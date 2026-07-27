@@ -23,10 +23,11 @@ export const CHARACTERS = {
     tagline: 'The lightest element — quick, explosive, everywhere.',
     teach: 'Hydrogen is the lightest and most abundant element in the universe.',
     // Benjamin-supplied render (art-src/hydra.png, background removed to
-    // hydra-cut.png). facing: the native image faces LEFT, so it is flipped
-    // to match the game's face-right convention. height = display px;
-    // bodyW/bodyH = physics hurtbox (tighter than the flame aura).
-    art: { key: 'char-hydra', file: 'art-src/hydra-cut.png', facing: -1, height: 170, bodyW: 58, bodyH: 150 },
+    // hydra-cut.png). facing: the direction the native image faces (1 =
+    // right); the Rig flips it to match the game's face-right convention.
+    // height = display px; bodyW/bodyH = physics hurtbox (tighter than the
+    // flame aura).
+    art: { key: 'char-hydra', file: 'art-src/hydra-cut.png', facing: 1, height: 153, bodyW: 52, bodyH: 135 },
     stats: {
       speed: 340,          // horizontal run speed (px/s)
       jumpVelocity: 680,   // initial jump speed (px/s, applied upward)

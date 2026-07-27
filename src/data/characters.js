@@ -142,6 +142,66 @@ export const CHARACTERS = {
       },
     },
   },
+
+  titan: {
+    id: 'titan',
+    name: 'Titan',
+    element: 'Titanium',
+    symbol: 'Ti',
+    atomicNumber: 22,
+    tagline: 'Aerospace-grade armor with a lance to match.',
+    teach: 'Titanium is as strong as steel but about 45% lighter, and it resists corrosion.',
+    // Native render faces LEFT (opposite of Hydra/Helen) -> facing: -1
+    art: { key: 'char-titan', file: 'art-src/titan-cut.png', facing: -1, height: 160, bodyW: 60, bodyH: 150 },
+    stats: {
+      speed: 230,          // heavy bruiser: slow...
+      jumpVelocity: 600,
+      airJumps: 1,
+      weight: 1.18,        // ...but hard to launch
+      gravityScale: 1.05,
+    },
+    // hard metal -> great kinetic defense; 1668°C melting point -> strong
+    // heat defense; titanium is a POOR electrical conductor -> weak to current
+    defense: { heat: 5, current: 1, kinetic: 6 },
+    palettes: [
+      { name: 'Steel',    skin: 0xbfc9d9, body: 0x9aa7b8, accent: 0x3f74c9, eye: 0x16324f },
+      { name: 'Gunmetal', skin: 0x9aa0ad, body: 0x5c6470, accent: 0x2b90a8, eye: 0x101820 },
+      { name: 'Aurora',   skin: 0xd9e2f2, body: 0x7f8fd9, accent: 0x9b59d0, eye: 0x1d1440 },
+      { name: 'Ember',    skin: 0xd9c9bf, body: 0xb87a5c, accent: 0xd94f2b, eye: 0x3a1710 },
+    ],
+    body: {
+      // fallback proportions if the render is ever missing
+      headRadius: 15, torsoWidth: 44, torsoHeight: 46,
+      armLength: 34, armWidth: 12, legLength: 38, legWidth: 14, antenna: false,
+    },
+    moves: {
+      basic: {
+        name: 'Lance Jab',
+        type: 'kinetic',
+        damage: 9,
+        baseKnockback: 230,
+        knockbackGrowth: 7,
+        rangeW: 74,   // spear = long reach
+        rangeH: 44,
+        duration: 300, // slower swing than the light characters
+        cooldown: 450,
+      },
+      special: {
+        name: 'Aero Lance',
+        kind: 'projectile',
+        type: 'kinetic',
+        damage: 12,
+        baseKnockback: 320,
+        knockbackGrowth: 7,
+        projectileSpeed: 540,
+        projectileRadius: 13,
+        projectileLife: 750,
+        duration: 320,
+        cooldown: 1700,
+        teach: 'Titanium’s strength-to-weight ratio makes it the metal of jets and spacecraft.',
+      },
+    },
+  },
 };
 
 export const ROSTER = Object.values(CHARACTERS);

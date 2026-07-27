@@ -18,7 +18,7 @@ const SLOTS = [
   { n: 15, sym: 'P', name: 'Phillip' }, { n: 16, sym: 'S', name: 'Sully' },
   { n: 17, sym: 'Cl', name: 'Chloe' }, { n: 18, sym: 'Ar', name: 'Aaron' },
   { n: 19, sym: 'K', name: 'Kyle' }, { n: 20, sym: 'Ca', name: 'Cal' },
-  { n: 21, sym: 'Sc', name: 'Scarlett' }, { n: 22, sym: 'Ti', name: 'Titan' },
+  { n: 21, sym: 'Sc', name: 'Scarlett' }, { n: 22, sym: 'Ti', name: 'Titan', charId: 'titan' },
   { n: 23, sym: 'V', name: 'Van' }, { n: 24, sym: 'Cr', name: 'Chroma' },
 ];
 

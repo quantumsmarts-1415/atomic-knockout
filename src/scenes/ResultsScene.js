@@ -33,8 +33,8 @@ export default class ResultsScene extends Phaser.Scene {
     if (winner) {
       const def = CHARACTERS[winner.charId];
       this.winnerRig = new Rig(this, def, winner.palette);
-      this.winnerRig.setPosition(W / 2, 330);
-      this.winnerRig.baseScale = 1.8;
+      this.winnerRig.setPosition(W / 2, 355);
+      this.winnerRig.baseScale = winner ? (CHARACTERS[winner.charId].art ? 1.15 : 1.8) : 1.8;
       this.add.existing(this.winnerRig);
       // teaching moment — surface the element fact on the results screen
       this.add.text(W / 2, 392, `${def.element} fact: ${def.teach}`, {
@@ -75,7 +75,7 @@ export default class ResultsScene extends Phaser.Scene {
     // victory bounce
     if (this.winnerRig) {
       this.winnerRig.animate(delta / 1000, 'idle', 0);
-      this.winnerRig.y = 330 + Math.sin(time / 260) * 8;
+      this.winnerRig.y = 355 + Math.sin(time / 260) * 8;
     }
   }
 }

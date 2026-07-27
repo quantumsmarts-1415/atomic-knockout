@@ -138,6 +138,36 @@ export class Rig extends Phaser.GameObjects.Container {
     super(scene, 0, 0);
     this.charDef = charDef;
     this.paletteIndex = paletteIndex;
+
+    // Sprite mode: if a real character render is loaded, use it as a single
+    // puppet-animated image (bob/lean/lunge/squash). Characters without art
+    // keep the code-drawn cutout rig below.
+    const art = charDef.art;
+    if (art && scene.textures.exists(art.key)) {
+      this.spriteMode = true;
+      this.sprite = scene.add.image(0, 0, art.key).setOrigin(0.5, 1);
+      this.sprite.setScale((art.height ?? 160) / this.sprite.height);
+      if ((art.facing ?? 1) === -1) this.sprite.setFlipX(true);
+      // palette variants on raster art: tint toward the palette color
+      if (paletteIndex > 0) {
+        const pal = charDef.palettes[paletteIndex % charDef.palettes.length];
+        const c = Phaser.Display.Color.ValueToColor(pal.body);
+        const mix = Phaser.Display.Color.GetColor(
+          Math.round(c.red + (255 - c.red) * 0.55),
+          Math.round(c.green + (255 - c.green) * 0.55),
+          Math.round(c.blue + (255 - c.blue) * 0.55),
+        );
+        this.sprite.setTint(mix);
+        this.paletteTint = mix;
+      }
+      this.add(this.sprite);
+      this.animT = Math.random() * 10;
+      this.attackSwing = 0;
+      this.facing = 1;
+      this.baseScale = 1;
+      return;
+    }
+
     ensureRigTextures(scene, charDef, paletteIndex);
 
     const b = charDef.body;
@@ -183,15 +213,24 @@ export class Rig extends Phaser.GameObjects.Container {
 
   // Approx full display height, used for physics body sizing.
   static heightOf(charDef) {
+    if (charDef.art?.bodyH) return charDef.art.bodyH;
     const b = charDef.body;
     return b.legLength + b.torsoHeight + b.headRadius * 2 + 2;
   }
 
   static widthOf(charDef) {
+    if (charDef.art?.bodyW) return charDef.art.bodyW;
     return charDef.body.torsoWidth + 14;
   }
 
   setFlash(color) {
+    if (this.spriteMode) {
+      if (color === null) {
+        if (this.paletteTint) this.sprite.setTint(this.paletteTint);
+        else this.sprite.clearTint();
+      } else this.sprite.setTint(color);
+      return;
+    }
     const parts = [this.torso, this.head, this.frontArm, this.backArm, this.frontLeg, this.backLeg];
     for (const p of parts) {
       if (color === null) p.clearTint();
@@ -206,6 +245,54 @@ export class Rig extends Phaser.GameObjects.Container {
   animate(dt, state, speedFactor = 1) {
     this.animT += dt;
     const t = this.animT;
+
+    if (this.spriteMode) {
+      let sx = 1;
+      let sy = 1;
+      this.sprite.x = 0;
+      switch (state) {
+        case 'walk':
+          this.sprite.y = -Math.abs(Math.sin(t * 10)) * 4;
+          this.sprite.rotation = Math.sin(t * 10) * 0.035;
+          break;
+        case 'jump':
+          this.sprite.y = 0; this.sprite.rotation = -0.06;
+          sy = 1.05; sx = 0.96;
+          break;
+        case 'fall':
+          this.sprite.y = 0; this.sprite.rotation = 0.045;
+          sy = 0.97;
+          break;
+        case 'attack': {
+          const s = Math.sin(this.attackSwing * Math.PI);
+          this.sprite.y = 0;
+          this.sprite.rotation = -s * 0.17;
+          this.sprite.x = s * 11; // forward lunge
+          sx = 1 + s * 0.05;
+          break;
+        }
+        case 'hurt':
+          this.sprite.y = 0; this.sprite.rotation = 0.22;
+          sx = 1.06; sy = 0.94;
+          break;
+        case 'ko':
+          this.rotation += dt * 14;
+          this.setScale(this.facing * this.baseScale, this.baseScale);
+          return;
+        case 'idle':
+        default: {
+          const bob = Math.sin(t * 3.2);
+          this.sprite.y = bob * 2.2;
+          this.sprite.rotation = bob * 0.015;
+          sy = 1 + bob * 0.008;
+          break;
+        }
+      }
+      this.rotation = 0;
+      this.setScale(this.facing * this.baseScale * sx, this.baseScale * sy);
+      return;
+    }
+
     const b = this.charDef.body;
 
     // reset squash each frame; states below may override

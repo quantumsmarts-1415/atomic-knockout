@@ -22,6 +22,11 @@ export const CHARACTERS = {
     atomicNumber: 1,
     tagline: 'The lightest element — quick, explosive, everywhere.',
     teach: 'Hydrogen is the lightest and most abundant element in the universe.',
+    // Benjamin-supplied render (art-src/hydra.png, background removed to
+    // hydra-cut.png). facing: the native image faces LEFT, so it is flipped
+    // to match the game's face-right convention. height = display px;
+    // bodyW/bodyH = physics hurtbox (tighter than the flame aura).
+    art: { key: 'char-hydra', file: 'art-src/hydra-cut.png', facing: -1, height: 170, bodyW: 58, bodyH: 150 },
     stats: {
       speed: 340,          // horizontal run speed (px/s)
       jumpVelocity: 680,   // initial jump speed (px/s, applied upward)
@@ -83,6 +88,7 @@ export const CHARACTERS = {
     atomicNumber: 2,
     tagline: 'Floaty, calm, and impossible to pin down.',
     teach: 'Helium is lighter than air and so unreactive it almost never forms compounds.',
+    art: { key: 'char-helen', file: 'art-src/helen-cut.png', facing: 1, height: 172, bodyW: 50, bodyH: 155 },
     stats: {
       speed: 265,
       jumpVelocity: 560,

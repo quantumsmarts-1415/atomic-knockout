@@ -25,6 +25,20 @@ const MIME = {
 
 http.createServer(async (req, res) => {
   try {
+    // dev-only helper: lets in-browser art tooling save processed PNGs
+    // back into art-src (e.g. background removal on AI renders)
+    if (req.method === 'POST' && req.url.startsWith('/save-art')) {
+      const name = (new URL(req.url, 'http://x').searchParams.get('name') || '')
+        .replace(/[^a-z0-9-]/gi, '');
+      if (!name) { res.writeHead(400).end('bad name'); return; }
+      const chunks = [];
+      for await (const chunk of req) chunks.push(chunk);
+      const { writeFile, mkdir } = await import('node:fs/promises');
+      await mkdir(join(root, 'art-src'), { recursive: true });
+      await writeFile(join(root, 'art-src', `${name}.png`), Buffer.concat(chunks));
+      res.writeHead(200).end('saved');
+      return;
+    }
     let urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     if (urlPath === '/') urlPath = '/index.html';
     const filePath = normalize(join(root, urlPath));

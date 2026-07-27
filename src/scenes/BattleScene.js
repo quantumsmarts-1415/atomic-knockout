@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import Fighter from '../engine/Fighter.js';
 import { CHARACTERS } from '../data/characters.js';
+import { play as sfx } from '../engine/sfx.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 
 const GRAVITY = 1500;
@@ -241,6 +242,7 @@ export default class BattleScene extends Phaser.Scene {
   landHit(attacker, victim, move) {
     const dmg = victim.takeHit(attacker, move, this.time.now);
     attacker.damageDealt += dmg;
+    sfx('hit');
     this.hitSpark(victim.x, victim.y - victim.bodyH * 0.6);
     // juice: hit-pause + shake scaled by damage
     this.physics.world.pause();
@@ -356,6 +358,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   koBlast(f) {
+    sfx('ko');
     // burst of lines at the blast point, clamped on-screen
     const x = Phaser.Math.Clamp(f.x, 30, W - 30);
     const y = Phaser.Math.Clamp(f.y, 30, H - 30);
@@ -378,6 +381,7 @@ export default class BattleScene extends Phaser.Scene {
     const alive = this.fighters.filter((f) => f.alive);
     if (alive.length > 1) return;
     this.matchOver = true;
+    sfx('gameEnd');
     const winner = alive[0] ?? null;
 
     const banner = this.add.text(W / 2, H / 2 - 40, 'GAME!', {

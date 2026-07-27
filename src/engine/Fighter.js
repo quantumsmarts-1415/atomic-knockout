@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
+import { play as sfx } from './sfx.js';
 
 // ---------------------------------------------------------------------------
 // Fighter — one combatant. Reads everything character-specific from its
@@ -92,9 +93,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (pressedJump) {
         if (onGround) {
           this.body.setVelocityY(-stats.jumpVelocity);
+          sfx('jump');
         } else if (this.airJumpsLeft > 0) {
           this.airJumpsLeft -= 1;
           this.body.setVelocityY(-stats.jumpVelocity * 0.92);
+          sfx('jump');
         }
       }
     }
@@ -135,7 +138,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.currentMove = move;
     this.stateUntil = time + move.duration;
     if (slot === 'basic') this.attackCooldownUntil = time + move.duration + move.cooldown;
-    else this.specialCooldownUntil = time + move.duration + move.cooldown;
+    else {
+      this.specialCooldownUntil = time + move.duration + move.cooldown;
+      sfx('special');
+    }
 
     if (move.kind === 'projectile') {
       this.scene.spawnProjectile(this, move);

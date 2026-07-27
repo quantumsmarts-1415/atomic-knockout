@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
+import { play as sfx } from '../engine/sfx.js';
 
 // ---------------------------------------------------------------------------
 // TitleScene — home screen. Play is live; Campaign/Settings are stubs that
@@ -58,7 +59,7 @@ export default class TitleScene extends Phaser.Scene {
     kb.on('keydown-DOWN', () => this.move(1));
     kb.on('keydown-W', () => this.move(-1));
     kb.on('keydown-S', () => this.move(1));
-    const go = () => this.buttons[this.selected].action?.();
+    const go = () => { if (this.buttons[this.selected].action) { sfx('menuConfirm'); this.buttons[this.selected].action(); } };
     kb.on('keydown-ENTER', go);
     kb.on('keydown-F', go);
     kb.on('keydown-SPACE', go);
@@ -103,6 +104,7 @@ export default class TitleScene extends Phaser.Scene {
   }
 
   move(dir) {
+    sfx('menuMove');
     do {
       this.selected = (this.selected + dir + this.buttons.length) % this.buttons.length;
     } while (!this.buttons[this.selected].action);

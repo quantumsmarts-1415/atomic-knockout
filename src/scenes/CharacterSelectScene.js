@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { CHARACTERS } from '../data/characters.js';
 import { Rig } from '../engine/Rig.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
+import { play as sfx } from '../engine/sfx.js';
 
 // The 24 launch slots (first 24 elements). Only entries with a charId are
 // playable today; the rest render as locked periodic-table tiles.
@@ -121,6 +122,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     };
 
     const onDir = (dx, dy) => {
+      if (p.phase !== 'locked') sfx('menuMove');
       if (p.phase === 'picking') {
         const col = (p.cursor % COLS + dx + COLS) % COLS;
         const row = Phaser.Math.Clamp(Math.floor(p.cursor / COLS) + dy, 0, Math.ceil(SLOTS.length / COLS) - 1);
@@ -137,6 +139,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     p.keys.up.on('down', () => onDir(0, -1));
     p.keys.down.on('down', () => onDir(0, 1));
     p.keys.confirm.on('down', () => {
+      if (p.phase !== 'locked' && SLOTS[p.cursor].charId) sfx('menuConfirm');
       if (p.phase === 'picking' && SLOTS[p.cursor].charId) {
         p.phase = 'palette';
         p.palette = p.index; // default different colors so mirror picks differ

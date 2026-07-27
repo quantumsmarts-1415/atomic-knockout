@@ -27,29 +27,33 @@ export function ensureRigTextures(scene, charDef, paletteIndex) {
     g.destroy();
   };
 
-  // --- torso: rounded body with belt + darker outline.
-  // Drawn facing RIGHT: shaded back edge on the left, chest highlight +
-  // collar opening + belt buckle all pushed toward the front (right).
-  mk('torso', b.torsoWidth + 8, b.torsoHeight + 8, (g) => {
-    const w = b.torsoWidth + 8;
+  // --- torso, drawn as a true profile facing RIGHT: a nearly straight back
+  // edge on the left and a convex chest curve on the right, so the body's
+  // silhouette agrees with the face direction (no decals needed).
+  mk('torso', b.torsoWidth + 10, b.torsoHeight + 8, (g) => {
+    const w = b.torsoWidth + 10;
+    const h = b.torsoHeight + 8;
+    // outline silhouette: flat back slab + chest ellipse
     g.fillStyle(pal.accent, 1);
-    g.fillRoundedRect(0, 0, w, b.torsoHeight + 8, 14);
+    g.fillRoundedRect(0, 0, w * 0.58, h, { tl: 9, bl: 12, tr: 0, br: 0 });
+    g.fillEllipse(w * 0.42, h / 2, w * 1.12, h);
+    // body fill, inset
     g.fillStyle(pal.body, 1);
-    g.fillRoundedRect(3, 3, b.torsoWidth + 2, b.torsoHeight + 2, 12);
-    // back shading (left side = behind)
-    g.fillStyle(pal.accent, 0.45);
-    g.fillRoundedRect(3, 3, 8, b.torsoHeight + 2, { tl: 12, bl: 12, tr: 0, br: 0 });
-    // chest highlight (front-right)
-    g.fillStyle(0xffffff, 0.16);
-    g.fillRoundedRect(w - 11, 5, 6, b.torsoHeight - 4, { tr: 10, br: 10, tl: 0, bl: 0 });
-    // collar opening toward the front
-    g.fillStyle(pal.skin, 1);
-    g.fillTriangle(w * 0.56, 3, w - 7, 3, w - 10, 13);
+    g.fillRoundedRect(2.5, 2.5, w * 0.58 - 2.5, h - 5, { tl: 7, bl: 10, tr: 0, br: 0 });
+    g.fillEllipse(w * 0.42, h / 2, w * 1.12 - 5, h - 5);
+    // subtle spine shade at the back
+    g.fillStyle(pal.accent, 0.35);
+    g.fillRect(2.5, 4, 3.5, h - 8);
+    // soft highlight tracing the chest curve
+    g.lineStyle(2.2, 0xffffff, 0.2);
+    g.beginPath();
+    g.arc(w * 0.42, h / 2, (w * 1.12 - 8) / 2, Phaser.Math.DegToRad(-55), Phaser.Math.DegToRad(55));
+    g.strokePath();
     // belt with the buckle set forward
     g.fillStyle(pal.accent, 1);
-    g.fillRect(3, b.torsoHeight - 8, b.torsoWidth + 2, 6);
+    g.fillRect(2.5, h - 12, w - 8, 6.5);
     g.fillStyle(0xf2c14e, 1);
-    g.fillRoundedRect(w * 0.6, b.torsoHeight - 9, 8, 8, 2);
+    g.fillRoundedRect(w * 0.62, h - 13, 8, 8, 2);
   });
 
   // --- head: circle with eyes, smile, and a little cap of body color
@@ -78,20 +82,23 @@ export function ensureRigTextures(scene, charDef, paletteIndex) {
     g.strokePath();
   });
 
-  // --- arm: rounded limb in body color with skin hand.
-  // Drawn facing RIGHT: sleeve shaded at the back, fist + thumb forward.
-  mk('arm', b.armWidth + 8, b.armLength + b.armWidth + 6, (g) => {
+  // --- arm, drawn hanging naturally in profile facing RIGHT: the elbow
+  // bows backward (left) and the hand ends forward (right), like a real
+  // relaxed arm — this is what makes the limb read as front-facing.
+  mk('arm', b.armWidth + 18, b.armLength + b.armWidth + 6, (g) => {
+    const aw = b.armWidth;
+    const al = b.armLength;
+    const cx = aw / 2 + 5;
+    const xAt = (t) => cx - 4 * Math.sin(Math.PI * t) + 5 * t;
+    const yAt = (t) => 2 + (al - 2) * t;
     g.fillStyle(pal.accent, 1);
-    g.fillRoundedRect(0, 0, b.armWidth + 4, b.armLength + 4, (b.armWidth + 4) / 2);
+    for (let t = 0; t <= 1.001; t += 0.08) g.fillCircle(xAt(t), yAt(t), aw / 2 + 1.3);
     g.fillStyle(pal.body, 1);
-    g.fillRoundedRect(1.5, 1.5, b.armWidth + 1, b.armLength + 1, (b.armWidth + 1) / 2);
-    // back-edge shading on the sleeve
-    g.fillStyle(pal.accent, 0.4);
-    g.fillRoundedRect(1.5, 1.5, 3.5, b.armLength + 1, 2);
-    // fist shifted forward, with a thumb nub on the leading side
-    const hx = (b.armWidth + 4) / 2 + 2;
-    const hy = b.armLength + 1;
-    const hr2 = b.armWidth / 2 + 1.5;
+    for (let t = 0; t <= 1.001; t += 0.08) g.fillCircle(xAt(t), yAt(t), aw / 2);
+    // fist forward with a thumb nub on the leading side
+    const hx = xAt(1) + 1;
+    const hy = al + 2;
+    const hr2 = aw / 2 + 1.5;
     g.fillStyle(pal.skin, 1);
     g.fillCircle(hx, hy, hr2);
     g.fillCircle(hx + hr2 * 0.85, hy - hr2 * 0.35, hr2 * 0.45);

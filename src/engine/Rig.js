@@ -95,13 +95,12 @@ export function ensureRigTextures(scene, charDef, paletteIndex) {
     for (let t = 0; t <= 1.001; t += 0.08) g.fillCircle(xAt(t), yAt(t), aw / 2 + 1.3);
     g.fillStyle(pal.body, 1);
     for (let t = 0; t <= 1.001; t += 0.08) g.fillCircle(xAt(t), yAt(t), aw / 2);
-    // fist forward with a thumb nub on the leading side
+    // fist ending forward (no thumb, per Benjamin)
     const hx = xAt(1) + 1;
     const hy = al + 2;
     const hr2 = aw / 2 + 1.5;
     g.fillStyle(pal.skin, 1);
     g.fillCircle(hx, hy, hr2);
-    g.fillCircle(hx + hr2 * 0.85, hy - hr2 * 0.35, hr2 * 0.45);
   });
 
   // --- leg: limb in accent color with a boot.
@@ -149,7 +148,9 @@ export class Rig extends Phaser.GameObjects.Container {
     const torsoCY = -(b.legLength + b.torsoHeight / 2);
     this.torsoCY = torsoCY;
 
-    this.backArm = scene.add.image(-b.torsoWidth / 2 + 3, torsoCY - b.torsoHeight / 2 + 12, k('arm'))
+    // Layering per Benjamin: the leading-side (+x) arm renders BEHIND the
+    // torso, and the trailing-side (-x) arm renders in the foreground.
+    this.backArm = scene.add.image(b.torsoWidth / 2 - 3, torsoCY - b.torsoHeight / 2 + 12, k('arm'))
       .setOrigin(0.5, 0.12);
     this.backLeg = scene.add.image(-b.torsoWidth / 4, -b.legLength + 2, k('leg'))
       .setOrigin(0.5, 0.08);
@@ -163,7 +164,7 @@ export class Rig extends Phaser.GameObjects.Container {
     }).setOrigin(0.5).setAlpha(0.9);
     this.head = scene.add.image(0, torsoCY - b.torsoHeight / 2 - b.headRadius + 4, k('head'))
       .setOrigin(0.5, 0.6);
-    this.frontArm = scene.add.image(b.torsoWidth / 2 - 3, torsoCY - b.torsoHeight / 2 + 12, k('arm'))
+    this.frontArm = scene.add.image(-b.torsoWidth / 2 + 3, torsoCY - b.torsoHeight / 2 + 12, k('arm'))
       .setOrigin(0.5, 0.12);
 
     const parts = [this.backArm, this.backLeg, this.frontLeg, this.torso, this.symbolText, this.head, this.frontArm];

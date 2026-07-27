@@ -239,6 +239,8 @@ export class Rig extends Phaser.GameObjects.Container {
     }
     this.rotation = 0;
     this.setScale(this.facing * this.baseScale * squashX, this.baseScale * squashY);
+    // keep the chest symbol readable when the rig is mirrored
+    this.symbolText.scaleX = this.facing < 0 ? -1 : 1;
     if (this.antenna) {
       this.antenna.rotation = Math.sin(t * 5) * 0.25;
     }

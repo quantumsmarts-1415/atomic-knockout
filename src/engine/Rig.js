@@ -27,15 +27,29 @@ export function ensureRigTextures(scene, charDef, paletteIndex) {
     g.destroy();
   };
 
-  // --- torso: rounded body with belt + darker outline
+  // --- torso: rounded body with belt + darker outline.
+  // Drawn facing RIGHT: shaded back edge on the left, chest highlight +
+  // collar opening + belt buckle all pushed toward the front (right).
   mk('torso', b.torsoWidth + 8, b.torsoHeight + 8, (g) => {
+    const w = b.torsoWidth + 8;
     g.fillStyle(pal.accent, 1);
-    g.fillRoundedRect(0, 0, b.torsoWidth + 8, b.torsoHeight + 8, 14);
+    g.fillRoundedRect(0, 0, w, b.torsoHeight + 8, 14);
     g.fillStyle(pal.body, 1);
     g.fillRoundedRect(3, 3, b.torsoWidth + 2, b.torsoHeight + 2, 12);
-    // belt
+    // back shading (left side = behind)
+    g.fillStyle(pal.accent, 0.45);
+    g.fillRoundedRect(3, 3, 8, b.torsoHeight + 2, { tl: 12, bl: 12, tr: 0, br: 0 });
+    // chest highlight (front-right)
+    g.fillStyle(0xffffff, 0.16);
+    g.fillRoundedRect(w - 11, 5, 6, b.torsoHeight - 4, { tr: 10, br: 10, tl: 0, bl: 0 });
+    // collar opening toward the front
+    g.fillStyle(pal.skin, 1);
+    g.fillTriangle(w * 0.56, 3, w - 7, 3, w - 10, 13);
+    // belt with the buckle set forward
     g.fillStyle(pal.accent, 1);
     g.fillRect(3, b.torsoHeight - 8, b.torsoWidth + 2, 6);
+    g.fillStyle(0xf2c14e, 1);
+    g.fillRoundedRect(w * 0.6, b.torsoHeight - 9, 8, 8, 2);
   });
 
   // --- head: circle with eyes, smile, and a little cap of body color
@@ -64,22 +78,40 @@ export function ensureRigTextures(scene, charDef, paletteIndex) {
     g.strokePath();
   });
 
-  // --- arm: rounded limb in body color with skin hand
-  mk('arm', b.armWidth + 4, b.armLength + b.armWidth + 4, (g) => {
+  // --- arm: rounded limb in body color with skin hand.
+  // Drawn facing RIGHT: sleeve shaded at the back, fist + thumb forward.
+  mk('arm', b.armWidth + 8, b.armLength + b.armWidth + 6, (g) => {
     g.fillStyle(pal.accent, 1);
     g.fillRoundedRect(0, 0, b.armWidth + 4, b.armLength + 4, (b.armWidth + 4) / 2);
     g.fillStyle(pal.body, 1);
     g.fillRoundedRect(1.5, 1.5, b.armWidth + 1, b.armLength + 1, (b.armWidth + 1) / 2);
+    // back-edge shading on the sleeve
+    g.fillStyle(pal.accent, 0.4);
+    g.fillRoundedRect(1.5, 1.5, 3.5, b.armLength + 1, 2);
+    // fist shifted forward, with a thumb nub on the leading side
+    const hx = (b.armWidth + 4) / 2 + 2;
+    const hy = b.armLength + 1;
+    const hr2 = b.armWidth / 2 + 1.5;
     g.fillStyle(pal.skin, 1);
-    g.fillCircle((b.armWidth + 4) / 2, b.armLength + 1, b.armWidth / 2 + 1.5);
+    g.fillCircle(hx, hy, hr2);
+    g.fillCircle(hx + hr2 * 0.85, hy - hr2 * 0.35, hr2 * 0.45);
   });
 
-  // --- leg: limb in accent color with rounded foot
-  mk('leg', b.legWidth + 6, b.legLength + 10, (g) => {
+  // --- leg: limb in accent color with a boot.
+  // Drawn facing RIGHT: heel flush with the back of the leg, toe box
+  // clearly extending forward, toe-cap highlight on the leading edge.
+  mk('leg', b.legWidth + 12, b.legLength + 10, (g) => {
     g.fillStyle(pal.accent, 1);
-    g.fillRoundedRect(1, 0, b.legWidth, b.legLength, b.legWidth / 2);
-    g.fillStyle(pal.eye, 1); // dark shoe
-    g.fillRoundedRect(0, b.legLength - 4, b.legWidth + 6, 10, 5);
+    g.fillRoundedRect(2, 0, b.legWidth, b.legLength, b.legWidth / 2);
+    // back-edge shading
+    g.fillStyle(pal.eye, 0.25);
+    g.fillRoundedRect(2, 0, 3.5, b.legLength, 2);
+    // boot with forward toe box
+    g.fillStyle(pal.eye, 1);
+    g.fillRoundedRect(2, b.legLength - 3, b.legWidth + 9, 9, { tl: 2, bl: 2, tr: 5, br: 5 });
+    // toe-cap highlight
+    g.fillStyle(0xffffff, 0.28);
+    g.fillRoundedRect(b.legWidth + 4, b.legLength - 2, 5, 4, 2);
   });
 
   // --- antenna orb (hydrogen's "electron")

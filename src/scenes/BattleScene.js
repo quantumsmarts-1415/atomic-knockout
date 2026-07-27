@@ -76,6 +76,8 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   buildStage() {
+    // solids collide from every side; platforms are one-way (drop onto only)
+    this.solids = this.physics.add.staticGroup();
     this.platforms = this.physics.add.staticGroup();
 
     // main floating island: x from 190 to 1090, top at y=560
@@ -92,9 +94,10 @@ export default class BattleScene extends Phaser.Scene {
     island.fillStyle(0x3bb886, 1);
     island.fillRect(mainX - mainW / 2, mainTopY + 16, mainW, 6);
 
-    const main = this.add.zone(mainX, mainTopY + 12, mainW, 24);
+    // full-thickness solid body so fast falls can't tunnel through the ground
+    const main = this.add.zone(mainX, mainTopY + 45, mainW, 90);
     this.physics.add.existing(main, true);
-    this.platforms.add(main);
+    this.solids.add(main);
 
     // one floating platform
     const platW = 260;
@@ -122,9 +125,14 @@ export default class BattleScene extends Phaser.Scene {
       return f;
     });
     for (const f of this.fighters) {
+      this.physics.add.collider(f, this.solids);
       this.physics.add.collider(f, this.platforms, undefined, (fighter, plat) => {
-        // one-way platforms: only collide when falling onto them from above
-        return fighter.body.velocity.y >= 0 && fighter.body.bottom <= plat.body.top + 14;
+        // one-way platforms: collide only when the fighter's feet were at or
+        // above the platform top on the PREVIOUS frame — velocity-independent,
+        // so a fast fall can never tunnel through
+        const b = fighter.body;
+        const prevBottom = b.prev.y + b.height;
+        return b.velocity.y >= 0 && prevBottom <= plat.body.top + 2;
       });
     }
   }

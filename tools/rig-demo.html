@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hydra cutout rig — animation demo</title>
+<style>
+  :root {
+    --bg: #0d1220; --panel: #151d31; --line: #26314c;
+    --ink: #e8eefc; --dim: #8a97b4; --hot: #38b6ff; --flame: #ff8a3d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif;
+  }
+  header {
+    padding: 18px 24px 14px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  }
+  h1 { margin: 0; font-size: 19px; letter-spacing: .2px; }
+  .sub { color: var(--dim); font-size: 13px; }
+  main { padding: 20px 24px 48px; max-width: 1180px; margin: 0 auto; }
+
+  .bar {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 18px;
+  }
+  button {
+    background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+    padding: 7px 14px; border-radius: 8px; cursor: pointer; font: inherit;
+    font-size: 14px;
+  }
+  button:hover { border-color: var(--hot); }
+  button.on { background: var(--hot); border-color: var(--hot); color: #05101d; font-weight: 600; }
+  .spacer { flex: 1 1 auto; }
+  label { color: var(--dim); font-size: 13px; display: flex; align-items: center; gap: 7px; }
+  input[type=range] { width: 130px; accent-color: var(--hot); }
+  input[type=checkbox] { accent-color: var(--hot); }
+
+  .stage {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  @media (max-width: 820px) { .stage { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    overflow: hidden;
+  }
+  .card h2 {
+    margin: 0; padding: 10px 14px; font-size: 13px; font-weight: 600;
+    letter-spacing: .4px; text-transform: uppercase; color: var(--dim);
+    border-bottom: 1px solid var(--line);
+  }
+  .card h2 em { font-style: normal; color: var(--flame); text-transform: none; letter-spacing: 0; }
+  canvas { display: block; width: 100%; height: auto; }
+  #cuts { display: none; }
+  #cuts.show { display: block; }
+  #cuts canvas { max-width: 760px; margin: 0 auto; }
+  .note {
+    margin-top: 20px; padding: 14px 16px; border: 1px solid var(--line);
+    border-radius: 10px; color: var(--dim); font-size: 13.5px; background: #111829;
+  }
+  .note b { color: var(--ink); font-weight: 600; }
+  .err { color: #ff6b6b; padding: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hydra cutout rig</h1>
+  <span class="sub">the existing render, sliced into 10 parts and animated on real joints</span>
+</header>
+
+<main>
+  <div class="bar" id="states"></div>
+
+  <div class="bar">
+    <label>size <input type="range" id="scale" min="120" max="620" value="420"></label>
+    <button id="gameSize">Game size (153px)</button>
+    <div class="spacer"></div>
+    <label><input type="checkbox" id="aura"> leftover flame</label>
+    <label><input type="checkbox" id="pivots"> show joints</label>
+    <label><input type="checkbox" id="showCuts"> show the cuts</label>
+  </div>
+
+  <div class="stage">
+    <div class="card">
+      <h2>Cutout rig &mdash; <em>new</em></h2>
+      <canvas id="rig" width="560" height="620"></canvas>
+    </div>
+    <div class="card">
+      <h2>Single image &mdash; what the game does today</h2>
+      <canvas id="flat" width="560" height="620"></canvas>
+    </div>
+  </div>
+
+  <div class="card" id="cuts">
+    <h2>Slices taken out of art-src/hydra-cut.png</h2>
+    <canvas id="cutsCanvas" width="727" height="800"></canvas>
+  </div>
+
+  <div class="note">
+    <b>What you're looking at.</b> Nothing was exported or hand-edited &mdash; the
+    browser cuts the parts straight out of <code>art-src/hydra-cut.png</code> every
+    time this page loads, using the polygons in <code>tools/hydra-parts.js</code>.
+    Each part records the angle it was <i>drawn</i> at, so the rig can cancel out
+    the render's action pose and hang the limbs neutral before animating them.
+    Elbows and knees are real joints, which is what a one-piece-per-limb cut
+    couldn't do. Hit <b>Game size</b> to see it at the 153px it actually renders
+    at in a match &mdash; that 5:1 downscale is what hides the seams.
+  </div>
+
+  <div class="note">
+    <b>Known rough edge.</b> Hydra's big background flame doesn't survive
+    slicing. Flame that touches a limb gets cut out <i>with</i> that limb and
+    rides along fine (watch his fists), but the wide aura behind him belonged to
+    arms that have since moved, so it's left stranded. Tick
+    <b>leftover flame</b> to see the problem &mdash; it drifts free of the body.
+    The fix isn't more careful cutting: that glow wants to be a code-drawn
+    effect that follows the fists, the same way the game already synthesises its
+    hit-sparks and KO bursts. Off by default because it currently looks worse.
+  </div>
+</main>
+
+<script type="module">
+import { Rig, SpritePuppet, PARTS, loadImage } from './rig-demo.js';
+
+const STATES = ['idle', 'walk', 'jump', 'fall', 'attack', 'hurt', 'ko'];
+let state = 'idle';
+
+const rigCv = document.getElementById('rig');
+const flatCv = document.getElementById('flat');
+const rc = rigCv.getContext('2d');
+const fc = flatCv.getContext('2d');
+const scaleEl = document.getElementById('scale');
+const pivotsEl = document.getElementById('pivots');
+const auraEl = document.getElementById('aura');
+const cutsEl = document.getElementById('cuts');
+
+const bar = document.getElementById('states');
+for (const s of STATES) {
+  const b = document.createElement('button');
+  b.textContent = s;
+  b.dataset.state = s;
+  if (s === state) b.classList.add('on');
+  b.onclick = () => {
+    state = s;
+    [...bar.children].forEach((c) => c.classList.toggle('on', c.dataset.state === s));
+  };
+  bar.appendChild(b);
+}
+document.getElementById('gameSize').onclick = () => { scaleEl.value = 153; };
+document.getElementById('showCuts').onchange = (e) => cutsEl.classList.toggle('show', e.target.checked);
+
+function ground(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, '#182241');
+  g.addColorStop(1, '#0b1020');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(56,182,255,.28)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(40, h - 70);
+  ctx.lineTo(w - 40, h - 70);
+  ctx.stroke();
+}
+
+function drawCuts(img, rig) {
+  const cv = document.getElementById('cutsCanvas');
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.globalAlpha = 0.5;
+  ctx.drawImage(img, 0, 0);
+  ctx.globalAlpha = 1;
+  const hues = Object.keys(PARTS).length;
+  Object.entries(PARTS).forEach(([name, def], i) => {
+    const hue = Math.round((i / hues) * 330);
+    ctx.strokeStyle = `hsl(${hue} 90% 62%)`;
+    ctx.fillStyle = `hsl(${hue} 90% 62% / .16)`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    def.poly.forEach(([x, y], j) => (j ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // pivot -> tip, the drawn angle the rig cancels out
+    ctx.beginPath();
+    ctx.moveTo(...def.pivot);
+    ctx.lineTo(...def.tip);
+    ctx.stroke();
+    ctx.fillStyle = `hsl(${hue} 90% 62%)`;
+    ctx.beginPath();
+    ctx.arc(def.pivot[0], def.pivot[1], 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = 'bold 15px system-ui, sans-serif';
+    ctx.strokeStyle = 'rgba(0,0,0,.85)';
+    ctx.lineWidth = 4;
+    ctx.strokeText(name, def.pivot[0] + 11, def.pivot[1] - 9);
+    ctx.fillText(name, def.pivot[0] + 11, def.pivot[1] - 9);
+  });
+}
+
+loadImage().then((img) => {
+  const rig = new Rig(img);
+  const flat = new SpritePuppet(img);
+  drawCuts(img, rig);
+
+  let last = performance.now();
+  let swing = 0;
+
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+
+    // loop the attack swing so the state is watchable
+    if (state === 'attack') {
+      swing = (swing + dt / 0.42) % 1.35;
+      const s = Math.min(swing, 1);
+      rig.attackSwing = s;
+      flat.attackSwing = s;
+    } else {
+      swing = 0;
+      rig.attackSwing = 0;
+      flat.attackSwing = 0;
+    }
+
+    const px = Number(scaleEl.value);
+    const rigScale = px / 800;   // source render is 800px tall
+    const flatScale = px / img.height;
+
+    rig.animate(dt, state);
+    flat.animate(dt, state);
+
+    ground(rc, rigCv.width, rigCv.height);
+    rig.draw(rc, rigCv.width / 2, rigCv.height - 70, rigScale, {
+      showPivots: pivotsEl.checked,
+      aura: auraEl.checked,
+    });
+
+    ground(fc, flatCv.width, flatCv.height);
+    flat.draw(fc, flatCv.width / 2, flatCv.height - 70, flatScale);
+
+    requestAnimationFrame(frame);
+  }
+  // frame() re-schedules itself, so this single call both paints immediately
+  // and starts the loop. The immediate paint matters because
+  // requestAnimationFrame doesn't fire while the tab/pane is hidden — without
+  // it the canvases sit blank until the page gets focus.
+  frame(last);
+}).catch((e) => {
+  document.querySelector('main').insertAdjacentHTML(
+    'afterbegin', `<div class="err">${e.message} — run this from the dev server (npm run dev), not file://</div>`);
+});
+</script>
+</body>
+</html>

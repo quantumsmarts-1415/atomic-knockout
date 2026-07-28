@@ -1,0 +1,72 @@
+{
+  "yaw": 12.0,
+  "frameW": 256,
+  "frameH": 256,
+  "fps": 12,
+  "clips": {
+    "attack": {
+      "cols": 8,
+      "rows": 2,
+      "frameW": 256,
+      "frameH": 256,
+      "count": 12,
+      "loop": false
+    },
+    "fall": {
+      "cols": 6,
+      "rows": 1,
+      "frameW": 256,
+      "frameH": 256,
+      "count": 6,
+      "loop": true
+    },
+    "hurt": {
+      "cols": 8,
+      "rows": 2,
+      "frameW": 256,
+      "frameH": 256,
+      "count": 10,
+      "loop": false
+    },
+    "idle": {
+      "cols": 8,
+      "rows": 2,
+      "frameW": 256,
+      "frameH": 256,
+      "count": 12,
+      "loop": true
+    },
+    "jump": {
+      "cols": 8,
+      "rows": 2,
+      "frameW": 256,
+      "frameH": 256,
+      "count": 10,
+      "loop": false
+    },
+    "ko": {
+      "cols": 8,
+      "rows": 2,
+      "frameW": 256,
+      "frameH": 256,
+      "count": 15,
+      "loop": false
+    },
+    "special": {
+      "cols": 8,
+      "rows": 2,
+      "frameW": 256,
+      "frameH": 256,
+      "count": 16,
+      "loop": false
+    },
+    "walk": {
+      "cols": 8,
+      "rows": 2,
+      "frameW": 256,
+      "frameH": 256,
+      "count": 16,
+      "loop": true
+    }
+  }
+}

@@ -1,3 +1,11 @@
 node_modules/
 dist/
 .DS_Store
+
+# Blender pipeline: per-frame renders are regenerable from hydra.blend.
+# The composed previews in out/ and the sheets in out/sheets/ are kept.
+tools/blender/out/_tmp/
+tools/blender/*.blend1
+
+# Python bytecode from Blender running the pipeline scripts
+tools/blender/__pycache__/

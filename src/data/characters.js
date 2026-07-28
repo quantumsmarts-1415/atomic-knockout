@@ -27,7 +27,43 @@ export const CHARACTERS = {
     // right); the Rig flips it to match the game's face-right convention.
     // height = display px; bodyW/bodyH = physics hurtbox (tighter than the
     // flame aura).
-    art: { key: 'char-hydra', file: 'art-src/hydra-cut.png', facing: 1, height: 153, bodyW: 52, bodyH: 135 },
+    art: {
+      key: 'char-hydra',
+      file: 'art-src/hydra-cut.png',
+      facing: 1,
+      height: 153,
+      bodyW: 52,
+      bodyH: 135,
+      // --- 3D sprite sheets (Session 3) ------------------------------------
+      // Rendered from tools/blender/hydra.blend: real limb animation instead
+      // of the single puppet-warped image above.
+      //
+      // TO TURN THIS OFF: set use3d to false. Everything falls straight back
+      // to the flat render on the `file` line -- nothing else needs touching.
+      use3d: true,
+      sheets: {
+        dir: 'tools/blender/out/sheets/',
+        frameW: 256,
+        frameH: 256,
+        // Where the ground line sits inside a frame, and how many of the
+        // frame's pixels the character actually occupies (feet to hair tip).
+        // Both come from the Blender camera: ortho_scale 2.60 centred at
+        // z = 0.95, so z = 0 lands (0.95 + 1.30) / 2.60 of the way down.
+        footY: 0.8654,
+        visibleH: 213,
+        // fps = 24 / the frame stride that clip was rendered with
+        clips: {
+          idle: { count: 12, fps: 12, loop: true },
+          walk: { count: 16, fps: 24, loop: true },
+          jump: { count: 10, fps: 24, loop: false },
+          fall: { count: 6, fps: 12, loop: true },
+          attack: { count: 12, fps: 24, loop: false },
+          special: { count: 16, fps: 24, loop: false },
+          hurt: { count: 10, fps: 24, loop: false },
+          ko: { count: 15, fps: 24, loop: false },
+        },
+      },
+    },
     stats: {
       speed: 340,          // horizontal run speed (px/s)
       jumpVelocity: 680,   // initial jump speed (px/s, applied upward)

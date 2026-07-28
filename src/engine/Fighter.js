@@ -136,6 +136,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
   startMove(time, move, slot) {
     this.state = 'attack';
     this.currentMove = move;
+    this.rig.moveSlot = slot; // sheet-mode rigs have separate basic/special clips
     this.stateUntil = time + move.duration;
     if (slot === 'basic') this.attackCooldownUntil = time + move.duration + move.cooldown;
     else {

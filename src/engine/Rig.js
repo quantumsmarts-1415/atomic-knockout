@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { sheetKey, use3dSheets } from '../scenes/BootScene.js';
 
 // ---------------------------------------------------------------------------
 // Rig — the code-drawn vector cartoon character.
@@ -139,27 +140,39 @@ export class Rig extends Phaser.GameObjects.Container {
     this.charDef = charDef;
     this.paletteIndex = paletteIndex;
 
+    const art = charDef.art;
+
+    // Sheet mode: 3D-rendered sprite sheets with real per-frame limb
+    // animation. Falls through to the modes below if the sheets are missing
+    // or art.use3d is off.
+    if (use3dSheets(charDef) && scene.textures.exists(sheetKey(art, 'idle'))) {
+      this.sheetMode = true;
+      this.sheets = art.sheets;
+      this.art = art;
+      this.sprite = scene.add.sprite(0, 0, sheetKey(art, 'idle'));
+      // origin y = the ground line inside the frame, so container y = feet
+      this.sprite.setOrigin(0.5, art.sheets.footY);
+      this.sprite.setScale((art.height ?? 160) / art.sheets.visibleH);
+      this.applyPaletteTint(scene, charDef, paletteIndex);
+      this.add(this.sprite);
+      this.currentClip = null;
+      this.animT = Math.random() * 10;
+      this.attackSwing = 0;
+      this.moveSlot = 'basic';
+      this.facing = 1;
+      this.baseScale = 1;
+      return;
+    }
+
     // Sprite mode: if a real character render is loaded, use it as a single
     // puppet-animated image (bob/lean/lunge/squash). Characters without art
     // keep the code-drawn cutout rig below.
-    const art = charDef.art;
     if (art && scene.textures.exists(art.key)) {
       this.spriteMode = true;
       this.sprite = scene.add.image(0, 0, art.key).setOrigin(0.5, 1);
       this.sprite.setScale((art.height ?? 160) / this.sprite.height);
       if ((art.facing ?? 1) === -1) this.sprite.setFlipX(true);
-      // palette variants on raster art: tint toward the palette color
-      if (paletteIndex > 0) {
-        const pal = charDef.palettes[paletteIndex % charDef.palettes.length];
-        const c = Phaser.Display.Color.ValueToColor(pal.body);
-        const mix = Phaser.Display.Color.GetColor(
-          Math.round(c.red + (255 - c.red) * 0.55),
-          Math.round(c.green + (255 - c.green) * 0.55),
-          Math.round(c.blue + (255 - c.blue) * 0.55),
-        );
-        this.sprite.setTint(mix);
-        this.paletteTint = mix;
-      }
+      this.applyPaletteTint(scene, charDef, paletteIndex);
       this.add(this.sprite);
       this.animT = Math.random() * 10;
       this.attackSwing = 0;
@@ -211,6 +224,21 @@ export class Rig extends Phaser.GameObjects.Container {
     this.baseScale = 1;   // menus can enlarge previews without animate() fighting them
   }
 
+  // Palette variants on raster art: tint toward the palette color. (True
+  // palette swaps would need per-color remapping — revisit if tints look bad.)
+  applyPaletteTint(scene, charDef, paletteIndex) {
+    if (paletteIndex <= 0) return;
+    const pal = charDef.palettes[paletteIndex % charDef.palettes.length];
+    const c = Phaser.Display.Color.ValueToColor(pal.body);
+    const mix = Phaser.Display.Color.GetColor(
+      Math.round(c.red + (255 - c.red) * 0.55),
+      Math.round(c.green + (255 - c.green) * 0.55),
+      Math.round(c.blue + (255 - c.blue) * 0.55),
+    );
+    this.sprite.setTint(mix);
+    this.paletteTint = mix;
+  }
+
   // Approx full display height, used for physics body sizing.
   static heightOf(charDef) {
     if (charDef.art?.bodyH) return charDef.art.bodyH;
@@ -224,7 +252,7 @@ export class Rig extends Phaser.GameObjects.Container {
   }
 
   setFlash(color) {
-    if (this.spriteMode) {
+    if (this.spriteMode || this.sheetMode) {
       if (color === null) {
         if (this.paletteTint) this.sprite.setTint(this.paletteTint);
         else this.sprite.clearTint();
@@ -245,6 +273,40 @@ export class Rig extends Phaser.GameObjects.Container {
   animate(dt, state, speedFactor = 1) {
     this.animT += dt;
     const t = this.animT;
+
+    if (this.sheetMode) {
+      // 'attack' covers both move slots; pick the clip the move actually is
+      const clip = state === 'attack'
+        ? (this.moveSlot === 'special' ? 'special' : 'attack')
+        : state;
+      const def = this.sheets.clips[clip] ? clip : 'idle';
+      const info = this.sheets.clips[def];
+
+      if (def === 'attack' || def === 'special') {
+        // Scrub these by the move's own progress rather than playing them at
+        // a fixed frame rate, so the swing always lines up with move.duration
+        // no matter how the move is retuned in characters.js.
+        const i = Phaser.Math.Clamp(
+          Math.floor(this.attackSwing * info.count), 0, info.count - 1,
+        );
+        this.sprite.anims.stop();
+        this.sprite.setTexture(sheetKey(this.art, def), i);
+        this.currentClip = def;
+      } else if (this.currentClip !== def) {
+        this.currentClip = def;
+        this.sprite.anims.play(sheetKey(this.art, def), true);
+      }
+
+      // the run cycle speeds up and slows down with actual ground speed
+      this.sprite.anims.timeScale = def === 'walk'
+        ? Phaser.Math.Clamp(speedFactor, 0.55, 1.6)
+        : 1;
+
+      // the KO clip already tumbles him, so don't spin the container too
+      this.rotation = 0;
+      this.setScale(this.facing * this.baseScale, this.baseScale);
+      return;
+    }
 
     if (this.spriteMode) {
       let sx = 1;

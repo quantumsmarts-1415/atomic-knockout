@@ -28,7 +28,30 @@ Built and tested against **Blender 5.2.0 LTS** at
 "/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b tools/blender/hydra.blend --python tools/blender/render_hydra.py -- --mode sheets --size 256 --yaw 12
 ```
 
-Other `--mode` values: `turnaround`, `poses`, `strip --clip walk`.
+Other `--mode` values: `turnaround`, `poses`, `strip --clip walk`. Adding
+`--clip <name>` to `--mode sheets` re-renders just that one clip and merges it
+into the existing manifest, which is how you iterate on a single animation
+without paying for all ~100 frames.
+
+### Matching hitboxes to the animation
+
+`build_hydra.py` prints a `HYDRA_REACH` line on every build:
+
+```
+HYDRA_REACH 70.73 px/unit | idle: frame 1, fist 0.218u = 15px from centre | attack: frame 6, fist 0.800u = 57px from centre
+```
+
+Those are **game pixels from the fighter's own centre line**, already through
+the camera projection and the in-game sprite scale, so a move's `rangeW` in
+`src/data/characters.js` can be set against the animation instead of guessed.
+The hitbox starts at `bodyW * 0.2`, so `rangeW = reach - bodyW * 0.2 + slack`.
+
+### Bone stretch
+
+Clip keys accept a `"stretch"` dict (`{"forearm.N": 1.26}`) that scales a bone
+along its own length. Rotation alone cannot lengthen a punch once the elbow is
+straight; stretching the arm through the strike is the standard fighting-game
+trick and reads clearly at sprite size.
 
 Rendering costs roughly 6–8 seconds per frame (Freestyle outlines dominate),
 so a full sheet pass of ~100 frames takes about 10 minutes.

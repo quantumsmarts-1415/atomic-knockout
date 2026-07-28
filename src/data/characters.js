@@ -97,7 +97,14 @@ export const CHARACTERS = {
         damage: 7,
         baseKnockback: 190,
         knockbackGrowth: 7,
-        rangeW: 58,   // hitbox width in front of fighter
+        // Matched to the animation: at full extension his fist centre sits
+        // 57px from his own centre line (measured in Blender — see the
+        // HYDRA_REACH line printed by build_hydra.py), so the visible fist
+        // tip is ~62px. The box starts at bodyW * 0.2 = 10px, so 74 puts the
+        // front edge at 84px — ~22px of generosity past the fist, normal for
+        // the genre. Raise rangeW to reach further; past ~85 he starts
+        // landing hits with visibly empty air in front of the glove.
+        rangeW: 74,   // hitbox width in front of fighter
         rangeH: 46,
         duration: 220,   // ms the swing lasts
         cooldown: 300,

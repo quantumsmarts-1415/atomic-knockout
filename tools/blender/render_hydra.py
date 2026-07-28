@@ -178,9 +178,20 @@ def mode_sheets(a):
     sc = scene_setup(a.size, a.yaw)
     cs = clips()
     tmp = os.path.join(a.out, "_tmp")
+    mpath = os.path.join(a.out, "sheets", "hydra_sheets.json")
+
+    # --clip re-renders one clip and merges it into the existing manifest,
+    # so tweaking a single animation costs one clip's frames, not all 97
+    only = None if a.clip in ("all", "") else a.clip
     manifest = {"yaw": a.yaw, "frameW": a.size, "frameH": a.size,
                 "fps": 12, "clips": {}}
+    if only and os.path.exists(mpath):
+        with open(mpath) as fh:
+            manifest = json.load(fh)
+
     for name, c in sorted(cs.items()):
+        if only and name != only:
+            continue
         rig().animation_data.action = c["action"]
         step = CLIP_STEP.get(name, 1)
         end = c["end"] - 1 if name in ("idle", "walk", "fall") else c["end"]
@@ -196,7 +207,6 @@ def mode_sheets(a):
         info["loop"] = name in ("idle", "walk", "fall")
         manifest["clips"][name] = info
         print("SHEET %s %s" % (out, info))
-    mpath = os.path.join(a.out, "sheets", "hydra_sheets.json")
     with open(mpath, "w") as fh:
         json.dump(manifest, fh, indent=2)
     print("OUT %s" % mpath)

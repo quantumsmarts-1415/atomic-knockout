@@ -550,7 +550,11 @@ STANCE = {
 def blend(base, over):
     out = dict(base)
     for k, v in over.items():
-        if k == "root":
+        if k == "stretch":
+            # bone stretch is an override, not an accumulation
+            out["stretch"] = dict(base.get("stretch", {}))
+            out["stretch"].update(v)
+        elif k == "root":
             loc = dict(base.get("root", {})).get("loc", (0, 0, 0))
             add = v.get("loc", (0, 0, 0))
             out["root"] = {"loc": tuple(a + b for a, b in zip(loc, add)),
@@ -669,23 +673,27 @@ clip("fall", True, [
 
 clip("attack", False, [  # Proton Jab -- lead (near) fist
     (1, {}),
-    (3, {"root": {"loc": (-0.026, 0.0, 0.0)}, "spine": -7.0, "chest": -4.0,
-         "neck": 3.0, "hair": 10.0,
+    (3, {"root": {"loc": (-0.034, 0.0, 0.0)}, "spine": -9.0, "chest": -5.0,
+         "neck": 3.0, "hair": 12.0,
          "upperarm.N": -29.0, "forearm.N": -25.0,   # fist chambered at the ribs
          "upperarm.F": 8.0, "forearm.F": -6.0,
-         "thigh.N": 6.0, "thigh.F": -6.0}),
-    (6, {"root": {"loc": (0.055, 0.0, -0.012)}, "spine": 12.0, "chest": 6.0,
-         "neck": -4.0, "head": 3.0, "hair": -18.0,
-         # arm 82 / forearm 88 = elbow near-straight, fist driving level
-         "upperarm.N": 78.0, "forearm.N": -47.0, "hand.N": -10.0,
+         "thigh.N": 6.0, "thigh.F": -8.0,
+         "stretch": {"upperarm.N": 0.94, "forearm.N": 0.94}}),
+    (6, {"root": {"loc": (0.130, 0.0, -0.020)}, "spine": 18.0, "chest": 10.0,
+         "neck": -6.0, "head": 4.0, "hair": -22.0,
+         # arm 86 / forearm 86 = elbow dead straight, fist driving level, and
+         # the whole arm stretches through the hit for the extra reach
+         "upperarm.N": 82.0, "forearm.N": -46.0, "hand.N": -10.0,
          "upperarm.F": -34.0, "forearm.F": -40.0,
-         "thigh.N": 14.0, "shin.N": -8.0,
-         "thigh.F": -18.0, "shin.F": 8.0, "foot.F": 14.0}),
-    (8, {"root": {"loc": (0.045, 0.0, -0.010)}, "spine": 10.0, "chest": 5.0,
-         "hair": -12.0,
-         "upperarm.N": 72.0, "forearm.N": -49.0, "hand.N": -10.0,
+         "thigh.N": 20.0, "shin.N": -10.0,
+         "thigh.F": -26.0, "shin.F": 10.0, "foot.F": 10.0,
+         "stretch": {"upperarm.N": 1.20, "forearm.N": 1.26, "hand.N": 1.15}}),
+    (8, {"root": {"loc": (0.115, 0.0, -0.018)}, "spine": 15.0, "chest": 8.0,
+         "hair": -14.0,
+         "upperarm.N": 76.0, "forearm.N": -48.0, "hand.N": -10.0,
          "upperarm.F": -30.0, "forearm.F": -36.0,
-         "thigh.N": 12.0, "thigh.F": -16.0}),
+         "thigh.N": 17.0, "shin.N": -8.0, "thigh.F": -22.0,
+         "stretch": {"upperarm.N": 1.14, "forearm.N": 1.18, "hand.N": 1.10}}),
     (12, {}),
 ])
 
@@ -772,6 +780,15 @@ def apply_pose(arm, pose):
     for pb in arm.pose.bones:
         pb.rotation_euler = (0.0, 0.0, 0.0)
         pb.location = (0.0, 0.0, 0.0)
+        pb.scale = (1.0, 1.0, 1.0)
+
+    # Bone stretch along its own length. A bone's local Y runs down the bone,
+    # so scale.y > 1 lengthens it and children ride along. This is the classic
+    # fighting-game "stretchy punch" and it buys real reach that rotation
+    # alone cannot -- the elbow is already straight at full extension.
+    for name, amount in pose.get("stretch", {}).items():
+        if name in arm.pose.bones:
+            arm.pose.bones[name].scale.y = amount
 
     deviation = {}  # accumulated rotation from rest, root -> this bone
     for name in POSE_ORDER:
@@ -797,11 +814,17 @@ def apply_pose(arm, pose):
         deviation[name] = parent_dev + local
 
 
+STRETCH_BONES = ("upperarm.N", "forearm.N", "hand.N",
+                 "upperarm.F", "forearm.F", "hand.F")
+
+
 def key_pose(arm, frame):
     for pb in arm.pose.bones:
         pb.keyframe_insert("rotation_euler", index=0, frame=frame)
         if pb.name == "root":
             pb.keyframe_insert("location", frame=frame)
+        if pb.name in STRETCH_BONES:
+            pb.keyframe_insert("scale", index=1, frame=frame)
 
 
 def build_actions(arm):
@@ -907,6 +930,40 @@ def aim_camera(cam, yaw_deg=15.0, target_z=0.950, distance=8.0):
 
 # ==========================================================================
 
+def report_reach(arm, clips, yaw_deg=12.0, ortho_scale=2.60, frame_px=256,
+                 display_h=153.0, visible_h_px=213.0):
+    """Print how far the fist actually reaches, in GAME pixels.
+
+    Lets the hitbox in characters.js be matched to the animation instead of
+    guessed. Screen-x is the projection the render camera actually uses, so a
+    non-zero yaw is accounted for; the result is measured from the fighter's
+    own centre line (world x = 0), which is where the physics body sits.
+    """
+    a = math.radians(yaw_deg)
+    px_per_unit = (frame_px / ortho_scale) * (display_h / visible_h_px)
+
+    def screen_x(v):
+        return v.x * math.cos(a) + v.y * math.sin(a)
+
+    out = []
+    for name in ("idle", "attack", "special"):
+        info = clips[name]
+        arm.animation_data.action = info["action"]
+        best = None
+        for f in range(info["start"], info["end"] + 1):
+            bpy.context.scene.frame_set(f)
+            bpy.context.view_layer.update()
+            tip = arm.matrix_world @ arm.pose.bones["hand.N"].tail
+            sx = screen_x(tip)
+            if best is None or sx > best[1]:
+                best = (f, sx)
+        out.append("%s: frame %d, fist %.3fu = %.0fpx from centre"
+                   % (name, best[0], best[1], best[1] * px_per_unit))
+    arm.animation_data.action = clips["idle"]["action"]
+    bpy.context.scene.frame_set(1)
+    print("HYDRA_REACH %.2f px/unit | %s" % (px_per_unit, " | ".join(out)))
+
+
 def clear_scene():
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
@@ -942,6 +999,7 @@ def main():
 
     clips = build_actions(arm)
     setup_scene()
+    report_reach(arm, clips)
 
     print("HYDRA_PARTS %d" % len(PARTS))
     print("HYDRA_CLIPS %s" % ",".join(

@@ -88,7 +88,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (inp.right) vx += stats.speed;
       if (this.state === 'attack' && onGround) vx *= 0.25; // plant feet on ground attacks
       this.body.setVelocityX(vx);
-      if (vx !== 0) this.facing = Math.sign(vx);
+      // No turning mid-swing: you commit to the direction you started the
+      // attack in. Otherwise the hitbox teleports to the other side of the
+      // body part-way through the animation.
+      if (vx !== 0 && this.state !== 'attack') this.facing = Math.sign(vx);
 
       if (pressedJump) {
         if (onGround) {
@@ -152,8 +155,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
         if (this.state === 'attack') this.scene.resolveBurst(this, move);
       });
     } else {
-      // melee: hitbox becomes active partway through the swing
-      this.activeHit = { move, from: time + move.duration * 0.25, until: time + move.duration * 0.8, landed: new Set() };
+      // melee: hitbox becomes active partway through the swing. `dir` is
+      // captured now and drives both the hitbox side and the launch, so the
+      // two can never disagree.
+      this.activeHit = {
+        move, dir: this.facing, landed: new Set(),
+        from: time + move.duration * 0.25,
+        until: time + move.duration * 0.8,
+      };
     }
   }
 
@@ -163,7 +172,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const t = this.scene.time.now;
     if (t < this.activeHit.from || t > this.activeHit.until) return null;
     const m = this.activeHit.move;
-    const x = this.facing === 1 ? this.x + this.bodyW * 0.2 : this.x - this.bodyW * 0.2 - m.rangeW;
+    const dir = this.activeHit.dir;
+    const x = dir === 1 ? this.x + this.bodyW * 0.2 : this.x - this.bodyW * 0.2 - m.rangeW;
     const y = this.y - this.bodyH * 0.75;
     return new Phaser.Geom.Rectangle(x, y, m.rangeW, m.rangeH);
   }
@@ -172,14 +182,34 @@ export default class Fighter extends Phaser.GameObjects.Container {
     return new Phaser.Geom.Rectangle(this.x - this.bodyW / 2, this.y - this.bodyH, this.bodyW, this.bodyH);
   }
 
-  /** Apply a hit to this fighter. Returns actual damage dealt. */
-  takeHit(attacker, move, time) {
+  /**
+   * Apply a hit to this fighter. Returns actual damage dealt.
+   * launchDir: -1 or 1, the direction the attack itself points. Omit it for
+   * radial moves, which launch away from the attacker instead.
+   */
+  takeHit(attacker, move, time, launchDir) {
     if (this.state === 'ko' || this.state === 'dead') return 0;
     const dmg = applyDefense(move.damage, move.type, this.charDef.defense);
     this.percent = Math.min(999, this.percent + dmg);
 
     const kb = (move.baseKnockback + this.percent * move.knockbackGrowth) / this.charDef.stats.weight;
-    const dir = Math.sign(this.x - attacker.x) || attacker.facing;
+
+    // Launch direction.
+    //
+    // Directional moves (punches, projectiles) launch the way the ATTACK
+    // points, passed in as launchDir. Deriving it from relative position
+    // instead — which is what this used to do — breaks when the two bodies
+    // overlap: standing on top of someone put their centre behind the
+    // attacker's, so a punch aimed right launched them left, back through
+    // the puncher.
+    //
+    // Radial moves (H-Burst and anything else centred on the attacker) still
+    // launch away from the blast, which is the whole point of them. A move
+    // can force either rule with `launch: 'radial' | 'directional'`.
+    const radial = move.launch ? move.launch === 'radial' : move.kind === 'burst';
+    const away = Math.sign(this.x - attacker.x) || attacker.facing || 1;
+    const dir = (!radial && launchDir) ? launchDir : away;
+
     const angle = -0.9; // launch angle: up and away
     this.body.setVelocity(kb * dir * Math.cos(0.45), kb * angle);
 

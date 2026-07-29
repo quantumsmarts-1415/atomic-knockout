@@ -247,8 +247,10 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
-  landHit(attacker, victim, move) {
-    const dmg = victim.takeHit(attacker, move, this.time.now);
+  // launchDir: the direction the attack points (-1 / 1). Omitted for radial
+  // moves like H-Burst, which launch away from the blast centre instead.
+  landHit(attacker, victim, move, launchDir) {
+    const dmg = victim.takeHit(attacker, move, this.time.now, launchDir);
     attacker.damageDealt += dmg;
     sfx('hit');
     this.hitSpark(victim.x, victim.y - victim.bodyH * 0.6);
@@ -315,7 +317,7 @@ export default class BattleScene extends Phaser.Scene {
         if (attacker.activeHit.landed.has(victim)) continue;
         if (Phaser.Geom.Rectangle.Overlaps(hb, victim.getHurtboxRect())) {
           attacker.activeHit.landed.add(victim);
-          this.landHit(attacker, victim, attacker.activeHit.move);
+          this.landHit(attacker, victim, attacker.activeHit.move, attacker.activeHit.dir);
         }
       }
     }
@@ -336,7 +338,9 @@ export default class BattleScene extends Phaser.Scene {
         const ny = Phaser.Math.Clamp(p.gfx.y, rect.top, rect.bottom);
         if (Phaser.Math.Distance.Between(p.gfx.x, p.gfx.y, nx, ny) <= p.radius) {
           p.landed.add(victim);
-          this.landHit(p.owner, victim, p.move);
+          // a projectile shoves you the way it was travelling, even if it
+          // caught you from your front
+          this.landHit(p.owner, victim, p.move, Math.sign(p.vx));
           p.gfx.destroy();
           p.dead = true;
           break;

@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import BootScene from './scenes/BootScene.js';
 import BattleScene from './scenes/BattleScene.js';
 import TitleScene from './scenes/TitleScene.js';
+import PlayerJoinScene from './scenes/PlayerJoinScene.js';
 import CharacterSelectScene from './scenes/CharacterSelectScene.js';
 import StageSelectScene from './scenes/StageSelectScene.js';
 import ResultsScene from './scenes/ResultsScene.js';
@@ -27,7 +28,7 @@ const config = {
       debug: false,
     },
   },
-  scene: [BootScene, TitleScene, CharacterSelectScene, StageSelectScene, BattleScene, ResultsScene, PauseMenuScene],
+  scene: [BootScene, TitleScene, PlayerJoinScene, CharacterSelectScene, StageSelectScene, BattleScene, ResultsScene, PauseMenuScene],
 };
 
 const game = new Phaser.Game(config);

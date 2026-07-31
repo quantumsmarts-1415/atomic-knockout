@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Controller — Periodic Table Game</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #0d1220; color: #eaf4ff;
+    font-family: Arial, sans-serif;
+    overscroll-behavior: none;
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
+  }
+  #join {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; gap: 16px; padding: 20px; box-sizing: border-box; text-align: center;
+  }
+  #join h2 { margin: 0; }
+  #join input {
+    font-size: 20px; padding: 10px 14px; border-radius: 8px; border: none;
+    width: 220px; text-align: center;
+  }
+  #join button {
+    font-size: 22px; padding: 14px 28px; border-radius: 12px; border: none;
+    background: #53e0a8; color: #0d2a1f; font-weight: bold;
+  }
+  #status { color: #9fc4e8; font-size: 16px; min-height: 22px; }
+
+  #controls { display: none; height: 100%; flex-direction: column; box-sizing: border-box; }
+  #controls.active { display: flex; }
+  #label {
+    text-align: center; padding: 12px; font-size: 20px; color: #ffd166; font-weight: bold;
+  }
+  #pad { flex: 1; display: flex; }
+  .side {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 12px;
+  }
+  .row { display: flex; gap: 14px; }
+  .btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 74px; height: 74px;
+    background: #1c2b4a; border: 3px solid #4a9fff; border-radius: 16px;
+    font-size: 26px; font-weight: bold; color: #eaf4ff;
+  }
+  .btn.pressed { background: #4a9fff; color: #0d1220; }
+  #confirm {
+    width: 130px; height: 130px; border-radius: 50%;
+    background: #53e0a8; border-color: #2a8f68; color: #0d2a1f; font-size: 20px;
+  }
+  #confirm.pressed { background: #2a8f68; color: #eaf4ff; }
+  #back {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: #ff5f4a; border-color: #c9402c; color: #3a0f08; font-size: 16px;
+  }
+  #back.pressed { background: #c9402c; color: #eaf4ff; }
+</style>
+</head>
+<body>
+  <div id="join">
+    <h2>Join the fight</h2>
+    <div id="status">Enter your name and join over the same WiFi as the game.</div>
+    <input id="name" maxlength="16" placeholder="Your name" />
+    <button id="joinBtn">JOIN GAME</button>
+  </div>
+
+  <div id="controls">
+    <div id="label"></div>
+    <div id="pad">
+      <div class="side" id="dpad">
+        <div class="btn" data-btn="up">&#9650;</div>
+        <div class="row">
+          <div class="btn" data-btn="left">&#9664;</div>
+          <div class="btn" data-btn="right">&#9654;</div>
+        </div>
+        <div class="btn" data-btn="down">&#9660;</div>
+      </div>
+      <div class="side" id="actions">
+        <div class="btn" id="back" data-btn="back">SPECIAL</div>
+        <div class="btn" id="confirm" data-btn="confirm">ATTACK</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const joinEl = document.getElementById('join');
+      const controlsEl = document.getElementById('controls');
+      const statusEl = document.getElementById('status');
+      const labelEl = document.getElementById('label');
+      const nameInput = document.getElementById('name');
+      const joinBtn = document.getElementById('joinBtn');
+
+      let ws = null;
+      const state = { left: false, right: false, up: false, down: false, confirm: false, back: false };
+
+      function send() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(Object.assign({ type: 'input' }, state)));
+        }
+      }
+
+      function bindButton(el) {
+        const key = el.dataset.btn;
+        const press = (e) => { e.preventDefault(); state[key] = true; el.classList.add('pressed'); send(); };
+        const release = (e) => { e.preventDefault(); state[key] = false; el.classList.remove('pressed'); send(); };
+        el.addEventListener('pointerdown', press);
+        el.addEventListener('pointerup', release);
+        el.addEventListener('pointercancel', release);
+        el.addEventListener('pointerleave', release);
+      }
+      document.querySelectorAll('.btn').forEach(bindButton);
+
+      function connect() {
+        statusEl.textContent = 'Connecting…';
+        const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+        const name = encodeURIComponent(nameInput.value.trim().slice(0, 16));
+        ws = new WebSocket(`${proto}://${location.host}/ws?role=controller&name=${name}`);
+
+        ws.onopen = () => { statusEl.textContent = 'Connected — waiting for the game…'; };
+
+        ws.onmessage = (ev) => {
+          const msg = JSON.parse(ev.data);
+          if (msg.type === 'assigned') {
+            joinEl.style.display = 'none';
+            controlsEl.classList.add('active');
+            labelEl.textContent = `You are ${msg.label}`;
+          } else if (msg.type === 'full') {
+            statusEl.textContent = 'Lobby is full (6 players max). Try again later.';
+          }
+        };
+
+        ws.onclose = () => {
+          const wasPlaying = controlsEl.classList.contains('active');
+          controlsEl.classList.remove('active');
+          joinEl.style.display = 'flex';
+          statusEl.textContent = wasPlaying
+            ? 'Disconnected — tap JOIN GAME to reconnect.'
+            : 'Could not connect. Tap JOIN GAME to retry.';
+        };
+      }
+
+      joinBtn.addEventListener('click', connect);
+    })();
+  </script>
+</body>
+</html>

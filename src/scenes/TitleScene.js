@@ -34,7 +34,7 @@ export default class TitleScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.buttons = [
-      { label: 'Play', action: () => this.scene.start('CharacterSelect') },
+      { label: 'Play', action: () => this.scene.start('PlayerJoin') },
       { label: 'Campaign  (coming soon)', action: null },
       { label: 'Settings  (coming soon)', action: null },
       { label: 'Credits', action: () => this.showCredits() },
@@ -64,7 +64,7 @@ export default class TitleScene extends Phaser.Scene {
     kb.on('keydown-F', go);
     kb.on('keydown-SPACE', go);
 
-    this.add.text(W / 2, H - 28, 'P1: WASD + F/G     P2: Arrows + K/L     Enter to select', {
+    this.add.text(W / 2, H - 28, 'P1: WASD + F/G     P2: Arrows + K/L     up to 4 more join by phone     Enter to select', {
       fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#7f95b5',
     }).setOrigin(0.5);
   }

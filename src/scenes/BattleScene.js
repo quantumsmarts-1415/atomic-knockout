@@ -3,6 +3,7 @@ import Fighter from '../engine/Fighter.js';
 import { CHARACTERS } from '../data/characters.js';
 import { play as sfx } from '../engine/sfx.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
+import { phoneNet } from '../net/PhoneNet.js';
 
 const GRAVITY = 1500;
 const BLAST_MARGIN = 140; // how far past the screen edge you must fly to die
@@ -120,6 +121,12 @@ export default class BattleScene extends Phaser.Scene {
     this.fighters = this.setup.players.map((p, i) => {
       const def = CHARACTERS[p.charId];
       const f = new Fighter(this, spawnXs[i % spawnXs.length], 480, def, p.palette ?? 0, i);
+      // controlSlot: 0/1 = keyboard P1/P2, 2-5 = a phone's PhoneNet slot.
+      // Carried from CharacterSelect rather than reusing the array index `i`,
+      // since a dropped phone can leave slots non-contiguous (e.g. only P4
+      // still connected while P3 left) and input must still reach the right
+      // fighter.
+      f.controlSlot = p.slot ?? i;
       f.stocks = this.setup.stocks ?? 3;
       f.facing = i % 2 === 0 ? 1 : -1;
       return f;
@@ -157,23 +164,29 @@ export default class BattleScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------- HUD
   buildHud() {
+    const n = this.fighters.length;
+    // 2 players keeps the original fixed 240px-from-edge layout; 3+ spread
+    // evenly across a narrower band and shrink so panels don't overlap.
+    const margin = n <= 2 ? 240 : 120;
+    const panelW = n <= 2 ? 260 : Math.max(150, (W - margin * 2) / (n - 1) - 20);
+    const scale = panelW / 260;
     this.hud = this.fighters.map((f, i) => {
-      const x = i === 0 ? 240 : W - 240;
+      const x = n === 1 ? W / 2 : margin + (i * (W - margin * 2)) / (n - 1);
       const pal = f.charDef.palettes[f.paletteIndex];
       const panel = this.add.graphics();
       panel.fillStyle(0x0a0f1c, 0.55);
-      panel.fillRoundedRect(x - 130, H - 96, 260, 78, 16);
+      panel.fillRoundedRect(x - panelW / 2, H - 96, panelW, 78, 16);
       panel.lineStyle(3, pal.body, 1);
-      panel.strokeRoundedRect(x - 130, H - 96, 260, 78, 16);
+      panel.strokeRoundedRect(x - panelW / 2, H - 96, panelW, 78, 16);
 
-      const name = this.add.text(x - 112, H - 88, `${f.charDef.name} · ${f.charDef.symbol}`, {
-        fontFamily: 'Arial Black, sans-serif', fontSize: '16px', color: '#cfe4ff',
+      const name = this.add.text(x - panelW / 2 + 18, H - 88, `${f.charDef.name} · ${f.charDef.symbol}`, {
+        fontFamily: 'Arial Black, sans-serif', fontSize: `${Math.round(16 * scale)}px`, color: '#cfe4ff',
       });
-      const percent = this.add.text(x + 60, H - 82, '0%', {
-        fontFamily: 'Arial Black, sans-serif', fontSize: '30px', color: '#ffffff',
+      const percent = this.add.text(x + panelW / 2 - 70 * scale, H - 82, '0%', {
+        fontFamily: 'Arial Black, sans-serif', fontSize: `${Math.round(30 * scale)}px`, color: '#ffffff',
       }).setOrigin(0.5, 0);
-      const stocks = this.add.text(x - 112, H - 52, '', {
-        fontFamily: 'Arial, sans-serif', fontSize: '20px', color: '#ffd166',
+      const stocks = this.add.text(x - panelW / 2 + 18, H - 52, '', {
+        fontFamily: 'Arial, sans-serif', fontSize: `${Math.round(20 * scale)}px`, color: '#ffd166',
       });
       return { percent, stocks, name };
     });
@@ -251,6 +264,7 @@ export default class BattleScene extends Phaser.Scene {
   // moves like H-Burst, which launch away from the blast centre instead.
   landHit(attacker, victim, move, launchDir) {
     const dmg = victim.takeHit(attacker, move, this.time.now, launchDir);
+    victim.lastHitBy = attacker;
     attacker.damageDealt += dmg;
     sfx('hit');
     this.hitSpark(victim.x, victim.y - victim.bodyH * 0.6);
@@ -295,15 +309,26 @@ export default class BattleScene extends Phaser.Scene {
   update(time, delta) {
     if (this.matchOver) return;
 
-    // feed keyboard input into fighters
-    this.fighters.forEach((f, i) => {
-      const map = this.keymaps[i];
-      if (!map) return;
-      f.input.left = map.left.isDown;
-      f.input.right = map.right.isDown;
-      f.input.jump = map.jump.isDown;
-      f.input.attack = map.attack.isDown;
-      f.input.special = map.special.isDown;
+    // feed input into fighters — slots 0/1 read the keyboard, 2-5 read
+    // whatever their phone last sent (or all-false if it's disconnected, so
+    // a dropped phone just leaves its fighter standing idle instead of
+    // crashing the match).
+    this.fighters.forEach((f) => {
+      const map = this.keymaps[f.controlSlot];
+      if (map) {
+        f.input.left = map.left.isDown;
+        f.input.right = map.right.isDown;
+        f.input.jump = map.jump.isDown;
+        f.input.attack = map.attack.isDown;
+        f.input.special = map.special.isDown;
+      } else {
+        const net = phoneNet.getInput(f.controlSlot);
+        f.input.left = net.left;
+        f.input.right = net.right;
+        f.input.jump = net.up;
+        f.input.attack = net.confirm;
+        f.input.special = net.back;
+      }
     });
 
     for (const f of this.fighters) f.update(time, delta);
@@ -365,7 +390,9 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   lastAttackerOf(victim) {
-    // simple attribution: the other fighter (fine for 1v1; revisit for 3+)
+    // Whoever last actually hit them, tracked in landHit() — falls back to
+    // "the other fighter" only for an un-hit blast-zone wander in 1v1.
+    if (victim.lastHitBy && victim.lastHitBy !== victim && victim.lastHitBy.alive) return victim.lastHitBy;
     return this.fighters.find((f) => f !== victim && f.alive) ?? null;
   }
 

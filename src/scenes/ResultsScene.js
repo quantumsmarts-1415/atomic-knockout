@@ -43,19 +43,26 @@ export default class ResultsScene extends Phaser.Scene {
       }).setOrigin(0.5, 0);
     }
 
-    // stat panels
+    // stat panels — evenly spread across the usable width; shrinks to fit
+    // however many players were actually in the match (up to 6).
+    const n = this.results.length;
+    const areaW = W - 80;
+    const panelW = Math.min(300, areaW / n - 16);
+    const spacing = areaW / n;
+    const nameScale = Math.min(1, panelW / 300);
     this.results.forEach((r, i) => {
-      const x = i === 0 ? W / 2 - 300 : W / 2 + 300;
+      const x = 40 + spacing * (i + 0.5);
       const panel = this.add.graphics();
       panel.fillStyle(0x0a0f1c, 0.6);
-      panel.fillRoundedRect(x - 150, 470, 300, 130, 16);
+      panel.fillRoundedRect(x - panelW / 2, 470, panelW, 130, 16);
       panel.lineStyle(3, r.won ? 0xffd166 : 0x44587a, 1);
-      panel.strokeRoundedRect(x - 150, 470, 300, 130, 16);
+      panel.strokeRoundedRect(x - panelW / 2, 470, panelW, 130, 16);
       this.add.text(x, 488, `${r.name}${r.won ? '  ★' : ''}`, {
-        fontFamily: 'Arial Black, sans-serif', fontSize: '24px', color: '#ffffff',
+        fontFamily: 'Arial Black, sans-serif', fontSize: `${Math.round(24 * nameScale)}px`, color: '#ffffff',
       }).setOrigin(0.5, 0);
       this.add.text(x, 526, `KOs: ${r.kos}    Damage dealt: ${r.damageDealt}%\nStocks left: ${Math.max(0, r.stocks)}`, {
-        fontFamily: 'Arial, sans-serif', fontSize: '18px', color: '#9fc4e8', align: 'center',
+        fontFamily: 'Arial, sans-serif', fontSize: `${Math.round(18 * nameScale)}px`, color: '#9fc4e8', align: 'center',
+        wordWrap: { width: panelW - 16 },
       }).setOrigin(0.5, 0);
     });
 

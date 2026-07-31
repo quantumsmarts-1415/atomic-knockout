@@ -33,4 +33,14 @@ const config = {
 
 const game = new Phaser.Game(config);
 window.game = game; // handy for debugging + automated playtesting
+
+// Defensive re-fit: Scale.FIT computes its initial size synchronously while
+// the game boots, which can happen a frame before the browser has finished
+// laying out #game's height:100% chain (most likely on a fresh full page
+// load rather than a warm reload). If that first measurement comes back
+// wrong, nothing else naturally corrects it since the window itself never
+// resizes afterward. Forcing one more measurement once the page is fully
+// loaded is a standard, safe fix for a canvas that boots at the wrong size.
+window.addEventListener('load', () => game.scale.refresh());
+
 export default game;

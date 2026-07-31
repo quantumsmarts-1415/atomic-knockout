@@ -16,12 +16,16 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      width: 100%;
       height: 100%;
     }
-    canvas {
-      max-width: 100vw;
-      max-height: 100vh;
-    }
+    /* No max-width/max-height rule here on purpose: Phaser's Scale.FIT
+       already sets the canvas's own inline width/height to fit #game while
+       keeping the 16:9 aspect ratio. A CSS max-width/max-height cap on top
+       of that computes independently per axis (no aspect-ratio awareness),
+       which can disagree with Phaser's own sizing on some window shapes and
+       show up as the canvas looking stretched/zoomed with part of it
+       cropped by the viewport edge. Let Phaser own the sizing. */
   </style>
 </head>
 <body>

@@ -568,12 +568,14 @@ export const CHARACTERS = {
     // bord-cut.png used as style reference only. Carbon-fiber armor +
     // diamond-crystal fist + smoky dark aura, themed on diamond hardness.
     // Native render leans/lunges toward the viewer's LEFT (crystal fist
-    // and front knee both lead left) -- recorded facing -1, verify on
-    // screen and flip if he reads backwards.
+    // and front knee both lead left) -- initially recorded facing -1, but
+    // Benjamin's playtest (2026-07-31, session 8) confirmed he reads
+    // backwards in-game (attacks land correctly since those are driven by
+    // Fighter.facing, independent of the sprite) -- flipped to 1.
     art: {
       key: 'char-carter',
       file: 'art-src/carter-cut.png',
-      facing: -1,
+      facing: 1,
       height: 150,
       bodyW: 54,
       bodyH: 130,

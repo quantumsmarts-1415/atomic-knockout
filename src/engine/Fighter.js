@@ -87,7 +87,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (inp.left) vx -= stats.speed;
       if (inp.right) vx += stats.speed;
       if (this.state === 'attack' && onGround) vx *= 0.25; // plant feet on ground attacks
-      this.body.setVelocityX(vx);
+      // Only stomp horizontal velocity when grounded (instant arcade
+      // stop/go) or when a direction is actively held (air control).
+      // Otherwise leave existing velocity alone -- without this, a
+      // knockback launch's horizontal speed died the instant hitstun
+      // ended and no direction was held, so the fighter hit an invisible
+      // "wall" mid-arc and just dropped straight down for the rest of it.
+      if (onGround || vx !== 0) this.body.setVelocityX(vx);
       // No turning mid-swing: you commit to the direction you started the
       // attack in. Otherwise the hitbox teleports to the other side of the
       // body part-way through the animation.

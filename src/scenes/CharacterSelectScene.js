@@ -9,9 +9,9 @@ import { play as sfx } from '../engine/sfx.js';
 const SLOTS = [
   { n: 1, sym: 'H', name: 'Hydra', charId: 'hydra' },
   { n: 2, sym: 'He', name: 'Helen', charId: 'helen' },
-  { n: 3, sym: 'Li', name: 'Lillie' }, { n: 4, sym: 'Be', name: 'Ben' },
-  { n: 5, sym: 'B', name: 'Bord' }, { n: 6, sym: 'C', name: 'Carter' },
-  { n: 7, sym: 'N', name: 'Nitra' }, { n: 8, sym: 'O', name: 'Oxana' },
+  { n: 3, sym: 'Li', name: 'Lillie', charId: 'lillie' }, { n: 4, sym: 'Be', name: 'Ben', charId: 'ben' },
+  { n: 5, sym: 'B', name: 'Bord', charId: 'bord' }, { n: 6, sym: 'C', name: 'Carter', charId: 'carter' },
+  { n: 7, sym: 'N', name: 'Nitra', charId: 'nitra' }, { n: 8, sym: 'O', name: 'Oxana' },
   { n: 9, sym: 'F', name: 'Flora' }, { n: 10, sym: 'Ne', name: 'Neo' },
   { n: 11, sym: 'Na', name: 'Natalie' }, { n: 12, sym: 'Mg', name: 'Maggie' },
   { n: 13, sym: 'Al', name: 'Allen' }, { n: 14, sym: 'Si', name: 'Silas' },

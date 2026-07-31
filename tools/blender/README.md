@@ -11,12 +11,21 @@ Built and tested against **Blender 5.2.0 LTS** at
 
 | File | What it is |
 | --- | --- |
-| `hydra_common.py` | Reusable helpers: cel-shading materials, mesh builders (loft / taper / ball / box / spike), geometric skinning, palette |
+| `hydra_common.py` | Reusable helpers: cel-shading materials, mesh builders (loft / taper / ball / box / spike / **hand** / **eye**), geometric skinning, Hydra's default palette |
 | `build_hydra.py` | Hydra's actual geometry, skeleton and animation clips. Writes `hydra.blend` |
 | `render_hydra.py` | Renders previews and sprite sheets from `hydra.blend` |
 | `hydra.blend` | The saved model — open this to inspect or hand-tweak |
+| `build_helen.py` | Helen's geometry, skeleton and animation clips (own palette, passed into `build_materials()`). Writes `helen.blend` |
+| `render_helen.py` | Renders previews and sprite sheets from `helen.blend` |
+| `helen.blend` | The saved model |
 | `out/` | Rendered previews |
-| `out/sheets/` | Game-ready sprite sheets + `hydra_sheets.json` manifest |
+| `out/sheets/` | Game-ready sprite sheets + one `<name>_sheets.json` manifest per character |
+
+`hand()` and `eye()` in `hydra_common.py` build a real palm-and-fingers hand
+and a layered sclera/iris/pupil/highlight eye — added for Helen because a
+bare sphere fist and a flat-colored eye ball both read as a claymation
+smudge at sprite scale. Both are character-agnostic; reuse them rather than
+going back to `ball()` for a fist or an eye.
 
 ## Commands
 
@@ -96,9 +105,19 @@ back.
 
 ## Adding another character
 
-Copy `build_hydra.py`, keep `hydra_common.py` as-is, and change: the palette,
-the ring tables (torso / head / boots), the hair or headgear, the joint
-positions, and the `STANCE` block. The bone layout, skinning, animation
-system and renderer are all character-agnostic — the clip definitions in
-`CLIPS` can usually be reused verbatim and only need retiming for a
-heavy character.
+Copy `build_hydra.py` (Helen's `build_helen.py` is the second reference
+example), keep `hydra_common.py` as-is, and change: the palette (define your
+own dict and pass it to `build_materials(my_palette, my_emissive,
+prefix="name")` — don't edit the module-level `PALETTE`/`EMISSIVE`, those are
+Hydra's), the ring tables (torso / head / boots), the hair or headgear, the
+joint positions, and the `STANCE` block. The bone layout, skinning, animation
+system and renderer are all character-agnostic — the pose/animation
+boilerplate (`blend`, `d`, `apply_pose`, `key_pose`, `build_actions`,
+`ABSOLUTE_BONES`, `REST_WORLD`) gets copied verbatim into the new file since
+it derives everything from that file's own `BONES` table; only the `CLIPS`
+values themselves need retiming or re-posing for a character with a
+different weight or personality (compare Hydra's loaded fighter crouch to
+Helen's floaty hover in their respective `STANCE` blocks).
+
+Copy `render_hydra.py` too and retarget its hardcoded rig name
+(`"HydraRig"`) and action-name prefix (`"hydra_"`) to match.

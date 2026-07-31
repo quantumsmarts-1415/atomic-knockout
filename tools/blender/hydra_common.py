@@ -118,14 +118,21 @@ def _emissive_material(name, color, strength):
     return mat
 
 
-def build_materials():
+def build_materials(palette=None, emissive=None, prefix="hydra"):
     """Create every material twice: normal, and a '.far' twin that is darker.
 
     Side-view sprites go mushy when the far arm and leg are the same value as
     the near ones, so the character's LEFT-side parts (+Y, away from camera)
     get the darkened twin. This is the 3D equivalent of the standard 2D
     side-scroller trick.
+
+    palette/emissive default to this module's Hydra tables so existing calls
+    are unaffected; pass a character's own dicts to reuse this function for a
+    different palette (prefix keeps Blender's material list readable when
+    more than one character's .blend is open at once).
     """
+    palette = PALETTE if palette is None else palette
+    emissive = EMISSIVE if emissive is None else emissive
     MAT.clear()
     MAT_LIST.clear()
 
@@ -133,15 +140,15 @@ def build_materials():
         MAT[name] = len(MAT_LIST)
         MAT_LIST.append(mat)
 
-    for name, base in PALETTE.items():
-        add(name, _cel_material("hydra_" + name, base))
+    for name, base in palette.items():
+        add(name, _cel_material(prefix + "_" + name, base))
         far = tuple(c * 0.70 for c in base)
-        add(name + ".far", _cel_material("hydra_" + name + "_far", far))
+        add(name + ".far", _cel_material(prefix + "_" + name + "_far", far))
 
-    for name, (color, strength) in EMISSIVE.items():
-        add(name, _emissive_material("hydra_" + name, color, strength))
+    for name, (color, strength) in emissive.items():
+        add(name, _emissive_material(prefix + "_" + name, color, strength))
         add(name + ".far", _emissive_material(
-            "hydra_" + name + "_far",
+            prefix + "_" + name + "_far",
             tuple(c * 0.7 for c in color), strength * 0.6))
 
     return MAT_LIST
@@ -302,6 +309,89 @@ def box(name, center, size, mat, rot=(0, 0, 0), smooth=False):
     for f in bm.faces:
         f.material_index = mat
     return _finish(bm, name, smooth)
+
+
+def hand(name, center, mat, size=0.072, curl=0.65, rot=(0, 0, 0),
+         thumb_side=1.0):
+    """A stylized hand: a palm block + four two-segment fingers + a thumb.
+
+    A bare sphere reads as a claymation ball at sprite scale -- this gives
+    the silhouette actual fingers instead. Local +X (before `rot`) is the
+    direction the fingers point. `curl` bends the fingertip segment toward
+    local -Z: 0.0 is a flat open hand, ~1.0 folds it into a fist. Put the
+    thumb on the character's LEADING side (thumb_side = NEAR or FAR) per the
+    facing rule -- it is the forward-cue that keeps the hand from reading
+    backwards.
+    """
+    from mathutils import Euler
+    bm = bmesh.new()
+
+    def add_block(lcenter, lsize, extra_rot=(0, 0, 0)):
+        rr = (rot[0] + extra_rot[0], rot[1] + extra_rot[1],
+              rot[2] + extra_rot[2])
+        m = Euler((math.radians(rr[0]), math.radians(rr[1]),
+                   math.radians(rr[2])), "XYZ").to_matrix()
+        res = bmesh.ops.create_cube(bm, size=1.0)
+        for v in res["verts"]:
+            v.co.x *= lsize[0]
+            v.co.y *= lsize[1]
+            v.co.z *= lsize[2]
+            v.co = m @ v.co
+            v.co.x += center[0] + lcenter[0]
+            v.co.y += center[1] + lcenter[1]
+            v.co.z += center[2] + lcenter[2]
+
+    # palm: a flattened paddle, fingers attach along its forward (+X) edge
+    add_block((size * 0.30, 0.0, 0.0), (size * 0.58, size * 0.86, size * 0.40))
+
+    n = 4
+    spread = size * 0.70
+    bend = curl * 78.0
+    for i in range(n):
+        fy = (i - (n - 1) / 2.0) * (spread / (n - 1))
+        knuckle_x = size * 0.56
+        seg = size * 0.30
+        # first knuckle segment stays straight out from the palm
+        add_block((knuckle_x + seg * 0.5, fy, 0.0),
+                  (seg, size * 0.135, size * 0.155))
+        # second segment folds toward -Z by `curl`, pivoting at the knuckle
+        tip_x = knuckle_x + seg + seg * 0.45 * math.cos(math.radians(bend))
+        tip_z = -seg * 0.45 * math.sin(math.radians(bend))
+        add_block((tip_x, fy, tip_z), (seg * 0.85, size * 0.125, size * 0.145),
+                  extra_rot=(0, bend, 0))
+
+    # thumb: shorter, thicker, angled out to the leading side and forward
+    add_block((size * 0.26, thumb_side * size * 0.44, -size * 0.04),
+              (size * 0.28, size * 0.165, size * 0.19),
+              extra_rot=(0, -24.0 * thumb_side, 0))
+
+    for f in bm.faces:
+        f.material_index = mat
+    return _finish(bm, name, smooth=True)
+
+
+def eye(name, center, mats, y_sign=-1.0, size=0.052, rot=(0, 0, 0)):
+    """A layered anime eye: sclera + iris + pupil + a bright highlight dot.
+
+    A single flat-colored ball reads as a featureless smudge at sprite
+    scale (Hydra's original problem) -- stacking four small layers along the
+    eye's own forward axis gives it a real pupil and a catchlight instead.
+    mats = {'sclera':, 'iris':, 'pupil':, 'highlight':} material slot
+    indices. y_sign = NEAR (-1) or FAR (+1), used only to mirror the
+    highlight's small offset toward the character's front.
+    """
+    cx, cy, cz = center
+    objs = [ball(name + "_sclera", center, size, mats["sclera"],
+                scale=(0.85, 0.62, 0.50), rot=rot)]
+    objs.append(ball(name + "_iris", (cx + size * 0.55, cy, cz), size * 0.60,
+                     mats["iris"], scale=(0.50, 0.90, 0.90), rot=rot))
+    objs.append(ball(name + "_pupil", (cx + size * 0.72, cy, cz), size * 0.28,
+                     mats["pupil"], scale=(0.55, 0.85, 0.85), rot=rot))
+    objs.append(ball(name + "_hi",
+                     (cx + size * 0.80, cy - y_sign * size * 0.16,
+                      cz + size * 0.24),
+                     size * 0.14, mats["highlight"]))
+    return objs
 
 
 def spike(name, base, direction, length, base_r, mat_lo, mat_hi,

@@ -153,6 +153,10 @@ export class Rig extends Phaser.GameObjects.Container {
       // origin y = the ground line inside the frame, so container y = feet
       this.sprite.setOrigin(0.5, art.sheets.footY);
       this.sprite.setScale((art.height ?? 160) / art.sheets.visibleH);
+      // one-time correction for the source render's native orientation
+      // (same as sprite mode below) -- separate from this.facing, which
+      // tracks which way the fighter is currently moving in-game.
+      if ((art.facing ?? 1) === -1) this.sprite.setFlipX(true);
       this.applyPaletteTint(scene, charDef, paletteIndex);
       this.add(this.sprite);
       this.currentClip = null;

@@ -1,0 +1,150 @@
+// Dev tool: edge-connected flood-fill background removal for Gemini concept-art renders.
+// Usage: node tools/remove-bg.js <input.png> <output-cut.png> [threshold]
+//
+// Samples the background color from the border pixels (the renders use a
+// plain flat-color backdrop), then erases every pixel that is (a) close
+// enough to that sampled color AND (b) reachable from the border through
+// other near-background pixels. Comparing every candidate to the fixed
+// sampled color (not neighbor-to-neighbor) avoids "color drift" leaking the
+// fill into the character through anti-aliased edges. Connectivity-gating
+// still protects an enclosed near-background pocket inside the silhouette
+// (e.g. between an arm and the torso) from being erased by a first pass —
+// run with a higher threshold a second time, or by hand, for those.
+import { PNG } from 'pngjs';
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const [, , inPath, outPath, thresholdArg] = process.argv;
+if (!inPath || !outPath) {
+  console.error('Usage: node remove-bg.js <input.png> <output.png> [threshold]');
+  process.exit(1);
+}
+const THRESH = thresholdArg ? Number(thresholdArg) : 40;
+
+const png = PNG.sync.read(readFileSync(inPath));
+const { width: w, height: h, data } = png;
+const idx = (x, y) => (w * y + x) << 2;
+const colorAt = (x, y) => {
+  const i = idx(x, y);
+  return [data[i], data[i + 1], data[i + 2]];
+};
+const dist = (a, b) => {
+  const dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2];
+  return Math.sqrt(dr * dr + dg * dg + db * db);
+};
+
+// Sample background color(s) from the border pixels. Gemini sometimes bakes
+// in a fake checkerboard instead of real transparency (two alternating flat
+// colors), so cluster into up to 2 representative colors via k-means rather
+// than assuming one flat color — a pixel counts as "background" if it's
+// close to EITHER centroid. For a genuinely flat backdrop the two centroids
+// just converge to the same color, so this subsumes the flat case too.
+const borderSamples = [];
+for (let x = 0; x < w; x++) { borderSamples.push(colorAt(x, 0)); borderSamples.push(colorAt(x, h - 1)); }
+for (let y = 0; y < h; y++) { borderSamples.push(colorAt(0, y)); borderSamples.push(colorAt(w - 1, y)); }
+
+function kmeans2(samples) {
+  let c0 = samples[0], c1 = samples[samples.length - 1];
+  for (let iter = 0; iter < 12; iter++) {
+    const g0 = [], g1 = [];
+    for (const s of samples) (dist(s, c0) <= dist(s, c1) ? g0 : g1).push(s);
+    const avg = (arr) => arr.length
+      ? [
+          Math.round(arr.reduce((a, c) => a + c[0], 0) / arr.length),
+          Math.round(arr.reduce((a, c) => a + c[1], 0) / arr.length),
+          Math.round(arr.reduce((a, c) => a + c[2], 0) / arr.length),
+        ]
+      : null;
+    const n0 = avg(g0), n1 = avg(g1);
+    if (n0) c0 = n0;
+    if (n1) c1 = n1;
+  }
+  return [c0, c1];
+}
+const bgCentroids = kmeans2(borderSamples);
+console.log(`Sampled background colors: rgb(${bgCentroids[0].join(',')}) / rgb(${bgCentroids[1].join(',')})`);
+const isBgColor = (c) => dist(c, bgCentroids[0]) < THRESH || dist(c, bgCentroids[1]) < THRESH;
+
+const visited = new Uint8Array(w * h);
+const erase = new Uint8Array(w * h);
+const stack = [];
+const pushIfBg = (x, y) => {
+  if (x < 0 || y < 0 || x >= w || y >= h) return;
+  const p = y * w + x;
+  if (visited[p]) return;
+  if (isBgColor(colorAt(x, y))) stack.push([x, y]);
+};
+for (let x = 0; x < w; x++) { pushIfBg(x, 0); pushIfBg(x, h - 1); }
+for (let y = 0; y < h; y++) { pushIfBg(0, y); pushIfBg(w - 1, y); }
+
+while (stack.length) {
+  const [x, y] = stack.pop();
+  const p = y * w + x;
+  if (visited[p]) continue;
+  visited[p] = 1;
+  erase[p] = 1;
+  pushIfBg(x + 1, y); pushIfBg(x - 1, y); pushIfBg(x, y + 1); pushIfBg(x, y - 1);
+}
+
+for (let p = 0; p < w * h; p++) {
+  if (erase[p]) data[(p << 2) + 3] = 0;
+}
+
+// Second pass: erase enclosed background-colored pockets (e.g. a gap
+// between an arm and the torso) that the border-connected pass above
+// intentionally leaves alone. Find connected components of remaining
+// opaque near-bg-color pixels; erase a component if it's small enough
+// to plausibly be a gap rather than actual clothing/shading, or if it
+// directly touches an already-erased pixel (meaning it's a sliver right
+// at the transparent boundary, not solid interior).
+const compVisited = new Uint8Array(w * h);
+for (let sy = 0; sy < h; sy++) {
+  for (let sx = 0; sx < w; sx++) {
+    const sp = sy * w + sx;
+    if (compVisited[sp] || erase[sp]) continue;
+    if (!isBgColor(colorAt(sx, sy))) { compVisited[sp] = 1; continue; }
+    // Flood the component of near-bg-color opaque pixels.
+    const comp = [sp];
+    const cstack = [[sx, sy]];
+    compVisited[sp] = 1;
+    let touchesErased = false;
+    while (cstack.length) {
+      const [x, y] = cstack.pop();
+      const neighbors = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
+      for (const [nx, ny] of neighbors) {
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        const np = ny * w + nx;
+        if (erase[np]) { touchesErased = true; continue; }
+        if (compVisited[np]) continue;
+        if (!isBgColor(colorAt(nx, ny))) continue;
+        compVisited[np] = 1;
+        comp.push(np);
+        cstack.push([nx, ny]);
+      }
+    }
+    // Any component of near-bg-color pixels not reachable from the border
+    // (pass 1 already erased those) is by definition an enclosed pocket —
+    // erase it too, regardless of size.
+    for (const p of comp) erase[p] = 1;
+    void touchesErased;
+  }
+}
+for (let p = 0; p < w * h; p++) {
+  if (erase[p]) data[(p << 2) + 3] = 0;
+}
+
+// Soft feather at the erase/keep boundary.
+const alphaSnapshot = new Uint8ClampedArray(w * h);
+for (let p = 0; p < w * h; p++) alphaSnapshot[p] = data[(p << 2) + 3];
+for (let y = 1; y < h - 1; y++) {
+  for (let x = 1; x < w - 1; x++) {
+    const p = y * w + x;
+    if (alphaSnapshot[p] === 0) continue;
+    const touchesErased =
+      alphaSnapshot[p - 1] === 0 || alphaSnapshot[p + 1] === 0 ||
+      alphaSnapshot[p - w] === 0 || alphaSnapshot[p + w] === 0;
+    if (touchesErased) data[idx(x, y) + 3] = Math.round(data[idx(x, y) + 3] * 0.55);
+  }
+}
+
+writeFileSync(outPath, PNG.sync.write(png));
+console.log(`Wrote ${outPath} (${w}x${h})`);

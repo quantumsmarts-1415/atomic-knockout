@@ -718,6 +718,92 @@ export const CHARACTERS = {
       },
     },
   },
+
+  oxana: {
+    id: 'oxana',
+    name: 'Oxana',
+    element: 'Oxygen',
+    symbol: 'O',
+    atomicNumber: 8,
+    tagline: 'Fast, sharp, and everywhere at once.',
+    teach: 'Oxygen makes up about 21% of the air we breathe and is the gas that makes fire possible -- nothing burns without it.',
+    // Session 11 (2026-08-01): Benjamin generated the idle video himself via
+    // Gemini's Videos tool after the automated Chrome pipeline kept losing
+    // track of the conversation. Same idle-only sheet treatment as the rest
+    // of the roster. Her pose is fairly frontal/dynamic (a mid-kick splash
+    // art) rather than a clean side profile -- facing is a best guess (1,
+    // right), same situation Lillie's render was in; verify on screen and
+    // flip if she reads backwards.
+    art: {
+      key: 'char-oxana',
+      file: 'art-src/oxana-cut.png',
+      facing: 1,
+      height: 155,
+      bodyW: 46,
+      bodyH: 130,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 686,
+        frameH: 717,
+        footY: 0.9744,
+        visibleH: 666,
+        clips: {
+          idle: { count: 13, fps: 3.6, loop: true },
+        },
+      },
+    },
+    stats: {
+      speed: 350,           // O2 gas -- fast, agile striker
+      jumpVelocity: 670,
+      airJumps: 2,          // wind/vortex theme -- agile in the air like Helen
+      weight: 0.75,
+      // real chemistry note: O2 (molar mass 32) is actually much heavier
+      // than the H2/He already in the roster (2 and 4), despite all three
+      // being gases -- so she's fast and light, but not floaty like Helen.
+      gravityScale: 0.95,
+    },
+    // oxygen is literally what makes fire burn -- weak heat defense fits
+    // both the theme and real chemistry; a gas has no inherent hardness ->
+    // weak-moderate kinetic; molecular oxygen doesn't conduct -> middling
+    // current defense. Overall a fast glass-cannon striker, not a tank.
+    defense: { heat: 2, current: 4, kinetic: 3 },
+    palettes: [
+      { name: 'Arctic',   skin: 0xe3eef5, body: 0xc7d3db, accent: 0x4ad6d0, eye: 0x1c8a86 },
+      { name: 'Violet',   skin: 0xe8e3f5, body: 0xb8b0c7, accent: 0x8a5fe0, eye: 0x4c2f9e },
+      { name: 'Crimson',  skin: 0xf5e3e6, body: 0xdbc7ca, accent: 0xd6303a, eye: 0x8a1c22 },
+      { name: 'Amber',    skin: 0xf5eee3, body: 0xdbd0c1, accent: 0xd6a02f, eye: 0x8a5f10 },
+    ],
+    body: {
+      headRadius: 20, torsoWidth: 36, torsoHeight: 42,
+      armLength: 27, armWidth: 10, legLength: 31, legWidth: 11, antenna: false,
+    },
+    moves: {
+      basic: {
+        name: 'Vortex Kick',
+        type: 'kinetic',
+        damage: 8,
+        baseKnockback: 150,
+        knockbackGrowth: 5.2,
+        rangeW: 64,
+        rangeH: 46,
+        duration: 200,   // fast, kick-based striker
+        cooldown: 100,
+      },
+      special: {
+        name: 'Oxidation Burst',
+        kind: 'burst', // radial blast, self-centered like H-Burst/Cryo Vortex
+        type: 'heat',
+        damage: 12,
+        baseKnockback: 235,
+        knockbackGrowth: 6.2,
+        radius: 88,
+        duration: 300,
+        cooldown: 380,
+        teach: 'Pure oxygen makes fires burn dramatically hotter and faster -- firefighters and hospitals handle oxygen tanks with extreme care for exactly this reason.',
+      },
+    },
+  },
 };
 
 export const ROSTER = Object.values(CHARACTERS);

@@ -76,7 +76,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Periodic Table Game running at http://localhost:${PORT}`);
+  console.log(`Atomic Knockout running at http://localhost:${PORT}`);
   console.log(`Phones on the same WiFi: http://${lanIp()}:${PORT}/controller`);
 });
 

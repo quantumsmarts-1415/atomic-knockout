@@ -1,7 +1,7 @@
-# Periodic Table Game
+# Atomic Knockout
 
 A Smash-style party brawler where every character is a periodic table element.
-Design doc lives in the Obsidian vault: `Projects/Periodic Table Game Build Instructions.md`.
+Design doc lives in the Obsidian vault: `Projects/Atomic Knockout Build Instructions.md`.
 
 ## Run it
 

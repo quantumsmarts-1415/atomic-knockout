@@ -25,7 +25,7 @@ export default class TitleScene extends Phaser.Scene {
     this.add.text(W / 2 - 54, 104, '119', { fontFamily: 'Arial, sans-serif', fontSize: '20px', color: '#14352a' });
     this.add.text(W / 2, 168, 'Pt', { fontFamily: 'Georgia, serif', fontSize: '74px', fontStyle: 'bold', color: '#0d2a1f' }).setOrigin(0.5);
 
-    this.add.text(W / 2, 286, 'PERIODIC TABLE GAME', {
+    this.add.text(W / 2, 286, 'ATOMIC KNOCKOUT', {
       fontFamily: 'Arial Black, sans-serif', fontSize: '58px', color: '#ffffff',
       stroke: '#1c2b4a', strokeThickness: 10,
     }).setOrigin(0.5);

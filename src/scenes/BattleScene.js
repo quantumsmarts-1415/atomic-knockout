@@ -4,6 +4,7 @@ import { CHARACTERS } from '../data/characters.js';
 import { play as sfx } from '../engine/sfx.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { phoneNet } from '../net/PhoneNet.js';
+import { computeBotInput } from '../engine/BotAI.js';
 
 const GRAVITY = 1500;
 const BLAST_MARGIN = 140; // how far past the screen edge you must fly to die
@@ -127,6 +128,7 @@ export default class BattleScene extends Phaser.Scene {
       // still connected while P3 left) and input must still reach the right
       // fighter.
       f.controlSlot = p.slot ?? i;
+      f.isBot = !!p.isBot;
       f.stocks = this.setup.stocks ?? 3;
       f.facing = i % 2 === 0 ? 1 : -1;
       return f;
@@ -179,7 +181,7 @@ export default class BattleScene extends Phaser.Scene {
       panel.lineStyle(3, pal.body, 1);
       panel.strokeRoundedRect(x - panelW / 2, H - 96, panelW, 78, 16);
 
-      const name = this.add.text(x - panelW / 2 + 18, H - 88, `${f.charDef.name} · ${f.charDef.symbol}`, {
+      const name = this.add.text(x - panelW / 2 + 18, H - 88, `${f.charDef.name} · ${f.charDef.symbol}${f.isBot ? ' (CPU)' : ''}`, {
         fontFamily: 'Arial Black, sans-serif', fontSize: `${Math.round(16 * scale)}px`, color: '#cfe4ff',
       });
       const percent = this.add.text(x + panelW / 2 - 70 * scale, H - 82, '0%', {
@@ -312,8 +314,18 @@ export default class BattleScene extends Phaser.Scene {
     // feed input into fighters — slots 0/1 read the keyboard, 2-5 read
     // whatever their phone last sent (or all-false if it's disconnected, so
     // a dropped phone just leaves its fighter standing idle instead of
-    // crashing the match).
+    // crashing the match), and bots run the basic CPU controller instead of
+    // any real input source.
     this.fighters.forEach((f) => {
+      if (f.isBot) {
+        const ai = computeBotInput(time, f, this.fighters, { minX: W / 2 - 400, maxX: W / 2 + 400 });
+        f.input.left = ai.left;
+        f.input.right = ai.right;
+        f.input.jump = ai.jump;
+        f.input.attack = ai.attack;
+        f.input.special = ai.special;
+        return;
+      }
       const map = this.keymaps[f.controlSlot];
       if (map) {
         f.input.left = map.left.isDown;

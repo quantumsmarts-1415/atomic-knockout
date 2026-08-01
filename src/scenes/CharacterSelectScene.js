@@ -4,6 +4,7 @@ import { Rig } from '../engine/Rig.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
+import { botSlots } from '../net/BotSlots.js';
 
 // The 24 launch slots (first 24 elements). Only entries with a charId are
 // playable today; the rest render as locked periodic-table tiles.
@@ -31,6 +32,8 @@ const GAP = 12;
 // phones, filled in from phoneNet — however many happen to be connected when
 // this scene starts (joining happens in the PlayerJoin lobby before this).
 const PLAYER_COLORS = [0xff5f4a, 0x4a9fff, 0x53e0a8, 0xffd166, 0xc98bff, 0xff8fc9];
+
+const PLAYABLE_SLOT_INDICES = SLOTS.map((s, i) => (s.charId ? i : null)).filter((i) => i !== null);
 
 // ---------------------------------------------------------------------------
 // CharacterSelectScene — every player (keyboard or phone) picks a character,
@@ -60,15 +63,24 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.tiles = SLOTS.map((slot, i) => this.drawTile(slot, i));
 
     // Player "slot" numbers: 0/1 are always the keyboard, 2-5 are whichever
-    // phones were connected when the lobby moved on. Array position doubles
-    // as each player's UI ordering (P1 leftmost preview, etc.).
-    this.playerSlots = [0, 1, ...phoneNet.connectedSlots].slice(0, 6);
+    // phones/bots were connected when the lobby moved on. Array position
+    // doubles as each player's UI ordering (P1 leftmost preview, etc.).
+    const seatSlots = new Set([...phoneNet.connectedSlots, ...botSlots.connectedSlots]);
+    this.playerSlots = [0, 1, ...[...seatSlots].sort((a, b) => a - b)].slice(0, 6);
     this.players = this.playerSlots.map((slot, i) => this.makePlayer(slot, i));
+
+    // Bots skip the whole picking flow -- they were already given a random
+    // character/palette and locked in makePlayer(); this just builds their
+    // preview now that the full player list (and layout it depends on) exists.
+    for (const p of this.players) {
+      if (p.isBot) this.buildPreview(p);
+    }
 
     this.hint = this.add.text(W / 2, H - 24, '', {
       fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#9fc4e8',
     }).setOrigin(0.5);
     this.refreshAll();
+    this.checkAllLocked();
   }
 
   drawBackground() {
@@ -122,6 +134,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
   // into BattleScene so input keeps routing to the right fighter.
   makePlayer(slot, index) {
     const isKeyboard = slot === 0 || slot === 1;
+    const isBot = !isKeyboard && botSlots.hasSlot(slot);
     const kb = this.input.keyboard;
     let keys = null;
     if (isKeyboard) {
@@ -136,13 +149,18 @@ export default class CharacterSelectScene extends Phaser.Scene {
     }
 
     const previewX = this.previewXFor(index, this.playerSlots?.length ?? 2);
+    const randomSlotIdx = PLAYABLE_SLOT_INDICES[Math.floor(Math.random() * PLAYABLE_SLOT_INDICES.length)];
+    const randomPalette = Math.floor(Math.random() * CHARACTERS[SLOTS[randomSlotIdx].charId].palettes.length);
     const p = {
-      slot, index, isKeyboard, keys,
+      slot, index, isKeyboard, isBot, keys,
       color: PLAYER_COLORS[index % PLAYER_COLORS.length],
-      label: `P${slot + 1}`,
-      cursor: Math.min(index, SLOTS.length - 1), // spreads each player onto a distinct playable slot to start
-      phase: 'picking', // picking | palette | locked
-      palette: index,
+      label: `P${slot + 1}${isBot ? ' (CPU)' : ''}`,
+      // Bots skip the picking UI entirely -- a random playable character and
+      // palette, locked immediately, is enough to "stand in for a human"
+      // (Phase 8's phrasing) for testing a match, not a real ability choice.
+      cursor: isBot ? randomSlotIdx : Math.min(index, SLOTS.length - 1),
+      phase: isBot ? 'locked' : 'picking', // picking | palette | locked
+      palette: isBot ? randomPalette : index,
       prevBtn: { left: false, right: false, up: false, down: false, confirm: false, back: false },
       box: this.add.graphics(),
       previewX,
@@ -240,7 +258,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.starting = true;
     this.time.delayedCall(700, () => {
       this.scene.start('StageSelect', {
-        players: this.players.map((p) => ({ charId: SLOTS[p.cursor].charId, palette: p.palette, slot: p.slot })),
+        players: this.players.map((p) => ({ charId: SLOTS[p.cursor].charId, palette: p.palette, slot: p.slot, isBot: p.isBot })),
         stocks: 3,
       });
     });
@@ -252,7 +270,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
       // waiting on them — auto-lock whatever they had selected (falling back
       // to the first playable character if they hadn't picked one yet) so a
       // dropped phone can't strand the rest of the group in the lobby.
-      if (!p.isKeyboard && !phoneNet.hasSlot(p.slot) && p.phase !== 'locked') {
+      if (!p.isKeyboard && !p.isBot && !phoneNet.hasSlot(p.slot) && p.phase !== 'locked') {
         if (!SLOTS[p.cursor].charId) p.cursor = 0;
         if (p.phase === 'picking') this.buildPreview(p);
         p.phase = 'locked';

@@ -102,6 +102,16 @@ function broadcastRoster() {
 }
 
 wss.on('connection', (ws, req) => {
+  // Disable Nagle's algorithm on this connection. Node's default TCP sockets
+  // buffer small writes for up to ~40ms hoping to coalesce them with more
+  // data (interacting badly with the receiver's own delayed-ACK timer) --
+  // exactly the wrong behavior for game input, which is small, bursty
+  // messages where every millisecond of latency is felt directly as input
+  // lag. This is the single biggest lever available on the server side;
+  // the rest of the latency budget is WiFi itself (see controller.html's
+  // network notes / the build doc for environment-level tips).
+  req.socket.setNoDelay(true);
+
   const { searchParams } = new URL(req.url, 'http://x');
   const role = searchParams.get('role');
 

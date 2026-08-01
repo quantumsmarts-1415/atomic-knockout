@@ -7,79 +7,121 @@
 <style>
   html, body {
     margin: 0; padding: 0; height: 100%;
-    background: #0d1220; color: #eaf4ff;
-    font-family: Arial, sans-serif;
+    background: #060a10; color: #d8ecff;
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
     overscroll-behavior: none;
     touch-action: none;
     -webkit-user-select: none; user-select: none;
   }
+  body {
+    background: radial-gradient(120% 90% at 50% 0%, #142033 0%, #060a10 62%);
+  }
+
   #join {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    height: 100%; gap: 16px; padding: 20px; box-sizing: border-box; text-align: center;
+    height: 100%; gap: 18px; padding: 20px; box-sizing: border-box; text-align: center;
   }
-  #join h2 { margin: 0; }
+  #join h2 { margin: 0; font-weight: 300; letter-spacing: 0.06em; font-size: 22px; }
+  .ring {
+    width: 76px; height: 76px; border-radius: 50%; border: 1px solid #4ad6ff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; letter-spacing: 0.12em; color: #4ad6ff;
+    box-shadow: 0 0 22px rgba(74, 214, 255, 0.35);
+  }
   #join input {
-    font-size: 20px; padding: 10px 14px; border-radius: 8px; border: none;
-    width: 220px; text-align: center;
+    font: inherit; font-size: 15px; padding: 11px 14px; border-radius: 2px;
+    border: 1px solid rgba(74, 214, 255, 0.5); background: rgba(255,255,255,0.03);
+    color: #eaf9ff; width: 220px; text-align: center; letter-spacing: 0.04em;
   }
+  #join input::placeholder { color: #5c7a94; }
   #join button {
-    font-size: 22px; padding: 14px 28px; border-radius: 12px; border: none;
-    background: #53e0a8; color: #0d2a1f; font-weight: bold;
+    font: inherit; font-size: 14px; padding: 13px 32px; border-radius: 2px;
+    border: 1px solid #4ad6ff; background: rgba(74, 214, 255, 0.12); color: #eaf9ff;
+    letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
   }
-  #status { color: #9fc4e8; font-size: 16px; min-height: 22px; }
+  #status { color: #5c7a94; font-size: 13px; min-height: 18px; letter-spacing: 0.02em; }
 
   #controls { display: none; height: 100%; flex-direction: column; box-sizing: border-box; }
   #controls.active { display: flex; }
   #label {
-    text-align: center; padding: 12px; font-size: 20px; color: #ffd166; font-weight: bold;
+    text-align: center; padding: 18px 12px 8px;
   }
-  #pad { flex: 1; display: flex; }
+  #label .eyebrow { font-size: 11px; letter-spacing: 0.22em; color: #4ad6ff; text-transform: uppercase; }
+  #label .name { font-size: 20px; font-weight: 300; letter-spacing: 0.04em; margin-top: 4px; }
+
+  #pad { flex: 1; display: flex; padding: 0 14px 22px; gap: 12px; }
   .side {
     flex: 1; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 12px;
+    justify-content: center;
   }
-  .row { display: flex; gap: 14px; }
+
+  /* --- d-pad: a real cross/plus grid, not stacked flex rows.
+     Each direction owns a fixed, non-overlapping grid cell, so it can never
+     get covered by its neighbors regardless of viewport height (this is the
+     fix for the down-arrow-overlap bug in the old stacked-rows layout). */
+  .dpad-grid {
+    display: grid;
+    grid-template-columns: 70px 70px 70px;
+    grid-template-rows: 70px 70px 70px;
+    gap: 8px;
+  }
+  .dpad-grid [data-btn="up"]    { grid-column: 2; grid-row: 1; }
+  .dpad-grid [data-btn="left"]  { grid-column: 1; grid-row: 2; }
+  .dpad-grid [data-btn="right"] { grid-column: 3; grid-row: 2; }
+  .dpad-grid [data-btn="down"]  { grid-column: 2; grid-row: 3; }
+
   .btn {
     display: flex; align-items: center; justify-content: center;
-    width: 74px; height: 74px;
-    background: #1c2b4a; border: 3px solid #4a9fff; border-radius: 16px;
-    font-size: 26px; font-weight: bold; color: #eaf4ff;
+    background: rgba(255,255,255,0.035); border: 1px solid rgba(74,214,255,0.35);
+    border-radius: 4px; color: #bfe6ff; font-size: 22px;
   }
-  .btn.pressed { background: #4a9fff; color: #0d1220; }
-  #confirm {
-    width: 130px; height: 130px; border-radius: 50%;
-    background: #53e0a8; border-color: #2a8f68; color: #0d2a1f; font-size: 20px;
+  .btn.pressed { background: rgba(74,214,255,0.2); box-shadow: 0 0 18px rgba(74,214,255,0.55); }
+
+  #actions { gap: 18px; }
+  #back, #confirm {
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; color: #d8ecff; font-weight: 300;
   }
-  #confirm.pressed { background: #2a8f68; color: #eaf4ff; }
   #back {
-    width: 90px; height: 90px; border-radius: 50%;
-    background: #ff5f4a; border-color: #c9402c; color: #3a0f08; font-size: 16px;
+    width: 82px; height: 82px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(216,236,255,0.4);
+    font-size: 12px; letter-spacing: 0.12em;
   }
-  #back.pressed { background: #c9402c; color: #eaf4ff; }
+  #back.pressed { background: rgba(216,236,255,0.16); }
+  #confirm {
+    width: 128px; height: 128px;
+    background: rgba(74,214,255,0.06); border: 1px solid #4ad6ff;
+    font-size: 15px; letter-spacing: 0.14em;
+  }
+  #confirm.pressed { background: rgba(74,214,255,0.24); box-shadow: 0 0 26px rgba(74,214,255,0.6); }
 </style>
 </head>
 <body>
   <div id="join">
+    <div class="ring">ID</div>
     <h2>Join the fight</h2>
-    <div id="status">Enter your name and join over the same WiFi as the game.</div>
-    <input id="name" maxlength="16" placeholder="Your name" />
-    <button id="joinBtn">JOIN GAME</button>
+    <div id="status">Enter your callsign and join over the same WiFi as the game.</div>
+    <input id="name" maxlength="16" placeholder="Callsign" />
+    <button id="joinBtn">Connect</button>
   </div>
 
   <div id="controls">
-    <div id="label"></div>
+    <div id="label">
+      <div class="eyebrow">Assigned</div>
+      <div class="name" id="labelName"></div>
+    </div>
     <div id="pad">
-      <div class="side" id="dpad">
-        <div class="btn" data-btn="up">&#9650;</div>
-        <div class="row">
+      <div class="side">
+        <div class="dpad-grid">
+          <div class="btn" data-btn="up">&#9650;</div>
           <div class="btn" data-btn="left">&#9664;</div>
           <div class="btn" data-btn="right">&#9654;</div>
+          <div class="btn" data-btn="down">&#9660;</div>
         </div>
-        <div class="btn" data-btn="down">&#9660;</div>
       </div>
       <div class="side" id="actions">
-        <div class="btn" id="back" data-btn="back">SPECIAL</div>
-        <div class="btn" id="confirm" data-btn="confirm">ATTACK</div>
+        <div id="back" data-btn="back">SPECIAL</div>
+        <div id="confirm" data-btn="confirm">ATTACK</div>
       </div>
     </div>
   </div>
@@ -89,7 +131,7 @@
       const joinEl = document.getElementById('join');
       const controlsEl = document.getElementById('controls');
       const statusEl = document.getElementById('status');
-      const labelEl = document.getElementById('label');
+      const labelEl = document.getElementById('labelName');
       const nameInput = document.getElementById('name');
       const joinBtn = document.getElementById('joinBtn');
 
@@ -111,7 +153,7 @@
         el.addEventListener('pointercancel', release);
         el.addEventListener('pointerleave', release);
       }
-      document.querySelectorAll('.btn').forEach(bindButton);
+      document.querySelectorAll('[data-btn]').forEach(bindButton);
 
       function connect() {
         statusEl.textContent = 'Connecting…';
@@ -126,7 +168,7 @@
           if (msg.type === 'assigned') {
             joinEl.style.display = 'none';
             controlsEl.classList.add('active');
-            labelEl.textContent = `You are ${msg.label}`;
+            labelEl.textContent = msg.label;
           } else if (msg.type === 'full') {
             statusEl.textContent = 'Lobby is full (6 players max). Try again later.';
           }
@@ -137,8 +179,8 @@
           controlsEl.classList.remove('active');
           joinEl.style.display = 'flex';
           statusEl.textContent = wasPlaying
-            ? 'Disconnected — tap JOIN GAME to reconnect.'
-            : 'Could not connect. Tap JOIN GAME to retry.';
+            ? 'Disconnected — tap Connect to reconnect.'
+            : 'Could not connect. Tap Connect to retry.';
         };
       }
 

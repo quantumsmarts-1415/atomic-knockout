@@ -9,6 +9,10 @@ import { computeBotInput } from '../engine/BotAI.js';
 const GRAVITY = 1500;
 const BLAST_MARGIN = 140; // how far past the screen edge you must fly to die
 
+// Slot numbering, decided in PlayerJoinScene: 0/1 = keyboard, 2-5 = a phone
+// (PhoneNet's own connection slot), 100+seatIndex = a bot.
+const BOT_SLOT_BASE = 100;
+
 // ---------------------------------------------------------------------------
 // BattleScene — the fight itself. Reads match setup (players, characters,
 // palettes) from scene data so menus can configure it; falls back to a
@@ -128,7 +132,7 @@ export default class BattleScene extends Phaser.Scene {
       // still connected while P3 left) and input must still reach the right
       // fighter.
       f.controlSlot = p.slot ?? i;
-      f.isBot = !!p.isBot;
+      f.isBot = f.controlSlot >= BOT_SLOT_BASE;
       f.stocks = this.setup.stocks ?? 3;
       f.facing = i % 2 === 0 ? 1 : -1;
       return f;
@@ -175,20 +179,22 @@ export default class BattleScene extends Phaser.Scene {
     this.hud = this.fighters.map((f, i) => {
       const x = n === 1 ? W / 2 : margin + (i * (W - margin * 2)) / (n - 1);
       const pal = f.charDef.palettes[f.paletteIndex];
+      // HUD chrome uses the glass-panel look; the border keeps the player's
+      // own palette color (thin, not bold) since that's identity, not decor.
       const panel = this.add.graphics();
-      panel.fillStyle(0x0a0f1c, 0.55);
+      panel.fillStyle(0xffffff, 0.03);
       panel.fillRoundedRect(x - panelW / 2, H - 96, panelW, 78, 16);
-      panel.lineStyle(3, pal.body, 1);
+      panel.lineStyle(1.5, pal.body, 0.85);
       panel.strokeRoundedRect(x - panelW / 2, H - 96, panelW, 78, 16);
 
       const name = this.add.text(x - panelW / 2 + 18, H - 88, `${f.charDef.name} · ${f.charDef.symbol}${f.isBot ? ' (CPU)' : ''}`, {
-        fontFamily: 'Arial Black, sans-serif', fontSize: `${Math.round(16 * scale)}px`, color: '#cfe4ff',
+        fontFamily: 'Arial Black, sans-serif', fontSize: `${Math.round(16 * scale)}px`, color: '#d8ecff',
       });
       const percent = this.add.text(x + panelW / 2 - 70 * scale, H - 82, '0%', {
-        fontFamily: 'Arial Black, sans-serif', fontSize: `${Math.round(30 * scale)}px`, color: '#ffffff',
+        fontFamily: 'Arial Black, sans-serif', fontSize: `${Math.round(30 * scale)}px`, color: '#eaf9ff',
       }).setOrigin(0.5, 0);
       const stocks = this.add.text(x - panelW / 2 + 18, H - 52, '', {
-        fontFamily: 'Arial, sans-serif', fontSize: `${Math.round(20 * scale)}px`, color: '#ffd166',
+        fontFamily: 'Arial, sans-serif', fontSize: `${Math.round(20 * scale)}px`, color: '#4ad6ff',
       });
       return { percent, stocks, name };
     });

@@ -11,21 +11,21 @@ export default class PauseMenuScene extends Phaser.Scene {
   }
 
   create() {
-    this.add.rectangle(W / 2, H / 2, W, H, 0x060a14, 0.65);
+    this.add.rectangle(W / 2, H / 2, W, H, 0x060a10, 0.7);
     const panel = this.add.graphics();
-    panel.fillStyle(0x101b33, 0.95);
+    panel.fillStyle(0x0a0e14, 0.9);
     panel.fillRoundedRect(W / 2 - 220, H / 2 - 130, 440, 260, 22);
-    panel.lineStyle(4, 0x7fd4ff, 1);
+    panel.lineStyle(1.5, 0x4ad6ff, 0.7);
     panel.strokeRoundedRect(W / 2 - 220, H / 2 - 130, 440, 260, 22);
 
     this.add.text(W / 2, H / 2 - 84, 'PAUSED', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '44px', color: '#ffffff',
+      fontFamily: 'Arial Black, sans-serif', fontSize: '44px', color: '#eaf9ff', letterSpacing: 1,
     }).setOrigin(0.5);
     this.add.text(W / 2, H / 2 + 4, 'Esc / Enter — Resume', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '24px', color: '#ffd166',
+      fontFamily: 'Arial Black, sans-serif', fontSize: '24px', color: '#4ad6ff',
     }).setOrigin(0.5);
     this.add.text(W / 2, H / 2 + 56, 'Q — Quit to Title', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '24px', color: '#ffffff',
+      fontFamily: 'Arial Black, sans-serif', fontSize: '24px', color: '#d8ecff',
     }).setOrigin(0.5);
 
     const resume = () => {

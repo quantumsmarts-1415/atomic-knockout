@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
+import { drawMenuBackground } from '../ui/theme.js';
 
 const STAGES = [
   {
@@ -20,29 +21,23 @@ export default class StageSelectScene extends Phaser.Scene {
   }
 
   create() {
-    const g = this.add.graphics();
-    const top = Phaser.Display.Color.ValueToColor(0x101b33);
-    const bottom = Phaser.Display.Color.ValueToColor(0x233a5c);
-    for (let i = 0; i < 24; i++) {
-      const c = Phaser.Display.Color.Interpolate.ColorWithColor(top, bottom, 24, i);
-      g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1);
-      g.fillRect(0, (H / 24) * i, W, H / 24 + 1);
-    }
+    drawMenuBackground(this, W, H);
 
     this.add.text(W / 2, 70, 'CHOOSE A STAGE', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '40px', color: '#ffffff',
-      stroke: '#1c2b4a', strokeThickness: 8,
+      fontFamily: 'Arial Black, sans-serif', fontSize: '40px', color: '#eaf9ff',
+      stroke: '#060a10', strokeThickness: 8, letterSpacing: 1,
     }).setOrigin(0.5);
 
-    // stage card with a mini preview of the island
+    // stage card chrome (the mini preview inside is the stage's own art --
+    // left untouched, same as the real battle stage)
     const cardW = 460;
     const cardH = 320;
     const cx = W / 2;
     const cy = H / 2 + 10;
     const card = this.add.graphics();
-    card.fillStyle(0x0a0f1c, 0.6);
+    card.fillStyle(0xffffff, 0.03);
     card.fillRoundedRect(cx - cardW / 2, cy - cardH / 2, cardW, cardH, 20);
-    card.lineStyle(4, 0xffd166, 1);
+    card.lineStyle(1.5, 0x4ad6ff, 0.6);
     card.strokeRoundedRect(cx - cardW / 2, cy - cardH / 2, cardW, cardH, 20);
 
     const mini = this.add.graphics();
@@ -58,15 +53,15 @@ export default class StageSelectScene extends Phaser.Scene {
     mini.fillRoundedRect(cx - 45, cy - 68, 90, 7, 3);
 
     this.add.text(cx, cy + 82, STAGES[0].name, {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '30px', color: '#ffffff',
+      fontFamily: 'Arial Black, sans-serif', fontSize: '30px', color: '#eaf9ff',
     }).setOrigin(0.5);
     this.add.text(cx, cy + 120, STAGES[0].desc, {
-      fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#9fc4e8',
+      fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#5c7a94',
       wordWrap: { width: cardW - 60 }, align: 'center',
     }).setOrigin(0.5);
 
     this.add.text(W / 2, H - 40, 'Press Enter / F / K to fight!', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '24px', color: '#ffd166',
+      fontFamily: 'Arial Black, sans-serif', fontSize: '24px', color: '#4ad6ff',
     }).setOrigin(0.5);
 
     const start = () => this.scene.start('Battle', { ...this.setup, stageId: STAGES[0].id });

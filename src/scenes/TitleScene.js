@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
+import { THEME, drawMenuBackground } from '../ui/theme.js';
 
 // ---------------------------------------------------------------------------
 // TitleScene — home screen. Play is live; Campaign/Settings are stubs that
@@ -14,23 +15,21 @@ export default class TitleScene extends Phaser.Scene {
   create() {
     this.drawBackground();
 
-    // logo: element-tile styled title
+    // logo: element-tile motif, restyled to the HUD Visor glass-panel look
     const tile = this.add.graphics();
-    tile.fillStyle(0x53e0a8, 1);
+    tile.fillStyle(0xffffff, 0.035);
     tile.fillRoundedRect(W / 2 - 70, 92, 140, 140, 18);
-    tile.fillStyle(0x2a8f68, 1);
-    tile.fillRoundedRect(W / 2 - 70, 92, 140, 140, 18);
-    tile.fillStyle(0x53e0a8, 1);
-    tile.fillRoundedRect(W / 2 - 64, 98, 128, 128, 14);
-    this.add.text(W / 2 - 54, 104, '119', { fontFamily: 'Arial, sans-serif', fontSize: '20px', color: '#14352a' });
-    this.add.text(W / 2, 168, 'Pt', { fontFamily: 'Georgia, serif', fontSize: '74px', fontStyle: 'bold', color: '#0d2a1f' }).setOrigin(0.5);
+    tile.lineStyle(1.5, THEME.accent, 0.7);
+    tile.strokeRoundedRect(W / 2 - 70, 92, 140, 140, 18);
+    this.add.text(W / 2 - 54, 104, '119', { fontFamily: 'Arial, sans-serif', fontSize: '20px', color: '#4ad6ff' });
+    this.add.text(W / 2, 168, 'Pt', { fontFamily: 'Georgia, serif', fontSize: '74px', fontStyle: 'bold', color: '#eaf9ff' }).setOrigin(0.5);
 
     this.add.text(W / 2, 286, 'ATOMIC KNOCKOUT', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '58px', color: '#ffffff',
-      stroke: '#1c2b4a', strokeThickness: 10,
+      fontFamily: 'Arial Black, sans-serif', fontSize: '58px', color: '#eaf9ff',
+      stroke: '#060a10', strokeThickness: 10, letterSpacing: 2,
     }).setOrigin(0.5);
     this.add.text(W / 2, 338, 'an elemental brawl', {
-      fontFamily: 'Georgia, serif', fontSize: '22px', fontStyle: 'italic', color: '#9fc4e8',
+      fontFamily: 'Georgia, serif', fontSize: '22px', fontStyle: 'italic', color: '#5c7a94',
     }).setOrigin(0.5);
 
     this.buttons = [
@@ -43,7 +42,7 @@ export default class TitleScene extends Phaser.Scene {
     this.buttonTexts = this.buttons.map((b, i) => {
       const t = this.add.text(W / 2, 420 + i * 58, b.label, {
         fontFamily: 'Arial Black, sans-serif', fontSize: '30px',
-        color: b.action ? '#ffffff' : '#5a6a85',
+        color: b.action ? '#d8ecff' : '#3a4a5c', letterSpacing: 1,
       }).setOrigin(0.5);
       if (b.action) {
         t.setInteractive({ useHandCursor: true })
@@ -65,19 +64,12 @@ export default class TitleScene extends Phaser.Scene {
     kb.on('keydown-SPACE', go);
 
     this.add.text(W / 2, H - 28, 'P1: WASD + F/G     P2: Arrows + K/L     up to 4 more join by phone     Enter to select', {
-      fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#7f95b5',
+      fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#5c7a94',
     }).setOrigin(0.5);
   }
 
   drawBackground() {
-    const g = this.add.graphics();
-    const top = Phaser.Display.Color.ValueToColor(0x0d1220);
-    const bottom = Phaser.Display.Color.ValueToColor(0x1c3050);
-    for (let i = 0; i < 24; i++) {
-      const c = Phaser.Display.Color.Interpolate.ColorWithColor(top, bottom, 24, i);
-      g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1);
-      g.fillRect(0, (H / 24) * i, W, H / 24 + 1);
-    }
+    drawMenuBackground(this, W, H);
     // drifting element tiles in the background
     const rnd = new Phaser.Math.RandomDataGenerator(['title']);
     const symbols = ['H', 'He', 'Li', 'C', 'O', 'Fe', 'Au', 'Ne', 'Ti', 'Cu', 'U', 'Na'];
@@ -86,13 +78,13 @@ export default class TitleScene extends Phaser.Scene {
       const y = rnd.between(40, H - 40);
       const size = rnd.between(34, 60);
       const tile = this.add.graphics();
-      tile.fillStyle(0x7fd4ff, 0.05);
+      tile.fillStyle(THEME.accent, 0.04);
       tile.fillRoundedRect(-size / 2, -size / 2, size, size, 8);
-      tile.lineStyle(1.5, 0x7fd4ff, 0.12);
+      tile.lineStyle(1.5, THEME.accent, 0.14);
       tile.strokeRoundedRect(-size / 2, -size / 2, size, size, 8);
       tile.setPosition(x, y);
       const label = this.add.text(x, y, s, {
-        fontFamily: 'Georgia, serif', fontSize: `${size * 0.45}px`, color: '#7fd4ff',
+        fontFamily: 'Georgia, serif', fontSize: `${size * 0.45}px`, color: '#4ad6ff',
       }).setOrigin(0.5).setAlpha(0.14);
       this.tweens.add({
         targets: [tile, label],
@@ -114,7 +106,7 @@ export default class TitleScene extends Phaser.Scene {
   refresh() {
     this.buttonTexts.forEach((t, i) => {
       const active = i === this.selected && this.buttons[i].action;
-      t.setColor(active ? '#ffd166' : this.buttons[i].action ? '#ffffff' : '#5a6a85');
+      t.setColor(active ? '#4ad6ff' : this.buttons[i].action ? '#d8ecff' : '#3a4a5c');
       t.setScale(active ? 1.08 : 1);
     });
   }
@@ -123,7 +115,7 @@ export default class TitleScene extends Phaser.Scene {
     if (this.creditsText) return;
     this.creditsText = this.add.text(W / 2, H - 70,
       'Created by Benjamin — built with Claude Code · Phaser 3 · all art drawn in code', {
-        fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#ffd166',
+        fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#4ad6ff',
       }).setOrigin(0.5);
     this.time.delayedCall(4000, () => { this.creditsText?.destroy(); this.creditsText = null; });
   }

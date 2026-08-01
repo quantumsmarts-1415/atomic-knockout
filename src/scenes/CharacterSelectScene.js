@@ -4,7 +4,12 @@ import { Rig } from '../engine/Rig.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
-import { botSlots } from '../net/BotSlots.js';
+import { drawMenuBackground } from '../ui/theme.js';
+
+// Slot numbering, decided in PlayerJoinScene: 0/1 = keyboard, 2-5 = a phone
+// (PhoneNet's own connection slot), 100+seatIndex = a bot. Bots live far
+// outside the phone range so the two can never collide.
+const BOT_SLOT_BASE = 100;
 
 // The 24 launch slots (first 24 elements). Only entries with a charId are
 // playable today; the rest render as locked periodic-table tiles.
@@ -51,22 +56,26 @@ export default class CharacterSelectScene extends Phaser.Scene {
     super('CharacterSelect');
   }
 
+  init(data) {
+    // Falls back to 2 keyboard players if launched directly (e.g. testing)
+    // without going through the PlayerJoin lobby.
+    this.playerSeeds = data?.playerSeeds?.length ? data.playerSeeds : [{ slot: 0 }, { slot: 1 }];
+  }
+
   create() {
     this.drawBackground();
     this.add.text(W / 2, 44, 'CHOOSE YOUR ELEMENT', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '40px', color: '#ffffff',
-      stroke: '#1c2b4a', strokeThickness: 8,
+      fontFamily: 'Arial Black, sans-serif', fontSize: '40px', color: '#eaf9ff',
+      stroke: '#060a10', strokeThickness: 8, letterSpacing: 1,
     }).setOrigin(0.5);
 
     this.gridX = W / 2 - (COLS * (TILE + GAP) - GAP) / 2;
     this.gridY = 96;
     this.tiles = SLOTS.map((slot, i) => this.drawTile(slot, i));
 
-    // Player "slot" numbers: 0/1 are always the keyboard, 2-5 are whichever
-    // phones/bots were connected when the lobby moved on. Array position
-    // doubles as each player's UI ordering (P1 leftmost preview, etc.).
-    const seatSlots = new Set([...phoneNet.connectedSlots, ...botSlots.connectedSlots]);
-    this.playerSlots = [0, 1, ...[...seatSlots].sort((a, b) => a - b)].slice(0, 6);
+    // Player "slot" numbers come straight from the lobby's decisions. Array
+    // position doubles as each player's UI ordering (P1 leftmost preview).
+    this.playerSlots = this.playerSeeds.map((seed) => seed.slot);
     this.players = this.playerSlots.map((slot, i) => this.makePlayer(slot, i));
 
     // Bots skip the whole picking flow -- they were already given a random
@@ -77,21 +86,14 @@ export default class CharacterSelectScene extends Phaser.Scene {
     }
 
     this.hint = this.add.text(W / 2, H - 24, '', {
-      fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#9fc4e8',
+      fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#5c7a94',
     }).setOrigin(0.5);
     this.refreshAll();
     this.checkAllLocked();
   }
 
   drawBackground() {
-    const g = this.add.graphics();
-    const top = Phaser.Display.Color.ValueToColor(0x101b33);
-    const bottom = Phaser.Display.Color.ValueToColor(0x233a5c);
-    for (let i = 0; i < 24; i++) {
-      const c = Phaser.Display.Color.Interpolate.ColorWithColor(top, bottom, 24, i);
-      g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1);
-      g.fillRect(0, (H / 24) * i, W, H / 24 + 1);
-    }
+    drawMenuBackground(this, W, H);
   }
 
   tileXY(i) {
@@ -104,37 +106,44 @@ export default class CharacterSelectScene extends Phaser.Scene {
     const { x, y } = this.tileXY(i);
     const unlocked = !!slot.charId;
     const g = this.add.graphics();
-    const base = unlocked ? CHARACTERS[slot.charId].palettes[0].body : 0x2a3550;
+    // Unlocked tiles keep the character's own palette color (that's their
+    // identity, not generic chrome); locked tiles get the HUD glass look.
+    const base = unlocked ? CHARACTERS[slot.charId].palettes[0].body : 0x0a0e14;
     return this.finishTile(g, slot, x, y, unlocked, base);
   }
 
   finishTile(g, slot, x, y, unlocked, base) {
-    g.fillStyle(unlocked ? base : 0x263450, 1);
+    g.fillStyle(base, unlocked ? 1 : 1);
     g.fillRoundedRect(x, y, TILE, TILE, 12);
-    g.fillStyle(unlocked ? 0xffffff : 0x314260, unlocked ? 0.16 : 1);
-    g.fillRoundedRect(x + 4, y + 4, TILE - 8, TILE - 8, 9);
+    if (unlocked) {
+      g.fillStyle(0xffffff, 0.16);
+      g.fillRoundedRect(x + 4, y + 4, TILE - 8, TILE - 8, 9);
+    } else {
+      g.lineStyle(1, 0x4ad6ff, 0.18);
+      g.strokeRoundedRect(x + 4, y + 4, TILE - 8, TILE - 8, 9);
+    }
     this.add.text(x + 10, y + 8, String(slot.n), {
       fontFamily: 'Arial, sans-serif', fontSize: '15px',
-      color: unlocked ? '#ffffff' : '#54678c',
+      color: unlocked ? '#ffffff' : '#3a4a5c',
     });
     this.add.text(x + TILE / 2, y + TILE / 2 + 2, slot.sym, {
       fontFamily: 'Georgia, serif', fontSize: '34px', fontStyle: 'bold',
-      color: unlocked ? '#ffffff' : '#54678c',
+      color: unlocked ? '#ffffff' : '#3a4a5c',
     }).setOrigin(0.5);
     this.add.text(x + TILE / 2, y + TILE - 13, unlocked ? slot.name : '???', {
       fontFamily: 'Arial, sans-serif', fontSize: '13px',
-      color: unlocked ? '#eaf4ff' : '#54678c',
+      color: unlocked ? '#eaf4ff' : '#3a4a5c',
     }).setOrigin(0.5);
     return { slot, x, y, unlocked };
   }
 
   // index: this player's position among the players in THIS match (0-based,
   // used for layout/color/starting pick). slot: their persistent control
-  // slot (0/1 keyboard, 2-5 phone) — this is what follows them all the way
-  // into BattleScene so input keeps routing to the right fighter.
+  // slot (0/1 keyboard, 2-5 phone, 100+ bot) — this is what follows them all
+  // the way into BattleScene so input keeps routing to the right fighter.
   makePlayer(slot, index) {
     const isKeyboard = slot === 0 || slot === 1;
-    const isBot = !isKeyboard && botSlots.hasSlot(slot);
+    const isBot = slot >= BOT_SLOT_BASE;
     const kb = this.input.keyboard;
     let keys = null;
     if (isKeyboard) {
@@ -154,7 +163,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
     const p = {
       slot, index, isKeyboard, isBot, keys,
       color: PLAYER_COLORS[index % PLAYER_COLORS.length],
-      label: `P${slot + 1}${isBot ? ' (CPU)' : ''}`,
+      // Label is by seat position (index), not the raw slot number -- slot
+      // is just a routing key now (bots sit at 100+, and a phone's slot can
+      // be a different number than its seat position once binding order
+      // shuffles things), so P-number must always come from seat order.
+      label: `P${index + 1}${isBot ? ' (CPU)' : ''}`,
       // Bots skip the picking UI entirely -- a random playable character and
       // palette, locked immediately, is enough to "stand in for a human"
       // (Phase 8's phrasing) for testing a match, not a real ability choice.
@@ -207,7 +220,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
     if (p.phase !== 'locked' && SLOTS[p.cursor].charId) sfx('menuConfirm');
     if (p.phase === 'picking' && SLOTS[p.cursor].charId) {
       p.phase = 'palette';
-      p.palette = p.index % 8; // default different colors so mirror picks differ
+      // default different colors so mirror picks differ -- modulo the
+      // actual character's palette count (was a hardcoded %8, which broke
+      // for player index >= a character's real palette count, e.g. P5+)
+      const def = CHARACTERS[SLOTS[p.cursor].charId];
+      p.palette = p.index % def.palettes.length;
       this.buildPreview(p);
     } else if (p.phase === 'palette') {
       p.phase = 'locked';
@@ -258,7 +275,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.starting = true;
     this.time.delayedCall(700, () => {
       this.scene.start('StageSelect', {
-        players: this.players.map((p) => ({ charId: SLOTS[p.cursor].charId, palette: p.palette, slot: p.slot, isBot: p.isBot })),
+        players: this.players.map((p) => ({ charId: SLOTS[p.cursor].charId, palette: p.palette, slot: p.slot })),
         stocks: 3,
       });
     });

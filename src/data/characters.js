@@ -911,6 +911,14 @@ export const CHARACTERS = {
     // Facing is a best guess (1, right) -- his render is a dynamic
     // leaping/running pose, not a clean profile, same situation as
     // Lillie/Oxana/Flora.
+    // Session 14 (2026-08-03): first idle video had his lower legs/feet
+    // cropped out of every frame (same bug Natalie hit) -- regenerated with
+    // an explicit "zoom out, don't crop his feet" prompt via Gemini's
+    // dedicated Videos tool. New sheet keyed clean with the same gradient
+    // mode; old cropped-feet sheet kept at
+    // art-src/gemini-test/sheets/_old/neo_idle_cropped-feet.png in case of
+    // regressions. footY moved from 0.9986 (feet right at the frame edge,
+    // the bug) to 0.9704 (real margin below his feet now).
     art: {
       key: 'char-neo',
       file: 'art-src/neo-cut.png',
@@ -921,12 +929,12 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 677,
+        frameW: 508,
         frameH: 704,
-        footY: 0.9986,
-        visibleH: 678,
+        footY: 0.9704,
+        visibleH: 655,
         clips: {
-          idle: { count: 13, fps: 3.6, loop: true },
+          idle: { count: 14, fps: 3.6, loop: true },
         },
       },
     },

@@ -33,6 +33,14 @@ const COLS = 8;
 const TILE = 92;
 const GAP = 12;
 
+// Preview rigs are anchored (feet) at this y and grow upward from there --
+// tall characters at the small-lobby scale (1.35x) could grow tall enough to
+// poke up into the tile grid above them, covering the bottom row of
+// characters. PREVIEW_TOP_MARGIN is the minimum gap always kept clear
+// between a preview's top and the grid's bottom edge.
+const PREVIEW_ANCHOR_Y = 560;
+const PREVIEW_TOP_MARGIN = 24;
+
 // P1/P2 are always the two local keyboard players (slots 0/1). Slots 2-5 are
 // phones, filled in from phoneNet — however many happen to be connected when
 // this scene starts (joining happens in the PlayerJoin lobby before this).
@@ -63,6 +71,13 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   create() {
+    // Phaser reuses this same scene instance every time CharacterSelect is
+    // entered (it doesn't get recreated), so instance flags set during a
+    // previous visit must be reset here or they leak into the next one --
+    // this one guards the StageSelect transition below and previously stuck
+    // every subsequent visit at "Everyone locked in" forever once it had
+    // been set true once.
+    this.starting = false;
     this.drawBackground();
     this.add.text(W / 2, 44, 'CHOOSE YOUR ELEMENT', {
       fontFamily: 'Arial Black, sans-serif', fontSize: '40px', color: '#eaf9ff',
@@ -71,6 +86,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     this.gridX = W / 2 - (COLS * (TILE + GAP) - GAP) / 2;
     this.gridY = 96;
+    this.gridBottom = this.gridY + Math.ceil(SLOTS.length / COLS) * (TILE + GAP) - GAP;
     this.tiles = SLOTS.map((slot, i) => this.drawTile(slot, i));
 
     // Player "slot" numbers come straight from the lobby's decisions. Array
@@ -275,8 +291,15 @@ export default class CharacterSelectScene extends Phaser.Scene {
     p.previewRig?.destroy();
     const def = CHARACTERS[SLOTS[p.cursor].charId];
     p.previewRig = new Rig(this, def, p.palette);
-    p.previewRig.setPosition(p.previewX, 560);
-    p.previewRig.baseScale = this.players.length > 3 ? 0.95 : 1.35;
+    p.previewRig.setPosition(p.previewX, PREVIEW_ANCHOR_Y);
+    const desiredScale = this.players.length > 3 ? 0.95 : 1.35;
+    // Visual height before scaling: art-based rigs render at art.height;
+    // procedural rigs are roughly legs + torso + head. Clamp the scale so
+    // the tallest characters can't grow up into the tile grid above.
+    const visualHeight = def.art?.height
+      ?? (def.body.legLength + def.body.torsoHeight + def.body.headRadius * 2);
+    const maxScale = (PREVIEW_ANCHOR_Y - this.gridBottom - PREVIEW_TOP_MARGIN) / visualHeight;
+    p.previewRig.baseScale = Math.min(desiredScale, maxScale);
     this.add.existing(p.previewRig);
     p.previewName?.destroy();
     p.previewName = this.add.text(p.previewX, 600, `${def.name}\n${def.palettes[p.palette].name}`, {

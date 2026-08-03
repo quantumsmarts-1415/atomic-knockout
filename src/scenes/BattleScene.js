@@ -86,8 +86,16 @@ export default class BattleScene extends Phaser.Scene {
     this.solids = this.physics.add.staticGroup();
     this.platforms = this.physics.add.staticGroup();
 
-    // main floating island: x from 190 to 1090, top at y=560
-    const mainW = 900;
+    // main floating island: x from 145 to 1135, top at y=560. Stage is 10%
+    // bigger than the original (mainW 900->990, platform 260->286, ground-
+    // to-platform gap 170->187) per Benjamin's request -- the gap was scaled
+    // by the same 10%, not left fixed, and re-verified against every
+    // character's jump+air-jump reach so nobody who could already make the
+    // jump loses access to the platform (the 4 zero-air-jump tanks -- Bord,
+    // Sully, Van, Cal -- already couldn't clear the old 170px gap from a
+    // standing jump either; that's an existing tank-tradeoff, not something
+    // this change newly breaks).
+    const mainW = 990;
     const mainX = W / 2;
     const mainTopY = 560;
     const island = this.add.graphics();
@@ -106,9 +114,9 @@ export default class BattleScene extends Phaser.Scene {
     this.solids.add(main);
 
     // one floating platform
-    const platW = 260;
+    const platW = 286;
     const platX = W / 2;
-    const platY = 390;
+    const platY = 373; // 187px above mainTopY (was 170px)
     const plat = this.add.graphics();
     plat.fillStyle(0x6a55a0, 1);
     plat.fillRoundedRect(platX - platW / 2, platY, platW, 18, 9);

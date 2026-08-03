@@ -102,7 +102,7 @@ export const CHARACTERS = {
         rangeW: 74,   // hitbox width in front of fighter
         rangeH: 46,
         duration: 220,   // ms the swing lasts
-        cooldown: 100,   // shortened ~3x for fast-paced testing (was 300)
+        cooldown: 300,
       },
       special: {
         name: 'H-Burst',
@@ -113,7 +113,7 @@ export const CHARACTERS = {
         knockbackGrowth: 7.2, // -20% (was 9)
         radius: 95,
         duration: 320,
-        cooldown: 430,   // shortened ~3x for fast-paced testing (was 1300)
+        cooldown: 1300,
         teach: 'Hydrogen gas is highly flammable — it powered early rockets.',
       },
     },
@@ -193,7 +193,7 @@ export const CHARACTERS = {
         rangeW: 54,
         rangeH: 50,
         duration: 240,
-        cooldown: 105,   // shortened ~3x for fast-paced testing (was 320)
+        cooldown: 320,
       },
       special: {
         name: 'Noble Gust',
@@ -206,7 +206,7 @@ export const CHARACTERS = {
         projectileRadius: 16,
         projectileLife: 900, // ms
         duration: 260,
-        cooldown: 500,   // shortened ~3x for fast-paced testing (was 1500)
+        cooldown: 1500,
         teach: 'Helium is a noble gas — inert, safe, and used to lift airships.',
       },
     },
@@ -278,7 +278,7 @@ export const CHARACTERS = {
         rangeW: 74,   // spear = long reach
         rangeH: 44,
         duration: 300, // slower swing than the light characters
-        cooldown: 150,   // shortened ~3x for fast-paced testing (was 450)
+        cooldown: 450,
       },
       special: {
         name: 'Aero Lance',
@@ -291,7 +291,7 @@ export const CHARACTERS = {
         projectileRadius: 13,
         projectileLife: 750,
         duration: 320,
-        cooldown: 565,   // shortened ~3x for fast-paced testing (was 1700)
+        cooldown: 1700,
         teach: 'Titanium’s strength-to-weight ratio makes it the metal of jets and spacecraft.',
       },
     },

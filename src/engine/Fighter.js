@@ -195,6 +195,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
    */
   takeHit(attacker, move, time, launchDir) {
     if (this.state === 'ko' || this.state === 'dead') return 0;
+    // Cancel whatever attack this fighter was mid-swing on. Without this, an
+    // attack's hitbox stayed live (getHitboxRect() only checks activeHit,
+    // not state) even after its owner got hit and entered hurt state, so
+    // "both fighters hit each other at once" wasn't just simultaneous
+    // swings landing together -- it was ALSO an already-losing attacker
+    // still landing their hit for the rest of its active window after being
+    // interrupted. Getting hit first now reliably beats swinging first.
+    this.activeHit = null;
     const dmg = applyDefense(move.damage, move.type, this.charDef.defense);
     this.percent = Math.min(999, this.percent + dmg);
 

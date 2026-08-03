@@ -1,5 +1,5 @@
 // Dev tool: edge-connected flood-fill background removal for Gemini concept-art renders.
-// Usage: node tools/remove-bg.js <input.png> <output-cut.png> [threshold]
+// Usage: node tools/remove-bg.js <input.png> <output-cut.png> [threshold] [mode]
 //
 // Samples the background color from the border pixels (the renders use a
 // plain flat-color backdrop), then erases every pixel that is (a) close
@@ -10,15 +10,31 @@
 // still protects an enclosed near-background pocket inside the silhouette
 // (e.g. between an arm and the torso) from being erased by a first pass —
 // run with a higher threshold a second time, or by hand, for those.
+//
+// mode: "auto" (default) k-means-fits 2 background centroids from the
+// border, as above. Use "checker" for renders whose fake checkerboard uses
+// MORE than 2 colors (e.g. two different checker patterns baked into one
+// image, light gray/white in one region and black/dark-gray in another --
+// seen on Cal's render). A plain 2-centroid fit can't cover 4+ colors at a
+// usable threshold: too tight and half the checker survives, too loose and
+// it eats into the character's own light/dark shading. "checker" instead
+// treats any border-connected, near-grayscale (low-saturation) pixel as
+// background regardless of its lightness, which covers every shade of an
+// achromatic checkerboard in one pass without needing to fit its colors --
+// the character's skin/armor/lava tones are all visibly warm (non-gray) by
+// comparison, so real content is protected by chroma, not brightness.
 import { PNG } from 'pngjs';
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const [, , inPath, outPath, thresholdArg] = process.argv;
+const [, , inPath, outPath, thresholdArg, modeArg] = process.argv;
 if (!inPath || !outPath) {
-  console.error('Usage: node remove-bg.js <input.png> <output.png> [threshold]');
+  console.error('Usage: node remove-bg.js <input.png> <output.png> [threshold] [mode: auto|checker]');
   process.exit(1);
 }
-const THRESH = thresholdArg ? Number(thresholdArg) : 40;
+const MODE = modeArg ?? 'auto';
+// checker mode's threshold is a max(r,g,b)-min(r,g,b) saturation cap, not a
+// color distance, so it needs a much smaller default than "auto"'s.
+const THRESH = thresholdArg ? Number(thresholdArg) : (MODE === 'checker' ? 14 : 40);
 
 const png = PNG.sync.read(readFileSync(inPath));
 const { width: w, height: h, data } = png;
@@ -32,37 +48,48 @@ const dist = (a, b) => {
   return Math.sqrt(dr * dr + dg * dg + db * db);
 };
 
-// Sample background color(s) from the border pixels. Gemini sometimes bakes
-// in a fake checkerboard instead of real transparency (two alternating flat
-// colors), so cluster into up to 2 representative colors via k-means rather
-// than assuming one flat color — a pixel counts as "background" if it's
-// close to EITHER centroid. For a genuinely flat backdrop the two centroids
-// just converge to the same color, so this subsumes the flat case too.
-const borderSamples = [];
-for (let x = 0; x < w; x++) { borderSamples.push(colorAt(x, 0)); borderSamples.push(colorAt(x, h - 1)); }
-for (let y = 0; y < h; y++) { borderSamples.push(colorAt(0, y)); borderSamples.push(colorAt(w - 1, y)); }
+let isBgColor;
+if (MODE === 'checker') {
+  // Any (near-)grayscale pixel is background, whatever its brightness --
+  // covers an arbitrary number of baked-in checker shades in one pass. See
+  // the file header for why this is safe against the character's own art.
+  const saturation = ([r, g, b]) => Math.max(r, g, b) - Math.min(r, g, b);
+  isBgColor = (c) => saturation(c) <= THRESH;
+  console.log(`checker mode: treating any pixel with channel spread <= ${THRESH} as background`);
+} else {
+  // Sample background color(s) from the border pixels. Gemini sometimes
+  // bakes in a fake checkerboard instead of real transparency (two
+  // alternating flat colors), so cluster into up to 2 representative colors
+  // via k-means rather than assuming one flat color — a pixel counts as
+  // "background" if it's close to EITHER centroid. For a genuinely flat
+  // backdrop the two centroids just converge to the same color, so this
+  // subsumes the flat case too.
+  const borderSamples = [];
+  for (let x = 0; x < w; x++) { borderSamples.push(colorAt(x, 0)); borderSamples.push(colorAt(x, h - 1)); }
+  for (let y = 0; y < h; y++) { borderSamples.push(colorAt(0, y)); borderSamples.push(colorAt(w - 1, y)); }
 
-function kmeans2(samples) {
-  let c0 = samples[0], c1 = samples[samples.length - 1];
-  for (let iter = 0; iter < 12; iter++) {
-    const g0 = [], g1 = [];
-    for (const s of samples) (dist(s, c0) <= dist(s, c1) ? g0 : g1).push(s);
-    const avg = (arr) => arr.length
-      ? [
-          Math.round(arr.reduce((a, c) => a + c[0], 0) / arr.length),
-          Math.round(arr.reduce((a, c) => a + c[1], 0) / arr.length),
-          Math.round(arr.reduce((a, c) => a + c[2], 0) / arr.length),
-        ]
-      : null;
-    const n0 = avg(g0), n1 = avg(g1);
-    if (n0) c0 = n0;
-    if (n1) c1 = n1;
+  function kmeans2(samples) {
+    let c0 = samples[0], c1 = samples[samples.length - 1];
+    for (let iter = 0; iter < 12; iter++) {
+      const g0 = [], g1 = [];
+      for (const s of samples) (dist(s, c0) <= dist(s, c1) ? g0 : g1).push(s);
+      const avg = (arr) => arr.length
+        ? [
+            Math.round(arr.reduce((a, c) => a + c[0], 0) / arr.length),
+            Math.round(arr.reduce((a, c) => a + c[1], 0) / arr.length),
+            Math.round(arr.reduce((a, c) => a + c[2], 0) / arr.length),
+          ]
+        : null;
+      const n0 = avg(g0), n1 = avg(g1);
+      if (n0) c0 = n0;
+      if (n1) c1 = n1;
+    }
+    return [c0, c1];
   }
-  return [c0, c1];
+  const bgCentroids = kmeans2(borderSamples);
+  console.log(`Sampled background colors: rgb(${bgCentroids[0].join(',')}) / rgb(${bgCentroids[1].join(',')})`);
+  isBgColor = (c) => dist(c, bgCentroids[0]) < THRESH || dist(c, bgCentroids[1]) < THRESH;
 }
-const bgCentroids = kmeans2(borderSamples);
-console.log(`Sampled background colors: rgb(${bgCentroids[0].join(',')}) / rgb(${bgCentroids[1].join(',')})`);
-const isBgColor = (c) => dist(c, bgCentroids[0]) < THRESH || dist(c, bgCentroids[1]) < THRESH;
 
 const visited = new Uint8Array(w * h);
 const erase = new Uint8Array(w * h);

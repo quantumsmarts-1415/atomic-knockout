@@ -19,14 +19,14 @@ const SLOTS = [
   { n: 3, sym: 'Li', name: 'Lillie', charId: 'lillie' }, { n: 4, sym: 'Be', name: 'Ben', charId: 'ben' },
   { n: 5, sym: 'B', name: 'Bord', charId: 'bord' }, { n: 6, sym: 'C', name: 'Carter', charId: 'carter' },
   { n: 7, sym: 'N', name: 'Nitra', charId: 'nitra' }, { n: 8, sym: 'O', name: 'Oxana', charId: 'oxana' },
-  { n: 9, sym: 'F', name: 'Flora' }, { n: 10, sym: 'Ne', name: 'Neo' },
-  { n: 11, sym: 'Na', name: 'Natalie' }, { n: 12, sym: 'Mg', name: 'Maggie' },
-  { n: 13, sym: 'Al', name: 'Allen' }, { n: 14, sym: 'Si', name: 'Silas' },
-  { n: 15, sym: 'P', name: 'Phillip' }, { n: 16, sym: 'S', name: 'Sully' },
-  { n: 17, sym: 'Cl', name: 'Chloe' }, { n: 18, sym: 'Ar', name: 'Aaron' },
-  { n: 19, sym: 'K', name: 'Kyle' }, { n: 20, sym: 'Ca', name: 'Cal' },
-  { n: 21, sym: 'Sc', name: 'Scarlett' }, { n: 22, sym: 'Ti', name: 'Titan', charId: 'titan' },
-  { n: 23, sym: 'V', name: 'Van' }, { n: 24, sym: 'Cr', name: 'Chroma' },
+  { n: 9, sym: 'F', name: 'Flora', charId: 'flora' }, { n: 10, sym: 'Ne', name: 'Neo', charId: 'neo' },
+  { n: 11, sym: 'Na', name: 'Natalie', charId: 'natalie' }, { n: 12, sym: 'Mg', name: 'Maggie', charId: 'maggie' },
+  { n: 13, sym: 'Al', name: 'Allen', charId: 'allen' }, { n: 14, sym: 'Si', name: 'Silas', charId: 'silas' },
+  { n: 15, sym: 'P', name: 'Phillip', charId: 'phillip' }, { n: 16, sym: 'S', name: 'Sully', charId: 'sully' },
+  { n: 17, sym: 'Cl', name: 'Chloe', charId: 'chloe' }, { n: 18, sym: 'Ar', name: 'Aaron', charId: 'aaron' },
+  { n: 19, sym: 'K', name: 'Kyle', charId: 'kyle' }, { n: 20, sym: 'Ca', name: 'Cal', charId: 'cal' },
+  { n: 21, sym: 'Sc', name: 'Scarlett', charId: 'scarlett' }, { n: 22, sym: 'Ti', name: 'Titan', charId: 'titan' },
+  { n: 23, sym: 'V', name: 'Van', charId: 'van' }, { n: 24, sym: 'Cr', name: 'Chroma', charId: 'chroma' },
 ];
 
 const COLS = 8;
@@ -112,28 +112,60 @@ export default class CharacterSelectScene extends Phaser.Scene {
     return this.finishTile(g, slot, x, y, unlocked, base);
   }
 
+  // Unlocked tiles show the character's own concept-art photo by default.
+  // Hovering the mouse over a tile swaps in a name/symbol card on top of it;
+  // moving the pointer away (which also covers "picked a character and
+  // moved on") swaps back to the photo. Locked (no charId yet) tiles keep
+  // the old plain "???" placeholder look, unaffected by any of this.
   finishTile(g, slot, x, y, unlocked, base) {
-    g.fillStyle(base, unlocked ? 1 : 1);
+    g.fillStyle(base, 1);
     g.fillRoundedRect(x, y, TILE, TILE, 12);
-    if (unlocked) {
+
+    const charDef = unlocked ? CHARACTERS[slot.charId] : null;
+    const hasPhoto = unlocked && charDef.art && this.textures.exists(charDef.art.key);
+
+    if (hasPhoto) {
+      const photo = this.add.image(x + TILE / 2, y + TILE / 2, charDef.art.key);
+      const pad = 8;
+      const scale = Math.min((TILE - pad) / photo.width, (TILE - pad) / photo.height);
+      photo.setScale(scale);
+    } else if (unlocked) {
       g.fillStyle(0xffffff, 0.16);
       g.fillRoundedRect(x + 4, y + 4, TILE - 8, TILE - 8, 9);
     } else {
       g.lineStyle(1, 0x4ad6ff, 0.18);
       g.strokeRoundedRect(x + 4, y + 4, TILE - 8, TILE - 8, 9);
     }
+
+    // Name/symbol card -- always present for locked tiles (no photo to show
+    // instead); only shown on hover for unlocked tiles with a real photo.
+    const card = this.add.container(0, 0);
+    const scrim = this.add.graphics();
+    scrim.fillStyle(0x0a0e14, 0.8);
+    scrim.fillRoundedRect(x + 4, y + 4, TILE - 8, TILE - 8, 9);
+    const symText = this.add.text(x + TILE / 2, y + TILE / 2 + 2, slot.sym, {
+      fontFamily: 'Georgia, serif', fontSize: '34px', fontStyle: 'bold',
+      color: unlocked ? '#ffffff' : '#3a4a5c',
+    }).setOrigin(0.5);
+    const nameText = this.add.text(x + TILE / 2, y + TILE - 13, unlocked ? slot.name : '???', {
+      fontFamily: 'Arial, sans-serif', fontSize: '13px',
+      color: unlocked ? '#eaf4ff' : '#3a4a5c',
+    }).setOrigin(0.5);
+    card.add([scrim, symText, nameText]);
+    card.setVisible(!hasPhoto);
+
+    // Tile number stays visible in both states (periodic-table convention).
     this.add.text(x + 10, y + 8, String(slot.n), {
       fontFamily: 'Arial, sans-serif', fontSize: '15px',
       color: unlocked ? '#ffffff' : '#3a4a5c',
     });
-    this.add.text(x + TILE / 2, y + TILE / 2 + 2, slot.sym, {
-      fontFamily: 'Georgia, serif', fontSize: '34px', fontStyle: 'bold',
-      color: unlocked ? '#ffffff' : '#3a4a5c',
-    }).setOrigin(0.5);
-    this.add.text(x + TILE / 2, y + TILE - 13, unlocked ? slot.name : '???', {
-      fontFamily: 'Arial, sans-serif', fontSize: '13px',
-      color: unlocked ? '#eaf4ff' : '#3a4a5c',
-    }).setOrigin(0.5);
+
+    if (hasPhoto) {
+      const zone = this.add.zone(x, y, TILE, TILE).setOrigin(0, 0).setInteractive();
+      zone.on('pointerover', () => card.setVisible(true));
+      zone.on('pointerout', () => card.setVisible(false));
+    }
+
     return { slot, x, y, unlocked };
   }
 

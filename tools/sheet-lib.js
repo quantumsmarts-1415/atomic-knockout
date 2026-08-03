@@ -144,6 +144,108 @@ export function keyBackground(png, threshold = 40) {
   return { x0, y0, x1: x1 + 1, y1: y1 + 1 };
 }
 
+// Alternative keying for frames whose backdrop is a soft vignette/gradient
+// close in color to the character's own palette (e.g. Neo's silver armor
+// against a gray-gradient backdrop) -- fixed-centroid distance either
+// leaves swaths of background un-erased or bleeds into the character
+// depending on threshold, because the true background color range is wider
+// than the gap to the character's color. Instead, grow the erased region
+// from the border by comparing each candidate pixel to its ALREADY-ERASED
+// NEIGHBOR (not a fixed sampled color), so it follows a smooth gradient
+// indefinitely but stops dead at the character's outline (anime line art
+// has a hard-edged dark stroke there, which breaks the neighbor-tolerance
+// chain even when the fill colors on both sides are similar). Still needs
+// the fixed-centroid pocket pass afterward for fully enclosed background
+// pockets, since those never touch the growing border region at all.
+export function keyBackgroundGradient(png, tolerance = 14, pocketThreshold = 40) {
+  const { width: w, height: h, data } = png;
+  const idx = (x, y) => (w * y + x) << 2;
+
+  const borderSamples = [];
+  for (let x = 0; x < w; x++) { borderSamples.push(colorAt(png, x, 0)); borderSamples.push(colorAt(png, x, h - 1)); }
+  for (let y = 0; y < h; y++) { borderSamples.push(colorAt(png, 0, y)); borderSamples.push(colorAt(png, w - 1, y)); }
+  const bgCentroids = kmeans2(borderSamples);
+  const isBgColor = (c) => dist(c, bgCentroids[0]) < pocketThreshold || dist(c, bgCentroids[1]) < pocketThreshold;
+
+  paintOverWatermark(png, bgCentroids[0]);
+
+  const visited = new Uint8Array(w * h);
+  const erase = new Uint8Array(w * h);
+  const stack = [];
+  for (let x = 0; x < w; x++) { stack.push([x, 0]); stack.push([x, h - 1]); }
+  for (let y = 0; y < h; y++) { stack.push([0, y]); stack.push([w - 1, y]); }
+  while (stack.length) {
+    const [x, y] = stack.pop();
+    if (x < 0 || y < 0 || x >= w || y >= h) continue;
+    const p = y * w + x;
+    if (visited[p]) continue;
+    visited[p] = 1;
+    erase[p] = 1;
+    const c = colorAt(png, x, y);
+    const neighbors = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
+    for (const [nx, ny] of neighbors) {
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+      const np = ny * w + nx;
+      if (visited[np]) continue;
+      if (dist(colorAt(png, nx, ny), c) < tolerance) stack.push([nx, ny]);
+    }
+  }
+
+  // enclosed pockets (same fixed-centroid approach as keyBackground)
+  const compVisited = new Uint8Array(w * h);
+  for (let sy = 0; sy < h; sy++) {
+    for (let sx = 0; sx < w; sx++) {
+      const sp = sy * w + sx;
+      if (compVisited[sp] || erase[sp]) continue;
+      if (!isBgColor(colorAt(png, sx, sy))) { compVisited[sp] = 1; continue; }
+      const comp = [sp];
+      const cstack = [[sx, sy]];
+      compVisited[sp] = 1;
+      while (cstack.length) {
+        const [x, y] = cstack.pop();
+        const neighbors = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
+        for (const [nx, ny] of neighbors) {
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          const np = ny * w + nx;
+          if (erase[np]) continue;
+          if (compVisited[np]) continue;
+          if (!isBgColor(colorAt(png, nx, ny))) continue;
+          compVisited[np] = 1;
+          comp.push(np);
+          cstack.push([nx, ny]);
+        }
+      }
+      for (const p of comp) erase[p] = 1;
+    }
+  }
+
+  for (let p = 0; p < w * h; p++) if (erase[p]) data[(p << 2) + 3] = 0;
+
+  const alphaSnapshot = new Uint8ClampedArray(w * h);
+  for (let p = 0; p < w * h; p++) alphaSnapshot[p] = data[(p << 2) + 3];
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const p = y * w + x;
+      if (alphaSnapshot[p] === 0) continue;
+      const touchesErased =
+        alphaSnapshot[p - 1] === 0 || alphaSnapshot[p + 1] === 0 ||
+        alphaSnapshot[p - w] === 0 || alphaSnapshot[p + w] === 0;
+      if (touchesErased) data[idx(x, y) + 3] = Math.round(data[idx(x, y) + 3] * 0.55);
+    }
+  }
+
+  let x0 = w, y0 = h, x1 = 0, y1 = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (data[idx(x, y) + 3] > 10) {
+        if (x < x0) x0 = x; if (x > x1) x1 = x;
+        if (y < y0) y0 = y; if (y > y1) y1 = y;
+      }
+    }
+  }
+  return { x0, y0, x1: x1 + 1, y1: y1 + 1 };
+}
+
 export function cropPng(png, box) {
   const w = box.x1 - box.x0, h = box.y1 - box.y0;
   const out = new PNG({ width: w, height: h });

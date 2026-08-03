@@ -23,18 +23,37 @@
 // achromatic checkerboard in one pass without needing to fit its colors --
 // the character's skin/armor/lava tones are all visibly warm (non-gray) by
 // comparison, so real content is protected by chroma, not brightness.
+//
+// "checker-edge" is for the hard case "checker" can't handle: a character
+// whose own suit/armor is ALSO neutral gray/white (seen on Scarlett's
+// silver-armor render over a light checkerboard) -- there, chroma can't
+// tell background and character apart at all, since neither has any. What
+// still tells them apart is that the checkerboard is flat within each
+// square (low local gradient) while her linework and shading are not, so
+// this mode gates flood-fill CONNECTIVITY on low local gradient IN ADDITION
+// to low saturation -- the fill can spread through a checker square's flat
+// interior but can't cross her bold outline strokes or shading edges. Trade
+// -off: this necessarily leaves a thin (1-2px) residue right at checker
+// SQUARE BOUNDARIES too, since that's also a color step -- much less
+// objectionable than a solid unremoved block, but not pixel-perfect. Do NOT
+// "fix" this by growing the erased region afterward using saturation alone
+// (no gradient gate) -- tried that, it happily eats several pixels into her
+// actual outline strokes wherever they sit near the checker (which is
+// everywhere along her silhouette), turning clean edges into static noise.
 import { PNG } from 'pngjs';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const [, , inPath, outPath, thresholdArg, modeArg] = process.argv;
 if (!inPath || !outPath) {
-  console.error('Usage: node remove-bg.js <input.png> <output.png> [threshold] [mode: auto|checker]');
+  console.error('Usage: node remove-bg.js <input.png> <output.png> [threshold] [mode: auto|checker|checker-edge]');
   process.exit(1);
 }
 const MODE = modeArg ?? 'auto';
-// checker mode's threshold is a max(r,g,b)-min(r,g,b) saturation cap, not a
-// color distance, so it needs a much smaller default than "auto"'s.
-const THRESH = thresholdArg ? Number(thresholdArg) : (MODE === 'checker' ? 14 : 40);
+// checker/checker-edge's threshold is a max(r,g,b)-min(r,g,b) saturation
+// cap, not a color distance, so it needs a much smaller default than
+// "auto"'s.
+const THRESH = thresholdArg ? Number(thresholdArg) : (MODE === 'auto' ? 40 : 14);
+const GRAD_THRESH = 18; // checker-edge only: max per-channel-sum step to a neighbor still counted as "flat"
 
 const png = PNG.sync.read(readFileSync(inPath));
 const { width: w, height: h, data } = png;
@@ -49,13 +68,34 @@ const dist = (a, b) => {
 };
 
 let isBgColor;
-if (MODE === 'checker') {
+// canCross(x,y): connectivity gate for the border flood-fill (pass 1) only.
+// Defaults to isBgColor's color-only test; checker-edge overrides it to add
+// the gradient gate. The enclosed-pocket pass (pass 2) and the erase
+// decision always use isBgColor alone -- see file header for why.
+let canCross;
+if (MODE === 'checker' || MODE === 'checker-edge') {
   // Any (near-)grayscale pixel is background, whatever its brightness --
   // covers an arbitrary number of baked-in checker shades in one pass. See
   // the file header for why this is safe against the character's own art.
   const saturation = ([r, g, b]) => Math.max(r, g, b) - Math.min(r, g, b);
   isBgColor = (c) => saturation(c) <= THRESH;
-  console.log(`checker mode: treating any pixel with channel spread <= ${THRESH} as background`);
+  console.log(`${MODE} mode: treating any pixel with channel spread <= ${THRESH} as background`);
+  if (MODE === 'checker-edge') {
+    const gradAt = (x, y) => {
+      const c = colorAt(x, y);
+      let maxD = 0;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx, ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        const n = colorAt(nx, ny);
+        const d = Math.abs(c[0] - n[0]) + Math.abs(c[1] - n[1]) + Math.abs(c[2] - n[2]);
+        if (d > maxD) maxD = d;
+      }
+      return maxD;
+    };
+    canCross = (x, y) => isBgColor(colorAt(x, y)) && gradAt(x, y) <= GRAD_THRESH;
+    console.log(`checker-edge: also gating on local gradient <= ${GRAD_THRESH}`);
+  }
 } else {
   // Sample background color(s) from the border pixels. Gemini sometimes
   // bakes in a fake checkerboard instead of real transparency (two
@@ -90,6 +130,7 @@ if (MODE === 'checker') {
   console.log(`Sampled background colors: rgb(${bgCentroids[0].join(',')}) / rgb(${bgCentroids[1].join(',')})`);
   isBgColor = (c) => dist(c, bgCentroids[0]) < THRESH || dist(c, bgCentroids[1]) < THRESH;
 }
+canCross ??= (x, y) => isBgColor(colorAt(x, y));
 
 const visited = new Uint8Array(w * h);
 const erase = new Uint8Array(w * h);
@@ -98,7 +139,7 @@ const pushIfBg = (x, y) => {
   if (x < 0 || y < 0 || x >= w || y >= h) return;
   const p = y * w + x;
   if (visited[p]) return;
-  if (isBgColor(colorAt(x, y))) stack.push([x, y]);
+  if (canCross(x, y)) stack.push([x, y]);
 };
 for (let x = 0; x < w; x++) { pushIfBg(x, 0); pushIfBg(x, h - 1); }
 for (let y = 0; y < h; y++) { pushIfBg(0, y); pushIfBg(w - 1, y); }

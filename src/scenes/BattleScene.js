@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import Fighter from '../engine/Fighter.js';
 import { CHARACTERS } from '../data/characters.js';
+import { STAGES } from '../data/stages.js';
 import { play as sfx } from '../engine/sfx.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { phoneNet } from '../net/PhoneNet.js';
@@ -33,6 +34,11 @@ export default class BattleScene extends Phaser.Scene {
           ],
           stocks: 3,
         };
+    // Falls back to a random stage rather than always the first one, so
+    // launching Battle directly (no StageSelect) for testing still shows
+    // stage variety instead of always Elemental Isle.
+    this.stage = STAGES.find((s) => s.id === this.setup.stageId)
+      ?? Phaser.Utils.Array.GetRandom(STAGES);
   }
 
   create() {
@@ -54,10 +60,12 @@ export default class BattleScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------ stage
   drawBackground() {
-    // Layered sky: night-lab gradient, distant "molecule" bubbles, soft hills
+    // Layered sky: night-lab gradient (per-stage theme color), distant
+    // "molecule" bubbles, soft hills.
+    const { skyTop, skyBottom, hills } = this.stage.theme;
     const g = this.add.graphics();
-    const top = Phaser.Display.Color.ValueToColor(0x101b33);
-    const bottom = Phaser.Display.Color.ValueToColor(0x2a4a6e);
+    const top = Phaser.Display.Color.ValueToColor(skyTop);
+    const bottom = Phaser.Display.Color.ValueToColor(skyBottom);
     for (let i = 0; i < 24; i++) {
       const c = Phaser.Display.Color.Interpolate.ColorWithColor(top, bottom, 24, i);
       g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1);
@@ -75,57 +83,57 @@ export default class BattleScene extends Phaser.Scene {
       g.strokeCircle(x, y, r);
     }
     // distant hills
-    g.fillStyle(0x18294a, 1);
+    g.fillStyle(hills[0], 1);
     g.fillEllipse(W * 0.25, H * 0.98, W * 0.9, H * 0.45);
-    g.fillStyle(0x14223d, 1);
+    g.fillStyle(hills[1], 1);
     g.fillEllipse(W * 0.85, H * 1.02, W * 0.95, H * 0.5);
   }
 
+  // Builds solids/platforms from this.stage's data (see data/stages.js).
+  // solids collide from every side (ground pieces, obstacles); platforms
+  // are one-way (drop onto only, matched to the collider callback below).
   buildStage() {
-    // solids collide from every side; platforms are one-way (drop onto only)
     this.solids = this.physics.add.staticGroup();
     this.platforms = this.physics.add.staticGroup();
+    const groundY = this.stage.groundY;
 
-    // main floating island: x from 145 to 1135, top at y=560. Stage is 10%
-    // bigger than the original (mainW 900->990, platform 260->286, ground-
-    // to-platform gap 170->187) per Benjamin's request -- the gap was scaled
-    // by the same 10%, not left fixed, and re-verified against every
-    // character's jump+air-jump reach so nobody who could already make the
-    // jump loses access to the platform (the 4 zero-air-jump tanks -- Bord,
-    // Sully, Van, Cal -- already couldn't clear the old 170px gap from a
-    // standing jump either; that's an existing tank-tradeoff, not something
-    // this change newly breaks).
-    const mainW = 990;
-    const mainX = W / 2;
-    const mainTopY = 560;
-    const island = this.add.graphics();
-    // dirt body
-    island.fillStyle(0x3d2f4e, 1);
-    island.fillRoundedRect(mainX - mainW / 2, mainTopY, mainW, 90, { tl: 8, tr: 8, bl: 60, br: 60 });
-    // grass/lab-floor top
-    island.fillStyle(0x53e0a8, 1);
-    island.fillRoundedRect(mainX - mainW / 2, mainTopY, mainW, 22, 8);
-    island.fillStyle(0x3bb886, 1);
-    island.fillRect(mainX - mainW / 2, mainTopY + 16, mainW, 6);
+    for (const s of this.stage.solids) {
+      const isGround = s.h === undefined; // ground pieces span down from groundY; obstacles give their own h
+      const h = s.h ?? 90;
+      const topY = s.y ?? groundY;
+      const g = this.add.graphics();
+      if (isGround) {
+        g.fillStyle(0x3d2f4e, 1);
+        g.fillRoundedRect(s.x - s.w / 2, topY, s.w, h, { tl: 8, tr: 8, bl: 60, br: 60 });
+        g.fillStyle(0x53e0a8, 1);
+        g.fillRoundedRect(s.x - s.w / 2, topY, s.w, 22, 8);
+        g.fillStyle(0x3bb886, 1);
+        g.fillRect(s.x - s.w / 2, topY + 16, s.w, 6);
+      } else {
+        // a standalone obstacle (e.g. The Core's pillar) -- same lab-floor
+        // cap on top, solid dirt body, no rounded "island underside" since
+        // it doesn't float.
+        g.fillStyle(0x3d2f4e, 1);
+        g.fillRoundedRect(s.x - s.w / 2, topY, s.w, h, 6);
+        g.fillStyle(0x53e0a8, 1);
+        g.fillRoundedRect(s.x - s.w / 2, topY, s.w, 10, 4);
+      }
+      const zone = this.add.zone(s.x, topY + h / 2, s.w, h);
+      this.physics.add.existing(zone, true);
+      this.solids.add(zone);
+    }
 
-    // full-thickness solid body so fast falls can't tunnel through the ground
-    const main = this.add.zone(mainX, mainTopY + 45, mainW, 90);
-    this.physics.add.existing(main, true);
-    this.solids.add(main);
+    for (const p of this.stage.platforms) {
+      const g = this.add.graphics();
+      g.fillStyle(0x6a55a0, 1);
+      g.fillRoundedRect(p.x - p.w / 2, p.y, p.w, 18, 9);
+      g.fillStyle(0x8f78cc, 1);
+      g.fillRoundedRect(p.x - p.w / 2, p.y, p.w, 8, 4);
 
-    // one floating platform
-    const platW = 286;
-    const platX = W / 2;
-    const platY = 373; // 187px above mainTopY (was 170px)
-    const plat = this.add.graphics();
-    plat.fillStyle(0x6a55a0, 1);
-    plat.fillRoundedRect(platX - platW / 2, platY, platW, 18, 9);
-    plat.fillStyle(0x8f78cc, 1);
-    plat.fillRoundedRect(platX - platW / 2, platY, platW, 8, 4);
-
-    const platform = this.add.zone(platX, platY + 9, platW, 18);
-    this.physics.add.existing(platform, true);
-    this.platforms.add(platform);
+      const zone = this.add.zone(p.x, p.y + 9, p.w, 18);
+      this.physics.add.existing(zone, true);
+      this.platforms.add(zone);
+    }
   }
 
   // --------------------------------------------------------------- fighters

@@ -1002,6 +1002,10 @@ export const CHARACTERS = {
   // a dynamic action pose, not a clean side profile, same situation as
   // Lillie/Oxana/Flora/Neo) -- verify on screen and flip if backwards.
   // -------------------------------------------------------------------------
+  // Natalie upgraded to a real idle sheet in session 14 (see below) -- her
+  // first video (session 12) had cropped boots in every frame, so she ran
+  // on the static photo (art.file, spriteMode) until the redo. The other 12
+  // in this batch are still static-photo only.
 
   natalie: {
     id: 'natalie',
@@ -1011,6 +1015,11 @@ export const CHARACTERS = {
     atomicNumber: 11,
     tagline: 'Drop her in water and stand back.',
     teach: 'Sodium metal reacts so violently with water that it can burst into flame -- pure sodium has to be stored away from air and moisture, never left exposed.',
+    // Session 14 (2026-08-03): idle video redone (first attempt had her
+    // boots cropped out of every frame) -- confirmed clean full-body
+    // framing across all 40 sampled frames before keying. Her armor is
+    // metallic silver like Neo's, so keyed with the same gradient mode
+    // rather than risking fixed-threshold bleed/residue.
     art: {
       key: 'char-natalie',
       file: 'art-src/natalie-cut.png',
@@ -1018,6 +1027,17 @@ export const CHARACTERS = {
       height: 128,
       bodyW: 37,
       bodyH: 112,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 496,
+        frameH: 699,
+        footY: 0.9697,
+        visibleH: 650,
+        clips: {
+          idle: { count: 14, fps: 3.6, loop: true },
+        },
+      },
     },
     stats: { speed: 355, jumpVelocity: 640, airJumps: 1, weight: 0.85, gravityScale: 1.0 },
     defense: { heat: 3, current: 2, kinetic: 3 }, // soft alkali metal -- reactive, not tough

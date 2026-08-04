@@ -1086,6 +1086,22 @@ export const CHARACTERS = {
     atomicNumber: 12,
     tagline: 'When she lights up, look away.',
     teach: 'Burning magnesium produces one of the brightest white lights of any common metal -- bright enough that it powered early photography flashbulbs and is still used in flares and fireworks.',
+    // Session 15 (2026-08-04): idle video clean on the first try, no drift
+    // across all 40 sampled frames, feet fully in frame throughout. Tried
+    // gradient mode first (her armor is metallic silver like Neo/Natalie/
+    // Allen) but it badly backfired here -- her armor has smooth unoutlined
+    // specular highlight streaks down the torso/hip, and gradient mode's
+    // neighbor-chained flood fill walked straight through that smooth
+    // brightness ramp and ate a large diagonal chunk of real armor detail
+    // (caught via the erase-overlay diff technique, not just eyeballing the
+    // magenta test -- Benjamin caught the bleed by eye first). Switched to
+    // `fixed` mode instead, which compares each pixel to one reference color
+    // so it can't tunnel through a smooth gradient; threshold 70 was the
+    // sweet spot (lower thresholds left a residual ground-shadow smudge,
+    // since the shadow-darkened ground doesn't match the sampled corner
+    // background color closely enough to clear at threshold <=40). Her
+    // flickering white flare/spark VFX (part of her actual design -- see
+    // maggie-cut.png) survived keying intact as bright foreground detail.
     art: {
       key: 'char-maggie',
       file: 'art-src/maggie-cut.png',
@@ -1093,6 +1109,17 @@ export const CHARACTERS = {
       height: 126,
       bodyW: 35,
       bodyH: 109,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 892,
+        frameH: 720,
+        footY: 0.9808,
+        visibleH: 692,
+        clips: {
+          idle: { count: 14, fps: 3.6, loop: true },
+        },
+      },
     },
     stats: { speed: 330, jumpVelocity: 700, airJumps: 2, weight: 0.72, gravityScale: 0.95 },
     // lightweight metal -- agile and floaty, but burns fast and bright
@@ -1143,6 +1170,12 @@ export const CHARACTERS = {
     atomicNumber: 13,
     tagline: 'Light, tough, and impossible to wear down.',
     teach: 'Aluminum reacts instantly with oxygen in the air to form a paper-thin, invisible layer of aluminum oxide on its surface -- that layer is what actually protects the metal underneath from corroding.',
+    // Session 15 (2026-08-04): idle video came out clean on the first try --
+    // no drift off-brief across all 40 sampled frames, feet fully in frame
+    // throughout. Metallic silver armor like Neo/Natalie, so keyed with the
+    // same gradient mode. The swirling blue energy aura survived keying
+    // intact -- confirmed it's part of Allen's actual design (present in
+    // his static allen-cut.png too), not a Gemini hallucination to strip.
     art: {
       key: 'char-allen',
       file: 'art-src/allen-cut.png',
@@ -1150,6 +1183,17 @@ export const CHARACTERS = {
       height: 134,
       bodyW: 38,
       bodyH: 118,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 596,
+        frameH: 720,
+        footY: 0.9745,
+        visibleH: 676,
+        clips: {
+          idle: { count: 14, fps: 3.6, loop: true },
+        },
+      },
     },
     stats: { speed: 345, jumpVelocity: 660, airJumps: 1, weight: 0.8, gravityScale: 1.0 },
     // protective oxide layer -> a solid, well-rounded all-purpose defense,
@@ -1200,6 +1244,23 @@ export const CHARACTERS = {
     atomicNumber: 14,
     tagline: 'Every circuit in the world speaks his language.',
     teach: 'Silicon is the material almost every computer chip on Earth is built from -- its semiconductor properties, conducting electricity only under the right conditions, make modern electronics possible.',
+    // Session 15 (2026-08-04): idle video was portrait orientation (720x1280,
+    // unlike every other character's 1280x720 landscape), and Benjamin
+    // flagged his hair clips off the top edge in most frames -- confirmed
+    // frame_01 has his forehead/hair visibly cropped (an intro transition
+    // frame), but the real problem ran deeper: even frames that LOOK fine
+    // have hair spikes touching y=0 exactly, which poisoned the background
+    // color sampling (kmeans2 picked up hair color as a fake "background"
+    // centroid) and caused his hair to be erased wholesale wherever it
+    // appeared elsewhere in the frame. Fixed at the tool level, not just by
+    // avoiding frames -- see tools/sheet-lib.js's sampleCleanBorder() and the
+    // now-gated border seeding in keyBackgroundGradient(). Also hit 3 frames
+    // (19, 20, 22, 23) with an unrelated one-off keying glitch that ate his
+    // forward leg's shin/boot even though the raw source frame was clean;
+    // found by scanning per-frame opaque-pixel fraction in that leg's bbox
+    // across all 40 frames and excluding the outliers rather than guessing.
+    // Keyed with gradient mode (crisp black panel outlines everywhere, same
+    // category as Allen/Neo -- unlike Maggie's smooth-highlight problem).
     art: {
       key: 'char-silas',
       file: 'art-src/silas-cut.png',
@@ -1207,6 +1268,17 @@ export const CHARACTERS = {
       height: 136,
       bodyW: 38,
       bodyH: 120,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 720,
+        frameH: 1280,
+        footY: 0.9938,
+        visibleH: 1270,
+        clips: {
+          idle: { count: 14, fps: 3.6, loop: true },
+        },
+      },
     },
     stats: { speed: 320, jumpVelocity: 630, airJumps: 1, weight: 0.95, gravityScale: 1.0 },
     // crystalline and glassy -- fairly hard, but a poor conductor (chips

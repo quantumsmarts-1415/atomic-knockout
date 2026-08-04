@@ -18,6 +18,44 @@ export function dist(a, b) {
   return Math.sqrt(dr * dr + dg * dg + db * db);
 }
 
+// Collects border-pixel color samples for background-centroid estimation,
+// but screens out localized contamination (e.g. a character's hair spikes
+// poking into the top edge of a tightly-framed portrait video) using a
+// sliding-window local median along each edge: real background varies
+// smoothly (a vignette can run the full range across a whole edge, like
+// 87->144 top-to-bottom on one side), but a foreground intrusion is a
+// short, sharply-different run against its own immediate neighbors. Keeping
+// only pixels close to their own local window's median tolerates a global
+// gradient while rejecting the intrusion, without needing to discard an
+// entire edge (which would throw away good data on three sides just because
+// hair happened to graze the fourth). Found on Silas (Silicon) -- his idle
+// video frames tightly crop his head, so his hair spikes touch y=0 in most
+// frames; without this, kmeans2 could pick a bad second "background"
+// centroid that's actually his hair color, and the enclosed-pocket pass
+// would then erase his hair wholesale wherever it appears elsewhere in the
+// frame. window=21, outlier gate=35 tuned against that case.
+function sampleCleanBorder(png, window = 21, gate = 35) {
+  const { width: w, height: h } = png;
+  const filterLine = (points) => {
+    const kept = [];
+    const half = Math.floor(window / 2);
+    for (let i = 0; i < points.length; i++) {
+      const lo = Math.max(0, i - half), hi = Math.min(points.length - 1, i + half);
+      const rs = [], gs = [], bs = [];
+      for (let j = lo; j <= hi; j++) { const [r, g, b] = points[j]; rs.push(r); gs.push(g); bs.push(b); }
+      rs.sort((a, b) => a - b); gs.sort((a, b) => a - b); bs.sort((a, b) => a - b);
+      const mid = Math.floor(rs.length / 2);
+      const med = [rs[mid], gs[mid], bs[mid]];
+      if (dist(points[i], med) <= gate) kept.push(points[i]);
+    }
+    return kept;
+  };
+  const top = [], bottom = [], left = [], right = [];
+  for (let x = 0; x < w; x++) { top.push(colorAt(png, x, 0)); bottom.push(colorAt(png, x, h - 1)); }
+  for (let y = 0; y < h; y++) { left.push(colorAt(png, 0, y)); right.push(colorAt(png, w - 1, y)); }
+  return [...filterLine(top), ...filterLine(bottom), ...filterLine(left), ...filterLine(right)];
+}
+
 function kmeans2(samples) {
   let c0 = samples[0], c1 = samples[samples.length - 1];
   for (let iter = 0; iter < 12; iter++) {
@@ -60,10 +98,7 @@ export function keyBackground(png, threshold = 40) {
   const { width: w, height: h, data } = png;
   const idx = (x, y) => (w * y + x) << 2;
 
-  const borderSamples = [];
-  for (let x = 0; x < w; x++) { borderSamples.push(colorAt(png, x, 0)); borderSamples.push(colorAt(png, x, h - 1)); }
-  for (let y = 0; y < h; y++) { borderSamples.push(colorAt(png, 0, y)); borderSamples.push(colorAt(png, w - 1, y)); }
-  const bgCentroids = kmeans2(borderSamples);
+  const bgCentroids = kmeans2(sampleCleanBorder(png));
   const isBgColor = (c) => dist(c, bgCentroids[0]) < threshold || dist(c, bgCentroids[1]) < threshold;
 
   paintOverWatermark(png, bgCentroids[0]);
@@ -161,10 +196,7 @@ export function keyBackgroundGradient(png, tolerance = 14, pocketThreshold = 40)
   const { width: w, height: h, data } = png;
   const idx = (x, y) => (w * y + x) << 2;
 
-  const borderSamples = [];
-  for (let x = 0; x < w; x++) { borderSamples.push(colorAt(png, x, 0)); borderSamples.push(colorAt(png, x, h - 1)); }
-  for (let y = 0; y < h; y++) { borderSamples.push(colorAt(png, 0, y)); borderSamples.push(colorAt(png, w - 1, y)); }
-  const bgCentroids = kmeans2(borderSamples);
+  const bgCentroids = kmeans2(sampleCleanBorder(png));
   const isBgColor = (c) => dist(c, bgCentroids[0]) < pocketThreshold || dist(c, bgCentroids[1]) < pocketThreshold;
 
   paintOverWatermark(png, bgCentroids[0]);
@@ -172,8 +204,23 @@ export function keyBackgroundGradient(png, tolerance = 14, pocketThreshold = 40)
   const visited = new Uint8Array(w * h);
   const erase = new Uint8Array(w * h);
   const stack = [];
-  for (let x = 0; x < w; x++) { stack.push([x, 0]); stack.push([x, h - 1]); }
-  for (let y = 0; y < h; y++) { stack.push([0, y]); stack.push([w - 1, y]); }
+  // Gate the initial border seeding on isBgColor rather than seeding every
+  // border pixel unconditionally -- every character before Silas had a
+  // clear background margin all the way around, so "every border pixel is
+  // background" always held in practice, but his tightly-cropped portrait
+  // video has his hair spikes actually touching y=0. Seeding from a
+  // hair-colored border pixel would erase/grow through his hair using ITS
+  // own color as the neighbor-tolerance seed, wiping out the whole spike.
+  // keyBackground (fixed mode) already gated its border seeding this way;
+  // this brings gradient mode's initial seeding in line with it.
+  for (let x = 0; x < w; x++) {
+    if (isBgColor(colorAt(png, x, 0))) stack.push([x, 0]);
+    if (isBgColor(colorAt(png, x, h - 1))) stack.push([x, h - 1]);
+  }
+  for (let y = 0; y < h; y++) {
+    if (isBgColor(colorAt(png, 0, y))) stack.push([0, y]);
+    if (isBgColor(colorAt(png, w - 1, y))) stack.push([w - 1, y]);
+  }
   while (stack.length) {
     const [x, y] = stack.pop();
     if (x < 0 || y < 0 || x >= w || y >= h) continue;

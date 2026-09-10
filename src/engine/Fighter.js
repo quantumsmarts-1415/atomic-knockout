@@ -318,12 +318,16 @@ export default class Fighter extends Phaser.GameObjects.Container {
         // Negate the hit entirely and retaliate on the attacker -- the
         // Uranium-style "emits radiation damage back" pattern, generalized so
         // any character's counter can use any damage type/knockback.
-        attacker.takeHit(this, {
-          damage: def.counterDamage,
-          type: def.counterType,
-          baseKnockback: def.counterKnockback,
-          knockbackGrowth: def.counterKnockbackGrowth ?? 0,
-        }, time, this.facing);
+        // Guard against counter-vs-counter recursion by tagging the move.
+        if (!move.isCounterAttack) {
+          attacker.takeHit(this, {
+            damage: def.counterDamage,
+            type: def.counterType,
+            baseKnockback: def.counterKnockback,
+            knockbackGrowth: def.counterKnockbackGrowth ?? 0,
+            isCounterAttack: true
+          }, time, this.facing);
+        }
         this.rig.setFlash(0x66ffee);
         this.scene.time.delayedCall(120, () => {
           if (this.state !== 'ko' && this.state !== 'dead') this.rig.setFlash(null);

@@ -2003,6 +2003,17 @@ export const CHARACTERS = {
       height: 144,
       bodyW: 46,
       bodyH: 130,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 416,
+        frameH: 684,
+        footY: 0.9688,
+        visibleH: 632,
+        clips: {
+          idle: { count: 13, fps: 3.6, loop: true },
+        },
+      },
     },
     stats: { speed: 290, jumpVelocity: 600, airJumps: 0, weight: 1.2, gravityScale: 1.1 },
     defense: { heat: 3, physical: 8, electrical: 3, chemical: 0 }, // bone -- hard, kinetic-resistant tank

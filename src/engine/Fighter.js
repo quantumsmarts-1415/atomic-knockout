@@ -7,9 +7,20 @@ import { play as sfx } from './sfx.js';
 // Fighter — one combatant. Reads everything character-specific from its
 // charDef (see src/data/characters.js); contains zero per-character logic.
 //
-// Input is abstracted: each frame the owner (keyboard mapper now, phone
-// controller later) writes into fighter.input = { left, right, jump, attack,
-// special } booleans. `jump/attack/special` are edge-triggered by this class.
+// Input is abstracted: each frame the owner (keyboard mapper, bot AI, or
+// phone controller) writes into fighter.input = { left, right, down, jump,
+// attack, special } booleans. `jump/attack/special` are edge-triggered by
+// this class; `left/right/down` are read as held state, and `jump` doubles
+// as the held "up" signal for move-slot gating (see dirHeld in update()).
+//
+// Each of the two buttons has two variants, chosen by whether a direction is
+// held at the moment of the press (2026-08-05 move-architecture change):
+//   attack + direction  -> charDef.moves.basicDirectional   (melee)
+//   attack, no direction -> charDef.moves.basicCharge        (hold-to-charge)
+//   special + direction -> charDef.moves.specialDirectional (burst/projectile)
+//   special, no direction -> charDef.moves.specialDefense    (block/counter)
+// basicCharge/specialDefense are optional -- a character without one yet
+// falls back to its directional move (see the attacks section in update()).
 // ---------------------------------------------------------------------------
 
 const GRAVITY = 1500;
@@ -50,12 +61,17 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.kos = 0;
     this.alive = true;
 
-    this.input = { left: false, right: false, jump: false, attack: false, special: false };
+    this.input = { left: false, right: false, down: false, jump: false, attack: false, special: false };
     this._prev = { jump: false, attack: false, special: false };
+    this.chargeStart = null;   // set while state === 'charging'
+    this.defenseMove = null;   // the move def driving state === 'defending'
+    this.wallLanded = null;    // Set of fighters already hit, for wall-kind defending
+    this.dashUntil = 0;        // forward-velocity override window for kind:'dash' melee
   }
 
   get isBusy() {
-    return this.state === 'attack' || this.state === 'hurt' || this.state === 'ko' || this.state === 'dead';
+    return this.state === 'attack' || this.state === 'hurt' || this.state === 'ko' || this.state === 'dead' ||
+      this.state === 'charging' || this.state === 'defending';
   }
 
   update(time, dt) {
@@ -66,27 +82,36 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (onGround) this.airJumpsLeft = stats.airJumps;
 
     // timed states expire
-    if ((this.state === 'attack' || this.state === 'hurt') && time >= this.stateUntil) {
+    if ((this.state === 'attack' || this.state === 'hurt' || this.state === 'defending') && time >= this.stateUntil) {
       this.state = 'idle';
       this.rig.setFlash(null);
       this.rig.attackSwing = 0;
       this.activeHit = null;
+      this.defenseMove = null;
     }
 
     const inp = this.input;
     const pressedJump = inp.jump && !this._prev.jump;
     const pressedAttack = inp.attack && !this._prev.attack;
     const pressedSpecial = inp.special && !this._prev.special;
+    const releasedAttack = !inp.attack && this._prev.attack;
     this._prev.jump = inp.jump;
     this._prev.attack = inp.attack;
     this._prev.special = inp.special;
 
-    // --- movement (locked out while hurt/KO'd; allowed while attacking in air)
-    if (this.state !== 'hurt' && this.state !== 'ko') {
+    // "direction held" for the basic/special move-slot gating: left/right are
+    // the normal movement keys, down is new, up reuses the jump key's
+    // held-state rather than adding a dedicated key (Benjamin's choice).
+    const dirHeld = inp.left || inp.right || inp.down || inp.jump;
+
+    // --- movement (locked out while hurt/KO'd/charging/defending; allowed
+    // while attacking in air)
+    if (this.state !== 'hurt' && this.state !== 'ko' && this.state !== 'charging' && this.state !== 'defending') {
       let vx = 0;
       if (inp.left) vx -= stats.speed;
       if (inp.right) vx += stats.speed;
       if (this.state === 'attack' && onGround) vx *= 0.25; // plant feet on ground attacks
+      if (this.dashUntil && time < this.dashUntil) vx = this.dashVX; // kind:'dash' overrides normal movement
       // Only stomp horizontal velocity when grounded (instant arcade
       // stop/go) or when a direction is actively held (air control).
       // Otherwise leave existing velocity alone -- without this, a
@@ -112,11 +137,36 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
 
     // --- attacks
-    if (!this.isBusy) {
+    // Each button has two variants gated on dirHeld: basicDirectional/
+    // specialDirectional (the old basic/special melee/burst/projectile
+    // moves, unchanged) fire when a direction is held; basicCharge
+    // (hold-to-charge) and specialDefense (block/counter) fire on a neutral
+    // press instead. A character without a charge/defense move yet (not
+    // migrated in Phase B) falls back to its directional move so nothing
+    // breaks mid-migration.
+    if (this.state === 'charging') {
+      if (dirHeld) {
+        // pressing a direction cancels the charge -- this slot is only for
+        // the neutral (no-direction) case.
+        this.state = 'idle';
+        this.chargeStart = null;
+      } else if (releasedAttack) {
+        this.fireCharge(time);
+      }
+    } else if (!this.isBusy) {
       if (pressedAttack && time >= this.attackCooldownUntil) {
-        this.startMove(time, this.charDef.moves.basic, 'basic');
+        if (dirHeld || !this.charDef.moves.basicCharge) {
+          this.startMove(time, this.charDef.moves.basicDirectional, 'basic');
+        } else {
+          this.state = 'charging';
+          this.chargeStart = time;
+        }
       } else if (pressedSpecial && time >= this.specialCooldownUntil) {
-        this.startMove(time, this.charDef.moves.special, 'special');
+        if (dirHeld || !this.charDef.moves.specialDefense) {
+          this.startMove(time, this.charDef.moves.specialDirectional, 'special');
+        } else {
+          this.startDefense(time);
+        }
       }
     }
 
@@ -164,12 +214,58 @@ export default class Fighter extends Phaser.GameObjects.Container {
       // melee: hitbox becomes active partway through the swing. `dir` is
       // captured now and drives both the hitbox side and the launch, so the
       // two can never disagree.
+      // kind: 'dash' is a melee variant (e.g. Hydra's Ignition Dash) where
+      // the fighter's own body sweeps forward as the hitbox instead of a
+      // static box in front of him -- active almost immediately/for nearly
+      // the whole swing, plus a forward-velocity override (see update()).
+      const isDash = move.kind === 'dash';
       this.activeHit = {
         move, dir: this.facing, landed: new Set(),
-        from: time + move.duration * 0.25,
-        until: time + move.duration * 0.8,
+        from: time + move.duration * (isDash ? 0.05 : 0.25),
+        until: time + move.duration * (isDash ? 0.95 : 0.8),
       };
+      if (isDash) {
+        this.dashUntil = time + move.duration;
+        this.dashVX = this.facing * (move.dashSpeed ?? 500);
+      }
     }
+  }
+
+  /** Release-to-fire for basicCharge: damage/knockback scale with hold time
+   * up to move.maxChargeMs (chargeDamageMult/chargeKnockbackMult at full
+   * charge; a tap with no hold at all fires at the base numbers). */
+  fireCharge(time) {
+    const move = this.charDef.moves.basicCharge;
+    const heldMs = Math.min(time - this.chargeStart, move.maxChargeMs);
+    const frac = move.maxChargeMs > 0 ? heldMs / move.maxChargeMs : 1;
+    this.chargeStart = null;
+    const scaled = {
+      ...move,
+      damage: move.damage * (1 + ((move.chargeDamageMult ?? 1) - 1) * frac),
+      // dual-type moves (e.g. Fusion Core: heat + radiation) scale their
+      // secondary damage the same way as the primary.
+      damage2: move.damage2 != null ? move.damage2 * (1 + ((move.chargeDamageMult ?? 1) - 1) * frac) : move.damage2,
+      baseKnockback: move.baseKnockback * (1 + ((move.chargeKnockbackMult ?? 1) - 1) * frac),
+      // radius scaling is optional -- only burst-kind charge moves (e.g.
+      // Hydra's Fusion Core, "large area explosion" at full charge) use it.
+      radius: move.radius != null ? move.radius * (1 + ((move.chargeRadiusMult ?? 1) - 1) * frac) : move.radius,
+    };
+    this.startMove(time, scaled, 'basic');
+  }
+
+  /** Enter the neutral-special defensive window (specialDefense). Whether it
+   * blocks or counters is decided by the move's own `kind` -- see takeHit(). */
+  startDefense(time) {
+    const move = this.charDef.moves.specialDefense;
+    this.state = 'defending';
+    this.defenseMove = move;
+    // `wall`-kind defenses (e.g. Hydra's Dual Flame Wall) are also an active
+    // hazard -- BattleScene checks this set each frame so the same fighter
+    // isn't hit twice by the same activation.
+    this.wallLanded = move.kind === 'wall' ? new Set() : null;
+    this.rig.moveSlot = 'special';
+    this.stateUntil = time + move.duration;
+    this.specialCooldownUntil = time + move.duration + move.cooldown;
   }
 
   // Axis-aligned hitbox in world space for the current melee attack.
@@ -179,7 +275,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (t < this.activeHit.from || t > this.activeHit.until) return null;
     const m = this.activeHit.move;
     const dir = this.activeHit.dir;
-    const x = dir === 1 ? this.x + this.bodyW * 0.2 : this.x - this.bodyW * 0.2 - m.rangeW;
+    // Dash hitboxes are anchored at his own back edge (his whole body sweeps
+    // through as the hitbox) instead of offset in front of him.
+    const isDash = m.kind === 'dash';
+    const x = dir === 1
+      ? (isDash ? this.x - this.bodyW / 2 : this.x + this.bodyW * 0.2)
+      : (isDash ? this.x + this.bodyW / 2 - m.rangeW : this.x - this.bodyW * 0.2 - m.rangeW);
     const y = this.y - this.bodyH * 0.75;
     return new Phaser.Geom.Rectangle(x, y, m.rangeW, m.rangeH);
   }
@@ -195,6 +296,66 @@ export default class Fighter extends Phaser.GameObjects.Container {
    */
   takeHit(attacker, move, time, launchDir) {
     if (this.state === 'ko' || this.state === 'dead') return 0;
+
+    // specialDefense interception -- block or counter, per the defending
+    // move's own `kind`. Both leave `state` at 'defending' (the window keeps
+    // running on its own stateUntil/cooldown, set when it started) rather
+    // than transitioning to 'hurt', since a successful block/counter isn't a
+    // normal hit.
+    if (this.state === 'defending' && this.defenseMove) {
+      const def = this.defenseMove;
+      if (def.kind === 'shield') {
+        // Absorbs exactly one hit of any strength, from any direction, then
+        // pops immediately (ends the defending window early rather than
+        // riding out the rest of its duration) -- Helen's Bubble Shield.
+        // No damage to either side, unlike block (reduced dmg) or counter
+        // (retaliation).
+        this.state = 'idle';
+        this.defenseMove = null;
+        return 0;
+      }
+      if (def.kind === 'counter') {
+        // Negate the hit entirely and retaliate on the attacker -- the
+        // Uranium-style "emits radiation damage back" pattern, generalized so
+        // any character's counter can use any damage type/knockback.
+        attacker.takeHit(this, {
+          damage: def.counterDamage,
+          type: def.counterType,
+          baseKnockback: def.counterKnockback,
+          knockbackGrowth: def.counterKnockbackGrowth ?? 0,
+        }, time, this.facing);
+        this.rig.setFlash(0x66ffee);
+        this.scene.time.delayedCall(120, () => {
+          if (this.state !== 'ko' && this.state !== 'dead') this.rig.setFlash(null);
+        });
+        return 0;
+      }
+      if (def.kind === 'block') {
+        // Reduced damage and knockback, no hitstun -- stays in the defending
+        // window instead of being launched.
+        const reduction = def.damageReduction ?? 0.7;
+        let dmg = applyDefense(move.damage, move.type, this.charDef.defense);
+        if (move.type2) dmg += applyDefense(move.damage2 ?? move.damage, move.type2, this.charDef.defense);
+        dmg *= (1 - reduction);
+        this.percent = Math.min(999, this.percent + dmg);
+        const kb = ((move.baseKnockback + this.percent * move.knockbackGrowth) / this.charDef.stats.weight) * (1 - reduction);
+        const radial = move.launch ? move.launch === 'radial' : move.kind === 'burst';
+        const away = Math.sign(this.x - attacker.x) || attacker.facing || 1;
+        const dir = (!radial && launchDir) ? launchDir : away;
+        this.body.setVelocity(kb * dir * Math.cos(0.45), kb * -0.9);
+        return dmg;
+      }
+      if (def.kind === 'wall') {
+        // Directional block: flame walls guard the left/right sides only.
+        // A hit from clearly above/below (vertical gap > half his own
+        // height) counts as "vertical/underside" and passes through
+        // untouched -- falls out of this if-block to the normal hit
+        // resolution below. A same-height hit is fully negated by the wall.
+        const verticalGap = Math.abs(attacker.y - this.y);
+        if (verticalGap <= this.bodyH * 0.5) return 0;
+      }
+    }
+
     // Cancel whatever attack this fighter was mid-swing on. Without this, an
     // attack's hitbox stayed live (getHitboxRect() only checks activeHit,
     // not state) even after its owner got hit and entered hurt state, so
@@ -203,7 +364,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
     // still landing their hit for the rest of its active window after being
     // interrupted. Getting hit first now reliably beats swinging first.
     this.activeHit = null;
-    const dmg = applyDefense(move.damage, move.type, this.charDef.defense);
+    // Dual-type moves (e.g. Fusion Core: heat + radiation) sum a second
+    // defense-adjusted damage component. Single-type moves are unaffected
+    // (type2 is undefined for them).
+    let dmg = applyDefense(move.damage, move.type, this.charDef.defense);
+    if (move.type2) dmg += applyDefense(move.damage2 ?? move.damage, move.type2, this.charDef.defense);
     this.percent = Math.min(999, this.percent + dmg);
 
     const kb = (move.baseKnockback + this.percent * move.knockbackGrowth) / this.charDef.stats.weight;

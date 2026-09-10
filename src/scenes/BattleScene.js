@@ -156,6 +156,9 @@ export default class BattleScene extends Phaser.Scene {
     for (const f of this.fighters) {
       this.physics.add.collider(f, this.solids);
       this.physics.add.collider(f, this.platforms, undefined, (fighter, plat) => {
+        // Holding down phases through floating platforms entirely (not the
+        // main stage -- that's this.solids, a separate collider above).
+        if (fighter.input.down) return false;
         // one-way platforms: collide only when the fighter's feet were at or
         // above the platform top on the PREVIOUS frame — velocity-independent,
         // so a fast fall can never tunnel through
@@ -169,16 +172,20 @@ export default class BattleScene extends Phaser.Scene {
   bindKeyboard() {
     const kb = this.input.keyboard;
     this.keymaps = [
-      // P1: WASD + F (attack) / G (special)
+      // P1: WASD + F (attack) / G (special). S was unused before the
+      // 2026-08-05 move-architecture change -- now it's the "down" direction
+      // for the basic/special neutral-vs-directional gating (see Fighter.js).
       {
-        left: kb.addKey('A'), right: kb.addKey('D'), jump: kb.addKey('W'),
+        left: kb.addKey('A'), right: kb.addKey('D'), jump: kb.addKey('W'), down: kb.addKey('S'),
         attack: kb.addKey('F'), special: kb.addKey('G'),
       },
-      // P2: arrows + K (attack) / L (special)
+      // P2: arrows + K (attack) / L (special). DOWN arrow was unused before
+      // the same change.
       {
         left: kb.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
         right: kb.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
         jump: kb.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
+        down: kb.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
         attack: kb.addKey('K'), special: kb.addKey('L'),
       },
     ];
@@ -237,12 +244,30 @@ export default class BattleScene extends Phaser.Scene {
     const r = move.projectileRadius;
     const pal = owner.charDef.palettes[owner.paletteIndex];
     const orb = this.add.graphics();
-    orb.fillStyle(pal.body, 0.5);
-    orb.fillCircle(0, 0, r);
-    orb.lineStyle(2.5, 0xffffff, 0.8);
-    orb.strokeCircle(0, 0, r);
-    orb.fillStyle(0xffffff, 0.55);
-    orb.fillCircle(-r * 0.3, -r * 0.3, r * 0.35);
+    if (move.visualShape === 'spearhead') {
+      // Oriented lance/spearhead shape instead of the generic orb -- points
+      // in the direction of travel (Titan's Aero Lance).
+      orb.fillStyle(pal.body, 0.9);
+      orb.lineStyle(2, 0xffffff, 0.9);
+      orb.beginPath();
+      orb.moveTo(r * 1.6, 0);
+      orb.lineTo(-r * 0.6, -r * 0.7);
+      orb.lineTo(-r * 0.2, 0);
+      orb.lineTo(-r * 0.6, r * 0.7);
+      orb.closePath();
+      orb.fillPath();
+      orb.strokePath();
+      orb.fillStyle(0xffffff, 0.6);
+      orb.fillCircle(r * 0.4, 0, r * 0.25);
+      orb.rotation = owner.facing === -1 ? Math.PI : 0;
+    } else {
+      orb.fillStyle(pal.body, 0.5);
+      orb.fillCircle(0, 0, r);
+      orb.lineStyle(2.5, 0xffffff, 0.8);
+      orb.strokeCircle(0, 0, r);
+      orb.fillStyle(0xffffff, 0.55);
+      orb.fillCircle(-r * 0.3, -r * 0.3, r * 0.35);
+    }
     orb.x = owner.x + owner.facing * (owner.bodyW / 2 + r + 4);
     orb.y = owner.y - owner.bodyH * 0.65;
 
@@ -344,6 +369,10 @@ export default class BattleScene extends Phaser.Scene {
         f.input.left = ai.left;
         f.input.right = ai.right;
         f.input.jump = ai.jump;
+        // Bots don't hold "down" -- v1 scope has them only ever using the
+        // directional basic/special (see BotAI.js); charge/counter play is a
+        // future AI enhancement.
+        f.input.down = false;
         f.input.attack = ai.attack;
         f.input.special = ai.special;
         return;
@@ -353,6 +382,7 @@ export default class BattleScene extends Phaser.Scene {
         f.input.left = map.left.isDown;
         f.input.right = map.right.isDown;
         f.input.jump = map.jump.isDown;
+        f.input.down = map.down.isDown;
         f.input.attack = map.attack.isDown;
         f.input.special = map.special.isDown;
       } else {
@@ -360,12 +390,40 @@ export default class BattleScene extends Phaser.Scene {
         f.input.left = net.left;
         f.input.right = net.right;
         f.input.jump = net.up;
+        // PhoneNet/controller.html already carry a real "down" button end to
+        // end (net.down) -- it just wasn't read into fighter input before the
+        // 2026-08-05 move-architecture change.
+        f.input.down = net.down;
         f.input.attack = net.confirm;
         f.input.special = net.back;
       }
     });
 
     for (const f of this.fighters) f.update(time, delta);
+
+    // `wall`-kind defensive moves (e.g. Hydra's Dual Flame Wall) are also an
+    // active hazard: two zones flanking the fighter that damage anyone who
+    // touches them, once per activation (tracked in f.wallLanded).
+    for (const f of this.fighters) {
+      if (f.state !== 'defending' || f.defenseMove?.kind !== 'wall') continue;
+      const m = f.defenseMove;
+      const y = f.y - f.bodyH * (m.wallYFrac ?? 0.75);
+      const sides = [f.x - f.bodyW / 2 - m.wallRangeW, f.x + f.bodyW / 2];
+      for (const wx of sides) {
+        const rect = new Phaser.Geom.Rectangle(wx, y - m.wallRangeH / 2, m.wallRangeW, m.wallRangeH);
+        for (const target of this.fighters) {
+          if (target === f || !target.alive || target.state === 'ko' || f.wallLanded.has(target)) continue;
+          if (Phaser.Geom.Rectangle.Overlaps(rect, target.getHurtboxRect())) {
+            f.wallLanded.add(target);
+            this.landHit(f, target, {
+              damage: m.wallDamage, type: m.wallType,
+              baseKnockback: m.wallKnockback, knockbackGrowth: m.wallKnockbackGrowth ?? 0,
+              kind: 'burst', // radial launch -- away from the wall, like a burst
+            });
+          }
+        }
+      }
+    }
 
     // melee hit detection
     for (const attacker of this.fighters) {

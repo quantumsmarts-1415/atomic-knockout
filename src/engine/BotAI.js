@@ -31,8 +31,12 @@ export function computeBotInput(time, bot, fighters, bounds) {
 
   const dx = target.x - bot.x;
   const dist = Math.abs(dx);
-  const basic = bot.charDef.moves.basic;
-  const special = bot.charDef.moves.special;
+  // Bots only ever use the directional variants (2026-08-05 move-architecture
+  // change) -- they never hold "down"/neutral, so basicCharge/specialDefense
+  // never fire for them. Teaching bots to charge/counter is a future AI
+  // enhancement, not required for the directional moves to keep working.
+  const basic = bot.charDef.moves.basicDirectional;
+  const special = bot.charDef.moves.specialDirectional;
   const basicRange = (basic.rangeW ?? 60) + 20;
   const specialRange = special.kind === 'burst' ? (special.radius ?? 90) : 240;
 

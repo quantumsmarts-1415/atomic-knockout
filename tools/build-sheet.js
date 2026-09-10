@@ -2,26 +2,32 @@
 // grid sprite sheet: key background transparent, crop all frames to one
 // consistent union bbox (+padding), compose into a grid, report footY /
 // visibleH for characters.js. See gemini-sprite-pipeline memory for the recipe.
-// Usage: node tools/build-sheet.js <framesDir> <outPng> <startIdx> <endIdx> <step> [threshold] [padding] [mode]
-// mode: "fixed" (default) or "gradient" -- use "gradient" when the character's
-// own colors are close to the backdrop (e.g. metallic/gray armor against a
-// gray vignette) and "fixed" leaves either background residue or bleeds into
-// the character depending on threshold. See keyBackgroundGradient in
-// sheet-lib.js for why.
-import { readPng, keyBackground, keyBackgroundGradient, cropPng } from './sheet-lib.js';
+// Usage: node tools/build-sheet.js <framesDir> <outPng> <startIdx> <endIdx> <step> [threshold] [padding] [mode] [pocketThreshold] [gradThreshold]
+// mode: "fixed" (default), "gradient", or "edge" --
+//   "gradient": character's own colors are close to the backdrop (e.g.
+//     metallic/gray armor against a gray vignette) and "fixed" leaves either
+//     background residue or bleeds into the character depending on
+//     threshold. See keyBackgroundGradient in sheet-lib.js for why.
+//   "edge": the hardest case -- the character's own FILL color (not just its
+//     edge) legitimately overlaps the backdrop over a large area, so neither
+//     fixed nor gradient mode can protect it (found on Allen/Aluminum). Gates
+//     flood-fill connectivity on local gradient too, so it can't tunnel
+//     across a real ink outline even through a thin anti-aliased gap. See
+//     keyBackgroundEdgeGated in sheet-lib.js for why.
+import { readPng, keyBackground, keyBackgroundGradient, keyBackgroundEdgeGated, cropPng } from './sheet-lib.js';
 import { PNG } from 'pngjs';
 import { readdirSync, writeFileSync } from 'node:fs';
 
-const [, , framesDir, outPath, startArg, endArg, stepArg, threshArg, padArg, modeArg, pocketArg] = process.argv;
+const [, , framesDir, outPath, startArg, endArg, stepArg, threshArg, padArg, modeArg, pocketArg, gradArg, minPocketArg] = process.argv;
 if (!framesDir || !outPath || startArg === undefined || endArg === undefined) {
-  console.error('Usage: node build-sheet.js <framesDir> <outPng> <startIdx> <endIdx> <step> [threshold] [padding] [mode] [pocketThreshold]');
+  console.error('Usage: node build-sheet.js <framesDir> <outPng> <startIdx> <endIdx> <step> [threshold] [padding] [mode] [pocketThreshold] [gradThreshold] [minPocketSize]');
   process.exit(1);
 }
 const start = Number(startArg), end = Number(endArg), step = stepArg ? Number(stepArg) : 1;
 const THRESH = threshArg ? Number(threshArg) : 40;
 const PAD = padArg ? Number(padArg) : 20;
 const MODE = modeArg || 'fixed';
-// In gradient mode the enclosed-pocket cleanup pass still uses a fixed
+// In gradient/edge mode the enclosed-pocket cleanup pass still uses a fixed
 // sampled background color (there's no "neighbor" inside a fully enclosed
 // pocket to grow from) -- for a character whose own colors sit close to
 // that fixed centroid (busy silhouettes with lots of small enclosed gaps,
@@ -30,6 +36,8 @@ const MODE = modeArg || 'fixed';
 // (e.g. 15-20) if a magenta-background test shows bleed even after
 // gradient mode fixed the border.
 const POCKET_THRESH = pocketArg ? Number(pocketArg) : 40;
+const GRAD_THRESH = gradArg ? Number(gradArg) : 18; // edge mode only
+const MIN_POCKET_SIZE = minPocketArg ? Number(minPocketArg) : 1500; // edge mode only
 
 const files = readdirSync(framesDir).filter(f => f.endsWith('.png')).sort();
 const chosen = [];
@@ -38,7 +46,9 @@ console.log(`Using ${chosen.length} frames:`, chosen.join(', '));
 
 const keyed = chosen.map(f => {
   const png = readPng(`${framesDir}/${f}`);
-  const box = MODE === 'gradient' ? keyBackgroundGradient(png, THRESH, POCKET_THRESH) : keyBackground(png, THRESH);
+  const box = MODE === 'gradient' ? keyBackgroundGradient(png, THRESH, POCKET_THRESH)
+    : MODE === 'edge' ? keyBackgroundEdgeGated(png, THRESH, GRAD_THRESH, POCKET_THRESH, MIN_POCKET_SIZE)
+    : keyBackground(png, THRESH);
   return { png, box };
 });
 

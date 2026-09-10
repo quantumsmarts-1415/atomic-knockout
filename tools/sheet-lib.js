@@ -293,6 +293,144 @@ export function keyBackgroundGradient(png, tolerance = 14, pocketThreshold = 40)
   return { x0, y0, x1: x1 + 1, y1: y1 + 1 };
 }
 
+// Third keying strategy, for the hardest case neither fixed nor gradient
+// mode can handle: a character whose own armor fill color (not just its
+// anti-aliased edge) legitimately overlaps the backdrop's color range over
+// a LARGE area -- found on Allen (Aluminum), whose mid-tone metallic gray
+// covers thousands of interior pixels within the same distance band as the
+// sampled backdrop gray. Fixed mode has no way to protect that area (it's
+// close to the centroid by definition); gradient mode makes it worse (nothing
+// stops it from chaining across the smooth panel-to-panel shading once the
+// border-connected fill leaks through any single thin/anti-aliased gap in
+// the ink outline). This mode ports the "checker-edge" trick from
+// remove-bg.js: gate the border-connected flood fill's CONNECTIVITY on local
+// gradient in addition to color distance, so it still spreads freely through
+// the backdrop's own flat/gradient interior (low local gradient there) but
+// cannot hop across a real ink outline stroke even through a single-pixel
+// anti-aliased gap, because the outline itself is a sharp local step. The
+// enclosed-pocket pass is ALSO gradient-gated here (unlike keyBackground/
+// keyBackgroundGradient, where it deliberately stays color-only) AND size-
+// gated -- see the comment at the pocket-pass loop below for why both were
+// needed; a gradient gate alone still erased hundreds of small legitimate
+// shading-detail pockets one at a time before the size gate was added.
+export function keyBackgroundEdgeGated(png, colorThreshold = 40, gradThreshold = 18, pocketThreshold = 40, minPocketSize = 1500) {
+  const { width: w, height: h, data } = png;
+  const idx = (x, y) => (w * y + x) << 2;
+
+  const bgCentroids = kmeans2(sampleCleanBorder(png));
+  const isBgColor = (c) => dist(c, bgCentroids[0]) < colorThreshold || dist(c, bgCentroids[1]) < colorThreshold;
+  const isPocketBgColor = (c) => dist(c, bgCentroids[0]) < pocketThreshold || dist(c, bgCentroids[1]) < pocketThreshold;
+
+  paintOverWatermark(png, bgCentroids[0]);
+
+  const gradAt = (x, y) => {
+    const c = colorAt(png, x, y);
+    let maxD = 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+      const n = colorAt(png, nx, ny);
+      const d = Math.abs(c[0] - n[0]) + Math.abs(c[1] - n[1]) + Math.abs(c[2] - n[2]);
+      if (d > maxD) maxD = d;
+    }
+    return maxD;
+  };
+  const canCross = (x, y) => isBgColor(colorAt(png, x, y)) && gradAt(x, y) <= gradThreshold;
+  const canCrossPocket = (x, y) => isPocketBgColor(colorAt(png, x, y)) && gradAt(x, y) <= gradThreshold;
+
+  const visited = new Uint8Array(w * h);
+  const erase = new Uint8Array(w * h);
+  const stack = [];
+  const pushIfCrossable = (x, y) => {
+    if (x < 0 || y < 0 || x >= w || y >= h) return;
+    const p = y * w + x;
+    if (visited[p]) return;
+    if (canCross(x, y)) stack.push([x, y]);
+  };
+  for (let x = 0; x < w; x++) { pushIfCrossable(x, 0); pushIfCrossable(x, h - 1); }
+  for (let y = 0; y < h; y++) { pushIfCrossable(0, y); pushIfCrossable(w - 1, y); }
+  while (stack.length) {
+    const [x, y] = stack.pop();
+    const p = y * w + x;
+    if (visited[p]) continue;
+    visited[p] = 1;
+    erase[p] = 1;
+    pushIfCrossable(x + 1, y); pushIfCrossable(x - 1, y); pushIfCrossable(x, y + 1); pushIfCrossable(x, y - 1);
+  }
+
+  // enclosed pockets -- gradient-gated like pass 1, PLUS a minimum size gate.
+  // Both turned out necessary on Allen, found the hard way (a first version
+  // with only the gradient gate looked clean at a glance but, on a closer
+  // zoom Benjamin caught, had peppered his armor's own recessed shading
+  // grooves and the aura's own dark sub-strokes with hundreds of tiny
+  // erased holes -- each recess/dark streak segment is its own small,
+  // locally-flat, near-centroid-colored component, so canCrossPocket
+  // happily erases each one individually even though none of them are
+  // background). The gradient gate alone can't fix this: a small real
+  // shading groove and a small slice of real background both look "flat
+  // and background-colored" at that scale. Size is what actually
+  // distinguishes them here -- the one pocket that legitimately needs
+  // erasing (the flat disk between Allen's aura ring and his silhouette) is
+  // thousands of pixels, while his shading detail's individual enclosed
+  // dark bits are tens to low hundreds. minPocketSize defaults to 400,
+  // comfortably above the shading noise floor and comfortably below a real
+  // aura-sized gap; raise it if a future character's real background pocket
+  // is smaller than that (rare -- most such pockets are gaps between limbs
+  // or full aura rings, not slivers) and it's leaking through un-erased.
+  const compVisited = new Uint8Array(w * h);
+  for (let sy = 0; sy < h; sy++) {
+    for (let sx = 0; sx < w; sx++) {
+      const sp = sy * w + sx;
+      if (compVisited[sp] || erase[sp]) continue;
+      if (!canCrossPocket(sx, sy)) { compVisited[sp] = 1; continue; }
+      const comp = [sp];
+      const cstack = [[sx, sy]];
+      compVisited[sp] = 1;
+      while (cstack.length) {
+        const [x, y] = cstack.pop();
+        const neighbors = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
+        for (const [nx, ny] of neighbors) {
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          const np = ny * w + nx;
+          if (erase[np]) continue;
+          if (compVisited[np]) continue;
+          if (!canCrossPocket(nx, ny)) continue;
+          compVisited[np] = 1;
+          comp.push(np);
+          cstack.push([nx, ny]);
+        }
+      }
+      if (comp.length >= minPocketSize) { for (const p of comp) erase[p] = 1; }
+    }
+  }
+
+  for (let p = 0; p < w * h; p++) if (erase[p]) data[(p << 2) + 3] = 0;
+
+  const alphaSnapshot = new Uint8ClampedArray(w * h);
+  for (let p = 0; p < w * h; p++) alphaSnapshot[p] = data[(p << 2) + 3];
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const p = y * w + x;
+      if (alphaSnapshot[p] === 0) continue;
+      const touchesErased =
+        alphaSnapshot[p - 1] === 0 || alphaSnapshot[p + 1] === 0 ||
+        alphaSnapshot[p - w] === 0 || alphaSnapshot[p + w] === 0;
+      if (touchesErased) data[idx(x, y) + 3] = Math.round(data[idx(x, y) + 3] * 0.55);
+    }
+  }
+
+  let x0 = w, y0 = h, x1 = 0, y1 = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (data[idx(x, y) + 3] > 10) {
+        if (x < x0) x0 = x; if (x > x1) x1 = x;
+        if (y < y0) y0 = y; if (y > y1) y1 = y;
+      }
+    }
+  }
+  return { x0, y0, x1: x1 + 1, y1: y1 + 1 };
+}
+
 export function cropPng(png, box) {
   const w = box.x1 - box.x0, h = box.y1 - box.y0;
   const out = new PNG({ width: w, height: h });

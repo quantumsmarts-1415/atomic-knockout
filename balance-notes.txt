@@ -1,0 +1,20 @@
+Balance Notes (Lillie & Ben):
+- Lillie's `basicDirectional` (Spark Jab) had duration 180ms and cooldown 90ms. This totals 270ms of recovery before the next attack. The base hitstun is 320ms, meaning Lillie could repeatedly attack an opponent before they could recover, causing an infinite combo. Increased cooldown to 160ms (total 340ms) to ensure opponents can recover.
+- Ben's `basicDirectional` (Precision Strike) had duration 200ms and cooldown 110ms (total 310ms). Increased cooldown to 140ms (total 340ms) to avoid infinite combos.
+
+Move Additions:
+- Lillie (Lithium):
+  - `basicCharge`: Volt Dash (Dash, extremely fast, electrical type).
+  - `specialDefense`: Reactive Armor (Counter, heat type).
+- Ben (Beryllium):
+  - `basicCharge`: Resonant Strike (Melee, scaling damage/knockback).
+  - `specialDefense`: Rigid Stance (Block, 80% reduction).
+- Bord (Boron):
+  - `basicCharge`: Heavy Ram (Dash, slow windup, immense knockback).
+  - `specialDefense`: Boron Carbide Wall (Wall, stops attacks, physical).
+- Carter (Carbon):
+  - `basicCharge`: Diamond Shard (Projectile, high speed, physical).
+  - `specialDefense`: Diamond Plating (Block, 70% reduction).
+- Nitra (Nitrogen):
+  - `basicCharge`: Nitrogen Rush (Dash, fast, moderate knockback).
+  - `specialDefense`: Inert Shield (Shield, ignores next hit).

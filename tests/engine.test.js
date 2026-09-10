@@ -3,7 +3,11 @@ import assert from 'node:assert';
 import { mock } from 'node:test';
 import { applyDefense, CHARACTERS } from '../src/data/characters.js';
 
-mock.module('phaser', {
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const phaserPath = require.resolve('phaser');
+
+mock.module(phaserPath, {
   namedExports: {
     Math: { Clamp: (v, min, max) => Math.min(Math.max(v, min), max) },
     Geom: { Rectangle: class { constructor(x,y,w,h) { this.x=x; this.y=y; this.width=w; this.height=h; } } },

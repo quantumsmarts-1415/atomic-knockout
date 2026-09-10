@@ -2069,17 +2069,6 @@ export const CHARACTERS = {
       height: 132,
       bodyW: 36,
       bodyH: 116,
-      use3d: true,
-      sheets: {
-        dir: 'art-src/gemini-test/sheets/',
-        frameW: 1280,
-        frameH: 720,
-        footY: 1.0000,
-        visibleH: 720,
-        clips: {
-          idle: { count: 13, fps: 3.6, loop: true },
-        },
-      },
     },
     stats: { speed: 340, jumpVelocity: 720, airJumps: 2, weight: 0.75, gravityScale: 0.9 }, // winged -- the most aerial kit on the roster
     defense: { heat: 3, physical: 4, electrical: 3, chemical: 0 },

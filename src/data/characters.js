@@ -1669,6 +1669,17 @@ export const CHARACTERS = {
       height: 134,
       bodyW: 38,
       bodyH: 118,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 392,
+        frameH: 716,
+        footY: 0.9722,
+        visibleH: 670,
+        clips: {
+          idle: { count: 13, fps: 3.6, loop: true },
+        },
+      },
     },
     stats: { speed: 325, jumpVelocity: 640, airJumps: 1, weight: 0.85, gravityScale: 1.0 },
     defense: { heat: 2, physical: 3, electrical: 3, chemical: 0 }, // ignites spontaneously in air -- weak vs heat
@@ -1724,6 +1735,17 @@ export const CHARACTERS = {
       height: 148,
       bodyW: 50,
       bodyH: 136,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 592,
+        frameH: 681,
+        footY: 0.9695,
+        visibleH: 622,
+        clips: {
+          idle: { count: 13, fps: 3.6, loop: true },
+        },
+      },
     },
     stats: { speed: 260, jumpVelocity: 560, airJumps: 0, weight: 1.35, gravityScale: 1.15 },
     // rocky lava-golem tank -- the toughest defense on the roster so far.
@@ -1780,6 +1802,17 @@ export const CHARACTERS = {
       height: 128,
       bodyW: 35,
       bodyH: 110,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 395,
+        frameH: 700,
+        footY: 0.9744,
+        visibleH: 660,
+        clips: {
+          idle: { count: 13, fps: 3.6, loop: true },
+        },
+      },
     },
     stats: { speed: 335, jumpVelocity: 650, airJumps: 1, weight: 0.82, gravityScale: 1.0 },
     defense: { heat: 3, physical: 2, electrical: 3, chemical: 0 }, // reactive halogen gas -- not tough
@@ -1835,6 +1868,17 @@ export const CHARACTERS = {
       height: 138,
       bodyW: 40,
       bodyH: 122,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 548,
+        frameH: 706,
+        footY: 0.9706,
+        visibleH: 653,
+        clips: {
+          idle: { count: 13, fps: 3.6, loop: true },
+        },
+      },
     },
     // another noble gas, same "inert = sturdy" logic as Helen and Neo.
     stats: { speed: 295, jumpVelocity: 610, airJumps: 1, weight: 1.0, gravityScale: 1.0 },
@@ -1891,6 +1935,17 @@ export const CHARACTERS = {
       height: 136,
       bodyW: 39,
       bodyH: 120,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 549,
+        frameH: 709,
+        footY: 0.9717,
+        visibleH: 659,
+        clips: {
+          idle: { count: 13, fps: 3.6, loop: true },
+        },
+      },
     },
     stats: { speed: 350, jumpVelocity: 645, airJumps: 1, weight: 0.83, gravityScale: 1.0 },
     // alkali metal like Natalie -- soft and reactive, but current defense

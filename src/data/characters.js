@@ -511,7 +511,7 @@ export const CHARACTERS = {
         rangeW: 60,
         rangeH: 44,
         duration: 180,
-        cooldown: 280,   // bumped to 280: 180+280=460 total. Next hit lands at 460+45 = 505. Hitstun is 340 (from 145 = 485). Prevents infinite combo.
+        cooldown: 280,
       },
       specialDirectional: {
         name: 'Water Reaction',
@@ -626,7 +626,7 @@ export const CHARACTERS = {
         rangeW: 62,
         rangeH: 44,
         duration: 200,
-        cooldown: 250,   // bumped to 250. 200+250 = 450. Next hit at 450+50 = 500. Hitstun from 160 = 500.
+        cooldown: 250,
       },
       specialDirectional: {
         name: 'Gyro Disc',

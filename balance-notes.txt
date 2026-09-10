@@ -1,9 +1,9 @@
 Balance Notes (Lillie & Ben):
-- Base hitstun in the engine calculates to at least 340ms (320ms base + percent growth).
-- Lillie's `basicDirectional` (Spark Jab) had duration 180ms and cooldown 90ms. This totals 270ms of recovery. Her next attack's active hitbox starts at 25% of the swing (45ms). 270 + 45 = 315ms, which meant the next hit landed 25ms BEFORE the opponent exited hitstun, causing an inescapable infinite true-combo.
-- Increased Lillie's cooldown to 280ms. New timing: 180 (duration) + 280 (cooldown) + 45 (startup) = 505ms. The opponent now has a 165ms window to react, block, or dodge before the next hit lands.
-- Ben's `basicDirectional` (Precision Strike) had duration 200ms and cooldown 110ms. New timing: 200 (duration) + 110 (cooldown) + 50 (startup) = 360ms. Still slightly too close to a true combo at higher percents.
-- Increased Ben's cooldown to 250ms. New timing: 200 + 250 + 50 = 500ms. Breaking the true combo.
+- Base hitstun in the engine calculates to at least 340ms (320ms base + percent growth). Hitstun starts when the attack connects.
+- Lillie's `basicDirectional` (Spark Jab) had duration 180ms and cooldown 90ms. If a hit landed at the 25% mark (45ms), she would recover 225ms after the hit (135ms remaining duration + 90ms cooldown). Her next swing's hitbox becomes active 45ms later, meaning the next hit would land 270ms after the first hit. Since 270ms is less than 340ms hitstun, it was an infinite true-combo.
+- Increased Lillie's cooldown to 280ms. New timing: After a hit lands at the 45ms mark, she recovers 415ms later (135ms remaining duration + 280ms cooldown). The next hit lands 45ms after that, which is 460ms after the first hit. Since hitstun is 340ms, the opponent now has 120ms to react, block, or dodge before the next hit connects.
+- Ben's `basicDirectional` (Precision Strike) had duration 200ms and cooldown 110ms. Hit at 25% (50ms). Recovery: 150ms remaining + 110ms cooldown = 260ms. Next hit lands 50ms later = 310ms after the first hit, less than 340ms hitstun, causing an infinite combo.
+- Increased Ben's cooldown to 250ms. New timing: After a hit lands at 50ms, recovery is 150ms + 250ms = 400ms. Next hit lands 50ms later = 450ms after the first hit. Opponent has 110ms to act (450ms - 340ms hitstun). Breaking the true combo.
 
 Move Additions:
 - Lillie (Lithium):
@@ -11,7 +11,7 @@ Move Additions:
   - `specialDefense`: Reactive Armor (Counter, heat type).
 - Ben (Beryllium):
   - `basicCharge`: Resonant Strike (Melee, scaling damage/knockback).
-  - `specialDefense`: Rigid Stance (Block, 80% reduction).
+  - `specialDefense`: Rigid Stance (Block, 65% reduction).
 - Bord (Boron):
   - `basicCharge`: Heavy Ram (Dash, slow windup, immense knockback).
   - `specialDefense`: Boron Carbide Wall (Wall, stops attacks, physical).

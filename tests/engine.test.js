@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import { mock } from 'node:test';
-import { applyDefense } from '../src/data/characters.js';
+import { applyDefense, CHARACTERS } from '../src/data/characters.js';
 
 mock.module('phaser', {
   namedExports: {
@@ -142,55 +142,50 @@ test('Cooldowns and move-slot selection', () => {
 
 test('Anti-spam timing validation: duration + cooldown vs hitstun', () => {
   const mockScene = createMockScene();
-  const charDef = { ...baseCharDef, moves: {
-    // Simulating Lillie's pre-fix move that was an infinite combo:
-    // duration 180, cooldown 90. Base hitstun is 320ms.
-    basicDirectional: { duration: 180, cooldown: 90, type: 'physical' }
-  }};
   
-  const f = new Fighter(mockScene, 0, 0, charDef, 0, 0);
-  f.rig = { animate: () => {}, setFlash: () => {}, play: () => {}, updateSheetFacing: () => {} };
+  // Use LIVE CHARACTERS data
+  const lillieDef = CHARACTERS.lillie;
+  const benDef = CHARACTERS.ben;
   
-  // Attacker starts swinging at T=1000
-  f.input = { left: true, attack: true, special: false }; f.update(1000, 16);
-  assert.strictEqual(f.state, 'attack');
-  assert.strictEqual(f.attackCooldownUntil, 1000 + 180 + 90); // 1270
+  // Lillie timing check
+  const lillie = new Fighter(mockScene, 0, 0, lillieDef, 0, 0);
+  lillie.rig = { animate: () => {}, setFlash: () => {}, play: () => {}, updateSheetFacing: () => {} };
   
-  // Victim hit calculation
-  const victim = new Fighter(mockScene, 0, 0, charDef, 0, 0);
-  victim.rig = { animate: () => {}, setFlash: () => {}, play: () => {}, updateSheetFacing: () => {} };
-  const move = { type: 'physical', damage: 10, baseKnockback: 100, knockbackGrowth: 10 };
+  lillie.input = { left: true, attack: true, special: false }; lillie.update(1000, 16);
+  assert.strictEqual(lillie.state, 'attack');
   
-  // Assume hit lands at T=1144 (80% through the 180ms duration)
-  victim.takeHit(f, move, 1144, 1);
-  assert.strictEqual(victim.state, 'hurt');
-  // Base hitstun is 320 + min(percent*2, 300) = 320 + 20 = 340. 
-  // 1144 + 340 = 1484
-  assert.strictEqual(victim.stateUntil, 1144 + 340);
+  const lDur = lillieDef.moves.basicDirectional.duration;
+  const lCool = lillieDef.moves.basicDirectional.cooldown;
+  const lStartup = lDur * 0.25; 
   
-  // Attacker can swing again at T=1270. 
-  // 1270 < 1484, so the attacker can easily land another hit before victim recovers.
-  assert.strictEqual(f.attackCooldownUntil < victim.stateUntil, true);
+  const lHitLandedTime = 1000 + lStartup;
+  const lHitstunEnd = lHitLandedTime + 340; // 340ms is base hitstun
   
-  // NOW test the fixed timings: Lillie's cooldown bumped to 280.
-  const charDefFixed = { ...baseCharDef, moves: {
-    basicDirectional: { duration: 180, cooldown: 280, type: 'physical' }
-  }};
-  const f2 = new Fighter(mockScene, 0, 0, charDefFixed, 0, 0);
-  f2.rig = { animate: () => {}, setFlash: () => {}, play: () => {}, updateSheetFacing: () => {} };
+  const lNextAttackAvailable = 1000 + lDur + lCool;
+  const lNextEarliestHit = lNextAttackAvailable + lStartup;
   
-  f2.input = {}; f2.update(950, 16);
-  f2.input = { left: true, attack: true, special: false }; f2.update(1000, 16);
+  // The next hit MUST land AFTER hitstun ends to break the true combo
+  assert.ok(lNextEarliestHit > lHitstunEnd, `Lillie true combo possible! Next hit: ${lNextEarliestHit}, Hitstun end: ${lHitstunEnd}`);
   
-  // Next attack available at T = 1000 + 180 + 280 = 1460
-  // Hit lands at earliest 25% of swing: 1460 + (180 * 0.25) = 1460 + 45 = 1505
-  const nextEarliestHit = f2.attackCooldownUntil + (180 * 0.25);
+  // Ben timing check
+  const ben = new Fighter(mockScene, 0, 0, benDef, 0, 0);
+  ben.rig = { animate: () => {}, setFlash: () => {}, play: () => {}, updateSheetFacing: () => {} };
   
-  // Base hitstun is 320ms + percent calculation. 
-  // If the first hit landed at T=1144, the victim is in hitstun until T = 1144 + 340 (at 0%) = 1484.
-  // 1505 > 1484, meaning the victim has 21ms to act (block, dodge, jump) before the next hit lands!
-  // True combo is properly broken.
-  assert.strictEqual(nextEarliestHit > 1484, true);
+  ben.input = { left: true, attack: true, special: false }; ben.update(1000, 16);
+  assert.strictEqual(ben.state, 'attack');
+  
+  const bDur = benDef.moves.basicDirectional.duration;
+  const bCool = benDef.moves.basicDirectional.cooldown;
+  const bStartup = bDur * 0.25; 
+  
+  const bHitLandedTime = 1000 + bStartup;
+  const bHitstunEnd = bHitLandedTime + 340; // 340ms is base hitstun
+  
+  const bNextAttackAvailable = 1000 + bDur + bCool;
+  const bNextEarliestHit = bNextAttackAvailable + bStartup;
+  
+  // The next hit MUST land AFTER hitstun ends to break the true combo
+  assert.ok(bNextEarliestHit > bHitstunEnd, `Ben true combo possible! Next hit: ${bNextEarliestHit}, Hitstun end: ${bHitstunEnd}`);
 });
 
 test('Charge scaling mechanics', () => {

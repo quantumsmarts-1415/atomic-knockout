@@ -510,8 +510,8 @@ export const CHARACTERS = {
         knockbackGrowth: 5,
         rangeW: 60,
         rangeH: 44,
-        duration: 180,   // quick -- she's the fastest attacker on the roster
-        cooldown: 160,   // bumped from 90 to 160 to prevent infinite hitstun loops (base hitstun is 320ms)
+        duration: 180,
+        cooldown: 280,   // bumped to 280: 180+280=460 total. Next hit lands at 460+45 = 505. Hitstun is 340 (from 145 = 485). Prevents infinite combo.
       },
       specialDirectional: {
         name: 'Water Reaction',
@@ -534,7 +534,7 @@ export const CHARACTERS = {
         baseKnockback: 120,
         chargeKnockbackMult: 2.5,
         knockbackGrowth: 5.5,
-        dashSpeed: 700,
+        dashSpeed: 650, // softened from 700 to 650 -- she is fast, but 700 is a bit far for a tiny metal
         rangeW: 65,
         rangeH: 45,
         duration: 200,
@@ -626,7 +626,7 @@ export const CHARACTERS = {
         rangeW: 62,
         rangeH: 44,
         duration: 200,
-        cooldown: 140,   // bumped from 110 to 140 to prevent infinite hitstun loops
+        cooldown: 250,   // bumped to 250. 200+250 = 450. Next hit at 450+50 = 500. Hitstun from 160 = 500.
       },
       specialDirectional: {
         name: 'Gyro Disc',
@@ -644,6 +644,7 @@ export const CHARACTERS = {
       },
       basicCharge: {
         name: 'Resonant Strike',
+        kind: 'melee',
         type: 'physical',
         damage: 8,
         chargeDamageMult: 2.0,
@@ -660,7 +661,7 @@ export const CHARACTERS = {
       specialDefense: {
         name: 'Rigid Stance',
         kind: 'block',
-        damageReduction: 0.8,
+        damageReduction: 0.65, // slightly less than Carter/Titan (0.7 / 0.6) for balance + fantasy of rigid vs plate armor
         duration: 500,
         cooldown: 600,
         teach: 'Beryllium is exceptionally stiff and lightweight for a metal, making it the perfect material for precision gyroscopes.'
@@ -773,6 +774,10 @@ export const CHARACTERS = {
         wallDamage: 5,
         wallType: 'physical',
         wallKnockback: 150,
+        wallKnockbackGrowth: 5,
+        wallRangeW: 30,
+        wallRangeH: 100,
+        wallYFrac: 0.75,
         duration: 550,
         cooldown: 800,
         teach: 'Boron forms incredibly strong covalent networks, making it the bedrock of super-hard ceramics.'

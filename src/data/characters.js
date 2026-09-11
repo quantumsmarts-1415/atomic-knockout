@@ -2201,6 +2201,17 @@ export const CHARACTERS = {
       height: 130,
       bodyW: 36,
       bodyH: 114,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 1280,
+        frameH: 720,
+        footY: 0.9894,
+        visibleH: 710,
+        clips: {
+          idle: { count: 13, fps: 3.6, loop: true },
+        },
+      },
     },
     stats: { speed: 330, jumpVelocity: 650, airJumps: 1, weight: 0.88, gravityScale: 1.0 },
     defense: { heat: 4, physical: 6, electrical: 3, chemical: 0 }, // chrome plating -- hard, corrosion-resistant coating

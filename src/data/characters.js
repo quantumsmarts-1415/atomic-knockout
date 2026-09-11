@@ -2204,10 +2204,10 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 1280,
-        frameH: 720,
-        footY: 0.9894,
-        visibleH: 710,
+        frameW: 883,
+        frameH: 707,
+        footY: 0.9830,
+        visibleH: 671,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },

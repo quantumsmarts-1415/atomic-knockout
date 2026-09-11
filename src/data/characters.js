@@ -2135,6 +2135,17 @@ export const CHARACTERS = {
       height: 146,
       bodyW: 48,
       bodyH: 132,
+      use3d: true,
+      sheets: {
+        dir: 'art-src/gemini-test/sheets/',
+        frameW: 1121,
+        frameH: 720,
+        footY: 0.9888,
+        visibleH: 691,
+        clips: {
+          idle: { count: 13, fps: 3.6, loop: true },
+        },
+      },
     },
     stats: { speed: 280, jumpVelocity: 580, airJumps: 0, weight: 1.25, gravityScale: 1.1 },
     defense: { heat: 4, physical: 7, electrical: 4, chemical: 0 }, // steel-strengthening alloy metal -- heavy industrial tank

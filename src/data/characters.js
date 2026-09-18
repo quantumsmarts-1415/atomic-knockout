@@ -590,6 +590,7 @@ export const CHARACTERS = {
         visibleH: 1180,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 416, frameH: 700, footY: 0.9943, visibleH: 669 },
         },
       },
     },

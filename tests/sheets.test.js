@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert';
 import { mock } from 'node:test';
 import { createRequire } from 'node:module';
+import { CHARACTERS } from '../src/data/characters.js';
 
 const require = createRequire(import.meta.url);
 const phaserPath = require.resolve('phaser');
@@ -20,7 +21,7 @@ mock.module(phaserPath, {
   },
 });
 
-const { clipFrameSize, clipDisplayLayout } = await import('../src/scenes/BootScene.js');
+const { default: BootScene, clipFrameSize, clipDisplayLayout } = await import('../src/scenes/BootScene.js');
 const { Rig } = await import('../src/engine/Rig.js');
 
 const sheets = {
@@ -72,7 +73,7 @@ test('clipDisplayLayout uses per-clip footY/visibleH when the clip has frameW/fr
 });
 
 function makeSprite() {
-  return {
+  const sprite = {
     originX: 0.5,
     originY: 0.5,
     scale: 1,
@@ -82,8 +83,13 @@ function makeSprite() {
     setFlipX() { return this; },
     setTint() { return this; },
     setTexture() { return this; },
-    anims: { play(key) { this.playKey = key; return this; }, stop() {}, timeScale: 1 },
   };
+  sprite.anims = {
+    play(key) { sprite.playKey = key; return sprite.anims; },
+    stop() {},
+    timeScale: 1,
+  };
+  return sprite;
 }
 
 function makeSheetScene(sprite) {
@@ -105,6 +111,35 @@ const charDef = {
   },
   body: { headRadius: 10, torsoWidth: 10, torsoHeight: 10, armLength: 10, armWidth: 10, legLength: 10, legWidth: 10 },
 };
+
+test('BootScene preload uses per-clip frame size when idle and walk cells differ', () => {
+  const hydra = CHARACTERS.hydra;
+  const prevWalk = hydra.art.sheets.clips.walk;
+  hydra.art.sheets.clips.walk = {
+    count: 12, fps: 10, loop: true, frameW: 1074, frameH: 720,
+  };
+  try {
+    const loads = [];
+    const scene = new BootScene();
+    scene.load = {
+      image() {},
+      spritesheet(key, url, cfg) { loads.push({ key, url, ...cfg }); },
+    };
+    scene.preload();
+    const idle = loads.find((l) => l.key === 'char-hydra-idle');
+    const walk = loads.find((l) => l.key === 'char-hydra-walk');
+    assert.ok(idle, 'idle sheet should load');
+    assert.ok(walk, 'walk sheet should load');
+    assert.strictEqual(idle.frameWidth, 609);
+    assert.strictEqual(idle.frameHeight, 720);
+    assert.strictEqual(walk.frameWidth, 1074);
+    assert.strictEqual(walk.frameHeight, 720);
+    assert.ok(walk.url.endsWith('hydra_walk.png'));
+  } finally {
+    if (prevWalk === undefined) delete hydra.art.sheets.clips.walk;
+    else hydra.art.sheets.clips.walk = prevWalk;
+  }
+});
 
 test('Rig sheet mode uses idle layout then walk layout when clips differ in frame size', () => {
   const sprite = makeSprite();

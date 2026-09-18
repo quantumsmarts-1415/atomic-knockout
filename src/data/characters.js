@@ -73,11 +73,9 @@ export const CHARACTERS = {
         visibleH: 668,
         // Optional per-clip frameW/frameH/footY/visibleH override sheets.*.
         clips: {
-          // Only idle exists from this test generation; Rig.js falls back
-          // to 'idle' for any clip not listed here, so the rest of his
-          // moves will just show him idling until walk/attack/etc. are
-          // generated the same way.
+          // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 808, frameH: 712, footY: 0.9944, visibleH: 673 },
         },
       },
     },
@@ -232,10 +230,9 @@ export const CHARACTERS = {
         footY: 0.978,
         visibleH: 690,
         clips: {
-          // Only idle exists from this test generation; Rig.js falls back
-          // to 'idle' for any clip not listed here (walk/attack/etc.),
-          // so the rest of the roster's moves will just show her idling.
+          // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 910, frameH: 648, footY: 0.9938, visibleH: 620 },
         },
       },
     },
@@ -474,8 +471,9 @@ export const CHARACTERS = {
         footY: 0.9725,
         visibleH: 672,
         clips: {
-          // idle only -- walk/attack/etc. not generated yet, falls back to idle
+          // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1294, frameH: 736, footY: 0.9946, visibleH: 700 },
         },
       },
     },

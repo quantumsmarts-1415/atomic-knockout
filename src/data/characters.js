@@ -75,7 +75,7 @@ export const CHARACTERS = {
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 808, frameH: 712, footY: 0.9944, visibleH: 673 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1242, frameH: 720, footY: 0.9741, visibleH: 674 },
         },
       },
     },
@@ -232,7 +232,7 @@ export const CHARACTERS = {
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 910, frameH: 648, footY: 0.9938, visibleH: 620 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1244, frameH: 692, footY: 0.9665, visibleH: 621 },
         },
       },
     },
@@ -473,7 +473,7 @@ export const CHARACTERS = {
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 1294, frameH: 736, footY: 0.9946, visibleH: 700 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1280, frameH: 720, footY: 0.9957, visibleH: 703 },
         },
       },
     },
@@ -590,7 +590,7 @@ export const CHARACTERS = {
         visibleH: 1180,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 416, frameH: 700, footY: 0.9943, visibleH: 669 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 454, frameH: 716, footY: 0.9782, visibleH: 670 },
         },
       },
     },
@@ -702,7 +702,7 @@ export const CHARACTERS = {
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 1162, frameH: 717, footY: 0.9805, visibleH: 663 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1116, frameH: 708, footY: 0.9759, visibleH: 661 },
         },
       },
     },
@@ -818,7 +818,7 @@ export const CHARACTERS = {
         visibleH: 679,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 1160, frameH: 702, footY: 0.9788, visibleH: 646 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1110, frameH: 700, footY: 0.9630, visibleH: 646 },
         },
       },
     },

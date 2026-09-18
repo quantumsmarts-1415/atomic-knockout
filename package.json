@@ -10,5 +10,8 @@
   "dependencies": {
     "phaser": "^3.88.2",
     "ws": "^8.21.1"
+  },
+  "devDependencies": {
+    "pngjs": "^7.0.0"
   }
 }

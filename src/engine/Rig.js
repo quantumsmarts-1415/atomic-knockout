@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { sheetKey, use3dSheets } from '../scenes/BootScene.js';
+import { sheetKey, use3dSheets, clipDisplayLayout } from '../scenes/BootScene.js';
 
 // ---------------------------------------------------------------------------
 // Rig — the code-drawn vector cartoon character.
@@ -151,8 +151,7 @@ export class Rig extends Phaser.GameObjects.Container {
       this.art = art;
       this.sprite = scene.add.sprite(0, 0, sheetKey(art, 'idle'));
       // origin y = the ground line inside the frame, so container y = feet
-      this.sprite.setOrigin(0.5, art.sheets.footY);
-      this.sprite.setScale((art.height ?? 160) / art.sheets.visibleH);
+      this.applyClipLayout(art.sheets.clips.idle);
       // one-time correction for the source render's native orientation
       // (same as sprite mode below) -- separate from this.facing, which
       // tracks which way the fighter is currently moving in-game.
@@ -243,6 +242,12 @@ export class Rig extends Phaser.GameObjects.Container {
     this.paletteTint = mix;
   }
 
+  applyClipLayout(clipDef) {
+    const { footY, visibleH } = clipDisplayLayout(this.sheets, clipDef);
+    this.sprite.setOrigin(0.5, footY);
+    this.sprite.setScale((this.art.height ?? 160) / visibleH);
+  }
+
   // Approx full display height, used for physics body sizing.
   static heightOf(charDef) {
     if (charDef.art?.bodyH) return charDef.art.bodyH;
@@ -295,9 +300,11 @@ export class Rig extends Phaser.GameObjects.Container {
         );
         this.sprite.anims.stop();
         this.sprite.setTexture(sheetKey(this.art, def), i);
+        if (this.currentClip !== def) this.applyClipLayout(info);
         this.currentClip = def;
       } else if (this.currentClip !== def) {
         this.currentClip = def;
+        this.applyClipLayout(info);
         this.sprite.anims.play(sheetKey(this.art, def), true);
       }
 

@@ -13,6 +13,24 @@ export function use3dSheets(charDef) {
   return Boolean(charDef.art?.use3d && charDef.art.sheets);
 }
 
+// Clip cell size: optional clips.<clip>.frameW / frameH, else sheets.frameW / frameH.
+export function clipFrameSize(sheets, clipDef = {}) {
+  return {
+    frameW: clipDef.frameW ?? sheets.frameW,
+    frameH: clipDef.frameH ?? sheets.frameH,
+  };
+}
+
+// Origin/scale for a clip. Per-clip footY / visibleH apply only when the clip
+// also sets frameW and/or frameH; otherwise sheets.footY / sheets.visibleH.
+export function clipDisplayLayout(sheets, clipDef = {}) {
+  const perClip = clipDef.frameW != null || clipDef.frameH != null;
+  return {
+    footY: perClip && clipDef.footY != null ? clipDef.footY : sheets.footY,
+    visibleH: perClip && clipDef.visibleH != null ? clipDef.visibleH : sheets.visibleH,
+  };
+}
+
 export default class BootScene extends Phaser.Scene {
   constructor() {
     super('Boot');
@@ -26,9 +44,10 @@ export default class BootScene extends Phaser.Scene {
       if (!use3dSheets(c)) continue;
       const s = c.art.sheets;
       for (const [clip, def] of Object.entries(s.clips)) {
+        const { frameW, frameH } = clipFrameSize(s, def);
         this.load.spritesheet(sheetKey(c.art, clip), `${s.dir}${c.id}_${clip}.png`, {
-          frameWidth: s.frameW,
-          frameHeight: s.frameH,
+          frameWidth: frameW,
+          frameHeight: frameH,
           // sheets are padded out to a full grid; stop at the real frame count
           endFrame: def.count - 1,
         });

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node server.js",
-    "test": "node --experimental-test-module-mocks tests/engine.test.js && node --experimental-test-module-mocks tests/roster.test.js"
+    "test": "node --experimental-test-module-mocks tests/engine.test.js && node --experimental-test-module-mocks tests/roster.test.js && node --experimental-test-module-mocks tests/sheets.test.js"
   },
   "dependencies": {
     "phaser": "^3.88.2",

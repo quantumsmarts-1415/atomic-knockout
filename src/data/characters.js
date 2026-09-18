@@ -700,7 +700,9 @@ export const CHARACTERS = {
         footY: 0.9807,
         visibleH: 672,
         clips: {
+          // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1261, frameH: 748, footY: 0.9840, visibleH: 720 },
         },
       },
     },

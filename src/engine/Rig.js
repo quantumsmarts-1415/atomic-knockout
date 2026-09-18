@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { sheetKey, use3dSheets, clipDisplayLayout } from '../scenes/BootScene.js';
+import { sheetKey, use3dSheets, clipDisplayLayout, positiveFinite } from '../scenes/BootScene.js';
 
 // ---------------------------------------------------------------------------
 // Rig — the code-drawn vector cartoon character.
@@ -243,9 +243,23 @@ export class Rig extends Phaser.GameObjects.Container {
   }
 
   applyClipLayout(clipDef) {
-    const { footY, visibleH } = clipDisplayLayout(this.sheets, clipDef);
-    this.sprite.setOrigin(0.5, footY);
-    this.sprite.setScale((this.art.height ?? 160) / visibleH);
+    // Visual only. Fighter physics uses the static art.bodyW/bodyH hitbox and
+    // does not follow per-clip visibleH/footY, so a clip with a different crop
+    // snaps sprite scale/origin against that same box.
+    let layout;
+    try {
+      layout = clipDisplayLayout(this.sheets, clipDef);
+    } catch (err) {
+      console.error(`Skipping clip layout for ${this.charDef.id}: ${err.message}`);
+      return;
+    }
+    const displayH = this.art.height ?? 160;
+    if (!positiveFinite(displayH)) {
+      console.error(`Skipping clip layout for ${this.charDef.id}: invalid art.height ${displayH}`);
+      return;
+    }
+    this.sprite.setOrigin(0.5, layout.footY);
+    this.sprite.setScale(displayH / layout.visibleH);
   }
 
   // Approx full display height, used for physics body sizing.

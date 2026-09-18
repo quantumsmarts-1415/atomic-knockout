@@ -71,11 +71,7 @@ export const CHARACTERS = {
         // Measured from the extracted+cropped Gemini frames' alpha bbox.
         footY: 0.9823,
         visibleH: 668,
-        // clips.<name> may set optional frameW/frameH when that sheet's cell
-        // size differs from sheets.frameW/frameH above (e.g. a wider walk
-        // cycle). Optional footY/visibleH on the same clip override origin
-        // and scale for that clip only. BootScene and Rig fall back to
-        // sheets.* when those fields are omitted.
+        // Optional per-clip frameW/frameH/footY/visibleH override sheets.*.
         clips: {
           // Only idle exists from this test generation; Rig.js falls back
           // to 'idle' for any clip not listed here, so the rest of his

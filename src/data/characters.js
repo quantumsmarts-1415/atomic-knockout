@@ -71,6 +71,7 @@ export const CHARACTERS = {
         // Measured from the extracted+cropped Gemini frames' alpha bbox.
         footY: 0.9823,
         visibleH: 668,
+        // Optional per-clip frameW/frameH/footY/visibleH override sheets.*.
         clips: {
           // Only idle exists from this test generation; Rig.js falls back
           // to 'idle' for any clip not listed here, so the rest of his

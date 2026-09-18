@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { sheetKey, use3dSheets } from '../scenes/BootScene.js';
+import { sheetKey, use3dSheets, clipDisplayLayout, positiveFinite } from '../scenes/BootScene.js';
 
 // ---------------------------------------------------------------------------
 // Rig — the code-drawn vector cartoon character.
@@ -151,8 +151,7 @@ export class Rig extends Phaser.GameObjects.Container {
       this.art = art;
       this.sprite = scene.add.sprite(0, 0, sheetKey(art, 'idle'));
       // origin y = the ground line inside the frame, so container y = feet
-      this.sprite.setOrigin(0.5, art.sheets.footY);
-      this.sprite.setScale((art.height ?? 160) / art.sheets.visibleH);
+      this.applyClipLayout(art.sheets.clips.idle);
       // one-time correction for the source render's native orientation
       // (same as sprite mode below) -- separate from this.facing, which
       // tracks which way the fighter is currently moving in-game.
@@ -243,6 +242,26 @@ export class Rig extends Phaser.GameObjects.Container {
     this.paletteTint = mix;
   }
 
+  applyClipLayout(clipDef) {
+    // Visual only. Fighter physics uses the static art.bodyW/bodyH hitbox and
+    // does not follow per-clip visibleH/footY, so a clip with a different crop
+    // snaps sprite scale/origin against that same box.
+    let layout;
+    try {
+      layout = clipDisplayLayout(this.sheets, clipDef);
+    } catch (err) {
+      console.error(`Skipping clip layout for ${this.charDef.id}: ${err.message}`);
+      return;
+    }
+    const displayH = this.art.height ?? 160;
+    if (!positiveFinite(displayH)) {
+      console.error(`Skipping clip layout for ${this.charDef.id}: invalid art.height ${displayH}`);
+      return;
+    }
+    this.sprite.setOrigin(0.5, layout.footY);
+    this.sprite.setScale(displayH / layout.visibleH);
+  }
+
   // Approx full display height, used for physics body sizing.
   static heightOf(charDef) {
     if (charDef.art?.bodyH) return charDef.art.bodyH;
@@ -295,9 +314,11 @@ export class Rig extends Phaser.GameObjects.Container {
         );
         this.sprite.anims.stop();
         this.sprite.setTexture(sheetKey(this.art, def), i);
+        if (this.currentClip !== def) this.applyClipLayout(info);
         this.currentClip = def;
       } else if (this.currentClip !== def) {
         this.currentClip = def;
+        this.applyClipLayout(info);
         this.sprite.anims.play(sheetKey(this.art, def), true);
       }
 

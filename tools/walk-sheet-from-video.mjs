@@ -18,7 +18,15 @@
  *   --start <i>          first frame index into sorted frames (default: 6)
  *   --end <i>            last frame index inclusive (default: 70)
  *   --step <n>           frame step (default: 2 → every-other ≈ 33 @ fps 8)
- *   --threshold <n>      magenta key threshold (default: 60)
+ *   --threshold <n>      key threshold (default: 60)
+ *   --key <name|RRGGBB>  key color: magenta (default) | blue | green | RRGGBB
+ *   --key-color <RRGGBB> same as --key
+ *   --connected          edge-connected key: only border-connected key-like
+ *                        pixels go transparent (no interior holes), soft
+ *                        alpha + despill on the 1-2px edge band
+ *   --soft <n> --band <px> --spill-band <px> --pocket-min <n>   connected-mode tuning
+ *                        (--pocket-min n: also key enclosed near-key gaps >= n px,
+ *                        e.g. between arm and torso; off by default)
  *   --padding <n>        union-bbox padding (default: 20)
  *   --skip-extract       reuse existing frames dir
  *   --meta <path>        optional one-line meta dump
@@ -57,6 +65,14 @@ const threshold = Number(arg('--threshold', '60'));
 const padding = Number(arg('--padding', '20'));
 const skipExtract = has('--skip-extract');
 const metaPath = arg('--meta', null);
+// Key options are forwarded to build-sheet.js only when given, so runs
+// without them behave exactly as before.
+const keyFlags = [];
+for (const f of ['--key', '--key-color', '--soft', '--band', '--spill-band', '--pocket-min']) {
+  const v = arg(f, null);
+  if (v !== null) keyFlags.push(f, v);
+}
+if (has('--connected')) keyFlags.push('--connected');
 
 const framesDir = resolve(
   arg('--frames-dir', join(dirname(outSheet), '..', 'frames', basename(outSheet, '.png')))
@@ -84,10 +100,11 @@ console.log(
   `build-sheet FIXED union crop: start=${start} end=${end} step=${step} thresh=${threshold} pad=${padding}`
 );
 console.log('(No per-frame character centering — union bbox only.)');
+if (keyFlags.length) console.log(`key flags: ${keyFlags.join(' ')}`);
 
 const bs = spawnSync(
   'node',
-  [buildSheet, framesDir, outAbs, String(start), String(end), String(step), String(threshold), String(padding)],
+  [buildSheet, framesDir, outAbs, String(start), String(end), String(step), String(threshold), String(padding), ...keyFlags],
   { encoding: 'utf8' }
 );
 process.stdout.write(bs.stdout || '');

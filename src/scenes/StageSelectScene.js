@@ -180,10 +180,33 @@ export default class StageSelectScene extends Phaser.Scene {
     };
     // Both keyboard layouts always work here (any human may pick), plus
     // Enter/Esc as a convenience for whoever is at the keyboard.
-    this.sources.push(keySrc({
+    const keyMap = {
       left: ['A', KC.LEFT], right: ['D', KC.RIGHT], up: ['W', KC.UP], down: ['S', KC.DOWN],
       confirm: ['F', 'K', KC.ENTER, KC.SPACE], back: ['G', 'L', KC.ESC, KC.BACKSPACE],
-    }));
+    };
+    const keys = keySrc(keyMap);
+    this.sources.push(keys);
+    // Keyboard presses are taken from the keydown events themselves and
+    // replayed in order on the next update, not by comparing key.isDown
+    // between frames: a quick tap that goes down AND up between two frames
+    // (slow device, busy machine) used to be lost -- e.g. Down, Right, Enter
+    // landing on twin-peaks while you aimed for hydrogen-breakout because the
+    // Down never registered. (Phaser's JustDown doesn't help: keyup clears
+    // it.) Auto-repeat is ignored, so a key held over from CharacterSelect
+    // still can't fire.
+    const actionOf = new Map();
+    for (const [action, list] of Object.entries(keys.keys)) for (const k of list) actionOf.set(k.keyCode, action);
+    this.keyPresses = [];
+    // Phaser re-dispatches every keyboard event still queued this frame each
+    // time a new DOM key event arrives, so the same keydown can be seen more
+    // than once -- count each native event once.
+    const seen = new WeakSet();
+    kb.on('keydown', (e) => {
+      if (seen.has(e)) return;
+      seen.add(e);
+      const a = actionOf.get(e.keyCode);
+      if (a && !e.repeat) this.keyPresses.push(a);
+    });
     for (const p of this.setup.players) {
       const slot = p.slot ?? -1;
       if (slot >= 2 && slot < BOT_SLOT_BASE) this.sources.push({ kind: 'phone', slot, prev: {} });
@@ -243,9 +266,24 @@ export default class StageSelectScene extends Phaser.Scene {
     this.scene.start('CharacterSelect', { playerSeeds: this.setup.players.map((p) => ({ slot: p.slot ?? 0 })) });
   }
 
+  apply(action) {
+    if (action === 'left') this.move(-1, 0);
+    else if (action === 'right') this.move(1, 0);
+    else if (action === 'up') this.move(0, -1);
+    else if (action === 'down') this.move(0, 1);
+    else if (action === 'confirm') this.confirm();
+    else if (action === 'back') this.back();
+  }
+
   update() {
     if (this.leaving) return;
+    // keyboard: every press since last frame, in order
+    for (const a of this.keyPresses.splice(0)) {
+      this.apply(a);
+      if (this.leaving) return;
+    }
     for (const src of this.sources) {
+      if (src.kind === 'keys') continue;
       const cur = this.readSource(src);
       const jd = (k) => cur[k] && !src.prev[k];
       if (jd('left')) this.move(-1, 0);

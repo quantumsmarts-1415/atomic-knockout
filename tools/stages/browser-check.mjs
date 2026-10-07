@@ -10,7 +10,7 @@ page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
 page.on('requestfailed', (r) => errors.push('requestfailed: ' + r.url()));
 page.on('response', (r) => { if (r.status() >= 400) errors.push(`HTTP ${r.status()} ${r.url()}`); });
-await page.goto('http://localhost:5199/', { waitUntil: 'load' });
+await page.goto(`http://localhost:${process.env.PORT || 5199}/`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.game?.scene?.isActive('Title'), null, { timeout: 600000 });
 console.log('booted');
 
@@ -32,6 +32,12 @@ const randIdx = await page.evaluate(() => window.game.scene.getScene('StageSelec
 await page.evaluate((i) => { const s = window.game.scene.getScene('StageSelect'); s.cursor = i; s.refresh(); }, randIdx);
 await page.waitForTimeout(200);
 await page.screenshot({ path: `${OUT}/stage-select-random.png` });
+// the big camera stage's tile + preview
+const skyIdx = await page.evaluate(() => window.game.scene.getScene('StageSelect').entries.indexOf('carbon-skyhook'));
+await page.evaluate((i) => { const s = window.game.scene.getScene('StageSelect'); s.cursor = i; s.refresh(); }, skyIdx);
+await page.waitForTimeout(200);
+await page.screenshot({ path: `${OUT}/big-stage/stage-select-skyhook.png` });
+console.log('stage select: carbon-skyhook tile index', skyIdx);
 // back -> CharacterSelect, then confirm path: pick via key F
 await nav('g');
 await page.waitForFunction(() => window.game.scene.isActive('CharacterSelect'));
@@ -45,7 +51,7 @@ const picked = await page.evaluate(() => window.game.scene.getScene('Battle').st
 console.log('confirm -> Battle on', picked);
 
 const ids = await page.evaluate(() => window.game.scene.getScene('Battle').constructor && (window.STAGE_IDS || null));
-const stageIds = ['hydrogen-breakout', 'silicon-foundry', 'brimstone-caldera', 'neon-nexus', 'holdout-keep', 'elemental-isle', 'twin-peaks', 'the-core', 'crystal-spire'];
+const stageIds = ['hydrogen-breakout', 'silicon-foundry', 'brimstone-caldera', 'neon-nexus', 'holdout-keep', 'elemental-isle', 'twin-peaks', 'the-core', 'crystal-spire', 'carbon-skyhook'];
 for (const id of stageIds) {
   await page.evaluate(({ s, id }) => { window.game.scene.getScenes(true)[0].scene.start('Battle', { ...s, stageId: id }); }, { s: setup, id });
   await page.waitForFunction((id) => window.game.scene.isActive('Battle') && window.game.scene.getScene('Battle').stage?.id === id && window.game.scene.getScene('Battle').fighters?.[0]?.body, id, { timeout: 60000 });
@@ -56,6 +62,8 @@ for (const id of stageIds) {
     return {
       scenes: window.game.scene.getScenes(true).map((x) => x.scene.key), over: !!b.matchOver,
       parallax: b.parallax?.map((l) => Math.round(l.img.x)) ?? null,
+      // camera stages only: follow camera + UI camera; everything else 1 fixed camera at zoom 1
+      cameras: b.cameras.cameras.map((c) => `${c.name || 'main'}@${c.zoom.toFixed(2)}`), camRig: !!b.camRig, nav: !!b.nav,
       movers: b.movers?.map((m) => Math.round(m.x)),
       fighters: b.fighters.map((f) => ({ id: f.charDef.id, x: Math.round(f.x), y: Math.round(f.y), pct: Math.round(f.percent), stocks: f.stocks, alive: f.alive, state: f.state, hasBody: !!f.body, ground: !!(f.body && (f.body.blocked.down || f.body.touching.down)) })),
       textures: { terrain: b.textures.exists(`stage-${b.stage.id}-terrain`) },

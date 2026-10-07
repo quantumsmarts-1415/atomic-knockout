@@ -38,7 +38,9 @@ export function startStageIntro(scene, stage, { onDone } = {}) {
     onDone?.();
   };
   try {
-    handler(scene, stage, def, ctl, done);
+    // camera stages: intro objects are screen-space (BattleScene.asUi)
+    const run = () => handler(scene, stage, def, ctl, done);
+    if (scene.asUi) scene.asUi(run); else run();
   } catch (err) {
     console.error(`stage intro '${def.type}' failed: ${err.message}`);
     done();
@@ -49,10 +51,11 @@ export function startStageIntro(scene, stage, { onDone } = {}) {
 /** The "GO!" banner shown when an intro hands over to gameplay. */
 export function showGo(scene) {
   const { width: W, height: H } = scene.scale;
-  const t = scene.add.text(W / 2, H / 2 - 30, 'GO!', {
+  const make = () => scene.add.text(W / 2, H / 2 - 30, 'GO!', {
     fontFamily: FONT_DISPLAY, fontSize: '120px', color: '#ffffff',
     stroke: '#0b3b5c', strokeThickness: 12,
   }).setOrigin(0.5).setDepth(DEPTH + 10).setScale(1.7).setAlpha(0);
+  const t = scene.asUi ? scene.asUi(make) : make();
   sfx('go');
   scene.tweens.add({ targets: t, scale: 1, alpha: 1, duration: 200, ease: 'Back.easeOut' });
   scene.tweens.add({ targets: t, alpha: 0, scale: 1.15, delay: 650, duration: 300, onComplete: () => t.destroy() });

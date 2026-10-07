@@ -35,6 +35,23 @@
 //   intro:    optional match intro { type, art: { name: file }, timing? } --
 //             played before GO with fighters frozen; types live in
 //             engine/stageIntros.js (STAGE_INTROS). Art loads from art.dir.
+//   platforms[].move: { axis: 'y', stops: [y...], speed, dwell } -- an
+//             elevator instead of a sine swing: rides stop to stop (ping-pong,
+//             eased, `speed` px/s average) and waits `dwell` ms at each stop.
+//             `y` is where it starts. See moverPosition().
+//
+// Camera stages (added with Carbon Skyhook, 2026-10-07) are bigger than the
+// screen and opt in to a follow camera; every other stage keeps the fixed
+// 1280x720 view exactly as before:
+//   world:    { width, height } -- stage size in px (default 1280x720).
+//   camera:   { minZoom?, maxZoom?, padX?, padTop?, padBottom?, lerpMs?, zoomInMs?,
+//             zoomOutMs? } -- BattleScene frames every live fighter, eases
+//             pan/zoom, and clamps to the world (zoom never below the level
+//             that shows the whole world). Parallax layers are world-sized and
+//             `par` becomes the Phaser scrollFactor (0 = fixed sky, 1 = terrain).
+//   botNav:   true -> CPUs path-find over the surface graph (engine/BotNav.js:
+//             jumps, air jumps, drop-throughs, elevator rides) instead of the
+//             flat-stage chase logic.
 export const DEFAULT_BLAST = { left: -140, right: 1420, top: -308, bottom: 860 };
 
 export const STAGES = [
@@ -310,6 +327,61 @@ export const STAGES = [
       { x: 720, y: 420 }, { x: 250, y: 470 }, { x: 1030, y: 470 },
     ],
   },
+  {
+    id: 'carbon-skyhook',
+    name: 'Carbon Skyhook',
+    desc: "The AI's orbital-elevator anchor, strung from a carbon-nanotube tether. Three tiers, stairs up the wings, a cargo lift up the middle -- and a lot of sky.",
+    layout: 'Mega (camera)',
+    music: 'bgm-carbon-skyhook',
+    theme: { skyTop: 0x070b1c, skyBottom: 0xd77a4a, hills: [0x1a2236, 0x141a2a] },
+    world: { width: 2560, height: 1440 },
+    camera: { maxZoom: 1, padX: 240, padTop: 230, padBottom: 180 },
+    botNav: true,
+    art: {
+      dir: 'art-src/stages/carbon-skyhook/',
+      // world-sized layers; par = scrollFactor on camera stages
+      layers: [
+        { file: 'sky.jpg', par: 0.1 },
+        { file: 'far.png', par: 0.3 },
+        { file: 'mid.png', par: 0.6 },
+        { file: 'near.png', par: 0.85 },
+      ],
+      terrain: 'terrain.png',
+      movingPlatform: 'lift.png',
+      ambient: { kind: 'petals', color: 0xdfe9ff, count: 70 },
+    },
+    // Lower deck x 280-2280 (2000px, ~2x a normal stage). Every tier is
+    // reachable by every character: the zero-air-jump tanks (91-109px jump)
+    // use the 60px dock ledges, the 64px wing stairs and the cargo lift;
+    // everyone else can also hop the 110-130px perches.
+    groundY: 1180,
+    solids: [
+      { x: 1280, w: 2000 },                // lower deck
+      { x: 480, y: 1120, w: 400, h: 60 },  // west dock (60px ledge)
+      { x: 2080, y: 1120, w: 400, h: 60 }, // east dock
+      { x: 915, y: 780, w: 470, h: 40 },   // west upper deck (x 680-1150)
+      { x: 1645, y: 780, w: 470, h: 40 },  // east upper deck (x 1410-1880)
+    ],
+    platforms: [
+      // wing stairs: 64px steps over the docks up to the upper decks (+20)
+      { x: 590, y: 1056, w: 180 }, { x: 470, y: 992, w: 180 }, { x: 590, y: 928, w: 180 },
+      { x: 470, y: 864, w: 180 }, { x: 590, y: 800, w: 180 },
+      { x: 1970, y: 1056, w: 180 }, { x: 2090, y: 992, w: 180 }, { x: 1970, y: 928, w: 180 },
+      { x: 2090, y: 864, w: 180 }, { x: 1970, y: 800, w: 180 },
+      // lower-deck perches (130px), under the upper decks
+      { x: 1000, y: 1050, w: 200 }, { x: 1560, y: 1050, w: 200 },
+      // gantries (110px over the decks) and the summit halves (110px higher)
+      { x: 830, y: 670, w: 180 }, { x: 1730, y: 670, w: 180 },
+      { x: 1065, y: 560, w: 190 }, { x: 1495, y: 560, w: 190 },
+      // cargo lift in the tether shaft: lower deck -> upper decks -> summit
+      { x: 1280, y: 1180, w: 240, move: { axis: 'y', stops: [1180, 780, 560], speed: 220, dwell: 1000 } },
+    ],
+    blast: { left: -260, right: 2820, top: -300, bottom: 1680 },
+    spawns: [
+      { x: 790, y: 1100 }, { x: 1770, y: 1100 }, { x: 900, y: 720 },
+      { x: 1660, y: 720 }, { x: 420, y: 1060 }, { x: 2140, y: 1060 },
+    ],
+  },
 ];
 
 // ------------------------------------------------------------- helpers
@@ -325,6 +397,69 @@ export function stageThumbFile(stage) {
 }
 export function stagePreviewFile(stage) {
   return `art-src/stages/${stage.id}/preview.jpg`;
+}
+
+// Stage size in px: the screen for normal stages, bigger for camera stages.
+export const SCREEN = { width: 1280, height: 720 };
+export function getStageWorld(stage) {
+  return stage.world ?? SCREEN;
+}
+
+// Where a moving platform's top-center is after `clock` ms of (unpaused)
+// match time. Sine movers swing around their x/y; elevator movers
+// (move.stops) ping-pong stop to stop, eased, dwelling at each stop.
+export function moverPosition(p, clock) {
+  const move = p.move;
+  if (!move) return { x: p.x, y: p.y };
+  if (!move.stops) {
+    const off = Math.sin((clock / move.period) * Math.PI * 2) * (move.range / 2);
+    return move.axis === 'x' ? { x: p.x + off, y: p.y } : { x: p.x, y: p.y + off };
+  }
+  const seq = elevatorCycle(move);
+  // start the cycle at the stop nearest the platform's own y
+  let start = seq.findIndex((s) => s.at === nearestStopIndex(move, p.y));
+  if (start < 0) start = 0;
+  let t = (clock + seq[start].t0) % seq.period;
+  for (const s of seq) {
+    if (t < s.dwell) return axisPos(p, move, s.from);
+    t -= s.dwell;
+    if (t < s.travel) {
+      const k = t / s.travel;
+      const e = k * k * (3 - 2 * k); // smoothstep: eased start/stop
+      return axisPos(p, move, s.from + (s.to - s.from) * e);
+    }
+    t -= s.travel;
+  }
+  return axisPos(p, move, seq[0].from);
+}
+
+function axisPos(p, move, v) {
+  return move.axis === 'x' ? { x: v, y: p.y } : { x: p.x, y: v };
+}
+
+function nearestStopIndex(move, v) {
+  let best = 0;
+  move.stops.forEach((s, i) => { if (Math.abs(s - v) < Math.abs(move.stops[best] - v)) best = i; });
+  return best;
+}
+
+// [stop0 -> stop1 -> ... -> stopN -> ... -> stop1] segments, each a dwell at
+// `from` then an eased travel to `to`; .period is the full loop in ms.
+export function elevatorCycle(move) {
+  const n = move.stops.length;
+  const order = [...Array(n).keys(), ...Array.from({ length: Math.max(0, n - 2) }, (_, i) => n - 2 - i)];
+  const dwell = move.dwell ?? 1000;
+  const seq = [];
+  let t0 = 0;
+  order.forEach((at, i) => {
+    const from = move.stops[at];
+    const to = move.stops[order[(i + 1) % order.length]];
+    const travel = (Math.abs(to - from) / (move.speed ?? 200)) * 1000;
+    seq.push({ at, from, to, dwell, travel, t0 });
+    t0 += dwell + travel;
+  });
+  seq.period = t0;
+  return seq;
 }
 
 export function getStageBlast(stage) {

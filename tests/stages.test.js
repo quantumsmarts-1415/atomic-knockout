@@ -3,7 +3,9 @@ import assert from 'node:assert';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { STAGES, getStageBlast, getStageSpawns, getStageBounds, stageThumbFile, stagePreviewFile } from '../src/data/stages.js';
+import { STAGES, getStageBlast, getStageSpawns, getStageBounds, stageThumbFile, stagePreviewFile, getStageWorld, moverPosition, elevatorCycle } from '../src/data/stages.js';
+import { buildNavGraph, jumpReach, reachableFrom, findPath, nodeAt } from '../src/engine/BotNav.js';
+import { computeBotInput } from '../src/engine/BotAI.js';
 import { CHARACTERS } from '../src/data/characters.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -17,6 +19,11 @@ const PLAT_H = 18;
 function surfaces(st) {
   const out = st.solids.map((s) => ({ x0: s.x - s.w / 2, x1: s.x + s.w / 2, y: s.y ?? st.groundY, solid: true }));
   for (const p of st.platforms) {
+    if (p.move?.stops) {
+      // elevator: covers every height between its top and bottom stop
+      out.push({ x0: p.x - p.w / 2, x1: p.x + p.w / 2, y: Math.min(...p.move.stops), yLow: Math.max(...p.move.stops), solid: false, move: p.move });
+      continue;
+    }
     const r = p.move?.axis === 'x' ? p.move.range / 2 : 0;
     const ry = p.move?.axis === 'y' ? p.move.range / 2 : 0;
     out.push({ x0: p.x - p.w / 2 - r, x1: p.x + p.w / 2 + r, y: p.y - ry, yLow: p.y + ry, solid: false, move: p.move });
@@ -39,7 +46,8 @@ test('stage ids are unique and every stage has a name, layout geometry and groun
 test('blast zones enclose the screen and every solid/platform (incl. moving sweep)', () => {
   for (const st of STAGES) {
     const b = getStageBlast(st);
-    assert.ok(b.left < 0 && b.right > W && b.top < 0 && b.bottom > H, `${st.id} blast zone must sit outside the screen`);
+    const wd = getStageWorld(st);
+    assert.ok(b.left < 0 && b.right > wd.width && b.top < 0 && b.bottom > wd.height, `${st.id} blast zone must sit outside the screen/world`);
     for (const s of surfaces(st)) {
       assert.ok(s.x0 > b.left + 40 && s.x1 < b.right - 40, `${st.id} surface x ${s.x0}-${s.x1} too close to a side blast line`);
       assert.ok(s.y > b.top + 100 && (s.yLow ?? s.y) < b.bottom - 100, `${st.id} surface y ${s.y} too close to top/bottom blast`);
@@ -49,6 +57,15 @@ test('blast zones enclose the screen and every solid/platform (incl. moving swee
 
 test('surfaces sit inside the visible play area (not under the HUD or off-screen)', () => {
   for (const st of STAGES) {
+    if (st.camera) {
+      // camera stages: inside the world, clear of its top sky and bottom edge
+      const wd = getStageWorld(st);
+      for (const s of surfaces(st)) {
+        assert.ok(s.y >= wd.height * 0.25 && (s.yLow ?? s.y) <= wd.height - 150, `${st.id} surface at y ${s.y} too near the world's top/bottom`);
+        assert.ok(s.x0 >= 0 && s.x1 <= wd.width, `${st.id} surface outside the world`);
+      }
+      continue;
+    }
     for (const s of surfaces(st)) {
       assert.ok(s.y >= 200 && (s.yLow ?? s.y) <= 600, `${st.id} surface at y ${s.y} outside y 200-600`);
       assert.ok(s.x1 > 0 && s.x0 < W, `${st.id} surface entirely off-screen`);
@@ -64,7 +81,7 @@ test('every seat has a spawn that drops onto solid ground, inside the blast zone
     const solids = surfaces(st).filter((s) => s.solid);
     spawns.forEach((sp, i) => {
       assert.ok(sp.x > b.left && sp.x < b.right && sp.y > b.top && sp.y < b.bottom, `${st.id} spawn ${i} outside blast zone`);
-      assert.ok(sp.x >= 0 && sp.x <= W, `${st.id} spawn ${i} off-screen`);
+      assert.ok(sp.x >= 0 && sp.x <= getStageWorld(st).width, `${st.id} spawn ${i} off-screen`);
       // highest solid surface below the spawn point under its x
       const below = solids.filter((s) => sp.x >= s.x0 + 20 && sp.x <= s.x1 - 20 && s.y >= sp.y);
       assert.ok(below.length, `${st.id} spawn ${i} (x ${sp.x}) has no ground under it`);
@@ -77,7 +94,8 @@ test('every seat has a spawn that drops onto solid ground, inside the blast zone
 test('1v1 spawns are mirrored around the stage center (fair start)', () => {
   for (const st of STAGES.filter((s) => s.spawns)) {
     const [a, b] = st.spawns;
-    assert.ok(Math.abs((a.x + b.x) / 2 - 640) <= 2 && a.y === b.y, `${st.id} P1/P2 spawns not mirrored`);
+    const cx = getStageWorld(st).width / 2;
+    assert.ok(Math.abs((a.x + b.x) / 2 - cx) <= 2 && a.y === b.y, `${st.id} P1/P2 spawns not mirrored`);
   }
 });
 
@@ -115,6 +133,23 @@ test('stage art files exist (thumb/preview for all; layers/terrain for painted)'
     for (const l of st.art.layers) assert.ok(existsSync(join(root, st.art.dir + l.file)), `missing ${st.art.dir}${l.file}`);
     assert.ok(existsSync(join(root, st.art.dir + st.art.terrain)), `missing ${st.id} terrain`);
     if (st.platforms.some((p) => p.move)) assert.ok(st.art.movingPlatform && existsSync(join(root, st.art.dir + st.art.movingPlatform)), `${st.id} moving platform art`);
+    if (st.camera) {
+      // camera stages: par is a scrollFactor; layers + terrain are world-sized
+      // (BattleScene's offset keeps a world-sized layer covering the view at
+      // every zoom >= whole-world zoom, which needs the world at 16:9)
+      const wd = getStageWorld(st);
+      assert.strictEqual(wd.width * 9, wd.height * 16, `${st.id} world must be 16:9 for full zoom-out`);
+      let prev = -1;
+      for (const l of st.art.layers) {
+        assert.ok(l.par >= 0 && l.par < 1 && l.par > prev, `${st.id} layer ${l.file} scrollFactor must rise 0..1 back to front`);
+        prev = l.par;
+        const sz = imageSize(readFileSync(join(root, st.art.dir + l.file)));
+        assert.deepStrictEqual([sz.w, sz.h], [wd.width, wd.height], `${st.id} ${l.file} must be world-sized`);
+      }
+      const tz = imageSize(readFileSync(join(root, st.art.dir + st.art.terrain)));
+      assert.deepStrictEqual([tz.w, tz.h], [wd.width, wd.height], `${st.id} terrain must be world-sized`);
+      continue;
+    }
     // fighters' midpoint rarely strays more than ~600px off-center, and the
     // scene also clamps the shift to the 80px painted margin
     for (const l of st.art.layers) assert.ok(l.par >= 0 && l.par * 600 <= 80, `${st.id} layer ${l.file} parallax would show its edge`);
@@ -124,7 +159,8 @@ test('stage art files exist (thumb/preview for all; layers/terrain for painted)'
 test('CPU ledge bounds stay over the ground', () => {
   for (const st of STAGES) {
     const b = getStageBounds(st);
-    assert.ok(b.minX < b.maxX && b.minX >= 0 - 1 && b.maxX <= W + 1, `${st.id} bounds ${b.minX}-${b.maxX}`);
+    const wd = getStageWorld(st);
+    assert.ok(b.minX < b.maxX && b.minX >= 0 - 1 && b.maxX <= wd.width + 1, `${st.id} bounds ${b.minX}-${b.maxX}`);
   }
 });
 
@@ -159,4 +195,135 @@ test('stage intros: known type, art present; door halves exactly cover the 1280x
     }
   }
   assert.ok(STAGES.some((s) => s.intro), 'expected at least one stage intro (hydrogen-breakout)');
+});
+
+// ------------------------------------------------------------ camera stages
+const camStages = STAGES.filter((s) => s.camera);
+
+test('camera stages opt in explicitly; every other stage stays a fixed 1280x720 screen', () => {
+  assert.ok(camStages.length >= 1, 'expected a big camera stage (carbon-skyhook)');
+  for (const st of STAGES) {
+    if (!st.camera) {
+      assert.ok(!st.world && !st.botNav, `${st.id}: world/botNav only make sense with a camera`);
+      assert.deepStrictEqual(getStageWorld(st), { width: W, height: H });
+      continue;
+    }
+    const wd = getStageWorld(st);
+    // "MUCH bigger": at least 2x the screen both ways, and a playable floor
+    // ~2x as wide as the normal stages' ~1000px
+    assert.ok(wd.width >= 2 * W && wd.height >= 2 * H, `${st.id} world ${wd.width}x${wd.height} not 2x the screen`);
+    const g = getStageBounds(st);
+    assert.ok(g.maxX - g.minX >= 1800, `${st.id} floor only ${g.maxX - g.minX}px wide`);
+    const tiers = new Set(surfaces(st).map((s) => s.y));
+    assert.ok(tiers.size >= 8, `${st.id} needs many vertical layers (has ${tiers.size})`);
+    const z = st.camera;
+    assert.ok((z.maxZoom ?? 1) <= 1 && (z.minZoom ?? 0) <= W / wd.width, `${st.id} camera zoom range must allow the whole world`);
+    assert.ok(st.botNav, `${st.id}: big stages need botNav so CPUs can climb`);
+  }
+});
+
+test('moving platforms: sine movers unchanged; elevators dwell at every stop and stay on their track', () => {
+  // the original sine formula (pre-elevator BattleScene) for every sine mover
+  for (const st of STAGES) {
+    for (const p of st.platforms.filter((q) => q.move && !q.move.stops)) {
+      for (let t = 0; t < 20000; t += 137) {
+        const off = Math.sin((t / p.move.period) * Math.PI * 2) * (p.move.range / 2);
+        const want = p.move.axis === 'x' ? { x: p.x + off, y: p.y } : { x: p.x, y: p.y + off };
+        assert.deepStrictEqual(moverPosition(p, t), want);
+      }
+    }
+  }
+  for (const st of STAGES) {
+    for (const p of st.platforms.filter((q) => q.move?.stops)) {
+      const { stops } = p.move;
+      const cyc = elevatorCycle(p.move);
+      assert.deepStrictEqual(moverPosition(p, 0), { x: p.x, y: p.y }, `${st.id} elevator starts where it's placed`);
+      const parked = new Map(stops.map((s) => [s, 0]));
+      let prev = moverPosition(p, 0).y;
+      for (let t = 0; t < cyc.period; t += 10) {
+        const { x, y } = moverPosition(p, t);
+        assert.strictEqual(x, p.x);
+        assert.ok(y >= Math.min(...stops) - 0.01 && y <= Math.max(...stops) + 0.01, `${st.id} elevator left its track (${y})`);
+        // never faster than 2x its average speed (eased), so a rider can't be shaken off
+        assert.ok(Math.abs(y - prev) <= (p.move.speed * 2 * 10) / 1000 + 0.01, `${st.id} elevator jumped ${Math.abs(y - prev)}px in 10ms`);
+        prev = y;
+        for (const s of stops) if (Math.abs(y - s) <= 3) parked.set(s, parked.get(s) + 10);
+      }
+      for (const [s, ms] of parked) assert.ok(ms >= p.move.dwell, `${st.id} elevator only parks ${ms}ms at y ${s}`);
+    }
+  }
+});
+
+test('big stages: every stop of an elevator is flush with a surface you can walk on/off at', () => {
+  for (const st of camStages) {
+    const nav = buildNavGraph(st);
+    for (const L of nav.lifts) {
+      for (const stop of L.stops) {
+        assert.ok(stop.out.some((e) => e.type === 'exit'), `${st.id} lift stop y ${stop.y} has nowhere to step off`);
+      }
+    }
+  }
+});
+
+test('big stages: bot nav graph -- everyone can climb every tier and always get back down', () => {
+  for (const st of camStages) {
+    const nav = buildNavGraph(st);
+    const spawnNode = nodeAt(nav, st.spawns[0].x, st.groundY);
+    assert.ok(spawnNode, `${st.id} P1 spawn not over a nav surface`);
+    const solids = nav.nodes.filter((n) => n.kind === 'solid');
+    const topY = Math.min(...nav.nodes.map((n) => n.y));
+    for (const c of Object.values(CHARACTERS)) {
+      const reach = jumpReach(c.stats);
+      const r = reachableFrom(nav, spawnNode.id, reach);
+      // every solid tier and the summit, for every character (tanks via
+      // ledges/stairs/lift); air-jumpers reach literally everything
+      for (const n of solids) assert.ok(r.has(n.id), `${st.id}: ${c.id} can't reach solid y ${n.y} x ${n.x0}-${n.x1}`);
+      assert.ok(nav.nodes.some((n) => n.y === topY && n.kind !== 'stop' && r.has(n.id)), `${st.id}: ${c.id} can't reach the summit`);
+      if (reach.airJumps > 0) assert.strictEqual(r.size, nav.nodes.length, `${st.id}: air-jumper ${c.id} misses ${nav.nodes.filter((n) => !r.has(n.id)).map((n) => n.y)}`);
+      else assert.ok(r.size >= nav.nodes.length - 2, `${st.id}: ${c.id} reaches only ${r.size}/${nav.nodes.length}`);
+      // no dead ends: from anywhere reachable there's a way back to the spawn floor
+      for (const id of r) assert.ok(findPath(nav, id, spawnNode.id, reach), `${st.id}: ${c.id} stuck on node ${id}`);
+    }
+    // walk-offs/drops always land on something (never off the stage)
+    for (const n of nav.nodes) {
+      for (const e of n.out.filter((x) => x.type === 'walkoff' || x.type === 'drop')) {
+        const B = nav.nodes[e.to];
+        assert.ok(e.x >= B.x0 && e.x <= B.x1 && B.y > n.y, `${st.id}: ${e.type} from y ${n.y} at x ${e.x} misses its landing`);
+      }
+    }
+  }
+});
+
+// minimal fighter stand-in for the pure CPU controller
+function fakeFighter(charId, x, y, { grounded = true, vy = 0 } = {}) {
+  return {
+    x, y, alive: true, state: 'idle', charDef: CHARACTERS[charId], bodyW: 60, bodyH: 110,
+    airJumpsLeft: CHARACTERS[charId].stats.airJumps,
+    body: { blocked: { down: grounded, left: false, right: false }, touching: { down: false, left: false, right: false }, velocity: { x: 0, y: vy } },
+  };
+}
+
+test('big-stage CPU: a tank heads for the lift to reach the summit; nobody walks into the void', () => {
+  const st = STAGES.find((s) => s.id === 'carbon-skyhook');
+  const nav = buildNavGraph(st);
+  // tank on the lower deck, target up on the summit -> walk toward the lift (parked at the bottom)
+  const bord = fakeFighter('bord', 800, st.groundY);
+  const foe = fakeFighter('hydra', 1065, 560);
+  const inp = computeBotInput(1000, bord, [bord, foe], getStageBounds(st), nav);
+  assert.ok(inp.right && !inp.left, 'tank should walk right toward the lift');
+  assert.match(bord._ai.lastEdge, /^board/);
+  // on the outer dock, target hanging off-stage to the left: hold the ledge
+  const dockX = 280 + 24;
+  const guard = fakeFighter('natalie', dockX, 1120);
+  const off = fakeFighter('hydra', 120, 1150, { grounded: false, vy: 200 });
+  for (let t = 0; t < 2000; t += 16) {
+    const i = computeBotInput(t, guard, [guard, off], getStageBounds(st), nav);
+    assert.ok(!i.left, 'must not walk off the outer ledge after an off-stage target');
+  }
+  // flat stages: unchanged controller (no nav -> never presses down)
+  const flat = STAGES.find((s) => s.id === 'holdout-keep');
+  const a = fakeFighter('natalie', 500, flat.groundY);
+  const b2 = fakeFighter('sully', 800, flat.groundY);
+  const fi = computeBotInput(1000, a, [a, b2], getStageBounds(flat));
+  assert.ok(fi.down === undefined && fi.right, 'flat-stage CPU unchanged');
 });

@@ -8,8 +8,11 @@ for the story stages in src/data/stages.js.
 Outputs art-src/stages/<id>/sky.jpg, {far,mid,near,terrain}.png (+ lift.png
 for the foundry), thumb.jpg (256x144) and preview.jpg (640x360). Layers are
 1440 wide (80px parallax margin each side); terrain is 1280x720 and lines
-up 1:1 with the stage geometry. The original four stages get thumbnails
-and previews only (drawn from their theme colors + geometry).
+up 1:1 with the stage geometry. Camera stages (stage.world, e.g. Carbon
+Skyhook -- painters3.py) instead paint every layer and the terrain at the
+world size (2560x1440), in world coordinates, so they stack 1:1 at full
+zoom-out. The original four stages get thumbnails and previews only (drawn
+from their theme colors + geometry).
 Deterministic (fixed seeds), so re-running reproduces the same art.
 """
 import json, math, os, sys
@@ -23,6 +26,11 @@ LW, H, W = 1440, 720, 1280
 OX = (LW - W) // 2  # layer x offset of the stage's x=0
 
 
+def world_size(stage):
+    w = stage.get('world') or {}
+    return w.get('width', W), w.get('height', H)
+
+
 # ----------------------------------------------------------------- terrain
 def ground_shape(s, stage, depth, taper):
     """Polygon for a ground solid: flat top, sides tapering into an island."""
@@ -32,7 +40,9 @@ def ground_shape(s, stage, depth, taper):
 
 
 def paint_terrain(stage, mat):
-    t = layer(W, H)
+    # canvas = the stage (1280x720, or the world on big camera stages)
+    TW, TH = world_size(stage)
+    t = layer(TW, TH)
     gy = stage['groundY']
     rng = np.random.default_rng(7)
     for s in stage['solids']:
@@ -41,7 +51,7 @@ def paint_terrain(stage, mat):
         y = s.get('y', gy)
         depth = (mat.get('depth', 110) if is_ground else s['h'])
         full = is_ground and mat.get('to_bottom')
-        bot = H if full else y + depth
+        bot = TH if full else y + depth
         taper = 0 if (full or not is_ground) else mat.get('taper', 70)
 
         def body(d, k, x0=x0, x1=x1, y=y, bot=bot, taper=taper):
@@ -51,23 +61,23 @@ def paint_terrain(stage, mat):
             else:
                 pts = [(x0, y), (x1, y), (x1, bot), (x0, bot)]
             d.polygon([(px * k, py * k) for px, py in pts], fill=255)
-        m = mask(W, H, body)
-        yy = np.arange(H)[:, None].astype(np.float32)
+        m = mask(TW, TH, body)
+        yy = np.arange(TH)[:, None].astype(np.float32)
         tt = np.clip((yy - y) / max(1, bot - y), 0, 1)
-        col = np.zeros((H, W, 3), np.float32)
+        col = np.zeros((TH, TW, 3), np.float32)
         c0, c1 = hexc(mat['body_top'])[:3], hexc(mat['body_bot'])[:3]
         col[:] = (c0 * (1 - tt[..., None]) + c1 * tt[..., None])
-        tmp = layer(W, H)
+        tmp = layer(TW, TH)
         fill(tmp, m, col)
         mat['detail'](tmp, m, x0, x1, y, bot, is_ground, rng)
         # cap / walking surface
         cap_h = mat.get('cap', 16)
-        capm = mask(W, H, lambda d, k: d.rectangle([x0 * k, y * k, x1 * k, (y + cap_h) * k], fill=255)) * m
+        capm = mask(TW, TH, lambda d, k: d.rectangle([x0 * k, y * k, x1 * k, (y + cap_h) * k], fill=255)) * m
         fill(tmp, capm, mat['cap_col'])
-        hi = mask(W, H, lambda d, k: d.rectangle([x0 * k, y * k, x1 * k, (y + 3) * k], fill=255)) * m
+        hi = mask(TW, TH, lambda d, k: d.rectangle([x0 * k, y * k, x1 * k, (y + 3) * k], fill=255)) * m
         fill(tmp, hi, mat['cap_hi'])
         # contact shadow under the cap lip
-        sh = mask(W, H, lambda d, k: d.rectangle([x0 * k, (y + cap_h) * k, x1 * k, (y + cap_h + 10) * k], fill=255), blur=4) * m
+        sh = mask(TW, TH, lambda d, k: d.rectangle([x0 * k, (y + cap_h) * k, x1 * k, (y + cap_h + 10) * k], fill=255), blur=4) * m
         shade(tmp, sh, -0.45)
         if mat.get('trim'):
             mat['trim'](tmp, m, x0, x1, y, cap_h, rng)
@@ -257,17 +267,21 @@ def hydrogen_breakout(stage, out):
 
 
 import painters2 as P2
+import painters3 as P3
 STAGE_PAINTERS = {
     'hydrogen-breakout': hydrogen_breakout,
     'silicon-foundry': lambda st, out: P2.silicon_foundry(st, out, paint_terrain, paint_platform),
     'brimstone-caldera': lambda st, out: P2.brimstone_caldera(st, out, paint_terrain, paint_platform),
     'neon-nexus': lambda st, out: P2.neon_nexus(st, out, paint_terrain, paint_platform),
     'holdout-keep': lambda st, out: P2.holdout_keep(st, out, paint_terrain, paint_platform),
+    'carbon-skyhook': lambda st, out: P3.carbon_skyhook(st, out, paint_terrain, paint_platform),
 }
 
 
 # --------------------------------------------------------- thumbs/previews
 def composite(stage, out, mat=None):
+    if stage.get('camera'):
+        return composite_world(stage, out)
     canvas = Image.new('RGBA', (W, H))
     for name in ('sky.jpg', 'far.png', 'mid.png', 'near.png'):
         im = Image.open(f'{out}/{name}').convert('RGBA')
@@ -280,7 +294,30 @@ def composite(stage, out, mat=None):
     return canvas
 
 
+def composite_world(stage, out):
+    # camera stages: world-sized layers stack 1:1 (that's the full zoom-out view)
+    TW, TH = world_size(stage)
+    canvas = Image.new('RGBA', (TW, TH))
+    for name in ('sky.jpg', 'far.png', 'mid.png', 'near.png', 'terrain.png'):
+        canvas.alpha_composite(Image.open(f'{out}/{name}').convert('RGBA'))
+    if os.path.exists(f'{out}/lift.png'):
+        lift = Image.open(f'{out}/lift.png').convert('RGBA')
+        p = next(p for p in stage['platforms'] if p.get('move'))
+        y = min(p['move'].get('stops', [p['y']]))  # show the lift up at the summit stop
+        canvas.alpha_composite(lift, (int(p['x'] - lift.width / 2), int(y - 8)))
+    return canvas
+
+
 def write_thumbs(canvas, out):
+    if canvas.width != W:
+        # camera stage: 16:9 frame on the playable area (drops the top sky)
+        w = canvas.width * 0.84
+        x0 = (canvas.width - w) / 2
+        h = w * 9 / 16
+        crop = canvas.crop((int(x0), int(canvas.height - h), int(x0 + w), canvas.height))
+        crop.convert('RGB').resize((640, 360), Image.LANCZOS).save(f'{out}/preview.jpg', quality=90)
+        crop.convert('RGB').resize((256, 144), Image.LANCZOS).save(f'{out}/thumb.jpg', quality=90)
+        return
     # 16:9 frame on the action area (drops the top of the sky), kept inside
     # the 1280x720 canvas so nothing pads with black
     crop = canvas.crop((80, 90, 1200, 720))

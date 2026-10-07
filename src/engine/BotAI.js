@@ -12,11 +12,19 @@
 // Call once per frame per bot fighter; returns the same {left,right,jump,
 // attack,special} shape every other input source produces, so BattleScene
 // can just assign it straight onto fighter.input.
+//
+// Big multi-level stages (stage.botNav) pass the BotNav graph as `nav`;
+// those bots path-find between tiers (navBotInput below) and may also return
+// down: true to drop through a platform. Every other stage keeps the flat
+// chase logic exactly as before.
 // ---------------------------------------------------------------------------
-export function computeBotInput(time, bot, fighters, bounds) {
+import { nodeAt, findPath, jumpReach, liftAt, reachableFrom } from './BotNav.js';
+
+export function computeBotInput(time, bot, fighters, bounds, nav = null) {
   const input = { left: false, right: false, jump: false, attack: false, special: false };
 
   const targets = fighters.filter((f) => f !== bot && f.alive && f.state !== 'ko' && f.state !== 'dead');
+  if (nav) return navBotInput(time, bot, targets, nav);
   if (!targets.length) return input;
 
   let target = targets[0];
@@ -82,4 +90,238 @@ export function computeBotInput(time, bot, fighters, bounds) {
   }
 
   return input;
+}
+
+// ------------------------------------------------------------ nav (big stages)
+const ATTACK_DY = 90;   // only swing when the target is about level with you
+const STUCK_MS = 3500;  // same edge this long without progress -> ban it
+const BAN_MS = 6000;
+
+function navBotInput(time, bot, targets, nav) {
+  const input = { left: false, right: false, jump: false, attack: false, special: false, down: false };
+  bot._ai ??= { nextAttackAt: 0, nextSpecialAt: 0, nextJumpAt: 0 };
+  const ai = bot._ai;
+  ai.reach ??= jumpReach(bot.charDef.stats);
+  ai.banned ??= new Map();
+  ai.nextAirJumpAt ??= 0;
+  ai.dropUntil ??= 0;
+  const b = bot.body;
+  if (!b) return input;
+  const grounded = b.blocked.down || b.touching.down;
+  const moveTo = (x, dead = 10) => {
+    if (x < bot.x - dead) input.left = true;
+    else if (x > bot.x + dead) input.right = true;
+    return Math.abs(x - bot.x) <= dead;
+  };
+  if (time < ai.dropUntil) input.down = true;
+
+  // nearest target by straight-line distance (tiers matter here)
+  let target = null;
+  let best = Infinity;
+  for (const f of targets) {
+    const d = Math.hypot(f.x - bot.x, f.y - bot.y);
+    if (d < best) { best = d; target = f; }
+  }
+
+  const halfW = Math.max(6, (bot.bodyW ?? 12) / 2 - 2);
+  let cur = grounded ? nodeAt(nav, bot.x, bot.y, 7, halfW) : null;
+  // grounded but between known spans (e.g. teetering on a lip): still on the last surface
+  if (grounded && !cur && ai.node != null && Math.abs(nav.nodes[ai.node].y - bot.y) <= 7 && nav.nodes[ai.node].kind !== 'stop') cur = nav.nodes[ai.node];
+  if (cur && cur.id !== ai.node) { ai.node = cur.id; ai.air = null; }
+  if (grounded && ai.air && time - ai.air.at > 200) ai.air = null;
+
+  if (!grounded) {
+    airControl(time, bot, target, nav, ai, input, moveTo);
+    if (target) tryAttacks(time, bot, target, ai, input);
+    return input;
+  }
+  if (!cur) {
+    // standing on something the graph doesn't know (rare): walk to the
+    // nearest known surface point at this height
+    if (target) moveTo(target.x, 30);
+    return input;
+  }
+  if (!target) { moveTo(cur.cx, 30); return input; }
+
+  // ---- plan: path to the target's surface, or as close as we can get
+  const now = new Set();
+  for (const [k, until] of ai.banned) { if (until > time) now.add(k); else ai.banned.delete(k); }
+  const goal = targetNode(nav, target);
+  let path = null;
+  if (goal && goal.id !== cur.id) {
+    path = findPath(nav, cur.id, goal.id, ai.reach, now);
+    if (!path) {
+      // unreachable for this character (e.g. a tank vs. a perch): go to the
+      // reachable surface closest to the target instead
+      const reach = reachableFrom(nav, cur.id, ai.reach);
+      let alt = null;
+      let ad = Infinity;
+      for (const id of reach) {
+        const n = nav.nodes[id];
+        const d = Math.hypot(Math.min(Math.max(target.x, n.x0), n.x1) - target.x, n.y - target.y);
+        if (d < ad) { ad = d; alt = n; }
+      }
+      if (alt && alt.id !== cur.id) path = findPath(nav, cur.id, alt.id, ai.reach, now);
+    }
+  }
+  const e = path?.[0] ?? null;
+  const key = e ? `${e.from}>${e.to}` : null;
+  if (key !== ai.edgeKey) { ai.edgeKey = key; ai.edgeSince = time; }
+  else if (e && !['board', 'ride', 'exit'].includes(e.type) && time - ai.edgeSince > STUCK_MS) {
+    ai.banned.set(key, time + BAN_MS);
+    ai.edgeSince = time;
+  }
+  ai.lastEdge = e ? `${e.type}>${e.to}` : 'engage';
+
+  if (!e) {
+    engage(time, bot, target, cur, nav, ai, input, moveTo);
+    return input;
+  }
+  followEdge(time, bot, e, cur, nav, ai, input, moveTo);
+  // opportunistic swings at anyone level with us on the way
+  tryAttacks(time, bot, target, ai, input);
+  return input;
+}
+
+// The surface the target is on (or will land on), null if over the void.
+function targetNode(nav, t) {
+  const tb = t.body;
+  if (tb && (tb.blocked.down || tb.touching.down)) {
+    const n = nodeAt(nav, t.x, t.y, 7, Math.max(6, (t.bodyW ?? 12) / 2 - 2));
+    if (n) return n;
+  }
+  return nav.firstBelow(t.x, t.y - 6);
+}
+
+function followEdge(time, bot, e, cur, nav, ai, input, moveTo) {
+  const B = nav.nodes[e.to];
+  switch (e.type) {
+    case 'walk':
+      moveTo(B.cx, 4);
+      break;
+    case 'jump':
+      if (moveTo(e.tx, 14) && time >= ai.nextJumpAt) {
+        input.jump = true;
+        ai.nextJumpAt = time + 350;
+        ai.air = { e, at: time, usedAir: false };
+        input.left = e.lx < bot.x - 6;
+        input.right = e.lx > bot.x + 6;
+      }
+      break;
+    case 'drop':
+      if (moveTo(e.x, 16)) {
+        input.left = input.right = false;
+        input.down = true;
+        ai.dropUntil = time + 260;
+        ai.air = { e, at: time };
+      }
+      break;
+    case 'walkoff':
+      moveTo(e.ex + e.side * 80, 0);
+      ai.air = { e, at: time };
+      break;
+    case 'board': {
+      // B is the stop; step on only while the lift is parked there
+      if (liftAt(nav, B, 6)) moveTo(B.cx, 24);
+      else if (cur.x1 > B.x0 && cur.x0 < B.x1) moveTo(B.cx, 24); // floor under the shaft: it comes to us
+      else moveTo(B.cx < cur.cx ? cur.x0 + 30 : cur.x1 - 30, 10); // wait at the edge, not in the shaft
+      break;
+    }
+    case 'exit':
+      if (liftAt(nav, cur, 6)) moveTo(B.cx, 10);
+      else moveTo(cur.cx, 30);
+      break;
+    case 'ride':
+    default:
+      moveTo(cur.cx, 30);
+  }
+}
+
+function airControl(time, bot, target, nav, ai, input, moveTo) {
+  const b = bot.body;
+  const vy = b.velocity.y;
+  // a hit (or nothing under us any more) cancels the move we were making --
+  // otherwise a bot knocked off mid-drop would never try to recover
+  if (ai.air && (bot.state === 'hurt' || (!nav.firstBelow(bot.x, bot.y - 4) && (ai.air.e.type !== 'jump' || time - ai.air.at > 900)))) ai.air = null;
+  const a = ai.air;
+  if (a && time - a.at < 2500) {
+    const e = a.e;
+    const B = nav.nodes[e.to];
+    if (e.type === 'jump') {
+      moveTo(e.lx, 6);
+      const by = B.kind === 'stop' ? nav.liftY[B.lift.mover] : B.y;
+      if (e.mode === 'double' && !a.usedAir && vy > -140 && bot.y > by - 18 && bot.airJumpsLeft > 0) {
+        input.jump = true;
+        a.usedAir = true;
+      }
+    } else if (e.type === 'walkoff') {
+      moveTo(Math.min(Math.max(e.x, B.x0 + 30), B.x1 - 30), 6);
+    }
+    // drop: fall straight
+    return;
+  }
+  // no committed edge (knocked back, fell): recover if nothing is below us
+  const below = nav.firstBelow(bot.x, bot.y - 4);
+  if (!below) {
+    let tx = bot.x;
+    let td = Infinity;
+    for (const n of nav.nodes) {
+      if (n.kind === 'stop') continue;
+      const cx = Math.min(Math.max(bot.x, n.x0 + 40), n.x1 - 40);
+      // prefer surfaces we can still get on top of
+      const d = Math.abs(cx - bot.x) + Math.max(0, bot.y - n.y - 60) * 2;
+      if (d < td) { td = d; tx = cx; }
+    }
+    moveTo(tx, 4);
+    if (vy > 40 && bot.airJumpsLeft > 0 && time >= ai.nextAirJumpAt) {
+      input.jump = true;
+      ai.nextAirJumpAt = time + 320;
+    }
+    ai.recovering = true;
+    return;
+  }
+  ai.recovering = false;
+  // over solid ground: drift toward the target, but never off the edge
+  if (target) {
+    const dir = Math.sign(target.x - bot.x);
+    if (dir && nav.firstBelow(bot.x + dir * 50, bot.y - 4)) moveTo(target.x, 20);
+  }
+}
+
+function engage(time, bot, target, cur, nav, ai, input, moveTo) {
+  const basic = bot.charDef.moves.basicDirectional;
+  const basicRange = (basic.rangeW ?? 60) + 20;
+  const dx = target.x - bot.x;
+  // stay on this surface: chase along it, but not past its ends
+  const lo = cur.x0 + 24;
+  const hi = cur.x1 - 24;
+  const want = Math.min(Math.max(target.x, lo), hi);
+  if (Math.abs(dx) > basicRange) moveTo(want, 6); // else in range: hold ground
+  // walled (a ledge lip): hop it, same as the flat bots
+  const b = bot.body;
+  const walled = (input.right && (b.blocked.right || b.touching.right)) || (input.left && (b.blocked.left || b.touching.left));
+  if (walled && time >= ai.nextJumpAt) { input.jump = true; ai.nextJumpAt = time + 400; }
+  else if (time >= ai.nextJumpAt && Math.random() < 0.006 && bot.x > lo + 60 && bot.x < hi - 60) {
+    input.jump = true; // the odd hop so they don't look glued down
+    ai.nextJumpAt = time + 600;
+  }
+  tryAttacks(time, bot, target, ai, input);
+}
+
+function tryAttacks(time, bot, target, ai, input) {
+  if (input.down) return;
+  const basic = bot.charDef.moves.basicDirectional;
+  const special = bot.charDef.moves.specialDirectional;
+  const basicRange = (basic.rangeW ?? 60) + 20;
+  const specialRange = special.kind === 'burst' ? (special.radius ?? 90) : 240;
+  const dist = Math.abs(target.x - bot.x);
+  const dy = Math.abs(target.y - bot.y);
+  if (dist <= basicRange && dy < ATTACK_DY && time >= ai.nextAttackAt) {
+    input.attack = true;
+    ai.nextAttackAt = time + basic.duration + basic.cooldown + 80;
+  }
+  if (dist <= specialRange && dy < ATTACK_DY + 20 && time >= ai.nextSpecialAt && Math.random() < 0.5) {
+    input.special = true;
+    ai.nextSpecialAt = time + special.duration + special.cooldown + 200;
+  }
 }

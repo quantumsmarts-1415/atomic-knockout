@@ -70,7 +70,36 @@ def key_frame(rgb, a):
     if a.pocket_min > 0:
         big = np.where(sizes >= a.pocket_min)[0]
         keyed |= np.isin(lab, big[big > 0])
-    # grow keyed region through the soft anti-aliased fringe only
+    if a.shadow:
+        # Floor shadow = a darker, same-hue version of the backdrop: per-channel
+        # ratio pix/model nearly equal across channels (k), 0.45 < k < 0.985,
+        # locally smooth. Grown ONLY outward from the keyed region and only in
+        # the bottom band of the silhouette, so dark/colored boots (ratio far
+        # from uniform, or k too low, or sharp gradient) are never crossed.
+        ratio = rgb / np.maximum(model, 1)
+        k = ratio.mean(-1)
+        flat = np.abs(ratio - k[..., None]).max(-1) < a.shadow_hue
+        sh = flat & (k > a.shadow_kmin) & (k < a.shadow_kmax) & (grad < a.shadow_grad)
+        ys = np.nonzero((~keyed).any(1))[0]
+        if len(ys):
+            top = int(ys.min() + (ys.max() - ys.min()) * (1 - a.shadow_band))
+            sh[:top] = False
+        grown = keyed.copy()
+        for _ in range(400):
+            nxt = grown | (ndi.binary_dilation(grown) & sh)
+            if (nxt == grown).all(): break
+            grown = nxt
+        lab2, n2 = ndi.label(sh & ~keyed)
+        if n2:  # finish whole shadow components the growth reached
+            hit = np.unique(lab2[grown & sh & ~keyed]); hit = hit[hit > 0]
+            grown |= np.isin(lab2, hit)
+        keyed = grown
+        # thin shadow contour lines (1-2 px, shadow-ish tone) left in the band
+        fgb = ~keyed
+        opened = ndi.binary_opening(fgb, structure=np.ones((3, 3)), iterations=1)
+        thin = fgb & ~opened & (k > 0.3) & (k < a.shadow_kmax) & (np.abs(ratio - k[..., None]).max(-1) < 0.2)
+        thin[:top] = False
+        keyed = keyed | thin
     fg = ~keyed
     # pocket fill: refill small enclosed transparent holes
     holes = ~fg & ndi.binary_fill_holes(fg)
@@ -89,6 +118,20 @@ def key_frame(rgb, a):
     edge = fg & ~ndi.binary_erosion(fg)
     ramp = np.clip((diff - a.thresh * 0.5) / max(1.0, a.thresh), 0.35, 1.0)
     alpha[edge] = ramp[edge]
+    # despill (colored backdrops only, e.g. magenta): in a 3-px band inside
+    # the silhouette edge, remove the component of each pixel's chroma that
+    # points along the backdrop's chroma, so no pink/blue fringe survives.
+    cb = model - model.mean(-1, keepdims=True)
+    if np.median(np.linalg.norm(cb, axis=-1)) > 12:
+        fg = ndi.binary_erosion(fg)  # outer ring is mostly key colour
+        alpha = fg.astype(np.float32)
+        edge = fg & ~ndi.binary_erosion(fg)
+        alpha[edge] = ramp[edge]
+        band = fg & ~ndi.binary_erosion(fg, iterations=a.spill_band)
+        cp = rgb - rgb.mean(-1, keepdims=True)
+        sproj = (cp * cb).sum(-1) / np.maximum((cb * cb).sum(-1), 1)
+        sproj = np.clip(sproj, 0, 1)
+        rgb = np.where(band[..., None], rgb - sproj[..., None] * cb, rgb)
     out = np.dstack([rgb.clip(0, 255), alpha * 255]).astype(np.uint8)
     return out
 
@@ -106,10 +149,18 @@ def main():
     p.add_argument('--hole-max', type=int, default=1000)
     p.add_argument('--speck', type=int, default=400)
     p.add_argument('--keep-frac', type=float, default=0.02)
+    p.add_argument('--shadow', action='store_true', help='also remove gray floor shadow under the feet')
+    p.add_argument('--shadow-kmin', type=float, default=0.45)
+    p.add_argument('--shadow-kmax', type=float, default=1.12)
+    p.add_argument('--shadow-hue', type=float, default=0.10)
+    p.add_argument('--shadow-grad', type=float, default=30)
+    p.add_argument('--shadow-band', type=float, default=0.22, help='bottom fraction of the silhouette to search')
+    p.add_argument('--spill-band', type=int, default=6)
+    p.add_argument('--frame-glob', default='frame_*.png')
     p.add_argument('--pad', type=int, default=20)
     p.add_argument('--crop-bottom', type=int, default=0, help='ignore N px at the bottom (shadow/watermark row)')
     a = p.parse_args()
-    files = sorted(glob.glob(os.path.join(a.frames, 'frame_*.png')))
+    files = sorted(glob.glob(os.path.join(a.frames, a.frame_glob)))
     pick = [files[a.start + i * a.step] for i in range(a.count)]
     frames = [key_frame(np.array(Image.open(f).convert('RGB')), a) for f in pick]
     if a.crop_bottom:

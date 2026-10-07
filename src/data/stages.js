@@ -32,6 +32,9 @@
 //   platforms[].move: { axis: 'x' | 'y', range, period } -- the platform
 //             swings +-range/2 around its x/y on a sine wave, carrying anyone
 //             standing on it (BattleScene.updateMovingPlatforms).
+//   intro:    optional match intro { type, art: { name: file }, timing? } --
+//             played before GO with fighters frozen; types live in
+//             engine/stageIntros.js (STAGE_INTROS). Art loads from art.dir.
 export const DEFAULT_BLAST = { left: -140, right: 1420, top: -308, bottom: 860 };
 
 export const STAGES = [
@@ -145,6 +148,9 @@ export const STAGES = [
     layout: 'Tri-platform',
     music: 'bgm-hydrogen-breakout',
     theme: { skyTop: 0x0a1626, skyBottom: 0x1b3a55, hills: [0x10243a, 0x0c1c2e] },
+    // optional match intro (engine/stageIntros.js): blast doors built from
+    // Gemini's bulkhead-door art (tools/stages/build_door_intro.py)
+    intro: { type: 'doors', art: { doorLeft: 'intro_door_left.jpg', doorRight: 'intro_door_right.jpg' } },
     art: {
       dir: 'art-src/stages/hydrogen-breakout/',
       layers: [
@@ -354,5 +360,6 @@ export function loadStageArt(loader, stages = STAGES) {
     art.layers.forEach((l, i) => loader.image(stageKey(st, `layer${i}`), art.dir + l.file));
     if (art.terrain) loader.image(stageKey(st, 'terrain'), art.dir + art.terrain);
     if (art.movingPlatform) loader.image(stageKey(st, 'moving'), art.dir + art.movingPlatform);
+    for (const [name, file] of Object.entries(st.intro?.art ?? {})) loader.image(stageKey(st, `intro-${name}`), art.dir + file);
   }
 }

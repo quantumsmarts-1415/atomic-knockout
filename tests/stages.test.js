@@ -127,3 +127,36 @@ test('CPU ledge bounds stay over the ground', () => {
     assert.ok(b.minX < b.maxX && b.minX >= 0 - 1 && b.maxX <= W + 1, `${st.id} bounds ${b.minX}-${b.maxX}`);
   }
 });
+
+// JPEG/PNG pixel size without decoding (enough for asset sanity checks)
+function imageSize(buf) {
+  if (buf[0] === 0x89 && buf[1] === 0x50) return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+  let i = 2;
+  while (i < buf.length) {
+    if (buf[i] !== 0xff) { i++; continue; }
+    const m = buf[i + 1];
+    if (m >= 0xc0 && m <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(m)) return { h: buf.readUInt16BE(i + 5), w: buf.readUInt16BE(i + 7) };
+    i += 2 + buf.readUInt16BE(i + 2);
+  }
+  return null;
+}
+
+test('stage intros: known type, art present; door halves exactly cover the 1280x720 screen', () => {
+  const KNOWN = ['doors']; // keep in sync with engine/stageIntros.js STAGE_INTROS
+  for (const st of STAGES.filter((s) => s.intro)) {
+    assert.ok(KNOWN.includes(st.intro.type), `${st.id}: unknown intro type ${st.intro.type}`);
+    assert.ok(st.art, `${st.id}: intro art loads from art.dir`);
+    for (const f of Object.values(st.intro.art ?? {})) {
+      const p = join(root, st.art.dir + f);
+      assert.ok(existsSync(p), `missing ${st.art.dir}${f}`);
+    }
+    if (st.intro.type === 'doors') {
+      const l = imageSize(readFileSync(join(root, st.art.dir + st.intro.art.doorLeft)));
+      const r = imageSize(readFileSync(join(root, st.art.dir + st.intro.art.doorRight)));
+      assert.deepStrictEqual([l.w + r.w, l.h, r.h], [W, H, H], `${st.id}: closed doors must cover the screen`);
+      // opaque formats only (JPEG) so there can't be holes in the closed doors
+      for (const f of [st.intro.art.doorLeft, st.intro.art.doorRight]) assert.match(f, /\.jpe?g$/, `${f} should be opaque`);
+    }
+  }
+  assert.ok(STAGES.some((s) => s.intro), 'expected at least one stage intro (hydrogen-breakout)');
+});

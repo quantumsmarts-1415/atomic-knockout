@@ -53,6 +53,11 @@ const SOUNDS = {
   ko: () => { noise({ dur: 0.35, vol: 0.35, lowpass: 1800 }); tone({ freq: 400, endFreq: 40, type: 'sawtooth', dur: 0.45, vol: 0.28 }); },
   menuMove: () => tone({ freq: 520, type: 'square', dur: 0.05, vol: 0.07 }),
   menuConfirm: () => { tone({ freq: 520, type: 'square', dur: 0.07, vol: 0.1 }); tone({ freq: 780, type: 'square', dur: 0.09, vol: 0.1, delay: 0.07 }); },
+  // stage intro (blast doors): two-tone klaxon, heavy unlock thunk, hydraulic hiss, GO
+  alarm: () => { tone({ freq: 660, type: 'square', dur: 0.12, vol: 0.08 }); tone({ freq: 495, type: 'square', dur: 0.12, vol: 0.08, delay: 0.13 }); },
+  doorUnlock: () => { noise({ dur: 0.22, vol: 0.32, lowpass: 900 }); tone({ freq: 110, endFreq: 45, type: 'triangle', dur: 0.25, vol: 0.32 }); },
+  doorSlide: () => { noise({ dur: 0.85, vol: 0.12, lowpass: 2400 }); tone({ freq: 70, endFreq: 95, type: 'sawtooth', dur: 0.8, vol: 0.05 }); },
+  go: () => { tone({ freq: 523, type: 'square', dur: 0.1, vol: 0.12 }); tone({ freq: 784, type: 'square', dur: 0.22, vol: 0.12, delay: 0.09 }); },
   gameEnd: () => { tone({ freq: 392, type: 'square', dur: 0.14, vol: 0.14 }); tone({ freq: 523, type: 'square', dur: 0.14, vol: 0.14, delay: 0.14 }); tone({ freq: 659, type: 'square', dur: 0.3, vol: 0.14, delay: 0.28 }); },
 };
 

@@ -6,6 +6,7 @@ import { play as sfx } from '../engine/sfx.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { computeBotInput } from '../engine/BotAI.js';
+import { startStageIntro } from '../engine/stageIntros.js';
 
 const GRAVITY = 1500;
 
@@ -60,6 +61,21 @@ export default class BattleScene extends Phaser.Scene {
     this.bindKeyboard();
 
     this.projectiles = [];
+
+    // optional per-stage match intro (engine/stageIntros.js): fighters are
+    // frozen while it plays (+200ms so a skip press can't become an attack);
+    // confirm (F/K/Enter/Space, phone attack) or a click skips it.
+    this.introLockUntil = 0;
+    this.intro = startStageIntro(this, this.stage, {
+      onDone: () => { this.introLockUntil = this.time.now + 200; },
+    });
+    if (this.intro) {
+      const skip = () => { if (this.intro?.active) this.intro.skip(); };
+      const SKIP_KEYS = new Set(['KeyF', 'KeyK', 'Enter', 'Space']);
+      this.input.keyboard.on('keydown', (e) => { if (SKIP_KEYS.has(e.code)) skip(); });
+      this.input.on('pointerdown', skip);
+      this.introPhonePrev = {};
+    }
 
     // pause menu hook (M4): ESC or P
     this.input.keyboard.on('keydown-ESC', () => this.togglePause());
@@ -490,7 +506,22 @@ export default class BattleScene extends Phaser.Scene {
     // a dropped phone just leaves its fighter standing idle instead of
     // crashing the match), and bots run the basic CPU controller instead of
     // any real input source.
+    const introLocked = this.intro?.active || this.time.now < this.introLockUntil;
+    if (this.intro?.active) {
+      // phone attack button skips the intro (edge-triggered)
+      for (const f of this.fighters) {
+        if (f.isBot || this.keymaps[f.controlSlot]) continue;
+        const c = phoneNet.getInput(f.controlSlot).confirm;
+        if (c && !this.introPhonePrev[f.controlSlot]) this.intro.skip();
+        this.introPhonePrev[f.controlSlot] = c;
+      }
+    }
     this.fighters.forEach((f) => {
+      if (introLocked) {
+        f.input.left = f.input.right = f.input.jump = f.input.down = false;
+        f.input.attack = f.input.special = false;
+        return;
+      }
       if (f.isBot) {
         const ai = computeBotInput(time, f, this.fighters, this.botBounds);
         f.input.left = ai.left;

@@ -466,10 +466,10 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 631,
+        frameW: 620,
         frameH: 720,
-        footY: 0.9725,
-        visibleH: 672,
+        footY: 0.9742,
+        visibleH: 674,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
@@ -918,9 +918,9 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 982,
-        frameH: 702,
-        footY: 0.9721,
+        frameW: 915,
+        frameH: 703,
+        footY: 0.9730,
         visibleH: 657,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
@@ -1026,10 +1026,10 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 686,
-        frameH: 717,
-        footY: 0.9744,
-        visibleH: 666,
+        frameW: 666,
+        frameH: 719,
+        footY: 0.9766,
+        visibleH: 669,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 13, fps: 3.6, loop: true },
@@ -1215,10 +1215,10 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 508,
-        frameH: 704,
-        footY: 0.9704,
-        visibleH: 655,
+        frameW: 602,
+        frameH: 705,
+        footY: 0.9730,
+        visibleH: 658,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
@@ -1416,10 +1416,10 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 713,
+        frameW: 1020,
         frameH: 720,
-        footY: 0.9809,
-        visibleH: 691,
+        footY: 0.9847,
+        visibleH: 698,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
         },
@@ -1683,10 +1683,10 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 392,
+        frameW: 694,
         frameH: 716,
-        footY: 0.9722,
-        visibleH: 670,
+        footY: 0.9751,
+        visibleH: 674,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -1749,10 +1749,10 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 592,
-        frameH: 681,
-        footY: 0.9695,
-        visibleH: 622,
+        frameW: 603,
+        frameH: 720,
+        footY: 0.9732,
+        visibleH: 669,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -1816,10 +1816,10 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 395,
-        frameH: 700,
-        footY: 0.9744,
-        visibleH: 660,
+        frameW: 729,
+        frameH: 703,
+        footY: 0.9796,
+        visibleH: 665,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -1882,10 +1882,10 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 548,
-        frameH: 706,
-        footY: 0.9706,
-        visibleH: 653,
+        frameW: 554,
+        frameH: 700,
+        footY: 0.9734,
+        visibleH: 657,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -1949,10 +1949,10 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 549,
-        frameH: 709,
-        footY: 0.9717,
-        visibleH: 659,
+        frameW: 556,
+        frameH: 710,
+        footY: 0.9764,
+        visibleH: 668,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -2017,10 +2017,10 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 416,
-        frameH: 684,
-        footY: 0.9688,
-        visibleH: 632,
+        frameW: 787,
+        frameH: 706,
+        footY: 0.9764,
+        visibleH: 665,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -2083,10 +2083,10 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 724,
+        frameW: 728,
         frameH: 720,
-        footY: 1.0,
-        visibleH: 684,
+        footY: 1.0000,
+        visibleH: 683,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },

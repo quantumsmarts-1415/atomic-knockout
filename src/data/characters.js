@@ -1328,6 +1328,11 @@ export const CHARACTERS = {
           //   --step 3 --key blue --connected --pocket-min 4 --threshold 120
           // = one full stride cycle (33 src frames, frame 161 ~ 128, IoU 0.97),
           // threshold 120 so her darker-blue floor shadow keys out too.
+          // Then every frame mirrored in place (PIL ImageOps.mirror per
+          // 443x710 cell): the video walks facing RIGHT but art.facing is -1
+          // (her idle faces left natively) and the Rig flips all clips by
+          // art.facing, so unmirrored she walked backwards. All clips in a
+          // sheet must share the idle's native orientation.
           idle: { count: 14, fps: 3.6, loop: true },
           walk: { count: 11, fps: 8, loop: true, frameW: 443, frameH: 710, footY: 0.9686, visibleH: 661 },
         },

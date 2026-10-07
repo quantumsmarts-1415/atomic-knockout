@@ -15,6 +15,25 @@
 // short enough that literally every character can hop it, since being
 // walled off from half the stage is a much bigger problem than missing a
 // bonus platform.
+//
+// Optional per-stage fields (added with the painted stages, 2026-10-07; the
+// original four stages leave them out and get the old defaults):
+//   art:      { dir, layers: [{ file, par }], terrain, ambient } -- painted
+//             parallax backgrounds (tools/stages/paint_stages.py). `par` is
+//             how many px the layer shifts per px the fighters' midpoint
+//             moves off-center (0 = locked to the stage, bigger = nearer).
+//             `terrain` is a full-canvas painted image of the solids and
+//             platforms, drawn to match the geometry below exactly.
+//   blast:    { left, right, top, bottom } world-space KO lines (default:
+//             140px past the screen sides/bottom, 308px above the top).
+//   spawns:   [{ x, y }] -- one per player seat (y = drop-in height).
+//   music:    placeholder track key for when stage music exists.
+//   layout:   short layout label shown on the stage select screen.
+//   platforms[].move: { axis: 'x' | 'y', range, period } -- the platform
+//             swings +-range/2 around its x/y on a sine wave, carrying anyone
+//             standing on it (BattleScene.updateMovingPlatforms).
+export const DEFAULT_BLAST = { left: -140, right: 1420, top: -308, bottom: 860 };
+
 export const STAGES = [
   {
     id: 'elemental-isle',
@@ -112,4 +131,228 @@ export const STAGES = [
       { x: 900, y: 456, w: 200 },
     ],
   },
+  // ---------------------------------------------------------------------
+  // Painted story stages (2026-10-07). Jump-reach rules from the header
+  // still apply: soft platforms sit 120-140px above what's under them (the
+  // roster's weakest air-jumper reaches 211px), and the only solid step
+  // (Holdout Keep's raised keep) is 60px tall, under the zero-air-jump
+  // tanks' 91px standing jump, so nobody gets walled off.
+  // ---------------------------------------------------------------------
+  {
+    id: 'hydrogen-breakout',
+    name: 'Hydrogen Breakout',
+    desc: "Silicon's containment lab, the night Hydra broke out. Classic three-platform layout.",
+    layout: 'Tri-platform',
+    music: 'bgm-hydrogen-breakout',
+    theme: { skyTop: 0x0a1626, skyBottom: 0x1b3a55, hills: [0x10243a, 0x0c1c2e] },
+    art: {
+      dir: 'art-src/stages/hydrogen-breakout/',
+      layers: [
+        { file: 'sky.jpg', par: 0.015 },
+        { file: 'far.png', par: 0.04 },
+        { file: 'mid.png', par: 0.08 },
+        { file: 'near.png', par: 0.13 },
+      ],
+      terrain: 'terrain.png',
+      ambient: { kind: 'bubbles', color: 0x9fe8ff, count: 26 },
+    },
+    groundY: 560,
+    solids: [
+      { x: 640, w: 900 }, // x 190-1090
+    ],
+    // sides 128px above the floor, top 128px above the sides
+    platforms: [
+      { x: 420, y: 432, w: 200 },
+      { x: 860, y: 432, w: 200 },
+      { x: 640, y: 304, w: 200 },
+    ],
+    blast: { left: -160, right: 1440, top: -300, bottom: 860 },
+    spawns: [
+      { x: 400, y: 470 }, { x: 880, y: 470 }, { x: 540, y: 470 },
+      { x: 740, y: 470 }, { x: 280, y: 470 }, { x: 1000, y: 470 },
+    ],
+  },
+  {
+    id: 'silicon-foundry',
+    name: 'Silicon Foundry',
+    desc: "The AI's wafer foundry, where it was built. A cargo lift sweeps back and forth overhead.",
+    layout: 'Moving platform',
+    music: 'bgm-silicon-foundry',
+    theme: { skyTop: 0x1a0f1c, skyBottom: 0x4a2030, hills: [0x2a1424, 0x22101c] },
+    art: {
+      dir: 'art-src/stages/silicon-foundry/',
+      layers: [
+        { file: 'sky.jpg', par: 0.015 },
+        { file: 'far.png', par: 0.04 },
+        { file: 'mid.png', par: 0.08 },
+        { file: 'near.png', par: 0.13 },
+      ],
+      terrain: 'terrain.png',
+      movingPlatform: 'lift.png',
+      ambient: { kind: 'sparks', color: 0xffb35c, count: 22 },
+    },
+    groundY: 560,
+    solids: [
+      { x: 640, w: 880 }, // x 200-1080
+    ],
+    // 140px above the floor; sweeps x 490-790 every 7s (edges stay over the floor)
+    platforms: [
+      { x: 640, y: 420, w: 220, move: { axis: 'x', range: 300, period: 7000 } },
+    ],
+    blast: { left: -160, right: 1440, top: -300, bottom: 860 },
+    spawns: [
+      { x: 380, y: 470 }, { x: 900, y: 470 }, { x: 520, y: 470 },
+      { x: 760, y: 470 }, { x: 270, y: 470 }, { x: 1010, y: 470 },
+    ],
+  },
+  {
+    id: 'brimstone-caldera',
+    name: 'Brimstone Caldera',
+    desc: 'A basalt slab over a sulfur volcano. One wide, flat floor and nowhere to hide.',
+    layout: 'Flat',
+    music: 'bgm-brimstone-caldera',
+    theme: { skyTop: 0x1c0c08, skyBottom: 0x5a2410, hills: [0x2a120a, 0x200e08] },
+    art: {
+      dir: 'art-src/stages/brimstone-caldera/',
+      layers: [
+        { file: 'sky.jpg', par: 0.015 },
+        { file: 'far.png', par: 0.04 },
+        { file: 'mid.png', par: 0.08 },
+        { file: 'near.png', par: 0.13 },
+      ],
+      terrain: 'terrain.png',
+      ambient: { kind: 'embers', color: 0xffa040, count: 34 },
+    },
+    groundY: 560,
+    solids: [
+      { x: 640, w: 1000 }, // x 140-1140
+    ],
+    platforms: [],
+    blast: { left: -150, right: 1430, top: -300, bottom: 860 },
+    spawns: [
+      { x: 380, y: 470 }, { x: 900, y: 470 }, { x: 520, y: 470 },
+      { x: 760, y: 470 }, { x: 240, y: 470 }, { x: 1040, y: 470 },
+    ],
+  },
+  {
+    id: 'neon-nexus',
+    name: 'Neon Nexus',
+    desc: 'A noble-gas city rooftop. The roof runs off both screen edges -- walk off and you are gone.',
+    layout: 'Walk-off',
+    music: 'bgm-neon-nexus',
+    theme: { skyTop: 0x0c0820, skyBottom: 0x2a1450, hills: [0x160f30, 0x120c26] },
+    art: {
+      dir: 'art-src/stages/neon-nexus/',
+      layers: [
+        { file: 'sky.jpg', par: 0.015 },
+        { file: 'far.png', par: 0.04 },
+        { file: 'mid.png', par: 0.08 },
+        { file: 'near.png', par: 0.13 },
+      ],
+      terrain: 'terrain.png',
+      ambient: { kind: 'rain', color: 0xb8a8ff, count: 70 },
+    },
+    groundY: 560,
+    // Full-width roof, x 0-1280: the side blast lines are pushed further
+    // out (-220 / 1500) so a walk-off KO takes a deliberate run, not a
+    // stumble past the screen edge.
+    solids: [
+      { x: 640, w: 1280 },
+    ],
+    // neon sign tops, 130px above the roof
+    platforms: [
+      { x: 330, y: 430, w: 210 },
+      { x: 950, y: 430, w: 210 },
+    ],
+    blast: { left: -220, right: 1500, top: -300, bottom: 860 },
+    spawns: [
+      { x: 400, y: 470 }, { x: 880, y: 470 }, { x: 540, y: 470 },
+      { x: 740, y: 470 }, { x: 250, y: 470 }, { x: 1030, y: 470 },
+    ],
+  },
+  {
+    id: 'holdout-keep',
+    name: 'Holdout Keep',
+    desc: 'Castle ramparts of the last free kingdom. A raised keep in the middle, balconies on the wings.',
+    layout: 'Stepped',
+    music: 'bgm-holdout-keep',
+    theme: { skyTop: 0x2a3050, skyBottom: 0xd88a5a, hills: [0x3a3550, 0x2e2a42] },
+    art: {
+      dir: 'art-src/stages/holdout-keep/',
+      layers: [
+        { file: 'sky.jpg', par: 0.015 },
+        { file: 'far.png', par: 0.04 },
+        { file: 'mid.png', par: 0.08 },
+        { file: 'near.png', par: 0.13 },
+      ],
+      terrain: 'terrain.png',
+      ambient: { kind: 'petals', color: 0xffd2a0, count: 20 },
+    },
+    groundY: 560,
+    solids: [
+      { x: 640, w: 960 },                // ramparts, x 160-1120
+      { x: 640, y: 500, w: 320, h: 60 }, // raised keep: 60px step (< 91px tank jump)
+    ],
+    // balconies 130px above the rampart floor
+    platforms: [
+      { x: 300, y: 430, w: 180 },
+      { x: 980, y: 430, w: 180 },
+    ],
+    blast: { left: -150, right: 1430, top: -300, bottom: 860 },
+    spawns: [
+      { x: 360, y: 470 }, { x: 920, y: 470 }, { x: 560, y: 420 },
+      { x: 720, y: 420 }, { x: 250, y: 470 }, { x: 1030, y: 470 },
+    ],
+  },
 ];
+
+// ------------------------------------------------------------- helpers
+// Texture key for a stage image (layers, terrain, thumb/preview).
+export function stageKey(stage, name) {
+  return `stage-${stage.id}-${name}`;
+}
+
+// Every stage has a thumbnail + preview for the select screen, painted or
+// not (the original four get theirs drawn from their theme + geometry).
+export function stageThumbFile(stage) {
+  return `art-src/stages/${stage.id}/thumb.jpg`;
+}
+export function stagePreviewFile(stage) {
+  return `art-src/stages/${stage.id}/preview.jpg`;
+}
+
+export function getStageBlast(stage) {
+  return { ...DEFAULT_BLAST, ...(stage.blast || {}) };
+}
+
+// Old default spawn row (x offsets from center, all dropped from y=480),
+// used by stages that don't list their own.
+const DEFAULT_SPAWN_XS = [-260, 260, -100, 100, -380, 380];
+export function getStageSpawns(stage) {
+  if (stage.spawns?.length) return stage.spawns;
+  return DEFAULT_SPAWN_XS.map((dx) => ({ x: 640 + dx, y: 480 }));
+}
+
+// Left/right edge of the walkable ground (solids without an explicit
+// height), for keeping CPU players away from the ledges.
+export function getStageBounds(stage) {
+  const ground = stage.solids.filter((s) => s.h === undefined);
+  const src = ground.length ? ground : stage.solids;
+  return {
+    minX: Math.min(...src.map((s) => s.x - s.w / 2)),
+    maxX: Math.max(...src.map((s) => s.x + s.w / 2)),
+  };
+}
+
+// Queue every stage image on a Phaser loader (BootScene).
+export function loadStageArt(loader, stages = STAGES) {
+  for (const st of stages) {
+    loader.image(stageKey(st, 'thumb'), stageThumbFile(st));
+    loader.image(stageKey(st, 'preview'), stagePreviewFile(st));
+    const art = st.art;
+    if (!art) continue;
+    art.layers.forEach((l, i) => loader.image(stageKey(st, `layer${i}`), art.dir + l.file));
+    if (art.terrain) loader.image(stageKey(st, 'terrain'), art.dir + art.terrain);
+    if (art.movingPlatform) loader.image(stageKey(st, 'moving'), art.dir + art.movingPlatform);
+  }
+}

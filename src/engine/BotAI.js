@@ -54,7 +54,17 @@ export function computeBotInput(time, bot, fighters, bounds) {
 
   // Light, occasional jumping -- reacts a bit to an airborne target, plus a
   // small random chance so bots don't read as perfectly flat-footed.
-  if (time >= ai.nextJumpAt) {
+  // Hop up steps (Holdout Keep's raised keep, The Core's pillar) instead of
+  // pressing into the wall forever. Jump is edge-triggered in Fighter, so
+  // this goes through the same nextJumpAt throttle.
+  const b = bot.body;
+  const grounded = !!b && (b.blocked.down || b.touching.down);
+  const walled = !!b && ((input.right && (b.blocked.right || b.touching.right))
+    || (input.left && (b.blocked.left || b.touching.left)));
+  if (grounded && walled && time >= ai.nextJumpAt) {
+    input.jump = true;
+    ai.nextJumpAt = time + 400;
+  } else if (time >= ai.nextJumpAt) {
     const shouldJump = (target.y < bot.y - 60 && Math.random() < 0.35) || Math.random() < 0.01;
     if (shouldJump) {
       input.jump = true;

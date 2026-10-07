@@ -1,14 +1,13 @@
 import * as Phaser from 'phaser';
 import Fighter from '../engine/Fighter.js';
 import { CHARACTERS } from '../data/characters.js';
-import { STAGES } from '../data/stages.js';
+import { STAGES, stageKey, getStageBlast, getStageSpawns, getStageBounds } from '../data/stages.js';
 import { play as sfx } from '../engine/sfx.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { computeBotInput } from '../engine/BotAI.js';
 
 const GRAVITY = 1500;
-const BLAST_MARGIN = 140; // how far past the screen edge you must fly to die
 
 // Slot numbering, decided in PlayerJoinScene: 0/1 = keyboard, 2-5 = a phone
 // (PhoneNet's own connection slot), 100+seatIndex = a bot.
@@ -44,6 +43,15 @@ export default class BattleScene extends Phaser.Scene {
   create() {
     this.physics.world.gravity.y = GRAVITY;
     this.matchOver = false;
+    // KO lines and CPU ledge bounds come from the stage (data/stages.js);
+    // the original four stages keep their old values via the defaults.
+    this.blast = getStageBlast(this.stage);
+    if (this.stage.art) {
+      const b = getStageBounds(this.stage);
+      this.botBounds = { minX: b.minX + 60, maxX: b.maxX - 60 };
+    } else {
+      this.botBounds = { minX: W / 2 - 400, maxX: W / 2 + 400 };
+    }
 
     this.drawBackground();
     this.buildStage();
@@ -60,6 +68,20 @@ export default class BattleScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------ stage
   drawBackground() {
+    // Painted stages: stacked parallax layers (sky -> near), each 1440px
+    // wide so they can slide up to +-80px as the fighters move without
+    // showing an edge. See updateParallax().
+    const art = this.stage.art;
+    if (art && this.textures.exists(stageKey(this.stage, 'layer0'))) {
+      this.parallax = art.layers.map((l, i) => ({
+        img: this.add.image(W / 2, H / 2, stageKey(this.stage, `layer${i}`)),
+        par: l.par,
+      }));
+      this.parallaxFocusX = W / 2;
+      this.buildAmbient(art.ambient);
+      return;
+    }
+    this.parallax = null;
     // Layered sky: night-lab gradient (per-stage theme color), distant
     // "molecule" bubbles, soft hills.
     const { skyTop, skyBottom, hills } = this.stage.theme;
@@ -96,13 +118,21 @@ export default class BattleScene extends Phaser.Scene {
     this.solids = this.physics.add.staticGroup();
     this.platforms = this.physics.add.staticGroup();
     const groundY = this.stage.groundY;
+    this.movers = [];
+    this.moverClock = 0;
+    // Painted stages draw all static terrain as one image lined up 1:1 with
+    // the geometry; physics zones below are built the same either way.
+    const painted = !!(this.stage.art?.terrain && this.textures.exists(stageKey(this.stage, 'terrain')));
+    if (painted) this.add.image(0, 0, stageKey(this.stage, 'terrain')).setOrigin(0, 0);
 
     for (const s of this.stage.solids) {
       const isGround = s.h === undefined; // ground pieces span down from groundY; obstacles give their own h
       const h = s.h ?? 90;
       const topY = s.y ?? groundY;
       const g = this.add.graphics();
-      if (isGround) {
+      if (painted) {
+        // terrain image already covers it
+      } else if (isGround) {
         g.fillStyle(0x3d2f4e, 1);
         g.fillRoundedRect(s.x - s.w / 2, topY, s.w, h, { tl: 8, tr: 8, bl: 60, br: 60 });
         g.fillStyle(0x53e0a8, 1);
@@ -124,24 +154,118 @@ export default class BattleScene extends Phaser.Scene {
     }
 
     for (const p of this.stage.platforms) {
-      const g = this.add.graphics();
-      g.fillStyle(0x6a55a0, 1);
-      g.fillRoundedRect(p.x - p.w / 2, p.y, p.w, 18, 9);
-      g.fillStyle(0x8f78cc, 1);
-      g.fillRoundedRect(p.x - p.w / 2, p.y, p.w, 8, 4);
+      let visual = null;
+      if (p.move && this.textures.exists(stageKey(this.stage, 'moving'))) {
+        visual = this.add.image(p.x, p.y - 8, stageKey(this.stage, 'moving')).setOrigin(0.5, 0);
+      } else if (!painted || p.move) {
+        const g = this.add.graphics();
+        g.fillStyle(0x6a55a0, 1);
+        g.fillRoundedRect(-p.w / 2, 0, p.w, 18, 9);
+        g.fillStyle(0x8f78cc, 1);
+        g.fillRoundedRect(-p.w / 2, 0, p.w, 8, 4);
+        g.setPosition(p.x, p.y);
+        visual = g;
+      }
 
       const zone = this.add.zone(p.x, p.y + 9, p.w, 18);
       this.physics.add.existing(zone, true);
       this.platforms.add(zone);
+      if (p.move) this.movers.push({ def: p, zone, visual, x: p.x, y: p.y });
+    }
+  }
+
+  // Moving platforms swing on a sine wave (platforms[].move) and carry
+  // anyone standing on them. The clock only advances while physics is
+  // running, so hit-pause freezes the lift along with everything else.
+  updateMovingPlatforms(delta) {
+    if (!this.movers?.length || this.physics.world.isPaused) return;
+    this.moverClock += delta;
+    for (const m of this.movers) {
+      const { move } = m.def;
+      const off = Math.sin((this.moverClock / move.period) * Math.PI * 2) * (move.range / 2);
+      const nx = move.axis === 'x' ? m.def.x + off : m.def.x;
+      const ny = move.axis === 'y' ? m.def.y + off : m.def.y;
+      const dx = nx - m.x;
+      const dy = ny - m.y;
+      const top = m.zone.body.top;
+      const left = m.zone.body.left;
+      const right = m.zone.body.right;
+      for (const f of this.fighters ?? []) {
+        if (!f.alive || !f.body?.enable) continue;
+        const b = f.body;
+        const standing = (b.touching.down || b.blocked.down) && Math.abs(b.bottom - top) <= 4
+          && f.x >= left - 4 && f.x <= right + 4;
+        if (standing) { f.x += dx; f.y += dy; }
+      }
+      m.x = nx; m.y = ny;
+      m.zone.setPosition(nx, ny + 9);
+      m.zone.body.updateFromGameObject();
+      // the lift image's walkable top sits 8px below its top edge
+      m.visual?.setPosition(nx, m.visual.type === 'Image' ? ny - 8 : ny);
+    }
+  }
+
+  // Painted-stage parallax: layers slide opposite the fighters' midpoint,
+  // nearer layers more (par), clamped to the 80px margin painted into them.
+  updateParallax(delta) {
+    if (!this.parallax) return;
+    const live = (this.fighters ?? []).filter((f) => f.alive && f.visible);
+    const target = live.length ? live.reduce((a, f) => a + f.x, 0) / live.length : W / 2;
+    const k = 1 - Math.exp(-delta / 400);
+    this.parallaxFocusX += (Phaser.Math.Clamp(target, 0, W) - this.parallaxFocusX) * k;
+    for (const l of this.parallax) {
+      l.img.x = W / 2 + Phaser.Math.Clamp(-(this.parallaxFocusX - W / 2) * l.par, -78, 78);
+    }
+  }
+
+  // Lightweight ambient motion for painted stages (one Graphics redrawn per
+  // frame, <= ~70 particles): bubbles, sparks, embers, rain, petals.
+  buildAmbient(cfg) {
+    this.ambient = null;
+    if (!cfg) return;
+    const rnd = new Phaser.Math.RandomDataGenerator([this.stage.id]);
+    const parts = Array.from({ length: cfg.count }, () => ({
+      x: rnd.between(0, W), y: rnd.between(0, H), s: rnd.realInRange(0.5, 1), ph: rnd.realInRange(0, Math.PI * 2),
+    }));
+    this.ambient = { cfg, parts, g: this.add.graphics(), rnd };
+  }
+
+  updateAmbient(time, delta) {
+    const a = this.ambient;
+    if (!a) return;
+    const dt = delta / 1000;
+    const { kind, color } = a.cfg;
+    a.g.clear();
+    for (const p of a.parts) {
+      if (kind === 'bubbles') { p.y -= 28 * p.s * dt; p.x += Math.sin(time / 700 + p.ph) * 0.3; }
+      else if (kind === 'embers') { p.y -= 46 * p.s * dt; p.x += Math.sin(time / 500 + p.ph) * 0.5; }
+      else if (kind === 'sparks') { p.y += 120 * p.s * dt; p.x += 20 * dt * Math.sin(p.ph); }
+      else if (kind === 'rain') { p.y += 620 * p.s * dt; p.x -= 120 * p.s * dt; }
+      else if (kind === 'petals') { p.y += 30 * p.s * dt; p.x += (24 + Math.sin(time / 900 + p.ph) * 18) * dt; }
+      if (p.y < -20) { p.y = H + 10; p.x = a.rnd.between(0, W); }
+      if (p.y > H + 20) { p.y = -10; p.x = a.rnd.between(0, W + 120); }
+      if (p.x < -20) p.x = W + 10; else if (p.x > W + 40) p.x = -10;
+      const flick = 0.55 + 0.45 * Math.sin(time / 180 + p.ph * 3);
+      if (kind === 'bubbles') {
+        a.g.lineStyle(1.2, color, 0.35 * p.s); a.g.strokeCircle(p.x, p.y, 2 + 4 * p.s);
+        a.g.fillStyle(0xffffff, 0.25 * p.s); a.g.fillCircle(p.x - p.s, p.y - p.s, 1.1);
+      } else if (kind === 'embers' || kind === 'sparks') {
+        a.g.fillStyle(color, (kind === 'embers' ? 0.75 : 0.9) * flick * p.s); a.g.fillCircle(p.x, p.y, 1 + 1.6 * p.s);
+      } else if (kind === 'rain') {
+        a.g.lineStyle(1, color, 0.22 * p.s); a.g.lineBetween(p.x, p.y, p.x + 4, p.y - 18 * p.s);
+      } else if (kind === 'petals') {
+        a.g.fillStyle(color, 0.7 * p.s); a.g.fillEllipse(p.x, p.y, 6 * p.s, 3 * p.s);
+      }
     }
   }
 
   // --------------------------------------------------------------- fighters
   spawnFighters() {
-    const spawnXs = [W / 2 - 260, W / 2 + 260, W / 2 - 100, W / 2 + 100, W / 2 - 380, W / 2 + 380];
+    const spawns = getStageSpawns(this.stage);
     this.fighters = this.setup.players.map((p, i) => {
       const def = CHARACTERS[p.charId];
-      const f = new Fighter(this, spawnXs[i % spawnXs.length], 480, def, p.palette ?? 0, i);
+      const sp = spawns[i % spawns.length];
+      const f = new Fighter(this, sp.x, sp.y, def, p.palette ?? 0, i);
       // controlSlot: 0/1 = keyboard P1/P2, 2-5 = a phone's PhoneNet slot.
       // Carried from CharacterSelect rather than reusing the array index `i`,
       // since a dropped phone can leave slots non-contiguous (e.g. only P4
@@ -356,7 +480,10 @@ export default class BattleScene extends Phaser.Scene {
 
   // ----------------------------------------------------------------- update
   update(time, delta) {
+    this.updateAmbient(time, delta);
+    this.updateParallax(delta);
     if (this.matchOver) return;
+    this.updateMovingPlatforms(delta);
 
     // feed input into fighters — slots 0/1 read the keyboard, 2-5 read
     // whatever their phone last sent (or all-false if it's disconnected, so
@@ -365,7 +492,7 @@ export default class BattleScene extends Phaser.Scene {
     // any real input source.
     this.fighters.forEach((f) => {
       if (f.isBot) {
-        const ai = computeBotInput(time, f, this.fighters, { minX: W / 2 - 400, maxX: W / 2 + 400 });
+        const ai = computeBotInput(time, f, this.fighters, this.botBounds);
         f.input.left = ai.left;
         f.input.right = ai.right;
         f.input.jump = ai.jump;
@@ -469,7 +596,8 @@ export default class BattleScene extends Phaser.Scene {
     // blast zones
     for (const f of this.fighters) {
       if (!f.alive || f.state === 'ko' || f.state === 'dead') continue;
-      if (f.x < -BLAST_MARGIN || f.x > W + BLAST_MARGIN || f.y > H + BLAST_MARGIN || f.y < -BLAST_MARGIN * 2.2) {
+      const b = this.blast;
+      if (f.x < b.left || f.x > b.right || f.y > b.bottom || f.y < b.top) {
         this.koBlast(f);
         const killer = this.lastAttackerOf(f);
         if (killer) killer.kos += 1;

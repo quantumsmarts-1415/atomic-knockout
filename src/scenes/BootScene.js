@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { loadStageArt } from '../data/stages.js';
 import { ROSTER } from '../data/characters.js';
 
 // A character can supply art in two forms:
@@ -150,6 +151,8 @@ export default class BootScene extends Phaser.Scene {
     // character renders (Benjamin-supplied art) — characters without an art
     // entry fall back to the code-drawn vector rig automatically
     loadRosterArt(this.load, ROSTER);
+    // painted stage layers + every stage's select-screen thumbnail/preview
+    loadStageArt(this.load);
   }
 
   create() {

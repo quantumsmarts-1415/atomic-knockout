@@ -1323,7 +1323,13 @@ export const CHARACTERS = {
         footY: 0.9697,
         visibleH: 650,
         clips: {
+          // walk: Gemini blue-key video (videos/natalie_walk_v1.mp4, walks in place):
+          // node tools/walk-sheet-from-video.mjs ... --fps 24 --start 128 --end 158
+          //   --step 3 --key blue --connected --pocket-min 4 --threshold 120
+          // = one full stride cycle (33 src frames, frame 161 ~ 128, IoU 0.97),
+          // threshold 120 so her darker-blue floor shadow keys out too.
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 11, fps: 8, loop: true, frameW: 443, frameH: 710, footY: 0.9686, visibleH: 661 },
         },
       },
     },

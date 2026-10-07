@@ -924,6 +924,10 @@ export const CHARACTERS = {
         visibleH: 657,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
+          // walk frames mirrored in place (PIL ImageOps.mirror per 735x667
+          // cell): the Gemini walk faces RIGHT but art.facing is -1 (her idle
+          // faces left natively) and the Rig flips every clip by art.facing,
+          // so unmirrored she walked backwards. Same fix as Natalie's walk.
           idle: { count: 14, fps: 3.6, loop: true },
           walk: { count: 33, fps: 10, loop: true, frameW: 735, frameH: 667, footY: 0.9686, visibleH: 617 },
         },

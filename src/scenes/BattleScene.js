@@ -868,7 +868,17 @@ export default class BattleScene extends Phaser.Scene {
           const body = bodies[b];
           if (body.enable) body.preUpdate(true, stepSec);
         }
-        world.step(stepSec);
+        // preUpdate already integrated this step. Resolve collisions once,
+        // the same way World.update does, instead of stepping again.
+        if (world.useTree) {
+          world.tree.clear();
+          world.tree.load(bodies);
+        }
+        const colliders = world.colliders.update();
+        for (let c = 0; c < colliders.length; c++) {
+          if (colliders[c].active) colliders[c].update();
+        }
+        world.stepsLastFrame = 1;
         world.postUpdate();
       }
       this.time.timeScale = 1;

@@ -39,7 +39,7 @@ weight       = clamp(1   * (1 + 0.38 * (2t - 1)), 0.58, 1.48)
 gravityScale = clamp(0.76 + t * (1.14 - 0.76), 0.70, 1.20)
 ```
 
-Knockback speed is still `(baseKnockback + percent * growth) / weight`, so a
+Knockback speed is `(baseKnockback + percent * growth) / weight * 0.72`, so a
 heavier fighter flies less far. Jump height is `jumpVelocity² / (2 * 1500 * gravityScale)`.
 
 ### Kinetic
@@ -49,9 +49,9 @@ Gases, liquids and missing numbers are 0.
 
 ```
 kineticAtk = 0                         if Mohs <= 0
-           = (Mohs / 10) * 0.36        otherwise     # diamond = +36%
+           = (Mohs / 10) * 0.50        otherwise     # diamond = +50%
 kineticDef = 0                         if MPa <= 0
-           = log10(1 + MPa) / log10(1 + 1200) * 0.28
+           = log10(1 + MPa) / log10(1 + 1200) * 0.42
 dealt      = base * (1 + attacker.kineticAtk) * (1 - defender.kineticDef)
 ```
 

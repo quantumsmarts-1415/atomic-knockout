@@ -92,6 +92,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.activeHit = null;   // current live hitbox descriptor
     this.spawnPoint = { x, y };
     this.damageDealt = 0;
+    this.damageTaken = 0;
+    this.dealtByType = {};
+    this.takenByType = {};
     this.kos = 0;
     this.alive = true;
 
@@ -437,10 +440,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (gate.result === 'counter') {
       if (gate.negate !== false && attacker && attacker !== this && attacker.takeHit) {
         const cdmg = attacker.takeHit(this, gate.counter, time, this.facing);
-        if (cdmg > 0) {
-          this.damageDealt += cdmg;
-          this.scene.noteHit?.(this, attacker, gate.counter);
-        }
+        if (cdmg > 0) this.scene.noteHit?.(this, attacker, gate.counter);
         if (gate.counter.rootMs && attacker.rootedUntil != null) {
           attacker.rootedUntil = Math.max(attacker.rootedUntil, time + gate.counter.rootMs);
         } else if (gate.counter.rootMs) {
@@ -466,6 +466,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
       this.lastPackets = dealt.packets.map((p) => ({ ...p, dealt: p.dealt * (1 - gate.reduction) }));
       this.percent = Math.min(999, this.percent + dmg);
+      this.creditDamage(attacker, dmg, incoming.type);
       if (!gate.noKnockback && !move.isSelf) {
         const kb = ((incoming.baseKnockback + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight) * (1 - gate.reduction);
         const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
@@ -497,6 +498,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (this.currentMove?.guardStrike && this.state === 'attack') dmg *= (1 - this.currentMove.guardStrike);
     this.percent = Math.min(999, this.percent + dmg);
     this.lastPackets = dealt.packets;
+    this.creditDamage(attacker, dmg, incoming.type);
 
     if (move.isSelf) {
       this.state = 'hurt';
@@ -537,6 +539,31 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (this.state !== 'ko' && this.state !== 'dead') this.rig.setFlash(null);
     });
     return dmg;
+  }
+
+  /** Damage taken always counts. Damage dealt counts only when someone else landed it. */
+  creditDamage(attacker, dmg, fallbackType) {
+    if (!(dmg > 0)) return;
+    this.damageTaken += dmg;
+    const packets = this.lastPackets;
+    let sum = 0;
+    if (packets) for (const p of packets) sum += p.dealt || 0;
+    const give = (bag, type, amount) => {
+      if (!bag || !(amount > 0)) return;
+      bag[type] = (bag[type] ?? 0) + amount;
+    };
+    if (sum > 0) {
+      const scale = dmg / sum;
+      for (const p of packets) {
+        const share = (p.dealt || 0) * scale;
+        give(this.takenByType, p.type, share);
+        if (attacker && attacker !== this) give(attacker.dealtByType, p.type, share);
+      }
+    } else if (fallbackType) {
+      give(this.takenByType, fallbackType, dmg);
+      if (attacker && attacker !== this) give(attacker.dealtByType, fallbackType, dmg);
+    }
+    if (attacker && attacker !== this) attacker.damageDealt += dmg;
   }
 
   /** Called by the scene when this fighter crosses a blast zone. */

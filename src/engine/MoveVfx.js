@@ -96,7 +96,7 @@ function shieldBubble(scene, fighter, color) {
 }
 
 export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
-  if (!scene?.add || !fighter) return;
+  if (!scene?.add || !fighter || scene.simFast) return;
   const color = extra.color ?? colorOf(move);
   const x = extra.x ?? fighter.x;
   const y = extra.y ?? fighter.y - (fighter.bodyH ?? 80) * 0.55;

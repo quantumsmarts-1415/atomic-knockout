@@ -46,6 +46,7 @@ export default class BattleScene extends Phaser.Scene {
   create() {
     this.physics.world.gravity.y = GRAVITY;
     this.matchOver = false;
+    this.reportPublished = false;
     // KO lines and CPU ledge bounds come from the stage (data/stages.js);
     // the original four stages keep their old values via the defaults.
     this.blast = getStageBlast(this.stage);
@@ -79,9 +80,20 @@ export default class BattleScene extends Phaser.Scene {
       kos: [],
       errors: [],
     };
+    this.simSpeed = Math.max(1, this.setup.simSpeed || 1);
+    this.simFast = this.simSpeed > 1;
+    this.matchStart = this.time.now;
+    this.simNow = this.matchStart;
     if (this.setup.playtestMs) {
-      this.playtestUntil = this.time.now + this.setup.playtestMs;
+      this.playtestUntil = this.matchStart + this.setup.playtestMs;
       window.__akReport = null;
+    }
+    if (this.simFast) {
+      // The tournament driver pumps fixed steps itself. Pause the automatic
+      // world so a real frame cannot move bodies a second time, and freeze
+      // the clock so rAF cannot advance hitstun between matches.
+      this.physics.pause();
+      this.time.timeScale = 0;
     }
 
     // optional per-stage match intro (engine/stageIntros.js): fighters are
@@ -513,6 +525,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   updateHud() {
+    if (this.simFast) return;
     this.fighters.forEach((f, i) => {
       const h = this.hud[i];
       h.percent.setText(`${Math.round(f.percent)}%`);
@@ -532,6 +545,26 @@ export default class BattleScene extends Phaser.Scene {
   spawnProjectile(owner, move) {
     const style = projectileStyle(move);
     const r = style.radius;
+    let vy = 0;
+    if (move.angleable) {
+      if (owner.input?.jump) vy = -240;
+      else if (owner.input?.down) vy = 220;
+    }
+    const x = owner.x + owner.facing * (owner.bodyW / 2 + r + 4);
+    const y = owner.y - owner.bodyH * 0.65;
+    if (this.simFast) {
+      this.projectiles.push({
+        gfx: { x, y, destroy() {} },
+        owner, move,
+        vx: owner.facing * move.projectileSpeed,
+        vy,
+        dieAt: this.time.now + move.projectileLife,
+        born: this.time.now,
+        landed: new Set(),
+        radius: r,
+      });
+      return;
+    }
     const pal = owner.charDef.palettes[owner.paletteIndex];
     const orb = this.add.graphics();
     if (move.visualShape === 'spearhead') {
@@ -579,11 +612,6 @@ export default class BattleScene extends Phaser.Scene {
     orb.x = owner.x + owner.facing * (owner.bodyW / 2 + r + 4);
     orb.y = owner.y - owner.bodyH * 0.65;
 
-    let vy = 0;
-    if (move.angleable) {
-      if (owner.input?.jump) vy = -240;
-      else if (owner.input?.down) vy = 220;
-    }
     this.projectiles.push({
       gfx: orb, owner, move,
       vx: owner.facing * move.projectileSpeed,
@@ -652,6 +680,15 @@ export default class BattleScene extends Phaser.Scene {
 
   spawnZone(owner, spec, x, y) {
     const radius = spec.radius ?? 70;
+    if (this.simFast) {
+      this.zones.push({
+        owner, spec, x, y, radius,
+        gfx: { destroy() {} },
+        until: this.time.now + (spec.ms ?? 1600),
+        next: this.time.now,
+      });
+      return;
+    }
     const color = spec.color ?? 0xff8844;
     const gfx = this.add.circle(x, y, radius, color, 0.28);
     gfx.setStrokeStyle?.(2, color, 0.8);
@@ -720,6 +757,11 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   buildPlaytestReport() {
+    const roundMap = (bag) => {
+      const out = {};
+      for (const [type, amount] of Object.entries(bag ?? {})) out[type] = Math.round(amount);
+      return out;
+    };
     const fighters = this.fighters.map((f) => ({
       id: f.charDef.id,
       name: f.charDef.name,
@@ -727,13 +769,19 @@ export default class BattleScene extends Phaser.Scene {
       percent: Math.round(f.percent),
       kos: f.kos,
       damageDealt: Math.round(f.damageDealt),
+      damageTaken: Math.round(f.damageTaken),
+      dealtByType: roundMap(f.dealtByType),
+      takenByType: roundMap(f.takenByType),
       alive: f.alive,
     }));
     const ranked = [...fighters].sort((a, b) => (b.stocks - a.stocks) || (a.percent - b.percent) || (b.damageDealt - a.damageDealt));
+    const now = this.simNow ?? this.time.now;
     return {
       stage: this.stage.id,
-      elapsedMs: this.setup.playtestMs,
+      matchStart: Math.round(this.matchStart ?? 0),
+      elapsedMs: Math.round(now - (this.matchStart ?? now)),
       winner: ranked[0]?.name ?? null,
+      winnerId: ranked[0]?.id ?? null,
       fighters,
       movesFired: this.matchReport.movesFired,
       hits: this.matchReport.hits,
@@ -748,13 +796,14 @@ export default class BattleScene extends Phaser.Scene {
     const report = this.buildPlaytestReport();
     window.__akReport = report;
     console.log(`AK_REPORT ${JSON.stringify(report)}`);
+    window.__akResolve?.(report);
   }
 
   landHit(attacker, victim, move, launchDir) {
     const dmg = victim.takeHit(attacker, move, this.time.now, launchDir);
     if (dmg > 0) this.noteHit(attacker, victim, move);
-    victim.lastHitBy = attacker;
-    attacker.damageDealt += dmg;
+    if (attacker !== victim) victim.lastHitBy = attacker;
+    if (this.simFast) return;
     sfx('hit');
     this.hitSpark(victim.x, victim.y - victim.bodyH * 0.6);
     // juice: hit-pause + shake scaled by damage
@@ -766,6 +815,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   hitSpark(x, y) {
+    if (this.simFast) return;
     const spark = this.add.graphics();
     spark.setPosition(x, y);
     spark.fillStyle(0xffffff, 1);
@@ -795,10 +845,45 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // ----------------------------------------------------------------- update
+  // One real frame. Fast sims ignore this and get pumped by runSimSteps.
   update(time, delta) {
-    this.updateAmbient(time, delta);
-    this.updateParallax(delta);
-    this.updateCamera(delta);
+    if (this.simFast) return;
+    this.stepMatch(time, delta);
+  }
+
+  // Fixed 60 Hz substeps on the sim clock. Physics is paused, so each step
+  // pre-updates bodies, steps the world, then runs the match logic.
+  runSimSteps(count) {
+    const stepMs = 1000 / 60;
+    const stepSec = stepMs / 1000;
+    const n = count ?? this.simSpeed;
+    const world = this.physics.world;
+    for (let i = 0; i < n; i++) {
+      if (this.reportPublished) return;
+      this.simNow += stepMs;
+      this.time.preUpdate();
+      if (!this.matchOver) {
+        const bodies = world.bodies.entries;
+        for (let b = 0; b < bodies.length; b++) {
+          const body = bodies[b];
+          if (body.enable) body.preUpdate(true, stepSec);
+        }
+        world.step(stepSec);
+        world.postUpdate();
+      }
+      this.time.timeScale = 1;
+      this.time.update(this.simNow, stepMs);
+      this.time.timeScale = 0;
+      this.stepMatch(this.simNow, stepMs);
+    }
+  }
+
+  stepMatch(time, delta) {
+    if (!this.simFast) {
+      this.updateAmbient(time, delta);
+      this.updateParallax(delta);
+      this.updateCamera(delta);
+    }
     if (this.playtestUntil && !this.reportPublished && time >= this.playtestUntil) {
       this.matchOver = true;
       this.publishPlaytestReport();
@@ -993,7 +1078,7 @@ export default class BattleScene extends Phaser.Scene {
       }
     }
 
-    this.updateHud();
+    if (!this.simFast) this.updateHud();
     this.checkWin();
   }
 
@@ -1005,6 +1090,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   koBlast(f) {
+    if (this.simFast) return;
     sfx('ko');
     // burst of lines at the blast point, clamped on-screen (to the camera
     // view on camera stages -- same as the screen everywhere else)

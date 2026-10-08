@@ -7,6 +7,17 @@ import { CHARACTERS, ROSTER } from '../data/characters.js';
 export function playtestSpec() {
   if (typeof window === 'undefined' || !window.location?.search) return null;
   const params = new URLSearchParams(window.location.search);
+  const speed = Math.min(30, Math.max(1, Number(params.get('speed')) || 1));
+  if (params.get('sim') === '1') {
+    return {
+      sim: true,
+      ids: [],
+      stageId: params.get('stage') || 'elemental-isle',
+      stocks: Number(params.get('stocks')) || 3,
+      ms: Number(params.get('ms')) || 14000,
+      speed,
+    };
+  }
   const raw = params.get('playtest');
   if (!raw) return null;
   const ids = raw.split(',').map((s) => s.trim()).filter((id) => CHARACTERS[id]);
@@ -16,6 +27,8 @@ export function playtestSpec() {
     stageId: params.get('stage') || 'elemental-isle',
     stocks: Number(params.get('stocks')) || 2,
     ms: Number(params.get('ms')) || 20000,
+    speed: 1,
+    sim: false,
   };
 }
 
@@ -166,7 +179,11 @@ export default class BootScene extends Phaser.Scene {
     // remote playable previews sit on a blank #0d1220 canvas for minutes.
     attachBootLoadUi(this);
     const spec = playtestSpec();
-    if (spec) {
+    if (spec?.sim) {
+      for (const c of ROSTER) {
+        if (c.art) this.load.image(c.art.key, c.art.file);
+      }
+    } else if (spec) {
       // Cutouts only. Sheets are hundreds of megabytes and this path is for
       // timed CPU matches, not for admiring walk cycles.
       for (const id of spec.ids) {
@@ -198,11 +215,56 @@ export default class BootScene extends Phaser.Scene {
       }
     }
     const spec = playtestSpec();
+    if (spec?.sim) {
+      // One page loads every cutout, then the tournament driver restarts Battle
+      // and pumps fixed steps on the sim clock (no real-time wait).
+      const game = this.game;
+      window.__akRun = (opts) => new Promise((resolve, reject) => {
+        const ms = opts.ms ?? spec.ms;
+        const speed = Math.max(1, opts.speed ?? spec.speed);
+        const timer = setTimeout(() => reject(new Error('match timeout')), 60000);
+        let settled = false;
+        const finish = (err, report) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          window.__akResolve = null;
+          if (err) reject(err);
+          else resolve(report);
+        };
+        window.__akResolve = (report) => finish(null, report);
+        try {
+          if (game.scene.isActive('Boot')) game.scene.stop('Boot');
+          game.scene.start('Battle', {
+            stageId: opts.stageId || spec.stageId,
+            stocks: opts.stocks ?? spec.stocks,
+            playtestMs: ms,
+            simSpeed: speed,
+            players: opts.ids.map((charId, i) => ({ charId, palette: i % 4, slot: 100 + i })),
+          });
+          const battle = game.scene.getScene('Battle');
+          const steps = Math.ceil(ms / (1000 / 60)) + 3;
+          const chunk = Math.max(1, speed);
+          for (let i = 0; i < steps && !battle.reportPublished; i += chunk) {
+            battle.runSimSteps(Math.min(chunk, steps - i));
+          }
+          if (!battle.reportPublished) {
+            battle.matchOver = true;
+            battle.publishPlaytestReport();
+          }
+        } catch (err) {
+          finish(err);
+        }
+      });
+      window.__akReady = true;
+      return;
+    }
     if (spec) {
       this.scene.start('Battle', {
         stageId: spec.stageId,
         stocks: spec.stocks,
         playtestMs: spec.ms,
+        simSpeed: spec.speed,
         players: spec.ids.map((charId, i) => ({ charId, palette: i % 4, slot: 100 + i })),
       });
       return;

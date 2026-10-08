@@ -214,14 +214,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
     } else if (!locked && !this.isBusy) {
       if (pressedAttack && time >= this.attackCooldownUntil) {
         if (dirHeld || !this.charDef.moves.basicCharge) {
-          this.startMove(time, this.charDef.moves.basicDirectional, 'basic');
+          this.startMove(time, this.charDef.moves.basicDirectional, 'basic', 'basicDirectional');
         } else {
           this.state = 'charging';
           this.chargeStart = time;
         }
       } else if (pressedSpecial && time >= this.specialCooldownUntil && time >= (this.vulnerableUntil ?? 0)) {
         if (dirHeld || !this.charDef.moves.specialDefense) {
-          this.startMove(time, this.charDef.moves.specialDirectional, 'special');
+          this.startMove(time, this.charDef.moves.specialDirectional, 'special', 'specialDirectional');
         } else {
           this.startDefense(time);
         }
@@ -237,6 +237,21 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (this.state === 'attack' && this.currentMove) {
       const total = this.currentMove.duration;
       this.rig.attackSwing = Phaser.Math.Clamp(1 - (this.stateUntil - time) / total, 0, 1);
+    }
+    if (this.state === 'charging') {
+      this.rig.moveKey = 'basicCharge';
+      const max = this.charDef.moves.basicCharge?.maxChargeMs || 1;
+      this.rig.poseT = Phaser.Math.Clamp((time - (this.chargeStart ?? time)) / max, 0, 1);
+    } else if (this.state === 'defending') {
+      this.rig.moveKey = 'specialDefense';
+      const dur = this.defenseMove?.duration || 400;
+      this.rig.poseT = ((time - (this.defenseStart ?? time)) % dur) / dur;
+    } else if (this.state === 'attack') {
+      this.rig.moveKey = this.currentMoveKey || this.rig.moveKey;
+      this.rig.poseT = this.rig.attackSwing;
+    } else {
+      this.rig.moveKey = null;
+      this.rig.poseT = 0;
     }
 
     // --- pick animation state
@@ -255,9 +270,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.rig.animate(dt / 1000, animState, speedFactor);
   }
 
-  startMove(time, move, slot) {
+  startMove(time, move, slot, moveKey = null) {
     this.state = 'attack';
     this.currentMove = move;
+    this.currentMoveKey = moveKey;
+    this.rig.moveKey = moveKey;
     this.rig.moveSlot = slot; // sheet-mode rigs have separate basic/special clips
     this.stateUntil = time + move.duration;
     this.scene.noteMove?.(this, move);
@@ -356,7 +373,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       dashSpeed: move.dashSpeed != null ? scale(move.dashSpeed, move.chargeDashMult) : move.dashSpeed,
       _beamScale: 1 + ((move.chargeLengthMult ?? 1) - 1) * frac,
     };
-    this.startMove(time, scaled, 'basic');
+    this.startMove(time, scaled, 'basic', 'basicCharge');
   }
 
   /** Enter the neutral-special defensive window (specialDefense). Whether it
@@ -372,6 +389,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.wallHits = 0;
     this.defenseStart = time;
     this.scene.noteMove?.(this, move);
+    this.currentMoveKey = 'specialDefense';
+    this.rig.moveKey = 'specialDefense';
     this.rig.moveSlot = 'special';
     this.stateUntil = time + move.duration;
     this.specialCooldownUntil = time + move.duration + move.cooldown;
@@ -469,8 +488,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.lastPackets = dealt.packets.map((p) => ({ ...p, dealt: p.dealt * (1 - gate.reduction) * (ownBlast ? TUNING.selfDamageMult : 1) }));
       this.percent = Math.min(999, this.percent + dmg);
       this.creditDamage(attacker, dmg, incoming.type);
-      if (!gate.noKnockback && !move.isSelf && !ownBlast) {
-        const kb = ((incoming.baseKnockback + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight) * (1 - gate.reduction) * TUNING.knockbackScale;
+      if (!gate.noKnockback && !move.isSelf) {
+        const kb = ((incoming.baseKnockback + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight) * (1 - gate.reduction) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1);
         const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
         const away = Math.sign(this.x - (attacker?.x ?? this.x)) || attacker?.facing || 1;
         const dir = launchDir || away;
@@ -510,13 +529,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
       : dealt.packets;
     this.creditDamage(attacker, dmg, incoming.type);
 
-    if (move.isSelf || ownBlast) {
+    if (move.isSelf) {
       this.state = 'hurt';
       this.stateUntil = time + 160;
       return dmg;
     }
 
-    const kb = (((incoming.baseKnockback ?? 0) + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight) * TUNING.knockbackScale;
+    const kb = (((incoming.baseKnockback ?? 0) + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1);
     const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
 
     // Launch direction.
@@ -543,7 +562,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     applyOnHit(attacker, this, incoming, time);
 
     this.state = 'hurt';
-    this.stateUntil = time + (320 + Math.min(this.percent * 2, 300)) * TUNING.hitstunScale;
+    this.stateUntil = time + 320 + Math.min(this.percent * 2, 300); // more hitstun at high %
     this.rig.setFlash(0xff5544);
     this.scene.time.delayedCall(120, () => {
       if (this.state !== 'ko' && this.state !== 'dead') this.rig.setFlash(null);

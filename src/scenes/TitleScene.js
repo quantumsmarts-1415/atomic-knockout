@@ -4,6 +4,7 @@ import { play as sfx } from '../engine/sfx.js';
 import {
   FONT_BODY, FONT_DISPLAY, FONT_MONO, THEME, drawMenuBackground, paintPill,
 } from '../ui/theme.js';
+import { showScene } from '../ui/flow.js';
 import { attachPhoneJoin } from '../ui/phoneJoin.js';
 import { TITLE_PARTNER_ID } from '../ui/portraits.js';
 import { CHARACTERS } from '../data/characters.js';
@@ -39,7 +40,7 @@ export default class TitleScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(6);
 
     this.buttons = [
-      { label: 'Play', action: () => this.scene.start('PlayerJoin') },
+      { label: 'Play', action: () => showScene(this, 'PlayerJoin') },
       { label: 'Campaign', action: null },
       { label: 'Settings', action: null },
       { label: 'Credits', action: () => this.showCredits() },

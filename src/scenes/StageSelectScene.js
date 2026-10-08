@@ -3,6 +3,7 @@ import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { drawMenuBackground, drawPanel, THEME, FONT_DISPLAY, FONT_BODY, FONT_MONO } from '../ui/theme.js';
 import { STAGES, stageKey } from '../data/stages.js';
 import { play as sfx } from '../engine/sfx.js';
+import { showScene } from '../ui/flow.js';
 import { phoneNet } from '../net/PhoneNet.js';
 
 const BOT_SLOT_BASE = 100;
@@ -261,14 +262,14 @@ export default class StageSelectScene extends Phaser.Scene {
     }
     this.hint.setText(`${st.name} -- get ready!`).setColor(THEME.goldCss);
     this.cameras.main.flash(160, 255, 79, 163);
-    this.time.delayedCall(550, () => this.scene.start('Battle', { ...this.setup, stageId: id }));
+    this.time.delayedCall(550, () => showScene(this, 'Battle', { ...this.setup, stageId: id }));
   }
 
   back() {
     if (this.leaving) return;
     this.leaving = true;
     sfx('menuMove');
-    this.scene.start('CharacterSelect', { playerSeeds: this.setup.players.map((p) => ({ slot: p.slot ?? 0 })) });
+    showScene(this, 'CharacterSelect', { playerSeeds: this.setup.players.map((p) => ({ slot: p.slot ?? 0 })) });
   }
 
   apply(action) {

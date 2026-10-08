@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
+import { showScene } from '../ui/flow.js';
 import { FONT_BODY, FONT_DISPLAY, FONT_MONO, THEME, paintPill } from '../ui/theme.js';
 
 export default class PauseMenuScene extends Phaser.Scene {
@@ -43,10 +44,6 @@ export default class PauseMenuScene extends Phaser.Scene {
     kb.on('keydown-ESC', resume);
     kb.on('keydown-ENTER', resume);
     kb.on('keydown-P', resume);
-    kb.on('keydown-Q', () => {
-      this.scene.stop(this.resumeKey);
-      this.scene.stop();
-      this.scene.start('Title');
-    });
+    kb.on('keydown-Q', () => showScene(this, 'Title'));
   }
 }

@@ -46,8 +46,16 @@ export const GRID = {
 
 const SKY_KEY = 'stage-neon-nexus-layer0';
 
-/** Void field, Neon Nexus sky if it is already loaded, orbital ellipses. */
+/**
+ * Void field, Neon Nexus sky if it is already loaded, orbital ellipses.
+ * The camera clear and the base plate are opaque, so a previous menu cannot
+ * show through. The sky is painted on top of that plate, not instead of it.
+ */
 export function drawMenuBackground(scene, W, H) {
+  scene.cameras.main.setBackgroundColor(THEME.voidCss);
+  const plate = scene.add.graphics().setDepth(-30);
+  plate.fillStyle(THEME.void, 1);
+  plate.fillRect(0, 0, W, H);
   if (scene.textures.exists(SKY_KEY)) {
     const img = scene.add.image(W / 2, H / 2, SKY_KEY).setDepth(-20);
     const src = img.texture.getSourceImage();

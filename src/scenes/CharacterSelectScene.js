@@ -5,6 +5,7 @@ import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { FONT_BODY, FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME, drawMenuBackground } from '../ui/theme.js';
+import { showScene } from '../ui/flow.js';
 import { menuPortraitKey } from '../ui/portraits.js';
 
 // Slot numbering, decided in PlayerJoinScene: 0/1 = keyboard, 2-5 = a phone
@@ -348,7 +349,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     if (this.starting || !this.players.every((p) => p.phase === 'locked')) return;
     this.starting = true;
     this.time.delayedCall(700, () => {
-      this.scene.start('StageSelect', {
+      showScene(this, 'StageSelect', {
         players: this.players.map((p) => ({ charId: SLOTS[p.cursor].charId, palette: p.palette, slot: p.slot })),
         stocks: 3,
       });

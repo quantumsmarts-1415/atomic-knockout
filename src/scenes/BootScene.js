@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { showScene } from '../ui/flow.js';
 import { loadStageArt } from '../data/stages.js';
 import { ROSTER } from '../data/characters.js';
 
@@ -174,7 +175,7 @@ export default class BootScene extends Phaser.Scene {
     // bundled faces too, so the title doesn't draw fallback type and then swap.
     const fonts = (typeof document !== 'undefined' && document.fonts) ? document.fonts.ready : Promise.resolve();
     Promise.resolve(fonts).then(() => {
-      if (this.scene.isActive()) this.scene.start('Title');
+      if (this.scene.isActive()) showScene(this, 'Title');
     });
   }
 }

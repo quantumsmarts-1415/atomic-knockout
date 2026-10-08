@@ -5,6 +5,7 @@ import { phoneNet } from '../net/PhoneNet.js';
 import {
   FONT_BODY, FONT_DISPLAY, FONT_MONO, GRID, PLAYER_COLORS, THEME, drawMenuBackground, paintPill,
 } from '../ui/theme.js';
+import { showScene } from '../ui/flow.js';
 import { attachPhoneJoin } from '../ui/phoneJoin.js';
 
 // Layout is fixed in 1280x720 game pixels. Scale.FIT letterboxes other
@@ -130,7 +131,7 @@ export default class PlayerJoinScene extends Phaser.Scene {
     const start = () => this.tryStart();
     kb.on('keydown-ENTER', start);
     kb.on('keydown-F', start);
-    kb.on('keydown-ESC', () => this.scene.start('Title'));
+    kb.on('keydown-ESC', () => showScene(this, 'Title'));
   }
 
   moveCursor(dy) {
@@ -235,6 +236,6 @@ export default class PlayerJoinScene extends Phaser.Scene {
         if (seat.type === 'bot') return { slot: BOT_SLOT_BASE + index };
         return { slot: seat.boundSlot };
       });
-    this.scene.start('CharacterSelect', { playerSeeds });
+    showScene(this, 'CharacterSelect', { playerSeeds });
   }
 }

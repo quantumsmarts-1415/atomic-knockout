@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { CHARACTERS } from '../data/characters.js';
 import { Rig } from '../engine/Rig.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
+import { showScene } from '../ui/flow.js';
 import { FONT_BODY, FONT_DISPLAY, FONT_MONO, THEME, drawMenuBackground, paintPill } from '../ui/theme.js';
 
 export default class ResultsScene extends Phaser.Scene {
@@ -64,11 +65,11 @@ export default class ResultsScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     const kb = this.input.keyboard;
-    kb.on('keydown-ENTER', () => this.scene.start('Battle', this.setup));
-    kb.on('keydown-F', () => this.scene.start('Battle', this.setup));
-    kb.on('keydown-K', () => this.scene.start('Battle', this.setup));
-    kb.on('keydown-C', () => this.scene.start('CharacterSelect'));
-    kb.on('keydown-T', () => this.scene.start('Title'));
+    kb.on('keydown-ENTER', () => showScene(this, 'Battle', this.setup));
+    kb.on('keydown-F', () => showScene(this, 'Battle', this.setup));
+    kb.on('keydown-K', () => showScene(this, 'Battle', this.setup));
+    kb.on('keydown-C', () => showScene(this, 'CharacterSelect'));
+    kb.on('keydown-T', () => showScene(this, 'Title'));
   }
 
   update(time, delta) {

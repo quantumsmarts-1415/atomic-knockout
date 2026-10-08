@@ -4,6 +4,7 @@ import { CHARACTERS } from '../data/characters.js';
 import { STAGES, stageKey, getStageBlast, getStageSpawns, getStageBounds, getStageWorld, moverPosition } from '../data/stages.js';
 import { play as sfx } from '../engine/sfx.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
+import { showScene } from '../ui/flow.js';
 import { FONT_BODY, FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME } from '../ui/theme.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { computeBotInput } from '../engine/BotAI.js';
@@ -838,7 +839,7 @@ export default class BattleScene extends Phaser.Scene {
         won: f === winner,
       }));
       if (this.scene.manager.getScene('Results')) {
-        this.scene.start('Results', { results, setup: this.setup });
+        showScene(this, 'Results', { results, setup: this.setup });
       } else {
         // pre-M4 fallback: restart the match
         this.scene.restart();

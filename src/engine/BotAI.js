@@ -64,7 +64,7 @@ export function computeBotInput(time, bot, fighters, bounds, nav = null) {
   if (grounded && walled && time >= ai.nextJumpAt) {
     input.jump = true;
     ai.nextJumpAt = time + 400;
-  } else if (time >= ai.nextJumpAt && Math.random() < 0.008) {
+  } else if (time >= ai.nextJumpAt && roll(bot) < 0.008) {
     input.jump = true;
     ai.nextJumpAt = time + 500;
   }
@@ -289,11 +289,16 @@ function engage(time, bot, target, cur, nav, ai, input, moveTo) {
   const b = bot.body;
   const walled = (input.right && (b.blocked.right || b.touching.right)) || (input.left && (b.blocked.left || b.touching.left));
   if (walled && time >= ai.nextJumpAt) { input.jump = true; ai.nextJumpAt = time + 400; }
-  else if (time >= ai.nextJumpAt && Math.random() < 0.006 && bot.x > lo + 60 && bot.x < hi - 60) {
+  else if (time >= ai.nextJumpAt && roll(bot) < 0.006 && bot.x > lo + 60 && bot.x < hi - 60) {
     input.jump = true; // the odd hop so they don't look glued down
     ai.nextJumpAt = time + 600;
   }
   tryAttacks(time, bot, target, ai, input);
+}
+
+function roll(bot) {
+  const rng = bot.scene?.rng;
+  return typeof rng === 'function' ? rng() : Math.random();
 }
 
 function tryAttacks(time, bot, target, ai, input) {

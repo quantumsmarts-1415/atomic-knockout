@@ -8,6 +8,8 @@ export function playtestSpec() {
   if (typeof window === 'undefined' || !window.location?.search) return null;
   const params = new URLSearchParams(window.location.search);
   const speed = Math.min(30, Math.max(1, Number(params.get('speed')) || 1));
+  const seedRaw = params.get('seed');
+  const seed = seedRaw == null || seedRaw === '' || !Number.isFinite(Number(seedRaw)) ? null : Number(seedRaw);
   if (params.get('sim') === '1') {
     return {
       sim: true,
@@ -16,6 +18,7 @@ export function playtestSpec() {
       stocks: Number(params.get('stocks')) || 3,
       ms: Number(params.get('ms')) || 14000,
       speed,
+      seed,
     };
   }
   const raw = params.get('playtest');
@@ -29,6 +32,7 @@ export function playtestSpec() {
     ms: Number(params.get('ms')) || 20000,
     speed: 1,
     sim: false,
+    seed,
   };
 }
 
@@ -240,6 +244,7 @@ export default class BootScene extends Phaser.Scene {
             stocks: opts.stocks ?? spec.stocks,
             playtestMs: ms,
             simSpeed: speed,
+            seed: opts.seed == null ? spec.seed : opts.seed,
             players: opts.ids.map((charId, i) => ({ charId, palette: i % 4, slot: 100 + i })),
           });
           const battle = game.scene.getScene('Battle');
@@ -265,6 +270,7 @@ export default class BootScene extends Phaser.Scene {
         stocks: spec.stocks,
         playtestMs: spec.ms,
         simSpeed: spec.speed,
+        seed: spec.seed,
         players: spec.ids.map((charId, i) => ({ charId, palette: i % 4, slot: 100 + i })),
       });
       return;

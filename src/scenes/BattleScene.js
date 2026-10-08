@@ -9,6 +9,7 @@ import { computeBotInput } from '../engine/BotAI.js';
 import { buildNavGraph } from '../engine/BotNav.js';
 import { startStageIntro } from '../engine/stageIntros.js';
 import { playVfx, projectileStyle } from '../engine/MoveVfx.js';
+import { mulberry32 } from '../engine/rng.js';
 
 const GRAVITY = 1500;
 
@@ -79,21 +80,26 @@ export default class BattleScene extends Phaser.Scene {
       hits: {},
       kos: [],
       errors: [],
+      fallThroughs: [],
     };
+    this.lowestY = {};
+    this.rng = this.setup.seed == null ? null : mulberry32(this.setup.seed);
     this.simSpeed = Math.max(1, this.setup.simSpeed || 1);
     this.simFast = this.simSpeed > 1;
-    this.matchStart = this.time.now;
-    this.simNow = this.matchStart;
+    // Real-time play and the fast sim share one 60 Hz clock. The render loop
+    // no longer steps arcade bodies: a hitch used to advance bot timers by
+    // wall-clock time while physics only integrated once, and the old fast
+    // sim integrated twice per tick and dropped heavies through the floor.
+    this.physics.disableUpdate();
+    this.stepMs = this.physics.world._frameTimeMS;
+    this.tickAccum = 0;
+    this.time.timeScale = 0;
+    this.time.now = 0;
+    this.matchStart = 0;
+    this.simNow = 0;
     if (this.setup.playtestMs) {
-      this.playtestUntil = this.matchStart + this.setup.playtestMs;
+      this.playtestUntil = this.setup.playtestMs;
       window.__akReport = null;
-    }
-    if (this.simFast) {
-      // The tournament driver pumps fixed steps itself. Pause the automatic
-      // world so a real frame cannot move bodies a second time, and freeze
-      // the clock so rAF cannot advance hitstun between matches.
-      this.physics.pause();
-      this.time.timeScale = 0;
     }
 
     // optional per-stage match intro (engine/stageIntros.js): fighters are
@@ -787,6 +793,9 @@ export default class BattleScene extends Phaser.Scene {
       hits: this.matchReport.hits,
       kos: this.matchReport.kos,
       errors: this.matchReport.errors,
+      fallThroughs: this.matchReport.fallThroughs,
+      lowestY: Object.fromEntries(Object.entries(this.lowestY).map(([id, y]) => [id, Math.round(y)])),
+      seed: this.setup.seed ?? null,
     };
   }
 
@@ -803,15 +812,16 @@ export default class BattleScene extends Phaser.Scene {
     const dmg = victim.takeHit(attacker, move, this.time.now, launchDir);
     if (dmg > 0) this.noteHit(attacker, victim, move);
     if (attacker !== victim) victim.lastHitBy = attacker;
-    if (this.simFast) return;
-    sfx('hit');
-    this.hitSpark(victim.x, victim.y - victim.bodyH * 0.6);
-    // juice: hit-pause + shake scaled by damage
+    const pauseMs = 45 + Math.min(dmg * 5, 70);
+    if (!this.simFast) {
+      sfx('hit');
+      this.hitSpark(victim.x, victim.y - victim.bodyH * 0.6);
+      this.cameras.main.shake(90 + dmg * 6, 0.004 + dmg * 0.0006);
+    }
+    // Same hit-stop in both clocks: freeze bodies, keep the match clock
+    // moving, resume when the delayed call elapses.
     this.physics.world.pause();
-    this.time.delayedCall(both(dmg), () => this.physics.world.resume());
-    this.cameras.main.shake(90 + dmg * 6, 0.004 + dmg * 0.0006);
-
-    function both(d) { return 45 + Math.min(d * 5, 70); }
+    this.time.delayedCall(pauseMs, () => this.physics.world.resume());
   }
 
   hitSpark(x, y) {
@@ -845,46 +855,41 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // ----------------------------------------------------------------- update
-  // One real frame. Fast sims ignore this and get pumped by runSimSteps.
-  update(time, delta) {
+  // One rendered frame. Gameplay itself is runSimSteps at a fixed 60 Hz.
+  // Fast sims ignore this and get pumped by the tournament driver.
+  update() {
     if (this.simFast) return;
-    this.stepMatch(time, delta);
+    const raw = this.game.loop.rawDelta || this.stepMs;
+    // A pause or a load stall must not replay as extra match time.
+    this.tickAccum += Math.min(raw, this.stepMs * 5);
+    let guard = 0;
+    while (this.tickAccum >= this.stepMs && guard < 5) {
+      this.tickAccum -= this.stepMs;
+      this.runSimSteps(1);
+      guard++;
+    }
   }
 
-  // Fixed 60 Hz substeps on the sim clock. Physics is paused, so each step
-  // pre-updates bodies, steps the world, then runs the match logic.
+  // One tick of the shared clock: timers, then Phaser's own world update
+  // (a single integration — preUpdate already moves the body, so nothing
+  // here may call world.step() as well), then hit detection.
   runSimSteps(count) {
-    const stepMs = 1000 / 60;
-    const stepSec = stepMs / 1000;
+    const stepMs = this.stepMs;
     const n = count ?? this.simSpeed;
     const world = this.physics.world;
     for (let i = 0; i < n; i++) {
       if (this.reportPublished) return;
       this.simNow += stepMs;
       this.time.preUpdate();
-      if (!this.matchOver) {
-        const bodies = world.bodies.entries;
-        for (let b = 0; b < bodies.length; b++) {
-          const body = bodies[b];
-          if (body.enable) body.preUpdate(true, stepSec);
-        }
-        // preUpdate already integrated this step. Resolve collisions once,
-        // the same way World.update does, instead of stepping again.
-        if (world.useTree) {
-          world.tree.clear();
-          world.tree.load(bodies);
-        }
-        const colliders = world.colliders.update();
-        for (let c = 0; c < colliders.length; c++) {
-          if (colliders[c].active) colliders[c].update();
-        }
-        world.stepsLastFrame = 1;
-        world.postUpdate();
-      }
       this.time.timeScale = 1;
       this.time.update(this.simNow, stepMs);
       this.time.timeScale = 0;
+      if (!this.matchOver) {
+        world._elapsed = 0;
+        world.update(this.simNow, stepMs);
+      }
       this.stepMatch(this.simNow, stepMs);
+      world.postUpdate();
     }
   }
 
@@ -1075,7 +1080,17 @@ export default class BattleScene extends Phaser.Scene {
     for (const f of this.fighters) {
       if (!f.alive || f.state === 'ko' || f.state === 'dead') continue;
       const b = this.blast;
+      const low = this.lowestY[f.charDef.id];
+      if (low == null || f.y > low) this.lowestY[f.charDef.id] = f.y;
       if (f.x < b.left || f.x > b.right || f.y > b.bottom || f.y < b.top) {
+        // A stock lost with essentially no damage is the floor-tunnel signature.
+        if ((f.damageTaken ?? 0) < 5 && f.percent < 5) {
+          this.matchReport.fallThroughs.push({
+            victim: f.charDef.id,
+            y: Math.round(f.y),
+            t: Math.round(time),
+          });
+        }
         this.koBlast(f);
         const killer = this.lastAttackerOf(f);
         if (killer) killer.kos += 1;

@@ -40,20 +40,27 @@ const TRIOS = [
   ['titan', 'van', 'chroma'],
 ];
 
+function matchSeed(kind, ids, rep) {
+  let h = 2166136261;
+  const s = `${kind}:${rep}:${ids.join(',')}`;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return (h >>> 0) || 1;
+}
+
 function jobs() {
   const list = [];
   for (let i = 0; i < IDS.length; i++) {
     for (let j = i + 1; j < IDS.length; j++) {
       for (let r = 0; r < REPS; r++) {
         const pair = r % 2 === 0 ? [IDS[i], IDS[j]] : [IDS[j], IDS[i]];
-        list.push({ kind: 'duel', ids: pair });
+        list.push({ kind: 'duel', ids: pair, seed: matchSeed('duel', pair, r) });
       }
     }
   }
   for (const trio of TRIOS) {
     for (let r = 0; r < 2; r++) {
       const ids = r % 2 === 0 ? trio : [trio[1], trio[2], trio[0]];
-      list.push({ kind: 'ffa', ids });
+      list.push({ kind: 'ffa', ids, seed: matchSeed('ffa', ids, r) });
     }
   }
   return LIMIT > 0 ? list.slice(0, LIMIT) : list;
@@ -176,9 +183,9 @@ async function openPage(browser) {
 }
 
 async function runOne(slot, job) {
-  const report = await slot.page.evaluate(async ({ ids, ms, stocks, stage }) => {
-    return await window.__akRun({ ids, ms, stocks, stageId: stage, speed: 30 });
-  }, { ids: job.ids, ms: MS, stocks: STOCKS, stage: STAGE });
+  const report = await slot.page.evaluate(async ({ ids, ms, stocks, stage, seed }) => {
+    return await window.__akRun({ ids, ms, stocks, stageId: stage, speed: 30, seed });
+  }, { ids: job.ids, ms: MS, stocks: STOCKS, stage: STAGE, seed: job.seed });
   report.consoleErrors = slot.errors.splice(0).filter((e) => !/favicon|Failed to load resource/i.test(e));
   return report;
 }

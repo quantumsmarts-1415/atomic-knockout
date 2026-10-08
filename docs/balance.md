@@ -39,8 +39,14 @@ weight       = clamp(1   * (1 + 0.38 * (2t - 1)), 0.58, 1.48)
 gravityScale = clamp(0.76 + t * (1.14 - 0.76), 0.70, 1.20)
 ```
 
-Knockback speed is still `(baseKnockback + percent * growth) / weight`, so a
-heavier fighter flies less far. Jump height is `jumpVelocity² / (2 * 1500 * gravityScale)`.
+Knockback speed is `(baseKnockback + percent * growth) / weight * knockbackScale`
+(`knockbackScale` is 0.82). A heavier fighter flies less far. Hitstun uses
+the same `hitstunScale` (0.8). Jump height is `jumpVelocity² / (2 * 1500 * gravityScale)`.
+
+Hits inside 72 px keep their full element math. From there out to 150 px the
+damage falls linearly to half, and stays at half past that. A longer reach
+is spacing, not free damage. Self-hits and fighters with no combat profile
+skip this.
 
 ### Kinetic
 

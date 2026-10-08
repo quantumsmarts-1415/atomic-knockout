@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
-import { resolveMoveDamage, resolvePacket } from '../data/balance.js';
+import { resolveMoveDamage, resolvePacket, spacingMult, TUNING } from '../data/balance.js';
 import { interceptHit } from './defense.js';
 import { applyOnCast, applyOnHit, bonusPackets, combatOpts, tickKit } from './kit.js';
 import { playVfx } from './MoveVfx.js';
@@ -464,11 +464,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (this.state === 'charging' && this.charDef.moves.basicCharge?.whileCharging) {
         dmg *= this.charDef.moves.basicCharge.whileCharging.keep ?? 0.5;
       }
+      dmg = this.spacedDamage(attacker, dmg);
       this.lastPackets = dealt.packets.map((p) => ({ ...p, dealt: p.dealt * (1 - gate.reduction) }));
       this.percent = Math.min(999, this.percent + dmg);
       this.creditDamage(attacker, dmg, incoming.type);
       if (!gate.noKnockback && !move.isSelf) {
-        const kb = ((incoming.baseKnockback + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight) * (1 - gate.reduction);
+        const kb = ((incoming.baseKnockback + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight) * (1 - gate.reduction) * TUNING.knockbackScale;
         const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
         const away = Math.sign(this.x - (attacker?.x ?? this.x)) || attacker?.facing || 1;
         const dir = launchDir || away;
@@ -496,17 +497,18 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (!except.includes(incoming.type) && incoming.type !== 'radiation') dmg *= charging.whileCharging.keep ?? 0.5;
     }
     if (this.currentMove?.guardStrike && this.state === 'attack') dmg *= (1 - this.currentMove.guardStrike);
+    dmg = this.spacedDamage(attacker, dmg);
     this.percent = Math.min(999, this.percent + dmg);
     this.lastPackets = dealt.packets;
     this.creditDamage(attacker, dmg, incoming.type);
 
     if (move.isSelf) {
       this.state = 'hurt';
-      this.stateUntil = time + 160;
+      this.stateUntil = time + 160 * TUNING.hitstunScale;
       return dmg;
     }
 
-    const kb = ((incoming.baseKnockback ?? 0) + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight;
+    const kb = ((incoming.baseKnockback ?? 0) + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight * TUNING.knockbackScale;
     const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
 
     // Launch direction.
@@ -533,12 +535,20 @@ export default class Fighter extends Phaser.GameObjects.Container {
     applyOnHit(attacker, this, incoming, time);
 
     this.state = 'hurt';
-    this.stateUntil = time + 320 + Math.min(this.percent * 2, 300); // more hitstun at high %
+    this.stateUntil = time + (320 + Math.min(this.percent * 2, 300)) * TUNING.hitstunScale;
     this.rig.setFlash(0xff5544);
     this.scene.time.delayedCall(120, () => {
       if (this.state !== 'ko' && this.state !== 'dead') this.rig.setFlash(null);
     });
     return dmg;
+  }
+
+  /** Long-range hits fall off. Legacy fighters with no combat profile are unchanged. */
+  spacedDamage(attacker, dmg) {
+    if (!(dmg > 0) || !this.charDef?.combat || !attacker || attacker === this) return dmg;
+    const dx = (attacker.x ?? this.x) - this.x;
+    const dy = (attacker.y ?? this.y) - this.y;
+    return dmg * spacingMult(Math.hypot(dx, dy));
   }
 
   /** Damage taken always counts. Damage dealt counts only when someone else landed it. */

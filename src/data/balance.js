@@ -75,10 +75,34 @@ export const TUNING = {
 
   // Global safety clamps so a future element can't delete or one-shot.
   incomingClamp: [0.22, 1.75],
+
+  // A hit landed from farther away deals less. Inside spacingClose the
+  // element matchup is unchanged. Long pokes and distant projectiles fall
+  // off so a longer reach is spacing, not free extra damage.
+  spacingClose: 72,
+  spacingFar: 150,
+  spacingFarMult: 0.5,
+
+  // Shared movement scales. Move defs still own their own knockback numbers.
+  knockbackScale: 0.82,
+  hitstunScale: 0.8,
 };
 
 function clamp(v, lo, hi) {
   return Math.min(hi, Math.max(lo, v));
+}
+
+/**
+ * Damage multiplier from how far the hit traveled.
+ * Inside spacingClose this is 1. At spacingFar and beyond it is spacingFarMult.
+ */
+export function spacingMult(distance) {
+  const T = TUNING;
+  if (!(distance >= 0)) return 1;
+  if (distance <= T.spacingClose) return 1;
+  if (distance >= T.spacingFar) return T.spacingFarMult;
+  const u = (distance - T.spacingClose) / (T.spacingFar - T.spacingClose);
+  return 1 + u * (T.spacingFarMult - 1);
 }
 
 /** 0 = lightest gas, 1 = densest metal. null when density is missing. */

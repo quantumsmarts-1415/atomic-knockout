@@ -15,7 +15,9 @@ const QR_Y = 300;
 const QR_SIZE = 220;
 const LINK_TOP = 492;
 const SEAT_LEFT = 420;
-const SEAT_W = W - SEAT_LEFT - GRID.margin;
+// Resolved when a seat is built. Reading W here would hit the main.js
+// import cycle (GAME_WIDTH isn't initialized yet).
+const seatWidth = () => W - SEAT_LEFT - GRID.margin;
 const SEAT_TOP = 108;
 const SEAT_H = 70;
 const SEAT_GAP = 10;
@@ -101,11 +103,11 @@ export default class PlayerJoinScene extends Phaser.Scene {
       this.seatDetail.push(this.add.text(SEAT_LEFT + 130, midY + 12, '', {
         fontFamily: FONT_BODY, fontSize: '14px', color: THEME.mistCss,
       }).setOrigin(0, 0.5).setDepth(4));
-      this.seatFlag.push(this.add.text(SEAT_LEFT + SEAT_W - 22, midY, '', {
+      this.seatFlag.push(this.add.text(SEAT_LEFT + seatWidth() - 22, midY, '', {
         fontFamily: FONT_MONO, fontSize: '13px', color: THEME.goldCss,
       }).setOrigin(1, 0.5).setDepth(4));
 
-      const zone = this.add.zone(SEAT_LEFT, y, SEAT_W, SEAT_H).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(5);
+      const zone = this.add.zone(SEAT_LEFT, y, seatWidth(), SEAT_H).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(5);
       zone.on('pointerover', () => { this.hover = i; this.refresh(); });
       zone.on('pointerout', () => { if (this.hover === i) this.hover = -1; this.refresh(); });
       zone.on('pointerdown', () => { this.cursor = i; sfx('menuMove'); this.refresh(); });
@@ -190,7 +192,7 @@ export default class PlayerJoinScene extends Phaser.Scene {
       const y = SEAT_TOP + i * (SEAT_H + SEAT_GAP);
       const g = this.rowBg[i];
       g.clear();
-      paintPill(g, SEAT_LEFT, y, SEAT_W, SEAT_H, state);
+      paintPill(g, SEAT_LEFT, y, seatWidth(), SEAT_H, state);
 
       // Player-color electron. Hollow when the seat is empty.
       const dotX = SEAT_LEFT + 26;

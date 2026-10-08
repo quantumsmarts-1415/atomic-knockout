@@ -64,16 +64,20 @@ export function computeBotInput(time, bot, fighters, bounds, nav = null) {
   if (grounded && walled && time >= ai.nextJumpAt) {
     input.jump = true;
     ai.nextJumpAt = time + 400;
-  } else if (time >= ai.nextJumpAt) {
-    const shouldJump = (target.y < bot.y - 60 && Math.random() < 0.35) || Math.random() < 0.01;
-    if (shouldJump) {
-      input.jump = true;
-      ai.nextJumpAt = time + 500;
-    }
+  } else if (time >= ai.nextJumpAt && Math.random() < 0.008) {
+    input.jump = true;
+    ai.nextJumpAt = time + 500;
+  }
+  // Side platforms are one-way. If the opponent is on the floor below,
+  // drop back down instead of camping where short moves cannot reach.
+  // Down does not fall through the solid stage, so this is a no-op there.
+  if (grounded && target.y > bot.y + 100) {
+    input.down = true;
+    input.jump = false;
   }
 
   tryAttacks(time, bot, target, ai, input);
-  return applyScriptedSlots(time, input);
+  return applyScriptedSlots(time, bot, input);
 }
 
 // ------------------------------------------------------------ nav (big stages)
@@ -117,15 +121,15 @@ function navBotInput(time, bot, targets, nav) {
   if (!grounded) {
     airControl(time, bot, target, nav, ai, input, moveTo);
     if (target) tryAttacks(time, bot, target, ai, input);
-    return applyScriptedSlots(time, input);
+    return applyScriptedSlots(time, bot, input);
   }
   if (!cur) {
     // standing on something the graph doesn't know (rare): walk to the
     // nearest known surface point at this height
     if (target) moveTo(target.x, 30);
-    return applyScriptedSlots(time, input);
+    return applyScriptedSlots(time, bot, input);
   }
-  if (!target) { moveTo(cur.cx, 30); return applyScriptedSlots(time, input); }
+  if (!target) { moveTo(cur.cx, 30); return applyScriptedSlots(time, bot, input); }
 
   // ---- plan: path to the target's surface, or as close as we can get
   const now = new Set();
@@ -159,12 +163,12 @@ function navBotInput(time, bot, targets, nav) {
 
   if (!e) {
     engage(time, bot, target, cur, nav, ai, input, moveTo);
-    return applyScriptedSlots(time, input);
+    return applyScriptedSlots(time, bot, input);
   }
   followEdge(time, bot, e, cur, nav, ai, input, moveTo);
   // opportunistic swings at anyone level with us on the way
   tryAttacks(time, bot, target, ai, input);
-  return applyScriptedSlots(time, input);
+  return applyScriptedSlots(time, bot, input);
 }
 
 // The surface the target is on (or will land on), null if over the void.
@@ -300,14 +304,27 @@ function tryAttacks(time, bot, target, ai, input) {
   const specialRange = specialRangeOf(special);
   const dist = Math.abs(target.x - bot.x);
   const dy = Math.abs(target.y - bot.y);
-  let wantBasic = dist <= basicRange && dy < ATTACK_DY && time >= ai.nextAttackAt;
-  let wantSpecial = dist <= specialRange && dy < ATTACK_DY + 20 && time >= ai.nextSpecialAt;
+  const ready = bot.state !== 'attack' && bot.state !== 'hurt' && bot.state !== 'ko'
+    && bot.state !== 'charging' && bot.state !== 'defending' && bot.state !== 'dead';
+  let wantBasic = ready && dist <= basicRange && dy < ATTACK_DY
+    && time >= ai.nextAttackAt && time >= (bot.attackCooldownUntil ?? 0);
+  let wantSpecial = ready && dist <= specialRange && dy < ATTACK_DY + 20
+    && time >= ai.nextSpecialAt && time >= (bot.specialCooldownUntil ?? 0);
   // Both buttons are edge-triggered on the same frame; attack would eat the
   // special press. Alternate so a bot actually uses both directional moves.
   if (wantBasic && wantSpecial) {
     if ((ai.swing ?? 0) % 2 === 0) wantSpecial = false;
     else wantBasic = false;
     ai.swing = (ai.swing ?? 0) + 1;
+  }
+  if (wantBasic || wantSpecial) {
+    // In range the bot otherwise holds still. A neutral press would charge
+    // or block instead of the directional move, so face the target for
+    // this one press.
+    if (!input.left && !input.right && !input.down && !input.jump) {
+      if (target.x >= bot.x) input.right = true;
+      else input.left = true;
+    }
   }
   if (wantBasic) {
     input.attack = true;
@@ -331,7 +348,7 @@ function specialRangeOf(special) {
 // those windows (t = 1000 stays a walk, which the stage CPU test relies on).
 const SLOT_CYCLE = 6400;
 
-function applyScriptedSlots(time, input) {
+function applyScriptedSlots(time, bot, input) {
   const t = time % SLOT_CYCLE;
   const neutral = () => {
     input.left = false;
@@ -339,23 +356,26 @@ function applyScriptedSlots(time, input) {
     input.jump = false;
     input.down = false;
   };
-  if (t >= 2600 && t < 2700) {
+  // A held button is not a new press. If the fighter is busy when the
+  // window opens, let go until they are free so the slot still fires.
+  const busy = bot.state === 'attack' || bot.state === 'hurt' || bot.state === 'defending' || bot.state === 'ko';
+  if (t >= 2500 && t < 2620) {
     neutral();
     input.attack = false;
     input.special = false;
-  } else if (t >= 2700 && t < 4000) {
+  } else if (t >= 2620 && t < 4100) {
     neutral();
-    input.attack = true;
     input.special = false;
-  } else if (t >= 4000 && t < 4120) {
+    input.attack = bot.state === 'charging' || !busy;
+  } else if (t >= 4100 && t < 4220) {
     neutral();
     input.attack = false;
     input.special = false;
-  } else if (t >= 4120 && t < 4720) {
+  } else if (t >= 4220 && t < 5300) {
     neutral();
     input.attack = false;
-    input.special = true;
-  } else if (t >= 4720 && t < 4840) {
+    input.special = bot.state === 'defending' || !busy;
+  } else if (t >= 5300 && t < 5420) {
     neutral();
     input.attack = false;
     input.special = false;

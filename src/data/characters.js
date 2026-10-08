@@ -924,6 +924,10 @@ export const CHARACTERS = {
         visibleH: 657,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
+          // walk frames mirrored in place (PIL ImageOps.mirror per 735x667
+          // cell): the Gemini walk faces RIGHT but art.facing is -1 (her idle
+          // faces left natively) and the Rig flips every clip by art.facing,
+          // so unmirrored she walked backwards. Same fix as Natalie's walk.
           idle: { count: 14, fps: 3.6, loop: true },
           walk: { count: 33, fps: 10, loop: true, frameW: 735, frameH: 667, footY: 0.9686, visibleH: 617 },
         },
@@ -1323,7 +1327,18 @@ export const CHARACTERS = {
         footY: 0.9697,
         visibleH: 650,
         clips: {
+          // walk: Gemini blue-key video (videos/natalie_walk_v1.mp4, walks in place):
+          // node tools/walk-sheet-from-video.mjs ... --fps 24 --start 128 --end 158
+          //   --step 3 --key blue --connected --pocket-min 4 --threshold 120
+          // = one full stride cycle (33 src frames, frame 161 ~ 128, IoU 0.97),
+          // threshold 120 so her darker-blue floor shadow keys out too.
+          // Then every frame mirrored in place (PIL ImageOps.mirror per
+          // 443x710 cell): the video walks facing RIGHT but art.facing is -1
+          // (her idle faces left natively) and the Rig flips all clips by
+          // art.facing, so unmirrored she walked backwards. All clips in a
+          // sheet must share the idle's native orientation.
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 11, fps: 8, loop: true, frameW: 443, frameH: 710, footY: 0.9686, visibleH: 661 },
         },
       },
     },

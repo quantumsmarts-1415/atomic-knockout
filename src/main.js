@@ -16,7 +16,7 @@ const config = {
   parent: 'game',
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
-  backgroundColor: '#0d1220',
+  backgroundColor: '#07060E',
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -30,6 +30,12 @@ const config = {
   },
   scene: [BootScene, TitleScene, PlayerJoinScene, CharacterSelectScene, StageSelectScene, BattleScene, ResultsScene, PauseMenuScene],
 };
+
+if (typeof document !== 'undefined' && document.fonts) {
+  document.fonts.load('700 48px Orbitron');
+  document.fonts.load('600 22px Sora');
+  document.fonts.load('400 18px "Share Tech Mono"');
+}
 
 const game = new Phaser.Game(config);
 window.game = game; // handy for debugging + automated playtesting

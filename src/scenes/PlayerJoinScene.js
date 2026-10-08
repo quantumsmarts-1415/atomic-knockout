@@ -2,25 +2,24 @@ import * as Phaser from 'phaser';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
-import { drawMenuBackground } from '../ui/theme.js';
+import {
+  FONT_BODY, FONT_DISPLAY, FONT_MONO, GRID, PLAYER_COLORS, THEME, drawMenuBackground, paintPill,
+} from '../ui/theme.js';
 import { attachPhoneJoin } from '../ui/phoneJoin.js';
 
-// The QR sits in the left margin, large enough to scan off a TV. Seats
-// shift right so the code isn't covering a row. The instruction line and
-// the QR are built from the same controller URL.
-const QR_X = 176;
-const QR_Y = 310;
-const QR_SIZE = 300;
-const SEAT_LEFT = 370;
-const SEAT_W = 860;
-const SEAT_CX = SEAT_LEFT + SEAT_W / 2;
+// Layout is fixed in 1280x720 game pixels. Scale.FIT letterboxes other
+// aspect ratios, so these rectangles never slide over each other.
+// Left column: reactor QR + URL. Right column: seats. No portrait.
+const QR_X = 198;
+const QR_Y = 300;
+const QR_SIZE = 220;
+const LINK_TOP = 492;
+const SEAT_LEFT = 420;
+const SEAT_W = W - SEAT_LEFT - GRID.margin;
+const SEAT_TOP = 108;
+const SEAT_H = 70;
+const SEAT_GAP = 10;
 
-// Slot numbering convention, shared with CharacterSelectScene/BattleScene:
-//   0/1    -> keyboard (P1/P2)
-//   2-5    -> a phone, numbered by PhoneNet in join order
-//   100+i  -> a bot "sitting in" seat i (i is the seat index, 0-5) --
-//             deliberately far outside the phone range so a bot can never
-//             collide with a real phone's slot number.
 const BOT_SLOT_BASE = 100;
 
 const TYPES_WITH_KEYBOARD = ['keyboard', 'controller', 'bot', 'empty'];
@@ -42,23 +41,36 @@ export default class PlayerJoinScene extends Phaser.Scene {
   create() {
     drawMenuBackground(this, W, H);
 
-    this.add.text(W / 2, 50, 'PLAYER SETUP', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '42px', color: '#eaf9ff',
-      stroke: '#060a10', strokeThickness: 8, letterSpacing: 1,
-    }).setOrigin(0.5);
+    this.add.text(GRID.margin, 26, 'SHELL ASSIGNMENT', {
+      fontFamily: FONT_MONO, fontSize: '13px', color: THEME.tealCss, letterSpacing: 3,
+    }).setDepth(4);
+    this.add.text(GRID.margin, 46, 'PLAYER SETUP', {
+      fontFamily: FONT_DISPLAY, fontSize: '32px', color: THEME.mistCss, letterSpacing: 1,
+    }).setDepth(4);
+    this.add.text(W - GRID.margin, 36, 'W/S select seat    A/D change type', {
+      fontFamily: FONT_BODY, fontSize: '14px', color: THEME.mistCss,
+    }).setOrigin(1, 0).setDepth(4);
+    this.add.text(W - GRID.margin, 58, 'Enter to start    Esc to back out', {
+      fontFamily: FONT_BODY, fontSize: '14px', color: THEME.dimCss,
+    }).setOrigin(1, 0).setDepth(4);
 
-    this.address = this.add.text(SEAT_CX, 168, 'Fetching network address…', {
-      fontFamily: 'Arial, sans-serif', fontSize: '18px', color: '#d8ecff',
-      align: 'center', wordWrap: { width: SEAT_W - 40 },
-    }).setOrigin(0.5);
+    this.add.text(QR_X, LINK_TOP, 'CONTROLLER LINK', {
+      fontFamily: FONT_MONO, fontSize: '13px', color: THEME.goldCss, letterSpacing: 2,
+    }).setOrigin(0.5, 0).setDepth(4);
+    this.address = this.add.text(QR_X, LINK_TOP + 22, 'Fetching network address…', {
+      fontFamily: FONT_MONO, fontSize: '15px', color: THEME.tealCss,
+      align: 'center', wordWrap: { width: 340 },
+    }).setOrigin(0.5, 0).setDepth(4);
     attachPhoneJoin(this, {
       x: QR_X,
       y: QR_Y,
       size: QR_SIZE,
+      bezel: true,
+      caption: false,
+      depth: 5,
       onLabel: (text) => this.address.setText(text),
     });
 
-    // Six seats. Default: keyboard in the first two, empty everywhere else.
     this.seats = [
       { type: 'keyboard', boundSlot: null },
       { type: 'keyboard', boundSlot: null },
@@ -68,29 +80,40 @@ export default class PlayerJoinScene extends Phaser.Scene {
       { type: 'empty', boundSlot: null },
     ];
     this.cursor = 0;
+    this.hover = -1;
 
-    const rowY = (i) => 214 + i * 60;
     this.rowBg = [];
-    this.seatTexts = [];
+    this.seatWho = [];
+    this.seatKind = [];
+    this.seatDetail = [];
+    this.seatFlag = [];
     for (let i = 0; i < 6; i++) {
-      const bg = this.add.graphics();
-      this.rowBg.push({ g: bg, y: rowY(i) });
-      const t = this.add.text(SEAT_CX, rowY(i) + 22, '', {
-        fontFamily: 'Arial Black, sans-serif', fontSize: '22px', color: '#5c7a94',
-      }).setOrigin(0.5);
-      this.seatTexts.push(t);
+      const y = SEAT_TOP + i * (SEAT_H + SEAT_GAP);
+      const g = this.add.graphics().setDepth(3);
+      this.rowBg.push(g);
+      const midY = y + SEAT_H / 2;
+      this.seatWho.push(this.add.text(SEAT_LEFT + 48, midY, '', {
+        fontFamily: FONT_DISPLAY, fontSize: '20px', color: THEME.mistCss,
+      }).setOrigin(0, 0.5).setDepth(4));
+      this.seatKind.push(this.add.text(SEAT_LEFT + 130, midY - 10, '', {
+        fontFamily: FONT_BODY, fontSize: '16px', color: THEME.mistCss,
+      }).setOrigin(0, 0.5).setDepth(4));
+      this.seatDetail.push(this.add.text(SEAT_LEFT + 130, midY + 12, '', {
+        fontFamily: FONT_BODY, fontSize: '14px', color: THEME.mistCss,
+      }).setOrigin(0, 0.5).setDepth(4));
+      this.seatFlag.push(this.add.text(SEAT_LEFT + SEAT_W - 22, midY, '', {
+        fontFamily: FONT_MONO, fontSize: '13px', color: THEME.goldCss,
+      }).setOrigin(1, 0.5).setDepth(4));
+
+      const zone = this.add.zone(SEAT_LEFT, y, SEAT_W, SEAT_H).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(5);
+      zone.on('pointerover', () => { this.hover = i; this.refresh(); });
+      zone.on('pointerout', () => { if (this.hover === i) this.hover = -1; this.refresh(); });
+      zone.on('pointerdown', () => { this.cursor = i; sfx('menuMove'); this.refresh(); });
     }
 
     this.refresh();
     this.unsub = phoneNet.onChange(() => { this.reconcileBindings(); this.refresh(); });
     this.events.once('shutdown', () => this.unsub?.());
-
-    this.hint = this.add.text(W / 2, H - 66, 'W/S — select seat   ·   A/D — change type', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '19px', color: '#5c7a94',
-    }).setOrigin(0.5);
-    this.hint2 = this.add.text(W / 2, H - 34, 'Press ENTER when everyone has joined  ·  Esc to back out', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '22px', color: '#4ad6ff',
-    }).setOrigin(0.5);
 
     const kb = this.input.keyboard;
     kb.on('keydown-W', () => this.moveCursor(-1));
@@ -119,16 +142,12 @@ export default class PlayerJoinScene extends Phaser.Scene {
     const options = this.cursor < 2 ? TYPES_WITH_KEYBOARD : TYPES_NO_KEYBOARD;
     const idx = options.indexOf(seat.type);
     seat.type = options[(idx + dir + options.length) % options.length];
-    seat.boundSlot = null; // any previous phone binding is released
+    seat.boundSlot = null;
     sfx('menuMove');
     this.reconcileBindings();
     this.refresh();
   }
 
-  // Matches connected phones to "controller" seats, stably: a seat that's
-  // already bound to a still-connected phone keeps that phone. Only newly
-  // freed/newly connected phones get (re)assigned, to the lowest-index
-  // unbound controller seat.
   reconcileBindings() {
     const connected = new Set(phoneNet.connectedSlots);
     for (const seat of this.seats) {
@@ -149,33 +168,52 @@ export default class PlayerJoinScene extends Phaser.Scene {
     const n = i + 1;
     if (seat.type === 'keyboard') {
       const keys = i === 0 ? 'WASD + F/G' : 'Arrows + K/L';
-      return { text: `P${n}  —  Keyboard  (${keys})`, color: '#4ad6ff' };
+      return { who: `P${n}`, kind: 'Keyboard', detail: keys, flag: 'LIVE', tone: 'live' };
     }
     if (seat.type === 'bot') {
-      return { text: `P${n}  —  CPU Bot`, color: '#4a9fff' };
+      return { who: `P${n}`, kind: 'CPU Bot', detail: 'Stands in for a player', flag: 'CPU', tone: 'live' };
     }
     if (seat.type === 'controller') {
       return seat.boundSlot != null
-        ? { text: `P${n}  —  ${phoneNet.nameOf(seat.boundSlot)}  (Controller)`, color: '#4ad6ff' }
-        : { text: `P${n}  —  Controller  (waiting for a phone…)`, color: '#5c7a94' };
+        ? { who: `P${n}`, kind: 'Controller', detail: phoneNet.nameOf(seat.boundSlot), flag: 'LINKED', tone: 'live' }
+        : { who: `P${n}`, kind: 'Controller', detail: 'Waiting for a phone', flag: 'WAIT', tone: 'wait' };
     }
-    return { text: `P${n}  —  Empty`, color: '#3a4a5c' };
+    return { who: `P${n}`, kind: 'Empty', detail: 'Open seat', flag: '—', tone: 'empty' };
   }
 
   refresh() {
     this.seats.forEach((seat, i) => {
-      const { text, color } = this.describeSeat(seat, i);
+      const info = this.describeSeat(seat, i);
       const selected = i === this.cursor;
-      this.seatTexts[i].setText((selected ? '▶  ' : '     ') + text).setColor(selected ? '#eaf9ff' : color);
-
-      const { g, y } = this.rowBg[i];
+      const hovered = i === this.hover && !selected;
+      const state = selected ? 'selected' : hovered ? 'hover' : info.tone === 'empty' ? 'empty' : 'idle';
+      const y = SEAT_TOP + i * (SEAT_H + SEAT_GAP);
+      const g = this.rowBg[i];
       g.clear();
-      const x0 = SEAT_LEFT;
-      const w0 = SEAT_W;
-      g.fillStyle(0xffffff, selected ? 0.045 : 0.02);
-      g.fillRoundedRect(x0, y, w0, 52, 10);
-      g.lineStyle(1.5, selected ? 0x4ad6ff : 0x2a5a78, selected ? 0.8 : 0.3);
-      g.strokeRoundedRect(x0, y, w0, 52, 10);
+      paintPill(g, SEAT_LEFT, y, SEAT_W, SEAT_H, state);
+
+      // Player-color electron. Hollow when the seat is empty.
+      const dotX = SEAT_LEFT + 26;
+      const dotY = y + SEAT_H / 2;
+      const pip = PLAYER_COLORS[i];
+      if (info.tone === 'empty') {
+        g.lineStyle(2, pip, 0.95);
+        g.strokeCircle(dotX, dotY, 7);
+      } else {
+        g.fillStyle(pip, 1);
+        g.fillCircle(dotX, dotY, 7);
+        if (selected) {
+          g.lineStyle(3, pip, 0.45);
+          g.strokeCircle(dotX, dotY, 12);
+        }
+      }
+
+      const kindColor = info.tone === 'empty' ? '#F2F7FF' : THEME.mistCss;
+      const detailColor = selected ? '#F7FBFF' : '#E4EEF8';
+      this.seatWho[i].setText(info.who).setColor(THEME.mistCss);
+      this.seatKind[i].setText(info.kind.toUpperCase()).setColor(kindColor);
+      this.seatDetail[i].setText(info.detail).setColor(detailColor);
+      this.seatFlag[i].setText(info.flag).setColor(selected ? THEME.goldCss : THEME.tealCss);
     });
   }
 

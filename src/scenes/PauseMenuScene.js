@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
+import { FONT_BODY, FONT_DISPLAY, FONT_MONO, THEME, paintPill } from '../ui/theme.js';
 
 export default class PauseMenuScene extends Phaser.Scene {
   constructor() {
@@ -11,21 +12,27 @@ export default class PauseMenuScene extends Phaser.Scene {
   }
 
   create() {
-    this.add.rectangle(W / 2, H / 2, W, H, 0x060a10, 0.7);
+    this.add.rectangle(W / 2, H / 2, W, H, THEME.void, 0.72);
     const panel = this.add.graphics();
-    panel.fillStyle(0x0a0e14, 0.9);
-    panel.fillRoundedRect(W / 2 - 220, H / 2 - 130, 440, 260, 22);
-    panel.lineStyle(1.5, 0x4ad6ff, 0.7);
-    panel.strokeRoundedRect(W / 2 - 220, H / 2 - 130, 440, 260, 22);
+    paintPill(panel, W / 2 - 240, H / 2 - 150, 480, 300, 'idle');
 
-    this.add.text(W / 2, H / 2 - 84, 'PAUSED', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '44px', color: '#eaf9ff', letterSpacing: 1,
+    this.add.text(W / 2, H / 2 - 108, 'PAUSED', {
+      fontFamily: FONT_DISPLAY, fontSize: '36px', color: THEME.mistCss, letterSpacing: 3,
     }).setOrigin(0.5);
-    this.add.text(W / 2, H / 2 + 4, 'Esc / Enter — Resume', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '24px', color: '#4ad6ff',
+
+    const resumeG = this.add.graphics();
+    paintPill(resumeG, W / 2 - 160, H / 2 - 40, 320, 52, 'selected');
+    this.add.text(W / 2, H / 2 - 14, 'RESUME', {
+      fontFamily: FONT_BODY, fontSize: '18px', color: THEME.mistCss,
     }).setOrigin(0.5);
-    this.add.text(W / 2, H / 2 + 56, 'Q — Quit to Title', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '24px', color: '#d8ecff',
+    this.add.text(W / 2, H / 2 + 36, 'ESC  /  ENTER', {
+      fontFamily: FONT_MONO, fontSize: '13px', color: THEME.goldCss,
+    }).setOrigin(0.5);
+
+    const quitG = this.add.graphics();
+    paintPill(quitG, W / 2 - 160, H / 2 + 62, 320, 48, 'idle');
+    this.add.text(W / 2, H / 2 + 86, 'Q  —  QUIT TO TITLE', {
+      fontFamily: FONT_BODY, fontSize: '16px', color: THEME.mistCss,
     }).setOrigin(0.5);
 
     const resume = () => {

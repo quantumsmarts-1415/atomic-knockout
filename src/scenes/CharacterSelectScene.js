@@ -4,7 +4,8 @@ import { Rig } from '../engine/Rig.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
-import { drawMenuBackground } from '../ui/theme.js';
+import { FONT_BODY, FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME, drawMenuBackground } from '../ui/theme.js';
+import { menuPortraitKey } from '../ui/portraits.js';
 
 // Slot numbering, decided in PlayerJoinScene: 0/1 = keyboard, 2-5 = a phone
 // (PhoneNet's own connection slot), 100+seatIndex = a bot. Bots live far
@@ -44,8 +45,6 @@ const PREVIEW_TOP_MARGIN = 24;
 // P1/P2 are always the two local keyboard players (slots 0/1). Slots 2-5 are
 // phones, filled in from phoneNet — however many happen to be connected when
 // this scene starts (joining happens in the PlayerJoin lobby before this).
-const PLAYER_COLORS = [0xff5f4a, 0x4a9fff, 0x53e0a8, 0xffd166, 0xc98bff, 0xff8fc9];
-
 const PLAYABLE_SLOT_INDICES = SLOTS.map((s, i) => (s.charId ? i : null)).filter((i) => i !== null);
 
 // ---------------------------------------------------------------------------
@@ -79,13 +78,16 @@ export default class CharacterSelectScene extends Phaser.Scene {
     // been set true once.
     this.starting = false;
     this.drawBackground();
-    this.add.text(W / 2, 44, 'CHOOSE YOUR ELEMENT', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '40px', color: '#eaf9ff',
-      stroke: '#060a10', strokeThickness: 8, letterSpacing: 1,
+    this.add.text(W / 2, 18, 'REACTOR  ·  ROSTER', {
+      fontFamily: FONT_MONO, fontSize: '12px', color: THEME.tealCss, letterSpacing: 3,
+    }).setOrigin(0.5);
+    this.add.text(W / 2, 42, 'CHOOSE YOUR ELEMENT', {
+      fontFamily: FONT_DISPLAY, fontSize: '28px', color: THEME.mistCss, letterSpacing: 1,
     }).setOrigin(0.5);
 
     this.gridX = W / 2 - (COLS * (TILE + GAP) - GAP) / 2;
     this.gridY = 96;
+    this.hoverBox = this.add.graphics().setDepth(4);
     this.gridBottom = this.gridY + Math.ceil(SLOTS.length / COLS) * (TILE + GAP) - GAP;
     this.tiles = SLOTS.map((slot, i) => this.drawTile(slot, i));
 
@@ -101,8 +103,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
       if (p.isBot) this.buildPreview(p);
     }
 
-    this.hint = this.add.text(W / 2, H - 24, '', {
-      fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#5c7a94',
+    this.hint = this.add.text(W / 2, H - 18, '', {
+      fontFamily: FONT_BODY, fontSize: '14px', color: THEME.dimCss,
     }).setOrigin(0.5);
     this.refreshAll();
     this.checkAllLocked();
@@ -124,7 +126,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     const g = this.add.graphics();
     // Unlocked tiles keep the character's own palette color (that's their
     // identity, not generic chrome); locked tiles get the HUD glass look.
-    const base = unlocked ? CHARACTERS[slot.charId].palettes[0].body : 0x0a0e14;
+    const base = unlocked ? CHARACTERS[slot.charId].palettes[0].body : THEME.shellEmpty;
     return this.finishTile(g, slot, x, y, unlocked, base);
   }
 
@@ -138,10 +140,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
     g.fillRoundedRect(x, y, TILE, TILE, 12);
 
     const charDef = unlocked ? CHARACTERS[slot.charId] : null;
-    const hasPhoto = unlocked && charDef.art && this.textures.exists(charDef.art.key);
+    const portrait = menuPortraitKey(charDef);
+    const hasPhoto = !!(portrait && this.textures.exists(portrait));
 
     if (hasPhoto) {
-      const photo = this.add.image(x + TILE / 2, y + TILE / 2, charDef.art.key);
+      const photo = this.add.image(x + TILE / 2, y + TILE / 2, portrait);
       const pad = 8;
       const scale = Math.min((TILE - pad) / photo.width, (TILE - pad) / photo.height);
       photo.setScale(scale);
@@ -149,7 +152,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
       g.fillStyle(0xffffff, 0.16);
       g.fillRoundedRect(x + 4, y + 4, TILE - 8, TILE - 8, 9);
     } else {
-      g.lineStyle(1, 0x4ad6ff, 0.18);
+      g.lineStyle(1.5, THEME.teal, 0.35);
       g.strokeRoundedRect(x + 4, y + 4, TILE - 8, TILE - 8, 9);
     }
 
@@ -157,29 +160,29 @@ export default class CharacterSelectScene extends Phaser.Scene {
     // instead); only shown on hover for unlocked tiles with a real photo.
     const card = this.add.container(0, 0);
     const scrim = this.add.graphics();
-    scrim.fillStyle(0x0a0e14, 0.8);
+    scrim.fillStyle(THEME.void, 0.82);
     scrim.fillRoundedRect(x + 4, y + 4, TILE - 8, TILE - 8, 9);
     const symText = this.add.text(x + TILE / 2, y + TILE / 2 + 2, slot.sym, {
-      fontFamily: 'Georgia, serif', fontSize: '34px', fontStyle: 'bold',
-      color: unlocked ? '#ffffff' : '#3a4a5c',
+      fontFamily: FONT_DISPLAY, fontSize: '28px',
+      color: unlocked ? THEME.mistCss : THEME.disabledCss,
     }).setOrigin(0.5);
     const nameText = this.add.text(x + TILE / 2, y + TILE - 13, unlocked ? slot.name : '???', {
-      fontFamily: 'Arial, sans-serif', fontSize: '13px',
-      color: unlocked ? '#eaf4ff' : '#3a4a5c',
+      fontFamily: FONT_BODY, fontSize: '12px',
+      color: unlocked ? THEME.mistCss : THEME.disabledCss,
     }).setOrigin(0.5);
     card.add([scrim, symText, nameText]);
     card.setVisible(!hasPhoto);
 
     // Tile number stays visible in both states (periodic-table convention).
     this.add.text(x + 10, y + 8, String(slot.n), {
-      fontFamily: 'Arial, sans-serif', fontSize: '15px',
-      color: unlocked ? '#ffffff' : '#3a4a5c',
+      fontFamily: FONT_MONO, fontSize: '12px',
+      color: unlocked ? THEME.goldCss : THEME.disabledCss,
     });
 
     if (hasPhoto) {
       const zone = this.add.zone(x, y, TILE, TILE).setOrigin(0, 0).setInteractive();
-      zone.on('pointerover', () => card.setVisible(true));
-      zone.on('pointerout', () => card.setVisible(false));
+      zone.on('pointerover', () => { card.setVisible(true); this.drawTileHover(x, y); });
+      zone.on('pointerout', () => { card.setVisible(false); this.hoverBox?.clear(); });
     }
 
     return { slot, x, y, unlocked };
@@ -303,9 +306,15 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.add.existing(p.previewRig);
     p.previewName?.destroy();
     p.previewName = this.add.text(p.previewX, 600, `${def.name}\n${def.palettes[p.palette].name}`, {
-      fontFamily: 'Arial Black, sans-serif', fontSize: this.players.length > 3 ? '16px' : '20px',
-      color: '#ffffff', align: 'center',
+      fontFamily: FONT_BODY, fontSize: this.players.length > 3 ? '14px' : '16px',
+      color: THEME.mistCss, align: 'center',
     }).setOrigin(0.5, 0);
+  }
+
+  drawTileHover(x, y) {
+    this.hoverBox.clear();
+    this.hoverBox.lineStyle(2, THEME.teal, 0.95);
+    this.hoverBox.strokeRoundedRect(x - 6, y - 6, TILE + 12, TILE + 12, 16);
   }
 
   refreshAll() {
@@ -313,11 +322,21 @@ export default class CharacterSelectScene extends Phaser.Scene {
       p.box.clear();
       const { x, y } = this.tileXY(p.cursor);
       const inset = (p.index % 5) * 4; // offset stacked cursors so overlapping picks are still visible
-      p.box.lineStyle(4, p.color, 1);
-      p.box.strokeRoundedRect(x - 3 + inset, y - 3 + inset, TILE + 6 - inset * 2, TILE + 6 - inset * 2, 12);
-      if (p.phase !== 'picking') {
-        p.box.lineStyle(2, 0xffffff, 0.8);
-        p.box.strokeRoundedRect(x - 7, y - 7, TILE + 14, TILE + 14, 14);
+      if (p.phase === 'locked') {
+        p.box.lineStyle(6, THEME.pink, 0.35);
+        p.box.strokeRoundedRect(x - 8, y - 8, TILE + 16, TILE + 16, 16);
+        p.box.lineStyle(3, THEME.gold, 1);
+        p.box.strokeRoundedRect(x - 4, y - 4, TILE + 8, TILE + 8, 14);
+      } else if (p.phase === 'palette') {
+        p.box.lineStyle(3, THEME.gold, 1);
+        p.box.strokeRoundedRect(x - 5, y - 5, TILE + 10, TILE + 10, 14);
+        p.box.lineStyle(4, p.color, 1);
+        p.box.strokeRoundedRect(x - 1 + inset, y - 1 + inset, TILE + 2 - inset * 2, TILE + 2 - inset * 2, 12);
+      } else {
+        p.box.fillStyle(p.color, 0.18);
+        p.box.fillRoundedRect(x - 4, y - 4, TILE + 8, TILE + 8, 14);
+        p.box.lineStyle(4, p.color, 1);
+        p.box.strokeRoundedRect(x - 4 + inset, y - 4 + inset, TILE + 8 - inset * 2, TILE + 8 - inset * 2, 14);
       }
     }
     const phases = this.players.map((p) => p.phase);

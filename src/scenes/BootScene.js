@@ -94,32 +94,32 @@ export function attachBootLoadUi(scene, {
   const barY = height / 2 + 16;
 
   const bg = scene.add.graphics();
-  bg.fillStyle(0x0d1220, 1);
+  bg.fillStyle(0x07060e, 1);
   bg.fillRect(0, 0, width, height);
 
   const track = scene.add.graphics();
-  track.fillStyle(0x0a0e14, 0.92);
-  track.fillRoundedRect(barX - 4, barY - 4, barW + 8, barH + 8, 8);
-  track.lineStyle(1.5, 0x4ad6ff, 0.55);
-  track.strokeRoundedRect(barX - 4, barY - 4, barW + 8, barH + 8, 8);
+  track.fillStyle(0x2a2444, 0.95);
+  track.fillRoundedRect(barX - 4, barY - 4, barW + 8, barH + 8, 10);
+  track.lineStyle(2, 0x3ef0e0, 0.8);
+  track.strokeRoundedRect(barX - 4, barY - 4, barW + 8, barH + 8, 10);
 
   const bar = scene.add.graphics();
-  const statusText = scene.add.text(cx, barY - 52, status, {
-    fontFamily: 'Arial, sans-serif',
-    fontSize: '22px',
-    color: '#d8ecff',
+  const statusText = scene.add.text(cx, barY - 58, status, {
+    fontFamily: 'Sora, sans-serif',
+    fontSize: '18px',
+    color: '#E8F6FF',
   }).setOrigin(0.5);
-  const percentText = scene.add.text(cx, barY - 22, formatLoadPercent(0), {
-    fontFamily: 'Arial Black, sans-serif',
-    fontSize: '28px',
-    color: '#eaf9ff',
+  const percentText = scene.add.text(cx, barY - 30, formatLoadPercent(0), {
+    fontFamily: 'Orbitron, sans-serif',
+    fontSize: '22px',
+    color: '#F0C14A',
   }).setOrigin(0.5);
 
   function setProgress(value) {
     const t = Math.max(0, Math.min(1, Number(value) || 0));
     percentText.setText(formatLoadPercent(t));
     bar.clear();
-    bar.fillStyle(0x4ad6ff, 1);
+    bar.fillStyle(0x3ef0e0, 1);
     const fillW = barW * t;
     if (fillW > 0) bar.fillRect(barX, barY, fillW, barH);
   }
@@ -170,6 +170,11 @@ export default class BootScene extends Phaser.Scene {
         });
       }
     }
-    this.scene.start('Title');
+    // Portraits are in the texture cache now (preload finished). Wait for the
+    // bundled faces too, so the title doesn't draw fallback type and then swap.
+    const fonts = (typeof document !== 'undefined' && document.fonts) ? document.fonts.ready : Promise.resolve();
+    Promise.resolve(fonts).then(() => {
+      if (this.scene.isActive()) this.scene.start('Title');
+    });
   }
 }

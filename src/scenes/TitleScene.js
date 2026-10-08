@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { THEME, drawMenuBackground } from '../ui/theme.js';
+import { attachPhoneJoin } from '../ui/phoneJoin.js';
 
 // ---------------------------------------------------------------------------
 // TitleScene — home screen. Play is live; Campaign/Settings are stubs that
@@ -66,6 +67,15 @@ export default class TitleScene extends Phaser.Scene {
     this.add.text(W / 2, H - 28, 'P1: WASD + F/G     P2: Arrows + K/L     up to 4 more join by phone     Enter to select', {
       fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#5c7a94',
     }).setOrigin(0.5);
+
+    // Visible as soon as the game boots. Hidden on a static deploy (no
+    // /lan-ip, no /ws) so the title doesn't grow a dead code.
+    attachPhoneJoin(this, {
+      x: W - 156,
+      y: 214,
+      size: 232,
+      hideWhenOffline: true,
+    });
   }
 
   drawBackground() {

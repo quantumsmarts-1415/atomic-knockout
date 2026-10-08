@@ -1,7 +1,10 @@
 import * as Phaser from 'phaser';
 import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
-import { resolveMoveDamage } from '../data/balance.js';
+import { resolveMoveDamage, resolvePacket } from '../data/balance.js';
+import { interceptHit } from './defense.js';
+import { applyOnCast, applyOnHit, bonusPackets, combatOpts, tickKit } from './kit.js';
+import { playVfx } from './MoveVfx.js';
 import { play as sfx } from './sfx.js';
 
 // ---------------------------------------------------------------------------
@@ -29,8 +32,22 @@ const GRAVITY = 1500;
 /** Damage after the derived combat profile, or the legacy 5%-per-point
  *  table when the defender has no element record (engine tests). */
 function dealtDamage(attacker, move, defender) {
+  const opts = combatOpts(defender);
+  if (move?.chemDealtMult) opts.chemDealtMult = move.chemDealtMult;
   if (defender.charDef?.combat) {
-    return resolveMoveDamage(move, attacker?.charDef, defender.charDef);
+    const resolved = resolveMoveDamage(move, attacker?.charDef, defender.charDef, opts);
+    const now = defender.scene?.time?.now ?? 0;
+    for (const bonus of bonusPackets(attacker, now)) {
+      const dealt = resolvePacket(bonus.damage, bonus.type, attacker?.charDef?.combat, defender.charDef.combat, opts);
+      resolved.packets.push({ type: bonus.type, base: bonus.damage, dealt, bonus: true });
+      resolved.total += dealt;
+    }
+    if (move?.flareHeat && (defender.burnUntil > now || defender.heatOnHitUntil > now)) {
+      const dealt = resolvePacket(move.flareHeat, 'heat', attacker?.charDef?.combat, defender.charDef.combat, opts);
+      resolved.packets.push({ type: 'heat', base: move.flareHeat, dealt, bonus: true });
+      resolved.total += dealt;
+    }
+    return resolved;
   }
   let total = applyDefense(move.damage ?? 0, move.type, defender.charDef?.defense);
   const packets = [{ type: move.type, dealt: total }];
@@ -100,12 +117,16 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
     // timed states expire
     if ((this.state === 'attack' || this.state === 'hurt' || this.state === 'defending') && time >= this.stateUntil) {
+      if (this.state === 'defending' && this.defenseMove?.openAfter) {
+        this.vulnerableUntil = time + (this.defenseMove.vulnerableMs ?? 650);
+      }
       this.state = 'idle';
       this.rig.setFlash(null);
       this.rig.attackSwing = 0;
       this.activeHit = null;
       this.defenseMove = null;
     }
+    tickKit(this, time);
 
     const inp = this.input;
     const pressedJump = inp.jump && !this._prev.jump;
@@ -123,10 +144,16 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
     // --- movement (locked out while hurt/KO'd/charging/defending; allowed
     // while attacking in air)
-    if (this.state !== 'hurt' && this.state !== 'ko' && this.state !== 'charging' && this.state !== 'defending') {
+    const locked = this.lockedUntil > time;
+    if (locked) this.body.setVelocityX(0);
+    if (!locked && this.state !== 'hurt' && this.state !== 'ko' && this.state !== 'charging' && this.state !== 'defending') {
+      let speed = stats.speed;
+      if (this.speedBuffUntil > time) speed *= this.speedBuff ?? 1;
+      if (this.slowUntil > time) speed *= 0.55;
       let vx = 0;
-      if (inp.left) vx -= stats.speed;
-      if (inp.right) vx += stats.speed;
+      if (inp.left) vx -= speed;
+      if (inp.right) vx += speed;
+      if (this.rootedUntil > time) vx = 0;
       if (this.state === 'attack' && onGround) vx *= 0.25; // plant feet on ground attacks
       if (this.dashUntil && time < this.dashUntil) vx = this.dashVX; // kind:'dash' overrides normal movement
       // Only stomp horizontal velocity when grounded (instant arcade
@@ -162,7 +189,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
     // migrated in Phase B) falls back to its directional move so nothing
     // breaks mid-migration.
     if (this.state === 'charging') {
-      if (dirHeld) {
+      const chargeMove = this.charDef.moves.basicCharge;
+      if (time - (this._chargeFx ?? 0) > 140) {
+        this._chargeFx = time;
+        playVfx(this.scene, this, chargeMove, 'charge');
+      }
+      if (chargeMove?.detonateAtFull && this.chargeStart != null && time - this.chargeStart >= chargeMove.maxChargeMs) {
+        this.fireCharge(time);
+      } else if (dirHeld) {
         // pressing a direction cancels the charge -- this slot is only for
         // the neutral (no-direction) case.
         this.state = 'idle';
@@ -170,7 +204,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
       } else if (releasedAttack) {
         this.fireCharge(time);
       }
-    } else if (!this.isBusy) {
+    } else if (this.state === 'defending' && this.defenseMove?.hold !== false && !inp.special) {
+      this.state = 'idle';
+      this.defenseMove = null;
+      this.rig.setFlash(null);
+    } else if (!locked && !this.isBusy) {
       if (pressedAttack && time >= this.attackCooldownUntil) {
         if (dirHeld || !this.charDef.moves.basicCharge) {
           this.startMove(time, this.charDef.moves.basicDirectional, 'basic');
@@ -178,13 +216,18 @@ export default class Fighter extends Phaser.GameObjects.Container {
           this.state = 'charging';
           this.chargeStart = time;
         }
-      } else if (pressedSpecial && time >= this.specialCooldownUntil) {
+      } else if (pressedSpecial && time >= this.specialCooldownUntil && time >= (this.vulnerableUntil ?? 0)) {
         if (dirHeld || !this.charDef.moves.specialDefense) {
           this.startMove(time, this.charDef.moves.specialDirectional, 'special');
         } else {
           this.startDefense(time);
         }
       }
+    }
+
+    if (this.diveUntil && time >= (this.diveArm ?? 0) && (onGround || time >= this.diveUntil)) {
+      this.scene.resolveBurst?.(this, this.diveMove);
+      this.diveUntil = 0;
     }
 
     // drive attack swing progress for the rig
@@ -214,18 +257,34 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.currentMove = move;
     this.rig.moveSlot = slot; // sheet-mode rigs have separate basic/special clips
     this.stateUntil = time + move.duration;
+    this.scene.noteMove?.(this, move);
     if (slot === 'basic') this.attackCooldownUntil = time + move.duration + move.cooldown;
     else {
       this.specialCooldownUntil = time + move.duration + move.cooldown;
       sfx('special');
     }
 
-    if (move.kind === 'projectile') {
+    playVfx(this.scene, this, move, 'release');
+    applyOnCast(this, move, time, move._chargeFrac ?? 1);
+    const commitBurst = !!(move.releaseOnHit || move.detonateAtFull || move.includeSelf);
+
+    if (move.kind === 'buff' || move.kind === 'zone') {
+      if (move.zone) this.scene.spawnZone?.(this, move.zone, this.x, this.y - this.bodyH * (move.zone.low ? 0.15 : 0.5));
+    } else if (move.kind === 'projectile') {
       this.scene.spawnProjectile(this, move);
+    } else if (move.kind === 'beam') {
+      this.scene.resolveBeam?.(this, move);
+    } else if (move.kind === 'dive') {
+      this.body.setVelocity(this.facing * (move.dashSpeed ?? 220), -(move.diveVY ?? 420));
+      this.diveUntil = time + move.duration;
+      this.diveArm = time + 160;
+      this.diveMove = move;
     } else if (move.kind === 'burst') {
-      // burst hits everything in a radius partway through the animation
-      this.scene.time.delayedCall(move.duration * 0.4, () => {
-        if (this.state === 'attack') this.scene.resolveBurst(this, move);
+      // burst hits everything in a radius partway through the animation.
+      // Moves that can be interrupted on purpose (Supernova popping early)
+      // still go off.
+      this.scene.time.delayedCall(move.duration * (commitBurst ? 0.05 : 0.4), () => {
+        if (this.state === 'attack' || commitBurst) this.scene.resolveBurst(this, move);
       });
     } else {
       // melee: hitbox becomes active partway through the swing. `dir` is
@@ -246,6 +305,23 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.dashVX = this.facing * (move.dashSpeed ?? 500);
       }
     }
+    if (move.zone && move.kind !== 'zone') {
+      const zx = this.x + this.facing * (move.offsetX ?? 0);
+      const zy = this.y - this.bodyH * (move.zone.low ? 0.2 : 0.45);
+      this.scene.spawnZone?.(this, move.zone, zx, zy);
+    }
+    if (move.secondHit?.atFull && (move._chargeFrac ?? 0) >= 0.95) {
+      const echo = {
+        ...move,
+        kind: 'burst',
+        damage: (move.damage ?? 0) * move.secondHit.scale,
+        damage2: move.damage2 != null ? move.damage2 * move.secondHit.scale : undefined,
+        radius: move.secondHit.radius ?? 90,
+      };
+      this.scene.time.delayedCall(move.secondHit.delay ?? 180, () => {
+        this.scene.resolveBurst?.(this, echo);
+      });
+    }
   }
 
   /** Release-to-fire for basicCharge: damage/knockback scale with hold time
@@ -253,19 +329,29 @@ export default class Fighter extends Phaser.GameObjects.Container {
    * charge; a tap with no hold at all fires at the base numbers). */
   fireCharge(time) {
     const move = this.charDef.moves.basicCharge;
-    const heldMs = Math.min(time - this.chargeStart, move.maxChargeMs);
-    const frac = move.maxChargeMs > 0 ? heldMs / move.maxChargeMs : 1;
+    if (!move || this.chargeStart == null) return;
+    const heldMs = Math.min(Math.max(0, time - this.chargeStart), move.maxChargeMs ?? 0);
+    let frac = move.maxChargeMs > 0 ? heldMs / move.maxChargeMs : 1;
+    if (move.redox) frac = Math.max(frac, this.redox ?? 0);
     this.chargeStart = null;
+    if (move.fizzleBelow != null && frac < move.fizzleBelow) {
+      this.state = 'idle';
+      this.attackCooldownUntil = time + 420;
+      this.scene.noteMove?.(this, move);
+      playVfx(this.scene, this, move, 'fizzle');
+      return;
+    }
+    const scale = (base, mult) => (base ?? 0) * (1 + ((mult ?? 1) - 1) * frac);
     const scaled = {
       ...move,
-      damage: move.damage * (1 + ((move.chargeDamageMult ?? 1) - 1) * frac),
-      // dual-type moves (e.g. Fusion Core: heat + radiation) scale their
-      // secondary damage the same way as the primary.
-      damage2: move.damage2 != null ? move.damage2 * (1 + ((move.chargeDamageMult ?? 1) - 1) * frac) : move.damage2,
-      baseKnockback: move.baseKnockback * (1 + ((move.chargeKnockbackMult ?? 1) - 1) * frac),
-      // radius scaling is optional -- only burst-kind charge moves (e.g.
-      // Hydra's Fusion Core, "large area explosion" at full charge) use it.
-      radius: move.radius != null ? move.radius * (1 + ((move.chargeRadiusMult ?? 1) - 1) * frac) : move.radius,
+      _chargeFrac: frac,
+      damage: move.damage != null ? scale(move.damage, move.chargeDamageMult) : move.damage,
+      damage2: move.damage2 != null ? scale(move.damage2, move.chargeDamageMult) : move.damage2,
+      baseKnockback: scale(move.baseKnockback ?? 0, move.chargeKnockbackMult),
+      radius: move.radius != null ? scale(move.radius, move.chargeRadiusMult) : move.radius,
+      projectileRadius: move.projectileRadius != null ? scale(move.projectileRadius, move.chargeRadiusMult) : move.projectileRadius,
+      dashSpeed: move.dashSpeed != null ? scale(move.dashSpeed, move.chargeDashMult) : move.dashSpeed,
+      _beamScale: 1 + ((move.chargeLengthMult ?? 1) - 1) * frac,
     };
     this.startMove(time, scaled, 'basic');
   }
@@ -280,9 +366,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
     // hazard -- BattleScene checks this set each frame so the same fighter
     // isn't hit twice by the same activation.
     this.wallLanded = move.kind === 'wall' ? new Set() : null;
+    this.wallHits = 0;
+    this.defenseStart = time;
+    this.scene.noteMove?.(this, move);
     this.rig.moveSlot = 'special';
     this.stateUntil = time + move.duration;
     this.specialCooldownUntil = time + move.duration + move.cooldown;
+    playVfx(this.scene, this, move, 'defense');
+    applyOnCast(this, move, time, 1);
   }
 
   // Axis-aligned hitbox in world space for the current melee attack.
@@ -314,66 +405,75 @@ export default class Fighter extends Phaser.GameObjects.Container {
   takeHit(attacker, move, time, launchDir) {
     if (this.state === 'ko' || this.state === 'dead') return 0;
 
-    // specialDefense interception -- block or counter, per the defending
-    // move's own `kind`. Both leave `state` at 'defending' (the window keeps
-    // running on its own stateUntil/cooldown, set when it started) rather
-    // than transitioning to 'hurt', since a successful block/counter isn't a
-    // normal hit.
-    if (this.state === 'defending' && this.defenseMove) {
-      const def = this.defenseMove;
-      if (def.kind === 'shield') {
-        // Absorbs exactly one hit of any strength, from any direction, then
-        // pops immediately (ends the defending window early rather than
-        // riding out the rest of its duration) -- Helen's Bubble Shield.
-        // No damage to either side, unlike block (reduced dmg) or counter
-        // (retaliation).
+    if (this.state === 'charging' && this.charDef.moves.basicCharge?.releaseOnHit && !move.isSelf && !move.isCounterAttack) {
+      this.fireCharge(time);
+    }
+
+    let incoming = move;
+    if (move.bonusVsBlock && this.state === 'defending') {
+      const bump = 1 + move.bonusVsBlock;
+      incoming = {
+        ...move,
+        damage: (move.damage ?? 0) * bump,
+        damage2: move.damage2 != null ? move.damage2 * bump : move.damage2,
+      };
+    }
+
+    const gate = interceptHit(this, attacker, incoming, time);
+    if (gate.result === 'pop' || gate.result === 'negate') {
+      if (gate.result === 'pop') {
         this.state = 'idle';
         this.defenseMove = null;
-        return 0;
-      }
-      if (def.kind === 'counter') {
-        // Negate the hit entirely and retaliate on the attacker -- the
-        // Uranium-style "emits radiation damage back" pattern, generalized so
-        // any character's counter can use any damage type/knockback.
-        // Guard against counter-vs-counter recursion by tagging the move.
-        if (!move.isCounterAttack) {
-          attacker.takeHit(this, {
-            damage: def.counterDamage,
-            type: def.counterType,
-            baseKnockback: def.counterKnockback,
-            knockbackGrowth: def.counterKnockbackGrowth ?? 0,
-            isCounterAttack: true
-          }, time, this.facing);
+      } else if (this.defenseMove?.crackAfterHits) {
+        this.wallHits = (this.wallHits ?? 0) + 1;
+        if (this.wallHits >= this.defenseMove.crackAfterHits) {
+          this.state = 'idle';
+          this.defenseMove = null;
         }
-        this.rig.setFlash(0x66ffee);
-        this.scene.time.delayedCall(120, () => {
-          if (this.state !== 'ko' && this.state !== 'dead') this.rig.setFlash(null);
-        });
+      }
+      this.rig.setFlash(0xaee6ff);
+      return 0;
+    }
+    if (gate.result === 'counter') {
+      if (gate.negate !== false && attacker && attacker !== this && attacker.takeHit) {
+        const cdmg = attacker.takeHit(this, gate.counter, time, this.facing);
+        if (cdmg > 0) {
+          this.damageDealt += cdmg;
+          this.scene.noteHit?.(this, attacker, gate.counter);
+        }
+        if (gate.counter.rootMs && attacker.rootedUntil != null) {
+          attacker.rootedUntil = Math.max(attacker.rootedUntil, time + gate.counter.rootMs);
+        } else if (gate.counter.rootMs) {
+          attacker.rootedUntil = time + gate.counter.rootMs;
+        }
+      }
+      this.rig.setFlash(0x66ffee);
+      this.scene.time.delayedCall(120, () => {
+        if (this.state !== 'ko' && this.state !== 'dead') this.rig.setFlash(null);
+      });
+      if (gate.negate === false) {
+        // fall through and also take the (reduced) hit — vulcanized rubber
+      } else {
         return 0;
       }
-      if (def.kind === 'block') {
-        // Reduced damage and knockback, no hitstun -- stays in the defending
-        // window instead of being launched.
-        const reduction = def.damageReduction ?? 0.7;
-        let dmg = dealtDamage(attacker, move, this).total;
-        dmg *= (1 - reduction);
-        this.percent = Math.min(999, this.percent + dmg);
-        const kb = ((move.baseKnockback + this.percent * move.knockbackGrowth) / this.charDef.stats.weight) * (1 - reduction);
-        const radial = move.launch ? move.launch === 'radial' : move.kind === 'burst';
-        const away = Math.sign(this.x - attacker.x) || attacker.facing || 1;
-        const dir = (!radial && launchDir) ? launchDir : away;
-        this.body.setVelocity(kb * dir * Math.cos(0.45), kb * -0.9);
-        return dmg;
+    }
+    if (gate.result === 'partial') {
+      const dealt = dealtDamage(attacker, incoming, this);
+      let dmg = dealt.total * (1 - gate.reduction);
+      if (this.currentMove?.guardStrike && this.state === 'attack') dmg *= (1 - this.currentMove.guardStrike);
+      if (this.state === 'charging' && this.charDef.moves.basicCharge?.whileCharging) {
+        dmg *= this.charDef.moves.basicCharge.whileCharging.keep ?? 0.5;
       }
-      if (def.kind === 'wall') {
-        // Directional block: flame walls guard the left/right sides only.
-        // A hit from clearly above/below (vertical gap > half his own
-        // height) counts as "vertical/underside" and passes through
-        // untouched -- falls out of this if-block to the normal hit
-        // resolution below. A same-height hit is fully negated by the wall.
-        const verticalGap = Math.abs(attacker.y - this.y);
-        if (verticalGap <= this.bodyH * 0.5) return 0;
+      this.lastPackets = dealt.packets.map((p) => ({ ...p, dealt: p.dealt * (1 - gate.reduction) }));
+      this.percent = Math.min(999, this.percent + dmg);
+      if (!gate.noKnockback && !move.isSelf) {
+        const kb = ((incoming.baseKnockback + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight) * (1 - gate.reduction);
+        const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
+        const away = Math.sign(this.x - (attacker?.x ?? this.x)) || attacker?.facing || 1;
+        const dir = launchDir || away;
+        this.body.setVelocity(kb * dir * Math.cos(0.45) * slip, kb * -0.9);
       }
+      return dmg;
     }
 
     // Cancel whatever attack this fighter was mid-swing on. Without this, an
@@ -387,12 +487,25 @@ export default class Fighter extends Phaser.GameObjects.Container {
     // Dual-type moves (e.g. Fusion Core: heat + radiation) sum a second
     // defense-adjusted damage component. Single-type moves are unaffected
     // (type2 is undefined for them).
-    const dealt = dealtDamage(attacker, move, this);
-    const dmg = dealt.total;
+    const dealt = dealtDamage(attacker, incoming, this);
+    let dmg = dealt.total;
+    const charging = this.charDef.moves.basicCharge;
+    if (this.state === 'charging' && charging?.whileCharging) {
+      const except = charging.whileCharging.except ?? [];
+      if (!except.includes(incoming.type) && incoming.type !== 'radiation') dmg *= charging.whileCharging.keep ?? 0.5;
+    }
+    if (this.currentMove?.guardStrike && this.state === 'attack') dmg *= (1 - this.currentMove.guardStrike);
     this.percent = Math.min(999, this.percent + dmg);
     this.lastPackets = dealt.packets;
 
-    const kb = (move.baseKnockback + this.percent * move.knockbackGrowth) / this.charDef.stats.weight;
+    if (move.isSelf) {
+      this.state = 'hurt';
+      this.stateUntil = time + 160;
+      return dmg;
+    }
+
+    const kb = ((incoming.baseKnockback ?? 0) + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight;
+    const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
 
     // Launch direction.
     //
@@ -406,12 +519,16 @@ export default class Fighter extends Phaser.GameObjects.Container {
     // Radial moves (H-Burst and anything else centred on the attacker) still
     // launch away from the blast, which is the whole point of them. A move
     // can force either rule with `launch: 'radial' | 'directional'`.
-    const radial = move.launch ? move.launch === 'radial' : move.kind === 'burst';
-    const away = Math.sign(this.x - attacker.x) || attacker.facing || 1;
+    const radial = incoming.launch ? incoming.launch === 'radial' : incoming.kind === 'burst';
+    const away = Math.sign(this.x - (attacker?.x ?? this.x)) || attacker?.facing || 1;
     const dir = (!radial && launchDir) ? launchDir : away;
 
-    const angle = -0.9; // launch angle: up and away
-    this.body.setVelocity(kb * dir * Math.cos(0.45), kb * angle);
+    const angle = incoming.lift ? -1.25 : -0.9; // lift sends them up (Balloon Bop)
+    let vx = kb * dir * Math.cos(0.45) * slip;
+    if (incoming.pull && attacker) vx = Math.sign((attacker.x ?? this.x) - this.x || dir) * incoming.pull;
+    this.body.setVelocity(vx, kb * angle);
+
+    applyOnHit(attacker, this, incoming, time);
 
     this.state = 'hurt';
     this.stateUntil = time + 320 + Math.min(this.percent * 2, 300); // more hitstun at high %

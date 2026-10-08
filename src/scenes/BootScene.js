@@ -1,6 +1,23 @@
 import * as Phaser from 'phaser';
 import { loadStageArt } from '../data/stages.js';
-import { ROSTER } from '../data/characters.js';
+import { CHARACTERS, ROSTER } from '../data/characters.js';
+
+/** `?playtest=hydra,helen,kyle` boots straight into a CPU match and only
+ *  loads those fighters' cutouts, so a headless run doesn't pull every sheet. */
+export function playtestSpec() {
+  if (typeof window === 'undefined' || !window.location?.search) return null;
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('playtest');
+  if (!raw) return null;
+  const ids = raw.split(',').map((s) => s.trim()).filter((id) => CHARACTERS[id]);
+  if (!ids.length) return null;
+  return {
+    ids,
+    stageId: params.get('stage') || 'elemental-isle',
+    stocks: Number(params.get('stocks')) || 2,
+    ms: Number(params.get('ms')) || 20000,
+  };
+}
 
 // A character can supply art in two forms:
 //   - a single render (art.file) -> puppet-animated by the Rig
@@ -148,11 +165,21 @@ export default class BootScene extends Phaser.Scene {
     // Show progress immediately — roster sheets are huge, and without this
     // remote playable previews sit on a blank #0d1220 canvas for minutes.
     attachBootLoadUi(this);
-    // character renders (Benjamin-supplied art) — characters without an art
-    // entry fall back to the code-drawn vector rig automatically
-    loadRosterArt(this.load, ROSTER);
-    // painted stage layers + every stage's select-screen thumbnail/preview
-    loadStageArt(this.load);
+    const spec = playtestSpec();
+    if (spec) {
+      // Cutouts only. Sheets are hundreds of megabytes and this path is for
+      // timed CPU matches, not for admiring walk cycles.
+      for (const id of spec.ids) {
+        const art = CHARACTERS[id].art;
+        if (art) this.load.image(art.key, art.file);
+      }
+    } else {
+      // character renders (Benjamin-supplied art) — characters without an art
+      // entry fall back to the code-drawn vector rig automatically
+      loadRosterArt(this.load, ROSTER);
+      // painted stage layers + every stage's select-screen thumbnail/preview
+      loadStageArt(this.load);
+    }
   }
 
   create() {
@@ -169,6 +196,16 @@ export default class BootScene extends Phaser.Scene {
           repeat: def.loop ? -1 : 0,
         });
       }
+    }
+    const spec = playtestSpec();
+    if (spec) {
+      this.scene.start('Battle', {
+        stageId: spec.stageId,
+        stocks: spec.stocks,
+        playtestMs: spec.ms,
+        players: spec.ids.map((charId, i) => ({ charId, palette: i % 4, slot: 100 + i })),
+      });
+      return;
     }
     this.scene.start('Title');
   }

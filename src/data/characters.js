@@ -1,5 +1,6 @@
 import { deriveProfile } from './balance.js';
 import { ELEMENTS } from './elements.js';
+import { MOVESETS } from './movesets.js';
 
 // ---------------------------------------------------------------------------
 // CHARACTER DATA — the single source of truth for the roster.
@@ -2297,6 +2298,7 @@ for (const def of Object.values(CHARACTERS)) {
     gravityScale: def.combat.gravityScale,
     airJumps,
   };
+  if (MOVESETS[def.id]) def.moves = MOVESETS[def.id];
 }
 
 export const ROSTER = Object.values(CHARACTERS);

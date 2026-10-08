@@ -259,7 +259,8 @@ export class Rig extends Phaser.GameObjects.Container {
       return;
     }
     this.sprite.setOrigin(0.5, layout.footY);
-    this.sprite.setScale(displayH / layout.visibleH);
+    this._layoutScale = displayH / layout.visibleH;
+    this.sprite.setScale(this._layoutScale);
   }
 
   // Approx full display height, used for physics body sizing.
@@ -330,6 +331,21 @@ export class Rig extends Phaser.GameObjects.Container {
       // the KO clip already tumbles him, so don't spin the container too
       this.rotation = 0;
       this.setScale(this.facing * this.baseScale, this.baseScale);
+      // No attack/charge/defend sheet: stay on the idle clip. A small
+      // telegraph marks the state; the move itself is the effects layer.
+      // Do not scrub idle frames as if they were a swing.
+      const posed = def === clip;
+      const layout = this._layoutScale ?? (Math.abs(this.sprite.scaleX) || 1);
+      this.sprite.x = 0;
+      this.sprite.y = 0;
+      if (!posed && state === 'charging') {
+        this.sprite.y = Math.sin(t * 16) * 3;
+        this.sprite.setScale(layout);
+      } else if (!posed && state === 'defending') {
+        this.sprite.setScale(layout * 0.94, layout * 0.88);
+      } else {
+        this.sprite.setScale(layout);
+      }
       return;
     }
 
@@ -354,10 +370,20 @@ export class Rig extends Phaser.GameObjects.Container {
           const s = Math.sin(this.attackSwing * Math.PI);
           this.sprite.y = 0;
           this.sprite.rotation = -s * 0.17;
-          this.sprite.x = s * 11; // forward lunge
+          this.sprite.x = s * 11; // forward lunge of the cutout; not a drawn attack pose
           sx = 1 + s * 0.05;
           break;
         }
+        case 'charging':
+          this.sprite.y = Math.sin(t * 16) * 3;
+          this.sprite.rotation = Math.sin(t * 10) * 0.05;
+          break;
+        case 'defending':
+          this.sprite.y = 2;
+          this.sprite.rotation = 0;
+          sx = 0.94;
+          sy = 0.88;
+          break;
         case 'hurt':
           this.sprite.y = 0; this.sprite.rotation = 0.22;
           sx = 1.06; sy = 0.94;
@@ -422,6 +448,21 @@ export class Rig extends Phaser.GameObjects.Container {
         this.torso.rotation = -s * 0.18;
         this.frontLeg.rotation = s * 0.2;
         this.backLeg.rotation = -s * 0.25;
+        break;
+      }
+      case 'charging': {
+        const bob = Math.sin(t * 16);
+        this.frontArm.rotation = -0.4 + bob * 0.15;
+        this.backArm.rotation = 0.4 - bob * 0.15;
+        this.head.y = this.baseHeadY + bob * 2;
+        break;
+      }
+      case 'defending': {
+        this.frontArm.rotation = -1.4;
+        this.backArm.rotation = 1.4;
+        this.torso.rotation = 0.08;
+        squashX = 1.06;
+        squashY = 0.9;
         break;
       }
       case 'hurt': {

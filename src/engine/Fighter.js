@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
+import { resolveMoveDamage } from '../data/balance.js';
 import { play as sfx } from './sfx.js';
 
 // ---------------------------------------------------------------------------
@@ -24,6 +25,22 @@ import { play as sfx } from './sfx.js';
 // ---------------------------------------------------------------------------
 
 const GRAVITY = 1500;
+
+/** Damage after the derived combat profile, or the legacy 5%-per-point
+ *  table when the defender has no element record (engine tests). */
+function dealtDamage(attacker, move, defender) {
+  if (defender.charDef?.combat) {
+    return resolveMoveDamage(move, attacker?.charDef, defender.charDef);
+  }
+  let total = applyDefense(move.damage ?? 0, move.type, defender.charDef?.defense);
+  const packets = [{ type: move.type, dealt: total }];
+  if (move.type2) {
+    const extra = applyDefense(move.damage2 ?? move.damage ?? 0, move.type2, defender.charDef?.defense);
+    total += extra;
+    packets.push({ type: move.type2, dealt: extra });
+  }
+  return { total, packets };
+}
 
 export default class Fighter extends Phaser.GameObjects.Container {
   constructor(scene, x, y, charDef, paletteIndex, playerIndex) {
@@ -338,8 +355,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         // Reduced damage and knockback, no hitstun -- stays in the defending
         // window instead of being launched.
         const reduction = def.damageReduction ?? 0.7;
-        let dmg = applyDefense(move.damage, move.type, this.charDef.defense);
-        if (move.type2) dmg += applyDefense(move.damage2 ?? move.damage, move.type2, this.charDef.defense);
+        let dmg = dealtDamage(attacker, move, this).total;
         dmg *= (1 - reduction);
         this.percent = Math.min(999, this.percent + dmg);
         const kb = ((move.baseKnockback + this.percent * move.knockbackGrowth) / this.charDef.stats.weight) * (1 - reduction);
@@ -371,9 +387,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
     // Dual-type moves (e.g. Fusion Core: heat + radiation) sum a second
     // defense-adjusted damage component. Single-type moves are unaffected
     // (type2 is undefined for them).
-    let dmg = applyDefense(move.damage, move.type, this.charDef.defense);
-    if (move.type2) dmg += applyDefense(move.damage2 ?? move.damage, move.type2, this.charDef.defense);
+    const dealt = dealtDamage(attacker, move, this);
+    const dmg = dealt.total;
     this.percent = Math.min(999, this.percent + dmg);
+    this.lastPackets = dealt.packets;
 
     const kb = (move.baseKnockback + this.percent * move.knockbackGrowth) / this.charDef.stats.weight;
 

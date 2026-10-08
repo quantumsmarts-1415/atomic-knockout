@@ -1,15 +1,16 @@
+import { deriveProfile } from './balance.js';
+import { ELEMENTS } from './elements.js';
+
 // ---------------------------------------------------------------------------
 // CHARACTER DATA — the single source of truth for the roster.
 // Adding a new element character = adding one entry here. No engine changes.
 //
-// Damage types (2026-08-05 migration, was heat/current/kinetic): every move
-// is heat, physical, electrical, chemical, or radiation. Every character has
-// per-type defense (0-10) for heat/physical/electrical/chemical -- chemical
-// defense is per-element and gets set during that character's own moveset
-// design session (starts at 0 as a placeholder, NOT a real balance number).
-// Radiation is NOT a per-character stat -- it affects every character
-// equally (see RADIATION_DEFENSE in applyDefense below). Defense reduces
-// incoming damage of that type by 5% per point.
+// Damage types: kinetic (older moves may still say "physical"), heat,
+// electrical, chemical, radiation. A move may deal more than one.
+// Combat numbers come from src/data/elements.js through src/data/balance.js
+// (modifiers on a shared base; 0 means no modifier). The per-character
+// `defense` objects further down are the retired 0–10 table and are not
+// used once a fighter has a `combat` profile.
 //
 // Moves (2026-08-05: expanded from 2 slots to 4, keyed off whether a
 // direction -- left/right/up/down, "up" = jump key held -- is held when the
@@ -2279,14 +2280,31 @@ export const CHARACTERS = {
   },
 };
 
+// Derived combat profiles overwrite the hand-tuned speed / jump / weight /
+// gravity. airJumps stays a per-character choice (the design doc doesn't
+// assign extra jumps). `defense` below is the old 0–10 table and is no
+// longer consulted once `combat` exists — see src/data/balance.js.
+for (const def of Object.values(CHARACTERS)) {
+  const el = ELEMENTS[def.id];
+  if (!el) continue;
+  def.elementData = el;
+  def.combat = deriveProfile(el);
+  const airJumps = def.stats?.airJumps ?? 1;
+  def.stats = {
+    speed: def.combat.speed,
+    jumpVelocity: def.combat.jumpVelocity,
+    weight: def.combat.weight,
+    gravityScale: def.combat.gravityScale,
+    airJumps,
+  };
+}
+
 export const ROSTER = Object.values(CHARACTERS);
 
-// Damage after per-type defense: 5% reduction per defense point.
-//
-// Radiation is deliberately universal -- every character takes radiation
-// damage identically, so it's a single shared constant rather than a
-// per-character stat (Benjamin: "Radiation will affect all elements
-// equally"). Everything else reads the character's own `defense` object.
+// Legacy 5%-per-point defense. Fighters with a derived `combat` profile
+// (see balance.js) do not use this — Fighter.dealtDamage() does.
+// Kept so older call sites and the engine tests still have a defined path
+// for a character that has no element record yet.
 const RADIATION_DEFENSE = 0;
 export function applyDefense(rawDamage, damageType, defense) {
   const points = damageType === 'radiation' ? RADIATION_DEFENSE : (defense?.[damageType] ?? 0);

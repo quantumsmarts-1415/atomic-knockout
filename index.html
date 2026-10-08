@@ -31,7 +31,12 @@
 <body>
   <div id="game"></div>
   <script type="importmap">
-    { "imports": { "phaser": "/node_modules/phaser/dist/phaser.esm.js" } }
+    {
+      "imports": {
+        "phaser": "/node_modules/phaser/dist/phaser.esm.js",
+        "qrcode-generator": "/node_modules/qrcode-generator/dist/qrcode.mjs"
+      }
+    }
   </script>
   <script type="module" src="/src/main.js"></script>
 </body>

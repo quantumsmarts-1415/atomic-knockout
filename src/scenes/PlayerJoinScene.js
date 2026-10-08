@@ -3,6 +3,17 @@ import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { drawMenuBackground } from '../ui/theme.js';
+import { attachPhoneJoin } from '../ui/phoneJoin.js';
+
+// The QR sits in the left margin, large enough to scan off a TV. Seats
+// shift right so the code isn't covering a row. The instruction line and
+// the QR are built from the same controller URL.
+const QR_X = 176;
+const QR_Y = 310;
+const QR_SIZE = 300;
+const SEAT_LEFT = 370;
+const SEAT_W = 860;
+const SEAT_CX = SEAT_LEFT + SEAT_W / 2;
 
 // Slot numbering convention, shared with CharacterSelectScene/BattleScene:
 //   0/1    -> keyboard (P1/P2)
@@ -36,13 +47,15 @@ export default class PlayerJoinScene extends Phaser.Scene {
       stroke: '#060a10', strokeThickness: 8, letterSpacing: 1,
     }).setOrigin(0.5);
 
-    this.address = this.add.text(W / 2, 100, 'Fetching network address…', {
-      fontFamily: 'Arial, sans-serif', fontSize: '17px', color: '#5c7a94',
+    this.address = this.add.text(SEAT_CX, 168, 'Fetching network address…', {
+      fontFamily: 'Arial, sans-serif', fontSize: '18px', color: '#d8ecff',
+      align: 'center', wordWrap: { width: SEAT_W - 40 },
     }).setOrigin(0.5);
-    fetch('/lan-ip').then((r) => r.json()).then(({ ip, port }) => {
-      this.address.setText(`Phones: open  http://${ip}:${port}/controller  on the same WiFi`);
-    }).catch(() => {
-      this.address.setText('Phones: open http://<this computer\'s IP>:5173/controller on the same WiFi');
+    attachPhoneJoin(this, {
+      x: QR_X,
+      y: QR_Y,
+      size: QR_SIZE,
+      onLabel: (text) => this.address.setText(text),
     });
 
     // Six seats. Default: keyboard in the first two, empty everywhere else.
@@ -56,13 +69,13 @@ export default class PlayerJoinScene extends Phaser.Scene {
     ];
     this.cursor = 0;
 
-    const rowY = (i) => 168 + i * 66;
+    const rowY = (i) => 214 + i * 60;
     this.rowBg = [];
     this.seatTexts = [];
     for (let i = 0; i < 6; i++) {
       const bg = this.add.graphics();
       this.rowBg.push({ g: bg, y: rowY(i) });
-      const t = this.add.text(W / 2, rowY(i) + 22, '', {
+      const t = this.add.text(SEAT_CX, rowY(i) + 22, '', {
         fontFamily: 'Arial Black, sans-serif', fontSize: '22px', color: '#5c7a94',
       }).setOrigin(0.5);
       this.seatTexts.push(t);
@@ -157,8 +170,8 @@ export default class PlayerJoinScene extends Phaser.Scene {
 
       const { g, y } = this.rowBg[i];
       g.clear();
-      const x0 = W / 2 - 340;
-      const w0 = 680;
+      const x0 = SEAT_LEFT;
+      const w0 = SEAT_W;
       g.fillStyle(0xffffff, selected ? 0.045 : 0.02);
       g.fillRoundedRect(x0, y, w0, 52, 10);
       g.lineStyle(1.5, selected ? 0x4ad6ff : 0x2a5a78, selected ? 0.8 : 0.3);

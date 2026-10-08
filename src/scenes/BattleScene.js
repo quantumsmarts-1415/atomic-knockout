@@ -10,8 +10,21 @@ import { buildNavGraph } from '../engine/BotNav.js';
 import { startStageIntro } from '../engine/stageIntros.js';
 import { playVfx, projectileStyle } from '../engine/MoveVfx.js';
 import { mulberry32 } from '../engine/rng.js';
+import { TUNING } from '../data/balance.js';
 
 const GRAVITY = 1500;
+
+// A disc on the way back is a second hit of the same move. Scale it here so
+// the moveset damage number stays the printed value.
+function projectilePayoff(p) {
+  if (!(p.returning && p.move?.returns)) return p.move;
+  const m = TUNING.returnHitMult;
+  return {
+    ...p.move,
+    damage: (p.move.damage ?? 0) * m,
+    damage2: p.move.damage2 == null ? p.move.damage2 : p.move.damage2 * m,
+  };
+}
 
 // Slot numbering, decided in PlayerJoinScene: 0/1 = keyboard, 2-5 = a phone
 // (PhoneNet's own connection slot), 100+seatIndex = a bot.
@@ -1052,21 +1065,22 @@ export default class BattleScene extends Phaser.Scene {
         const def = victim.defenseMove;
         const perfect = def?.reflectProjectiles === 'perfect'
           && time - (victim.defenseStart ?? time) <= (def.perfectMs ?? 200);
+        const shot = projectilePayoff(p);
         if (victim.state === 'defending' && (def?.reflectProjectiles === true || perfect)) {
-          this.landHit(victim, p.owner, p.move, -Math.sign(p.vx) || victim.facing);
+          this.landHit(victim, p.owner, shot, -Math.sign(p.vx) || victim.facing);
           p.gfx.destroy();
           p.dead = true;
           break;
         }
         p.landed.add(victim);
         if (p.move.explodeOnly) {
-          this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
+          this.resolveBurst(p.owner, { ...shot, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
           p.gfx.destroy();
           p.dead = true;
           break;
         }
         // a projectile shoves you the way it was travelling
-        this.landHit(p.owner, victim, p.move, Math.sign(p.vx) || p.owner.facing);
+        this.landHit(p.owner, victim, shot, Math.sign(p.vx) || p.owner.facing);
         if (!p.move.pierce) {
           p.gfx.destroy();
           p.dead = true;

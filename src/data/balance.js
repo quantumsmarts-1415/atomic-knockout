@@ -37,7 +37,7 @@ export const TUNING = {
 
   // Kinetic attack from Mohs hardness. 0 Mohs → modifier 0.
   // Mohs 10 (diamond) → +mohsMax.
-  mohsMax: 0.50,
+  mohsMax: 0.32,
 
   // Kinetic defense from ultimate tensile strength (MPa), log scaled.
   // 0 MPa → modifier 0. tensileRef is the "very strong metal" anchor.
@@ -82,7 +82,13 @@ export const TUNING = {
 
   // A blast that includes its owner (Lake Drop) is not a designed self-cost.
   // Explicit isSelf moves (Supernova) keep their full damage.
-  selfDamageMult: 0.55,
+  selfDamageMult: 0.88,
+
+  // A projectile on the way back (Gyro Disc) deals this fraction of its damage.
+  returnHitMult: 0.40,
+
+  // Hitstun at the base duration. Lower lets a fighter act again sooner.
+  hitstunScale: 0.70,
 };
 
 function clamp(v, lo, hi) {

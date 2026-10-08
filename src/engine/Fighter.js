@@ -543,7 +543,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     applyOnHit(attacker, this, incoming, time);
 
     this.state = 'hurt';
-    this.stateUntil = time + 320 + Math.min(this.percent * 2, 300); // more hitstun at high %
+    this.stateUntil = time + (320 + Math.min(this.percent * 2, 300)) * TUNING.hitstunScale;
     this.rig.setFlash(0xff5544);
     this.scene.time.delayedCall(120, () => {
       if (this.state !== 'ko' && this.state !== 'dead') this.rig.setFlash(null);

@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
-import { resolveMoveDamage, resolvePacket } from '../data/balance.js';
+import { resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { interceptHit } from './defense.js';
 import { applyOnCast, applyOnHit, bonusPackets, combatOpts, tickKit } from './kit.js';
 import { playVfx } from './MoveVfx.js';
@@ -465,9 +465,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
         dmg *= this.charDef.moves.basicCharge.whileCharging.keep ?? 0.5;
       }
       this.lastPackets = dealt.packets.map((p) => ({ ...p, dealt: p.dealt * (1 - gate.reduction) }));
+      if (attacker === this || move.isSelf) dmg *= TUNING.selfDamageMult;
       this.percent = Math.min(999, this.percent + dmg);
       this.creditDamage(attacker, dmg, incoming.type);
-      if (!gate.noKnockback && !move.isSelf) {
+      if (!gate.noKnockback && !move.isSelf && attacker !== this) {
         const kb = ((incoming.baseKnockback + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight) * (1 - gate.reduction);
         const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
         const away = Math.sign(this.x - (attacker?.x ?? this.x)) || attacker?.facing || 1;
@@ -496,11 +497,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (!except.includes(incoming.type) && incoming.type !== 'radiation') dmg *= charging.whileCharging.keep ?? 0.5;
     }
     if (this.currentMove?.guardStrike && this.state === 'attack') dmg *= (1 - this.currentMove.guardStrike);
+    if (attacker === this || move.isSelf) dmg *= TUNING.selfDamageMult;
     this.percent = Math.min(999, this.percent + dmg);
     this.lastPackets = dealt.packets;
     this.creditDamage(attacker, dmg, incoming.type);
 
-    if (move.isSelf) {
+    if (move.isSelf || attacker === this) {
       this.state = 'hurt';
       this.stateUntil = time + 160;
       return dmg;

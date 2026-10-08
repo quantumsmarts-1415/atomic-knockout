@@ -49,9 +49,9 @@ Gases, liquids and missing numbers are 0.
 
 ```
 kineticAtk = 0                         if Mohs <= 0
-           = (Mohs / 10) * 0.50        otherwise     # diamond = +50%
+           = (Mohs / 10) * 0.36        otherwise     # diamond = +36%
 kineticDef = 0                         if MPa <= 0
-           = log10(1 + MPa) / log10(1 + 1200) * 0.42
+           = log10(1 + MPa) / log10(1 + 1200) * 0.28
 dealt      = base * (1 + attacker.kineticAtk) * (1 - defender.kineticDef)
 ```
 

@@ -37,12 +37,12 @@ export const TUNING = {
 
   // Kinetic attack from Mohs hardness. 0 Mohs → modifier 0.
   // Mohs 10 (diamond) → +mohsMax.
-  mohsMax: 0.50,
+  mohsMax: 0.36,
 
   // Kinetic defense from ultimate tensile strength (MPa), log scaled.
   // 0 MPa → modifier 0. tensileRef is the "very strong metal" anchor.
   tensileRef: 1200,
-  tensileMax: 0.42,
+  tensileMax: 0.28,
 
   // Heat defense from boiling point (K), log distance from heatRefK.
   // Below the reference (cold gases) take MORE heat damage.
@@ -75,6 +75,10 @@ export const TUNING = {
 
   // Global safety clamps so a future element can't delete or one-shot.
   incomingClamp: [0.22, 1.75],
+
+  // Self-hits still hurt, but a full charged blast should not be a
+  // suicide. The move keeps its element and its numbers.
+  selfDamageMult: 0.62,
 };
 
 function clamp(v, lo, hi) {

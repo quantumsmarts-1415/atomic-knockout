@@ -94,11 +94,15 @@ export function paintOverWatermark(png, bgColor) {
 // border, k-means over 2 centroids so it handles a real checkerboard too),
 // then erases fully-enclosed background-colored pockets, then feathers the
 // erase/keep boundary. Returns the opaque-pixel bbox {x0,y0,x1,y1} (exclusive).
-export function keyBackground(png, threshold = 40) {
+export function keyBackground(png, threshold = 40, keyColor = null) {
   const { width: w, height: h, data } = png;
   const idx = (x, y) => (w * y + x) << 2;
 
-  const bgCentroids = kmeans2(sampleCleanBorder(png));
+  // keyColor is only set when --key/--key-color is passed explicitly; the
+  // default (null) keeps the original border-sampled k-means behavior.
+  const bgCentroids = keyColor
+    ? (() => { const k = calibrateKeyColor(png, keyColor); return [k, k]; })()
+    : kmeans2(sampleCleanBorder(png));
   const isBgColor = (c) => dist(c, bgCentroids[0]) < threshold || dist(c, bgCentroids[1]) < threshold;
 
   paintOverWatermark(png, bgCentroids[0]);
@@ -423,6 +427,233 @@ export function keyBackgroundEdgeGated(png, colorThreshold = 40, gradThreshold =
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       if (data[idx(x, y) + 3] > 10) {
+        if (x < x0) x0 = x; if (x > x1) x1 = x;
+        if (y < y0) y0 = y; if (y > y1) y1 = y;
+      }
+    }
+  }
+  return { x0, y0, x1: x1 + 1, y1: y1 + 1 };
+}
+
+// Named key colors for --key. Magenta is the historical Gemini backdrop.
+export const KEY_COLORS = {
+  magenta: [255, 0, 255],
+  blue: [0, 0, 255],
+  green: [0, 255, 0],
+};
+
+// Parses "blue" / "0000ff" / "#0000FF" into [r,g,b]; null for falsy input.
+export function parseKeyColor(v) {
+  if (!v) return null;
+  const s = String(v).trim().toLowerCase();
+  if (KEY_COLORS[s]) return KEY_COLORS[s].slice();
+  const m = /^#?([0-9a-f]{6})$/.exec(s);
+  if (!m) throw new Error(`Bad key color "${v}" (use magenta|blue|green or RRGGBB)`);
+  const n = parseInt(m[1], 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+// A nominally pure key (#0000FF) never survives video encoding exactly --
+// Gemini's "pure blue" decodes as ~(16,67,237), ~70 away from #0000FF. So
+// take the border pixels that are within `radius` of the nominal key and use
+// their per-channel median as the real backdrop color. Falls back to the
+// nominal key if too few border pixels qualify.
+export function calibrateKeyColor(png, nominal, radius = 110) {
+  const { width: w, height: h } = png;
+  const rs = [], gs = [], bs = [];
+  const take = (x, y) => {
+    const c = colorAt(png, x, y);
+    if (dist(c, nominal) <= radius) { rs.push(c[0]); gs.push(c[1]); bs.push(c[2]); }
+  };
+  for (let x = 0; x < w; x++) { take(x, 0); take(x, h - 1); }
+  for (let y = 0; y < h; y++) { take(0, y); take(w - 1, y); }
+  if (rs.length < 0.25 * 2 * (w + h)) return nominal.slice();
+  const med = (a) => { a.sort((p, q) => p - q); return a[a.length >> 1]; };
+  return [med(rs), med(gs), med(bs)];
+}
+
+function hueOf(r, g, b) {
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), c = mx - mn;
+  if (c === 0) return -1;
+  let hh = mx === r ? ((g - b) / c) % 6 : mx === g ? (b - r) / c + 2 : (r - g) / c + 4;
+  hh *= 60;
+  return hh < 0 ? hh + 360 : hh;
+}
+function hueDiff(r, g, b, ref) {
+  const hh = hueOf(r, g, b);
+  if (hh < 0 || ref < 0) return 360;
+  const dd = Math.abs(hh - ref) % 360;
+  return dd > 180 ? 360 - dd : dd;
+}
+
+// Edge-connected chroma key with soft edges + despill (--connected mode).
+// Unlike keyBackground there is NO enclosed-pocket pass: a pixel becomes
+// transparent only if it is within `threshold` of the key AND connected to
+// the frame border through other key-like pixels. Interior pixels that happen
+// to be key-ish (violet hair/gems vs a magenta key -- the Flora bug) stay
+// opaque, so the body can't get speckled holes.
+// Edge band (opaque pixels within `band` px of the keyed region): alpha is
+// ramped by color distance (threshold -> threshold+soft) so anti-aliased
+// backdrop blends become partial alpha instead of a hard stair-step, and the
+// backdrop contribution is un-mixed out of the color (C = a*F + (1-a)*K ->
+// F = (C-(1-a)K)/a), then any remaining excess of the key's dominant
+// channel(s) is clamped to the local interior ratio on key-hued pixels up to
+// `spillBand` px in (chroma subsampling tints the inside of the ink line) --
+// no blue fringe, while violet hair / purple gems keep their hue.
+// opts.pocketMin > 0 additionally keys enclosed near-key components of at
+// least that many pixels (off by default).
+export function keyBackgroundConnected(png, opts = {}) {
+  const { width: w, height: h, data } = png;
+  const nominal = opts.keyColor || KEY_COLORS.magenta;
+  const threshold = opts.threshold ?? 50;
+  const soft = opts.soft ?? 70;
+  const band = opts.band ?? 2;
+  // Video chroma subsampling bleeds the key a couple of px further in than
+  // the alpha edge (it tints the inside of the dark ink outline), so the
+  // key-channel clamp runs on a slightly wider ring than the alpha ramp.
+  const spillBand = Math.max(band, opts.spillBand ?? band + 6);
+  const pocketMin = opts.pocketMin ?? 0;
+  const key = calibrateKeyColor(png, nominal);
+
+  paintOverWatermark(png, key);
+
+  const N = w * h;
+  const d = new Float32Array(N);
+  for (let p = 0; p < N; p++) {
+    const i = p << 2;
+    const dr = data[i] - key[0], dg = data[i + 1] - key[1], db = data[i + 2] - key[2];
+    d[p] = Math.sqrt(dr * dr + dg * dg + db * db);
+  }
+
+  // 1) border-connected flood fill through key-like pixels
+  const bg = new Uint8Array(N);
+  const stack = [];
+  const seed = (p) => { if (!bg[p] && d[p] < threshold) { bg[p] = 1; stack.push(p); } };
+  for (let x = 0; x < w; x++) { seed(x); seed((h - 1) * w + x); }
+  for (let y = 0; y < h; y++) { seed(y * w); seed(y * w + w - 1); }
+  while (stack.length) {
+    const p = stack.pop();
+    const x = p % w, y = (p / w) | 0;
+    if (x > 0) seed(p - 1);
+    if (x < w - 1) seed(p + 1);
+    if (y > 0) seed(p - w);
+    if (y < h - 1) seed(p + w);
+  }
+
+  // 1b) optional: large enclosed near-key pockets (real gaps between limbs)
+  if (pocketMin > 0) {
+    const seen = new Uint8Array(N);
+    for (let s = 0; s < N; s++) {
+      if (seen[s] || bg[s] || d[s] >= threshold) continue;
+      const comp = [s]; seen[s] = 1; const cs = [s];
+      while (cs.length) {
+        const p = cs.pop(); const x = p % w, y = (p / w) | 0;
+        for (const q of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1]) {
+          if (q < 0 || seen[q] || bg[q] || d[q] >= threshold) continue;
+          seen[q] = 1; comp.push(q); cs.push(q);
+        }
+      }
+      if (comp.length >= pocketMin) for (const p of comp) bg[p] = 1;
+    }
+  }
+
+  // 2) distance (in px, 4-neighbor BFS) from the keyed region, up to spillBand
+  const dpx = new Uint8Array(N).fill(255);
+  let frontier = [];
+  for (let p = 0; p < N; p++) if (bg[p]) { dpx[p] = 0; frontier.push(p); }
+  for (let k = 1; k <= spillBand; k++) {
+    const next = [];
+    for (const p of frontier) {
+      const x = p % w, y = (p / w) | 0;
+      for (const q of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1]) {
+        if (q >= 0 && dpx[q] === 255) { dpx[q] = k; next.push(q); }
+      }
+    }
+    frontier = next;
+  }
+
+  // dominant key channel(s): e.g. blue -> [2], magenta -> [0,2]
+  const kmax = Math.max(...nominal);
+  const keyCh = [0, 1, 2].filter((c) => nominal[c] === kmax && kmax > 0);
+  const otherCh = [0, 1, 2].filter((c) => !keyCh.includes(c));
+
+  // 3) soft alpha from color distance, processed ring by ring outward from
+  // the keyed region. A ring-k pixel can't be more transparent than its most
+  // transparent ring-(k-1) neighbor, so every partial-alpha pixel stays
+  // connected to the keyed background (no semi-transparent specks hiding
+  // behind an opaque outline, which would read as tiny interior holes).
+  const alphaF = new Float32Array(N).fill(1);
+  const ring = [];
+  for (let k = 0; k <= band; k++) ring.push([]);
+  for (let p = 0; p < N; p++) if (dpx[p] <= band) ring[dpx[p]].push(p);
+  for (const p of ring[0]) alphaF[p] = 0;
+  for (let k = 1; k <= band; k++) {
+    for (const p of ring[k]) {
+      const x = p % w, y = (p / w) | 0;
+      let floor = 1;
+      for (const q of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1]) {
+        if (q >= 0 && dpx[q] === k - 1 && alphaF[q] < floor) floor = alphaF[q];
+      }
+      let a = (d[p] - threshold) / soft;
+      a = a < 0 ? 0 : a > 1 ? 1 : a;
+      alphaF[p] = Math.max(a, floor);
+    }
+  }
+
+  // Only pixels whose hue is near the key's hue count as spill: blue-tinted
+  // ink/edges get clamped, violet hair and purple gems (hue ~270-290 vs
+  // blue ~226) are left alone even right at the silhouette edge.
+  const spillHue = opts.spillHue ?? 30;
+  const keyHue = hueOf(key[0], key[1], key[2]);
+  // Key-channel dominance ratio of the solid interior near p (pixels deeper
+  // than spillBand, which are never modified), e.g. violet hair ~1.5
+  // blue:red, green suit / skin -> 1 (no blue dominance allowed).
+  const refRatio = (p) => {
+    const x = p % w, y = (p / w) | 0;
+    let sum = 0, n = 0;
+    for (let yy = Math.max(0, y - 6); yy <= Math.min(h - 1, y + 6); yy++) {
+      for (let xx = Math.max(0, x - 6); xx <= Math.min(w - 1, x + 6); xx++) {
+        const q = yy * w + xx;
+        if (dpx[q] <= spillBand) continue;
+        const j = q << 2;
+        const o = Math.max(8, ...otherCh.map((c) => data[j + c]));
+        const kv = Math.min(...keyCh.map((c) => data[j + c]));
+        sum += Math.min(3, Math.max(1, kv / o));
+        n++;
+      }
+    }
+    return n ? sum / n : 1;
+  };
+
+  for (let p = 0; p < N; p++) {
+    const i = p << 2;
+    if (bg[p]) { data[i + 3] = 0; continue; }
+    if (dpx[p] > spillBand) continue;
+    const a = dpx[p] <= band ? alphaF[p] : 1;
+    // 4a) un-mix the key from partially transparent pixels
+    //     (C = a*F + (1-a)*K -> F = (C-(1-a)K)/a). Gain is capped (a >= 0.5)
+    //     so near-transparent pixels can't blow up into saturated specks.
+    if (a > 0 && a < 1) {
+      const ag = Math.max(a, 0.5);
+      for (let c = 0; c < 3; c++) {
+        const f = (data[i + c] - (1 - ag) * key[c]) / ag;
+        data[i + c] = f < 0 ? 0 : f > 255 ? 255 : Math.round(f);
+      }
+    }
+    // 4b) despill: key channel(s) may exceed the other channels only by the
+    //     local interior's own ratio (keeps violet hair violet, turns a
+    //     spill-tinted outline like (17,22,98) back into dark ink).
+    if (otherCh.length && a > 0 && hueDiff(data[i], data[i + 1], data[i + 2], keyHue) <= spillHue) {
+      const lim = Math.max(...otherCh.map((c) => data[i + c])) * refRatio(p);
+      for (const c of keyCh) if (data[i + c] > lim) data[i + c] = Math.round(lim);
+    }
+    data[i + 3] = Math.round(data[i + 3] * a);
+  }
+
+  let x0 = w, y0 = h, x1 = 0, y1 = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (data[((w * y + x) << 2) + 3] > 10) {
         if (x < x0) x0 = x; if (x > x1) x1 = x;
         if (y < y0) y0 = y; if (y > y1) y1 = y;
       }

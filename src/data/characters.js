@@ -73,11 +73,9 @@ export const CHARACTERS = {
         visibleH: 668,
         // Optional per-clip frameW/frameH/footY/visibleH override sheets.*.
         clips: {
-          // Only idle exists from this test generation; Rig.js falls back
-          // to 'idle' for any clip not listed here, so the rest of his
-          // moves will just show him idling until walk/attack/etc. are
-          // generated the same way.
+          // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1242, frameH: 720, footY: 0.9741, visibleH: 674 },
         },
       },
     },
@@ -232,10 +230,9 @@ export const CHARACTERS = {
         footY: 0.978,
         visibleH: 690,
         clips: {
-          // Only idle exists from this test generation; Rig.js falls back
-          // to 'idle' for any clip not listed here (walk/attack/etc.),
-          // so the rest of the roster's moves will just show her idling.
+          // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1244, frameH: 692, footY: 0.9665, visibleH: 621 },
         },
       },
     },
@@ -474,8 +471,9 @@ export const CHARACTERS = {
         footY: 0.9725,
         visibleH: 672,
         clips: {
-          // idle only -- walk/attack/etc. not generated yet, falls back to idle
+          // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1280, frameH: 720, footY: 0.9957, visibleH: 703 },
         },
       },
     },
@@ -592,6 +590,7 @@ export const CHARACTERS = {
         visibleH: 1180,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 454, frameH: 716, footY: 0.9782, visibleH: 670 },
         },
       },
     },
@@ -701,7 +700,9 @@ export const CHARACTERS = {
         footY: 0.9807,
         visibleH: 672,
         clips: {
+          // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1116, frameH: 708, footY: 0.9759, visibleH: 661 },
         },
       },
     },
@@ -817,6 +818,7 @@ export const CHARACTERS = {
         visibleH: 679,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1110, frameH: 700, footY: 0.9630, visibleH: 646 },
         },
       },
     },
@@ -921,7 +923,9 @@ export const CHARACTERS = {
         footY: 0.9721,
         visibleH: 657,
         clips: {
+          // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 735, frameH: 667, footY: 0.9686, visibleH: 617 },
         },
       },
     },
@@ -1027,7 +1031,9 @@ export const CHARACTERS = {
         footY: 0.9744,
         visibleH: 666,
         clips: {
+          // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 13, fps: 3.6, loop: true },
+          walk: { count: 33, fps: 10, loop: true, frameW: 452, frameH: 701, footY: 0.9801, visibleH: 659 },
         },
       },
     },
@@ -1112,7 +1118,9 @@ export const CHARACTERS = {
         footY: 0.9713,
         visibleH: 642,
         clips: {
+          // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 13, fps: 3.6, loop: true },
+          walk: { count: 29, fps: 10, loop: true, frameW: 458, frameH: 674, footY: 0.9844, visibleH: 634 },
         },
       },
     },
@@ -1212,7 +1220,9 @@ export const CHARACTERS = {
         footY: 0.9704,
         visibleH: 655,
         clips: {
+          // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 29, fps: 10, loop: true, frameW: 442, frameH: 719, footY: 0.9702, visibleH: 668 },
         },
       },
     },

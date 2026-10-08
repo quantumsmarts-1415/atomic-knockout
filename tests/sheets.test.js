@@ -25,6 +25,9 @@ const {
   clipDisplayLayout,
   loadRosterArt,
   positiveFinite,
+  formatLoadPercent,
+  attachBootLoadUi,
+  default: BootScene,
 } = await import('../src/scenes/BootScene.js');
 const { Rig } = await import('../src/engine/Rig.js');
 
@@ -142,6 +145,108 @@ test('loadRosterArt uses per-clip frame size on an isolated fake roster', () => 
   assert.strictEqual(walk.frameWidth, 1074);
   assert.strictEqual(walk.frameHeight, 720);
   assert.ok(walk.url.endsWith('testhero_walk.png'));
+});
+
+test('formatLoadPercent clamps Phaser 0..1 progress to a percent label', () => {
+  assert.strictEqual(formatLoadPercent(0), '0%');
+  assert.strictEqual(formatLoadPercent(0.42), '42%');
+  assert.strictEqual(formatLoadPercent(1), '100%');
+  assert.strictEqual(formatLoadPercent(-0.2), '0%');
+  assert.strictEqual(formatLoadPercent(1.4), '100%');
+  assert.strictEqual(formatLoadPercent(undefined), '0%');
+});
+
+function fakeLoadScene() {
+  const listeners = {};
+  const texts = [];
+  const graphics = [];
+  const scene = {
+    scale: { width: 1280, height: 720 },
+    add: {
+      graphics() {
+        const g = {
+          fillStyle() { return this; },
+          fillRoundedRect() { return this; },
+          strokeRoundedRect() { return this; },
+          lineStyle() { return this; },
+          fillRect() { this.filled = true; return this; },
+          clear() { this.cleared = true; return this; },
+          destroy() { this.destroyed = true; },
+        };
+        graphics.push(g);
+        return g;
+      },
+      text(_x, _y, str) {
+        const t = {
+          text: str,
+          setOrigin() { return this; },
+          setText(s) { this.text = s; return this; },
+          destroy() { this.destroyed = true; },
+        };
+        texts.push(t);
+        return t;
+      },
+    },
+    load: {
+      on(event, cb) { listeners[event] = cb; return this; },
+    },
+  };
+  return { scene, listeners, texts, graphics };
+}
+
+test('attachBootLoadUi shows Loading art status, updates percent, destroys on complete', () => {
+  const { scene, listeners, texts, graphics } = fakeLoadScene();
+  attachBootLoadUi(scene);
+  assert.ok(texts.some((t) => /Loading art/i.test(t.text)), 'status text should say Loading art');
+  assert.ok(texts.some((t) => t.text === '0%'), 'percent should start at 0%');
+  assert.strictEqual(typeof listeners.progress, 'function');
+  assert.strictEqual(typeof listeners.complete, 'function');
+  listeners.progress(0.5);
+  assert.ok(texts.some((t) => t.text === '50%'), 'progress 0.5 should show 50%');
+  listeners.complete();
+  assert.ok(texts.every((t) => t.destroyed), 'texts destroyed on complete');
+  assert.ok(graphics.every((g) => g.destroyed), 'graphics destroyed on complete');
+});
+
+test('BootScene.preload attaches load UI then still queues roster images and sheets', () => {
+  const loads = [];
+  const listeners = {};
+  const texts = [];
+  const scene = new BootScene();
+  scene.scale = { width: 1280, height: 720 };
+  scene.add = {
+    graphics() {
+      return {
+        fillStyle() { return this; },
+        fillRoundedRect() { return this; },
+        strokeRoundedRect() { return this; },
+        lineStyle() { return this; },
+        fillRect() { return this; },
+        clear() { return this; },
+        destroy() {},
+      };
+    },
+    text(_x, _y, str) {
+      const t = { text: str, setOrigin() { return this; }, setText(s) { this.text = s; return this; }, destroy() {} };
+      texts.push(t);
+      return t;
+    },
+  };
+  scene.load = {
+    on(event, cb) { listeners[event] = cb; return this; },
+    image(key, file) { loads.push({ type: 'image', key, file }); },
+    spritesheet(key, url, cfg) { loads.push({ type: 'spritesheet', key, url, ...cfg }); },
+  };
+  scene.preload();
+  assert.ok(texts.some((t) => /Loading art/i.test(t.text)));
+  assert.ok(listeners.progress, 'should bind this.load.on("progress")');
+  assert.ok(listeners.complete, 'should bind this.load.on("complete")');
+  const images = loads.filter((l) => l.type === 'image');
+  const sheets = loads.filter((l) => l.type === 'spritesheet');
+  assert.ok(images.length >= 1, 'roster still images should still queue');
+  assert.ok(sheets.length >= 1, 'roster sprite sheets should still queue');
+  assert.ok(sheets.some((l) => l.key === 'char-hydra-idle'), 'hydra idle sheet must still load');
+  assert.ok(sheets.some((l) => l.key === 'char-hydra-walk'), 'hydra walk sheet must still load');
 });
 
 test('loadRosterArt skips a clip with invalid frame size and still loads the rest', () => {

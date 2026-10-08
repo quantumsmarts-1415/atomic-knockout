@@ -70,12 +70,83 @@ export function loadRosterArt(loader, roster) {
   }
 }
 
+// Phaser LoaderPlugin progress is 0..1. Clamp + round so the HUD never shows
+// "NaN%" / "-1%" if a host fires a weird value.
+export function formatLoadPercent(value) {
+  const pct = Math.round((Number(value) || 0) * 100);
+  return `${Math.max(0, Math.min(100, pct))}%`;
+}
+
+// First-paint loading HUD for BootScene. Bind this BEFORE queueing files so
+// the bar is on screen at 0% while the ~hundreds-of-MB roster sheets load.
+// Colors match the HUD visor theme (src/ui/theme.js) without importing it —
+// BootScene tests mock Phaser and should not pull Display helpers.
+export function attachBootLoadUi(scene, {
+  width = scene.scale?.width || scene.cameras?.main?.width || 1280,
+  height = scene.scale?.height || scene.cameras?.main?.height || 720,
+  status = 'Loading art…',
+} = {}) {
+  const cx = width / 2;
+  const barW = 420;
+  const barH = 16;
+  const barX = cx - barW / 2;
+  const barY = height / 2 + 16;
+
+  const bg = scene.add.graphics();
+  bg.fillStyle(0x0d1220, 1);
+  bg.fillRect(0, 0, width, height);
+
+  const track = scene.add.graphics();
+  track.fillStyle(0x0a0e14, 0.92);
+  track.fillRoundedRect(barX - 4, barY - 4, barW + 8, barH + 8, 8);
+  track.lineStyle(1.5, 0x4ad6ff, 0.55);
+  track.strokeRoundedRect(barX - 4, barY - 4, barW + 8, barH + 8, 8);
+
+  const bar = scene.add.graphics();
+  const statusText = scene.add.text(cx, barY - 52, status, {
+    fontFamily: 'Arial, sans-serif',
+    fontSize: '22px',
+    color: '#d8ecff',
+  }).setOrigin(0.5);
+  const percentText = scene.add.text(cx, barY - 22, formatLoadPercent(0), {
+    fontFamily: 'Arial Black, sans-serif',
+    fontSize: '28px',
+    color: '#eaf9ff',
+  }).setOrigin(0.5);
+
+  function setProgress(value) {
+    const t = Math.max(0, Math.min(1, Number(value) || 0));
+    percentText.setText(formatLoadPercent(t));
+    bar.clear();
+    bar.fillStyle(0x4ad6ff, 1);
+    const fillW = barW * t;
+    if (fillW > 0) bar.fillRect(barX, barY, fillW, barH);
+  }
+
+  function destroy() {
+    bg.destroy();
+    bar.destroy();
+    track.destroy();
+    statusText.destroy();
+    percentText.destroy();
+  }
+
+  setProgress(0);
+  scene.load.on('progress', setProgress);
+  scene.load.on('complete', destroy);
+
+  return { statusText, percentText, bar, track, bg, setProgress, destroy };
+}
+
 export default class BootScene extends Phaser.Scene {
   constructor() {
     super('Boot');
   }
 
   preload() {
+    // Show progress immediately — roster sheets are huge, and without this
+    // remote playable previews sit on a blank #0d1220 canvas for minutes.
+    attachBootLoadUi(this);
     // character renders (Benjamin-supplied art) — characters without an art
     // entry fall back to the code-drawn vector rig automatically
     loadRosterArt(this.load, ROSTER);

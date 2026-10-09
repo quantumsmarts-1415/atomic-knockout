@@ -116,7 +116,12 @@ export default class BattleScene extends Phaser.Scene {
     this.introLockUntil = 0;
     // Timed CPU matches skip the stage intro so the clock is all fighting.
     this.intro = this.setup.playtestMs ? null : startStageIntro(this, this.stage, {
-      onDone: () => { this.introLockUntil = this.time.now + 200; },
+      // Stamp the sim clock. Phaser writes the loop timestamp into time.now
+      // on every frame while our clock scale is 0, and the doors' "GO" tween
+      // finishes on that frame — so time.now here is how long the game has
+      // been open, not how long the round has been running. A match started
+      // from the menus would stay input-locked until sim time caught up.
+      onDone: () => { this.introLockUntil = this.simNow + 200; },
     });
     if (this.intro) {
       const skip = () => { if (this.intro?.active) this.intro.skip(); };
@@ -1253,7 +1258,7 @@ export default class BattleScene extends Phaser.Scene {
     // a dropped phone just leaves its fighter standing idle instead of
     // crashing the match), and bots run the basic CPU controller instead of
     // any real input source.
-    const introLocked = this.intro?.active || this.time.now < this.introLockUntil;
+    const introLocked = this.intro?.active || this.simNow < this.introLockUntil;
     if (this.intro?.active) {
       // phone attack button skips the intro (edge-triggered)
       for (const f of this.fighters) {

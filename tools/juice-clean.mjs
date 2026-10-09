@@ -32,7 +32,11 @@ const report = await page.evaluate(async () => {
   const b = window.game.scene.getScene('Battle');
   window.game.loop.sleep();
   // 30s at 60 Hz, with the CPUs fighting. captureFrame steps the sim and the juice.
-  for (let i = 0; i < 1800; i++) b.captureFrame();
+  let peak = 0;
+  for (let i = 0; i < 1800; i++) {
+    b.captureFrame();
+    peak = Math.max(peak, b.juice.effectCount());
+  }
   const mid = b.juice.effectCount();
   for (const f of b.fighters) f.isBot = false;
   // Nothing new spawns. A dozen frames is the fade; give it forty.
@@ -43,6 +47,7 @@ const report = await page.evaluate(async () => {
   renderer.postRender();
   renderer.gl?.flush?.();
   return {
+    peak,
     mid,
     after: b.juice.effectCount(),
     pool: b.juice.pool.length,
@@ -53,8 +58,8 @@ const report = await page.evaluate(async () => {
 console.log(JSON.stringify(report));
 await page.screenshot({ path: out, type: 'jpeg', quality: 80 });
 await browser.close();
-if (report.after > 4) {
-  console.error(`effects still live: ${report.after}`);
+if (!(report.peak > 0) || report.after > 4) {
+  console.error(`effects did not spawn and clear: ${JSON.stringify(report)}`);
   process.exit(1);
 }
 console.log(`clean frame ${out}`);

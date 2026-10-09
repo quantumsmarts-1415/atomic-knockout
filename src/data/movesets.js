@@ -238,9 +238,9 @@ export const MOVESETS = {
       baseKnockback: 280, knockbackGrowth: 6.5, duration: 280, cooldown: 860,
     }),
     basicDirectional: melee('Flame Fist', {
-      type: K, damage: 9, type2: H, damage2: 9, vfx: 'fire', vfxColor: 0xffc14a,
-      baseKnockback: 165, knockbackGrowth: 4.2,
-      duration: 240, cooldown: 500,
+      type: K, damage: 14, type2: H, damage2: 14, vfx: 'fire', vfxColor: 0xffc14a,
+      baseKnockback: 185, knockbackGrowth: 4.7,
+      duration: 240, cooldown: 440,
     }),
     specialDefense: m('Oil Bath', {
       blocks: [C, H],

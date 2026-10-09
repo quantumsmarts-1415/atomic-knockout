@@ -267,35 +267,35 @@ export class Juice {
 
   hit(x, y, dmg, type, angle = 0) {
     if (this.fast) return;
-    const s = 0.55 + 0.9 * Math.min(1, Math.max(0, dmg / 20));
+    const s = 0.9 + 1.15 * Math.min(1, Math.max(0, dmg / 18));
     const color = sparkColor(type);
-    const life = (8 + Math.min(6, dmg * 0.25)) * FEEL.stepMs / 1000;
+    const life = (10 + Math.min(4, dmg * 0.2)) * FEEL.stepMs / 1000;
     const starKey = type === 'electrical' ? TEX.jag : TEX.star;
     const star = this.borrow(starKey);
     if (star) {
       star.setPosition(x, y).setTint(color).setRotation(angle).setDepth(40);
-      this.track(star, { kind: 'spark', life, scale0: 0.35 * s, scale1: 1.15 * s, alpha0: 0.95 });
+      this.track(star, { kind: 'spark', life, scale0: 0.7 * s, scale1: 1.45 * s, alpha0: 0.95 });
     }
     const slash = this.borrow(TEX.slash);
     if (slash) {
       slash.setPosition(x, y).setTint(color).setRotation(angle).setDepth(41);
       this.track(slash, {
-        kind: 'spark', life: life * 0.8, scale0: 0.55 * s, scale1: 1.05 * s, alpha0: 0.9,
+        kind: 'spark', life: life * 0.85, scale0: 0.85 * s, scale1: 1.55 * s, alpha0: 0.92,
       });
     }
-    const n = 4 + Math.round(Math.min(3, dmg / 8));
+    const n = 5 + Math.round(Math.min(2, dmg / 10));
     for (let i = 0; i < n; i++) {
       const bit = this.borrow(TEX.streak);
       if (!bit) break;
-      const spread = (i - (n - 1) / 2) * 0.28;
+      const spread = (i - (n - 1) / 2) * 0.32;
       const a = angle + spread;
       bit.setPosition(x, y).setTint(color).setRotation(a).setDepth(39);
-      const speed = 220 + dmg * 8 + i * 30;
+      const speed = 260 + dmg * 10 + i * 36;
       this.track(bit, {
         kind: 'line',
-        life: (6 + i) * FEEL.stepMs / 1000,
-        scale0: 0.45 + 0.15 * s,
-        scale1: 0.9 + 0.2 * s,
+        life: (8 + i) * FEEL.stepMs / 1000,
+        scale0: 0.7 + 0.2 * s,
+        scale1: 1.15 + 0.25 * s,
         alpha0: 0.9,
         vx: Math.cos(a) * speed,
         vy: Math.sin(a) * speed,

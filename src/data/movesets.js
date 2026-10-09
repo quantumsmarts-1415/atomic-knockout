@@ -57,18 +57,18 @@ export const MOVESETS = {
       chargeDamageMult: 1.7, chargeKnockbackMult: 1.6, chargeRadiusMult: 1.8,
       maxChargeMs: 700, lift: true, vfx: 'balloon',
       baseKnockback: 280, knockbackGrowth: 6.2,
-      projectileSpeed: 240, projectileRadius: 24, projectileLife: 1800,
+      projectileSpeed: 240, projectileRadius: 28, projectileLife: 1800,
       duration: 260, cooldown: 860,
     }),
     basicDirectional: melee('Noble Gust', {
-      type: K, damage: 5, baseKnockback: 300, knockbackGrowth: 7.2,
-      rangeW: 82, rangeH: 50, vfx: 'gust', duration: 220, cooldown: 280,
+      type: K, damage: 7, baseKnockback: 300, knockbackGrowth: 7.2,
+      rangeW: 82, rangeH: 50, vfx: 'gust', duration: 220, cooldown: 260,
     }),
     specialDefense: m('Bubble Shield', {
       kind: 'shield', duration: 1400, cooldown: 760, vfx: 'bubble', vfxColor: 0xbfefff,
     }),
     specialDirectional: m('Air Wave', {
-      kind: 'projectile', type: K, damage: 9, vfx: 'gust',
+      kind: 'projectile', type: K, damage: 10, vfx: 'gust',
       baseKnockback: 340, knockbackGrowth: 7,
       projectileSpeed: 360, projectileRadius: 36, projectileLife: 1100,
       duration: 240, cooldown: 860,
@@ -130,15 +130,15 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Diamond Cross', {
       type: K, damage: 9, baseKnockback: 200, rangeW: 70, vfx: 'strike',
-      duration: 250, cooldown: 580,
+      duration: 250, cooldown: 660,
     }),
     specialDefense: m('Diamond Plating', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.78,
       duration: 700, cooldown: 680, vfx: 'shield', vfxColor: 0xd6f4ff,
     }),
     specialDirectional: m('Graphene Wave', {
-      kind: 'burst', type: E, damage: 12, radius: 92, vfx: 'spark',
-      baseKnockback: 200, duration: 280, cooldown: 820,
+      kind: 'burst', type: E, damage: 12, radius: 82, vfx: 'spark',
+      baseKnockback: 200, duration: 280, cooldown: 980,
     }),
   },
 
@@ -217,14 +217,14 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Staff Crack', {
       type: K, damage: 5, type2: E, damage2: 5, vfx: 'spark',
-      rangeW: 84, duration: 210, cooldown: 320,
+      rangeW: 94, duration: 210, cooldown: 280,
     }),
     specialDefense: m('No Vacancy', {
       blocks: [K, H, E, C, R], frontOnly: true, openAfter: true, vulnerableMs: 650,
       duration: 900, cooldown: 400, vfx: 'shield', vfxColor: 0xff5a2a,
     }),
     specialDirectional: m('Neon Flare', {
-      kind: 'burst', type: E, damage: 11, radius: 90, vfx: 'spark', vfxColor: 0xff5a2a,
+      kind: 'burst', type: E, damage: 11, radius: 102, vfx: 'spark', vfxColor: 0xff5a2a,
       onHit: { blind: 800 }, baseKnockback: 170, duration: 260, cooldown: 820,
     }),
   },
@@ -282,8 +282,8 @@ export const MOVESETS = {
       duration: 240, cooldown: 760,
     }),
     basicDirectional: melee('Turbine Strike', {
-      type: K, damage: 4, multiHit: 3, rangeW: 78, vfx: 'spark',
-      baseKnockback: 90, duration: 320, cooldown: 360,
+      type: K, damage: 5, multiHit: 3, rangeW: 90, vfx: 'spark',
+      baseKnockback: 90, duration: 320, cooldown: 300,
     }),
     specialDefense: m('Oxide Skin', {
       kind: 'oxide', duration: 2000, cooldown: 1600, vfx: 'shield', vfxColor: 0xd8dde6,
@@ -451,7 +451,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Wing Slash', {
       type: K, damage: 8, rangeW: 100, rangeH: 72, vfx: 'strike',
-      duration: 230, cooldown: 340,
+      duration: 230, cooldown: 290,
     }),
     specialDefense: m('Folded Wings', {
       blocks: [K], reflectProjectiles: 'perfect', perfectMs: 200,
@@ -512,7 +512,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Chrome Edge', {
       type: K, damage: 10, rangeW: 74, vfx: 'strike', vfxColor: 0xe8eef2,
-      baseKnockback: 190, duration: 280, cooldown: 820,
+      baseKnockback: 190, duration: 280, cooldown: 660,
     }),
     specialDefense: m('Mirror Chrome', {
       reflectProjectiles: true, duration: 700, cooldown: 720,
@@ -520,7 +520,7 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Prismatic Shatter', {
       kind: 'burst', type: K, damage: 12, radius: 80, vfx: 'spark', vfxColor: 0xff2a3a,
-      baseKnockback: 210, duration: 280, cooldown: 1100,
+      baseKnockback: 210, duration: 280, cooldown: 960,
     }),
   },
 };

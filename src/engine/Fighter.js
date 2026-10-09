@@ -37,13 +37,34 @@ const GRAVITY = 1500;
 
 /** Damage after the derived combat profile, or the legacy 5%-per-point
  *  table when the defender has no element record (engine tests). */
+// The percent launch pulled these fourteen just outside 40–60% in the
+// full duel table. The stored kits stay as written; only the dealt
+// total moves, and only for this list.
+const BAND_DAMAGE = {
+  amy: 0.88,
+  nick: 0.90,
+  nitra: 0.91,
+  bianca: 0.93,
+  allen: 0.95,
+  yvette: 0.96,
+  titan: 0.97,
+  thule: 1.18,
+  polonius: 1.12,
+  lucy: 1.08,
+  sully: 1.08,
+  iona: 1.07,
+  kyle: 1.06,
+  ruth: 1.06,
+  frank: 1.04,
+};
+
 function dealtDamage(attacker, move, defender) {
   const now = defender.scene?.time?.now ?? 0;
   move = prepareMove(move, attacker, defender, now);
   const opts = combatOpts(defender);
   if (move?.chemDealtMult) opts.chemDealtMult = move.chemDealtMult;
   if (move?.ignoreDefense) opts.ignoreDefense = true;
-  if (defender.charDef?.combat) {
+    if (defender.charDef?.combat) {
     const resolved = resolveMoveDamage(move, attacker?.charDef, defender.charDef, opts);
     for (const bonus of bonusPackets(attacker, now)) {
       const dealt = resolvePacket(bonus.damage, bonus.type, attacker?.charDef?.combat, defender.charDef.combat, opts);
@@ -54,6 +75,11 @@ function dealtDamage(attacker, move, defender) {
       const dealt = resolvePacket(move.flareHeat, 'heat', attacker?.charDef?.combat, defender.charDef.combat, opts);
       resolved.packets.push({ type: 'heat', base: move.flareHeat, dealt, bonus: true });
       resolved.total += dealt;
+    }
+    const band = BAND_DAMAGE[attacker?.charDef?.id];
+    if (band && band !== 1) {
+      resolved.total *= band;
+      for (const p of resolved.packets) p.dealt *= band;
     }
     return resolved;
   }

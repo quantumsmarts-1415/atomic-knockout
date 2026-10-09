@@ -4297,8 +4297,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 7.4,
+            "count": 12,
+            "fps": 11.1,
             "loop": true,
             "frameW": 108,
             "frameH": 147,
@@ -4403,8 +4403,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.97778
           },
           "walk": {
-            "count": 8,
-            "fps": 6.9,
+            "count": 12,
+            "fps": 10.3,
             "loop": true,
             "frameW": 104,
             "frameH": 148,
@@ -4614,8 +4614,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 6.9,
+            "count": 12,
+            "fps": 10.3,
             "loop": true,
             "frameW": 110,
             "frameH": 148,
@@ -5037,8 +5037,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.2,
+            "count": 12,
+            "fps": 9.3,
             "loop": true,
             "frameW": 102,
             "frameH": 148,
@@ -5142,8 +5142,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.9,
+            "count": 12,
+            "fps": 10.3,
             "loop": true,
             "frameW": 123,
             "frameH": 148,
@@ -5354,8 +5354,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 8,
+            "count": 12,
+            "fps": 12,
             "loop": true,
             "frameW": 114,
             "frameH": 150,
@@ -5565,8 +5565,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 6.9,
+            "count": 12,
+            "fps": 10.3,
             "loop": true,
             "frameW": 113,
             "frameH": 146,
@@ -5671,8 +5671,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 4.8,
+            "count": 12,
+            "fps": 7.2,
             "loop": true,
             "frameW": 169,
             "frameH": 151,
@@ -5777,8 +5777,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 5.6,
+            "count": 12,
+            "fps": 8.5,
             "loop": true,
             "frameW": 103,
             "frameH": 147,
@@ -5883,8 +5883,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 5.6,
+            "count": 12,
+            "fps": 8.5,
             "loop": true,
             "frameW": 115,
             "frameH": 150,
@@ -5988,8 +5988,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99281
           },
           "walk": {
-            "count": 8,
-            "fps": 10,
+            "count": 12,
+            "fps": 11.1,
             "loop": true,
             "frameW": 113,
             "frameH": 156,
@@ -6093,8 +6093,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6,
+            "count": 12,
+            "fps": 9,
             "loop": true,
             "frameW": 155,
             "frameH": 147,
@@ -6199,8 +6199,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.4,
+            "count": 12,
+            "fps": 9.6,
             "loop": true,
             "frameW": 101,
             "frameH": 148,
@@ -6409,8 +6409,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 8,
+            "count": 12,
+            "fps": 12,
             "loop": true,
             "frameW": 126,
             "frameH": 149,
@@ -6620,8 +6620,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.9,
+            "count": 12,
+            "fps": 10.3,
             "loop": true,
             "frameW": 103,
             "frameH": 151,
@@ -6725,8 +6725,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 7.7,
+            "count": 12,
+            "fps": 11.5,
             "loop": true,
             "frameW": 204,
             "frameH": 148,
@@ -6936,8 +6936,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.98507
           },
           "walk": {
-            "count": 8,
-            "fps": 6.4,
+            "count": 12,
+            "fps": 9.6,
             "loop": true,
             "frameW": 103,
             "frameH": 145,
@@ -7041,8 +7041,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.98529
           },
           "walk": {
-            "count": 8,
-            "fps": 10,
+            "count": 12,
+            "fps": 8.5,
             "loop": true,
             "frameW": 146,
             "frameH": 149,
@@ -7146,8 +7146,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 5.3,
+            "count": 12,
+            "fps": 8,
             "loop": true,
             "frameW": 117,
             "frameH": 146,
@@ -7252,8 +7252,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 5.5,
+            "count": 12,
+            "fps": 8.2,
             "loop": true,
             "frameW": 136,
             "frameH": 150,
@@ -7357,8 +7357,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 5.6,
+            "count": 12,
+            "fps": 8.5,
             "loop": true,
             "frameW": 103,
             "frameH": 148,
@@ -7462,8 +7462,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.2,
+            "count": 12,
+            "fps": 9.3,
             "loop": true,
             "frameW": 108,
             "frameH": 149,
@@ -7567,8 +7567,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 7.1,
+            "count": 12,
+            "fps": 10.7,
             "loop": true,
             "frameW": 152,
             "frameH": 150,
@@ -7777,8 +7777,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.4,
+            "count": 12,
+            "fps": 9.6,
             "loop": true,
             "frameW": 116,
             "frameH": 149,
@@ -7882,8 +7882,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 4.8,
+            "count": 12,
+            "fps": 7.2,
             "loop": true,
             "frameW": 111,
             "frameH": 148,
@@ -8093,8 +8093,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.98507
           },
           "walk": {
-            "count": 8,
-            "fps": 7.4,
+            "count": 12,
+            "fps": 11.1,
             "loop": true,
             "frameW": 151,
             "frameH": 150,
@@ -8198,8 +8198,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 7.4,
+            "count": 12,
+            "fps": 11.1,
             "loop": true,
             "frameW": 143,
             "frameH": 147,
@@ -8408,8 +8408,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99237
           },
           "walk": {
-            "count": 8,
-            "fps": 10,
+            "count": 12,
+            "fps": 11.1,
             "loop": true,
             "frameW": 84,
             "frameH": 145,
@@ -8618,8 +8618,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 5.6,
+            "count": 12,
+            "fps": 8.5,
             "loop": true,
             "frameW": 98,
             "frameH": 147,
@@ -8829,8 +8829,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 7.4,
+            "count": 12,
+            "fps": 11.1,
             "loop": true,
             "frameW": 95,
             "frameH": 148,
@@ -9039,8 +9039,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.4,
+            "count": 12,
+            "fps": 9.6,
             "loop": true,
             "frameW": 99,
             "frameH": 146,
@@ -9144,8 +9144,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 4.6,
+            "count": 12,
+            "fps": 6.9,
             "loop": true,
             "frameW": 120,
             "frameH": 146,
@@ -9250,8 +9250,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 4.4,
+            "count": 12,
+            "fps": 6.5,
             "loop": true,
             "frameW": 137,
             "frameH": 149,
@@ -9355,8 +9355,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.98551
           },
           "walk": {
-            "count": 8,
-            "fps": 10,
+            "count": 12,
+            "fps": 9.6,
             "loop": true,
             "frameW": 123,
             "frameH": 156,
@@ -9460,8 +9460,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.9,
+            "count": 12,
+            "fps": 10.3,
             "loop": true,
             "frameW": 132,
             "frameH": 150,
@@ -9565,8 +9565,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 5.2,
+            "count": 12,
+            "fps": 7.8,
             "loop": true,
             "frameW": 115,
             "frameH": 148,
@@ -9670,8 +9670,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 7.4,
+            "count": 12,
+            "fps": 11.1,
             "loop": true,
             "frameW": 105,
             "frameH": 148,
@@ -9775,8 +9775,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.4,
+            "count": 12,
+            "fps": 9.6,
             "loop": true,
             "frameW": 107,
             "frameH": 147,
@@ -9881,8 +9881,8 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 8,
+            "count": 12,
+            "fps": 12,
             "loop": true,
             "frameW": 167,
             "frameH": 180,

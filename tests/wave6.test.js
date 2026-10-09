@@ -23,13 +23,13 @@ const WALK12 = [
   'ace', 'agatha', 'arsenio', 'aurelius', 'barry', 'bianca', 'boar', 'brock', 'burke', 'caesar', 'cali', 'ceres',
   'collin', 'cooper', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'erin', 'europa', 'fey', 'flo', 'frank',
   'gail', 'gertrude', 'goldie', 'hog', 'holly', 'hoss', 'indy', 'ira', 'krypto',
+  'lana', 'lars', 'lucy', 'mendel', 'molly', 'neptune', 'niko', 'niobe', 'noble', 'ogden', 'oz', 'pablo', 'pat',
+  'percy', 'pluto', 'polonius', 'ray', 'rex', 'rhoda', 'roger', 'ronan', 'ruben', 'ruth', 'sam', 'sandy',
+  'selena', 'sterling', 'tara', 'terra', 'tessa', 'thor', 'thule', 'uri', 'wolf', 'xander', 'yara', 'yvette', 'zane', 'zora',
 ];
 const STILL8 = [
   'amy', 'cody', 'einstein', 'fermi', 'ford', 'haley', 'iona', 'manny', 'nadia', 'nick', 'paula', 'pit',
   'prometheus', 'saab', 'talia', 'tate', 'tex',
-  'lana', 'lars', 'lucy', 'mendel', 'molly', 'neptune', 'niko', 'niobe', 'noble', 'ogden', 'oz', 'pablo', 'pat',
-  'percy', 'pluto', 'polonius', 'ray', 'rex', 'rhoda', 'roger', 'ronan', 'ruben', 'ruth', 'sam', 'sandy',
-  'selena', 'sterling', 'tara', 'terra', 'tessa', 'thor', 'thule', 'uri', 'wolf', 'xander', 'yara', 'yvette', 'zane', 'zora',
 ];
 
 function gridFrames(png, count, frameW, frameH) {

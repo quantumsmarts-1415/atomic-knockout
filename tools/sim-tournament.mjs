@@ -74,6 +74,9 @@ const TRIOS = [
   ['gertrude', 'nadia', 'niobe'],
   ['prometheus', 'zora', 'einstein'],
   ['copernicus', 'fermi', 'ogden'],
+  ['sarge', 'mae', 'mac'],
+  ['liv', 'tess', 'ogden'],
+  ['sarge', 'liv', 'ira'],
 ];
 
 function matchSeed(kind, ids, rep) {

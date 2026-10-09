@@ -127,6 +127,11 @@ for (let frame = 0; frame < frames; frame++) {
       else if (phase >= 90 && phase < 120) { hk.right.isDown = true; hk.attack.isDown = true; }
       else if (phase >= 140 && phase < 175) hk.special.isDown = true;
       else if (phase >= 190 && phase < 215) { hk.right.isDown = true; hk.special.isDown = true; }
+    } else if (scriptName === 'walk') {
+      // Hold right so the walk cycle plays. The foe stays parked on the far side.
+      if (frame === 0) { pin(hero, 220, 1); pin(foe, 1120, -1); }
+      if (frame % 30 === 0) pin(foe, 1120, -1);
+      hk.right.isDown = true;
     } else if (scriptName === 'match') {
       // CPUs play so the camera has to follow them, then a scripted hit near
       // the blast line produces a KO the short clip can actually show.

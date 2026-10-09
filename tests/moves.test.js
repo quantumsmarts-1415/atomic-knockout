@@ -53,6 +53,19 @@ test('owner-locked kits stay as specified', () => {
   );
 });
 
+test('a dive bot will not launch toward the open side of the deck', () => {
+  const bot = fake('scarlett', 900, 500);
+  bot.facing = 1;
+  const foe = fake('helen', 1040, 500);
+  const bounds = { minX: 240, maxX: 1040 };
+  const input = computeBotInput(1000, bot, [bot, foe], bounds);
+  assert.strictEqual(input.special, false);
+  const mid = fake('scarlett', 640, 500);
+  const near = fake('helen', 800, 500);
+  const diving = computeBotInput(1000, mid, [mid, near], bounds);
+  assert.strictEqual(diving.special, true);
+});
+
 test('bots cycle a neutral charge and a neutral defense without walking', () => {
   const bot = fake('kyle', 400, 500);
   const foe = fake('hydra', 900, 500);

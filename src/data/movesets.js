@@ -53,24 +53,24 @@ export const MOVESETS = {
   helen: {
     // Owner: keep her existing bubble attack as Charge. Air Wave moves to Special.
     basicCharge: m('Balloon Bop', {
-      kind: 'projectile', type: K, damage: 8,
+      kind: 'projectile', type: K, damage: 10,
       chargeDamageMult: 1.7, chargeKnockbackMult: 1.6, chargeRadiusMult: 1.8,
       maxChargeMs: 700, lift: true, vfx: 'balloon',
       baseKnockback: 280, knockbackGrowth: 6.2,
-      projectileSpeed: 340, projectileRadius: 16, projectileLife: 1000,
+      projectileSpeed: 240, projectileRadius: 24, projectileLife: 1800,
       duration: 260, cooldown: 860,
     }),
     basicDirectional: melee('Noble Gust', {
       type: K, damage: 5, baseKnockback: 300, knockbackGrowth: 7.2,
-      rangeW: 64, rangeH: 50, vfx: 'gust', duration: 220, cooldown: 320,
+      rangeW: 82, rangeH: 50, vfx: 'gust', duration: 220, cooldown: 280,
     }),
     specialDefense: m('Bubble Shield', {
       kind: 'shield', duration: 1400, cooldown: 760, vfx: 'bubble', vfxColor: 0xbfefff,
     }),
     specialDirectional: m('Air Wave', {
-      kind: 'projectile', type: K, damage: 7, vfx: 'gust',
+      kind: 'projectile', type: K, damage: 9, vfx: 'gust',
       baseKnockback: 340, knockbackGrowth: 7,
-      projectileSpeed: 480, projectileRadius: 28, projectileLife: 620,
+      projectileSpeed: 360, projectileRadius: 36, projectileLife: 1100,
       duration: 240, cooldown: 860,
     }),
   },
@@ -83,7 +83,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Precision Strike', {
       type: K, damage: 7, sweetSpot: 5, rangeW: 70, vfx: 'strike',
-      duration: 250, cooldown: 540,
+      duration: 250, cooldown: 740,
     }),
     specialDefense: m('Rigid Stance', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.72, noKnockback: true,
@@ -94,7 +94,7 @@ export const MOVESETS = {
       kind: 'projectile', type: K, damage: 9, vfx: 'spark',
       returns: true, angleable: true, pierce: false,
       projectileSpeed: 460, projectileRadius: 12, projectileLife: 1100,
-      baseKnockback: 190, duration: 240, cooldown: 1000,
+      baseKnockback: 190, duration: 240, cooldown: 1180,
     }),
   },
 
@@ -130,7 +130,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Diamond Cross', {
       type: K, damage: 9, baseKnockback: 200, rangeW: 70, vfx: 'strike',
-      duration: 250, cooldown: 460,
+      duration: 250, cooldown: 580,
     }),
     specialDefense: m('Diamond Plating', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.78,
@@ -151,15 +151,15 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Frost Fang', {
       type: K, damage: 5, type2: H, damage2: 4,
-      onHit: { slow: 700 }, vfx: 'ice', duration: 200, cooldown: 320,
+      onHit: { slow: 1200 }, rangeW: 84, vfx: 'ice', duration: 200, cooldown: 300,
     }),
     specialDefense: m('Inert Shield', {
       kind: 'shield', duration: 900, cooldown: 700, vfx: 'bubble', vfxColor: 0xd8fff8,
     }),
     specialDirectional: m('Cryo Vortex', {
-      kind: 'burst', type: H, damage: 10, radius: 84, vfx: 'ice',
-      zone: { type: H, damage: 2, ms: 1600, radius: 78, tick: 400, slide: true, color: 0xbff6ff },
-      baseKnockback: 180, duration: 300, cooldown: 860,
+      kind: 'burst', type: H, damage: 10, radius: 96, vfx: 'ice',
+      zone: { type: H, damage: 3.2, ms: 2600, radius: 90, tick: 400, slide: true, color: 0xbff6ff },
+      baseKnockback: 240, duration: 300, cooldown: 860,
     }),
   },
 
@@ -168,19 +168,19 @@ export const MOVESETS = {
       kind: 'projectile', type: K, damage: 4, flareHeat: 9,
       chargeDamageMult: 1.6, maxChargeMs: 700, vfx: 'gust',
       baseKnockback: 260, knockbackGrowth: 6,
-      projectileSpeed: 500, projectileRadius: 26, projectileLife: 520,
+      projectileSpeed: 380, projectileRadius: 32, projectileLife: 1100,
       duration: 240, cooldown: 640,
     }),
     basicDirectional: melee('Vortex Kick', {
-      type: K, damage: 8, flareHeat: 6, rangeW: 74, vfx: 'gust',
-      duration: 230, cooldown: 340,
+      type: K, damage: 8, flareHeat: 6, rangeW: 88, vfx: 'gust',
+      duration: 230, cooldown: 320,
     }),
     specialDefense: m('Ozone Layer', {
       blocks: [R], duration: 800, cooldown: 720, vfx: 'shield', vfxColor: 0x9ad7ff,
     }),
     specialDirectional: m('Oxidation Burst', {
       kind: 'burst', type: H, damage: 7, type2: C, damage2: 6,
-      radius: 86, rustMetals: true, vfx: 'acid',
+      radius: 108, rustMetals: true, vfx: 'acid',
       baseKnockback: 190, duration: 280, cooldown: 840,
     }),
   },
@@ -239,7 +239,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Flame Fist', {
       type: K, damage: 5, type2: H, damage2: 5, vfx: 'fire', vfxColor: 0xffc14a,
-      duration: 210, cooldown: 300,
+      duration: 240, cooldown: 500,
     }),
     specialDefense: m('Oil Bath', {
       blocks: [C, H],
@@ -321,7 +321,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Glow Strike', {
       type: K, damage: 7, onHit: { burn: { dps: 2.2, ms: 1400 } },
-      vfx: 'fire', vfxColor: 0xe8ffb0, duration: 210, cooldown: 330,
+      vfx: 'fire', vfxColor: 0xe8ffb0, duration: 250, cooldown: 560,
     }),
     specialDefense: m('Red Phosphorus Form', {
       blocks: [H], debuffImmune: true, duration: 900, cooldown: 700,
@@ -458,7 +458,7 @@ export const MOVESETS = {
       duration: 600, cooldown: 700, vfx: 'shield',
     }),
     specialDirectional: m('Aerial Dive', {
-      kind: 'dive', type: K, damage: 11, radius: 78, diveVY: 780, dashSpeed: 220,
+      kind: 'dive', type: K, damage: 11, radius: 88, diveVY: 460, dashSpeed: 160,
       vfx: 'dash', baseKnockback: 240, duration: 420, cooldown: 860,
     }),
   },
@@ -471,8 +471,8 @@ export const MOVESETS = {
       baseKnockback: 230, duration: 280, cooldown: 700,
     }),
     basicDirectional: melee('Lance Jab', {
-      type: K, damage: 8, rangeW: 94, rangeH: 36, vfx: 'strike',
-      duration: 270, cooldown: 520,
+      type: K, damage: 8, rangeW: 84, rangeH: 36, vfx: 'strike',
+      duration: 280, cooldown: 700,
     }),
     specialDefense: m('Aerospace Plating', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.62, blocks: [C], noKnockback: true,
@@ -480,8 +480,8 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Aero Lance', {
       kind: 'projectile', type: K, damage: 11, pierce: true, visualShape: 'spearhead', vfx: 'strike',
-      projectileSpeed: 640, projectileRadius: 10, projectileLife: 620,
-      baseKnockback: 220, duration: 240, cooldown: 780,
+      projectileSpeed: 480, projectileRadius: 10, projectileLife: 700,
+      baseKnockback: 220, duration: 240, cooldown: 1100,
     }),
   },
 
@@ -492,15 +492,15 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Alloy Fist', {
       type: K, damage: 9, breaksBlock: 'weak', vfx: 'strike',
-      baseKnockback: 200, duration: 270, cooldown: 580,
+      baseKnockback: 200, duration: 270, cooldown: 800,
     }),
     specialDefense: m('Four-State Guard', {
       cycle: [E, C, H, K], cycleMs: 360,
       duration: 1200, cooldown: 700, vfx: 'spark',
     }),
     specialDirectional: m('Prism Surge', {
-      kind: 'burst', type: E, damage: 12, radius: 90, vfx: 'spark', vfxColor: 0x8af5c9,
-      baseKnockback: 180, duration: 260, cooldown: 800,
+      kind: 'burst', type: E, damage: 12, radius: 82, vfx: 'spark', vfxColor: 0x8af5c9,
+      baseKnockback: 180, duration: 260, cooldown: 1100,
     }),
   },
 
@@ -512,15 +512,15 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Chrome Edge', {
       type: K, damage: 10, rangeW: 74, vfx: 'strike', vfxColor: 0xe8eef2,
-      baseKnockback: 190, duration: 260, cooldown: 560,
+      baseKnockback: 190, duration: 280, cooldown: 820,
     }),
     specialDefense: m('Mirror Chrome', {
       reflectProjectiles: true, duration: 700, cooldown: 720,
       vfx: 'shield', vfxColor: 0xe8eef2,
     }),
     specialDirectional: m('Prismatic Shatter', {
-      kind: 'burst', type: K, damage: 12, radius: 92, vfx: 'spark', vfxColor: 0xff2a3a,
-      baseKnockback: 210, duration: 280, cooldown: 840,
+      kind: 'burst', type: K, damage: 12, radius: 80, vfx: 'spark', vfxColor: 0xff2a3a,
+      baseKnockback: 210, duration: 280, cooldown: 1100,
     }),
   },
 };

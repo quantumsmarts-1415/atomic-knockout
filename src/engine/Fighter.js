@@ -159,6 +159,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (this.rootedUntil > time) vx = 0;
       if (this.state === 'attack' && onGround) vx *= 0.25; // plant feet on ground attacks
       if (this.dashUntil && time < this.dashUntil) vx = this.dashVX; // kind:'dash' overrides normal movement
+      if (this.diveUntil && time < this.diveUntil) vx = this.diveVX ?? vx;
       // Only stomp horizontal velocity when grounded (instant arcade
       // stop/go) or when a direction is actively held (air control).
       // Otherwise leave existing velocity alone -- without this, a
@@ -228,6 +229,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
     }
 
+    if (this.diveUntil || (this.dashUntil && time < this.dashUntil)) this.holdDiveOnDeck();
     if (this.diveUntil && time >= (this.diveArm ?? 0) && (onGround || time >= this.diveUntil)) {
       this.scene.resolveBurst?.(this, this.diveMove);
       this.diveUntil = 0;
@@ -295,10 +297,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
     } else if (move.kind === 'beam') {
       this.scene.resolveBeam?.(this, move);
     } else if (move.kind === 'dive') {
-      this.body.setVelocity(this.facing * (move.dashSpeed ?? 220), -(move.diveVY ?? 420));
+      const hop = move.dashSpeed ?? 160;
+      this.diveVX = this.facing * hop;
+      this.body.setVelocity(this.diveVX, -(move.diveVY ?? 420));
       this.diveUntil = time + move.duration;
       this.diveArm = time + 160;
       this.diveMove = move;
+      this.holdDiveOnDeck();
     } else if (move.kind === 'burst') {
       // burst hits everything in a radius partway through the animation.
       // Moves that can be interrupted on purpose (Supernova popping early)
@@ -396,6 +401,25 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.specialCooldownUntil = time + move.duration + move.cooldown;
     playVfx(this.scene, this, move, 'defense');
     applyOnCast(this, move, time, 1);
+  }
+
+  // A dive hop keeps its own horizontal speed, then stops at the lip of the
+  // deck. Air control must not replace that hop with a full run, or the
+  // landing carries her off the stage.
+  holdDiveOnDeck() {
+    if (!this.body) return;
+    const next = diveVelocityX(
+      this.x,
+      this.body.velocity.x,
+      this.scene.stage?.solids,
+      (this.scene.stepMs || 16.7) / 1000,
+    );
+    if (next === this.body.velocity.x) return;
+    const back = next !== 0 && Math.sign(next) !== Math.sign(this.body.velocity.x || this.facing || 1);
+    this.diveVX = next;
+    this.dashVX = next;
+    this.body.setVelocityX(next);
+    if (back && this.body.velocity.y > -80) this.body.setVelocityY(-320);
   }
 
   // Axis-aligned hitbox in world space for the current melee attack.
@@ -624,4 +648,23 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.scene.tweens.add({ targets: this, alpha: 0.35, yoyo: true, repeat: 5, duration: 120, onComplete: () => (this.alpha = 1) });
     });
   }
+}
+
+// Horizontal speed for an aerial dive. Zero it when the next step would
+// leave the deck, and point it back if she is already past the lip.
+export function diveVelocityX(x, vx, solids, stepSec = 0.0167, margin = 40) {
+  const list = solids || [];
+  const ground = list.filter((s) => s.h == null);
+  const src = ground.length ? ground : list;
+  if (!src.length) return vx;
+  const covers = (px) => src.some((s) => px >= s.x - s.w / 2 + margin && px <= s.x + s.w / 2 - margin);
+  if (!covers(x)) {
+    let best = src[0];
+    for (const s of src) if (Math.abs(s.x - x) < Math.abs(best.x - x)) best = s;
+    const dir = Math.sign(best.x - x) || 1;
+    return dir * Math.max(160, Math.abs(vx) || 160);
+  }
+  const step = Math.max(stepSec, 0.012);
+  if (!covers(x + vx * step)) return 0;
+  return vx;
 }

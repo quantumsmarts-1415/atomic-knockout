@@ -76,7 +76,7 @@ export function computeBotInput(time, bot, fighters, bounds, nav = null) {
     input.jump = false;
   }
 
-  tryAttacks(time, bot, target, ai, input);
+  tryAttacks(time, bot, target, ai, input, bounds);
   return applyScriptedSlots(time, bot, input);
 }
 
@@ -120,7 +120,7 @@ function navBotInput(time, bot, targets, nav) {
 
   if (!grounded) {
     airControl(time, bot, target, nav, ai, input, moveTo);
-    if (target) tryAttacks(time, bot, target, ai, input);
+    if (target) tryAttacks(time, bot, target, ai, input, deckOf(nav, ai));
     return applyScriptedSlots(time, bot, input);
   }
   if (!cur) {
@@ -167,7 +167,7 @@ function navBotInput(time, bot, targets, nav) {
   }
   followEdge(time, bot, e, cur, nav, ai, input, moveTo);
   // opportunistic swings at anyone level with us on the way
-  tryAttacks(time, bot, target, ai, input);
+  tryAttacks(time, bot, target, ai, input, deckOf(nav, ai));
   return applyScriptedSlots(time, bot, input);
 }
 
@@ -293,7 +293,7 @@ function engage(time, bot, target, cur, nav, ai, input, moveTo) {
     input.jump = true; // the odd hop so they don't look glued down
     ai.nextJumpAt = time + 600;
   }
-  tryAttacks(time, bot, target, ai, input);
+  tryAttacks(time, bot, target, ai, input, deckOf(nav, ai));
 }
 
 function roll(bot) {
@@ -301,7 +301,32 @@ function roll(bot) {
   return typeof rng === 'function' ? rng() : Math.random();
 }
 
-function tryAttacks(time, bot, target, ai, input) {
+function deckOf(nav, ai) {
+  if (ai.deck) return ai.deck;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  for (const n of nav.nodes) {
+    if (n.kind === 'stop') continue;
+    if (n.x0 < minX) minX = n.x0;
+    if (n.x1 > maxX) maxX = n.x1;
+  }
+  ai.deck = { minX, maxX };
+  return ai.deck;
+}
+
+function diveLeavesDeck(bot, input, target, bounds) {
+  const move = bot.charDef?.moves?.specialDirectional;
+  if (!bounds || move?.kind !== 'dive') return false;
+  let dir = 0;
+  if (input.right && !input.left) dir = 1;
+  else if (input.left && !input.right) dir = -1;
+  else dir = Math.sign((target?.x ?? bot.x) - bot.x) || bot.facing || 1;
+  const travel = (move.dashSpeed ?? 160) * 0.9 + 80;
+  if (dir > 0) return bot.x + travel > bounds.maxX;
+  return bot.x - travel < bounds.minX;
+}
+
+function tryAttacks(time, bot, target, ai, input, bounds) {
   if (input.down) return;
   const basic = bot.charDef.moves.basicDirectional;
   const special = bot.charDef.moves.specialDirectional;
@@ -317,6 +342,7 @@ function tryAttacks(time, bot, target, ai, input) {
     && time >= ai.nextSpecialAt && time >= (bot.specialCooldownUntil ?? 0);
   // Both buttons are edge-triggered on the same frame; attack would eat the
   // special press. Alternate so a bot actually uses both directional moves.
+  if (wantSpecial && diveLeavesDeck(bot, input, target, bounds)) wantSpecial = false;
   if (wantBasic && wantSpecial) {
     if ((ai.swing ?? 0) % 2 === 0) wantSpecial = false;
     else wantBasic = false;

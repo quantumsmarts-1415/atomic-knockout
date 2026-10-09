@@ -558,6 +558,52 @@ export default class BattleScene extends Phaser.Scene {
     this.spawnZone(p.owner, p.move.dropZone, p.gfx.x, p.gfx.y);
   }
 
+  consumeZones(fighter, spec) {
+    if (!this.zones?.length || !spec) return 0;
+    let n = 0;
+    const radius = spec.radius ?? 140;
+    const want = spec.type;
+    for (const z of this.zones) {
+      if (z.dead || z.owner === fighter) continue;
+      const toxic = z.spec?.type === 'chemical' || z.spec?.onHit?.poison;
+      if (want && z.spec?.type !== want && !(want === 'chemical' && toxic)) continue;
+      const d = Math.hypot(z.x - fighter.x, z.y - (fighter.y - fighter.bodyH * 0.4));
+      if (d > radius + (z.radius ?? 0) * 0.4) continue;
+      z.dead = true;
+      z.gfx?.destroy?.();
+      n += 1;
+    }
+    if (n) {
+      fighter.bonusHits = (fighter.bonusHits ?? 0) + n;
+      fighter.bonusPacket = {
+        type: spec.bonusType ?? 'heat',
+        damage: spec.bonus ?? 3,
+        hitsName: fighter.charDef?.moves?.basicCharge?.name,
+      };
+    }
+    return n;
+  }
+
+  dropPins(fighter) {
+    for (const p of this.projectiles ?? []) {
+      if (p.pinOwner !== fighter || p.dead) continue;
+      p.move = { ...p.move, explodeOnly: false, dropZone: null, igniteAt: 0 };
+      p.gfx?.destroy?.();
+      p.dead = true;
+    }
+  }
+
+  sweepMarked(owner, move, already) {
+    if (!move?.hitMarked || !owner) return;
+    const now = this.time.now;
+    for (const target of this.fighters) {
+      if (already?.has(target) || target === owner || !target.alive || target.state === 'ko') continue;
+      if (target.mark !== move.hitMarked || !(target.markUntil > now)) continue;
+      if (target.markedBy !== owner.charDef?.id) continue;
+      this.landHit(owner, target, { ...move, hitMarked: null });
+    }
+  }
+
   spawnProjectile(owner, move) {
     if (move.fanTypes?.length && !move._fanChild) {
       const types = move.fanTypes;
@@ -604,6 +650,7 @@ export default class BattleScene extends Phaser.Scene {
         vy,
         dieAt: this.time.now + move.projectileLife,
         born: this.time.now,
+        armAt: move.delayMs ? this.time.now + move.delayMs : 0,
         landed: new Set(),
         radius: r,
       });
@@ -662,6 +709,7 @@ export default class BattleScene extends Phaser.Scene {
       vy,
       dieAt: this.time.now + move.projectileLife,
       born: this.time.now,
+      armAt: move.delayMs ? this.time.now + move.delayMs : 0,
       landed: new Set(),
       radius: r,
     });
@@ -673,6 +721,7 @@ export default class BattleScene extends Phaser.Scene {
     playVfx(this, owner, move, 'release', { x: cx, y: cy });
 
     let hits = 0;
+    const struck = new Set();
     for (const target of this.fighters) {
       if (!move.includeSelf && target === owner) continue;
       if (!target.alive || target.state === 'ko') continue;
@@ -683,9 +732,11 @@ export default class BattleScene extends Phaser.Scene {
       );
       if (Phaser.Math.Distance.Between(cx, cy, nearest.x, nearest.y) <= (move.radius ?? 70)) {
         this.landHit(owner, target, move);
+        struck.add(target);
         hits += 1;
       }
     }
+    this.sweepMarked(owner, move, struck);
     if (move.missRetry && hits === 0 && !move._retried) {
       this.time.delayedCall(180, () => {
         if (owner.alive) this.resolveBurst(owner, { ...move, _retried: true, missRetry: false });
@@ -738,12 +789,15 @@ export default class BattleScene extends Phaser.Scene {
     const y = owner.y - owner.bodyH * 0.62;
     const rect = new Phaser.Geom.Rectangle(x, y - thick / 2, len, thick);
     playVfx(this, owner, move, 'release');
+    const struck = new Set();
     for (const target of this.fighters) {
       if (target === owner || !target.alive || target.state === 'ko') continue;
       if (Phaser.Geom.Rectangle.Overlaps(rect, target.getHurtboxRect())) {
         this.landHit(owner, target, move, owner.facing);
+        struck.add(target);
       }
     }
+    this.sweepMarked(owner, move, struck);
   }
 
   spawnZone(owner, spec, x, y) {
@@ -1112,6 +1166,37 @@ export default class BattleScene extends Phaser.Scene {
         p.returning = true;
         p.landed = new Set();
       }
+      if (p.move.homing && !p.pinned) {
+        let best = null;
+        let bestD = Infinity;
+        for (const f of this.fighters) {
+          if (f === p.owner || !f.alive || f.state === 'ko' || f.state === 'dead') continue;
+          const d = Math.hypot(f.x - p.gfx.x, (f.y - f.bodyH * 0.5) - p.gfx.y);
+          if (d < bestD) { bestD = d; best = f; }
+        }
+        if (best) {
+          const speed = Math.hypot(p.vx, p.vy) || p.move.projectileSpeed || 300;
+          const dx = best.x - p.gfx.x;
+          const dy = (best.y - best.bodyH * 0.5) - p.gfx.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const k = Math.min(1, (p.move.homing === true ? 4 : p.move.homing) * delta / 1000);
+          p.vx += ((dx / len) * speed - p.vx) * k;
+          p.vy += ((dy / len) * speed - p.vy) * k;
+        }
+      }
+      if (!p.pinned) {
+        for (const f of this.fighters) {
+          const reach = f.state === 'defending' ? f.defenseMove?.pinProjectiles : 0;
+          if (!reach || f === p.owner || !f.alive) continue;
+          if (Math.hypot(f.x - p.gfx.x, (f.y - f.bodyH * 0.5) - p.gfx.y) > reach) continue;
+          p.pinned = true;
+          p.pinOwner = f;
+          p.vx = 0;
+          p.vy = 0;
+          p.move = { ...p.move, damage: 0, damage2: 0, explodeOnly: false, dropZone: null, igniteAt: 0, homing: 0 };
+          break;
+        }
+      }
       if (!p.dead) {
         for (const f of this.fighters) {
           const pull = f.state === 'attack' && f.currentMove?.attractProjectiles;
@@ -1139,16 +1224,54 @@ export default class BattleScene extends Phaser.Scene {
           }
         }
       }
-      p.gfx.x += (p.vx * delta) / 1000;
-      p.gfx.y += (p.vy * delta) / 1000 + Math.sin(time / 90) * 0.25;
+      if (p.pinned) p.gfx.y += (90 * delta) / 1000;
+      else {
+        p.gfx.x += (p.vx * delta) / 1000;
+        p.gfx.y += (p.vy * delta) / 1000 + Math.sin(time / 90) * 0.25;
+      }
+      if (p.move.ricochet && !p.pinned) {
+        const cap = p.move.ricochet === true ? 2 : p.move.ricochet;
+        if ((p.bounces ?? 0) < cap) {
+          const solids = (this.stage?.solids ?? []).filter((s) => s.h == null);
+          const deck = solids.find((s) => p.gfx.x >= s.x - s.w / 2 - 8 && p.gfx.x <= s.x + s.w / 2 + 8);
+          if (deck) {
+            const left = deck.x - deck.w / 2 + 16;
+            const right = deck.x + deck.w / 2 - 16;
+            if (p.gfx.x < left || p.gfx.x > right) {
+              p.vx *= -1;
+              p.gfx.x = Phaser.Math.Clamp(p.gfx.x, left, right);
+              p.bounces = (p.bounces ?? 0) + 1;
+              p.landed = new Set();
+            }
+          }
+        }
+      }
       const off = p.gfx.x < -80 || p.gfx.x > this.world.width + 80 || p.gfx.y > this.world.height + 80;
       if (time > p.dieAt || off) {
-        if (p.move.explodeOnly) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
-        this.dropProjectileZone(p);
+        if (p.move.explodeOnly && !p.pinned) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
+        if (!p.pinned) this.dropProjectileZone(p);
         p.gfx.destroy();
         p.dead = true;
         continue;
       }
+      if (p.move.igniteAt && !p.ignited && !p.pinned && time >= p.born + p.move.projectileLife * p.move.igniteAt) {
+        p.ignited = true;
+        this.resolveBurst(p.owner, {
+          ...p.move,
+          kind: 'burst',
+          type: p.move.igniteType ?? 'heat',
+          damage: p.move.igniteDamage ?? p.move.damage,
+          type2: undefined,
+          damage2: undefined,
+          radius: p.move.igniteRadius ?? 52,
+          igniteAt: 0,
+          onHit: p.move.igniteOnHit ?? p.move.onHit,
+        }, { x: p.gfx.x, y: p.gfx.y });
+        p.gfx.destroy();
+        p.dead = true;
+        continue;
+      }
+      if (p.pinned || (p.armAt && time < p.armAt)) continue;
       for (const victim of this.fighters) {
         if (victim === p.owner || !victim.alive || victim.state === 'ko' || !victim.visible || p.landed.has(victim)) continue;
         const rect = victim.getHurtboxRect();

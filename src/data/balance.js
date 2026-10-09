@@ -227,6 +227,7 @@ export function resolvePacket(amount, type, atkCombat, defCombat, opts = {}) {
   if (canonicalType(type) === 'kinetic' && opts.kinDefMult != null) mult *= opts.kinDefMult;
   if (canonicalType(type) === 'kinetic' && opts.kineticTakenMult != null) mult *= opts.kineticTakenMult;
   if (canonicalType(type) === 'heat' && opts.heatTakenMult != null) mult *= opts.heatTakenMult;
+  if (canonicalType(type) === 'chemical' && opts.chemTakenMult != null) mult *= opts.chemTakenMult;
   if (canonicalType(type) === 'chemical' && opts.chemDealtMult != null) dmg *= opts.chemDealtMult;
   dmg *= mult;
   if (opts.takenMult) dmg *= opts.takenMult;

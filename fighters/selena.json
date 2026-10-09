@@ -1,0 +1,56 @@
+{
+  "id": "selena",
+  "name": "Selena",
+  "element": "Selenium",
+  "symbol": "Se",
+  "atomicNumber": 34,
+  "tagline": "Photoconductor",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "nonmetal",
+    "metal": false,
+    "noble": false,
+    "density": 4.81,
+    "mohs": 2,
+    "tensile": 0,
+    "boiling": 958,
+    "conductivity": 0,
+    "en": 2.55
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 12635831,
+      "body": 3840650,
+      "accent": 9681546,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 12635831,
+      "body": 3107422,
+      "accent": 9681546,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 12635831,
+      "body": 11522242,
+      "accent": 9681546,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 12635831,
+      "body": 1779758,
+      "accent": 9681546,
+      "eye": 16055295
+    }
+  ]
+}

@@ -61,6 +61,14 @@ const TRIOS = [
   ['lana', 'goldie', 'holly'],
   ['lucy', 'frank', 'pablo'],
   ['krypto', 'hydra', 'helen'],
+  ['percy', 'rhoda', 'ronan'],
+  ['ruben', 'ruth', 'saab'],
+  ['sam', 'sandy', 'selena'],
+  ['sterling', 'terra', 'tessa'],
+  ['tex', 'thule', 'xander'],
+  ['yara', 'yvette', 'zane'],
+  ['selena', 'ronan', 'sterling'],
+  ['yara', 'zane', 'thule'],
 ];
 
 function matchSeed(kind, ids, rep) {

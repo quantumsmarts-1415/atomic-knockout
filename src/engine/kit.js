@@ -18,6 +18,12 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.freeze) lock(victim, time, fx.freeze, true);
   if (fx.root) victim.rootedUntil = Math.max(victim.rootedUntil ?? 0, time + fx.root);
   if (fx.blind) victim.blindUntil = time + fx.blind;
+  if (fx.miss) victim.missNext = (victim.missNext ?? 0) + (fx.miss === true ? 1 : fx.miss);
+  if (fx.reveal) victim.phasingUntil = 0;
+  if (fx.chemVulnerable) {
+    victim.chemVulnerableMult = fx.chemVulnerable;
+    victim.chemVulnerableUntil = time + (fx.chemVulnerableMs ?? 2400);
+  }
   if (fx.drift) victim.driftUntil = time + fx.drift;
   if (fx.interrupt) lock(victim, time, fx.interrupt, true);
   if (fx.poison) {
@@ -72,6 +78,7 @@ export function cleanse(fighter, kinds) {
   const list = kinds ?? [];
   if (list.includes('poison')) fighter.poisonUntil = 0;
   if (list.includes('burn')) fighter.burnUntil = 0;
+  if (list.includes('blind')) fighter.blindUntil = 0;
   if (list.includes('slow')) fighter.slowUntil = 0;
   if (list.includes('mark')) fighter.markUntil = 0;
   if (list.includes('debuff')) stripBuffs(fighter);
@@ -153,6 +160,10 @@ function grantBuff(fighter, buff, time) {
   if (buff.heatTaken != null) {
     fighter.heatResistMult = buff.heatTaken;
     fighter.heatResistUntil = time + ms;
+  }
+  if (buff.chemTaken != null) {
+    fighter.chemResistMult = buff.chemTaken;
+    fighter.chemResistUntil = time + ms;
   }
   if (buff.kineticTaken != null) {
     fighter.kineticResistMult = buff.kineticTaken;
@@ -246,6 +257,22 @@ export function prepareMove(move, attacker, defender, now = 0) {
   if (move.bonusVsBuff && buffed) {
     next = { ...next, damage: (next.damage ?? 0) * move.bonusVsBuff, damage2: next.damage2 != null ? next.damage2 * move.bonusVsBuff : next.damage2 };
   }
+  if (move.bonusVsMetal && defender?.charDef?.combat?.metal) {
+    const mult = move.bonusVsMetal;
+    next = {
+      ...next,
+      damage: (next.damage ?? 0) * mult,
+      damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
+    };
+  }
+  if (move.bonusVsPercent && defender) {
+    const mult = 1 + Math.min(1.1, ((defender.percent ?? 0) / 100) * move.bonusVsPercent);
+    next = {
+      ...next,
+      damage: (next.damage ?? 0) * mult,
+      damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
+    };
+  }
   if (move.bonusVsMark && defender?.mark === move.bonusVsMark && defender.markUntil > now && defender.markedBy === attacker?.charDef?.id) {
     const mult = move.markMult ?? 1.35;
     next = { ...next, damage: (next.damage ?? 0) * mult, damage2: next.damage2 != null ? next.damage2 * mult : next.damage2 };
@@ -262,6 +289,12 @@ export function combatOpts(defender) {
   const opts = {};
   if (defender.kinDefMultUntil > now) opts.kinDefMult = defender.kinDefMult ?? 0.75;
   if (defender.heatResistUntil > now) opts.heatTakenMult = defender.heatResistMult ?? 0.4;
+  let chem = null;
+  if (defender.chemResistUntil > now && defender.chemResistMult != null) chem = defender.chemResistMult;
+  if (defender.chemVulnerableUntil > now && defender.chemVulnerableMult != null) {
+    chem = (chem ?? 1) * defender.chemVulnerableMult;
+  }
+  if (chem != null) opts.chemTakenMult = chem;
   if (defender.kineticResistUntil > now && defender.kineticResistMult != null) {
     opts.kineticTakenMult = defender.kineticResistMult;
   }

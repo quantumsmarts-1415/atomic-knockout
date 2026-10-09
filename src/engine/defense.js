@@ -28,7 +28,17 @@ function counterHitFx(defense, retort) {
   if (defense?.counterBlind) on.blind = defense.counterBlind;
   if (retort?.stun) on.stun = retort.stun;
   if (retort?.blind) on.blind = retort.blind;
+  if (retort?.slow) on.slow = retort.slow;
   return Object.keys(on).length ? on : undefined;
+}
+
+function groundSlam(move, attacker) {
+  if (move?.ground || move?.slam) return true;
+  const b = attacker?.body;
+  const grounded = !!(b && (b.blocked?.down || b.touching?.down));
+  if (!grounded) return false;
+  const k = move?.kind;
+  return !k || k === 'dash' || k === 'burst';
 }
 
 function rootMs(defense, attacker) {
@@ -67,7 +77,25 @@ export function interceptHit(defender, attacker, move, time) {
   if (move?.isSelf) return { result: 'pass' };
 
   const types = typesOf(move);
-  if (defense.phase && !move?.breakPhase) {
+  if (defense.absorbTypes?.length && !move?.isCounterAttack && types.some((t) => defense.absorbTypes.includes(t))) {
+    return { result: 'negate', endDefense: true };
+  }
+  if (defense.blockGround && !move?.isCounterAttack && groundSlam(move, attacker)) {
+    return {
+      result: 'counter',
+      counter: {
+        name: defense.name,
+        damage: defense.counterDamage ?? 6,
+        type: defense.counterType ?? 'kinetic',
+        baseKnockback: defense.counterKnockback ?? 120,
+        knockbackGrowth: defense.counterKnockbackGrowth ?? 1.6,
+        isCounterAttack: true,
+        onHit: counterHitFx(defense),
+      },
+    };
+  }
+  // phase:true dodges everything. phase:'overhead' still takes ground-tagged hits.
+  if (defense.phase && !move?.breakPhase && !(defense.phase === 'overhead' && move?.ground)) {
     const ret = defense.phaseRetort;
     if (ret && !move?.isCounterAttack) {
       return {

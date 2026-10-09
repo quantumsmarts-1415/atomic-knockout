@@ -1,0 +1,56 @@
+{
+  "id": "saab",
+  "name": "Saab",
+  "element": "Antimony",
+  "symbol": "Sb",
+  "atomicNumber": 51,
+  "tagline": "Printing Press",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "metalloid",
+    "metal": false,
+    "noble": false,
+    "density": 6.694,
+    "mohs": 3,
+    "tensile": 11,
+    "boiling": 1908,
+    "conductivity": 2.5,
+    "en": 2.05
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 13814693,
+      "body": 8032074,
+      "accent": 11973479,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 13814693,
+      "body": 5792564,
+      "accent": 11973479,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 13814693,
+      "body": 13159593,
+      "accent": 11973479,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 13814693,
+      "body": 2696736,
+      "accent": 11973479,
+      "eye": 16055295
+    }
+  ]
+}

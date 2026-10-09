@@ -5,6 +5,7 @@ import { resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, interceptHit } from './defense.js';
 import { applyOnCast, applyOnHit, bonusPackets, combatOpts, prepareMove, tickKit, weakestType } from './kit.js';
 import { playVfx } from './MoveVfx.js';
+import { hurtboxes, hurtUnion, hitboxes, pushbox } from './boxes.js';
 import { play as sfx, playHit } from './sfx.js';
 import {
   FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, launchAngle,
@@ -41,104 +42,121 @@ const GRAVITY = 1500;
 // 40–60%. The stored kits stay as written; only the dealt total moves.
 // Filled after the 150% knockback curve, so an old nudge is not reused.
 const BAND_DAMAGE = {
-  aaron: 1.15,
-  ace: 0.89,
-  agatha: 0.77,
-  allen: 0.78,
-  amy: 1.06,
-  arsenio: 1.09,
-  aurelius: 0.77,
-  barry: 1.42,
-  ben: 0.71,
-  bianca: 0.83,
+  aaron: 1.31,
+  ace: 0.82,
+  agatha: 0.88,
+  allen: 1.02,
+  amy: 1.77,
+  arsenio: 1.67,
+  aurelius: 0.90,
+  barry: 1.30,
+  ben: 0.73,
+  bianca: 0.67,
   boar: 1.28,
   bord: 0.89,
+  brock: 0.97,
   burke: 0.96,
-  caesar: 1.26,
+  caesar: 1.57,
   cal: 0.86,
-  cali: 0.88,
-  carter: 0.69,
-  ceres: 1.06,
-  chloe: 1.43,
-  chroma: 0.59,
-  cody: 1.12,
-  cooper: 0.90,
+  cali: 1.03,
+  carter: 1.10,
+  ceres: 1.18,
+  chloe: 1.33,
+  chroma: 0.42,
+  cody: 1.01,
+  collin: 0.72,
+  cooper: 1.23,
   copernicus: 2.60,
-  curie: 1.03,
-  dizzy: 1.16,
+  curie: 0.94,
+  dizzy: 1.34,
   duke: 1.04,
-  erin: 1.08,
-  europa: 1.22,
+  einstein: 0.87,
+  erin: 1.21,
+  europa: 1.15,
   fermi: 1.18,
-  fey: 1.07,
+  fey: 1.19,
   flo: 1.03,
-  flora: 0.81,
-  ford: 1.17,
-  gail: 1.24,
-  gertrude: 0.86,
-  goldie: 1.15,
+  flora: 1.33,
+  ford: 1.27,
+  frank: 1.03,
+  gail: 1.20,
+  gertrude: 1.04,
+  goldie: 1.29,
+  haley: 0.92,
   helen: 0.58,
-  hog: 1.10,
-  holly: 1.09,
+  hog: 0.92,
+  hoss: 0.97,
+  holly: 1.25,
   hydra: 0.78,
   indy: 1.30,
-  iona: 1.33,
+  iona: 1.03,
   ira: 1.20,
   krypto: 1.27,
-  lana: 0.89,
+  kyle: 1.30,
+  lana: 0.96,
   lars: 1.04,
-  lillie: 0.70,
+  lillie: 0.73,
   liv: 1.15,
-  lucy: 1.17,
-  mae: 1.63,
-  maggie: 0.89,
-  manny: 1.40,
-  mendel: 1.14,
-  nadia: 0.88,
-  natalie: 0.56,
-  neo: 0.70,
+  lucy: 1.28,
+  mac: 0.88,
+  mae: 1.26,
+  maggie: 1.15,
+  manny: 1.30,
+  mendel: 0.91,
+  molly: 0.79,
+  nadia: 0.77,
+  natalie: 0.48,
+  neo: 0.76,
   neptune: 0.93,
-  niko: 1.12,
-  niobe: 1.10,
+  nick: 0.81,
+  niko: 1.07,
+  niobe: 1.01,
   noble: 1.15,
-  ogden: 1.23,
-  oxana: 0.78,
-  oz: 1.18,
+  ogden: 1.40,
+  oxana: 1.08,
+  oz: 1.14,
   pablo: 1.09,
-  paula: 1.26,
-  percy: 1.15,
-  phillip: 1.42,
+  pat: 0.95,
+  paula: 1.14,
+  percy: 1.28,
+  phillip: 1.29,
   pit: 0.69,
+  pluto: 0.84,
   polonius: 0.86,
-  prometheus: 0.90,
-  ray: 3.03,
-  rex: 0.80,
-  rhoda: 1.05,
-  roger: 0.91,
-  ronan: 1.80,
-  ruben: 1.33,
-  ruth: 1.31,
-  saab: 1.30,
-  sam: 1.18,
+  prometheus: 1.03,
+  ray: 3.28,
+  rex: 1.06,
+  rhoda: 1.52,
+  roger: 1.14,
+  ronan: 1.67,
+  ruben: 1.10,
+  ruth: 1.55,
+  saab: 1.35,
+  sam: 0.94,
+  sandy: 1.09,
   sarge: 1.09,
-  selena: 1.18,
-  silas: 0.78,
-  sully: 0.87,
-  talia: 1.89,
+  scarlett: 0.90,
+  selena: 1.37,
+  silas: 0.97,
+  sterling: 0.96,
+  sully: 1.23,
+  talia: 1.61,
+  tara: 1.14,
   tate: 1.22,
-  tess: 0.91,
-  tessa: 1.30,
+  tess: 1.78,
+  tessa: 1.12,
   tex: 1.04,
   thor: 1.13,
-  thule: 1.19,
-  titan: 0.77,
+  thule: 1.04,
+  titan: 0.62,
   uri: 0.83,
-  van: 0.84,
+  van: 0.94,
   wolf: 0.71,
   xander: 1.63,
-  yara: 1.37,
-  zane: 1.23,
-  zora: 1.15,
+  yara: 1.09,
+  yvette: 0.92,
+  zane: 1.13,
+  zora: 1.57,
 };
 
 function dealtDamage(attacker, move, defender) {
@@ -244,6 +262,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
     const stats = this.charDef.stats;
     const onGround = this.body.blocked.down || this.body.touching.down;
+    this.grounded = onGround;
 
     if (onGround) {
       this.airJumpsLeft = stats.airJumps;
@@ -930,28 +949,37 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (back && this.body.velocity.y > -80) this.body.setVelocityY(-320);
   }
 
+  // Head, torso, and legs, in world space, for the pose he is in now.
+  getHurtboxes() {
+    return hurtboxes(this);
+  }
+
+  getPushbox() {
+    return pushbox(this);
+  }
+
+  // Every live strike box. A dash uses the body itself.
+  getHitboxes() {
+    return hitboxes(this);
+  }
+
   // Axis-aligned hitbox in world space for the current melee attack.
+  // One rectangle covering every live strike box, for callers that want a tip.
   getHitboxRect() {
-    if (!this.activeHit) return null;
-    const t = this.scene.time.now;
-    if (t < this.activeHit.from || t > this.activeHit.until) return null;
-    const m = this.activeHit.move;
-    const dir = this.activeHit.dir;
-    // Dash hitboxes are anchored at his own back edge (his whole body sweeps
-    // through as the hitbox) instead of offset in front of him.
-    const isDash = m.kind === 'dash';
-    const x = dir === 1
-      ? (isDash ? this.x - this.bodyW / 2 : this.x + this.bodyW * 0.2)
-      : (isDash ? this.x + this.bodyW / 2 - m.rangeW : this.x - this.bodyW * 0.2 - m.rangeW);
-    const y = this.y - this.bodyH * 0.75;
-    return new Phaser.Geom.Rectangle(x, y, m.rangeW, m.rangeH);
+    const list = hitboxes(this);
+    if (!list.length) return null;
+    const x0 = Math.min(...list.map((r) => r.x));
+    const y0 = Math.min(...list.map((r) => r.y));
+    const x1 = Math.max(...list.map((r) => r.x + r.width));
+    const y1 = Math.max(...list.map((r) => r.y + r.height));
+    return new Phaser.Geom.Rectangle(x0, y0, x1 - x0, y1 - y0);
   }
 
   getHurtboxRect() {
-    // Anchored at the feet, same origin as the sprite foot line. The height
-    // is the gameplay body, not the sprite cell, so a hair lock or a glow
-    // does not change who gets hit.
-    return new Phaser.Geom.Rectangle(this.x - this.bodyW / 2, this.y - this.bodyH, this.bodyW, this.bodyH);
+    // Union of the part boxes. Beams and zones that only need a rough body
+    // still work; melee and projectiles test the parts.
+    const u = hurtUnion(this);
+    return new Phaser.Geom.Rectangle(u.x, u.y, u.width, u.height);
   }
 
   /**

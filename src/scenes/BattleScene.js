@@ -16,6 +16,7 @@ import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 import { Juice } from '../engine/juice.js';
 import { FEEL, frameZoom, percentColor } from '../engine/feel.js';
+import { resolvePush, rectsOverlap, circleHitsRects, projectileRect, projectileSpriteSize } from '../engine/boxes.js';
 
 const GRAVITY = 1500;
 
@@ -136,6 +137,9 @@ export default class BattleScene extends Phaser.Scene {
     // pause menu hook (M4): ESC or P
     this.input.keyboard.on('keydown-ESC', () => this.togglePause());
     this.input.keyboard.on('keydown-P', () => this.togglePause());
+    this.showBoxes = false;
+    this.boxGfx = this.add.graphics().setDepth(80);
+    this.input.keyboard.on('keydown-H', () => { this.showBoxes = !this.showBoxes; });
   }
 
   // ----------------------------------------------------------------- camera
@@ -768,6 +772,8 @@ export default class BattleScene extends Phaser.Scene {
         armAt: move.delayMs ? this.time.now + move.delayMs : 0,
         landed: new Set(),
         radius: r,
+        spriteW: projectileSpriteSize(move).w,
+        spriteH: projectileSpriteSize(move).h,
       });
       return;
     }
@@ -839,6 +845,8 @@ export default class BattleScene extends Phaser.Scene {
       armAt: move.delayMs ? this.time.now + move.delayMs : 0,
       landed: new Set(),
       radius: r,
+      spriteW: projectileSpriteSize(move).w,
+      spriteH: projectileSpriteSize(move).h,
     });
   }
 
@@ -857,12 +865,7 @@ export default class BattleScene extends Phaser.Scene {
         const dy = Math.abs((target.y - (target.bodyH ?? 0) * 0.4) - (owner.y - (owner.bodyH ?? 0) * 0.5));
         if (ahead > 30 && dy < 90 && ahead < 340) continue;
       }
-      const rect = target.getHurtboxRect();
-      const nearest = new Phaser.Geom.Point(
-        Phaser.Math.Clamp(cx, rect.left, rect.right),
-        Phaser.Math.Clamp(cy, rect.top, rect.bottom),
-      );
-      if (Phaser.Math.Distance.Between(cx, cy, nearest.x, nearest.y) <= (move.radius ?? 70)) {
+      if (circleHitsRects(cx, cy, move.radius ?? 70, target.getHurtboxes())) {
         this.landHit(owner, target, move);
         struck.add(target);
         hits += 1;
@@ -933,7 +936,7 @@ export default class BattleScene extends Phaser.Scene {
     const struck = new Set();
     for (const target of this.fighters) {
       if (target === owner || !target.alive || target.state === 'ko') continue;
-      if (Phaser.Geom.Rectangle.Overlaps(rect, target.getHurtboxRect())) {
+      if (target.getHurtboxes().some((hurt) => rectsOverlap(rect, hurt))) {
         this.landHit(owner, target, move, owner.facing);
         struck.add(target);
       }
@@ -986,10 +989,7 @@ export default class BattleScene extends Phaser.Scene {
       z.tickDamage = (tickDamage ?? 0) + (z.spec.ramp ?? 0);
       for (const target of this.fighters) {
         if (target === z.owner || !target.alive || target.state === 'ko') continue;
-        const rect = target.getHurtboxRect();
-        const nx = Phaser.Math.Clamp(z.x, rect.left, rect.right);
-        const ny = Phaser.Math.Clamp(z.y, rect.top, rect.bottom);
-        if (Phaser.Math.Distance.Between(z.x, z.y, nx, ny) > z.radius) continue;
+        if (!circleHitsRects(z.x, z.y, z.radius, target.getHurtboxes())) continue;
         this.landHit(z.owner, target, {
           name: z.spec.name ?? 'zone',
           type: z.spec.type,
@@ -1208,7 +1208,37 @@ export default class BattleScene extends Phaser.Scene {
     this.renderInterp();
     for (const f of this.fighters || []) f.tickHitFlash?.();
     this.juice?.update(dt / 1000);
+    this.juice?.syncStrikes?.();
+    this.drawDebug();
     if (!this.simFast) this.updateCamera(dt);
+  }
+
+  drawDebug() {
+    if (!this.boxGfx) return;
+    this.boxGfx.clear();
+    if (!this.showBoxes) return;
+    for (const f of this.fighters || []) {
+      if (f.state === 'dead') continue;
+      for (const r of f.getHurtboxes?.() || []) {
+        this.boxGfx.lineStyle(2, 0x3dff7a, 0.95);
+        this.boxGfx.strokeRect(r.x, r.y, r.width, r.height);
+      }
+      const push = f.getPushbox?.();
+      if (push) {
+        this.boxGfx.lineStyle(2, 0x4aa3ff, 0.95);
+        this.boxGfx.strokeRect(push.x, push.y, push.width, push.height);
+      }
+      for (const h of f.getHitboxes?.() || []) {
+        this.boxGfx.lineStyle(2, 0xff4040, 1);
+        this.boxGfx.strokeRect(h.x, h.y, h.width, h.height);
+      }
+    }
+    for (const p of this.projectiles || []) {
+      if (p.dead || !p.gfx) continue;
+      const r = projectileRect(p);
+      this.boxGfx.lineStyle(2, 0xff4040, 1);
+      this.boxGfx.strokeRect(r.x, r.y, r.width, r.height);
+    }
   }
 
   renderInterp() {
@@ -1316,6 +1346,7 @@ export default class BattleScene extends Phaser.Scene {
     });
 
     for (const f of this.fighters) f.update(time, delta);
+    resolvePush(this.fighters);
     this.updateZones(time);
 
     // `wall`-kind defensive moves (e.g. Hydra's Dual Flame Wall) are also an
@@ -1333,7 +1364,7 @@ export default class BattleScene extends Phaser.Scene {
         const rect = new Phaser.Geom.Rectangle(wx, y - m.wallRangeH / 2, m.wallRangeW, m.wallRangeH);
         for (const target of this.fighters) {
           if (target === f || !target.alive || target.state === 'ko' || f.wallLanded.has(target)) continue;
-          if (Phaser.Geom.Rectangle.Overlaps(rect, target.getHurtboxRect())) {
+          if (target.getHurtboxes().some((hurt) => rectsOverlap(rect, hurt))) {
             f.wallLanded.add(target);
             if (m.wallRootMs && time - (f.defenseStart ?? time) < m.wallRootMs) {
               target.rootedUntil = time + 480;
@@ -1351,15 +1382,17 @@ export default class BattleScene extends Phaser.Scene {
 
     // melee hit detection
     for (const attacker of this.fighters) {
+      const boxes = attacker.getHitboxes();
+      if (!boxes.length) continue;
       const hb = attacker.getHitboxRect();
-      if (!hb) continue;
       for (const victim of this.fighters) {
         if (victim === attacker || !victim.alive || victim.state === 'ko' || !victim.visible) continue;
         const hit = attacker.activeHit;
         if (!hit) break;
         if (hit.landed.has(victim)) continue;
         if (hit.next && time < (hit.next.get(victim) ?? 0)) continue;
-        if (Phaser.Geom.Rectangle.Overlaps(hb, victim.getHurtboxRect())) {
+        const hurts = victim.getHurtboxes();
+        if (boxes.some((box) => hurts.some((hurt) => rectsOverlap(box, hurt)))) {
           const cap = hit.move.multiHit ?? 1;
           const n = (hit.counts?.get(victim) ?? 0) + 1;
           hit.counts ??= new Map();
@@ -1536,10 +1569,8 @@ export default class BattleScene extends Phaser.Scene {
       if (p.pinned || (p.armAt && time < p.armAt)) continue;
       for (const victim of this.fighters) {
         if (victim === p.owner || !victim.alive || victim.state === 'ko' || !victim.visible || p.landed.has(victim)) continue;
-        const rect = victim.getHurtboxRect();
-        const nx = Phaser.Math.Clamp(p.gfx.x, rect.left, rect.right);
-        const ny = Phaser.Math.Clamp(p.gfx.y, rect.top, rect.bottom);
-        if (Phaser.Math.Distance.Between(p.gfx.x, p.gfx.y, nx, ny) > p.radius) continue;
+        const shotBox = projectileRect(p);
+        if (!victim.getHurtboxes().some((hurt) => rectsOverlap(shotBox, hurt))) continue;
         const def = victim.defenseMove;
         const perfect = def?.reflectProjectiles === 'perfect'
           && time - (victim.defenseStart ?? time) <= (def.perfectMs ?? 200);

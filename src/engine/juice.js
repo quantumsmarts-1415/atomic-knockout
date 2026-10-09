@@ -8,6 +8,7 @@
 // ---------------------------------------------------------------------------
 import * as Phaser from 'phaser';
 import { FEEL, traumaForHit, traumaOffset } from './feel.js';
+import { strikeRect } from './boxes.js';
 
 const TEX = {
   dot: 'juice-dot',
@@ -384,16 +385,36 @@ export class Juice {
     const slash = this.borrow(TEX.slash);
     if (!slash) return;
     const color = SPARK[move?.type] ?? 0xfff2a8;
-    const reach = Math.max(0.55, (move?.rangeW ?? 72) / 90);
+    const rect = strikeRect(fighter);
+    const reach = rect ? rect.width / 72 : Math.max(0.55, (move?.rangeW ?? 72) / 90);
+    const thick = rect ? Math.max(0.4, rect.height / 28) : reach;
     slash.setPosition(
-      fighter.x + facing * fighter.bodyW * 0.45,
-      fighter.y - fighter.bodyH * 0.58,
+      rect ? rect.x + rect.width / 2 : fighter.x + facing * fighter.bodyW * 0.45,
+      rect ? rect.y + rect.height / 2 : fighter.y - fighter.bodyH * 0.58,
     );
     slash.setTint(color).setRotation(facing === 1 ? -0.35 : Math.PI + 0.35).setDepth(20);
     slash.setBlendMode(Phaser.BlendModes.ADD);
+    const frames = fighter.frameData?.active ?? 8;
     this.track(slash, {
-      kind: 'spark', life: 0.16, scale0: reach * 0.75, scale1: reach * 1.35, alpha0: 0.92,
+      kind: 'spark', life: (frames * FEEL.stepMs) / 1000, scale0: reach, scale1: reach, alpha0: 0.92, holdScale: true,
     });
+    this._swings ??= new Map();
+    this._swings.set(fighter, slash);
+    if (rect) slash.setScale(reach, thick);
+  }
+
+  // Keep the slash on the live hitbox so the graphic and the box are the same reach.
+  syncStrikes() {
+    if (!this._swings) return;
+    for (const [fighter, slash] of this._swings) {
+      const rect = strikeRect(fighter);
+      if (!rect || slash.alpha <= 0.02) {
+        this._swings.delete(fighter);
+        continue;
+      }
+      slash.setPosition(rect.x + rect.width / 2, rect.y + rect.height / 2);
+      slash.setScale(rect.width / 72, Math.max(0.4, rect.height / 28));
+    }
   }
 
   /**

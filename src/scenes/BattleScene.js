@@ -9,6 +9,7 @@ import { computeBotInput } from '../engine/BotAI.js';
 import { buildNavGraph } from '../engine/BotNav.js';
 import { startStageIntro } from '../engine/stageIntros.js';
 import { playVfx, projectileStyle } from '../engine/MoveVfx.js';
+import { cleanse } from '../engine/kit.js';
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 
@@ -551,11 +552,27 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // ------------------------------------------------------------ combat glue
+  dropProjectileZone(p) {
+    if (!p?.move?.dropZone || p.dropped) return;
+    p.dropped = true;
+    this.spawnZone(p.owner, p.move.dropZone, p.gfx.x, p.gfx.y);
+  }
+
   spawnProjectile(owner, move) {
+    if (move.fan > 1 && !move._fanChild) {
+      const n = move.fan | 0;
+      const spread = move.fanSpread ?? 220;
+      for (let i = 0; i < n; i++) {
+        const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
+        this.spawnProjectile(owner, { ...move, fan: null, _fanChild: true, _vy: t * spread });
+      }
+      return;
+    }
     const style = projectileStyle(move);
     const r = style.radius;
-    let vy = 0;
-    if (move.angleable) {
+    let vy = move._vy ?? 0;
+    if (move.ground) vy = Math.max(vy, 180);
+    if (!move._vy && move.angleable) {
       if (owner.input?.jump) vy = -240;
       else if (owner.input?.down) vy = 220;
     }
@@ -718,7 +735,7 @@ export default class BattleScene extends Phaser.Scene {
         owner, spec, x, y, radius,
         gfx: { destroy() {} },
         until: this.time.now + (spec.ms ?? 1600),
-        next: this.time.now,
+        next: this.time.now + (spec.delay ?? 0),
       });
       return;
     }
@@ -728,7 +745,7 @@ export default class BattleScene extends Phaser.Scene {
     this.zones.push({
       owner, spec, x, y, radius, gfx,
       until: this.time.now + (spec.ms ?? 1600),
-      next: this.time.now,
+      next: this.time.now + (spec.delay ?? 0),
     });
   }
 
@@ -741,6 +758,19 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (time < z.next) continue;
       z.next = time + (z.spec.tick ?? 400);
+      if (z.spec.cleanseOwner && z.owner && !z.cleansed) {
+        const rect = z.owner.getHurtboxRect?.();
+        if (rect) {
+          const nx = Phaser.Math.Clamp(z.x, rect.left, rect.right);
+          const ny = Phaser.Math.Clamp(z.y, rect.top, rect.bottom);
+          if (Phaser.Math.Distance.Between(z.x, z.y, nx, ny) <= z.radius) {
+            z.cleansed = true;
+            cleanse(z.owner, z.spec.cleanseOwner);
+          }
+        }
+      }
+      const tickDamage = z.tickDamage ?? z.spec.damage;
+      z.tickDamage = (tickDamage ?? 0) + (z.spec.ramp ?? 0);
       for (const target of this.fighters) {
         if (target === z.owner || !target.alive || target.state === 'ko') continue;
         const rect = target.getHurtboxRect();
@@ -750,9 +780,10 @@ export default class BattleScene extends Phaser.Scene {
         this.landHit(z.owner, target, {
           name: z.spec.name ?? 'zone',
           type: z.spec.type,
-          damage: z.spec.damage,
-          baseKnockback: 40,
-          knockbackGrowth: 0.4,
+          damage: tickDamage,
+          baseKnockback: z.spec.knockback ?? 40,
+          knockbackGrowth: z.spec.growth ?? 0.4,
+          onHit: z.spec.onHit,
           kind: 'burst',
         });
         if (z.spec.slide) {
@@ -1061,11 +1092,24 @@ export default class BattleScene extends Phaser.Scene {
         p.returning = true;
         p.landed = new Set();
       }
+      if (!p.slowed) {
+        for (const f of this.fighters) {
+          if (f.state !== 'defending' || !f.defenseMove?.slowProjectiles) continue;
+          if (Math.abs(f.x - p.gfx.x) < 110 && Math.abs(f.y - p.gfx.y) < 110) {
+            const mul = f.defenseMove.slowProjectiles;
+            p.vx *= mul;
+            p.vy *= mul;
+            p.slowed = true;
+            break;
+          }
+        }
+      }
       p.gfx.x += (p.vx * delta) / 1000;
       p.gfx.y += (p.vy * delta) / 1000 + Math.sin(time / 90) * 0.25;
       const off = p.gfx.x < -80 || p.gfx.x > this.world.width + 80 || p.gfx.y > this.world.height + 80;
       if (time > p.dieAt || off) {
         if (p.move.explodeOnly) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
+        this.dropProjectileZone(p);
         p.gfx.destroy();
         p.dead = true;
         continue;
@@ -1086,6 +1130,11 @@ export default class BattleScene extends Phaser.Scene {
           break;
         }
         p.landed.add(victim);
+        let shot = p.move;
+        if (victim.state === 'defending' && victim.defenseMove?.softenProjectiles) {
+          const mul = victim.defenseMove.softenProjectiles;
+          shot = { ...shot, damage: (shot.damage ?? 0) * mul, damage2: shot.damage2 != null ? shot.damage2 * mul : shot.damage2 };
+        }
         if (p.move.explodeOnly) {
           this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
           p.gfx.destroy();
@@ -1093,7 +1142,8 @@ export default class BattleScene extends Phaser.Scene {
           break;
         }
         // a projectile shoves you the way it was travelling
-        this.landHit(p.owner, victim, p.move, Math.sign(p.vx) || p.owner.facing);
+        this.landHit(p.owner, victim, shot, Math.sign(p.vx) || p.owner.facing);
+        this.dropProjectileZone(p);
         if (!p.move.pierce) {
           p.gfx.destroy();
           p.dead = true;

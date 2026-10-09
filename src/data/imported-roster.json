@@ -1,4 +1,1474 @@
 {
+  "ace": {
+    "id": "ace",
+    "name": "Ace",
+    "element": "Actinium",
+    "symbol": "Ac",
+    "atomicNumber": 89,
+    "tagline": "Actinic Ray",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 10,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 3500,
+      "conductivity": null,
+      "en": 1.1
+    },
+    "art": {
+      "key": "char-ace",
+      "file": "art-src/imported/ace-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 96,
+        "frameH": 148,
+        "footY": 0.9392,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 96,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.4,
+            "loop": true,
+            "frameW": 112,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 144,
+            "frameH": 164,
+            "footY": 0.9085,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "agatha": {
+    "id": "agatha",
+    "name": "Agatha",
+    "element": "Silver",
+    "symbol": "Ag",
+    "atomicNumber": 47,
+    "tagline": "Silver Bullet",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 10.503,
+      "mohs": 2.5,
+      "tensile": 170,
+      "boiling": 2435,
+      "conductivity": 62,
+      "en": 1.93
+    },
+    "art": {
+      "key": "char-agatha",
+      "file": "art-src/imported/agatha-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 77,
+        "frameH": 147,
+        "footY": 0.9388,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 77,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 7.4,
+            "loop": true,
+            "frameW": 92,
+            "frameH": 146,
+            "footY": 0.9384,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 141,
+            "frameH": 163,
+            "footY": 0.908,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          }
+        }
+      }
+    }
+  },
+  "aurelius": {
+    "id": "aurelius",
+    "name": "Aurelius",
+    "element": "Gold",
+    "symbol": "Au",
+    "atomicNumber": 79,
+    "tagline": "Midas Touch",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 19.283,
+      "mohs": 2.5,
+      "tensile": 100,
+      "boiling": 3243,
+      "conductivity": 45,
+      "en": 2.54
+    },
+    "art": {
+      "key": "char-aurelius",
+      "file": "art-src/imported/aurelius-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 101,
+        "frameH": 147,
+        "footY": 0.9456,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 101,
+            "frameH": 147,
+            "footY": 0.9456,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6,
+            "loop": true,
+            "frameW": 107,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 134,
+            "bodyH": 134,
+            "displayScale": 0.98507
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 148,
+            "frameH": 164,
+            "footY": 0.9146,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "barry": {
+    "id": "barry",
+    "name": "Barry",
+    "element": "Barium",
+    "symbol": "Ba",
+    "atomicNumber": 56,
+    "tagline": "Heavyweight Drop",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15387040,
+        "body": 13666874,
+        "accent": 15053150,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15387040,
+        "body": 9461802,
+        "accent": 15053150,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15387040,
+        "body": 15256227,
+        "accent": 15053150,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15387040,
+        "body": 3941660,
+        "accent": 15053150,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "alkaline",
+      "metal": true,
+      "noble": false,
+      "density": 3.594,
+      "mohs": 1.25,
+      "tensile": 0,
+      "boiling": 2118,
+      "conductivity": 2.9,
+      "en": 0.89
+    },
+    "art": {
+      "key": "char-barry",
+      "file": "art-src/imported/barry-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 90,
+        "frameH": 151,
+        "footY": 0.9404,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 90,
+            "frameH": 151,
+            "footY": 0.9404,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 5.6,
+            "loop": true,
+            "frameW": 113,
+            "frameH": 152,
+            "footY": 0.9408,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 189,
+            "frameH": 169,
+            "footY": 0.9112,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "bianca": {
+    "id": "bianca",
+    "name": "Bianca",
+    "element": "Bismuth",
+    "symbol": "Bi",
+    "atomicNumber": 83,
+    "tagline": "Hopper Crystal",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12898999,
+        "body": 4892810,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12898999,
+        "body": 3765342,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12898999,
+        "body": 11916738,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12898999,
+        "body": 1977134,
+        "accent": 10207626,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "post-transition",
+      "metal": true,
+      "noble": false,
+      "density": 9.807,
+      "mohs": 2.25,
+      "tensile": 4,
+      "boiling": 1837,
+      "conductivity": 0.77,
+      "en": 2.02
+    },
+    "art": {
+      "key": "char-bianca",
+      "file": "art-src/imported/bianca-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 82,
+        "frameH": 147,
+        "footY": 0.9456,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 82,
+            "frameH": 147,
+            "footY": 0.9456,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.9,
+            "loop": true,
+            "frameW": 104,
+            "frameH": 146,
+            "footY": 0.9384,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 153,
+            "frameH": 165,
+            "footY": 0.9091,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "brock": {
+    "id": "brock",
+    "name": "Brock",
+    "element": "Bromine",
+    "symbol": "Br",
+    "atomicNumber": 35,
+    "tagline": "Bromos Stench",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15193253,
+        "body": 12890186,
+        "accent": 14665319,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15193253,
+        "body": 9009460,
+        "accent": 14665319,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15193253,
+        "body": 14997673,
+        "accent": 14665319,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15193253,
+        "body": 3747104,
+        "accent": 14665319,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "liquid",
+      "family": "halogen",
+      "metal": false,
+      "noble": false,
+      "density": 3.103,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 332,
+      "conductivity": 0,
+      "en": 2.96
+    },
+    "art": {
+      "key": "char-brock",
+      "file": "art-src/imported/brock-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 94,
+        "frameH": 149,
+        "footY": 0.9396,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 94,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.4,
+            "loop": true,
+            "frameW": 107,
+            "frameH": 150,
+            "footY": 0.94,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 159,
+            "frameH": 166,
+            "footY": 0.9096,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "caesar": {
+    "id": "caesar",
+    "name": "Caesar",
+    "element": "Caesium",
+    "symbol": "Cs",
+    "atomicNumber": 55,
+    "tagline": "Defining Second",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15187109,
+        "body": 12868170,
+        "accent": 14653031,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15187109,
+        "body": 8995124,
+        "accent": 14653031,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15187109,
+        "body": 14989481,
+        "accent": 14653031,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15187109,
+        "body": 3742240,
+        "accent": 14653031,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "alkali",
+      "metal": true,
+      "noble": false,
+      "density": 1.886,
+      "mohs": 0.2,
+      "tensile": 0,
+      "boiling": 944,
+      "conductivity": 5,
+      "en": 0.79
+    },
+    "art": {
+      "key": "char-caesar",
+      "file": "art-src/imported/caesar-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 121,
+        "frameH": 148,
+        "footY": 0.9392,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 121,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 8,
+            "loop": true,
+            "frameW": 135,
+            "frameH": 150,
+            "footY": 0.94,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 180,
+            "frameH": 166,
+            "footY": 0.9096,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "ceres": {
+    "id": "ceres",
+    "name": "Ceres",
+    "element": "Cerium",
+    "symbol": "Ce",
+    "atomicNumber": 58,
+    "tagline": "Ferro Rod Sparks",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15188155,
+        "body": 12872346,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15188155,
+        "body": 8997736,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15188155,
+        "body": 14991048,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15188155,
+        "body": 3743281,
+        "accent": 14655379,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "lanthanide",
+      "metal": true,
+      "noble": false,
+      "density": 6.77,
+      "mohs": 2.5,
+      "tensile": 100,
+      "boiling": 3716,
+      "conductivity": 1.4,
+      "en": 1.12
+    },
+    "art": {
+      "key": "char-ceres",
+      "file": "art-src/imported/ceres-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 91,
+        "frameH": 147,
+        "footY": 0.9388,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 91,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 7.4,
+            "loop": true,
+            "frameW": 108,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 158,
+            "frameH": 165,
+            "footY": 0.9091,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "cody": {
+    "id": "cody",
+    "name": "Cody",
+    "element": "Cadmium",
+    "symbol": "Cd",
+    "atomicNumber": 48,
+    "tagline": "Quantum Dot",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 8.649,
+      "mohs": 2,
+      "tensile": 75,
+      "boiling": 1040,
+      "conductivity": 14,
+      "en": 1.69
+    },
+    "art": {
+      "key": "char-cody",
+      "file": "art-src/imported/cody-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 103,
+        "frameH": 147,
+        "footY": 0.9388,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 103,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 7.4,
+            "loop": true,
+            "frameW": 112,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 146,
+            "frameH": 168,
+            "footY": 0.9107,
+            "visibleH": 134,
+            "bodyH": 134,
+            "displayScale": 0.98507
+          }
+        }
+      }
+    }
+  },
+  "collin": {
+    "id": "collin",
+    "name": "Collin",
+    "element": "Cobalt",
+    "symbol": "Co",
+    "atomicNumber": 27,
+    "tagline": "Gamma Knife",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 8.834,
+      "mohs": 5,
+      "tensile": 800,
+      "boiling": 3200,
+      "conductivity": 17,
+      "en": 1.88
+    },
+    "art": {
+      "key": "char-collin",
+      "file": "art-src/imported/collin-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 94,
+        "frameH": 147,
+        "footY": 0.9456,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 94,
+            "frameH": 147,
+            "footY": 0.9456,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 8,
+            "loop": true,
+            "frameW": 107,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 144,
+            "frameH": 164,
+            "footY": 0.9085,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "cooper": {
+    "id": "cooper",
+    "name": "Cooper",
+    "element": "Copper",
+    "symbol": "Cu",
+    "atomicNumber": 29,
+    "tagline": "Electromagnet",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 8.935,
+      "mohs": 3,
+      "tensile": 210,
+      "boiling": 2835,
+      "conductivity": 59,
+      "en": 1.9
+    },
+    "art": {
+      "key": "char-cooper",
+      "file": "art-src/imported/cooper-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 108,
+        "frameH": 149,
+        "footY": 0.9396,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 108,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 5.6,
+            "loop": true,
+            "frameW": 116,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 205,
+            "frameH": 177,
+            "footY": 0.9153,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "dizzy": {
+    "id": "dizzy",
+    "name": "Dizzy",
+    "element": "Dysprosium",
+    "symbol": "Dy",
+    "atomicNumber": 66,
+    "tagline": "Hard to Get",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15188155,
+        "body": 12872346,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15188155,
+        "body": 8997736,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15188155,
+        "body": 14991048,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15188155,
+        "body": 3743281,
+        "accent": 14655379,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "lanthanide",
+      "metal": true,
+      "noble": false,
+      "density": 8.55,
+      "mohs": 1.8,
+      "tensile": 220,
+      "boiling": 2840,
+      "conductivity": 1.1,
+      "en": 1.22
+    },
+    "art": {
+      "key": "char-dizzy",
+      "file": "art-src/imported/dizzy-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 112,
+        "frameH": 150,
+        "footY": 0.9467,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 112,
+            "frameH": 150,
+            "footY": 0.9467,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 5.6,
+            "loop": true,
+            "frameW": 117,
+            "frameH": 150,
+            "footY": 0.94,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 167,
+            "frameH": 166,
+            "footY": 0.9096,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "erin": {
+    "id": "erin",
+    "name": "Erin",
+    "element": "Erbium",
+    "symbol": "Er",
+    "atomicNumber": 68,
+    "tagline": "Undersea Cable",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15188155,
+        "body": 12872346,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15188155,
+        "body": 8997736,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15188155,
+        "body": 14991048,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15188155,
+        "body": 3743281,
+        "accent": 14655379,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "lanthanide",
+      "metal": true,
+      "noble": false,
+      "density": 9.065,
+      "mohs": 1.97,
+      "tensile": 260,
+      "boiling": 3141,
+      "conductivity": 1.2,
+      "en": 1.24
+    },
+    "art": {
+      "key": "char-erin",
+      "file": "art-src/imported/erin-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 140,
+        "frameH": 152,
+        "footY": 0.9408,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 140,
+            "frameH": 152,
+            "footY": 0.9408,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 9.6,
+            "loop": true,
+            "frameW": 134,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 180,
+            "frameH": 182,
+            "footY": 0.9176,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          }
+        }
+      }
+    }
+  },
+  "europa": {
+    "id": "europa",
+    "name": "Europa",
+    "element": "Europium",
+    "symbol": "Eu",
+    "atomicNumber": 63,
+    "tagline": "Phosphor Bloom",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15188155,
+        "body": 12872346,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15188155,
+        "body": 8997736,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15188155,
+        "body": 14991048,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15188155,
+        "body": 3743281,
+        "accent": 14655379,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "lanthanide",
+      "metal": true,
+      "noble": false,
+      "density": 5.246,
+      "mohs": 3.07,
+      "tensile": 120,
+      "boiling": 1802,
+      "conductivity": 1.1,
+      "en": 1.2
+    },
+    "art": {
+      "key": "char-europa",
+      "file": "art-src/imported/europa-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 86,
+        "frameH": 148,
+        "footY": 0.9392,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 86,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 8,
+            "loop": true,
+            "frameW": 92,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 131,
+            "frameH": 163,
+            "footY": 0.908,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "oz": {
     "id": "oz",
     "name": "Oz",
@@ -209,6 +1679,216 @@
       }
     }
   },
+  "polonius": {
+    "id": "polonius",
+    "name": "Polonius",
+    "element": "Polonium",
+    "symbol": "Po",
+    "atomicNumber": 84,
+    "tagline": "Blue Glow Burst",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12898999,
+        "body": 4892810,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12898999,
+        "body": 3765342,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12898999,
+        "body": 11916738,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12898999,
+        "body": 1977134,
+        "accent": 10207626,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "post-transition",
+      "metal": true,
+      "noble": false,
+      "density": 9.2,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 1235,
+      "conductivity": 2.3,
+      "en": 2
+    },
+    "art": {
+      "key": "char-polonius",
+      "file": "art-src/imported/polonius-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 193,
+        "frameH": 147,
+        "footY": 0.9388,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 193,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 7.7,
+            "loop": true,
+            "frameW": 204,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 222,
+            "frameH": 168,
+            "footY": 0.9048,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "ray": {
+    "id": "ray",
+    "name": "Ray",
+    "element": "Radium",
+    "symbol": "Ra",
+    "atomicNumber": 88,
+    "tagline": "Radium Tonic",
+    "teach": "Radium glows in the dark. She was once sold in tonics, and the glow was hers.",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15387040,
+        "body": 13666874,
+        "accent": 15053150,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15387040,
+        "body": 9461802,
+        "accent": 15053150,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15387040,
+        "body": 15256227,
+        "accent": 15053150,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15387040,
+        "body": 3941660,
+        "accent": 15053150,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "alkaline",
+      "metal": true,
+      "noble": false,
+      "density": 5.5,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 2010,
+      "conductivity": 1,
+      "en": 0.9
+    },
+    "art": {
+      "key": "char-ray",
+      "file": "art-src/imported/ray-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 95,
+        "frameH": 147,
+        "footY": 0.9456,
+        "visibleH": 134,
+        "bodyH": 134,
+        "displayScale": 0.98507,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 95,
+            "frameH": 147,
+            "footY": 0.9456,
+            "visibleH": 134,
+            "bodyH": 134,
+            "displayScale": 0.98507
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.4,
+            "loop": true,
+            "frameW": 103,
+            "frameH": 145,
+            "footY": 0.9448,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 173,
+            "frameH": 163,
+            "footY": 0.908,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "rex": {
     "id": "rex",
     "name": "Rex",
@@ -314,6 +1994,111 @@
       }
     }
   },
+  "talia": {
+    "id": "talia",
+    "name": "Talia",
+    "element": "Thallium",
+    "symbol": "Tl",
+    "atomicNumber": 81,
+    "tagline": "Poisoner's Poison",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12898999,
+        "body": 4892810,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12898999,
+        "body": 3765342,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12898999,
+        "body": 11916738,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12898999,
+        "body": 1977134,
+        "accent": 10207626,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "post-transition",
+      "metal": true,
+      "noble": false,
+      "density": 11.873,
+      "mohs": 1.2,
+      "tensile": 8,
+      "boiling": 1746,
+      "conductivity": 6.7,
+      "en": 1.62
+    },
+    "art": {
+      "key": "char-talia",
+      "file": "art-src/imported/talia-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 69,
+        "frameH": 147,
+        "footY": 0.9456,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 69,
+            "frameH": 147,
+            "footY": 0.9456,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.4,
+            "loop": true,
+            "frameW": 81,
+            "frameH": 146,
+            "footY": 0.9384,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 142,
+            "frameH": 163,
+            "footY": 0.9141,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "tara": {
     "id": "tara",
     "name": "Tara",
@@ -414,6 +2199,216 @@
             "visibleH": 131,
             "bodyH": 131,
             "displayScale": 0.99237
+          }
+        }
+      }
+    }
+  },
+  "tate": {
+    "id": "tate",
+    "name": "Tate",
+    "element": "Astatine",
+    "symbol": "At",
+    "atomicNumber": 85,
+    "tagline": "Self-Vaporize",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 13814693,
+        "body": 8032074,
+        "accent": 11973479,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 13814693,
+        "body": 5792564,
+        "accent": 11973479,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 13814693,
+        "body": 13159593,
+        "accent": 11973479,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 13814693,
+        "body": 2696736,
+        "accent": 11973479,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "metalloid",
+      "metal": false,
+      "noble": false,
+      "density": 8.95,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": null,
+      "conductivity": null,
+      "en": 2.2
+    },
+    "art": {
+      "key": "char-tate",
+      "file": "art-src/imported/tate-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 105,
+        "frameH": 148,
+        "footY": 0.9459,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 105,
+            "frameH": 148,
+            "footY": 0.9459,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 8,
+            "loop": true,
+            "frameW": 123,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 149,
+            "frameH": 165,
+            "footY": 0.9091,
+            "visibleH": 134,
+            "bodyH": 134,
+            "displayScale": 0.98507
+          }
+        }
+      }
+    }
+  },
+  "thor": {
+    "id": "thor",
+    "name": "Thor",
+    "element": "Thorium",
+    "symbol": "Th",
+    "atomicNumber": 90,
+    "tagline": "Thunder Hammer",
+    "teach": "",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 11.725,
+      "mohs": 3,
+      "tensile": 220,
+      "boiling": 5061,
+      "conductivity": 6.7,
+      "en": 1.3
+    },
+    "art": {
+      "key": "char-thor",
+      "file": "art-src/imported/thor-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 112,
+        "frameH": 147,
+        "footY": 0.9388,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 112,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.4,
+            "loop": true,
+            "frameW": 99,
+            "frameH": 146,
+            "footY": 0.9384,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 146,
+            "frameH": 171,
+            "footY": 0.9123,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
           }
         }
       }

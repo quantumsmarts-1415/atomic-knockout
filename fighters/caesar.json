@@ -1,0 +1,56 @@
+{
+  "id": "caesar",
+  "name": "Caesar",
+  "element": "Caesium",
+  "symbol": "Cs",
+  "atomicNumber": 55,
+  "tagline": "Defining Second",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "alkali",
+    "metal": true,
+    "noble": false,
+    "density": 1.886,
+    "mohs": 0.2,
+    "tensile": 0,
+    "boiling": 944,
+    "conductivity": 5,
+    "en": 0.79
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15187109,
+      "body": 12868170,
+      "accent": 14653031,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15187109,
+      "body": 8995124,
+      "accent": 14653031,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15187109,
+      "body": 14989481,
+      "accent": 14653031,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15187109,
+      "body": 3742240,
+      "accent": 14653031,
+      "eye": 16055295
+    }
+  ]
+}

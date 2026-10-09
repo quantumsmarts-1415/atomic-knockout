@@ -1,0 +1,56 @@
+{
+  "id": "cooper",
+  "name": "Cooper",
+  "element": "Copper",
+  "symbol": "Cu",
+  "atomicNumber": 29,
+  "tagline": "Electromagnet",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "transition",
+    "metal": true,
+    "noble": false,
+    "density": 8.935,
+    "mohs": 3,
+    "tensile": 210,
+    "boiling": 2835,
+    "conductivity": 59,
+    "en": 1.9
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 12897228,
+      "body": 4886486,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 12897228,
+      "body": 3761039,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 12897228,
+      "body": 11914463,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 12897228,
+      "body": 1975871,
+      "accent": 10204084,
+      "eye": 16055295
+    }
+  ]
+}

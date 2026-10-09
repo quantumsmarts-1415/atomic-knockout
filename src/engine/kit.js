@@ -20,6 +20,22 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.blind) victim.blindUntil = time + fx.blind;
   if (fx.drift) victim.driftUntil = time + fx.drift;
   if (fx.interrupt) lock(victim, time, fx.interrupt, true);
+  if (fx.poison) {
+    const p = fx.poison;
+    victim.poisonUntil = time + (p.ms ?? 1600);
+    victim.poisonDps = p.dps ?? 1.4;
+    victim.poisonRamp = p.ramp ?? 0;
+    victim.poisonTick = time + (p.delay ?? 280);
+  }
+  if (fx.mark) {
+    victim.mark = fx.mark;
+    victim.markUntil = time + (fx.markMs ?? 3600);
+    victim.markedBy = attacker?.charDef?.id ?? null;
+  }
+  if (fx.weaken) {
+    victim.weakenUntil = time + (fx.weaken.ms ?? 1600);
+    victim.weakenMult = fx.weaken.mult ?? 0.75;
+  }
   if (fx.burn) {
     victim.burnUntil = time + (fx.burn.ms ?? 1200);
     victim.burnDps = fx.burn.dps ?? 2;
@@ -42,6 +58,15 @@ function lock(victim, time, ms, cancelAttack) {
   }
 }
 
+export function cleanse(fighter, kinds) {
+  const list = kinds ?? [];
+  if (list.includes('poison')) fighter.poisonUntil = 0;
+  if (list.includes('burn')) fighter.burnUntil = 0;
+  if (list.includes('slow')) fighter.slowUntil = 0;
+  if (list.includes('mark')) fighter.markUntil = 0;
+  if (list.includes('debuff')) stripBuffs(fighter);
+}
+
 export function stripBuffs(fighter) {
   fighter.bonusHits = 0;
   fighter.bonusPacket = null;
@@ -58,6 +83,13 @@ export function tickKit(fighter, time) {
     fighter.percent = Math.min(999, fighter.percent + dmg);
     fighter.scene?.noteDot?.(fighter, 'heat', dmg);
   }
+  if (fighter.poisonUntil && time < fighter.poisonUntil && time >= (fighter.poisonTick ?? 0)) {
+    fighter.poisonTick = time + 280;
+    const dmg = fighter.poisonDps ?? 1.4;
+    fighter.percent = Math.min(999, fighter.percent + dmg);
+    fighter.poisonDps = dmg + (fighter.poisonRamp ?? 0);
+    fighter.scene?.noteDot?.(fighter, 'chemical', dmg);
+  }
 }
 
 /** Flags a just-fired move asked to leave on its owner. */
@@ -66,16 +98,24 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     const selfMove = {
       name: move.name,
       type: move.selfDamage.type ?? 'heat',
-      damage: move.selfDamage.damage ?? 4,
+      damage: (move.selfDamage.damage ?? 4) * (move.selfDamage.withCharge ? frac : 1),
       baseKnockback: 30,
       knockbackGrowth: 0,
       isSelf: true,
+      noFlinch: !!move.selfDamage.noFlinch,
       launch: 'radial',
     };
     fighter.takeHit(fighter, selfMove, time);
     fighter.scene?.noteHit?.(fighter, fighter, selfMove);
   }
-  if (move.buff) grantBuff(fighter, move.buff, time);
+  if (move.buff) {
+    const buff = move.buff.scaleWithCharge && move.buff.bonus
+      ? { ...move.buff, bonus: { ...move.buff.bonus, damage: (move.buff.bonus.damage ?? 0) * frac } }
+      : move.buff;
+    grantBuff(fighter, buff, time);
+  }
+  if (move.cleanse) cleanse(fighter, move.cleanse);
+  if (move.blinkMs) fighter.phasingUntil = time + move.blinkMs;
   if (move.redox) {
     fighter.redox = Math.max(fighter.redox ?? 0, frac);
     fighter.bonusHits = 3;
@@ -160,6 +200,24 @@ export function prepareMove(move, attacker, defender, now = 0) {
   const selfHot = attacker && (attacker.burnUntil > now || attacker.heatedUntil > now);
   if (move.heatEmpower && selfHot) {
     next = { ...next, damage: (next.damage ?? 0) + move.heatEmpower };
+  }
+  const buffed = defender && (
+    defender.bonusHits > 0
+    || defender.speedBuffUntil > now
+    || defender.heatResistUntil > now
+    || defender.heatOnHitUntil > now
+    || defender.armedDash?.until > now
+  );
+  if (move.bonusVsBuff && buffed) {
+    next = { ...next, damage: (next.damage ?? 0) * move.bonusVsBuff, damage2: next.damage2 != null ? next.damage2 * move.bonusVsBuff : next.damage2 };
+  }
+  if (move.bonusVsMark && defender?.mark === move.bonusVsMark && defender.markUntil > now && defender.markedBy === attacker?.charDef?.id) {
+    const mult = move.markMult ?? 1.35;
+    next = { ...next, damage: (next.damage ?? 0) * mult, damage2: next.damage2 != null ? next.damage2 * mult : next.damage2 };
+  }
+  if (attacker?.weakenUntil > now) {
+    const mult = attacker.weakenMult ?? 0.75;
+    next = { ...next, damage: (next.damage ?? 0) * mult, damage2: next.damage2 != null ? next.damage2 * mult : next.damage2 };
   }
   return next;
 }

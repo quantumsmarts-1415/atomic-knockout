@@ -58,6 +58,13 @@ export function interceptHit(defender, attacker, move, time) {
   if (move?.isSelf) return { result: 'pass' };
 
   const types = typesOf(move);
+  if (defense.phase && !move?.breakPhase) return { result: 'negate' };
+  if (defense.backOpen && attacker && attacker !== defender) {
+    const facing = defender.facing || 1;
+    if ((attacker.x - defender.x) * facing < -10) {
+      return { result: 'pass', damageMult: defense.behindMult ?? 1 };
+    }
+  }
   const vertical = Math.abs((attacker?.y ?? defender.y) - defender.y) > (defender.bodyH ?? 80) * 0.5;
   if ((defense.kind === 'wall' || defense.frontOnly) && vertical && defense.kind !== 'counter') {
     return { result: 'pass' };
@@ -99,7 +106,9 @@ export function interceptHit(defender, attacker, move, time) {
     }
   }
 
-  if (breaksBlock(move, defense) && defense.kind !== 'counter') return { result: 'pass' };
+  if (breaksBlock(move, defense) && defense.kind !== 'counter') {
+    return { result: 'pass', damageMult: defense.pierceMult ?? 1 };
+  }
 
   if (defense.kind === 'shield') return { result: 'pop' };
 
@@ -113,8 +122,40 @@ export function interceptHit(defender, attacker, move, time) {
     const i = Math.floor(Math.max(0, time - (defender.defenseStart ?? time)) / step) % defense.cycle.length;
     const cur = defense.cycle[i];
     defender.cycleShowing = cur;
-    if (types.length && types.every((t) => t === cur)) return { result: 'negate' };
+    if (types.length && types.every((t) => t === cur)) {
+      if (defense.cycleReflect) {
+        return {
+          result: 'counter',
+          counter: {
+            name: defense.name,
+            damage: move.damage ?? defense.counterDamage ?? 6,
+            type: cur,
+            baseKnockback: defense.counterKnockback ?? 140,
+            knockbackGrowth: defense.counterKnockbackGrowth ?? 2,
+            isCounterAttack: true,
+          },
+        };
+      }
+      return { result: 'negate' };
+    }
     return { result: 'partial', reduction: 0.4 };
+  }
+
+  if (defense.reflectTypes?.length && !move?.isCounterAttack) {
+    const hit = types.find((t) => defense.reflectTypes.includes(t));
+    if (hit) {
+      return {
+        result: 'counter',
+        counter: {
+          name: defense.name,
+          damage: move.damage ?? 6,
+          type: hit,
+          baseKnockback: defense.counterKnockback ?? 120,
+          knockbackGrowth: defense.counterKnockbackGrowth ?? 2,
+          isCounterAttack: true,
+        },
+      };
+    }
   }
 
   if (defense.blocks?.length) {

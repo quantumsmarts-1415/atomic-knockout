@@ -1,0 +1,56 @@
+{
+  "id": "goldie",
+  "name": "Goldie",
+  "element": "Gadolinium",
+  "symbol": "Gd",
+  "atomicNumber": 64,
+  "tagline": "MRI Contrast",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "lanthanide",
+    "metal": true,
+    "noble": false,
+    "density": 7.899,
+    "mohs": 5.13,
+    "tensile": 170,
+    "boiling": 3546,
+    "conductivity": 0.77,
+    "en": 1.2
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15188155,
+      "body": 12872346,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15188155,
+      "body": 8997736,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15188155,
+      "body": 14991048,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15188155,
+      "body": 3743281,
+      "accent": 14655379,
+      "eye": 16055295
+    }
+  ]
+}

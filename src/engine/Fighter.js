@@ -36,6 +36,7 @@ function dealtDamage(attacker, move, defender) {
   move = prepareMove(move, attacker, defender, now);
   const opts = combatOpts(defender);
   if (move?.chemDealtMult) opts.chemDealtMult = move.chemDealtMult;
+  if (move?.ignoreDefense) opts.ignoreDefense = true;
   if (defender.charDef?.combat) {
     const resolved = resolveMoveDamage(move, attacker?.charDef, defender.charDef, opts);
     for (const bonus of bonusPackets(attacker, now)) {
@@ -124,6 +125,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (this.state === 'defending' && this.defenseMove?.openAfter) {
         this.vulnerableUntil = time + (this.defenseMove.vulnerableMs ?? 650);
       }
+      if (this.state === 'defending') this.lingerHardening(time);
       this.state = 'idle';
       this.rig.setFlash(null);
       this.rig.attackSwing = 0;
@@ -213,6 +215,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this._chargeFx = time;
         playVfx(this.scene, this, chargeMove, 'charge');
       }
+      if (chargeMove?.slide && this.body) this.body.setVelocityX(this.facing * chargeMove.slide);
       if (chargeMove?.detonateAtFull && this.chargeStart != null && time - this.chargeStart >= chargeMove.maxChargeMs) {
         this.fireCharge(time);
       } else if (dirHeld) {
@@ -224,6 +227,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.fireCharge(time);
       }
     } else if (this.state === 'defending' && this.defenseMove?.hold !== false && !inp.special) {
+      this.lingerHardening(time);
       this.state = 'idle';
       this.defenseMove = null;
       this.rig.setFlash(null);
@@ -285,9 +289,19 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const speedFactor = Math.abs(this.body.velocity.x) / stats.speed;
     this.rig.facing = this.facing;
     this.rig.animate(dt / 1000, animState, speedFactor);
+    if (this._px != null) this.travel = (this.travel ?? 0) + Math.abs(this.x - this._px);
+    this._px = this.x;
+  }
+
+  lingerHardening(time) {
+    const d = this.defenseMove;
+    if (!d?.harden || !this.hardenStacks) return;
+    this.kineticResistMult = Math.max(0.55, 1 - this.hardenStacks * (d.hardenLingerStep ?? 0.07));
+    this.kineticResistUntil = time + (d.hardenLinger ?? 1800);
   }
 
   startMove(time, move, slot, moveKey = null) {
+    this.openedStill = !!(this.body && Math.abs(this.body.velocity.x) < 36 && Math.abs(this.body.velocity.y) < 80);
     if (moveKey === 'basicDirectional' && this.armedDash && time < this.armedDash.until) {
       const arm = this.armedDash;
       this.armedDash = null;
@@ -399,7 +413,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
     let frac = move.maxChargeMs > 0 ? heldMs / move.maxChargeMs : 1;
     if (move.redox) frac = Math.max(frac, this.redox ?? 0);
     this.chargeStart = null;
-    if (move.fizzleBelow != null && frac < move.fizzleBelow) {
+    const coinFlip = move.fizzleCoin && (Math.floor(time / 6400) % 2 === 1);
+    if ((move.fizzleBelow != null && frac < move.fizzleBelow) || coinFlip) {
       this.state = 'idle';
       this.attackCooldownUntil = time + 420;
       this.scene.noteMove?.(this, move);
@@ -421,6 +436,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
       dashSpeed: move.dashSpeed != null ? scale(move.dashSpeed, move.chargeDashMult) : move.dashSpeed,
       _beamScale: 1 + ((move.chargeLengthMult ?? 1) - 1) * frac,
     };
+    if (move.perTravel) {
+      const extra = Math.min(move.perTravelCap ?? 5, (this.travel ?? 0) / move.perTravel);
+      if (scaled.damage != null) scaled.damage += extra;
+      this.travel = 0;
+    }
+    if (move.stainAtFull && frac >= (move.stainAt ?? 0.95)) scaled.dropZone = move.stainAtFull;
     if (move.zone && move.chargeRadiusMult) {
       scaled.zone = { ...move.zone, radius: scale(move.zone.radius ?? 70, move.chargeRadiusMult) };
     }
@@ -446,6 +467,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     // isn't hit twice by the same activation.
     this.wallLanded = move.kind === 'wall' ? new Set() : null;
     this.wallHits = 0;
+    this.hardenStacks = 0;
     this.defenseStart = time;
     this._drainAt = time + (move.drain?.every ?? 1000);
     if (move.float) this.body?.setVelocityY(-70);
@@ -548,10 +570,24 @@ export default class Fighter extends Phaser.GameObjects.Container {
             hitsName: this.defenseMove.name,
           };
         }
+        if (this.defenseMove.fuelHeal) this.percent = Math.max(0, this.percent - this.defenseMove.fuelHeal);
+        this.retortFromImmune(attacker, move, time);
         this.rig.setFlash(0xaee6ff);
         return 0;
       }
       incoming = stripped.move;
+    }
+    if (!move.isSelf && this.state === 'defending' && this.defenseMove?.absorbState
+      && attacker?.charDef?.combat?.state === this.defenseMove.absorbState) {
+      if (this.defenseMove.fuelHeal) this.percent = Math.max(0, this.percent - this.defenseMove.fuelHeal);
+      this.bonusHits = (this.bonusHits ?? 0) + 1;
+      this.bonusPacket = {
+        type: this.defenseMove.fuelType ?? 'electrical',
+        damage: this.defenseMove.fuelDamage ?? 4,
+        hitsName: this.defenseMove.name,
+      };
+      this.rig.setFlash(0xaee6ff);
+      return 0;
     }
     if (move.bonusVsBlock && this.state === 'defending') {
       const bump = 1 + move.bonusVsBlock;
@@ -624,6 +660,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.body.setVelocity(kb * dir * Math.cos(0.45) * slip, kb * -0.9);
       }
       this.noteHeatAndRecoil(attacker, incoming, time, dealt);
+      this.spreadPoison(attacker, time, this.poisonInherit && this.poisonUntil > time);
       return dmg;
     }
 
@@ -649,6 +686,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
     if (this.currentMove?.guardStrike && this.state === 'attack') dmg *= (1 - this.currentMove.guardStrike);
     const ownBlast = attacker === this && !move.isSelf;
+    const contagious = this.poisonInherit && this.poisonUntil > time;
+    if (this.state === 'defending' && this.defenseMove?.flatHit != null && !move.isSelf && dmg > 0 && incoming.name !== 'zone') {
+      dmg = this.defenseMove.flatHit;
+    }
     if (ownBlast || move.isSelf) {
       // isSelf is a designed cost (Supernova) and stays at full damage.
       // ownBlast is a move that happens to include its owner.
@@ -696,6 +737,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
     applyOnHit(attacker, this, incoming, time);
     this.noteHeatAndRecoil(attacker, incoming, time, dealt);
+    this.spreadPoison(attacker, time, contagious);
     if (armored) return dmg;
 
     this.state = 'hurt';
@@ -709,8 +751,36 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
   weightNow() {
     const w = this.charDef.stats.weight;
+    const now = this.scene?.time?.now ?? 0;
+    if (this.weightBuffUntil > now) return w * (this.weightBuff ?? 1);
     if (this.state === 'defending' && this.defenseMove?.weightMult) return w * this.defenseMove.weightMult;
     return w;
+  }
+
+  spreadPoison(attacker, time, contagious) {
+    if (!contagious || !attacker || attacker === this || attacker.percent == null) return;
+    attacker.poisonUntil = Math.max(attacker.poisonUntil ?? 0, this.poisonUntil);
+    attacker.poisonDps = this.poisonDps;
+    attacker.poisonRamp = this.poisonRamp ?? 0;
+    attacker.poisonTick = time + 280;
+    attacker.poisonInherit = true;
+  }
+
+  retortFromImmune(attacker, move, time) {
+    const ret = this.defenseMove?.retort;
+    if (!ret || !attacker || attacker === this || !attacker.takeHit) return;
+    const types = [move?.type, move?.type2].filter(Boolean);
+    if (ret.when && !types.includes(ret.when)) return;
+    const cdmg = attacker.takeHit(this, {
+      name: this.defenseMove.name,
+      damage: ret.damage ?? 0,
+      type: ret.type ?? 'radiation',
+      baseKnockback: ret.knockback ?? 40,
+      knockbackGrowth: ret.growth ?? 0.4,
+      isCounterAttack: true,
+      onHit: ret.blind || ret.stun ? { blind: ret.blind, stun: ret.stun } : undefined,
+    }, time, this.facing);
+    if (cdmg > 0) this.scene?.noteHit?.(this, attacker, { name: this.defenseMove.name, type: ret.type });
   }
 
   noteHeatAndRecoil(attacker, incoming, time, dealt) {

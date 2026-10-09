@@ -22,6 +22,15 @@ function breaksBlock(move, defense) {
   return false;
 }
 
+function counterHitFx(defense, retort) {
+  const on = {};
+  if (defense?.counterStun) on.stun = defense.counterStun;
+  if (defense?.counterBlind) on.blind = defense.counterBlind;
+  if (retort?.stun) on.stun = retort.stun;
+  if (retort?.blind) on.blind = retort.blind;
+  return Object.keys(on).length ? on : undefined;
+}
+
 function rootMs(defense, attacker) {
   let ms = defense.rootMs ?? defense.counterRootMs ?? 0;
   if (!ms) return 0;
@@ -58,7 +67,30 @@ export function interceptHit(defender, attacker, move, time) {
   if (move?.isSelf) return { result: 'pass' };
 
   const types = typesOf(move);
-  if (defense.phase && !move?.breakPhase) return { result: 'negate' };
+  if (defense.phase && !move?.breakPhase) {
+    const ret = defense.phaseRetort;
+    if (ret && !move?.isCounterAttack) {
+      return {
+        result: 'counter',
+        counter: {
+          name: defense.name,
+          damage: ret.damage ?? 6,
+          type: ret.type ?? 'radiation',
+          baseKnockback: ret.knockback ?? 70,
+          knockbackGrowth: ret.growth ?? 1.2,
+          isCounterAttack: true,
+          onHit: counterHitFx(defense, ret),
+        },
+      };
+    }
+    return { result: 'negate' };
+  }
+  if (defense.amalgam && attacker?.charDef?.combat?.metal && !move?.isCounterAttack) {
+    const id = attacker.charDef?.id;
+    attacker.kinDefMult = defense.amalgamVs?.[id] ?? defense.amalgamMult ?? 0.68;
+    attacker.kinDefMultUntil = time + (defense.amalgamMs ?? 2400);
+    return { result: 'negate' };
+  }
   if (defense.backOpen && attacker && attacker !== defender) {
     const facing = defender.facing || 1;
     if ((attacker.x - defender.x) * facing < -10) {
@@ -83,6 +115,7 @@ export function interceptHit(defender, attacker, move, time) {
           knockbackGrowth: defense.counterKnockbackGrowth ?? 4,
           isCounterAttack: true,
           rootMs: rootMs(defense, attacker),
+          onHit: counterHitFx(defense),
         },
       };
     }
@@ -101,6 +134,7 @@ export function interceptHit(defender, attacker, move, time) {
           baseKnockback: defense.retort.knockback ?? 210,
           knockbackGrowth: defense.retort.growth ?? 4,
           isCounterAttack: true,
+          onHit: counterHitFx(defense, defense.retort),
         },
       };
     }
@@ -171,6 +205,10 @@ export function interceptHit(defender, attacker, move, time) {
       return { result: 'pass' };
     }
     let used = reduction ?? 0.7;
+    if (defense.harden) {
+      defender.hardenStacks = (defender.hardenStacks ?? 0) + 1;
+      used = Math.min(defense.hardenCap ?? 0.8, used + defender.hardenStacks * (defense.hardenStep ?? 0.1));
+    }
     if (move?.bonusVsBlock) used *= 0.45;
     return { result: 'partial', reduction: used, noKnockback: !!defense.noKnockback };
   }

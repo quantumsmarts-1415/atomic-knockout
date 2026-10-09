@@ -26,6 +26,16 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.poisonDps = p.dps ?? 1.4;
     victim.poisonRamp = p.ramp ?? 0;
     victim.poisonTick = time + (p.delay ?? 280);
+    if (p.inherit) victim.poisonInherit = true;
+  }
+  if (fx.heal && attacker) attacker.percent = Math.max(0, (attacker.percent ?? 0) - fx.heal);
+  if (fx.mute) {
+    victim.muteType = fx.mute;
+    victim.muteUntil = time + (fx.muteMs ?? 2600);
+  }
+  if (fx.vulnerable) {
+    victim.vulnerableMult = fx.vulnerable;
+    victim.vulnerableUntil = time + (fx.vulnerableMs ?? 2600);
   }
   if (fx.mark) {
     victim.mark = fx.mark;
@@ -162,6 +172,10 @@ function grantBuff(fighter, buff, time) {
     fighter.slipperyMult = buff.slippery;
   }
   if (buff.heated) fighter.heatedUntil = Math.max(fighter.heatedUntil ?? 0, time + ms);
+  if (buff.weight) {
+    fighter.weightBuff = buff.weight;
+    fighter.weightBuffUntil = time + ms;
+  }
   if (buff.armDash) {
     fighter.armedDash = {
       until: time + ms,
@@ -176,6 +190,27 @@ export function prepareMove(move, attacker, defender, now = 0) {
   if (!move) return move;
   let next = move;
   const id = defender?.charDef?.id;
+  if (attacker?.muteUntil > now && attacker.muteType) {
+    const mute = attacker.muteType;
+    if (next.type === mute) next = { ...next, damage: 0 };
+    if (next.type2 === mute) next = { ...next, damage2: 0 };
+  }
+  if (move.bonusVsStun && defender && (defender.state === 'hurt' || (defender.lockedUntil ?? 0) > now)) {
+    const mult = move.bonusVsStun;
+    next = {
+      ...next,
+      damage: (next.damage ?? 0) * mult,
+      damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
+    };
+  }
+  if (move.stillBonus && attacker?.openedStill) {
+    const mult = move.stillBonus;
+    next = {
+      ...next,
+      damage: (next.damage ?? 0) * mult,
+      damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
+    };
+  }
   if (move.bonusVsId && id && move.bonusVsId[id]) {
     const mult = move.bonusVsId[id];
     next = {
@@ -230,6 +265,7 @@ export function combatOpts(defender) {
   if (defender.kineticResistUntil > now && defender.kineticResistMult != null) {
     opts.kineticTakenMult = defender.kineticResistMult;
   }
+  if (defender.vulnerableUntil > now) opts.takenMult = defender.vulnerableMult ?? 1.2;
   return opts;
 }
 

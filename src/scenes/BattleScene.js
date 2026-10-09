@@ -559,6 +559,23 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   spawnProjectile(owner, move) {
+    if (move.fanTypes?.length && !move._fanChild) {
+      const types = move.fanTypes;
+      const spread = move.fanSpread ?? 200;
+      for (let i = 0; i < types.length; i++) {
+        const t = types.length === 1 ? 0 : (i / (types.length - 1) - 0.5);
+        this.spawnProjectile(owner, {
+          ...move, fanTypes: null, _fanChild: true, _vy: t * spread,
+          type: types[i], type2: undefined, damage2: undefined,
+        });
+      }
+      return;
+    }
+    if (move.alsoBehind && !move._behindChild) {
+      this.spawnProjectile(owner, { ...move, alsoBehind: false, _behindChild: true });
+      this.spawnProjectile(owner, { ...move, alsoBehind: false, _behindChild: true, _flip: true });
+      return;
+    }
     if (move.fan > 1 && !move._fanChild) {
       const n = move.fan | 0;
       const spread = move.fanSpread ?? 220;
@@ -576,13 +593,14 @@ export default class BattleScene extends Phaser.Scene {
       if (owner.input?.jump) vy = -240;
       else if (owner.input?.down) vy = 220;
     }
-    const x = owner.x + owner.facing * (owner.bodyW / 2 + r + 4);
+    const face = move._flip ? -owner.facing : owner.facing;
+    const x = owner.x + face * (owner.bodyW / 2 + r + 4);
     const y = owner.y - owner.bodyH * 0.65;
     if (this.simFast) {
       this.projectiles.push({
         gfx: { x, y, destroy() {} },
         owner, move,
-        vx: owner.facing * move.projectileSpeed,
+        vx: face * move.projectileSpeed,
         vy,
         dieAt: this.time.now + move.projectileLife,
         born: this.time.now,
@@ -635,12 +653,12 @@ export default class BattleScene extends Phaser.Scene {
         orb.fillCircle(-r * 0.3, -r * 0.3, r * 0.35);
       }
     }
-    orb.x = owner.x + owner.facing * (owner.bodyW / 2 + r + 4);
+    orb.x = owner.x + face * (owner.bodyW / 2 + r + 4);
     orb.y = owner.y - owner.bodyH * 0.65;
 
     this.projectiles.push({
       gfx: orb, owner, move,
-      vx: owner.facing * move.projectileSpeed,
+      vx: face * move.projectileSpeed,
       vy,
       dieAt: this.time.now + move.projectileLife,
       born: this.time.now,
@@ -784,7 +802,9 @@ export default class BattleScene extends Phaser.Scene {
           baseKnockback: z.spec.knockback ?? 40,
           knockbackGrowth: z.spec.growth ?? 0.4,
           onHit: z.spec.onHit,
+          bonusVsId: z.spec.bonusVsId,
           kind: 'burst',
+          name: z.spec.name ?? 'zone',
         });
         if (z.spec.slide) {
           target.slipperyUntil = time + 280;
@@ -1092,6 +1112,21 @@ export default class BattleScene extends Phaser.Scene {
         p.returning = true;
         p.landed = new Set();
       }
+      if (!p.dead) {
+        for (const f of this.fighters) {
+          const pull = f.state === 'attack' && f.currentMove?.attractProjectiles;
+          if (!pull || f === p.owner || !f.alive) continue;
+          if (Math.abs(f.x - p.gfx.x) > 220 || Math.abs(f.y - p.gfx.y) > 160) continue;
+          p.vx += Math.sign(f.x - p.gfx.x || 1) * pull;
+          p.vy += Math.sign((f.y - f.bodyH * 0.5) - p.gfx.y || 1) * pull * 0.35;
+          if (Math.abs(f.x - p.gfx.x) < 28 && Math.abs((f.y - f.bodyH * 0.5) - p.gfx.y) < 40) {
+            p.gfx.destroy();
+            p.dead = true;
+          }
+          break;
+        }
+      }
+      if (p.dead) continue;
       if (!p.slowed) {
         for (const f of this.fighters) {
           if (f.state !== 'defending' || !f.defenseMove?.slowProjectiles) continue;
@@ -1123,7 +1158,9 @@ export default class BattleScene extends Phaser.Scene {
         const def = victim.defenseMove;
         const perfect = def?.reflectProjectiles === 'perfect'
           && time - (victim.defenseStart ?? time) <= (def.perfectMs ?? 200);
-        if (victim.state === 'defending' && (def?.reflectProjectiles === true || perfect)) {
+        const metalShot = !!(p.owner?.charDef?.combat?.metal);
+        const reflect = def?.reflectProjectiles === true || perfect || (def?.reflectMetals && metalShot);
+        if (victim.state === 'defending' && reflect) {
           this.landHit(victim, p.owner, p.move, -Math.sign(p.vx) || victim.facing);
           p.gfx.destroy();
           p.dead = true;
@@ -1131,6 +1168,9 @@ export default class BattleScene extends Phaser.Scene {
         }
         p.landed.add(victim);
         let shot = p.move;
+        if (shot.tipBonus && p.owner && Math.abs(p.gfx.x - p.owner.x) >= (shot.tipAt ?? 260)) {
+          shot = { ...shot, damage: (shot.damage ?? 0) + shot.tipBonus };
+        }
         if (victim.state === 'defending' && victim.defenseMove?.softenProjectiles) {
           const mul = victim.defenseMove.softenProjectiles;
           shot = { ...shot, damage: (shot.damage ?? 0) * mul, damage2: shot.damage2 != null ? shot.damage2 * mul : shot.damage2 };

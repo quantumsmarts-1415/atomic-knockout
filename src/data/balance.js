@@ -222,12 +222,14 @@ function incomingMult(type, atk, def) {
 export function resolvePacket(amount, type, atkCombat, defCombat, opts = {}) {
   if (!(amount > 0)) return 0;
   let dmg = amount * outgoingMult(type, atkCombat);
+  if (opts.ignoreDefense) return dmg < 0 ? 0 : dmg;
   let mult = incomingMult(type, atkCombat, defCombat);
   if (canonicalType(type) === 'kinetic' && opts.kinDefMult != null) mult *= opts.kinDefMult;
   if (canonicalType(type) === 'kinetic' && opts.kineticTakenMult != null) mult *= opts.kineticTakenMult;
   if (canonicalType(type) === 'heat' && opts.heatTakenMult != null) mult *= opts.heatTakenMult;
   if (canonicalType(type) === 'chemical' && opts.chemDealtMult != null) dmg *= opts.chemDealtMult;
   dmg *= mult;
+  if (opts.takenMult) dmg *= opts.takenMult;
   return dmg < 0 ? 0 : dmg;
 }
 

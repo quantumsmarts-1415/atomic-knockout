@@ -1,0 +1,56 @@
+{
+  "id": "ruben",
+  "name": "Ruben",
+  "element": "Rubidium",
+  "symbol": "Rb",
+  "atomicNumber": 37,
+  "tagline": "Condensate Collapse",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "alkali",
+    "metal": true,
+    "noble": false,
+    "density": 1.534,
+    "mohs": 0.3,
+    "tensile": 0,
+    "boiling": 961,
+    "conductivity": 8.3,
+    "en": 0.82
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15187109,
+      "body": 12868170,
+      "accent": 14653031,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15187109,
+      "body": 8995124,
+      "accent": 14653031,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15187109,
+      "body": 14989481,
+      "accent": 14653031,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15187109,
+      "body": 3742240,
+      "accent": 14653031,
+      "eye": 16055295
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "id": "neptune",
+  "name": "Neptune",
+  "element": "Neptunium",
+  "symbol": "Np",
+  "atomicNumber": 93,
+  "tagline": "Tidal Surge",
+  "teach": "Neptunium was the first element past uranium. He is named for the planet beyond Uranus.",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 0,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "actinide",
+    "metal": true,
+    "noble": false,
+    "density": 20.45,
+    "mohs": 0,
+    "tensile": 0,
+    "boiling": 4447,
+    "conductivity": 0.83,
+    "en": 1.36
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15384759,
+      "body": 13658762,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15384759,
+      "body": 9456478,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15384759,
+      "body": 15253186,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15384759,
+      "body": 3939886,
+      "accent": 15048586,
+      "eye": 16055295
+    }
+  ]
+}

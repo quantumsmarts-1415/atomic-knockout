@@ -1,108 +1,79 @@
 import * as Phaser from 'phaser';
 import { CHARACTERS } from '../data/characters.js';
+import { buildSelectSlots, familyColor, stepSlot, TABLE_COLS, TABLE_ROWS } from '../data/periodic.js';
 import { Rig } from '../engine/Rig.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
-import { FONT_BODY, FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME, drawMenuBackground } from '../ui/theme.js';
+import {
+  drawMenuBackground, FONT_BODY, FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME,
+} from '../ui/theme.js';
 import { showScene } from '../ui/flow.js';
-import { menuPortraitKey } from '../ui/portraits.js';
 
 // Slot numbering, decided in PlayerJoinScene: 0/1 = keyboard, 2-5 = a phone
 // (PhoneNet's own connection slot), 100+seatIndex = a bot. Bots live far
 // outside the phone range so the two can never collide.
 const BOT_SLOT_BASE = 100;
 
-// The 24 launch slots (first 24 elements). Only entries with a charId are
-// playable today; the rest render as locked periodic-table tiles.
-const SLOTS = [
-  { n: 1, sym: 'H', name: 'Hydra', charId: 'hydra' },
-  { n: 2, sym: 'He', name: 'Helen', charId: 'helen' },
-  { n: 3, sym: 'Li', name: 'Lillie', charId: 'lillie' }, { n: 4, sym: 'Be', name: 'Ben', charId: 'ben' },
-  { n: 5, sym: 'B', name: 'Bord', charId: 'bord' }, { n: 6, sym: 'C', name: 'Carter', charId: 'carter' },
-  { n: 7, sym: 'N', name: 'Nitra', charId: 'nitra' }, { n: 8, sym: 'O', name: 'Oxana', charId: 'oxana' },
-  { n: 9, sym: 'F', name: 'Flora', charId: 'flora' }, { n: 10, sym: 'Ne', name: 'Neo', charId: 'neo' },
-  { n: 11, sym: 'Na', name: 'Natalie', charId: 'natalie' }, { n: 12, sym: 'Mg', name: 'Maggie', charId: 'maggie' },
-  { n: 13, sym: 'Al', name: 'Allen', charId: 'allen' }, { n: 14, sym: 'Si', name: 'Silas', charId: 'silas' },
-  { n: 15, sym: 'P', name: 'Phillip', charId: 'phillip' }, { n: 16, sym: 'S', name: 'Sully', charId: 'sully' },
-  { n: 17, sym: 'Cl', name: 'Chloe', charId: 'chloe' }, { n: 18, sym: 'Ar', name: 'Aaron', charId: 'aaron' },
-  { n: 19, sym: 'K', name: 'Kyle', charId: 'kyle' }, { n: 20, sym: 'Ca', name: 'Cal', charId: 'cal' },
-  { n: 21, sym: 'Sc', name: 'Scarlett', charId: 'scarlett' }, { n: 22, sym: 'Ti', name: 'Titan', charId: 'titan' },
-  { n: 23, sym: 'V', name: 'Van', charId: 'van' }, { n: 24, sym: 'Cr', name: 'Chroma', charId: 'chroma' },
-];
+// 18 columns, seven periods, then the lanthanide and actinide rows. The
+// viewport scrolls so a D-pad can reach all 118 without shrinking the tiles
+// down to specks. Phone input uses the same left/right/up/down booleans.
+const TILE_W = 58;
+const TILE_H = 44;
+const GAP = 4;
+const STRIDE_X = TILE_W + GAP;
+const STRIDE_Y = TILE_H + GAP;
+const VIEW_Y = 76;
+const VIEW_H = 332;
 
-const COLS = 8;
-const TILE = 92;
-const GAP = 12;
+const PREVIEW_ANCHOR_Y = 592;
+const PREVIEW_TOP_MARGIN = 16;
 
-// Preview rigs are anchored (feet) at this y and grow upward from there --
-// tall characters at the small-lobby scale (1.35x) could grow tall enough to
-// poke up into the tile grid above them, covering the bottom row of
-// characters. PREVIEW_TOP_MARGIN is the minimum gap always kept clear
-// between a preview's top and the grid's bottom edge.
-const PREVIEW_ANCHOR_Y = 560;
-const PREVIEW_TOP_MARGIN = 24;
-
-// P1/P2 are always the two local keyboard players (slots 0/1). Slots 2-5 are
-// phones, filled in from phoneNet — however many happen to be connected when
-// this scene starts (joining happens in the PlayerJoin lobby before this).
-const PLAYABLE_SLOT_INDICES = SLOTS.map((s, i) => (s.charId ? i : null)).filter((i) => i !== null);
-
-// ---------------------------------------------------------------------------
-// CharacterSelectScene — every player (keyboard or phone) picks a character,
-// then a color. Flow per player: move cursor → confirm character → left/right
-// cycles palette → confirm again to lock in. Back backs out one step.
-//
-// Input is unified across sources: every player is polled once per frame for
-// {left,right,up,down,confirm,back} booleans (keyboard reads Phaser Key
-// state, phones read PhoneNet), and edge-detection (just-pressed) happens
-// here rather than via Phaser's keyboard events, so both sources behave
-// identically.
-// ---------------------------------------------------------------------------
 export default class CharacterSelectScene extends Phaser.Scene {
   constructor() {
     super('CharacterSelect');
   }
 
   init(data) {
-    // Falls back to 2 keyboard players if launched directly (e.g. testing)
-    // without going through the PlayerJoin lobby.
     this.playerSeeds = data?.playerSeeds?.length ? data.playerSeeds : [{ slot: 0 }, { slot: 1 }];
   }
 
   create() {
-    // Phaser reuses this same scene instance every time CharacterSelect is
-    // entered (it doesn't get recreated), so instance flags set during a
-    // previous visit must be reset here or they leak into the next one --
-    // this one guards the StageSelect transition below and previously stuck
-    // every subsequent visit at "Everyone locked in" forever once it had
-    // been set true once.
     this.starting = false;
-    this.drawBackground();
-    this.add.text(W / 2, 18, 'REACTOR  ·  ROSTER', {
+    this.slots = buildSelectSlots(CHARACTERS);
+    this.playable = this.slots.map((s, i) => (s.charId ? i : null)).filter((i) => i !== null);
+    this.scrollY = 0;
+    drawMenuBackground(this, W, H);
+    this.add.text(W / 2, 22, 'REACTOR  ·  ROSTER', {
       fontFamily: FONT_MONO, fontSize: '12px', color: THEME.tealCss, letterSpacing: 3,
     }).setOrigin(0.5);
-    this.add.text(W / 2, 42, 'CHOOSE YOUR ELEMENT', {
-      fontFamily: FONT_DISPLAY, fontSize: '28px', color: THEME.mistCss, letterSpacing: 1,
+    this.add.text(W / 2, 46, 'CHOOSE YOUR ELEMENT', {
+      fontFamily: FONT_DISPLAY, fontSize: '26px', color: THEME.mistCss, letterSpacing: 1,
     }).setOrigin(0.5);
 
-    this.gridX = W / 2 - (COLS * (TILE + GAP) - GAP) / 2;
-    this.gridY = 96;
-    this.hoverBox = this.add.graphics().setDepth(4);
-    this.gridBottom = this.gridY + Math.ceil(SLOTS.length / COLS) * (TILE + GAP) - GAP;
-    this.tiles = SLOTS.map((slot, i) => this.drawTile(slot, i));
+    const gridW = TABLE_COLS * STRIDE_X - GAP;
+    this.gridX = Math.round((W - gridW) / 2);
+    this.contentH = (TABLE_ROWS - 1) * STRIDE_Y + TILE_H;
+    this.maxScroll = Math.max(0, this.contentH - VIEW_H);
 
-    // Player "slot" numbers come straight from the lobby's decisions. Array
-    // position doubles as each player's UI ordering (P1 leftmost preview).
+    this.grid = this.add.container(this.gridX, VIEW_Y);
+    const maskG = this.make.graphics({ x: 0, y: 0, add: false });
+    maskG.fillStyle(0xffffff);
+    maskG.fillRect(this.gridX - 32, VIEW_Y, gridW + 48, VIEW_H);
+    this.grid.setMask(maskG.createGeometryMask());
+
+    this.tiles = this.slots.map((slot, i) => this.drawTile(slot, i));
+    this.drawRowLabels();
+
+    this.scrollTrack = this.add.graphics();
+    this.scrollThumb = this.add.graphics();
+
     this.playerSlots = this.playerSeeds.map((seed) => seed.slot);
     this.players = this.playerSlots.map((slot, i) => this.makePlayer(slot, i));
-
-    // Bots skip the whole picking flow -- they were already given a random
-    // character/palette and locked in makePlayer(); this just builds their
-    // preview now that the full player list (and layout it depends on) exists.
     for (const p of this.players) {
-      if (p.isBot) this.buildPreview(p);
+      this.buildPreview(p);
     }
+    this.scrollTo(this.players.find((p) => !p.isBot)?.cursor ?? 0);
 
     this.hint = this.add.text(W / 2, H - 18, '', {
       fontFamily: FONT_BODY, fontSize: '14px', color: THEME.dimCss,
@@ -111,88 +82,86 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.checkAllLocked();
   }
 
-  drawBackground() {
-    drawMenuBackground(this, W, H);
+  tileXY(slot) {
+    return { x: slot.col * STRIDE_X, y: slot.row * STRIDE_Y };
   }
 
-  tileXY(i) {
-    const col = i % COLS;
-    const row = Math.floor(i / COLS);
-    return { x: this.gridX + col * (TILE + GAP), y: this.gridY + row * (TILE + GAP) };
+  drawRowLabels() {
+    const labels = [
+      [0, '1'], [1, '2'], [2, '3'], [3, '4'], [4, '5'], [5, '6'], [6, '7'],
+      [8, 'La'], [9, 'Ac'],
+    ];
+    // Period 7 leaves column 2 empty, right before Rf. That gap labels the ghost row.
+    this.grid.add(this.add.text(2 * STRIDE_X + TILE_W / 2, 6 * STRIDE_Y + TILE_H / 2, 'GHOST\nRf–Og', {
+      fontFamily: FONT_MONO, fontSize: '10px', color: THEME.tealCss, align: 'center',
+    }).setOrigin(0.5));
+    for (const [row, text] of labels) {
+      this.grid.add(this.add.text(-6, row * STRIDE_Y + TILE_H / 2, text, {
+        fontFamily: FONT_MONO, fontSize: '11px', color: THEME.dimCss,
+      }).setOrigin(1, 0.5));
+    }
   }
 
   drawTile(slot, i) {
-    const { x, y } = this.tileXY(i);
+    const { x, y } = this.tileXY(slot);
     const unlocked = !!slot.charId;
-    const g = this.add.graphics();
-    // Unlocked tiles keep the character's own palette color (that's their
-    // identity, not generic chrome); locked tiles get the HUD glass look.
-    const base = unlocked ? CHARACTERS[slot.charId].palettes[0].body : THEME.shellEmpty;
-    return this.finishTile(g, slot, x, y, unlocked, base);
-  }
-
-  // Unlocked tiles show the character's own concept-art photo by default.
-  // Hovering the mouse over a tile swaps in a name/symbol card on top of it;
-  // moving the pointer away (which also covers "picked a character and
-  // moved on") swaps back to the photo. Locked (no charId yet) tiles keep
-  // the old plain "???" placeholder look, unaffected by any of this.
-  finishTile(g, slot, x, y, unlocked, base) {
-    g.fillStyle(base, 1);
-    g.fillRoundedRect(x, y, TILE, TILE, 12);
+    const g = this.make.graphics({ add: false });
+    const base = unlocked ? (CHARACTERS[slot.charId].palettes[0].body) : THEME.shellEmpty;
+    g.fillStyle(base, unlocked ? 1 : 0.92);
+    g.fillRoundedRect(x, y, TILE_W, TILE_H, 7);
+    g.fillStyle(familyColor(slot.n), unlocked ? 0.95 : 0.55);
+    g.fillRect(x, y + 6, 3, TILE_H - 12);
+    this.grid.add(g);
 
     const charDef = unlocked ? CHARACTERS[slot.charId] : null;
-    const portrait = menuPortraitKey(charDef);
-    const hasPhoto = !!(portrait && this.textures.exists(portrait));
-
+    const hasPhoto = unlocked && charDef.art && this.textures.exists(charDef.art.key);
     if (hasPhoto) {
-      const photo = this.add.image(x + TILE / 2, y + TILE / 2, portrait);
+      const photo = this.add.image(x + TILE_W / 2 + 2, y + TILE_H / 2, charDef.art.key);
       const pad = 8;
-      const scale = Math.min((TILE - pad) / photo.width, (TILE - pad) / photo.height);
+      const scale = Math.min((TILE_W - pad) / photo.width, (TILE_H - pad) / photo.height);
       photo.setScale(scale);
-    } else if (unlocked) {
-      g.fillStyle(0xffffff, 0.16);
-      g.fillRoundedRect(x + 4, y + 4, TILE - 8, TILE - 8, 9);
-    } else {
-      g.lineStyle(1.5, THEME.teal, 0.35);
-      g.strokeRoundedRect(x + 4, y + 4, TILE - 8, TILE - 8, 9);
+      this.grid.add(photo);
     }
 
-    // Name/symbol card -- always present for locked tiles (no photo to show
-    // instead); only shown on hover for unlocked tiles with a real photo.
-    const card = this.add.container(0, 0);
-    const scrim = this.add.graphics();
-    scrim.fillStyle(THEME.void, 0.82);
-    scrim.fillRoundedRect(x + 4, y + 4, TILE - 8, TILE - 8, 9);
-    const symText = this.add.text(x + TILE / 2, y + TILE / 2 + 2, slot.sym, {
-      fontFamily: FONT_DISPLAY, fontSize: '28px',
-      color: unlocked ? THEME.mistCss : THEME.disabledCss,
-    }).setOrigin(0.5);
-    const nameText = this.add.text(x + TILE / 2, y + TILE - 13, unlocked ? slot.name : '???', {
-      fontFamily: FONT_BODY, fontSize: '12px',
-      color: unlocked ? THEME.mistCss : THEME.disabledCss,
-    }).setOrigin(0.5);
-    card.add([scrim, symText, nameText]);
-    card.setVisible(!hasPhoto);
+    const numColor = unlocked ? THEME.goldCss : (slot.soon ? THEME.mistCss : THEME.disabledCss);
+    const symColor = unlocked ? THEME.mistCss : (slot.soon ? THEME.mistCss : THEME.dimCss);
+    this.grid.add(this.add.text(x + 8, y + 2, String(slot.n), {
+      fontFamily: FONT_MONO, fontSize: '10px', color: numColor,
+    }));
+    this.grid.add(this.add.text(x + TILE_W / 2 + 1, y + (hasPhoto ? TILE_H - 11 : TILE_H / 2 + (slot.soon ? 1 : 4)), slot.sym, {
+      fontFamily: FONT_DISPLAY, fontSize: hasPhoto ? '11px' : (slot.soon ? '12px' : '14px'),
+      color: symColor,
+    }).setOrigin(0.5));
+    if (slot.soon) {
+      this.grid.add(this.add.text(x + TILE_W / 2, y + TILE_H - 8, 'soon', {
+        fontFamily: FONT_MONO, fontSize: '8px', color: THEME.tealCss,
+      }).setOrigin(0.5));
+    }
 
-    // Tile number stays visible in both states (periodic-table convention).
-    this.add.text(x + 10, y + 8, String(slot.n), {
-      fontFamily: FONT_MONO, fontSize: '12px',
-      color: unlocked ? THEME.goldCss : THEME.disabledCss,
+    const zone = this.add.zone(x, y, TILE_W, TILE_H).setOrigin(0, 0).setInteractive();
+    zone.on('pointerover', () => {
+      const human = this.players?.find((p) => p.isKeyboard && p.phase === 'picking');
+      if (!human) return;
+      human.cursor = i;
+      this.scrollTo(i);
+      this.buildPreview(human);
+      this.refreshAll();
     });
-
-    if (hasPhoto) {
-      const zone = this.add.zone(x, y, TILE, TILE).setOrigin(0, 0).setInteractive();
-      zone.on('pointerover', () => { card.setVisible(true); this.drawTileHover(x, y); });
-      zone.on('pointerout', () => { card.setVisible(false); this.hoverBox?.clear(); });
-    }
-
+    zone.on('pointerdown', () => this.pickWithPointer(i));
+    this.grid.add(zone);
     return { slot, x, y, unlocked };
   }
 
-  // index: this player's position among the players in THIS match (0-based,
-  // used for layout/color/starting pick). slot: their persistent control
-  // slot (0/1 keyboard, 2-5 phone, 100+ bot) — this is what follows them all
-  // the way into BattleScene so input keeps routing to the right fighter.
+  pickWithPointer(index) {
+    const human = this.players?.find((p) => p.isKeyboard && p.phase !== 'locked');
+    if (!human) return;
+    human.cursor = index;
+    this.scrollTo(index);
+    if (human.phase === 'picking') this.handleConfirm(human);
+    else if (human.phase === 'palette' && this.slots[index].charId) this.handleConfirm(human);
+    else this.refreshAll();
+  }
+
   makePlayer(slot, index) {
     const isKeyboard = slot === 0 || slot === 1;
     const isBot = slot >= BOT_SLOT_BASE;
@@ -210,21 +179,15 @@ export default class CharacterSelectScene extends Phaser.Scene {
     }
 
     const previewX = this.previewXFor(index, this.playerSlots?.length ?? 2);
-    const randomSlotIdx = PLAYABLE_SLOT_INDICES[Math.floor(Math.random() * PLAYABLE_SLOT_INDICES.length)];
-    const randomPalette = Math.floor(Math.random() * CHARACTERS[SLOTS[randomSlotIdx].charId].palettes.length);
-    const p = {
+    const randomSlotIdx = this.playable[Math.floor(Math.random() * this.playable.length)];
+    const randomPalette = Math.floor(Math.random() * CHARACTERS[this.slots[randomSlotIdx].charId].palettes.length);
+    const start = isBot ? randomSlotIdx : Math.min(index, this.slots.length - 1);
+    return {
       slot, index, isKeyboard, isBot, keys,
       color: PLAYER_COLORS[index % PLAYER_COLORS.length],
-      // Label is by seat position (index), not the raw slot number -- slot
-      // is just a routing key now (bots sit at 100+, and a phone's slot can
-      // be a different number than its seat position once binding order
-      // shuffles things), so P-number must always come from seat order.
       label: `P${index + 1}${isBot ? ' (CPU)' : ''}`,
-      // Bots skip the picking UI entirely -- a random playable character and
-      // palette, locked immediately, is enough to "stand in for a human"
-      // (Phase 8's phrasing) for testing a match, not a real ability choice.
-      cursor: isBot ? randomSlotIdx : Math.min(index, SLOTS.length - 1),
-      phase: isBot ? 'locked' : 'picking', // picking | palette | locked
+      cursor: start,
+      phase: isBot ? 'locked' : 'picking',
       palette: isBot ? randomPalette : index,
       prevBtn: { left: false, right: false, up: false, down: false, confirm: false, back: false },
       box: this.add.graphics(),
@@ -232,7 +195,6 @@ export default class CharacterSelectScene extends Phaser.Scene {
       previewRig: null,
       panel: this.add.container(previewX, 500),
     };
-    return p;
   }
 
   previewXFor(index, n) {
@@ -241,8 +203,6 @@ export default class CharacterSelectScene extends Phaser.Scene {
     return margin + (index * (W - margin * 2)) / (n - 1);
   }
 
-  // Current {left,right,up,down,confirm,back} booleans for a player, from
-  // whichever input source they use.
   readInput(p) {
     if (p.isKeyboard) {
       return {
@@ -254,14 +214,39 @@ export default class CharacterSelectScene extends Phaser.Scene {
     return phoneNet.getInput(p.slot);
   }
 
+  scrollTo(index) {
+    const slot = this.slots[index];
+    if (!slot) return;
+    const y = slot.row * STRIDE_Y;
+    if (y < this.scrollY) this.scrollY = y;
+    else if (y + TILE_H > this.scrollY + VIEW_H) this.scrollY = y + TILE_H - VIEW_H;
+    this.scrollY = Phaser.Math.Clamp(this.scrollY, 0, this.maxScroll);
+    this.grid.y = VIEW_Y - this.scrollY;
+    this.drawScrollbar();
+  }
+
+  drawScrollbar() {
+    const x = this.gridX + TABLE_COLS * STRIDE_X - GAP + 10;
+    this.scrollTrack.clear();
+    this.scrollThumb.clear();
+    if (this.maxScroll <= 0) return;
+    this.scrollTrack.fillStyle(THEME.shellIdleFill, 0.9);
+    this.scrollTrack.fillRoundedRect(x, VIEW_Y, 6, VIEW_H, 3);
+    const thumbH = Math.max(28, VIEW_H * (VIEW_H / this.contentH));
+    const travel = VIEW_H - thumbH;
+    const ty = VIEW_Y + (this.maxScroll ? (this.scrollY / this.maxScroll) * travel : 0);
+    this.scrollThumb.fillStyle(THEME.teal, 0.9);
+    this.scrollThumb.fillRoundedRect(x, ty, 6, thumbH, 3);
+  }
+
   handleDir(p, dx, dy) {
     if (p.phase !== 'locked') sfx('menuMove');
     if (p.phase === 'picking') {
-      const col = (p.cursor % COLS + dx + COLS) % COLS;
-      const row = Phaser.Math.Clamp(Math.floor(p.cursor / COLS) + dy, 0, Math.ceil(SLOTS.length / COLS) - 1);
-      p.cursor = Math.min(row * COLS + col, SLOTS.length - 1);
+      p.cursor = stepSlot(this.slots, p.cursor, dx, dy);
+      this.scrollTo(p.cursor);
+      this.buildPreview(p);
     } else if (p.phase === 'palette' && dx !== 0) {
-      const def = CHARACTERS[SLOTS[p.cursor].charId];
+      const def = CHARACTERS[this.slots[p.cursor].charId];
       p.palette = (p.palette + dx + def.palettes.length) % def.palettes.length;
       this.buildPreview(p);
     }
@@ -269,13 +254,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   handleConfirm(p) {
-    if (p.phase !== 'locked' && SLOTS[p.cursor].charId) sfx('menuConfirm');
-    if (p.phase === 'picking' && SLOTS[p.cursor].charId) {
+    const slot = this.slots[p.cursor];
+    if (p.phase !== 'locked' && slot.charId) sfx('menuConfirm');
+    if (p.phase === 'picking' && slot.charId) {
       p.phase = 'palette';
-      // default different colors so mirror picks differ -- modulo the
-      // actual character's palette count (was a hardcoded %8, which broke
-      // for player index >= a character's real palette count, e.g. P5+)
-      const def = CHARACTERS[SLOTS[p.cursor].charId];
+      const def = CHARACTERS[slot.charId];
       p.palette = p.index % def.palettes.length;
       this.buildPreview(p);
     } else if (p.phase === 'palette') {
@@ -293,56 +276,56 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   buildPreview(p) {
     p.previewRig?.destroy();
-    const def = CHARACTERS[SLOTS[p.cursor].charId];
-    p.previewRig = new Rig(this, def, p.palette);
+    p.previewRig = null;
+    p.previewName?.destroy();
+    const slot = this.slots[p.cursor];
+    if (!slot?.charId) {
+      const waiting = slot.soon ? 'Coming soon' : 'Not forged yet';
+      p.previewName = this.add.text(p.previewX, PREVIEW_ANCHOR_Y - 36, `${slot.sym}  ${slot.n}\n${slot.element}\n${waiting}`, {
+        fontFamily: FONT_BODY, fontSize: '16px', color: THEME.dimCss, align: 'center',
+      }).setOrigin(0.5);
+      return;
+    }
+    const def = CHARACTERS[slot.charId];
+    p.previewRig = new Rig(this, def, p.palette % def.palettes.length);
     p.previewRig.setPosition(p.previewX, PREVIEW_ANCHOR_Y);
-    const desiredScale = this.players.length > 3 ? 0.95 : 1.35;
-    // Visual height before scaling: art-based rigs render at art.height;
-    // procedural rigs are roughly legs + torso + head. Clamp the scale so
-    // the tallest characters can't grow up into the tile grid above.
+    const desiredScale = this.players.length > 3 ? 0.85 : 1.05;
     const visualHeight = def.art?.height
       ?? (def.body.legLength + def.body.torsoHeight + def.body.headRadius * 2);
-    const maxScale = (PREVIEW_ANCHOR_Y - this.gridBottom - PREVIEW_TOP_MARGIN) / visualHeight;
-    p.previewRig.baseScale = Math.min(desiredScale, maxScale);
+    const maxScale = (PREVIEW_ANCHOR_Y - (VIEW_Y + VIEW_H) - PREVIEW_TOP_MARGIN) / visualHeight;
+    p.previewRig.baseScale = Math.min(desiredScale, Math.max(0.4, maxScale));
     this.add.existing(p.previewRig);
-    p.previewName?.destroy();
-    p.previewName = this.add.text(p.previewX, 600, `${def.name}\n${def.palettes[p.palette].name}`, {
+    const palette = def.palettes[p.palette % def.palettes.length];
+    p.previewName = this.add.text(p.previewX, PREVIEW_ANCHOR_Y + 18, `${p.label}  ${def.name}\n${def.element} · ${palette.name}`, {
       fontFamily: FONT_BODY, fontSize: this.players.length > 3 ? '14px' : '16px',
       color: THEME.mistCss, align: 'center',
     }).setOrigin(0.5, 0);
   }
 
-  drawTileHover(x, y) {
-    this.hoverBox.clear();
-    this.hoverBox.lineStyle(2, THEME.teal, 0.95);
-    this.hoverBox.strokeRoundedRect(x - 6, y - 6, TILE + 12, TILE + 12, 16);
-  }
-
   refreshAll() {
     for (const p of this.players) {
+      if (p.box.parentContainer !== this.grid) this.grid.add(p.box);
       p.box.clear();
-      const { x, y } = this.tileXY(p.cursor);
-      const inset = (p.index % 5) * 4; // offset stacked cursors so overlapping picks are still visible
+      const slot = this.slots[p.cursor];
+      const { x, y } = this.tileXY(slot);
+      const inset = (p.index % 5) * 3;
       if (p.phase === 'locked') {
-        p.box.lineStyle(6, THEME.pink, 0.35);
-        p.box.strokeRoundedRect(x - 8, y - 8, TILE + 16, TILE + 16, 16);
-        p.box.lineStyle(3, THEME.gold, 1);
-        p.box.strokeRoundedRect(x - 4, y - 4, TILE + 8, TILE + 8, 14);
+        p.box.lineStyle(4, THEME.gold, 1);
+        p.box.strokeRoundedRect(x - 4, y - 4, TILE_W + 8, TILE_H + 8, 9);
       } else if (p.phase === 'palette') {
         p.box.lineStyle(3, THEME.gold, 1);
-        p.box.strokeRoundedRect(x - 5, y - 5, TILE + 10, TILE + 10, 14);
-        p.box.lineStyle(4, p.color, 1);
-        p.box.strokeRoundedRect(x - 1 + inset, y - 1 + inset, TILE + 2 - inset * 2, TILE + 2 - inset * 2, 12);
+        p.box.strokeRoundedRect(x - 5, y - 5, TILE_W + 10, TILE_H + 10, 9);
+        p.box.lineStyle(3, p.color, 1);
+        p.box.strokeRoundedRect(x - 2 + inset, y - 2 + inset, TILE_W + 4 - inset * 2, TILE_H + 4 - inset * 2, 8);
       } else {
-        p.box.fillStyle(p.color, 0.18);
-        p.box.fillRoundedRect(x - 4, y - 4, TILE + 8, TILE + 8, 14);
-        p.box.lineStyle(4, p.color, 1);
-        p.box.strokeRoundedRect(x - 4 + inset, y - 4 + inset, TILE + 8 - inset * 2, TILE + 8 - inset * 2, 14);
+        p.box.lineStyle(3, p.color, 1);
+        p.box.strokeRoundedRect(x - 2 + inset, y - 2 + inset, TILE_W + 4 - inset * 2, TILE_H + 4 - inset * 2, 8);
       }
     }
     const phases = this.players.map((p) => p.phase);
     if (phases.every((ph) => ph === 'locked')) this.hint.setText('Everyone locked in — starting…');
-    else this.hint.setText('Move: D-pad/WASD/Arrows/phone · Confirm: attack button · Color: ←→ · Back: special button');
+    else this.hint.setText('Move: D-pad/WASD/Arrows/phone · Confirm: attack · Color: ←→ · Back: special');
+    this.drawScrollbar();
   }
 
   checkAllLocked() {
@@ -350,7 +333,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.starting = true;
     this.time.delayedCall(700, () => {
       showScene(this, 'StageSelect', {
-        players: this.players.map((p) => ({ charId: SLOTS[p.cursor].charId, palette: p.palette, slot: p.slot })),
+        players: this.players.map((p) => ({ charId: this.slots[p.cursor].charId, palette: p.palette, slot: p.slot })),
         stocks: 3,
       });
     });
@@ -358,12 +341,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   update(time, delta) {
     for (const p of this.players) {
-      // Graceful disconnect: if a phone player drops before locking in, stop
-      // waiting on them — auto-lock whatever they had selected (falling back
-      // to the first playable character if they hadn't picked one yet) so a
-      // dropped phone can't strand the rest of the group in the lobby.
       if (!p.isKeyboard && !p.isBot && !phoneNet.hasSlot(p.slot) && p.phase !== 'locked') {
-        if (!SLOTS[p.cursor].charId) p.cursor = 0;
+        if (!this.slots[p.cursor].charId) p.cursor = this.playable[0] ?? 0;
         if (p.phase === 'picking') this.buildPreview(p);
         p.phase = 'locked';
         this.refreshAll();

@@ -3,6 +3,7 @@
 //
 //   npm run sim
 //   SIM_LIMIT=2 SIM_TAG=smoke npm run sim
+//   SIM_PAIR=1 SIM_ONLY=helen,tara npm run sim   # just those matchups, with a pair log
 //
 // Writes an aggregate JSON (win rate, damage, KO time, damage by type)
 // to SIM_OUT (default /tmp/ak-sim/<tag>.json). Duels and 3-player FFAs
@@ -27,6 +28,8 @@ const CHROME = process.env.PLAYWRIGHT_CHROME
   || (fs.existsSync('/usr/bin/google-chrome') ? '/usr/bin/google-chrome' : '/usr/local/bin/google-chrome');
 
 const IDS = ROSTER.map((c) => c.id);
+const ONLY = (process.env.SIM_ONLY || '').split(',').map((s) => s.trim()).filter(Boolean);
+const PAIR = process.env.SIM_PAIR === '1';
 const TYPES = ['kinetic', 'heat', 'electrical', 'chemical', 'radiation'];
 
 const TRIOS = [
@@ -38,6 +41,42 @@ const TRIOS = [
   ['sully', 'chloe', 'aaron'],
   ['kyle', 'cal', 'scarlett'],
   ['titan', 'van', 'chroma'],
+  ['tara', 'wolf', 'rex'],
+  ['oz', 'pit', 'chroma'],
+  ['tara', 'hydra', 'helen'],
+  ['wolf', 'van', 'titan'],
+  ['caesar', 'barry', 'brock'],
+  ['aurelius', 'talia', 'bianca'],
+  ['polonius', 'tate', 'ray'],
+  ['agatha', 'cody', 'collin'],
+  ['cooper', 'ceres', 'europa'],
+  ['dizzy', 'erin', 'thor'],
+  ['ace', 'ray', 'polonius'],
+  ['caesar', 'helen', 'aurelius'],
+  ['frank', 'manny', 'fey'],
+  ['nick', 'molly', 'paula'],
+  ['haley', 'ira', 'hog'],
+  ['gail', 'indy', 'pablo'],
+  ['arsenio', 'iona', 'krypto'],
+  ['lana', 'goldie', 'holly'],
+  ['lucy', 'frank', 'pablo'],
+  ['krypto', 'hydra', 'helen'],
+  ['percy', 'rhoda', 'ronan'],
+  ['ruben', 'ruth', 'saab'],
+  ['sam', 'sandy', 'selena'],
+  ['sterling', 'terra', 'tessa'],
+  ['tex', 'thule', 'xander'],
+  ['yara', 'yvette', 'zane'],
+  ['selena', 'ronan', 'sterling'],
+  ['yara', 'zane', 'thule'],
+  ['duke', 'flo', 'ogden'],
+  ['ford', 'boar', 'roger'],
+  ['gertrude', 'nadia', 'niobe'],
+  ['prometheus', 'zora', 'einstein'],
+  ['copernicus', 'fermi', 'ogden'],
+  ['sarge', 'mae', 'mac'],
+  ['liv', 'tess', 'ogden'],
+  ['sarge', 'liv', 'ira'],
 ];
 
 function matchSeed(kind, ids, rep) {
@@ -47,17 +86,42 @@ function matchSeed(kind, ids, rep) {
   return (h >>> 0) || 1;
 }
 
+function sampleJobs() {
+  const n = Number(process.env.SIM_SAMPLE || 0);
+  if (!(n > 0) || !ONLY.length) return null;
+  const others = IDS.filter((id) => !ONLY.includes(id));
+  const list = [];
+  for (const id of ONLY) {
+    const picks = [];
+    let cursor = 2166136261;
+    for (let i = 0; i < id.length; i++) cursor = Math.imul(cursor ^ id.charCodeAt(i), 16777619) >>> 0;
+    while (picks.length < Math.min(n, others.length)) {
+      cursor = (Math.imul(cursor, 1664525) + 1013904223) >>> 0;
+      const opp = others[cursor % others.length];
+      if (!picks.includes(opp)) picks.push(opp);
+    }
+    for (const opp of picks) {
+      list.push({ kind: 'duel', ids: [id, opp], seed: matchSeed('sample', [id, opp], 0) });
+    }
+  }
+  return list;
+}
+
 function jobs() {
+  const sampled = sampleJobs();
+  if (sampled) return LIMIT > 0 ? sampled.slice(0, LIMIT) : sampled;
   const list = [];
   for (let i = 0; i < IDS.length; i++) {
     for (let j = i + 1; j < IDS.length; j++) {
+      if (ONLY.length && !ONLY.includes(IDS[i]) && !ONLY.includes(IDS[j])) continue;
+      if (PAIR && ONLY.length && !(ONLY.includes(IDS[i]) && ONLY.includes(IDS[j]))) continue;
       for (let r = 0; r < REPS; r++) {
         const pair = r % 2 === 0 ? [IDS[i], IDS[j]] : [IDS[j], IDS[i]];
         list.push({ kind: 'duel', ids: pair, seed: matchSeed('duel', pair, r) });
       }
     }
   }
-  for (const trio of TRIOS) {
+  if (!ONLY.length) for (const trio of TRIOS) {
     for (let r = 0; r < 2; r++) {
       const ids = r % 2 === 0 ? trio : [trio[1], trio[2], trio[0]];
       list.push({ kind: 'ffa', ids, seed: matchSeed('ffa', ids, r) });
@@ -134,13 +198,13 @@ function finish(table) {
 
 function markdown(rows) {
   const lines = [
-    '| fighter | matches | win% | dealt | taken | KO time (ms) | dealt by type |',
-    '|---|---:|---:|---:|---:|---:|---|',
+    '| fighter | matches | win% | KOs | KOd | dealt | taken | KO time (ms) | dealt by type |',
+    '|---|---:|---:|---:|---:|---:|---:|---:|---|',
   ];
   for (const r of rows) {
     const types = TYPES.map((t) => `${t.slice(0, 4)} ${r.avgDealtByType[t]}`).join(', ');
     const ko = r.avgKoTimeScored == null ? '—' : String(r.avgKoTimeScored);
-    lines.push(`| ${r.id} | ${r.matches} | ${(r.winRate * 100).toFixed(1)} | ${r.avgDamageDealt} | ${r.avgDamageTaken} | ${ko} | ${types} |`);
+    lines.push(`| ${r.id} | ${r.matches} | ${(r.winRate * 100).toFixed(1)} | ${r.kosScored} | ${r.kosSuffered} | ${r.avgDamageDealt} | ${r.avgDamageTaken} | ${ko} | ${types} |`);
   }
   return lines.join('\n');
 }
@@ -172,7 +236,7 @@ async function ensureServer() {
 
 async function openPage(browser) {
   const page = await browser.newPage({ viewport: { width: 480, height: 270 } });
-  page.setDefaultTimeout(90000);
+  page.setDefaultTimeout(Math.max(180000, MS * 4));
   const errors = [];
   page.on('pageerror', (err) => errors.push(String(err)));
   await page.goto(`http://127.0.0.1:${PORT}/?sim=1&stage=${STAGE}&stocks=${STOCKS}&ms=${MS}&speed=8`, {
@@ -208,6 +272,7 @@ async function main() {
   const duels = {};
   const ffas = {};
   const failures = [];
+  const pairLog = [];
   let done = 0;
   const started = Date.now();
   try {
@@ -223,6 +288,13 @@ async function main() {
           const report = await runOne(slot, job);
           if (job.kind === 'ffa') addMatch(ffas, report);
           else addMatch(duels, report);
+          if (PAIR && job.kind === 'duel') {
+            pairLog.push({
+              ids: job.ids.join(' vs '),
+              winner: report.winnerId,
+              dealt: Object.fromEntries((report.fighters ?? []).map((f) => [f.id, Math.round(f.damageDealt ?? 0)])),
+            });
+          }
           if (report.consoleErrors?.length) {
             failures.push({ ids: job.ids, errors: report.consoleErrors.slice(0, 3) });
           }
@@ -265,6 +337,10 @@ async function main() {
   const file = path.join(OUT, `${TAG}.json`);
   fs.writeFileSync(file, JSON.stringify(payload, null, 2));
   const played = (rows) => markdown(rows.filter((r) => r.matches > 0));
+  if (pairLog.length) {
+    console.log('\nPAIRS');
+    for (const row of pairLog) console.log(`${row.ids} -> ${row.winner} ${JSON.stringify(row.dealt)}`);
+  }
   console.log(`\nDUELS\n${played(duelRows)}`);
   if (ffaRows.some((r) => r.matches)) console.log(`\nFFA\n${played(ffaRows)}`);
   console.log(`\nwrote ${file}`);

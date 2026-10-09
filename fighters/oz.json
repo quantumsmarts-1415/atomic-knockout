@@ -1,0 +1,32 @@
+{
+  "id": "oz",
+  "name": "Oz",
+  "element": "Osmium",
+  "symbol": "Os",
+  "atomicNumber": 76,
+  "tagline": "The densest thing on the table.",
+  "teach": "Osmium is the densest element. Its name comes from the Greek for smell, after the sharp vapor of osmium tetroxide.",
+  "height": 138,
+  "facing": 1,
+  "airJumps": 0,
+  "bodyW": 50,
+  "bodyH": 122,
+  "elementData": {
+    "state": "solid",
+    "family": "transition",
+    "metal": true,
+    "noble": false,
+    "density": 22.587,
+    "mohs": 7,
+    "tensile": 1000,
+    "boiling": 5281,
+    "conductivity": 12,
+    "en": 2.2
+  },
+  "palettes": [
+    { "name": "Dense", "skin": 13816538, "body": 1712432, "accent": 7374945, "eye": 12648384 },
+    { "name": "Nib", "skin": 14540253, "body": 2632752, "accent": 12632256, "eye": 16777215 },
+    { "name": "Tetroxide", "skin": 13816538, "body": 2238514, "accent": 10092288, "eye": 12648384 },
+    { "name": "Ingot", "skin": 16316664, "body": 6908265, "accent": 4243647, "eye": 2148682 }
+  ]
+}

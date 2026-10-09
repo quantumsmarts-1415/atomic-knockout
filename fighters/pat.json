@@ -1,0 +1,56 @@
+{
+  "id": "pat",
+  "name": "Pat",
+  "element": "Protactinium",
+  "symbol": "Pa",
+  "atomicNumber": 91,
+  "tagline": "Proto Daughter",
+  "teach": "Protactinium means \"before actinium.\" She decays into a glowing daughter and dates time in ocean sediments.",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 0,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "actinide",
+    "metal": true,
+    "noble": false,
+    "density": 15.43,
+    "mohs": 0,
+    "tensile": 0,
+    "boiling": 4300,
+    "conductivity": 5.6,
+    "en": 1.5
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15384759,
+      "body": 13658762,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15384759,
+      "body": 9456478,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15384759,
+      "body": 15253186,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15384759,
+      "body": 3939886,
+      "accent": 15048586,
+      "eye": 16055295
+    }
+  ]
+}

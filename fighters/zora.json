@@ -1,0 +1,56 @@
+{
+  "id": "zora",
+  "name": "Zora",
+  "element": "Zirconium",
+  "symbol": "Zr",
+  "atomicNumber": 40,
+  "tagline": "Ceramic Blade",
+  "teach": "Zirconium cladding wraps nuclear fuel. She forges a ceramic blade that never dulls and ignores a block.",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "transition",
+    "metal": true,
+    "noble": false,
+    "density": 6.505,
+    "mohs": 5,
+    "tensile": 330,
+    "boiling": 4650,
+    "conductivity": 2.4,
+    "en": 1.33
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 12897228,
+      "body": 4886486,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 12897228,
+      "body": 3761039,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 12897228,
+      "body": 11914463,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 12897228,
+      "body": 1975871,
+      "accent": 10204084,
+      "eye": 16055295
+    }
+  ]
+}

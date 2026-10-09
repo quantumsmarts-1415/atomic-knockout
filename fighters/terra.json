@@ -1,0 +1,56 @@
+{
+  "id": "terra",
+  "name": "Terra",
+  "element": "Terbium",
+  "symbol": "Tb",
+  "atomicNumber": 65,
+  "tagline": "Sonar Pulse",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "lanthanide",
+    "metal": true,
+    "noble": false,
+    "density": 8.229,
+    "mohs": 2.33,
+    "tensile": 0,
+    "boiling": 3396,
+    "conductivity": 0.83,
+    "en": 1.2
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15188155,
+      "body": 12872346,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15188155,
+      "body": 8997736,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15188155,
+      "body": 14991048,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15188155,
+      "body": 3743281,
+      "accent": 14655379,
+      "eye": 16055295
+    }
+  ]
+}

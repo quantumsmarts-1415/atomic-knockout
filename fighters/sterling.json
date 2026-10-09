@@ -1,0 +1,56 @@
+{
+  "id": "sterling",
+  "name": "Sterling",
+  "element": "Strontium",
+  "symbol": "Sr",
+  "atomicNumber": 38,
+  "tagline": "Bone Seeker",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "alkaline",
+    "metal": true,
+    "noble": false,
+    "density": 2.582,
+    "mohs": 1.5,
+    "tensile": 0,
+    "boiling": 1650,
+    "conductivity": 7.7,
+    "en": 0.95
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15387040,
+      "body": 13666874,
+      "accent": 15053150,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15387040,
+      "body": 9461802,
+      "accent": 15053150,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15387040,
+      "body": 15256227,
+      "accent": 15053150,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15387040,
+      "body": 3941660,
+      "accent": 15053150,
+      "eye": 16055295
+    }
+  ]
+}

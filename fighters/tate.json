@@ -1,0 +1,56 @@
+{
+  "id": "tate",
+  "name": "Tate",
+  "element": "Astatine",
+  "symbol": "At",
+  "atomicNumber": 85,
+  "tagline": "Self-Vaporize",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "metalloid",
+    "metal": false,
+    "noble": false,
+    "density": 8.95,
+    "mohs": 0,
+    "tensile": 0,
+    "boiling": null,
+    "conductivity": null,
+    "en": 2.2
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 13814693,
+      "body": 8032074,
+      "accent": 11973479,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 13814693,
+      "body": 5792564,
+      "accent": 11973479,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 13814693,
+      "body": 13159593,
+      "accent": 11973479,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 13814693,
+      "body": 2696736,
+      "accent": 11973479,
+      "eye": 16055295
+    }
+  ]
+}

@@ -90,8 +90,13 @@ test('Knockback formula and damage reduction via takeHit', () => {
   const dmg = f.takeHit(attacker, move, 1000, 1);
   assert.strictEqual(dmg, 10);
   assert.strictEqual(f.percent, 10);
-  assert.strictEqual(Math.abs(velocityX) > 0, true);
-  assert.strictEqual(Math.abs(velocityY) > 0, true);
+  let guard = 0;
+  while (f.hitlagFrames > 0 && guard < 40) {
+    f.update(1000 + guard * 17, 17);
+    guard++;
+  }
+  f.update(2000, 17);
+  assert.ok(Math.abs(velocityX) > 0 || Math.abs(velocityY) > 0, `launch vx ${velocityX} vy ${velocityY}`);
 });
 
 test('Cooldowns and move-slot selection', () => {

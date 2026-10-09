@@ -1,6 +1,7 @@
-import { deriveProfile } from './balance.js';
+import { deriveProfile, TUNING } from './balance.js';
 import { ELEMENTS } from './elements.js';
 import { MOVESETS } from './movesets.js';
+import { IMPORTED_ROSTER, characterFromImport } from './imported.js';
 
 // ---------------------------------------------------------------------------
 // CHARACTER DATA — the single source of truth for the roster.
@@ -2327,6 +2328,14 @@ export const CHARACTERS = {
   },
 };
 
+// Imported fighters (tools/import-fighter.js) join the same table. A moveset
+// in movesets.js still replaces the placeholder kit below.
+for (const rec of Object.values(IMPORTED_ROSTER)) {
+  if (!rec?.id || CHARACTERS[rec.id]) continue;
+  ELEMENTS[rec.id] = rec.elementData;
+  CHARACTERS[rec.id] = characterFromImport(rec);
+}
+
 // Derived combat profiles overwrite the hand-tuned speed / jump / weight /
 // gravity. airJumps stays a per-character choice (the design doc doesn't
 // assign extra jumps). `defense` below is the old 0–10 table and is no
@@ -2345,6 +2354,33 @@ for (const def of Object.values(CHARACTERS)) {
     airJumps,
   };
   if (MOVESETS[def.id]) def.moves = MOVESETS[def.id];
+}
+// Helium's derived weight and gravity let the new launch carry her out at
+// low percent. Keep the float, but not enough to stock her for free.
+{
+  const helen = CHARACTERS.helen;
+  if (helen?.stats) {
+    helen.stats.weight = Math.max(helen.stats.weight, 0.92);
+    helen.stats.gravityScale = Math.max(helen.stats.gravityScale, 0.98);
+  }
+}
+// Ghosts (Rf–Og) keep a steady percent drain and very weak movement.
+// Their attacks are the strong part. TUNING itself is unchanged.
+for (const def of Object.values(CHARACTERS)) {
+  if (!def.ghost || !def.stats) continue;
+  const [speedLo] = TUNING.speedClamp;
+  const [jumpLo] = TUNING.jumpClamp;
+  const [weightLo] = TUNING.weightClamp;
+  def.stats.speed = Math.max(speedLo, Math.round(def.stats.speed * 0.62));
+  def.stats.jumpVelocity = Math.max(jumpLo, Math.round(def.stats.jumpVelocity * 0.78));
+  def.stats.weight = weightLo;
+  def.stats.gravityScale = Math.max(0.7, Math.min(def.stats.gravityScale, 0.8));
+  if (def.combat) {
+    def.combat.speed = def.stats.speed;
+    def.combat.jumpVelocity = def.stats.jumpVelocity;
+    def.combat.weight = def.stats.weight;
+    def.combat.gravityScale = def.stats.gravityScale;
+  }
 }
 
 export const ROSTER = Object.values(CHARACTERS);

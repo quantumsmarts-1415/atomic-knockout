@@ -1,0 +1,56 @@
+{
+  "id": "prometheus",
+  "name": "Prometheus",
+  "element": "Promethium",
+  "symbol": "Pm",
+  "atomicNumber": 61,
+  "tagline": "Stolen Fire",
+  "teach": "Promethium powers nuclear batteries. He steals fire while he charges, the way his namesake stole it from the gods.",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "lanthanide",
+    "metal": true,
+    "noble": false,
+    "density": 7.25,
+    "mohs": 0,
+    "tensile": 160,
+    "boiling": 3273,
+    "conductivity": 1.3,
+    "en": 1.13
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15188155,
+      "body": 12872346,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15188155,
+      "body": 8997736,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15188155,
+      "body": 14991048,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15188155,
+      "body": 3743281,
+      "accent": 14655379,
+      "eye": 16055295
+    }
+  ]
+}

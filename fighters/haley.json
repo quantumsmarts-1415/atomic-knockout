@@ -1,0 +1,56 @@
+{
+  "id": "haley",
+  "name": "Haley",
+  "element": "Hafnium",
+  "symbol": "Hf",
+  "atomicNumber": 72,
+  "tagline": "Plasma Cutter",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 0,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "transition",
+    "metal": true,
+    "noble": false,
+    "density": 13.281,
+    "mohs": 5.5,
+    "tensile": 480,
+    "boiling": 4876,
+    "conductivity": 3.3,
+    "en": 1.3
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 12897228,
+      "body": 4886486,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 12897228,
+      "body": 3761039,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 12897228,
+      "body": 11914463,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 12897228,
+      "body": 1975871,
+      "accent": 10204084,
+      "eye": 16055295
+    }
+  ]
+}

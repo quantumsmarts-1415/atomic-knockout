@@ -1,0 +1,56 @@
+{
+  "id": "aurelius",
+  "name": "Aurelius",
+  "element": "Gold",
+  "symbol": "Au",
+  "atomicNumber": 79,
+  "tagline": "Midas Touch",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 0,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "transition",
+    "metal": true,
+    "noble": false,
+    "density": 19.283,
+    "mohs": 2.5,
+    "tensile": 100,
+    "boiling": 3243,
+    "conductivity": 45,
+    "en": 2.54
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 12897228,
+      "body": 4886486,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 12897228,
+      "body": 3761039,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 12897228,
+      "body": 11914463,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 12897228,
+      "body": 1975871,
+      "accent": 10204084,
+      "eye": 16055295
+    }
+  ]
+}

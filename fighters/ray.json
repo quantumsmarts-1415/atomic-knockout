@@ -1,0 +1,56 @@
+{
+  "id": "ray",
+  "name": "Ray",
+  "element": "Radium",
+  "symbol": "Ra",
+  "atomicNumber": 88,
+  "tagline": "Radium Tonic",
+  "teach": "Radium glows in the dark. She was once sold in tonics, and the glow was hers.",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "alkaline",
+    "metal": true,
+    "noble": false,
+    "density": 5.5,
+    "mohs": 0,
+    "tensile": 0,
+    "boiling": 2010,
+    "conductivity": 1,
+    "en": 0.9
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15387040,
+      "body": 13666874,
+      "accent": 15053150,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15387040,
+      "body": 9461802,
+      "accent": 15053150,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15387040,
+      "body": 15256227,
+      "accent": 15053150,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15387040,
+      "body": 3941660,
+      "accent": 15053150,
+      "eye": 16055295
+    }
+  ]
+}

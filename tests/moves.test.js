@@ -7,7 +7,7 @@ const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDire
 const TYPES = new Set(['kinetic', 'heat', 'electrical', 'chemical', 'radiation', 'physical']);
 
 test('every fighter has four named moves with legal damage types', () => {
-  assert.strictEqual(Object.keys(CHARACTERS).length, 24);
+  assert.strictEqual(Object.keys(CHARACTERS).length, 118);
   for (const c of Object.values(CHARACTERS)) {
     for (const slot of SLOTS) {
       const move = c.moves[slot];
@@ -79,6 +79,22 @@ test('bots cycle a neutral charge and a neutral defense without walking', () => 
   assert.strictEqual(defense.special, true);
   assert.strictEqual(defense.attack, false);
   assert.strictEqual(!!(defense.left || defense.right), false);
+});
+
+test('pilot fighters use the element doc kits', () => {
+  assert.deepStrictEqual(
+    ['tara', 'wolf', 'rex', 'oz', 'pit'].map((id) => CHARACTERS[id].element),
+    ['Tantalum', 'Tungsten', 'Rhenium', 'Osmium', 'Platinum'],
+  );
+  assert.strictEqual(CHARACTERS.tara.moves.basicCharge.name, 'Capacitor Dump');
+  assert.strictEqual(CHARACTERS.wolf.moves.basicDirectional.name, 'Tin Eater');
+  assert.strictEqual(CHARACTERS.rex.moves.specialDefense.name, 'Creep Resistance');
+  assert.strictEqual(CHARACTERS.oz.moves.specialDirectional.name, 'Tetroxide Puff');
+  assert.strictEqual(CHARACTERS.pit.moves.specialDefense.name, 'Cisplatin Clamp');
+  assert.ok(CHARACTERS.oz.combat.weight >= CHARACTERS.chroma.combat.weight);
+  assert.ok(CHARACTERS.oz.combat.speed <= CHARACTERS.chroma.combat.speed);
+  assert.strictEqual(CHARACTERS.tara.moves.specialDefense.immune[0], 'chemical');
+  assert.strictEqual(CHARACTERS.wolf.moves.specialDefense.immune[0], 'heat');
 });
 
 function fake(id, x, y) {

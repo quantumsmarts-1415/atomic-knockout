@@ -1,0 +1,32 @@
+{
+  "id": "rex",
+  "name": "Rex",
+  "element": "Rhenium",
+  "symbol": "Re",
+  "atomicNumber": 75,
+  "tagline": "Still sharp when the turbine is glowing.",
+  "teach": "Rhenium superalloys keep jet-turbine blades from creeping out of shape, and rhenium catalysts reform fuel into high-octane gasoline.",
+  "height": 134,
+  "facing": 1,
+  "airJumps": 0,
+  "bodyW": 46,
+  "bodyH": 118,
+  "elementData": {
+    "state": "solid",
+    "family": "transition",
+    "metal": true,
+    "noble": false,
+    "density": 21.01,
+    "mohs": 7,
+    "tensile": 1070,
+    "boiling": 5903,
+    "conductivity": 5.6,
+    "en": 1.9
+  },
+  "palettes": [
+    { "name": "Superalloy", "skin": 15721958, "body": 3026478, "accent": 16744448, "eye": 16763080 },
+    { "name": "Catalyst", "skin": 15658734, "body": 2172460, "accent": 4351765, "eye": 16763080 },
+    { "name": "Turbine", "skin": 13816538, "body": 1713964, "accent": 12632256, "eye": 10079487 },
+    { "name": "Octane", "skin": 16316664, "body": 3947580, "accent": 16753920, "eye": 16775138 }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "id": "tess",
+  "name": "Tess",
+  "element": "Tennessine",
+  "symbol": "Ts",
+  "atomicNumber": 117,
+  "tagline": "Electron Hunger",
+  "teach": "Tennessine is a ghost halogen, one electron short. She yanks the nearest fighter in, then hides in a blue haze that burns anyone inside.",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "halogen",
+    "metal": false,
+    "noble": false,
+    "density": 0,
+    "mohs": 0,
+    "tensile": 0,
+    "boiling": 0,
+    "conductivity": 0,
+    "en": 0
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15193253,
+      "body": 12890186,
+      "accent": 14665319,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15193253,
+      "body": 9009460,
+      "accent": 14665319,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15193253,
+      "body": 14997673,
+      "accent": 14665319,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15193253,
+      "body": 3747104,
+      "accent": 14665319,
+      "eye": 16055295
+    }
+  ],
+  "ghost": true
+}

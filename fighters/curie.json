@@ -1,0 +1,56 @@
+{
+  "id": "curie",
+  "name": "Curie",
+  "element": "Curium",
+  "symbol": "Cm",
+  "atomicNumber": 96,
+  "tagline": "Double Nobel",
+  "teach": "Curium is named for Marie and Pierre Curie. She carries both of Marie's Nobel Prizes: one in physics, one in chemistry.",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 0,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "actinide",
+    "metal": true,
+    "noble": false,
+    "density": 13.51,
+    "mohs": 0,
+    "tensile": 0,
+    "boiling": 3383,
+    "conductivity": 0.8,
+    "en": 1.3
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15384759,
+      "body": 13658762,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15384759,
+      "body": 9456478,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15384759,
+      "body": 15253186,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15384759,
+      "body": 3939886,
+      "accent": 15048586,
+      "eye": 16055295
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "id": "gail",
+  "name": "Gail",
+  "element": "Gallium",
+  "symbol": "Ga",
+  "atomicNumber": 31,
+  "tagline": "Superconductor Arc",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "post-transition",
+    "metal": true,
+    "noble": false,
+    "density": 5.907,
+    "mohs": 1.5,
+    "tensile": 15,
+    "boiling": 2676,
+    "conductivity": 7.1,
+    "en": 1.81
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 12898999,
+      "body": 4892810,
+      "accent": 10207626,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 12898999,
+      "body": 3765342,
+      "accent": 10207626,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 12898999,
+      "body": 11916738,
+      "accent": 10207626,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 12898999,
+      "body": 1977134,
+      "accent": 10207626,
+      "eye": 16055295
+    }
+  ]
+}

@@ -11,7 +11,11 @@ import { computeBotInput } from '../engine/BotAI.js';
 import { buildNavGraph } from '../engine/BotNav.js';
 import { startStageIntro } from '../engine/stageIntros.js';
 import { playVfx, projectileStyle } from '../engine/MoveVfx.js';
+import { cleanse } from '../engine/kit.js';
 import { mulberry32 } from '../engine/rng.js';
+import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
+import { Juice } from '../engine/juice.js';
+import { FEEL, frameZoom, percentColor } from '../engine/feel.js';
 
 const GRAVITY = 1500;
 
@@ -88,6 +92,10 @@ export default class BattleScene extends Phaser.Scene {
     this.rng = this.setup.seed == null ? null : mulberry32(this.setup.seed);
     this.simSpeed = Math.max(1, this.setup.simSpeed || 1);
     this.simFast = this.simSpeed > 1;
+    this.timeScale = 1;
+    this.visualT = 0;
+    this.juice = this.simFast ? null : new Juice(this);
+    window.__akBattle = this;
     // Real-time play and the fast sim share one 60 Hz clock. The render loop
     // no longer steps arcade bodies: a hitch used to advance bot timers by
     // wall-clock time while physics only integrated once, and the old fast
@@ -110,7 +118,12 @@ export default class BattleScene extends Phaser.Scene {
     this.introLockUntil = 0;
     // Timed CPU matches skip the stage intro so the clock is all fighting.
     this.intro = this.setup.playtestMs ? null : startStageIntro(this, this.stage, {
-      onDone: () => { this.introLockUntil = this.time.now + 200; },
+      // Stamp the sim clock. Phaser writes the loop timestamp into time.now
+      // on every frame while our clock scale is 0, and the doors' "GO" tween
+      // finishes on that frame — so time.now here is how long the game has
+      // been open, not how long the round has been running. A match started
+      // from the menus would stay input-locked until sim time caught up.
+      onDone: () => { this.introLockUntil = this.simNow + 200; },
     });
     if (this.intro) {
       const skip = () => { if (this.intro?.active) this.intro.skip(); };
@@ -134,12 +147,21 @@ export default class BattleScene extends Phaser.Scene {
   setupCamera() {
     this.camRig = null;
     this.uiCam = null;
-    const cfg = this.stage.camera;
-    if (!cfg) return;
+    const stageCam = this.stage.camera || {};
+    const cfg = {
+      padX: FEEL.camPadX, padTop: FEEL.camPadTop, padBottom: FEEL.camPadBottom,
+      lerpMs: FEEL.camPosTau, zoomOutMs: FEEL.camZoomOutTau, zoomInMs: FEEL.camZoomInTau,
+      ...stageCam,
+    };
     const { width: WW, height: WH } = this.world;
-    const minZoom = Math.min(1, Math.max(W / WW, H / WH, cfg.minZoom ?? 0));
+    const players = this.setup.players?.length || 2;
+    const feelCap = players >= 3 ? FEEL.camMaxMulti : FEEL.camMax1;
+    // A stage maxZoom is a ceiling (Carbon Skyhook must still show its
+    // whole world). It does not raise the close-fight cap.
+    const cap = stageCam.maxZoom != null ? Math.min(feelCap, stageCam.maxZoom) : feelCap;
+    const minZoom = Math.min(1, Math.max(W / WW, H / WH, stageCam.minZoom ?? 0));
     this.camRig = {
-      cfg, minZoom, maxZoom: Math.max(minZoom, cfg.maxZoom ?? 1),
+      cfg, minZoom, maxZoom: Math.max(minZoom, cap),
       zoom: minZoom, cx: WW / 2, cy: WH / 2, first: true, uiMode: false,
     };
     const main = this.cameras.main;
@@ -184,30 +206,73 @@ export default class BattleScene extends Phaser.Scene {
     let ty = WH / 2;
     if (live.length) {
       let x0 = Infinity; let x1 = -Infinity; let y0 = Infinity; let y1 = -Infinity;
+      const blast = this.blast;
+      const lead = FEEL.camBlastLead;
       for (const f of live) {
-        const fx = Phaser.Math.Clamp(f.x, 0, WW);
-        const fy = Phaser.Math.Clamp(f.y, 0, WH);
+        const vx = f.body?.velocity?.x || 0;
+        const vy = f.body?.velocity?.y || 0;
+        // Launches stay in the box and pull it toward the blast line they
+        // are flying at, so the trajectory stays framed. The zoom eases;
+        // nobody is dropped after a few frames.
+        let leadX = vx * FEEL.camLook;
+        let leadY = vy * FEEL.camLook;
+        const flying = !!f.launch;
+        if (blast && flying) {
+          if (vx < -200 || f.x < blast.left + lead) leadX -= lead;
+          if (vx > 200 || f.x > blast.right - lead) leadX += lead;
+          if (vy < -200 || f.y < blast.top + lead) leadY -= lead;
+          if (vy > 200 || f.y > blast.bottom - lead) leadY += lead * 0.8;
+        }
+        const fx = Phaser.Math.Clamp(f.x + leadX, 0, WW);
+        const fy = Phaser.Math.Clamp(f.y + leadY, 0, WH);
         x0 = Math.min(x0, fx - f.bodyW / 2); x1 = Math.max(x1, fx + f.bodyW / 2);
         y0 = Math.min(y0, fy - f.bodyH); y1 = Math.max(y1, fy);
       }
-      x0 -= cfg.padX ?? 240; x1 += cfg.padX ?? 240;
-      y0 -= cfg.padTop ?? 220; y1 += cfg.padBottom ?? 130;
-      tz = Phaser.Math.Clamp(Math.min(W / (x1 - x0), H / (y1 - y0)), rig.minZoom, rig.maxZoom);
-      tx = (x0 + x1) / 2;
-      ty = (y0 + y1) / 2;
+      if (x0 === Infinity) {
+        tx = rig.cx; ty = rig.cy; tz = rig.zoom;
+      } else {
+        x0 -= cfg.padX ?? FEEL.camPadX; x1 += cfg.padX ?? FEEL.camPadX;
+        y0 -= cfg.padTop ?? FEEL.camPadTop; y1 += cfg.padBottom ?? FEEL.camPadBottom;
+        const boxCx = (x0 + x1) / 2;
+        const boxCy = (y0 + y1) / 2;
+        const spanX = Math.max(FEEL.camMinSpanX, x1 - x0);
+        const spanY = Math.max(FEEL.camMinSpanY, y1 - y0);
+        const cap = this.koZoom || rig.maxZoom;
+        tz = frameZoom(spanX, spanY, W, H, rig.minZoom, cap);
+        tx = boxCx;
+        ty = boxCy;
+        const dead = (W / Math.max(rig.zoom, 0.2)) * FEEL.camDead;
+        if (Math.abs(tx - rig.cx) < dead) tx = rig.cx;
+        if (Math.abs(ty - rig.cy) < dead) ty = rig.cy;
+      }
+    }
+    if (this.koVictim && this.koZoom) {
+      this.koPoint = {
+        x: this.koVictim.x,
+        y: this.koVictim.y - this.koVictim.bodyH * 0.5,
+      };
+    }
+    if (this.koPoint && this.koZoom) {
+      tx = this.koPoint.x;
+      ty = this.koPoint.y;
+      tz = Math.max(tz, this.koZoom);
     }
     const first = rig.first;
     rig.first = false;
-    const zMs = tz < rig.zoom ? (cfg.zoomOutMs ?? 220) : (cfg.zoomInMs ?? 650);
-    rig.zoom += (tz - rig.zoom) * (first ? 1 : 1 - Math.exp(-delta / zMs));
+    const ko = this.koPoint && this.koZoom;
+    const zMs = ko
+      ? FEEL.koZoomTau
+      : (tz < rig.zoom ? (cfg.zoomOutMs ?? FEEL.camZoomOutTau) : (cfg.zoomInMs ?? FEEL.camZoomInTau));
+    rig.zoom += (tz - rig.zoom) * (first ? 1 : 1 - Math.exp(-Math.max(0, delta) / zMs));
     const hw = W / (2 * rig.zoom);
     const hh = H / (2 * rig.zoom);
     const k = first ? 1 : 1 - Math.exp(-delta / (cfg.lerpMs ?? 200));
     rig.cx += (Phaser.Math.Clamp(tx, hw, WW - hw) - rig.cx) * k;
     rig.cy += (Phaser.Math.Clamp(ty, hh, WH - hh) - rig.cy) * k;
-    rig.cx = Phaser.Math.Clamp(rig.cx, hw, WW - hw);
-    rig.cy = Phaser.Math.Clamp(rig.cy, hh, WH - hh);
-    this.cameras.main.setZoom(rig.zoom).centerOn(rig.cx, rig.cy);
+    rig.cx = Phaser.Math.Clamp(rig.cx, hw, Math.max(hw, WW - hw));
+    rig.cy = Phaser.Math.Clamp(rig.cy, hh, Math.max(hh, WH - hh));
+    const shake = this.juice?.shakeOffset(this.visualT || 0, rig.zoom) || { x: 0, y: 0, rot: 0 };
+    this.cameras.main.setZoom(rig.zoom).centerOn(rig.cx + shake.x, rig.cy + shake.y).setRotation(shake.rot || 0);
     this.drawOffscreenMarkers(live);
   }
 
@@ -334,6 +399,10 @@ export default class BattleScene extends Phaser.Scene {
       const zone = this.add.zone(s.x, topY + h / 2, s.w, h);
       this.physics.add.existing(zone, true);
       this.solids.add(zone);
+      const top = topY;
+      this.ledges ??= [];
+      this.ledges.push({ x: s.x - s.w / 2, y: top, facing: 1 });
+      this.ledges.push({ x: s.x + s.w / 2, y: top, facing: -1 });
     }
 
     for (const p of this.stage.platforms) {
@@ -354,6 +423,9 @@ export default class BattleScene extends Phaser.Scene {
       this.physics.add.existing(zone, true);
       this.platforms.add(zone);
       if (p.move) this.movers.push({ def: p, zone, visual, x: p.x, y: p.y });
+      this.ledges ??= [];
+      this.ledges.push({ x: p.x - p.w / 2, y: p.y, facing: 1 });
+      this.ledges.push({ x: p.x + p.w / 2, y: p.y, facing: -1 });
       // an elevator's lift image hangs below its walkable top -- keep it
       // behind the fighters but above the terrain (it already is: added later)
     }
@@ -502,21 +574,18 @@ export default class BattleScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------- HUD
   buildHud() {
-    const n = this.fighters.length;
-    // 2 players keeps the original fixed 240px-from-edge layout; 3+ spread
-    // evenly across a narrower band and shrink so panels don't overlap.
-    const margin = n <= 2 ? 240 : 120;
-    const panelW = n <= 2 ? 260 : Math.max(150, (W - margin * 2) / (n - 1) - 20);
-    const scale = panelW / 260;
+    const slots = hudLayout(this.fighters.length, W, H);
     this.hud = this.fighters.map((f, i) => {
-      const x = n === 1 ? W / 2 : margin + (i * (W - margin * 2)) / (n - 1);
+      const slot = slots[i];
+      const { panelW, top } = slot;
+      const scale = panelW / 260;
       const pip = PLAYER_COLORS[i % PLAYER_COLORS.length];
-      // Reactor shell; the border is the seat color so P1–P6 stay distinct
-      // from character palette choices.
+      // Reactor shell sized by hudLayout so 3–6 players stay on screen.
+      // The border is the seat color so it stays distinct from palette choices.
       const panel = this.add.graphics();
-      const px = x - panelW / 2;
-      const py = H - 96;
-      const ph = 78;
+      const px = slot.left;
+      const py = top;
+      const ph = slot.panelH;
       panel.fillStyle(THEME.shell, 0.92);
       panel.fillRoundedRect(px, py, panelW, ph, ph / 2);
       panel.lineStyle(6, pip, 0.35);
@@ -524,12 +593,17 @@ export default class BattleScene extends Phaser.Scene {
       panel.lineStyle(2.5, pip, 1);
       panel.strokeRoundedRect(px, py, panelW, ph, ph / 2);
 
-      const name = this.add.text(px + 18, py + 10, `${f.charDef.name} · ${f.charDef.symbol}${f.isBot ? ' (CPU)' : ''}`, {
-        fontFamily: FONT_BODY, fontSize: `${Math.round(15 * scale)}px`, color: THEME.mistCss,
+      const label = `${f.charDef.name} · ${f.charDef.symbol}${f.isBot ? ' (CPU)' : ''}`;
+      const percentSize = Math.max(18, Math.round(26 * scale));
+      const nameMax = panelW - 28 - percentSize * 2.4;
+      const name = this.add.text(px + 18, py + 10, label, {
+        fontFamily: FONT_BODY,
+        fontSize: `${fitLabelSize(label, nameMax, Math.round(15 * scale))}px`,
+        color: THEME.mistCss,
       });
-      const percent = this.add.text(x + panelW / 2 - 58 * scale, py + 8, '0%', {
-        fontFamily: FONT_DISPLAY, fontSize: `${Math.round(26 * scale)}px`, color: THEME.mistCss,
-      }).setOrigin(0.5, 0);
+      const percent = this.add.text(slot.right - 18, py + 8, '0%', {
+        fontFamily: FONT_DISPLAY, fontSize: `${percentSize}px`, color: THEME.mistCss,
+      }).setOrigin(1, 0);
       const stocks = this.add.text(px + 18, py + 40, '', {
         fontFamily: FONT_MONO, fontSize: `${Math.round(16 * scale)}px`, color: THEME.tealCss,
       });
@@ -541,38 +615,157 @@ export default class BattleScene extends Phaser.Scene {
     if (this.simFast) return;
     this.fighters.forEach((f, i) => {
       const h = this.hud[i];
-      h.percent.setText(`${Math.round(f.percent)}%`);
-      // percent text heats up as damage rises
-      const p = Phaser.Math.Clamp(f.percent / 150, 0, 1);
-      const col = Phaser.Display.Color.Interpolate.ColorWithColor(
-        Phaser.Display.Color.ValueToColor(0xffffff),
-        Phaser.Display.Color.ValueToColor(0xff3b30),
-        1, p,
-      );
-      h.percent.setColor(Phaser.Display.Color.RGBToString(col.r, col.g, col.b));
+      const shown = Math.round(f.percent);
+      if (h.shown !== shown) {
+        if (shown > (h.shown ?? 0)) {
+          h.punch = 1;
+          if (shown - (h.shown ?? 0) >= 15 && !this.simFast) {
+            const floater = this.add.text(h.percent.x, h.percent.y + 28, `+${shown - (h.shown ?? 0)}`, {
+              fontFamily: FONT_DISPLAY, fontSize: '18px', color: THEME.goldCss,
+            }).setOrigin(1, 0).setScrollFactor(0).setDepth(40);
+            this.tweens.add({
+              targets: floater, y: floater.y - 28, alpha: 0, duration: 500, ease: 'Quad.easeOut',
+              onComplete: () => floater.destroy(),
+            });
+          }
+        }
+        h.shown = shown;
+      }
+      h.percent.setText(`${shown}%`);
+      h.percent.setColor(percentColor(f.percent));
+      if (h.punch > 0) {
+        h.punch = Math.max(0, h.punch - 0.12);
+        const s = 1 + 0.35 * h.punch;
+        h.percent.setScale(s);
+        h.percent.x = (h.percentX ?? h.percent.x) + Math.sin(h.punch * 20) * 3 * h.punch;
+      } else if (h.percentX == null) {
+        h.percentX = h.percent.x;
+      }
       h.stocks.setText('●'.repeat(Math.max(0, f.stocks)) + '○'.repeat(Math.max(0, (this.setup.stocks ?? 3) - f.stocks)));
     });
   }
 
   // ------------------------------------------------------------ combat glue
+  dropProjectileZone(p) {
+    if (!p?.move?.dropZone || p.dropped) return;
+    p.dropped = true;
+    this.spawnZone(p.owner, p.move.dropZone, p.gfx.x, p.gfx.y);
+  }
+
+  consumeZones(fighter, spec) {
+    if (!this.zones?.length || !spec) return 0;
+    let n = 0;
+    const radius = spec.radius ?? 140;
+    const want = spec.type;
+    for (const z of this.zones) {
+      if (z.dead || z.owner === fighter) continue;
+      const toxic = z.spec?.type === 'chemical' || z.spec?.onHit?.poison;
+      if (want && z.spec?.type !== want && !(want === 'chemical' && toxic)) continue;
+      const d = Math.hypot(z.x - fighter.x, z.y - (fighter.y - fighter.bodyH * 0.4));
+      if (d > radius + (z.radius ?? 0) * 0.4) continue;
+      z.dead = true;
+      z.gfx?.destroy?.();
+      n += 1;
+    }
+    if (n) {
+      fighter.bonusHits = (fighter.bonusHits ?? 0) + n;
+      fighter.bonusPacket = {
+        type: spec.bonusType ?? 'heat',
+        damage: spec.bonus ?? 3,
+        hitsName: fighter.charDef?.moves?.basicCharge?.name,
+      };
+    }
+    return n;
+  }
+
+  dropPins(fighter) {
+    for (const p of this.projectiles ?? []) {
+      if (p.pinOwner !== fighter || p.dead) continue;
+      p.move = { ...p.move, explodeOnly: false, dropZone: null, igniteAt: 0 };
+      p.gfx?.destroy?.();
+      p.dead = true;
+    }
+  }
+
+  sweepMarked(owner, move, already) {
+    if (!move?.hitMarked || !owner) return;
+    const now = this.time.now;
+    for (const target of this.fighters) {
+      if (already?.has(target) || target === owner || !target.alive || target.state === 'ko') continue;
+      if (target.mark !== move.hitMarked || !(target.markUntil > now)) continue;
+      if (target.markedBy !== owner.charDef?.id) continue;
+      this.landHit(owner, target, { ...move, hitMarked: null });
+    }
+  }
+
   spawnProjectile(owner, move) {
+    if (move.rain > 1 && !move._rainChild) {
+      const n = move.rain | 0;
+      for (let i = 0; i < n; i++) {
+        const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
+        this.spawnProjectile(owner, {
+          ...move,
+          rain: 0,
+          _rainChild: true,
+          _vy: 260 + (i % 3) * 40,
+          projectileSpeed: 70 + Math.abs(t) * 220,
+          _flip: t < 0,
+        });
+      }
+      return;
+    }
+    if (move.fanTypes?.length && !move._fanChild) {
+      const types = move.fanTypes;
+      const spread = move.fanSpread ?? 200;
+      for (let i = 0; i < types.length; i++) {
+        const t = types.length === 1 ? 0 : (i / (types.length - 1) - 0.5);
+        this.spawnProjectile(owner, {
+          ...move, fanTypes: null, _fanChild: true, _vy: t * spread,
+          type: types[i], type2: undefined, damage2: undefined,
+        });
+      }
+      return;
+    }
+    if (move.alsoBehind && !move._behindChild) {
+      this.spawnProjectile(owner, { ...move, alsoBehind: false, _behindChild: true });
+      this.spawnProjectile(owner, { ...move, alsoBehind: false, _behindChild: true, _flip: true });
+      return;
+    }
+    if (move.fan > 1 && !move._fanChild) {
+      const n = move.fan | 0;
+      const spread = move.fanSpread ?? 220;
+      for (let i = 0; i < n; i++) {
+        const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
+        this.spawnProjectile(owner, { ...move, fan: null, _fanChild: true, _vy: t * spread });
+      }
+      return;
+    }
     const style = projectileStyle(move);
     const r = style.radius;
-    let vy = 0;
-    if (move.angleable) {
+    let vy = move._vy ?? 0;
+    if (move.ground) vy = Math.max(vy, 180);
+    if (move.lob != null && move._vy == null) {
+      const up = typeof move.lob === 'number' ? move.lob : (move.lob.vy ?? 460);
+      vy = -Math.abs(up);
+    }
+    if (!move._vy && move.angleable) {
       if (owner.input?.jump) vy = -240;
       else if (owner.input?.down) vy = 220;
     }
-    const x = owner.x + owner.facing * (owner.bodyW / 2 + r + 4);
-    const y = owner.y - owner.bodyH * 0.65;
+    const face = move._flip ? -owner.facing : owner.facing;
+    const x = move._from?.x ?? (owner.x + face * (owner.bodyW / 2 + r + 4));
+    let y = move._from?.y ?? (owner.y - owner.bodyH * 0.65);
+    if (move.fromAbove) y -= 220;
+    if (move._rainChild) y -= 160;
     if (this.simFast) {
       this.projectiles.push({
         gfx: { x, y, destroy() {} },
         owner, move,
-        vx: owner.facing * move.projectileSpeed,
-        vy,
+        vx: face * move.projectileSpeed,
+        vy: move.fromAbove ? (move.fallSpeed ?? 420) : vy,
         dieAt: this.time.now + move.projectileLife,
         born: this.time.now,
+        armAt: move.delayMs ? this.time.now + move.delayMs : 0,
         landed: new Set(),
         radius: r,
       });
@@ -599,12 +792,12 @@ export default class BattleScene extends Phaser.Scene {
     } else {
       const fill = style.fill ?? pal.body;
       if (style.shape === 'balloon') {
-        orb.fillStyle(fill, 0.35);
+        orb.fillStyle(fill, 0.4);
         orb.fillEllipse(0, 0, r * 1.7, r * 2.1);
-        orb.lineStyle(2, 0xffffff, 0.85);
+        orb.lineStyle(2, fill, 0.95);
         orb.strokeEllipse(0, 0, r * 1.7, r * 2.1);
-        orb.fillStyle(0xffffff, 0.7);
-        orb.fillCircle(-r * 0.3, -r * 0.45, r * 0.28);
+        orb.fillStyle(0xfff6e4, 0.7);
+        orb.fillCircle(0, -r * 0.15, r * 0.22);
       } else if (style.shape === 'wave') {
         orb.lineStyle(4, fill, 0.9);
         orb.beginPath();
@@ -614,23 +807,36 @@ export default class BattleScene extends Phaser.Scene {
         orb.lineTo(r, r * 0.45);
         orb.strokePath();
       } else {
-        orb.fillStyle(fill, 0.55);
-        orb.fillCircle(0, 0, r);
-        orb.lineStyle(2.5, 0xffffff, 0.8);
-        orb.strokeCircle(0, 0, r);
-        orb.fillStyle(0xffffff, 0.55);
-        orb.fillCircle(-r * 0.3, -r * 0.3, r * 0.35);
+        // Traveling star in the element color. A white ring and a white
+        // dot read as a placeholder at any zoom.
+        const star = (len, hot) => {
+          orb.fillStyle(hot ? 0xfff4d2 : fill, hot ? 0.95 : 0.92);
+          for (let i = 0; i < 4; i++) {
+            const a = (Math.PI / 2) * i + (hot ? 0.4 : -0.2);
+            const L = hot ? len * 0.5 : len;
+            orb.fillTriangle(
+              Math.cos(a) * L, Math.sin(a) * L,
+              Math.cos(a + 0.55) * L * 0.28, Math.sin(a + 0.55) * L * 0.28,
+              Math.cos(a - 0.55) * L * 0.28, Math.sin(a - 0.55) * L * 0.28,
+            );
+          }
+        };
+        star(r * 1.45, false);
+        star(r * 0.75, true);
+        orb.fillStyle(fill, 1);
+        orb.fillCircle(0, 0, Math.max(2, r * 0.22));
       }
     }
-    orb.x = owner.x + owner.facing * (owner.bodyW / 2 + r + 4);
-    orb.y = owner.y - owner.bodyH * 0.65;
+    orb.x = x;
+    orb.y = y;
 
     this.projectiles.push({
       gfx: orb, owner, move,
-      vx: owner.facing * move.projectileSpeed,
-      vy,
+      vx: face * move.projectileSpeed,
+      vy: move.fromAbove ? (move.fallSpeed ?? 420) : vy,
       dieAt: this.time.now + move.projectileLife,
       born: this.time.now,
+      armAt: move.delayMs ? this.time.now + move.delayMs : 0,
       landed: new Set(),
       radius: r,
     });
@@ -642,9 +848,15 @@ export default class BattleScene extends Phaser.Scene {
     playVfx(this, owner, move, 'release', { x: cx, y: cy });
 
     let hits = 0;
+    const struck = new Set();
     for (const target of this.fighters) {
       if (!move.includeSelf && target === owner) continue;
       if (!target.alive || target.state === 'ko') continue;
+      if (move.unseen && target !== owner) {
+        const ahead = (target.x - owner.x) * (owner.facing || 1);
+        const dy = Math.abs((target.y - (target.bodyH ?? 0) * 0.4) - (owner.y - (owner.bodyH ?? 0) * 0.5));
+        if (ahead > 30 && dy < 90 && ahead < 340) continue;
+      }
       const rect = target.getHurtboxRect();
       const nearest = new Phaser.Geom.Point(
         Phaser.Math.Clamp(cx, rect.left, rect.right),
@@ -652,26 +864,61 @@ export default class BattleScene extends Phaser.Scene {
       );
       if (Phaser.Math.Distance.Between(cx, cy, nearest.x, nearest.y) <= (move.radius ?? 70)) {
         this.landHit(owner, target, move);
+        struck.add(target);
         hits += 1;
       }
     }
+    this.sweepMarked(owner, move, struck);
     if (move.missRetry && hits === 0 && !move._retried) {
       this.time.delayedCall(180, () => {
         if (owner.alive) this.resolveBurst(owner, { ...move, _retried: true, missRetry: false });
       });
     }
-    if (move.chain && !move._chained) {
-      for (let i = 1; i <= move.chain.count; i++) {
-        const echo = {
+    if (move.igniteGases && this.zones?.length) {
+      const sparks = [];
+      for (const z of this.zones) {
+        if (z.dead) continue;
+        const reach = (move.radius ?? 80) + (z.radius ?? 0);
+        if (Phaser.Math.Distance.Between(cx, cy, z.x, z.y) <= reach) {
+          sparks.push({ x: z.x, y: z.y, radius: Math.max(36, (z.radius ?? 40) * 0.65) });
+        }
+      }
+      for (const s of sparks) {
+        this.resolveBurst(owner, {
           ...move,
-          _chained: true,
+          igniteGases: false,
+          bonusVsState: null,
+          type: 'heat',
+          damage: move.gasCloud ?? 6,
+          type2: undefined,
+          damage2: undefined,
+          radius: s.radius,
           chain: null,
-          damage: (move.damage ?? 0) * (move.chain.scale ?? 0.6),
-          radius: (move.radius ?? 70) * (0.7 + i * 0.15),
-        };
-        this.time.delayedCall((move.chain.delay ?? 160) * i, () => {
-          if (owner.alive) this.resolveBurst(owner, echo);
-        });
+          zone: null,
+        }, { x: s.x, y: s.y });
+      }
+    }
+    if (move.chain && !move._chained) {
+      const spots = move.chain.fromHits && struck.size
+        ? [...struck].map((f) => ({ x: f.x, y: f.y - (f.bodyH ?? 80) * 0.4 }))
+        : [null];
+      for (const spot of spots) {
+        for (let i = 1; i <= move.chain.count; i++) {
+          const echo = {
+            ...move,
+            _chained: true,
+            chain: null,
+            unseen: false,
+            damage: move.chain.damage ?? (move.damage ?? 0) * (move.chain.scale ?? 0.6),
+            damage2: move.chain.type ? undefined : move.damage2,
+            type: move.chain.type ?? move.type,
+            type2: move.chain.type ? undefined : move.type2,
+            radius: (move.radius ?? 70) * (move.chain.radiusScale ?? (0.7 + i * 0.15)),
+          };
+          this.time.delayedCall((move.chain.delay ?? 160) * i, () => {
+            if (owner.alive) this.resolveBurst(owner, echo, spot || undefined);
+          });
+        }
       }
     }
   }
@@ -683,12 +930,15 @@ export default class BattleScene extends Phaser.Scene {
     const y = owner.y - owner.bodyH * 0.62;
     const rect = new Phaser.Geom.Rectangle(x, y - thick / 2, len, thick);
     playVfx(this, owner, move, 'release');
+    const struck = new Set();
     for (const target of this.fighters) {
       if (target === owner || !target.alive || target.state === 'ko') continue;
       if (Phaser.Geom.Rectangle.Overlaps(rect, target.getHurtboxRect())) {
         this.landHit(owner, target, move, owner.facing);
+        struck.add(target);
       }
     }
+    this.sweepMarked(owner, move, struck);
   }
 
   spawnZone(owner, spec, x, y) {
@@ -698,7 +948,7 @@ export default class BattleScene extends Phaser.Scene {
         owner, spec, x, y, radius,
         gfx: { destroy() {} },
         until: this.time.now + (spec.ms ?? 1600),
-        next: this.time.now,
+        next: this.time.now + (spec.delay ?? 0),
       });
       return;
     }
@@ -708,7 +958,7 @@ export default class BattleScene extends Phaser.Scene {
     this.zones.push({
       owner, spec, x, y, radius, gfx,
       until: this.time.now + (spec.ms ?? 1600),
-      next: this.time.now,
+      next: this.time.now + (spec.delay ?? 0),
     });
   }
 
@@ -721,6 +971,19 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (time < z.next) continue;
       z.next = time + (z.spec.tick ?? 400);
+      if (z.spec.cleanseOwner && z.owner && !z.cleansed) {
+        const rect = z.owner.getHurtboxRect?.();
+        if (rect) {
+          const nx = Phaser.Math.Clamp(z.x, rect.left, rect.right);
+          const ny = Phaser.Math.Clamp(z.y, rect.top, rect.bottom);
+          if (Phaser.Math.Distance.Between(z.x, z.y, nx, ny) <= z.radius) {
+            z.cleansed = true;
+            cleanse(z.owner, z.spec.cleanseOwner);
+          }
+        }
+      }
+      const tickDamage = z.tickDamage ?? z.spec.damage;
+      z.tickDamage = (tickDamage ?? 0) + (z.spec.ramp ?? 0);
       for (const target of this.fighters) {
         if (target === z.owner || !target.alive || target.state === 'ko') continue;
         const rect = target.getHurtboxRect();
@@ -730,10 +993,14 @@ export default class BattleScene extends Phaser.Scene {
         this.landHit(z.owner, target, {
           name: z.spec.name ?? 'zone',
           type: z.spec.type,
-          damage: z.spec.damage,
-          baseKnockback: 40,
-          knockbackGrowth: 0.4,
+          damage: tickDamage,
+          baseKnockback: z.spec.knockback ?? 40,
+          knockbackGrowth: z.spec.growth ?? 0.4,
+          onHit: z.spec.onHit,
+          bonusVsId: z.spec.bonusVsId,
           kind: 'burst',
+          hitlagMult: 0,
+          _projectile: true,
         });
         if (z.spec.slide) {
           target.slipperyUntil = time + 280;
@@ -819,16 +1086,45 @@ export default class BattleScene extends Phaser.Scene {
     const dmg = victim.takeHit(attacker, move, this.time.now, launchDir);
     if (dmg > 0) this.noteHit(attacker, victim, move);
     if (attacker !== victim) victim.lastHitBy = attacker;
-    const pauseMs = 45 + Math.min(dmg * 5, 70);
-    if (!this.simFast) {
-      sfx('hit');
-      this.hitSpark(victim.x, victim.y - victim.bodyH * 0.6);
-      this.cameras.main.shake(90 + dmg * 6, 0.004 + dmg * 0.0006);
+    // Hitlag lives on the fighters (feel.js). The world clock keeps moving
+    // so other players, projectiles and the stage do not freeze.
+  }
+
+  beginFinish(victim, info) {
+    if (this.simFast || this.finishing) return;
+    this.finishing = true;
+    const finalBlow = !!(info?.final);
+    this.finishFinal = finalBlow;
+    // Hold the hit, then drop into slow motion. The zoom tracks the victim.
+    this.timeScale = 0;
+    this.freezeLeft = FEEL.koFreezeFrames;
+    this.finishLeft = finalBlow ? FEEL.koSlowFrames : FEEL.stockSlowFrames;
+    this.koZoom = FEEL.koZoom;
+    this.koVictim = victim;
+    this.koPoint = { x: victim.x, y: victim.y - victim.bodyH * 0.5 };
+    this.juice?.addTrauma(0.7);
+    const color = info?.charged && !finalBlow ? 0x16325a : (finalBlow ? 0xff3a2a : 0x3a6cff);
+    this.juice?.koMoment(color, this.blastSide(victim));
+    if (!this.simFast) sfx('koHit');
+  }
+
+  /** Which screen edge a launch is heading for. */
+  blastSide(victim) {
+    const blast = this.blast;
+    if (blast) {
+      const scores = [
+        ['left', victim.x - blast.left],
+        ['right', blast.right - victim.x],
+        ['top', victim.y - blast.top],
+        ['bottom', blast.bottom - victim.y],
+      ];
+      scores.sort((a, b) => a[1] - b[1]);
+      return scores[0][0];
     }
-    // Same hit-stop in both clocks: freeze bodies, keep the match clock
-    // moving, resume when the delayed call elapses.
-    this.physics.world.pause();
-    this.time.delayedCall(pauseMs, () => this.physics.world.resume());
+    const vx = victim.body?.velocity?.x || 0;
+    const vy = victim.body?.velocity?.y || 0;
+    if (Math.abs(vx) >= Math.abs(vy)) return vx < 0 ? 'left' : 'right';
+    return vy < 0 ? 'top' : 'bottom';
   }
 
   hitSpark(x, y) {
@@ -867,13 +1163,60 @@ export default class BattleScene extends Phaser.Scene {
   update() {
     if (this.simFast) return;
     const raw = this.game.loop.rawDelta || this.stepMs;
-    // A pause or a load stall must not replay as extra match time.
-    this.tickAccum += Math.min(raw, this.stepMs * 5);
+    this.present(Math.min(raw, this.stepMs * 5));
+  }
+
+  /** One rendered frame. Slow-motion scales how much sim time it contains. */
+  captureFrame() {
+    this.present(this.stepMs);
+  }
+
+  present(dt) {
+    this.visualT += dt / 1000;
+    if (this.freezeLeft > 0) {
+      this.timeScale = 0;
+      this.freezeLeft -= 1;
+      if (this.freezeLeft <= 0) {
+        this.timeScale = this.finishFinal ? FEEL.koSlow : FEEL.stockSlow;
+      }
+    } else if (this.finishLeft > 0) {
+      this.finishLeft -= 1;
+      if (this.finishLeft <= 0) {
+        this.ramping = FEEL.koRampFrames;
+        this.koZoom = null;
+        this.koPoint = null;
+        this.koVictim = null;
+      }
+    } else if (this.ramping > 0) {
+      this.ramping -= 1;
+      const t = 1 - this.ramping / FEEL.koRampFrames;
+      const from = this.timeScale < 0.4 ? FEEL.koSlow : FEEL.stockSlow;
+      this.timeScale = from + (1 - from) * t;
+      if (this.ramping <= 0) {
+        this.timeScale = 1;
+        this.finishing = false;
+      }
+    }
+    if (this.tweens) this.tweens.timeScale = this.timeScale || 1;
+    this.tickAccum += dt * (this.timeScale || 1);
     let guard = 0;
     while (this.tickAccum >= this.stepMs && guard < 5) {
       this.tickAccum -= this.stepMs;
       this.runSimSteps(1);
       guard++;
+    }
+    this.renderInterp();
+    for (const f of this.fighters || []) f.tickHitFlash?.();
+    this.juice?.update(dt / 1000);
+    if (!this.simFast) this.updateCamera(dt);
+  }
+
+  renderInterp() {
+    const alpha = this.stepMs ? Math.min(1, Math.max(0, this.tickAccum / this.stepMs)) : 1;
+    for (const f of this.fighters || []) {
+      if (f.prevX == null || !f.rig) continue;
+      f.rig.x = (f.prevX + (f.x - f.prevX) * alpha) - f.x + (f._shakeX || 0);
+      f.rig.y = (f.prevY + (f.y - f.prevY) * alpha) - f.y + (f._shakeY || 0);
     }
   }
 
@@ -886,6 +1229,10 @@ export default class BattleScene extends Phaser.Scene {
     const world = this.physics.world;
     for (let i = 0; i < n; i++) {
       if (this.reportPublished) return;
+      for (const f of this.fighters || []) {
+        f.prevX = f.x;
+        f.prevY = f.y;
+      }
       this.simNow += stepMs;
       this.time.preUpdate();
       this.time.timeScale = 1;
@@ -904,7 +1251,6 @@ export default class BattleScene extends Phaser.Scene {
     if (!this.simFast) {
       this.updateAmbient(time, delta);
       this.updateParallax(delta);
-      this.updateCamera(delta);
     }
     if (this.playtestUntil && !this.reportPublished && time >= this.playtestUntil) {
       this.matchOver = true;
@@ -919,7 +1265,7 @@ export default class BattleScene extends Phaser.Scene {
     // a dropped phone just leaves its fighter standing idle instead of
     // crashing the match), and bots run the basic CPU controller instead of
     // any real input source.
-    const introLocked = this.intro?.active || this.time.now < this.introLockUntil;
+    const introLocked = this.intro?.active || this.simNow < this.introLockUntil;
     if (this.intro?.active) {
       // phone attack button skips the intro (edge-triggered)
       for (const f of this.fighters) {
@@ -1010,6 +1356,7 @@ export default class BattleScene extends Phaser.Scene {
       for (const victim of this.fighters) {
         if (victim === attacker || !victim.alive || victim.state === 'ko' || !victim.visible) continue;
         const hit = attacker.activeHit;
+        if (!hit) break;
         if (hit.landed.has(victim)) continue;
         if (hit.next && time < (hit.next.get(victim) ?? 0)) continue;
         if (Phaser.Geom.Rectangle.Overlaps(hb, victim.getHurtboxRect())) {
@@ -1041,15 +1388,152 @@ export default class BattleScene extends Phaser.Scene {
         p.returning = true;
         p.landed = new Set();
       }
-      p.gfx.x += (p.vx * delta) / 1000;
-      p.gfx.y += (p.vy * delta) / 1000 + Math.sin(time / 90) * 0.25;
+      if (p.move.lob && !p.pinned) {
+        const g = typeof p.move.lob === 'object' ? (p.move.lob.g ?? 1200) : 1200;
+        p.vy += g * delta / 1000;
+      }
+      if (p.move.arc && !p.pinned && p.vy) {
+        p.vy += Math.sign(p.vy) * p.move.arc * delta / 1000;
+      }
+      if (p.move.dragMetals && !p.pinned) {
+        const reach = p.move.dragRadius ?? 88;
+        for (const f of this.fighters) {
+          if (f === p.owner || !f.alive || !f.body || !f.charDef?.combat?.metal) continue;
+          if (Math.hypot(f.x - p.gfx.x, (f.y - f.bodyH * 0.5) - p.gfx.y) > reach) continue;
+          f.body.setVelocityX(f.body.velocity.x * 0.82 + p.vx * 0.18);
+          f.body.setVelocityY(f.body.velocity.y * 0.9 + p.vy * 0.06);
+        }
+      }
+      if (p.move.homing && !p.pinned) {
+        let best = null;
+        let bestD = Infinity;
+        for (const f of this.fighters) {
+          if (f === p.owner || !f.alive || f.state === 'ko' || f.state === 'dead') continue;
+          const d = Math.hypot(f.x - p.gfx.x, (f.y - f.bodyH * 0.5) - p.gfx.y);
+          if (d < bestD) { bestD = d; best = f; }
+        }
+        if (best) {
+          const speed = Math.hypot(p.vx, p.vy) || p.move.projectileSpeed || 300;
+          const dx = best.x - p.gfx.x;
+          const dy = (best.y - best.bodyH * 0.5) - p.gfx.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const k = Math.min(1, (p.move.homing === true ? 4 : p.move.homing) * delta / 1000);
+          p.vx += ((dx / len) * speed - p.vx) * k;
+          p.vy += ((dy / len) * speed - p.vy) * k;
+        }
+      }
+      if (!p.pinned) {
+        for (const f of this.fighters) {
+          const reach = f.state === 'defending' ? f.defenseMove?.pinProjectiles : 0;
+          if (!reach || f === p.owner || !f.alive) continue;
+          if (Math.hypot(f.x - p.gfx.x, (f.y - f.bodyH * 0.5) - p.gfx.y) > reach) continue;
+          p.pinned = true;
+          p.pinOwner = f;
+          p.vx = 0;
+          p.vy = 0;
+          p.move = { ...p.move, damage: 0, damage2: 0, explodeOnly: false, dropZone: null, igniteAt: 0, homing: 0 };
+          break;
+        }
+      }
+      if (!p.dead) {
+        for (const f of this.fighters) {
+          const pull = f.state === 'attack' && f.currentMove?.attractProjectiles;
+          if (!pull || f === p.owner || !f.alive) continue;
+          if (Math.abs(f.x - p.gfx.x) > 220 || Math.abs(f.y - p.gfx.y) > 160) continue;
+          p.vx += Math.sign(f.x - p.gfx.x || 1) * pull;
+          p.vy += Math.sign((f.y - f.bodyH * 0.5) - p.gfx.y || 1) * pull * 0.35;
+          if (Math.abs(f.x - p.gfx.x) < 28 && Math.abs((f.y - f.bodyH * 0.5) - p.gfx.y) < 40) {
+            p.gfx.destroy();
+            p.dead = true;
+          }
+          break;
+        }
+      }
+      if (p.dead) continue;
+      if (!p.slowed) {
+        for (const f of this.fighters) {
+          if (f.state !== 'defending' || !f.defenseMove?.slowProjectiles) continue;
+          if (Math.abs(f.x - p.gfx.x) < 110 && Math.abs(f.y - p.gfx.y) < 110) {
+            const mul = f.defenseMove.slowProjectiles;
+            p.vx *= mul;
+            p.vy *= mul;
+            p.slowed = true;
+            break;
+          }
+        }
+      }
+      if (p.move.orbitMs && !p.orbited && time < p.born + p.move.orbitMs && p.owner?.alive) {
+        const ang = ((time - p.born) / p.move.orbitMs) * Math.PI * 2;
+        const rad = p.move.orbitRadius ?? 52;
+        p.gfx.x = p.owner.x + Math.cos(ang) * rad;
+        p.gfx.y = p.owner.y - (p.owner.bodyH ?? 80) * 0.5 + Math.sin(ang) * rad * 0.45;
+        p.vx = (p.owner.facing || 1) * (p.move.projectileSpeed ?? 400);
+        p.vy = 0;
+      } else if (p.move.orbitMs && !p.orbited) {
+        p.orbited = true;
+      }
+      if (p.move.pulse && !p.pinned && time >= (p.pulseAt ?? p.born)) {
+        p.pulseAt = time + (p.move.pulse.every ?? 400);
+        if (time > p.born + 40) {
+          this.resolveBurst(p.owner, {
+            name: p.move.name,
+            type: p.move.pulse.type ?? p.move.type,
+            damage: p.move.pulse.damage ?? 2,
+            radius: p.move.pulse.radius ?? 48,
+            baseKnockback: 30,
+            knockbackGrowth: 0.4,
+            kind: 'burst',
+          }, { x: p.gfx.x, y: p.gfx.y });
+        }
+      }
+      if (p.pinned) p.gfx.y += (90 * delta) / 1000;
+      else if (!(p.move.orbitMs && !p.orbited && time < p.born + p.move.orbitMs)) {
+        p.gfx.x += (p.vx * delta) / 1000;
+        p.gfx.y += (p.vy * delta) / 1000 + Math.sin(time / 90) * 0.25;
+      }
+      if (p.move.ricochet && !p.pinned) {
+        const cap = p.move.ricochet === true ? 2 : p.move.ricochet;
+        if ((p.bounces ?? 0) < cap) {
+          const solids = (this.stage?.solids ?? []).filter((s) => s.h == null);
+          const deck = solids.find((s) => p.gfx.x >= s.x - s.w / 2 - 8 && p.gfx.x <= s.x + s.w / 2 + 8);
+          if (deck) {
+            const left = deck.x - deck.w / 2 + 16;
+            const right = deck.x + deck.w / 2 - 16;
+            if (p.gfx.x < left || p.gfx.x > right) {
+              p.vx *= -1;
+              p.gfx.x = Phaser.Math.Clamp(p.gfx.x, left, right);
+              p.bounces = (p.bounces ?? 0) + 1;
+              p.landed = new Set();
+            }
+          }
+        }
+      }
       const off = p.gfx.x < -80 || p.gfx.x > this.world.width + 80 || p.gfx.y > this.world.height + 80;
       if (time > p.dieAt || off) {
-        if (p.move.explodeOnly) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
+        if (p.move.explodeOnly && !p.pinned) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
+        if (!p.pinned) this.dropProjectileZone(p);
         p.gfx.destroy();
         p.dead = true;
         continue;
       }
+      if (p.move.igniteAt && !p.ignited && !p.pinned && time >= p.born + p.move.projectileLife * p.move.igniteAt) {
+        p.ignited = true;
+        this.resolveBurst(p.owner, {
+          ...p.move,
+          kind: 'burst',
+          type: p.move.igniteType ?? 'heat',
+          damage: p.move.igniteDamage ?? p.move.damage,
+          type2: undefined,
+          damage2: undefined,
+          radius: p.move.igniteRadius ?? 52,
+          igniteAt: 0,
+          onHit: p.move.igniteOnHit ?? p.move.onHit,
+        }, { x: p.gfx.x, y: p.gfx.y });
+        p.gfx.destroy();
+        p.dead = true;
+        continue;
+      }
+      if (p.pinned || (p.armAt && time < p.armAt)) continue;
       for (const victim of this.fighters) {
         if (victim === p.owner || !victim.alive || victim.state === 'ko' || !victim.visible || p.landed.has(victim)) continue;
         const rect = victim.getHurtboxRect();
@@ -1059,13 +1543,28 @@ export default class BattleScene extends Phaser.Scene {
         const def = victim.defenseMove;
         const perfect = def?.reflectProjectiles === 'perfect'
           && time - (victim.defenseStart ?? time) <= (def.perfectMs ?? 200);
-        if (victim.state === 'defending' && (def?.reflectProjectiles === true || perfect)) {
+        const metalShot = !!(p.owner?.charDef?.combat?.metal);
+        const reflect = def?.reflectProjectiles === true || perfect || (def?.reflectMetals && metalShot);
+        if (victim.state === 'defending' && reflect) {
           this.landHit(victim, p.owner, p.move, -Math.sign(p.vx) || victim.facing);
           p.gfx.destroy();
           p.dead = true;
           break;
         }
         p.landed.add(victim);
+        let shot = p.move;
+        if (shot.tipBonus && p.owner && Math.abs(p.gfx.x - p.owner.x) >= (shot.tipAt ?? 260)) {
+          shot = { ...shot, damage: (shot.damage ?? 0) + shot.tipBonus };
+        }
+        if (shot.slowHit) {
+          const sp = Math.hypot(p.vx, p.vy);
+          const mul = Math.min(2.2, 280 / Math.max(80, sp));
+          shot = { ...shot, damage: (shot.damage ?? 0) * mul, damage2: shot.damage2 != null ? shot.damage2 * mul : shot.damage2 };
+        }
+        if (victim.state === 'defending' && victim.defenseMove?.softenProjectiles) {
+          const mul = victim.defenseMove.softenProjectiles;
+          shot = { ...shot, damage: (shot.damage ?? 0) * mul, damage2: shot.damage2 != null ? shot.damage2 * mul : shot.damage2 };
+        }
         if (p.move.explodeOnly) {
           this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
           p.gfx.destroy();
@@ -1073,7 +1572,22 @@ export default class BattleScene extends Phaser.Scene {
           break;
         }
         // a projectile shoves you the way it was travelling
-        this.landHit(p.owner, victim, p.move, Math.sign(p.vx) || p.owner.facing);
+        this.landHit(p.owner, victim, { ...shot, _projectile: true }, Math.sign(p.vx) || p.owner.facing);
+        this.dropProjectileZone(p);
+        if (p.move.splitOnHit && !p._splitChild && p.owner) {
+          const spread = p.move.splitSpread ?? 150;
+          const child = {
+            ...p.move,
+            splitOnHit: null,
+            damage: p.move.splitDamage ?? p.move.damage,
+            delayMs: 40,
+            _splitChild: true,
+            _from: { x: p.gfx.x + Math.sign(p.vx || 1) * 18, y: p.gfx.y },
+          };
+          this.spawnProjectile(p.owner, { ...child, _vy: -spread * 0.35 });
+          this.spawnProjectile(p.owner, { ...child, _vy: spread * 0.35 });
+          p._splitChild = true;
+        }
         if (!p.move.pierce) {
           p.gfx.destroy();
           p.dead = true;
@@ -1124,24 +1638,12 @@ export default class BattleScene extends Phaser.Scene {
   koBlast(f) {
     if (this.simFast) return;
     sfx('ko');
-    // burst of lines at the blast point, clamped on-screen (to the camera
-    // view on camera stages -- same as the screen everywhere else)
-    const v = this.camRig ? this.cameras.main.worldView : { x: 0, y: 0, right: W, bottom: H };
-    const x = Phaser.Math.Clamp(f.x, v.x + 30, v.right - 30);
-    const y = Phaser.Math.Clamp(f.y, v.y + 30, v.bottom - 30);
-    const pal = f.charDef.palettes[f.paletteIndex];
-    for (let i = 0; i < 10; i++) {
-      const a = (Math.PI * 2 * i) / 10;
-      const line = this.add.rectangle(x, y, 34, 5, pal.body).setRotation(a);
-      this.tweens.add({
-        targets: line,
-        x: x + Math.cos(a) * 110,
-        y: y + Math.sin(a) * 110,
-        alpha: 0, scaleX: 0.2, duration: 320,
-        onComplete: () => line.destroy(),
-      });
-    }
-    this.cameras.main.shake(180, 0.012);
+    sfx('cheer');
+    this.juice?.koLine(f);
+    this.juice?.addTrauma(0.5);
+    // The exit burst is juice.koLine plus the screen-edge flash from
+    // beginFinish. Both fade on the render clock, including while a
+    // capture has the Phaser tween clock asleep.
   }
 
   checkWin() {
@@ -1154,12 +1656,21 @@ export default class BattleScene extends Phaser.Scene {
     }
     sfx('gameEnd');
     const winner = alive[0] ?? null;
+    if (this.hud) {
+      for (const h of this.hud) {
+        h.percent?.setVisible(false);
+        h.stocks?.setVisible(false);
+        h.name?.setVisible(false);
+      }
+    }
 
-    const banner = this.asUi(() => this.add.text(W / 2, H / 2 - 40, 'GAME!', {
-      fontFamily: FONT_DISPLAY, fontSize: '96px', color: THEME.goldCss,
-      stroke: THEME.voidCss, strokeThickness: 10,
-    }).setOrigin(0.5).setScale(0.2));
-    this.tweens.add({ targets: banner, scale: 1, duration: 320, ease: 'Back.Out' });
+    this.time.delayedCall(600, () => {
+      const banner = this.asUi(() => this.add.text(W / 2, H / 2 - 40, 'GAME!', {
+        fontFamily: FONT_DISPLAY, fontSize: '96px', color: THEME.goldCss,
+        stroke: THEME.voidCss, strokeThickness: 10,
+      }).setOrigin(0.5).setScale(0.2));
+      this.tweens.add({ targets: banner, scale: 1, duration: 320, ease: 'Back.Out' });
+    });
 
     this.time.delayedCall(1800, () => {
       const results = this.fighters.map((f) => ({

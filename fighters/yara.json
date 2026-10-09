@@ -1,0 +1,56 @@
+{
+  "id": "yara",
+  "name": "Yara",
+  "element": "Yttrium",
+  "symbol": "Y",
+  "atomicNumber": 39,
+  "tagline": "Maglev Launch",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "transition",
+    "metal": true,
+    "noble": false,
+    "density": 4.469,
+    "mohs": 0,
+    "tensile": 115,
+    "boiling": 3203,
+    "conductivity": 1.8,
+    "en": 1.22
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 12897228,
+      "body": 4886486,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 12897228,
+      "body": 3761039,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 12897228,
+      "body": 11914463,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 12897228,
+      "body": 1975871,
+      "accent": 10204084,
+      "eye": 16055295
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "id": "talia",
+  "name": "Talia",
+  "element": "Thallium",
+  "symbol": "Tl",
+  "atomicNumber": 81,
+  "tagline": "Poisoner's Poison",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 0,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "post-transition",
+    "metal": true,
+    "noble": false,
+    "density": 11.873,
+    "mohs": 1.2,
+    "tensile": 8,
+    "boiling": 1746,
+    "conductivity": 6.7,
+    "en": 1.62
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 12898999,
+      "body": 4892810,
+      "accent": 10207626,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 12898999,
+      "body": 3765342,
+      "accent": 10207626,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 12898999,
+      "body": 11916738,
+      "accent": 10207626,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 12898999,
+      "body": 1977134,
+      "accent": 10207626,
+      "eye": 16055295
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "id": "iona",
+  "name": "Iona",
+  "element": "Iodine",
+  "symbol": "I",
+  "atomicNumber": 53,
+  "tagline": "Violet Vapor",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "halogen",
+    "metal": false,
+    "noble": false,
+    "density": 4.944,
+    "mohs": 0,
+    "tensile": 0,
+    "boiling": 457.4,
+    "conductivity": 0,
+    "en": 2.66
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15193253,
+      "body": 12890186,
+      "accent": 14665319,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15193253,
+      "body": 9009460,
+      "accent": 14665319,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15193253,
+      "body": 14997673,
+      "accent": 14665319,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15193253,
+      "body": 3747104,
+      "accent": 14665319,
+      "eye": 16055295
+    }
+  ]
+}

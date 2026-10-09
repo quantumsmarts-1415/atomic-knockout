@@ -1,0 +1,56 @@
+{
+  "id": "sam",
+  "name": "Sam",
+  "element": "Samarium",
+  "symbol": "Sm",
+  "atomicNumber": 62,
+  "tagline": "Heatproof Magnet",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "lanthanide",
+    "metal": true,
+    "noble": false,
+    "density": 7.518,
+    "mohs": 1.44,
+    "tensile": 124,
+    "boiling": 2173,
+    "conductivity": 1.1,
+    "en": 1.17
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15188155,
+      "body": 12872346,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15188155,
+      "body": 8997736,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15188155,
+      "body": 14991048,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15188155,
+      "body": 3743281,
+      "accent": 14655379,
+      "eye": 16055295
+    }
+  ]
+}

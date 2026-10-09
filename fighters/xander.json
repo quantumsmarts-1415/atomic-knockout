@@ -1,0 +1,56 @@
+{
+  "id": "xander",
+  "name": "Xander",
+  "element": "Xenon",
+  "symbol": "Xe",
+  "atomicNumber": 54,
+  "tagline": "Ion Thruster",
+  "teach": "",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "gas",
+    "family": "noble",
+    "metal": false,
+    "noble": true,
+    "density": 0.005894,
+    "mohs": 0,
+    "tensile": 0,
+    "boiling": 165.05,
+    "conductivity": 0,
+    "en": 2.6
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 14074060,
+      "body": 9071318,
+      "accent": 12558260,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 14074060,
+      "body": 6507407,
+      "accent": 12558260,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 14074060,
+      "body": 13549279,
+      "accent": 12558260,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 14074060,
+      "body": 2891327,
+      "accent": 12558260,
+      "eye": 16055295
+    }
+  ]
+}

@@ -44,7 +44,7 @@ const GRAVITY = 1500;
 const BAND_DAMAGE = {
   aaron: 1.37,
   ace: 0.99,
-  agatha: 0.79,
+  agatha: 0.83,
   allen: 1.23,
   amy: 1.34,
   arsenio: 1.39,

@@ -48,6 +48,10 @@ const browser = await chromium.launch({
 });
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
 page.on('pageerror', (err) => console.error('PAGE', err.message));
+page.on('console', (msg) => {
+  const t = msg.text();
+  if (t.startsWith('AKCAP') || msg.type() === 'error') console.log(t);
+});
 
 const url = `${base}/?playtest=${ids}&stocks=${stocks}&ms=60000&seed=${seed}&stage=${stage}`;
 await page.goto(url, { waitUntil: 'domcontentloaded' });
@@ -108,12 +112,12 @@ for (let frame = 0; frame < frames; frame++) {
       if (frame === 0) { pin(hero, 460, 1); pin(foe, 820, -1); foe.percent = 0; }
       if (frame >= 20 && frame < 36) hk.jump.isDown = true;
       if (frame >= 70 && frame < 92) { hero.facing = -1; hk.left.isDown = true; hk.attack.isDown = true; }
-      if (frame === 130) { pin(hero, 620, 1); pin(foe, 760, -1); foe.percent = 0; foe.stocks = 5; }
+      if (frame === 130) { pin(hero, 700, 1); pin(foe, 760, -1); foe.percent = 0; foe.stocks = 5; }
       if (frame >= 142 && frame < 168) { hk.right.isDown = true; hk.attack.isDown = true; }
-      if (frame === 250) { pin(hero, 860, 1); pin(foe, 1000, -1); foe.percent = 130; foe.stocks = Math.max(foe.stocks, 1); }
-      if (frame >= 262 && frame < 290) { hk.right.isDown = true; hk.attack.isDown = true; }
-      if (frame === 360) { pin(hero, 520, 1); pin(foe, 900, -1); }
-      if (frame >= 372 && frame < 450) hk.attack.isDown = true;
+      if (frame === 250) { pin(hero, 1060, 1); pin(foe, 1130, -1); foe.percent = 280; foe.stocks = 1; }
+      if (frame >= 262 && frame < 300) { hk.right.isDown = true; hk.attack.isDown = true; }
+      if (frame === 460) { pin(hero, 520, 1); pin(foe, 900, -1); }
+      if (frame >= 472 && frame < 545) hk.attack.isDown = true;
     } else if (scriptName === 'moves') {
       // charge, normal, defense, special, against a standing dummy.
       if (frame === 0) { pin(hero, 500, 1); pin(foe, 740, -1); foe.percent = 40; }
@@ -124,28 +128,61 @@ for (let frame = 0; frame < frames; frame++) {
       else if (phase >= 140 && phase < 175) hk.special.isDown = true;
       else if (phase >= 190 && phase < 215) { hk.right.isDown = true; hk.special.isDown = true; }
     } else if (scriptName === 'match') {
-      // CPUs play so the camera moves, then a scripted hit at high percent
-      // produces a KO the short clip can actually show.
-      for (const f of b.fighters) f.isBot = frame < 360;
-      if (frame === 360) {
-        const ground = b.stage?.groundY ?? 560;
-        pin(hero, 560, 1);
-        pin(foe, 700, -1);
-        foe.percent = 160;
+      // CPUs play so the camera has to follow them, then a scripted hit near
+      // the blast line produces a KO the short clip can actually show.
+      for (const f of b.fighters) f.isBot = frame < 240;
+      if (frame === 240) {
+        pin(hero, 1060, 1);
+        pin(foe, 1130, -1);
+        foe.percent = 220;
         foe.stocks = 1;
         const third = b.fighters[2];
         if (third) {
-          pin(third, 980, -1);
-          third.percent = 40;
+          pin(third, 280, 1);
+          third.percent = 30;
         }
       }
-      if (frame >= 372 && frame < 430) {
+      if (frame >= 252 && frame < 320) {
         hk.right.isDown = true;
         hk.attack.isDown = true;
       }
     }
     if (typeof b.captureFrame === 'function') b.captureFrame();
     else b.runSimSteps(1);
+    const game = window.game;
+    const renderer = game.renderer;
+    if (renderer?.preRender) {
+      renderer.preRender();
+      game.scene.render(renderer);
+      renderer.postRender();
+      renderer.gl?.flush();
+    }
+    // WebGL drops the drawing buffer after composite. Copy it now, while
+    // this turn still owns the pixels, onto a 2D canvas the screenshot reads.
+    const src = game.canvas;
+    let shot = document.getElementById('ak-shot');
+    if (!shot) {
+      shot = document.createElement('canvas');
+      shot.id = 'ak-shot';
+      shot.width = src.width;
+      shot.height = src.height;
+      shot.style.cssText = 'position:fixed;left:0;top:0;width:1280px;height:720px;z-index:100000';
+      document.body.appendChild(shot);
+    }
+    shot.getContext('2d').drawImage(src, 0, 0);
+    if (frame % 60 === 0) {
+      const cam = b.cameras?.main;
+      console.log('AKCAP ' + JSON.stringify({
+        frame,
+        zoom: cam ? Math.round(cam.zoom * 100) / 100 : null,
+        jump: !!b.keymaps[hero.controlSlot]?.jump?.isDown,
+        fighters: b.fighters.map((f) => ({
+          id: f.charDef?.id, x: Math.round(f.x), y: Math.round(f.y),
+          p: Math.round(f.percent), stocks: f.stocks, state: f.state,
+          bot: !!f.isBot, vy: Math.round(f.body?.velocity?.y || 0),
+        })),
+      }));
+    }
   }, { frame, scriptName });
   if (frame % stride === 0) {
     const name = String(written).padStart(5, '0');

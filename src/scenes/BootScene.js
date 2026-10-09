@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { loadStageArt } from '../data/stages.js';
 import { CHARACTERS, ROSTER } from '../data/characters.js';
+import { collectMoveStrips } from '../engine/moveClip.js';
 
 /** `?playtest=hydra,helen,kyle` boots straight into a CPU match and only
  *  loads those fighters' cutouts, so a headless run doesn't pull every sheet. */
@@ -159,6 +160,8 @@ export function attachBootLoadUi(scene, {
   }
 
   function destroy() {
+    scene.load.off?.('progress', setProgress);
+    scene.load.off?.('complete', destroy);
     bg.destroy();
     bar.destroy();
     track.destroy();
@@ -264,17 +267,39 @@ export default class BootScene extends Phaser.Scene {
       window.__akReady = true;
       return;
     }
-    if (spec) {
-      this.scene.start('Battle', {
-        stageId: spec.stageId,
-        stocks: spec.stocks,
-        playtestMs: spec.ms,
-        simSpeed: spec.speed,
-        seed: spec.seed,
-        players: spec.ids.map((charId, i) => ({ charId, palette: i % 4, slot: 100 + i })),
-      });
-      return;
-    }
-    this.scene.start('Title');
+    const roster = spec
+      ? spec.ids.map((id) => CHARACTERS[id]).filter(Boolean)
+      : ROSTER;
+    const proceed = () => {
+      if (spec) {
+        this.scene.start('Battle', {
+          stageId: spec.stageId,
+          stocks: spec.stocks,
+          playtestMs: spec.ms,
+          simSpeed: spec.speed,
+          seed: spec.seed,
+          players: spec.ids.map((charId, i) => ({ charId, palette: i % 4, slot: 100 + i })),
+        });
+        return;
+      }
+      this.scene.start('Title');
+    };
+    // Optional strips. A missing manifest is the idle telegraph, not an error.
+    collectMoveStrips(roster).then((jobs) => {
+      const pending = jobs.filter((j) => !this.textures.exists(j.textureKey));
+      if (!pending.length) {
+        proceed();
+        return;
+      }
+      for (const j of pending) {
+        this.load.spritesheet(j.textureKey, j.url, {
+          frameWidth: j.cellW,
+          frameHeight: j.cellH,
+          endFrame: j.frames - 1,
+        });
+      }
+      this.load.once('complete', proceed);
+      this.load.start();
+    }).catch(() => proceed());
   }
 }

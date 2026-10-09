@@ -1,5 +1,54 @@
 # Animation art needed
 
+## Drop-in move clips
+
+The game loads an optional strip for any move without a code change. If the file or the manifest is missing, the fighter stays on the idle sheet (or the cutout) and the existing telegraph plays: a bob while charging, a squash while defending. The effects layer (`src/engine/MoveVfx.js`) is drawn on the scene, above the fighter, and stays on top of the strip.
+
+Put files here:
+
+```
+public/assets/sprites/moves/<characterId>/manifest.json
+public/assets/sprites/moves/<characterId>/<moveKey>.png
+```
+
+`characterId` is the roster id (`hydra`, `helen`, `lillie`, …). `moveKey` is one of:
+
+| moveKey | Slot |
+| --- | --- |
+| `basicCharge` | hold normal, no direction |
+| `basicDirectional` | normal + direction |
+| `specialDefense` | hold special, no direction |
+| `specialDirectional` | special + direction |
+
+The strip is horizontal, left to right, one cell per frame. Frame count is 1–8 and comes from the manifest, not from the filename.
+
+```json
+{
+  "moves": {
+    "basicDirectional": { "frames": 3 }
+  }
+}
+```
+
+Cell size, `footY`, and `visibleH` default to that character's **idle** cell (not the walk cell). Override them on the manifest or on one move when a strip uses a different crop:
+
+```json
+{
+  "cellW": 609,
+  "cellH": 720,
+  "footY": 0.9823,
+  "visibleH": 668,
+  "moves": {
+    "basicCharge": { "frames": 8 },
+    "specialDefense": { "frames": 4, "cellW": 609, "cellH": 720 }
+  }
+}
+```
+
+`footY` is a Phaser origin from 0 to 1, the same value as the idle clip. Feet sit near 1. It is not a pixel row. `visibleH` is the pixel height of the body inside the cell; the fighter is scaled so that height matches the idle display height. `cellW` and `cellH` are the pixel size of one frame.
+
+1 frame: the cell stays put and the body squashes, stretches, and lunges through anticipation, strike, and recovery. 2 frames: anticipation, then the strike, crossfaded. 3 frames: anticipation, strike, recovery, crossfaded, with the same squash and stretch. 4–8 frames: the strip is scrubbed across the move (`floor(t × count)`, last frame at the end). Defense loops. A charge scrub follows how full the charge is.
+
 Every roster move needs its own sprite clip. The sheets on disk are idle loops, plus a walk cycle for Hydra, Helen, Lillie, Ben, Bord, Carter, Nitra, Flora, Neo, and Natalie. Walk is a locomotion cycle. It does not read as a dash, a punch, a cast, or a guard, so it is not reused for any move. Idle is not reused as an attack pose either.
 
 Until a clip below exists, the fighter stays on the idle sheet. Charging adds a small vertical bob and defending squashes the sprite slightly, so the state is visible. The move itself is drawn by the effects layer (`src/engine/MoveVfx.js`): typed color, windup, hit flash, and a shape for the kind of move (burst, beam, projectile, wall, shield). That placeholder is temporary. It is not a stand-in pose.

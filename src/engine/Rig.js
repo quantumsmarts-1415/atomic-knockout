@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { sheetKey, use3dSheets, clipDisplayLayout, positiveFinite } from '../scenes/BootScene.js';
+import { clipPose, moveClipFor, moveTextureKey } from './moveClip.js';
 
 // ---------------------------------------------------------------------------
 // Rig — the code-drawn vector cartoon character.
@@ -294,9 +295,56 @@ export class Rig extends Phaser.GameObjects.Container {
    * Procedural animation. state: 'idle' | 'walk' | 'jump' | 'fall' |
    * 'attack' | 'hurt' | 'ko'. speedFactor 0..1 scales the walk cycle.
    */
+  // A shipped strip replaces the idle telegraph for this move. Effects stay
+  // on the scene, above this container, so the body clip never covers them.
+  showMoveClip(state) {
+    const key = this.moveKey;
+    const clip = key ? moveClipFor(this.charDef?.id, key) : null;
+    const tex = clip ? moveTextureKey(this.charDef.id, key) : null;
+    const posing = clip && tex && this.scene.textures.exists(tex)
+      && (state === 'attack' || state === 'charging' || state === 'defending');
+    if (!posing) {
+      this.clipA?.setVisible(false);
+      this.clipB?.setVisible(false);
+      this.sprite?.setVisible?.(true);
+      return false;
+    }
+    const pose = clipPose(this.poseT ?? this.attackSwing ?? 0, clip.frames);
+    const displayH = this.art?.height ?? this.charDef?.art?.height ?? 160;
+    const layout = positiveFinite(displayH) && positiveFinite(clip.visibleH) ? displayH / clip.visibleH : 1;
+    const ensure = (slot) => {
+      if (this[slot]) return this[slot];
+      const spr = this.scene.add.sprite(0, 0, tex, 0);
+      if ((this.art?.facing ?? this.charDef?.art?.facing ?? 1) === -1) spr.setFlipX(true);
+      this.add(spr);
+      this[slot] = spr;
+      return spr;
+    };
+    const paint = (spr, frame, alpha) => {
+      spr.setVisible(alpha > 0.001);
+      spr.setAlpha(alpha);
+      spr.setTexture(tex, frame);
+      spr.setOrigin(0.5, clip.footY);
+      spr.setScale(layout * pose.scaleX, layout * pose.scaleY);
+      spr.x = pose.lunge;
+      spr.y = pose.y;
+    };
+    if (this.sprite) this.sprite.setVisible(false);
+    const blend = pose.mode === 'tween' ? pose.blend : 0;
+    paint(ensure('clipA'), pose.frame, 1 - blend);
+    paint(ensure('clipB'), pose.frameB, blend);
+    return true;
+  }
+
   animate(dt, state, speedFactor = 1) {
     this.animT += dt;
     const t = this.animT;
+
+    if (this.showMoveClip(state)) {
+      this.rotation = 0;
+      this.setScale(this.facing * this.baseScale, this.baseScale);
+      return;
+    }
 
     if (this.sheetMode) {
       // 'attack' covers both move slots; pick the clip the move actually is

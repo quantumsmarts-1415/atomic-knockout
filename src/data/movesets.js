@@ -1511,25 +1511,25 @@ export const MOVESETS = {
 
   ronan: {
     basicCharge: m('Ground Seep', {
-      kind: 'burst', type: R, damage: 8.8, chargeDamageMult: 1.2, riseUnder: true,
+      kind: 'burst', type: R, damage: 9.5, chargeDamageMult: 1.2, riseUnder: true,
       maxChargeMs: 800, radius: 46, vfx: 'cloud', vfxColor: 0xd4f5a8,
-      baseKnockback: 44, knockbackGrowth: 0.88, duration: 240, cooldown: 980,
+      baseKnockback: 47.52, knockbackGrowth: 0.95, duration: 240, cooldown: 980,
     }),
     basicDirectional: melee('Decay Daughters', {
-      type: K, damage: 7.7, rangeW: 68, vfx: 'strike', vfxColor: 0xc6e88a,
-      zone: { type: R, damage: 0.61, ms: 900, radius: 40, tick: 460, color: 0xd4f5a8, knockback: 8.8, growth: 0.11 },
-      baseKnockback: 77, knockbackGrowth: 1.43, duration: 200, cooldown: 460,
+      type: K, damage: 8.32, rangeW: 68, vfx: 'strike', vfxColor: 0xc6e88a,
+      zone: { type: R, damage: 0.66, ms: 900, radius: 40, tick: 460, color: 0xd4f5a8, knockback: 9.5, growth: 0.12 },
+      baseKnockback: 83.16, knockbackGrowth: 1.54, duration: 200, cooldown: 460,
     }),
     specialDefense: m('Radon Spa', {
       regen: 1.5, regenEvery: 450,
-      zone: { type: R, damage: 0.55, ms: 800, radius: 46, tick: 480, color: 0xe4ffb0, knockback: 6.6, growth: 0.11 },
+      zone: { type: R, damage: 0.59, ms: 800, radius: 46, tick: 480, color: 0xe4ffb0, knockback: 7.13, growth: 0.12 },
       duration: 700, cooldown: 1000, vfx: 'shield', vfxColor: 0xd8f0a0,
     }),
     specialDirectional: m('Radon Creep', {
-      kind: 'projectile', type: R, damage: 6.6, ground: true, vfx: 'cloud', vfxColor: 0xc6e070,
-      dropZone: { type: R, damage: 0.61, ms: 1000, radius: 42, tick: 460, color: 0xc6e070, knockback: 6.6, growth: 0.11 },
+      kind: 'projectile', type: R, damage: 7.13, ground: true, vfx: 'cloud', vfxColor: 0xc6e070,
+      dropZone: { type: R, damage: 0.66, ms: 1000, radius: 42, tick: 460, color: 0xc6e070, knockback: 7.13, growth: 0.12 },
       projectileSpeed: 280, projectileRadius: 12, projectileLife: 700,
-      baseKnockback: 33, knockbackGrowth: 0.66, duration: 220, cooldown: 640,
+      baseKnockback: 35.64, knockbackGrowth: 0.71, duration: 220, cooldown: 640,
     }),
   },
 
@@ -2483,47 +2483,47 @@ export const MOVESETS = {
 
   sarge: {
     basicCharge: m('Sound Off', {
-      kind: 'buff', chargeStack: { every: 1000, damage: 4, cap: 12 }, unblockAtFull: true,
+      kind: 'buff', chargeStack: { every: 1000, damage: 5.6, cap: 17 }, unblockAtFull: true,
       maxChargeMs: 3000, duration: 160, cooldown: 800, vfx: 'spark', vfxColor: 0xffe08a,
     }),
     basicDirectional: melee('Six-Count Flurry', {
-      type: K, damage: 6, type2: R, damage2: 5, multiHit: 6, rangeW: 78, rangeH: 52,
+      type: K, damage: 8.4, type2: R, damage2: 7, multiHit: 6, rangeW: 78, rangeH: 52,
       vfx: 'strike', vfxColor: 0xfff2c0,
-      baseKnockback: 80, knockbackGrowth: 1.6, duration: 420, cooldown: 640,
+      baseKnockback: 97.6, knockbackGrowth: 1.95, duration: 420, cooldown: 640,
     }),
     specialDefense: m('Periodic Shield', {
       blocks: [K, H, E, C, R], crackAfterHits: 5,
       duration: 900, cooldown: 1100, vfx: 'shield', vfxColor: 0xf0e8c8,
     }),
     specialDirectional: m('Decay Mortar', {
-      kind: 'projectile', type: R, damage: 14, type2: H, damage2: 10, lob: 480, explodeOnly: true,
+      kind: 'projectile', type: R, damage: 19.6, type2: H, damage2: 14, lob: 480, explodeOnly: true,
       explodeRadius: 78, vfx: 'spark', vfxColor: 0xffd070,
       projectileSpeed: 340, projectileRadius: 11, projectileLife: 900,
-      baseKnockback: 190, knockbackGrowth: 4.0, duration: 220, cooldown: 860,
+      baseKnockback: 231.8, knockbackGrowth: 4.88, duration: 220, cooldown: 860,
     }),
   },
 
   mae: {
     basicCharge: m('Liquid Drop Split', {
-      kind: 'projectile', type: R, damage: 14, type2: H, damage2: 12, alsoBehind: true,
+      kind: 'projectile', type: R, damage: 7.64, type2: H, damage2: 6.55, alsoBehind: true,
       chargeDamageMult: 1.45, maxChargeMs: 800, vfx: 'spark', vfxColor: 0xfff0a0,
       projectileSpeed: 460, projectileRadius: 10, projectileLife: 520,
-      baseKnockback: 180, knockbackGrowth: 3.8, duration: 220, cooldown: 820,
+      baseKnockback: 98.28, knockbackGrowth: 2.07, duration: 220, cooldown: 820,
     }),
     basicDirectional: melee('Overlooked', {
-      type: K, damage: 14, type2: R, damage2: 11, rangeW: 70, vfx: 'strike', vfxColor: 0xf4fbff,
-      baseKnockback: 170, knockbackGrowth: 3.6, duration: 90, cooldown: 420,
+      type: K, damage: 7.64, type2: R, damage2: 6.01, rangeW: 70, vfx: 'strike', vfxColor: 0xf4fbff,
+      baseKnockback: 92.82, knockbackGrowth: 1.97, duration: 90, cooldown: 420,
     }),
     specialDefense: m('Border Slip', {
-      kind: 'counter', counterType: R, counterDamage: 14, swap: true,
-      counterKnockback: 180, counterKnockbackGrowth: 3.8,
+      kind: 'counter', counterType: R, counterDamage: 7.64, swap: true,
+      counterKnockback: 98.28, counterKnockbackGrowth: 2.07,
       duration: 520, cooldown: 900, vfx: 'shield', vfxColor: 0xe8f4ff,
     }),
     specialDirectional: m('Neutron Splitter', {
-      kind: 'projectile', type: R, damage: 12, splitOnHit: true, splitDamage: 10, splitSpread: 160,
+      kind: 'projectile', type: R, damage: 6.55, splitOnHit: true, splitDamage: 5.46, splitSpread: 160,
       vfx: 'spark', vfxColor: 0xe8ffc0,
       projectileSpeed: 520, projectileRadius: 7, projectileLife: 480,
-      baseKnockback: 160, knockbackGrowth: 3.4, duration: 180, cooldown: 780,
+      baseKnockback: 87.36, knockbackGrowth: 1.86, duration: 180, cooldown: 780,
     }),
   },
 
@@ -2558,46 +2558,46 @@ export const MOVESETS = {
 
   liv: {
     basicCharge: m('192 Beams', {
-      kind: 'burst', type: H, damage: 18, type2: R, damage2: 16, fizzleBelow: 0.95,
+      kind: 'burst', type: H, damage: 15.12, type2: R, damage2: 13.44, fizzleBelow: 0.95,
       chargeDamageMult: 1.15, chargeRadiusMult: 1.2, maxChargeMs: 1100, radius: 92,
       vfx: 'supernova', vfxColor: 0xffe8a0,
-      baseKnockback: 210, knockbackGrowth: 4.6, duration: 280, cooldown: 1100,
+      baseKnockback: 176.4, knockbackGrowth: 3.86, duration: 280, cooldown: 1100,
     }),
     basicDirectional: melee('Chalcogen Hook', {
-      type: K, damage: 14, type2: C, damage2: 11, rangeW: 78, vfx: 'strike', vfxColor: 0xffd24a,
-      baseKnockback: 190, knockbackGrowth: 4.0, duration: 220, cooldown: 460,
+      type: K, damage: 11.76, type2: C, damage2: 9.24, rangeW: 78, vfx: 'strike', vfxColor: 0xffd24a,
+      baseKnockback: 159.6, knockbackGrowth: 3.36, duration: 220, cooldown: 460,
     }),
     specialDefense: m('Hohlraum', {
       reflectTypes: [H, R], reflectAs: R, reflectPower: 1.3,
-      counterKnockback: 170, counterKnockbackGrowth: 3.6,
+      counterKnockback: 142.8, counterKnockbackGrowth: 3.02,
       duration: 700, cooldown: 960, vfx: 'shield', vfxColor: 0xffe08a,
     }),
     specialDirectional: m('Last Instant', {
-      kind: 'projectile', type: R, damage: 22, vfx: 'spark', vfxColor: 0xfff6c0,
+      kind: 'projectile', type: R, damage: 18.48, vfx: 'spark', vfxColor: 0xfff6c0,
       projectileSpeed: 640, projectileRadius: 6, projectileLife: 110,
-      baseKnockback: 160, knockbackGrowth: 3.2, duration: 120, cooldown: 720,
+      baseKnockback: 134.4, knockbackGrowth: 2.69, duration: 120, cooldown: 720,
     }),
   },
 
   tess: {
     basicCharge: m('Electron Hunger', {
-      kind: 'burst', type: C, damage: 12, chargeDamageMult: 1.35, chargeRadiusMult: 1.2,
+      kind: 'burst', type: C, damage: 5.95, chargeDamageMult: 1.35, chargeRadiusMult: 1.2,
       maxChargeMs: 800, radius: 64, pull: { radius: 220, speed: 200 }, vfx: 'gust', vfxColor: 0x9ad0ff,
-      baseKnockback: 140, knockbackGrowth: 3.0, duration: 240, cooldown: 860,
+      baseKnockback: 50.34, knockbackGrowth: 1.08, duration: 240, cooldown: 860,
     }),
     basicDirectional: melee('Last Halogen', {
-      type: C, damage: 13, type2: R, damage2: 11, rangeW: 72, vfx: 'strike', vfxColor: 0xc8b4ff,
-      baseKnockback: 180, knockbackGrowth: 4.0, duration: 200, cooldown: 440,
+      type: C, damage: 6.45, type2: R, damage2: 5.46, rangeW: 72, vfx: 'strike', vfxColor: 0xc8b4ff,
+      baseKnockback: 64.73, knockbackGrowth: 1.44, duration: 200, cooldown: 440,
     }),
     specialDefense: m('Smoky Haze', {
       phase: true,
-      zone: { type: C, damage: 5, ms: 700, radius: 78, tick: 180, color: 0x8eb4ff },
+      zone: { type: C, damage: 2.48, ms: 700, radius: 78, tick: 180, color: 0x8eb4ff },
       duration: 700, cooldown: 980, vfx: 'shield', vfxColor: 0x9ec0ff,
     }),
     specialDirectional: m('Six-Atom Spread', {
-      kind: 'projectile', type: R, damage: 8, fan: 6, fanSpread: 210, vfx: 'spark', vfxColor: 0xd0e4ff,
+      kind: 'projectile', type: R, damage: 3.97, fan: 6, fanSpread: 210, vfx: 'spark', vfxColor: 0xd0e4ff,
       projectileSpeed: 520, projectileRadius: 5, projectileLife: 420,
-      baseKnockback: 120, knockbackGrowth: 2.4, duration: 180, cooldown: 760,
+      baseKnockback: 43.15, knockbackGrowth: 0.86, duration: 180, cooldown: 760,
     }),
   },
 };

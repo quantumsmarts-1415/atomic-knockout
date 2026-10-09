@@ -33,8 +33,8 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Flame Dash', {
       kind: 'dash', type: K, damage: 7, type2: H, damage2: 6,
-      dashSpeed: 720, rangeW: 96, rangeH: 100, baseKnockback: 190,
-      knockbackGrowth: 4.0, duration: 300, cooldown: 700, vfx: 'fire',
+      dashSpeed: 720, rangeW: 96, rangeH: 100, baseKnockback: 180,
+      knockbackGrowth: 3.4, duration: 300, cooldown: 700, vfx: 'fire',
     }),
     specialDefense: m('Fire Wall', {
       kind: 'wall', frontOnly: true, duration: 520, cooldown: 680,
@@ -46,7 +46,7 @@ export const MOVESETS = {
       kind: 'projectile', type: H, damage: 10, type2: R, damage2: 8,
       explodeOnly: true, explodeRadius: 74, vfx: 'mushroom',
       projectileSpeed: 420, projectileRadius: 10, projectileLife: 700,
-      baseKnockback: 200, knockbackGrowth: 4.2, duration: 260, cooldown: 980,
+      baseKnockback: 190, knockbackGrowth: 3.6, duration: 260, cooldown: 980,
     }),
   },
 
@@ -83,7 +83,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Precision Strike', {
       type: K, damage: 7, sweetSpot: 5, rangeW: 70, vfx: 'strike',
-      duration: 250, cooldown: 740,
+      baseKnockback: 160, knockbackGrowth: 3.6, duration: 250, cooldown: 740,
     }),
     specialDefense: m('Rigid Stance', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.72, noKnockback: true,
@@ -475,7 +475,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Lance Jab', {
       type: K, damage: 8, rangeW: 84, rangeH: 36, vfx: 'strike',
-      duration: 280, cooldown: 700,
+      baseKnockback: 170, knockbackGrowth: 3.8, duration: 280, cooldown: 700,
     }),
     specialDefense: m('Aerospace Plating', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.62, blocks: [C], noKnockback: true,
@@ -534,10 +534,10 @@ export const MOVESETS = {
     basicCharge: m('Capacitor Dump', {
       kind: 'beam', type: E, damage: 8, chargeDamageMult: 1.75, chargeLengthMult: 2.15,
       maxChargeMs: 760, beamLen: 148, beamThick: 24, vfx: 'laser', vfxColor: 0x7ec8ff,
-      baseKnockback: 150, duration: 200, cooldown: 740,
+      baseKnockback: 140, knockbackGrowth: 3.0, duration: 200, cooldown: 740,
     }),
     basicDirectional: melee('Tantalizing Hook', {
-      type: K, damage: 7, pull: 210, rangeW: 92, rangeH: 42, vfx: 'spark',
+      type: K, damage: 6, pull: 210, rangeW: 92, rangeH: 42, vfx: 'spark',
       baseKnockback: 40, knockbackGrowth: 1.2, duration: 240, cooldown: 460,
     }),
     specialDefense: m('Tantalus Guard', {
@@ -915,7 +915,7 @@ export const MOVESETS = {
       baseKnockback: 70, knockbackGrowth: 2.4, duration: 240, cooldown: 780,
     }),
     basicDirectional: m('Caustic Splash', {
-      kind: 'projectile', type: C, damage: 7, bonusVsMark: 'stain', markMult: 1.35, vfx: 'cloud',
+      kind: 'projectile', type: C, damage: 6, bonusVsMark: 'stain', markMult: 1.35, vfx: 'cloud',
       projectileSpeed: 460, projectileRadius: 11, projectileLife: 460,
       baseKnockback: 145, knockbackGrowth: 3.4, duration: 200, cooldown: 520,
     }),
@@ -1534,13 +1534,13 @@ export const MOVESETS = {
 
   ruben: {
     basicCharge: m('Condensate Collapse', {
-      kind: 'dash', type: H, damage: 8, chargeDamageMult: 1.3, chargeDashMult: 1.15,
-      maxChargeMs: 800, dashSpeed: 520, onHit: { freeze: 240 }, rangeW: 96, rangeH: 70,
+      kind: 'dash', type: H, damage: 9, chargeDamageMult: 1.25, chargeDashMult: 1.1,
+      maxChargeMs: 800, dashSpeed: 360, onHit: { freeze: 240 }, rangeW: 90, rangeH: 70,
       vfx: 'dash', vfxColor: 0x9ad7ff,
       baseKnockback: 80, knockbackGrowth: 1.5, duration: 260, cooldown: 760,
     }),
     basicDirectional: melee('Molten Palm', {
-      type: K, damage: 6, type2: H, damage2: 5, rangeW: 74, vfx: 'fire', vfxColor: 0xff6a4a,
+      type: K, damage: 7, type2: H, damage2: 5, rangeW: 74, vfx: 'fire', vfxColor: 0xff6a4a,
       zone: { type: H, damage: 0.6, ms: 800, radius: 34, tick: 420, color: 0xff6a4a, knockback: 10, growth: 0.15 },
       baseKnockback: 90, knockbackGrowth: 1.8, duration: 200, cooldown: 440,
     }),
@@ -1609,7 +1609,7 @@ export const MOVESETS = {
       baseKnockback: 100, knockbackGrowth: 1.8, duration: 260, cooldown: 800,
     }),
     basicDirectional: melee('Samarskite Smash', {
-      type: K, damage: 7, rangeW: 74, vfx: 'strike', vfxColor: 0xc4a070,
+      type: K, damage: 8, rangeW: 74, vfx: 'strike', vfxColor: 0xc4a070,
       baseKnockback: 120, knockbackGrowth: 2.2, duration: 210, cooldown: 400,
     }),
     specialDefense: m('Mine Shaft Duck', {
@@ -1712,20 +1712,20 @@ export const MOVESETS = {
 
   tessa: {
     basicCharge: m('Peltier Punch', {
-      type: H, damage: 9, chargeDamageMult: 1.3, maxChargeMs: 800,
+      type: H, damage: 10, chargeDamageMult: 1.25, maxChargeMs: 800,
       buff: { heatTaken: 0.6, ms: 2000 }, rangeW: 70, rangeH: 48, vfx: 'fire', vfxColor: 0xff8844,
       baseKnockback: 90, knockbackGrowth: 1.7, duration: 220, cooldown: 780,
     }),
     basicDirectional: melee('Garlic Breath', {
-      type: C, damage: 6, onHit: { interrupt: 220 }, rangeW: 60, rangeH: 44, vfx: 'cloud', vfxColor: 0xe8e0c0,
+      type: C, damage: 7, onHit: { interrupt: 220 }, rangeW: 72, rangeH: 46, vfx: 'cloud', vfxColor: 0xe8e0c0,
       baseKnockback: 50, knockbackGrowth: 1.0, duration: 180, cooldown: 400,
     }),
     specialDefense: m('Phase Rewrite', {
-      kind: 'shield', healOnBlock: 5,
+      kind: 'shield', healOnBlock: 7,
       duration: 640, cooldown: 980, vfx: 'shield', vfxColor: 0xd8d0ea,
     }),
     specialDirectional: m('Tellus Tremor', {
-      kind: 'projectile', type: K, damage: 8, ground: true, vfx: 'strike', vfxColor: 0xc4b49a,
+      kind: 'projectile', type: K, damage: 9, ground: true, vfx: 'strike', vfxColor: 0xc4b49a,
       projectileSpeed: 360, projectileRadius: 14, projectileLife: 560,
       baseKnockback: 100, knockbackGrowth: 1.8, duration: 220, cooldown: 540,
     }),
@@ -1762,15 +1762,15 @@ export const MOVESETS = {
       baseKnockback: 90, knockbackGrowth: 1.6, duration: 200, cooldown: 800,
     }),
     basicDirectional: melee('Polar Night', {
-      type: K, damage: 6, type2: H, damage2: 5, onHit: { freeze: 240 }, rangeW: 72, vfx: 'strike', vfxColor: 0xb7d4ff,
+      type: K, damage: 7, type2: H, damage2: 5, onHit: { freeze: 240 }, rangeW: 74, vfx: 'strike', vfxColor: 0xb7d4ff,
       baseKnockback: 80, knockbackGrowth: 1.6, duration: 200, cooldown: 440,
     }),
     specialDefense: m('Aurora Veil', {
-      kind: 'block', blockReduction: 0.4, noKnockback: true, onStruck: { blind: 420, miss: true },
+      kind: 'block', blockReduction: 0.52, noKnockback: true, onStruck: { blind: 420, miss: true },
       duration: 600, cooldown: 840, vfx: 'shield', vfxColor: 0xb8f0c8,
     }),
     specialDirectional: m('Handheld X-Ray', {
-      kind: 'beam', type: R, damage: 8, beamLen: 140, beamThick: 30, vfx: 'laser', vfxColor: 0xd0e8ff,
+      kind: 'beam', type: R, damage: 9, beamLen: 150, beamThick: 32, vfx: 'laser', vfxColor: 0xd0e8ff,
       baseKnockback: 50, knockbackGrowth: 1.0, duration: 180, cooldown: 500,
     }),
   },
@@ -1848,7 +1848,7 @@ export const MOVESETS = {
       baseKnockback: 70, knockbackGrowth: 1.4, duration: 240, cooldown: 820,
     }),
     basicDirectional: melee('Brass Knuckles', {
-      type: K, damage: 7, rangeW: 66, vfx: 'strike', vfxColor: 0xe0c070,
+      type: K, damage: 8, rangeW: 68, vfx: 'strike', vfxColor: 0xe0c070,
       baseKnockback: 120, knockbackGrowth: 2.2, duration: 200, cooldown: 400,
     }),
     specialDefense: m('Sacrificial Anode', {

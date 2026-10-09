@@ -52,8 +52,8 @@ export function startStageIntro(scene, stage, { onDone } = {}) {
 export function showGo(scene) {
   const { width: W, height: H } = scene.scale;
   const make = () => scene.add.text(W / 2, H / 2 - 30, 'GO!', {
-    fontFamily: FONT_DISPLAY, fontSize: '120px', color: '#ffffff',
-    stroke: '#0b3b5c', strokeThickness: 12,
+    fontFamily: FONT_DISPLAY, fontSize: '120px', color: '#F0C14A',
+    stroke: '#07060E', strokeThickness: 12,
   }).setOrigin(0.5).setDepth(DEPTH + 10).setScale(1.7).setAlpha(0);
   const t = scene.asUi ? scene.asUi(make) : make();
   sfx('go');

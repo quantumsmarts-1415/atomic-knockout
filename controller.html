@@ -5,16 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Controller — Atomic Knockout</title>
 <style>
+  @font-face {
+    font-family: Sora;
+    src: url("/fonts/sora-400.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: Sora;
+    src: url("/fonts/sora-600.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
   html, body {
     margin: 0; padding: 0; height: 100%;
-    background: #060a10; color: #d8ecff;
-    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    background: #07060E; color: #E8F6FF;
+    font-family: Sora, "Segoe UI", sans-serif;
     overscroll-behavior: none;
     touch-action: none;
     -webkit-user-select: none; user-select: none;
   }
   body {
-    background: radial-gradient(120% 90% at 50% 0%, #142033 0%, #060a10 62%);
+    background: radial-gradient(120% 90% at 50% 0%, #2A1848 0%, #07060E 62%);
   }
 
   #join {
@@ -23,30 +37,30 @@
   }
   #join h2 { margin: 0; font-weight: 300; letter-spacing: 0.06em; font-size: 22px; }
   .ring {
-    width: 76px; height: 76px; border-radius: 50%; border: 1px solid #4ad6ff;
+    width: 76px; height: 76px; border-radius: 50%; border: 1px solid #3EF0E0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 11px; letter-spacing: 0.12em; color: #4ad6ff;
-    box-shadow: 0 0 22px rgba(74, 214, 255, 0.35);
+    font-size: 11px; letter-spacing: 0.12em; color: #3EF0E0;
+    box-shadow: 0 0 22px rgba(62, 240, 224, 0.35);
   }
   #join input {
-    font: inherit; font-size: 15px; padding: 11px 14px; border-radius: 2px;
-    border: 1px solid rgba(74, 214, 255, 0.5); background: rgba(255,255,255,0.03);
-    color: #eaf9ff; width: 220px; text-align: center; letter-spacing: 0.04em;
+    font: inherit; font-size: 15px; padding: 11px 14px; border-radius: 999px;
+    border: 1px solid rgba(62, 240, 224, 0.55); background: rgba(83, 70, 138, 0.45);
+    color: #E8F6FF; width: 220px; text-align: center; letter-spacing: 0.04em;
   }
-  #join input::placeholder { color: #5c7a94; }
+  #join input::placeholder { color: #9A91B0; }
   #join button {
-    font: inherit; font-size: 14px; padding: 13px 32px; border-radius: 2px;
-    border: 1px solid #4ad6ff; background: rgba(74, 214, 255, 0.12); color: #eaf9ff;
+    font: inherit; font-size: 14px; padding: 13px 32px; border-radius: 999px;
+    border: 1px solid #3EF0E0; background: rgba(62, 240, 224, 0.16); color: #E8F6FF;
     letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
   }
-  #status { color: #5c7a94; font-size: 13px; min-height: 18px; letter-spacing: 0.02em; }
+  #status { color: #9A91B0; font-size: 13px; min-height: 18px; letter-spacing: 0.02em; }
 
   #controls { display: none; height: 100%; flex-direction: column; box-sizing: border-box; }
   #controls.active { display: flex; }
   #label {
     text-align: center; padding: 18px 12px 8px;
   }
-  #label .eyebrow { font-size: 11px; letter-spacing: 0.22em; color: #4ad6ff; text-transform: uppercase; }
+  #label .eyebrow { font-size: 11px; letter-spacing: 0.22em; color: #3EF0E0; text-transform: uppercase; }
   #label .name { font-size: 20px; font-weight: 300; letter-spacing: 0.04em; margin-top: 4px; }
 
   #pad { flex: 1; display: flex; padding: 0 14px 22px; gap: 12px; }
@@ -72,28 +86,28 @@
 
   .btn {
     display: flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.035); border: 1px solid rgba(74,214,255,0.35);
-    border-radius: 4px; color: #bfe6ff; font-size: 22px;
+    background: rgba(83,70,138,0.55); border: 1px solid rgba(62,240,224,0.55);
+    border-radius: 4px; color: #E8F6FF; font-size: 22px;
   }
-  .btn.pressed { background: rgba(74,214,255,0.2); box-shadow: 0 0 18px rgba(74,214,255,0.55); }
+  .btn.pressed { background: rgba(62,240,224,0.28); box-shadow: 0 0 18px rgba(62,240,224,0.55); }
 
   #actions { gap: 18px; }
   #back, #confirm {
     display: flex; align-items: center; justify-content: center;
-    border-radius: 50%; color: #d8ecff; font-weight: 300;
+    border-radius: 50%; color: #E8F6FF; font-weight: 300;
   }
   #back {
     width: 82px; height: 82px;
-    background: rgba(255,255,255,0.03); border: 1px solid rgba(216,236,255,0.4);
+    background: rgba(83,70,138,0.45); border: 1px solid rgba(232,246,255,0.45);
     font-size: 12px; letter-spacing: 0.12em;
   }
   #back.pressed { background: rgba(216,236,255,0.16); }
   #confirm {
     width: 128px; height: 128px;
-    background: rgba(74,214,255,0.06); border: 1px solid #4ad6ff;
+    background: rgba(62,240,224,0.08); border: 1px solid #3EF0E0;
     font-size: 15px; letter-spacing: 0.14em;
   }
-  #confirm.pressed { background: rgba(74,214,255,0.24); box-shadow: 0 0 26px rgba(74,214,255,0.6); }
+  #confirm.pressed { background: rgba(62,240,224,0.28); box-shadow: 0 0 26px rgba(255,79,163,0.45); }
 </style>
 </head>
 <body>

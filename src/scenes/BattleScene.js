@@ -4,6 +4,8 @@ import { CHARACTERS } from '../data/characters.js';
 import { STAGES, stageKey, getStageBlast, getStageSpawns, getStageBounds, getStageWorld, moverPosition } from '../data/stages.js';
 import { play as sfx } from '../engine/sfx.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
+import { showScene } from '../ui/flow.js';
+import { FONT_BODY, FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME } from '../ui/theme.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { computeBotInput } from '../engine/BotAI.js';
 import { buildNavGraph } from '../engine/BotNav.js';
@@ -575,30 +577,35 @@ export default class BattleScene extends Phaser.Scene {
     const slots = hudLayout(this.fighters.length, W, H);
     this.hud = this.fighters.map((f, i) => {
       const slot = slots[i];
-      const { x, panelW, top } = slot;
+      const { panelW, top } = slot;
       const scale = panelW / 260;
-      const pal = f.charDef.palettes[f.paletteIndex];
-      // HUD chrome uses the glass-panel look; the border keeps the player's
-      // own palette color (thin, not bold) since that's identity, not decor.
+      const pip = PLAYER_COLORS[i % PLAYER_COLORS.length];
+      // Reactor shell sized by hudLayout so 3–6 players stay on screen.
+      // The border is the seat color so it stays distinct from palette choices.
       const panel = this.add.graphics();
-      panel.fillStyle(0xffffff, 0.03);
-      panel.fillRoundedRect(slot.left, top, panelW, slot.panelH, 16);
-      panel.lineStyle(1.5, pal.body, 0.85);
-      panel.strokeRoundedRect(slot.left, top, panelW, slot.panelH, 16);
+      const px = slot.left;
+      const py = top;
+      const ph = slot.panelH;
+      panel.fillStyle(THEME.shell, 0.92);
+      panel.fillRoundedRect(px, py, panelW, ph, ph / 2);
+      panel.lineStyle(6, pip, 0.35);
+      panel.strokeRoundedRect(px - 2, py - 2, panelW + 4, ph + 4, ph / 2 + 2);
+      panel.lineStyle(2.5, pip, 1);
+      panel.strokeRoundedRect(px, py, panelW, ph, ph / 2);
 
       const label = `${f.charDef.name} · ${f.charDef.symbol}${f.isBot ? ' (CPU)' : ''}`;
-      const percentSize = Math.max(18, Math.round(28 * scale));
+      const percentSize = Math.max(18, Math.round(26 * scale));
       const nameMax = panelW - 28 - percentSize * 2.4;
-      const name = this.add.text(slot.left + 14, top + 8, label, {
-        fontFamily: 'Arial Black, sans-serif',
-        fontSize: `${fitLabelSize(label, nameMax, Math.round(16 * scale))}px`,
-        color: '#d8ecff',
+      const name = this.add.text(px + 18, py + 10, label, {
+        fontFamily: FONT_BODY,
+        fontSize: `${fitLabelSize(label, nameMax, Math.round(15 * scale))}px`,
+        color: THEME.mistCss,
       });
-      const percent = this.add.text(slot.right - 14, top + 6, '0%', {
-        fontFamily: 'Arial Black, sans-serif', fontSize: `${percentSize}px`, color: '#eaf9ff',
+      const percent = this.add.text(slot.right - 18, py + 8, '0%', {
+        fontFamily: FONT_DISPLAY, fontSize: `${percentSize}px`, color: THEME.mistCss,
       }).setOrigin(1, 0);
-      const stocks = this.add.text(slot.left + 14, top + 40, '', {
-        fontFamily: 'Arial, sans-serif', fontSize: `${Math.round(20 * scale)}px`, color: '#4ad6ff',
+      const stocks = this.add.text(px + 18, py + 40, '', {
+        fontFamily: FONT_MONO, fontSize: `${Math.round(16 * scale)}px`, color: THEME.tealCss,
       });
       return { percent, stocks, name };
     });
@@ -614,7 +621,7 @@ export default class BattleScene extends Phaser.Scene {
           h.punch = 1;
           if (shown - (h.shown ?? 0) >= 15 && !this.simFast) {
             const floater = this.add.text(h.percent.x, h.percent.y + 28, `+${shown - (h.shown ?? 0)}`, {
-              fontFamily: 'Arial Black, sans-serif', fontSize: '18px', color: '#ffe14a',
+              fontFamily: FONT_DISPLAY, fontSize: '18px', color: THEME.goldCss,
             }).setOrigin(1, 0).setScrollFactor(0).setDepth(40);
             this.tweens.add({
               targets: floater, y: floater.y - 28, alpha: 0, duration: 500, ease: 'Quad.easeOut',
@@ -1659,10 +1666,10 @@ export default class BattleScene extends Phaser.Scene {
 
     this.time.delayedCall(600, () => {
       const banner = this.asUi(() => this.add.text(W / 2, H / 2 - 40, 'GAME!', {
-        fontFamily: 'Arial Black, sans-serif', fontSize: '110px', color: '#ffffff',
-        stroke: '#1c2b4a', strokeThickness: 14,
-      }).setOrigin(0.5).setScale(1.4));
-      this.tweens.add({ targets: banner, scale: 1, duration: 250, ease: 'Back.easeOut' });
+        fontFamily: FONT_DISPLAY, fontSize: '96px', color: THEME.goldCss,
+        stroke: THEME.voidCss, strokeThickness: 10,
+      }).setOrigin(0.5).setScale(0.2));
+      this.tweens.add({ targets: banner, scale: 1, duration: 320, ease: 'Back.Out' });
     });
 
     this.time.delayedCall(1800, () => {
@@ -1676,7 +1683,7 @@ export default class BattleScene extends Phaser.Scene {
         won: f === winner,
       }));
       if (this.scene.manager.getScene('Results')) {
-        this.scene.start('Results', { results, setup: this.setup });
+        showScene(this, 'Results', { results, setup: this.setup });
       } else {
         // pre-M4 fallback: restart the match
         this.scene.restart();

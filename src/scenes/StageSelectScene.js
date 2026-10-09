@@ -1,8 +1,9 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
-import { drawMenuBackground, drawPanel, THEME, FONT_DISPLAY, FONT_BODY } from '../ui/theme.js';
+import { drawMenuBackground, drawPanel, THEME, FONT_DISPLAY, FONT_BODY, FONT_MONO } from '../ui/theme.js';
 import { STAGES, stageKey } from '../data/stages.js';
 import { play as sfx } from '../engine/sfx.js';
+import { showScene } from '../ui/flow.js';
 import { phoneNet } from '../net/PhoneNet.js';
 
 const BOT_SLOT_BASE = 100;
@@ -47,9 +48,11 @@ export default class StageSelectScene extends Phaser.Scene {
     this.cursor = Math.max(0, this.entries.indexOf(last));
 
     drawMenuBackground(this, W, H);
-    this.add.text(W / 2, 44, 'CHOOSE A STAGE', {
-      fontFamily: FONT_DISPLAY, fontSize: '40px', color: '#eaf9ff',
-      stroke: '#060a10', strokeThickness: 8, letterSpacing: 1,
+    this.add.text(W / 2, 16, 'REACTOR  ·  ARENA', {
+      fontFamily: FONT_MONO, fontSize: '12px', color: THEME.tealCss, letterSpacing: 3,
+    }).setOrigin(0.5);
+    this.add.text(W / 2, 40, 'CHOOSE A STAGE', {
+      fontFamily: FONT_DISPLAY, fontSize: '28px', color: THEME.mistCss, letterSpacing: 1,
     }).setOrigin(0.5);
 
     this.buildPreview();
@@ -58,7 +61,7 @@ export default class StageSelectScene extends Phaser.Scene {
 
     this.hint = this.add.text(W / 2, H - 24,
       'Move: D-pad/WASD/Arrows/phone · Confirm: attack button · Back: special button', {
-        fontFamily: FONT_BODY, fontSize: '17px', color: '#5c7a94',
+        fontFamily: FONT_BODY, fontSize: '14px', color: THEME.dimCss,
       }).setOrigin(0.5);
 
     this.buildInputs();
@@ -76,18 +79,18 @@ export default class StageSelectScene extends Phaser.Scene {
     const { x, y } = this.tileXY(i);
     const c = this.add.container(x + TILE_W / 2, y + TILE_H / 2);
     const frame = this.add.graphics();
-    frame.fillStyle(THEME.panelFill, 1);
+    frame.fillStyle(THEME.shellIdleFill, 1);
     frame.fillRoundedRect(-TILE_W / 2 - 3, -TILE_H / 2 - 3, TILE_W + 6, TILE_H + 6, 10);
     c.add(frame);
     if (id === RANDOM) {
       const g = this.add.graphics();
-      g.fillGradientStyle(0x1a2c48, 0x1a2c48, 0x0a1220, 0x0a1220, 1);
+      g.fillGradientStyle(0x53468a, 0x53468a, 0x2a2444, 0x2a2444, 1);
       g.fillRoundedRect(-TILE_W / 2, -TILE_H / 2, TILE_W, TILE_H, 8);
-      g.lineStyle(1.5, THEME.accent, 0.5);
+      g.lineStyle(1.5, THEME.gold, 0.8);
       g.strokeRoundedRect(-TILE_W / 2 + 6, -TILE_H / 2 + 6, TILE_W - 12, TILE_H - 12, 6);
       c.add(g);
       c.add(this.add.text(0, 0, '?', {
-        fontFamily: FONT_DISPLAY, fontSize: '50px', color: '#4ad6ff', stroke: '#060a10', strokeThickness: 6,
+        fontFamily: FONT_DISPLAY, fontSize: '50px', color: THEME.goldCss,
       }).setOrigin(0.5));
     } else {
       const st = STAGES.find((s) => s.id === id);
@@ -103,7 +106,7 @@ export default class StageSelectScene extends Phaser.Scene {
     }
     const label = this.add.text(x + TILE_W / 2, y + TILE_H + 18,
       id === RANDOM ? 'Random' : STAGES.find((s) => s.id === id).name, {
-        fontFamily: FONT_BODY, fontSize: '14px', color: '#d8ecff',
+        fontFamily: FONT_BODY, fontSize: '14px', color: THEME.mistCss,
       }).setOrigin(0.5);
     const zone = this.add.zone(x, y, TILE_W, TILE_H).setOrigin(0, 0).setInteractive({ useHandCursor: true });
     zone.on('pointerover', () => { if (this.cursor !== i) { this.cursor = i; sfx('menuMove'); this.refresh(); } });
@@ -121,21 +124,21 @@ export default class StageSelectScene extends Phaser.Scene {
     this.previewImg.setMask(m.createGeometryMask());
     this.randomCard = this.add.container(x + w / 2, y + h / 2);
     const rg = this.add.graphics();
-    rg.fillGradientStyle(0x1a2c48, 0x1a2c48, 0x060a10, 0x060a10, 1);
+    rg.fillGradientStyle(0x53468a, 0x3a3268, 0x07060e, 0x07060e, 1);
     rg.fillRoundedRect(-w / 2, -h / 2, w, h, 12);
     this.randomCard.add(rg);
     this.randomCard.add(this.add.text(0, -10, '?', {
-      fontFamily: FONT_DISPLAY, fontSize: '150px', color: '#4ad6ff', stroke: '#060a10', strokeThickness: 10,
+      fontFamily: FONT_DISPLAY, fontSize: '120px', color: THEME.goldCss,
     }).setOrigin(0.5));
     this.previewName = this.add.text(x + 4, y + h + 18, '', {
-      fontFamily: FONT_DISPLAY, fontSize: '32px', color: '#eaf9ff',
+      fontFamily: FONT_DISPLAY, fontSize: '28px', color: THEME.mistCss,
     });
-    this.previewTag = this.add.text(x + w - 4, y + h + 28, '', {
-      fontFamily: FONT_BODY, fontSize: '16px', color: '#4ad6ff',
-      backgroundColor: 'rgba(74,214,255,0.12)', padding: { x: 10, y: 4 },
+    this.previewTag = this.add.text(x + w - 4, y + h + 26, '', {
+      fontFamily: FONT_MONO, fontSize: '14px', color: THEME.goldCss,
+      backgroundColor: 'rgba(240,193,74,0.14)', padding: { x: 10, y: 4 },
     }).setOrigin(1, 0);
-    this.previewDesc = this.add.text(x + 4, y + h + 66, '', {
-      fontFamily: FONT_BODY, fontSize: '17px', color: '#8fb0c8', wordWrap: { width: w - 8 },
+    this.previewDesc = this.add.text(x + 4, y + h + 64, '', {
+      fontFamily: FONT_BODY, fontSize: '16px', color: THEME.dimCss, wordWrap: { width: w - 8 },
     });
   }
 
@@ -144,11 +147,14 @@ export default class StageSelectScene extends Phaser.Scene {
     this.tiles.forEach((t, i) => {
       const on = i === this.cursor;
       t.container.setScale(on ? 1.06 : 1);
-      t.label.setColor(on ? '#4ad6ff' : '#d8ecff');
+      t.label.setColor(on ? THEME.goldCss : THEME.mistCss);
+      t.label.setFontStyle(on ? 'bold' : 'normal');
     });
     const { x, y } = this.tileXY(this.cursor);
     this.cursorBox.clear();
-    this.cursorBox.lineStyle(4, THEME.accent, 1);
+    this.cursorBox.lineStyle(6, THEME.pink, 0.45);
+    this.cursorBox.strokeRoundedRect(x - 12, y - 12, TILE_W + 24, TILE_H + 24, 16);
+    this.cursorBox.lineStyle(3, THEME.teal, 1);
     this.cursorBox.strokeRoundedRect(x - 8, y - 8, TILE_W + 16, TILE_H + 16, 12);
 
     if (id === RANDOM) {
@@ -254,16 +260,16 @@ export default class StageSelectScene extends Phaser.Scene {
       this.cursor = this.entries.indexOf(id);
       this.refresh();
     }
-    this.hint.setText(`${st.name} -- get ready!`).setColor('#4ad6ff');
-    this.cameras.main.flash(160, 74, 214, 255);
-    this.time.delayedCall(550, () => this.scene.start('Battle', { ...this.setup, stageId: id }));
+    this.hint.setText(`${st.name} -- get ready!`).setColor(THEME.goldCss);
+    this.cameras.main.flash(160, 255, 79, 163);
+    this.time.delayedCall(550, () => showScene(this, 'Battle', { ...this.setup, stageId: id }));
   }
 
   back() {
     if (this.leaving) return;
     this.leaving = true;
     sfx('menuMove');
-    this.scene.start('CharacterSelect', { playerSeeds: this.setup.players.map((p) => ({ slot: p.slot ?? 0 })) });
+    showScene(this, 'CharacterSelect', { playerSeeds: this.setup.players.map((p) => ({ slot: p.slot ?? 0 })) });
   }
 
   apply(action) {

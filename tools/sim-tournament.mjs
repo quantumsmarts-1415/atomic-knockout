@@ -18,7 +18,7 @@ import { ROSTER } from '../src/data/characters.js';
 const PORT = Number(process.env.PORT || 5173);
 const OUT = process.env.SIM_OUT || '/tmp/ak-sim';
 const TAG = process.env.SIM_TAG || 'run';
-const MS = Number(process.env.SIM_MS || 16000);
+const MS = Number(process.env.SIM_MS || 600000);
 const STOCKS = Number(process.env.SIM_STOCKS || 3);
 const REPS = Number(process.env.SIM_REPS || 3);
 const PAGES = Math.max(1, Number(process.env.SIM_PAGES || 4));
@@ -146,6 +146,8 @@ function blank() {
 }
 
 const koPercents = { sum: 0, n: 0 };
+const koHist = {};
+const clock = { finished: 0, timedOut: 0, koTimeSum: 0, koTimeN: 0, elapsedSum: 0, elapsedMax: 0 };
 
 function addMatch(table, report) {
   const start = report.matchStart ?? 0;
@@ -173,8 +175,18 @@ function addMatch(table, report) {
     if (Number.isFinite(ko.percent)) {
       koPercents.sum += ko.percent;
       koPercents.n += 1;
+      clock.koTimeSum += dt;
+      clock.koTimeN += 1;
+      const bucket = Math.floor(ko.percent / 20) * 20;
+      koHist[bucket] = (koHist[bucket] || 0) + 1;
     }
   }
+  const stillUp = (report.fighters ?? []).filter((f) => (f.stocks ?? 0) > 0).length;
+  if (stillUp > 1) clock.timedOut += 1;
+  else clock.finished += 1;
+  const elapsed = report.elapsedMs ?? 0;
+  clock.elapsedSum += elapsed;
+  if (elapsed > clock.elapsedMax) clock.elapsedMax = elapsed;
 }
 
 function finish(table) {
@@ -336,6 +348,14 @@ async function main() {
     failures,
     avgKoPercent: koPercents.n ? Math.round(koPercents.sum / koPercents.n) : null,
     koCount: koPercents.n,
+    koHist,
+    avgKoTimeMs: clock.koTimeN ? Math.round(clock.koTimeSum / clock.koTimeN) : null,
+    matchesFinished: clock.finished,
+    matchesTimedOut: clock.timedOut,
+    avgElapsedMs: (clock.finished + clock.timedOut)
+      ? Math.round(clock.elapsedSum / (clock.finished + clock.timedOut))
+      : null,
+    maxElapsedMs: clock.elapsedMax,
     outside,
     duels: duelRows,
     ffa: ffaRows,

@@ -18,7 +18,7 @@ export function playtestSpec() {
       ids: [],
       stageId: params.get('stage') || 'elemental-isle',
       stocks: Number(params.get('stocks')) || 3,
-      ms: Number(params.get('ms')) || 14000,
+      ms: Number(params.get('ms')) || 600000,
       speed,
       seed,
     };
@@ -34,7 +34,7 @@ export function playtestSpec() {
     ids,
     stageId: params.get('stage') || 'elemental-isle',
     stocks: Number(params.get('stocks')) || 2,
-    ms: Number(params.get('ms')) || 20000,
+    ms: Number(params.get('ms')) || 600000,
     speed: 1,
     sim: false,
     seed,

@@ -140,6 +140,47 @@ for (let frame = 0; frame < frames; frame++) {
       if (frame === 0) { pin(hero, 220, 1); pin(foe, 1120, -1); }
       if (frame % 30 === 0) pin(foe, 1120, -1);
       hk.right.isDown = true;
+    } else if (scriptName === 'launch') {
+      // Three standing hits. Close enough that the first swing connects.
+      // 50% only slides, 150% crosses the stage, 300% leaves it.
+      const beats = [
+        { at: 0, percent: 50, label: '50%' },
+        { at: 220, percent: 150, label: '150%' },
+        { at: 440, percent: 300, label: '300%' },
+      ];
+      const beat = [...beats].reverse().find((b) => frame >= b.at);
+      const settle = (f) => {
+        f.state = 'idle';
+        f.activeHit = null;
+        f.hitlagFrames = 0;
+        f.pendingLaunch = null;
+        f.launch = null;
+        f._appliedLaunch = null;
+        f.attackCooldownUntil = 0;
+        f.body?.setVelocity(0, 0);
+      };
+      if (beat && frame === beat.at) {
+        pin(hero, 600, 1);
+        pin(foe, 672, -1);
+        settle(hero);
+        settle(foe);
+        foe.percent = beat.percent;
+        foe.stocks = 5;
+        hero.stocks = 5;
+        let cap = document.getElementById('ak-cap');
+        if (!cap) {
+          cap = document.createElement('div');
+          cap.id = 'ak-cap';
+          cap.style.cssText = 'position:fixed;left:28px;top:18px;z-index:100001;font:700 48px Orbitron,sans-serif;color:#fff;letter-spacing:1px;text-shadow:0 3px 10px #000';
+          document.body.appendChild(cap);
+        }
+        cap.textContent = beat.label;
+      }
+      const phase = beat ? frame - beat.at : 0;
+      if (phase >= 18 && phase < 56) {
+        hk.right.isDown = true;
+        hk.attack.isDown = true;
+      }
     } else if (scriptName === 'match') {
       // Three fighters stay in a close group so the camera can zoom, then
       // a real swing at the lip KOs. Percent climbs in small sparked steps

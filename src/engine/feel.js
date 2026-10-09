@@ -20,16 +20,17 @@ export const FEEL = {
   hitlagCreep: 0.05,
   koHitlagMult: 1.5,
 
-  // Knockback. The move still supplies base and growth. Percent is the
-  // loud term: the base is quiet, growth is amplified, and every hit
-  // also adds kbPercent per point of damage so a weak move at 300%
-  // still leaves the stage. kbCurve above 1 stretches that gap further.
-  kbBaseMul: 0.36,
-  kbGrowthMul: 1.15,
-  kbPercent: 1.15,
-  kbUnit: 13,
-  kbCurve: 1.48,
-  kbPivot: 14,
+  // Knockback. The move still supplies base and growth. Base is a small
+  // shove and growth stays quiet, so a hit at 0–30% only slides. Percent
+  // is the loud term: kbPercent per point of damage, then a curve above 1,
+  // so a strong hit around 150% leaves the stage and a weak hit at 300%
+  // still does. Weight divides the result.
+  kbBaseMul: 0.45,
+  kbGrowthMul: 0.20,
+  kbPercent: 1.66,
+  kbUnit: 11,
+  kbCurve: 1.75,
+  kbPivot: 12,
   pxPerUnit: 10.4,
   launchPerUnit: 0.05,
   // Most of a hit's travel happens during hitstun, so fighters separate
@@ -76,9 +77,12 @@ export const FEEL = {
   // poseTarget so a short wind-up actually reaches the pose.
   poseK: 600,
   poseDamp: 0.72,
-  // Knockback never divides by a weight below this, so a light gas is not
-  // launched ~1.6× farther than the rest of the cast. Movement weight is unchanged.
-  launchWeightFloor: 0.87,
+  // Knockback weight is pulled toward 1, then clamped. Heavier fighters
+  // still fly less far, but a heavy metal is not twice as hard to KO as
+  // a light gas. Movement weight is unchanged.
+  launchWeightFloor: 0.92,
+  launchWeightCeil: 1.10,
+  launchWeightSpan: 0.28,
   afterimageCap: 4,
   afterimageAlpha: 0.42,
   afterimageFrames: 9,
@@ -301,7 +305,8 @@ export function easeOutBack(t, c1 = 4.2) {
 /** Weight used only as the knockback divisor. */
 export function launchWeight(weight) {
   const w = Number.isFinite(weight) && weight > 0 ? weight : 1;
-  return Math.max(w, FEEL.launchWeightFloor);
+  const pulled = 1 + (w - 1) * (FEEL.launchWeightSpan ?? 1);
+  return Math.min(FEEL.launchWeightCeil ?? pulled, Math.max(pulled, FEEL.launchWeightFloor));
 }
 
 /**

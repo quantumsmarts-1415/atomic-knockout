@@ -2,7 +2,8 @@ import * as Phaser from 'phaser';
 import { CHARACTERS } from '../data/characters.js';
 import { Rig } from '../engine/Rig.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
-import { drawMenuBackground } from '../ui/theme.js';
+import { showScene } from '../ui/flow.js';
+import { FONT_BODY, FONT_DISPLAY, FONT_MONO, THEME, drawMenuBackground, paintPill } from '../ui/theme.js';
 
 export default class ResultsScene extends Phaser.Scene {
   constructor() {
@@ -18,9 +19,11 @@ export default class ResultsScene extends Phaser.Scene {
     drawMenuBackground(this, W, H);
 
     const winner = this.results.find((r) => r.won);
-    this.add.text(W / 2, 90, winner ? `${winner.name.toUpperCase()} WINS!` : 'DRAW!', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '64px', color: '#4ad6ff',
-      stroke: '#060a10', strokeThickness: 12, letterSpacing: 1,
+    this.add.text(W / 2, 28, 'MATCH COMPLETE', {
+      fontFamily: FONT_MONO, fontSize: '13px', color: THEME.tealCss, letterSpacing: 3,
+    }).setOrigin(0.5);
+    this.add.text(W / 2, 64, winner ? `${winner.name.toUpperCase()} WINS` : 'DRAW', {
+      fontFamily: FONT_DISPLAY, fontSize: '42px', color: THEME.goldCss, letterSpacing: 1,
     }).setOrigin(0.5);
 
     // winner's rig doing a victory pose
@@ -31,9 +34,9 @@ export default class ResultsScene extends Phaser.Scene {
       this.winnerRig.baseScale = winner ? (CHARACTERS[winner.charId].art ? 1.15 : 1.8) : 1.8;
       this.add.existing(this.winnerRig);
       // teaching moment — surface the element fact on the results screen
-      this.add.text(W / 2, 392, `${def.element} fact: ${def.teach}`, {
-        fontFamily: 'Georgia, serif', fontSize: '19px', fontStyle: 'italic', color: '#d8ecff',
-        wordWrap: { width: 700 }, align: 'center',
+      this.add.text(W / 2, 400, `${def.element} — ${def.teach}`, {
+        fontFamily: FONT_BODY, fontSize: '16px', color: THEME.mistCss,
+        wordWrap: { width: 720 }, align: 'center',
       }).setOrigin(0.5, 0);
     }
 
@@ -47,29 +50,26 @@ export default class ResultsScene extends Phaser.Scene {
     this.results.forEach((r, i) => {
       const x = 40 + spacing * (i + 0.5);
       const panel = this.add.graphics();
-      panel.fillStyle(0xffffff, 0.03);
-      panel.fillRoundedRect(x - panelW / 2, 470, panelW, 130, 16);
-      panel.lineStyle(1.5, r.won ? 0x4ad6ff : 0x3a4a5c, r.won ? 0.9 : 0.6);
-      panel.strokeRoundedRect(x - panelW / 2, 470, panelW, 130, 16);
-      this.add.text(x, 488, `${r.name}${r.won ? '  ★' : ''}`, {
-        fontFamily: 'Arial Black, sans-serif', fontSize: `${Math.round(24 * nameScale)}px`, color: '#eaf9ff',
+      paintPill(panel, x - panelW / 2, 500, panelW, 120, r.won ? 'selected' : 'idle');
+      this.add.text(x, 516, `${r.name}${r.won ? '  ★' : ''}`, {
+        fontFamily: FONT_DISPLAY, fontSize: `${Math.round(18 * nameScale)}px`, color: THEME.mistCss,
       }).setOrigin(0.5, 0);
-      this.add.text(x, 526, `KOs: ${r.kos}    Damage dealt: ${r.damageDealt}%\nStocks left: ${Math.max(0, r.stocks)}`, {
-        fontFamily: 'Arial, sans-serif', fontSize: `${Math.round(18 * nameScale)}px`, color: '#5c7a94', align: 'center',
-        wordWrap: { width: panelW - 16 },
+      this.add.text(x, 548, `KOs ${r.kos}   ·   ${r.damageDealt}% dealt\nStocks ${Math.max(0, r.stocks)}`, {
+        fontFamily: FONT_BODY, fontSize: `${Math.round(15 * nameScale)}px`, color: '#E4EEF8', align: 'center',
+        wordWrap: { width: panelW - 20 },
       }).setOrigin(0.5, 0);
     });
 
-    this.add.text(W / 2, H - 50, 'Enter — Rematch      C — Character Select      T — Title', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '22px', color: '#d8ecff',
+    this.add.text(W / 2, H - 36, 'ENTER  REMATCH     C  CHARACTER SELECT     T  TITLE', {
+      fontFamily: FONT_MONO, fontSize: '14px', color: THEME.tealCss,
     }).setOrigin(0.5);
 
     const kb = this.input.keyboard;
-    kb.on('keydown-ENTER', () => this.scene.start('Battle', this.setup));
-    kb.on('keydown-F', () => this.scene.start('Battle', this.setup));
-    kb.on('keydown-K', () => this.scene.start('Battle', this.setup));
-    kb.on('keydown-C', () => this.scene.start('CharacterSelect'));
-    kb.on('keydown-T', () => this.scene.start('Title'));
+    kb.on('keydown-ENTER', () => showScene(this, 'Battle', this.setup));
+    kb.on('keydown-F', () => showScene(this, 'Battle', this.setup));
+    kb.on('keydown-K', () => showScene(this, 'Battle', this.setup));
+    kb.on('keydown-C', () => showScene(this, 'CharacterSelect'));
+    kb.on('keydown-T', () => showScene(this, 'Title'));
   }
 
   update(time, delta) {

@@ -107,6 +107,37 @@ export function tickKit(fighter, time) {
     fighter.poisonDps = dmg + (fighter.poisonRamp ?? 0);
     fighter.scene?.noteDot?.(fighter, 'chemical', dmg);
   }
+  tickGhostDrain(fighter, time);
+}
+
+/** Superheavy ghosts lose percent the whole time they are on screen. */
+export function tickGhostDrain(fighter, time) {
+  if (!fighter?.charDef?.ghost) return;
+  if (!fighter.alive || fighter.state === 'ko' || fighter.state === 'dead') return;
+  if (time < (fighter.drainPauseUntil ?? 0)) return;
+  if (time < (fighter._ghostDrainAt ?? 0)) return;
+  fighter._ghostDrainAt = time + 500;
+  const cost = 1;
+  fighter.percent = Math.min(999, (fighter.percent ?? 0) + cost);
+  fighter.damageTaken = (fighter.damageTaken ?? 0) + cost;
+  if (fighter.takenByType) {
+    fighter.takenByType.radiation = (fighter.takenByType.radiation ?? 0) + cost;
+  }
+  fighter.scene?.noteDot?.(fighter, 'radiation', cost);
+}
+
+/** Highest incoming multiplier. That is the type a scan should punish. */
+export function weakestType(combat) {
+  if (!combat) return 'kinetic';
+  const scores = [
+    ['kinetic', 1 - (combat.kineticDef || 0)],
+    ['heat', 1 - (combat.heatDef || 0)],
+    ['electrical', combat.elecTaken ?? 1],
+    ['radiation', 1 - (combat.radDef || 0)],
+    ['chemical', combat.noble ? 0 : 1.15],
+  ];
+  scores.sort((a, b) => b[1] - a[1]);
+  return scores[0][0];
 }
 
 /** Flags a just-fired move asked to leave on its owner. */
@@ -149,6 +180,7 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     }
   }
   if (move.debuffImmune) fighter.debuffImmuneUntil = time + move.duration;
+  if (move.pauseDrain) fighter.drainPauseUntil = time + move.pauseDrain;
 }
 
 function grantBuff(fighter, buff, time) {
@@ -280,6 +312,19 @@ export function prepareMove(move, attacker, defender, now = 0) {
   if (attacker?.weakenUntil > now) {
     const mult = attacker.weakenMult ?? 0.75;
     next = { ...next, damage: (next.damage ?? 0) * mult, damage2: next.damage2 != null ? next.damage2 * mult : next.damage2 };
+  }
+  if (attacker?.muteAllUntil > now) {
+    next = { ...next, damage: 0, damage2: next.damage2 != null ? 0 : next.damage2 };
+  }
+  if (move.sharpen && attacker?._sharpenName === move.name) {
+    const bonus = Math.max(0, (attacker._sharpen ?? 1) - 1) * (move.sharpen.step ?? 2);
+    const capped = Math.min(move.sharpen.cap ?? 12, bonus);
+    if (capped) next = { ...next, damage: (next.damage ?? 0) + capped };
+  }
+  if (move.perSecond && attacker) {
+    const sec = Math.max(0, (now - (attacker.bornAt ?? now)) / 1000);
+    const extra = Math.min(move.perSecondCap ?? 16, sec * move.perSecond);
+    if (extra) next = { ...next, damage: (next.damage ?? 0) + extra };
   }
   return next;
 }

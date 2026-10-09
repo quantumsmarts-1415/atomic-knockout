@@ -78,7 +78,30 @@ function matchSeed(kind, ids, rep) {
   return (h >>> 0) || 1;
 }
 
+function sampleJobs() {
+  const n = Number(process.env.SIM_SAMPLE || 0);
+  if (!(n > 0) || !ONLY.length) return null;
+  const others = IDS.filter((id) => !ONLY.includes(id));
+  const list = [];
+  for (const id of ONLY) {
+    const picks = [];
+    let cursor = 2166136261;
+    for (let i = 0; i < id.length; i++) cursor = Math.imul(cursor ^ id.charCodeAt(i), 16777619) >>> 0;
+    while (picks.length < Math.min(n, others.length)) {
+      cursor = (Math.imul(cursor, 1664525) + 1013904223) >>> 0;
+      const opp = others[cursor % others.length];
+      if (!picks.includes(opp)) picks.push(opp);
+    }
+    for (const opp of picks) {
+      list.push({ kind: 'duel', ids: [id, opp], seed: matchSeed('sample', [id, opp], 0) });
+    }
+  }
+  return list;
+}
+
 function jobs() {
+  const sampled = sampleJobs();
+  if (sampled) return LIMIT > 0 ? sampled.slice(0, LIMIT) : sampled;
   const list = [];
   for (let i = 0; i < IDS.length; i++) {
     for (let j = i + 1; j < IDS.length; j++) {

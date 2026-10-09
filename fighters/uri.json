@@ -1,0 +1,56 @@
+{
+  "id": "uri",
+  "name": "Uri",
+  "element": "Uranium",
+  "symbol": "U",
+  "atomicNumber": 92,
+  "tagline": "Chain Reaction",
+  "teach": "Uranium fuels fission chains. His depleted-uranium penetrators sharpen as they punch through armor.",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 0,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "actinide",
+    "metal": true,
+    "noble": false,
+    "density": 19.05,
+    "mohs": 6,
+    "tensile": 390,
+    "boiling": 4404,
+    "conductivity": 3.6,
+    "en": 1.38
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15384759,
+      "body": 13658762,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15384759,
+      "body": 9456478,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15384759,
+      "body": 15253186,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15384759,
+      "body": 3939886,
+      "accent": 15048586,
+      "eye": 16055295
+    }
+  ]
+}

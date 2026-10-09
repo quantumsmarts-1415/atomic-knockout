@@ -1,4 +1,4 @@
-import { deriveProfile } from './balance.js';
+import { deriveProfile, TUNING } from './balance.js';
 import { ELEMENTS } from './elements.js';
 import { MOVESETS } from './movesets.js';
 import { IMPORTED_ROSTER, characterFromImport } from './imported.js';
@@ -2362,6 +2362,24 @@ for (const def of Object.values(CHARACTERS)) {
   if (helen?.stats) {
     helen.stats.weight = Math.max(helen.stats.weight, 0.92);
     helen.stats.gravityScale = Math.max(helen.stats.gravityScale, 0.98);
+  }
+}
+// Ghosts (Rf–Og) keep a steady percent drain and very weak movement.
+// Their attacks are the strong part. TUNING itself is unchanged.
+for (const def of Object.values(CHARACTERS)) {
+  if (!def.ghost || !def.stats) continue;
+  const [speedLo] = TUNING.speedClamp;
+  const [jumpLo] = TUNING.jumpClamp;
+  const [weightLo] = TUNING.weightClamp;
+  def.stats.speed = Math.max(speedLo, Math.round(def.stats.speed * 0.62));
+  def.stats.jumpVelocity = Math.max(jumpLo, Math.round(def.stats.jumpVelocity * 0.78));
+  def.stats.weight = weightLo;
+  def.stats.gravityScale = Math.max(0.7, Math.min(def.stats.gravityScale, 0.8));
+  if (def.combat) {
+    def.combat.speed = def.stats.speed;
+    def.combat.jumpVelocity = def.stats.jumpVelocity;
+    def.combat.weight = def.stats.weight;
+    def.combat.gravityScale = def.stats.gravityScale;
   }
 }
 

@@ -213,6 +213,112 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "amy": {
+    "id": "amy",
+    "name": "Amy",
+    "element": "Americium",
+    "symbol": "Am",
+    "atomicNumber": 95,
+    "tagline": "Alarm Blare",
+    "teach": "Americium-241 sits inside household smoke detectors. She ionizes the air and chirps when the battery dies.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 12,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 2880,
+      "conductivity": 1.4,
+      "en": 1.3
+    },
+    "art": {
+      "key": "char-amy",
+      "file": "art-src/imported/amy-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 108,
+        "frameH": 148,
+        "footY": 0.9459,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 108,
+            "frameH": 148,
+            "footY": 0.9459,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 8.7,
+            "loop": true,
+            "frameW": 120,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 176,
+            "frameH": 164,
+            "footY": 0.9085,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "arsenio": {
     "id": "arsenio",
     "name": "Arsenio",
@@ -738,6 +844,112 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "burke": {
+    "id": "burke",
+    "name": "Burke",
+    "element": "Berkelium",
+    "symbol": "Bk",
+    "atomicNumber": 97,
+    "tagline": "Bombarded Target",
+    "teach": "Berkelium is named for Berkeley. He is the target labs bombard when they want a heavier element.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 14.78,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 2900,
+      "conductivity": null,
+      "en": 1.3
+    },
+    "art": {
+      "key": "char-burke",
+      "file": "art-src/imported/burke-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 85,
+        "frameH": 146,
+        "footY": 0.9384,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 85,
+            "frameH": 146,
+            "footY": 0.9384,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.9,
+            "loop": true,
+            "frameW": 108,
+            "frameH": 146,
+            "footY": 0.9384,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 168,
+            "frameH": 166,
+            "footY": 0.9096,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "caesar": {
     "id": "caesar",
     "name": "Caesar",
@@ -838,6 +1050,112 @@ export const IMPORTED_ROSTER = {
             "visibleH": 133,
             "bodyH": 133,
             "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "cali": {
+    "id": "cali",
+    "name": "Cali",
+    "element": "Californium",
+    "symbol": "Cf",
+    "atomicNumber": 98,
+    "tagline": "Neutron Kickstart",
+    "teach": "Californium-252 is a neutron source used to start reactors and to prospect for gold and oil. She surfs the neutron wave in.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 15.1,
+      "mohs": 4,
+      "tensile": 0,
+      "boiling": 1743,
+      "conductivity": null,
+      "en": 1.3
+    },
+    "art": {
+      "key": "char-cali",
+      "file": "art-src/imported/cali-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 92,
+        "frameH": 146,
+        "footY": 0.9384,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 92,
+            "frameH": 146,
+            "footY": 0.9384,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.9,
+            "loop": true,
+            "frameW": 101,
+            "frameH": 146,
+            "footY": 0.9384,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 153,
+            "frameH": 164,
+            "footY": 0.9085,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
           }
         }
       }
@@ -1263,6 +1581,324 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "copernicus": {
+    "id": "copernicus",
+    "name": "Copernicus",
+    "element": "Copernicium",
+    "symbol": "Cn",
+    "atomicNumber": 112,
+    "tagline": "Heliocentric",
+    "teach": "Copernicium is a ghost predicted to be a volatile liquid. He puts himself at the center, the way Copernicus put the sun there.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "liquid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-copernicus",
+      "file": "art-src/imported/copernicus-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 100,
+        "frameH": 149,
+        "footY": 0.9396,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 100,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 4,
+            "loop": true,
+            "frameW": 107,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 161,
+            "frameH": 173,
+            "footY": 0.9133,
+            "visibleH": 134,
+            "bodyH": 134,
+            "displayScale": 0.98507
+          }
+        }
+      }
+    }
+  },
+  "curie": {
+    "id": "curie",
+    "name": "Curie",
+    "element": "Curium",
+    "symbol": "Cm",
+    "atomicNumber": 96,
+    "tagline": "Double Nobel",
+    "teach": "Curium is named for Marie and Pierre Curie. She carries both of Marie's Nobel Prizes: one in physics, one in chemistry.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 13.51,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 3383,
+      "conductivity": 0.8,
+      "en": 1.3
+    },
+    "art": {
+      "key": "char-curie",
+      "file": "art-src/imported/curie-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 83,
+        "frameH": 148,
+        "footY": 0.9392,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 83,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 7.7,
+            "loop": true,
+            "frameW": 94,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 140,
+            "frameH": 165,
+            "footY": 0.9091,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "dash": {
+    "id": "dash",
+    "name": "Dash",
+    "element": "Darmstadtium",
+    "symbol": "Ds",
+    "atomicNumber": 110,
+    "tagline": "Triple Dash",
+    "teach": "Darmstadtium is a ghost named for the city where it was made. He does not stay long enough to be seen.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-dash",
+      "file": "art-src/imported/dash-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 90,
+        "frameH": 148,
+        "footY": 0.9392,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 90,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 4.8,
+            "loop": true,
+            "frameW": 109,
+            "frameH": 148,
+            "footY": 0.9324,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 189,
+            "frameH": 166,
+            "footY": 0.9036,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          }
+        }
+      }
+    }
+  },
   "dizzy": {
     "id": "dizzy",
     "name": "Dizzy",
@@ -1363,6 +1999,218 @@ export const IMPORTED_ROSTER = {
             "visibleH": 133,
             "bodyH": 133,
             "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "duke": {
+    "id": "duke",
+    "name": "Duke",
+    "element": "Dubnium",
+    "symbol": "Db",
+    "atomicNumber": 105,
+    "tagline": "Long Reign",
+    "teach": "Dubnium is a ghost on the superheavy row. He is the longest-lived of them: dubnium-268 lasts about sixteen hours.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-duke",
+      "file": "art-src/imported/duke-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 117,
+        "frameH": 150,
+        "footY": 0.9333,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 117,
+            "frameH": 150,
+            "footY": 0.9333,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 7.1,
+            "loop": true,
+            "frameW": 127,
+            "frameH": 150,
+            "footY": 0.9333,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 172,
+            "frameH": 167,
+            "footY": 0.8922,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          }
+        }
+      }
+    }
+  },
+  "einstein": {
+    "id": "einstein",
+    "name": "Einstein",
+    "element": "Einsteinium",
+    "symbol": "Es",
+    "atomicNumber": 99,
+    "tagline": "Mass-Energy",
+    "teach": "Einsteinium was first found in the fallout of the first hydrogen bomb. He turns a little mass into a lot of energy.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 8.84,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 1269,
+      "conductivity": null,
+      "en": 1.3
+    },
+    "art": {
+      "key": "char-einstein",
+      "file": "art-src/imported/einstein-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 88,
+        "frameH": 148,
+        "footY": 0.9392,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 88,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.4,
+            "loop": true,
+            "frameW": 108,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 158,
+            "frameH": 164,
+            "footY": 0.9085,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
           }
         }
       }
@@ -1578,6 +2426,112 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "fermi": {
+    "id": "fermi",
+    "name": "Fermi",
+    "element": "Fermium",
+    "symbol": "Fm",
+    "atomicNumber": 100,
+    "tagline": "Chicago Pile",
+    "teach": "Fermium is named for Enrico Fermi. He stacked the first nuclear reactor and found that slow neutrons do the work.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 9.7,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": null,
+      "conductivity": null,
+      "en": 1.3
+    },
+    "art": {
+      "key": "char-fermi",
+      "file": "art-src/imported/fermi-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 91,
+        "frameH": 149,
+        "footY": 0.9396,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 91,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 8.7,
+            "loop": true,
+            "frameW": 104,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 168,
+            "frameH": 168,
+            "footY": 0.9107,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "fey": {
     "id": "fey",
     "name": "Fey",
@@ -1678,6 +2632,112 @@ export const IMPORTED_ROSTER = {
             "visibleH": 133,
             "bodyH": 133,
             "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "flo": {
+    "id": "flo",
+    "name": "Flo",
+    "element": "Flerovium",
+    "symbol": "Fl",
+    "atomicNumber": 114,
+    "tagline": "Island of Stability",
+    "teach": "Flerovium is a ghost predicted to sit near an island of stability. She may behave like a metal or like a noble gas.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12898999,
+        "body": 4892810,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12898999,
+        "body": 3765342,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12898999,
+        "body": 11916738,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12898999,
+        "body": 1977134,
+        "accent": 10207626,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "liquid",
+      "family": "post-transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-flo",
+      "file": "art-src/imported/flo-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 97,
+        "frameH": 149,
+        "footY": 0.9396,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 97,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.4,
+            "loop": true,
+            "frameW": 131,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 134,
+            "bodyH": 134,
+            "displayScale": 0.98507
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 182,
+            "frameH": 173,
+            "footY": 0.8728,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
           }
         }
       }
@@ -2313,6 +3373,112 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "hoss": {
+    "id": "hoss",
+    "name": "Hoss",
+    "element": "Hassium",
+    "symbol": "Hs",
+    "atomicNumber": 108,
+    "tagline": "Stampede",
+    "teach": "Hassium is a ghost. He locks into the doubly magic hassium-270 nucleus, extra-stable and still not staying.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-hoss",
+      "file": "art-src/imported/hoss-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 117,
+        "frameH": 151,
+        "footY": 0.9404,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 117,
+            "frameH": 151,
+            "footY": 0.9404,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 5.6,
+            "loop": true,
+            "frameW": 138,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 152,
+            "frameH": 170,
+            "footY": 0.9118,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "indy": {
     "id": "indy",
     "name": "Indy",
@@ -2838,6 +4004,112 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "lars": {
+    "id": "lars",
+    "name": "Lars",
+    "element": "Lawrencium",
+    "symbol": "Lr",
+    "atomicNumber": 103,
+    "tagline": "Cyclotron Beam",
+    "teach": "Lawrencium is named for Ernest Lawrence, who invented the cyclotron. His punches follow that same spiral.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 14.4,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": null,
+      "conductivity": null,
+      "en": 1.3
+    },
+    "art": {
+      "key": "char-lars",
+      "file": "art-src/imported/lars-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 94,
+        "frameH": 150,
+        "footY": 0.94,
+        "visibleH": 135,
+        "bodyH": 135,
+        "displayScale": 0.97778,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 94,
+            "frameH": 150,
+            "footY": 0.94,
+            "visibleH": 135,
+            "bodyH": 135,
+            "displayScale": 0.97778
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.9,
+            "loop": true,
+            "frameW": 104,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 151,
+            "frameH": 166,
+            "footY": 0.9096,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          }
+        }
+      }
+    }
+  },
   "lucy": {
     "id": "lucy",
     "name": "Lucy",
@@ -3048,6 +4320,112 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "mendel": {
+    "id": "mendel",
+    "name": "Mendel",
+    "element": "Mendelevium",
+    "symbol": "Md",
+    "atomicNumber": 101,
+    "tagline": "Dream of the Table",
+    "teach": "Mendelevium is named for Dmitri Mendeleev. He dozes off and dreams the periodic table, empty squares and all.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 10.3,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": null,
+      "conductivity": null,
+      "en": 1.3
+    },
+    "art": {
+      "key": "char-mendel",
+      "file": "art-src/imported/mendel-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 96,
+        "frameH": 149,
+        "footY": 0.9396,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 96,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.2,
+            "loop": true,
+            "frameW": 102,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 154,
+            "frameH": 165,
+            "footY": 0.9091,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          }
+        }
+      }
+    }
+  },
   "molly": {
     "id": "molly",
     "name": "Molly",
@@ -3143,6 +4521,112 @@ export const IMPORTED_ROSTER = {
             "fps": 12,
             "loop": false,
             "frameW": 174,
+            "frameH": 167,
+            "footY": 0.9102,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "neptune": {
+    "id": "neptune",
+    "name": "Neptune",
+    "element": "Neptunium",
+    "symbol": "Np",
+    "atomicNumber": 93,
+    "tagline": "Tidal Surge",
+    "teach": "Neptunium was the first element past uranium. He is named for the planet beyond Uranus.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 20.45,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 4447,
+      "conductivity": 0.83,
+      "en": 1.36
+    },
+    "art": {
+      "key": "char-neptune",
+      "file": "art-src/imported/neptune-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 109,
+        "frameH": 149,
+        "footY": 0.9396,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 109,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 8,
+            "loop": true,
+            "frameW": 114,
+            "frameH": 150,
+            "footY": 0.94,
+            "visibleH": 134,
+            "bodyH": 134,
+            "displayScale": 0.98507
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 155,
             "frameH": 167,
             "footY": 0.9102,
             "visibleH": 133,
@@ -3253,6 +4737,218 @@ export const IMPORTED_ROSTER = {
             "visibleH": 134,
             "bodyH": 134,
             "displayScale": 0.98507
+          }
+        }
+      }
+    }
+  },
+  "niko": {
+    "id": "niko",
+    "name": "Niko",
+    "element": "Nihonium",
+    "symbol": "Nh",
+    "atomicNumber": 113,
+    "tagline": "Rising Sun",
+    "teach": "Nihonium is a ghost. He is named for Nihon, the land of the rising sun, and the first three atoms took nine years to confirm.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12898999,
+        "body": 4892810,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12898999,
+        "body": 3765342,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12898999,
+        "body": 11916738,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12898999,
+        "body": 1977134,
+        "accent": 10207626,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "post-transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-niko",
+      "file": "art-src/imported/niko-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 123,
+        "frameH": 147,
+        "footY": 0.9388,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 123,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.9,
+            "loop": true,
+            "frameW": 113,
+            "frameH": 146,
+            "footY": 0.9384,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 183,
+            "frameH": 166,
+            "footY": 0.9096,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "noble": {
+    "id": "noble",
+    "name": "Noble",
+    "element": "Nobelium",
+    "symbol": "No",
+    "atomicNumber": 102,
+    "tagline": "Dynamite Stick",
+    "teach": "Nobelium is named for Alfred Nobel. He lights the prize and the dynamite from the same hand.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 9.9,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": null,
+      "conductivity": null,
+      "en": 1.3
+    },
+    "art": {
+      "key": "char-noble",
+      "file": "art-src/imported/noble-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 90,
+        "frameH": 148,
+        "footY": 0.9392,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 90,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 5.6,
+            "loop": true,
+            "frameW": 103,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 193,
+            "frameH": 163,
+            "footY": 0.908,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
           }
         }
       }
@@ -3463,6 +5159,112 @@ export const IMPORTED_ROSTER = {
             "visibleH": 132,
             "bodyH": 132,
             "displayScale": 1
+          }
+        }
+      }
+    }
+  },
+  "pat": {
+    "id": "pat",
+    "name": "Pat",
+    "element": "Protactinium",
+    "symbol": "Pa",
+    "atomicNumber": 91,
+    "tagline": "Proto Daughter",
+    "teach": "Protactinium means \"before actinium.\" She decays into a glowing daughter and dates time in ocean sediments.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 15.43,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 4300,
+      "conductivity": 5.6,
+      "en": 1.5
+    },
+    "art": {
+      "key": "char-pat",
+      "file": "art-src/imported/pat-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 96,
+        "frameH": 149,
+        "footY": 0.9396,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 96,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.4,
+            "loop": true,
+            "frameW": 101,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 139,
+            "frameH": 179,
+            "footY": 0.9162,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
           }
         }
       }
@@ -3778,6 +5580,112 @@ export const IMPORTED_ROSTER = {
             "visibleH": 133,
             "bodyH": 133,
             "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "pluto": {
+    "id": "pluto",
+    "name": "Pluto",
+    "element": "Plutonium",
+    "symbol": "Pu",
+    "atomicNumber": 94,
+    "tagline": "Critical Mass",
+    "teach": "Plutonium runs hot from his own decay. The same metal powers the batteries on the Voyager probes.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 19.85,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 3505,
+      "conductivity": 0.67,
+      "en": 1.28
+    },
+    "art": {
+      "key": "char-pluto",
+      "file": "art-src/imported/pluto-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 92,
+        "frameH": 149,
+        "footY": 0.9463,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 92,
+            "frameH": 149,
+            "footY": 0.9463,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.9,
+            "loop": true,
+            "frameW": 103,
+            "frameH": 151,
+            "footY": 0.9338,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 188,
+            "frameH": 188,
+            "footY": 0.9255,
+            "visibleH": 134,
+            "bodyH": 134,
+            "displayScale": 0.98507
           }
         }
       }
@@ -5883,6 +7791,112 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "uri": {
+    "id": "uri",
+    "name": "Uri",
+    "element": "Uranium",
+    "symbol": "U",
+    "atomicNumber": 92,
+    "tagline": "Chain Reaction",
+    "teach": "Uranium fuels fission chains. His depleted-uranium penetrators sharpen as they punch through armor.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15384759,
+        "body": 13658762,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15384759,
+        "body": 9456478,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15384759,
+        "body": 15253186,
+        "accent": 15048586,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15384759,
+        "body": 3939886,
+        "accent": 15048586,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "actinide",
+      "metal": true,
+      "noble": false,
+      "density": 19.05,
+      "mohs": 6,
+      "tensile": 390,
+      "boiling": 4404,
+      "conductivity": 3.6,
+      "en": 1.38
+    },
+    "art": {
+      "key": "char-uri",
+      "file": "art-src/imported/uri-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 118,
+        "frameH": 148,
+        "footY": 0.9459,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 118,
+            "frameH": 148,
+            "footY": 0.9459,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 4.4,
+            "loop": true,
+            "frameW": 137,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 169,
+            "frameH": 163,
+            "footY": 0.908,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          }
+        }
+      }
+    }
+  },
   "wolf": {
     "id": "wolf",
     "name": "Wolf",
@@ -6420,6 +8434,7 @@ export function characterFromImport(rec) {
     atomicNumber: rec.atomicNumber,
     tagline: rec.tagline ?? '',
     teach: rec.teach ?? '',
+    ghost: !!rec.ghost,
     art: {
       key: rec.art.key,
       file: rec.art.file,

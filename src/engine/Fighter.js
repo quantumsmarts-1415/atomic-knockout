@@ -3,7 +3,7 @@ import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, interceptHit } from './defense.js';
-import { applyOnCast, applyOnHit, bonusPackets, combatOpts, prepareMove, tickKit } from './kit.js';
+import { applyOnCast, applyOnHit, bonusPackets, combatOpts, prepareMove, tickKit, weakestType } from './kit.js';
 import { playVfx } from './MoveVfx.js';
 import { play as sfx, playHit } from './sfx.js';
 import {
@@ -126,6 +126,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
   }
 
   update(time, dt) {
+    if (this.bornAt == null) this.bornAt = time;
     if (this.state === 'dead') return;
     if (this.state === 'ko' && this._koHide > 0) {
       this._koHide -= 1;
@@ -174,6 +175,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (this.state === 'defending') {
         this.lingerHardening(time);
         this.scene?.dropPins?.(this);
+        this.restoreShrink();
       }
       this.state = 'idle';
       this.rig.setFlash(null);
@@ -228,7 +230,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (inp.right) vx += speed;
       if (this.rootedUntil > time) vx = 0;
       if (this.state === 'attack' && onGround) vx *= 0.25; // plant feet on ground attacks
-      if (this.dashUntil && time < this.dashUntil) vx = this.dashVX; // kind:'dash' overrides normal movement
+      if (this.dashUntil && time < this.dashUntil) {
+        const weave = this.currentMove?.weaveEvery;
+        if (weave && this.attackFrame && this.attackFrame % weave === 0 && this._weavedAt !== this.attackFrame) {
+          this._weavedAt = this.attackFrame;
+          this.dashVX = -this.dashVX;
+        }
+        vx = this.dashVX; // kind:'dash' overrides normal movement
+      }
       if (this.diveUntil && time < this.diveUntil) vx = this.diveVX ?? vx;
       // Only stomp horizontal velocity when grounded (instant arcade
       // stop/go) or when a direction is actively held (air control).
@@ -314,7 +323,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (chargeMove?.slide && this.body) this.body.setVelocityX(this.facing * chargeMove.slide);
       if (chargeMove?.seep) this.phasingUntil = time + 80;
       if (chargeMove?.eatZones) this.scene?.consumeZones?.(this, chargeMove.eatZones);
-      if (chargeMove?.detonateAtFull && this.chargeStart != null && time - this.chargeStart >= chargeMove.maxChargeMs) {
+      if (chargeMove?.pull) this.pullNearby(chargeMove.pull);
+      if (chargeMove?.overhold && this.chargeStart != null && time - this.chargeStart >= (chargeMove.maxChargeMs ?? 0) + (chargeMove.overhold.grace ?? 220)) {
+        this._overheld = true;
+        this.fireCharge(time);
+      } else if (chargeMove?.detonateAtFull && this.chargeStart != null && time - this.chargeStart >= chargeMove.maxChargeMs) {
         this.fireCharge(time);
       } else if (dirHeld) {
         // pressing a direction cancels the charge -- this slot is only for
@@ -327,6 +340,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     } else if (this.state === 'defending' && this.defenseMove?.hold !== false && !inp.special) {
       this.lingerHardening(time);
       this.scene?.dropPins?.(this);
+      this.restoreShrink();
       this.state = 'idle';
       this.defenseMove = null;
       this.rig.setFlash(null);
@@ -459,6 +473,25 @@ export default class Fighter extends Phaser.GameObjects.Container {
   }
 
   startMove(time, move, slot, moveKey = null) {
+    if (move.luckyEvery) {
+      this._lucky = (this._lucky ?? 0) + 1;
+      if (this._lucky % move.luckyEvery === 0) {
+        const mul = move.luckyMult ?? 2;
+        move = {
+          ...move,
+          damage: (move.damage ?? 0) * mul,
+          damage2: move.damage2 != null ? move.damage2 * mul : move.damage2,
+        };
+      }
+    }
+    if (move.sharpen) {
+      if (this._sharpenName === move.name) {
+        this._sharpen = Math.min(8, (this._sharpen ?? 0) + 1);
+      } else {
+        this._sharpenName = move.name;
+        this._sharpen = 1;
+      }
+    }
     this.openedStill = !!(this.body && Math.abs(this.body.velocity.x) < 36 && Math.abs(this.body.velocity.y) < 80);
     if (this.missNext > 0) {
       this.missNext -= 1;
@@ -620,6 +653,17 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.travel = 0;
     }
     if (move.stainAtFull && frac >= (move.stainAt ?? 0.95)) scaled.dropZone = move.stainAtFull;
+    if (this._overheld && move.overhold) {
+      this._overheld = false;
+      scaled.includeSelf = true;
+      if (move.overhold.damage != null) scaled.damage = move.overhold.damage;
+      if (move.overhold.damage2 != null) scaled.damage2 = move.overhold.damage2;
+      if (move.overhold.radius != null) scaled.radius = move.overhold.radius;
+    }
+    if (this._storedCharge && move.storeHits) {
+      scaled.damage = (scaled.damage ?? 0) + this._storedCharge;
+      this._storedCharge = 0;
+    }
     if (move.clockWindow) {
       const period = move.clockWindow.period ?? 410;
       const slack = move.clockWindow.slack ?? 85;
@@ -670,6 +714,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.defenseStart = time;
     this._drainAt = time + (move.drain?.every ?? 1000);
     this._regenAt = time + (move.regenEvery ?? 800);
+    if (move.rewind) this._rewindSnap = { x: this.x, y: this.y, percent: this.percent ?? 0 };
+    if (move.shrink && this.rig) {
+      this._shrinkFrom = this.rig.baseScale ?? 1;
+      this.rig.baseScale = this._shrinkFrom * move.shrink;
+    }
+    if (move.leaveAfterimage) this.scene?.juice?.afterimage?.(this, 0.48);
     if (move.float) this.body?.setVelocityY(-70);
     if (move.zone) {
       this.scene.spawnZone?.(this, move.zone, this.x, this.y - this.bodyH * (move.zone.low ? 0.2 : 0.45));
@@ -751,6 +801,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (this.state === 'charging' && this.charDef.moves.basicCharge?.releaseOnHit && !move.isSelf && !move.isCounterAttack) {
       this.fireCharge(time);
     }
+    if (this.state === 'charging' && !move.isSelf && !move.isCounterAttack) {
+      const store = this.charDef.moves.basicCharge?.storeHits;
+      if (store) this._storedCharge = Math.min(store.cap ?? 24, (this._storedCharge ?? 0) + (store.per ?? 3));
+    }
 
     let incoming = move;
     if (this.state === 'defending' && this.defenseMove?.immune?.length && !move.isSelf && !move.isCounterAttack) {
@@ -810,6 +864,19 @@ export default class Fighter extends Phaser.GameObjects.Container {
       };
     }
     if (gate.result === 'pop' || gate.result === 'negate') {
+      if (gate.rewind && this._rewindSnap && this.body) {
+        this.percent = this._rewindSnap.percent;
+        this.body.reset(this._rewindSnap.x, this._rewindSnap.y);
+        this.body.setVelocity(0, 0);
+      }
+      if (this.defenseMove?.scanWeak && attacker && attacker !== this) {
+        this.bonusHits = 1;
+        this.bonusPacket = {
+          type: weakestType(attacker.charDef?.combat),
+          damage: this.defenseMove.scanDamage ?? 6,
+          hitsName: this.defenseMove.name,
+        };
+      }
       if (this.defenseMove?.healOnBlock) {
         this.percent = Math.max(0, this.percent - this.defenseMove.healOnBlock);
       }
@@ -836,6 +903,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
       return 0;
     }
     if (gate.result === 'counter') {
+      if (this.defenseMove?.truce && attacker && attacker !== this) {
+        const ms = this.defenseMove.truce.ms ?? 900;
+        this.muteAllUntil = time + ms;
+        attacker.muteAllUntil = time + ms;
+        const dir = Math.sign(attacker.x - this.x) || (this.facing || 1);
+        const push = this.defenseMove.truce.push ?? 280;
+        attacker.body?.setVelocityX(dir * push);
+        this.body?.setVelocityX(-dir * push);
+      }
       if (this.defenseMove?.swap && attacker?.body && this.body && attacker !== this) {
         const ax = attacker.x;
         const ay = attacker.y;
@@ -1055,7 +1131,16 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this._shakeX = kick.x;
     this._shakeY = kick.y;
     const spr = this.rig?.sprite;
-    if (!spr?.setTintFill) return;
+    if (!spr?.setTint) return;
+    // Ghost sheets are translucent RGBA. A tint-fill would paint a solid
+    // silhouette. Multiply instead, so the alpha channel stays the art's.
+    if (this.charDef?.ghost) {
+      if (frame < 6) spr.setTint(frame < 2 ? 0xfff4e4 : (TYPE_COLOR[this.pendingLaunch?.type] ?? 0xff5544));
+      else if (this.rig.paletteTint) spr.setTint(this.rig.paletteTint);
+      else spr.clearTint?.();
+      return;
+    }
+    if (!spr.setTintFill) return;
     if (frame < 2) spr.setTintFill(0xffffff);
     else if (frame < 6) spr.setTint?.(TYPE_COLOR[this.pendingLaunch?.type] ?? 0xff5544);
     else spr.clearTint?.();
@@ -1190,6 +1275,26 @@ export default class Fighter extends Phaser.GameObjects.Container {
   leaveLedge() {
     if (this.body) this.body.allowGravity = true;
     this.ledge = null;
+  }
+
+  pullNearby(pull) {
+    const radius = pull.radius ?? 170;
+    const speed = pull.speed ?? 90;
+    for (const f of this.scene?.fighters ?? []) {
+      if (f === this || !f.alive || f.state === 'ko' || f.state === 'dead' || !f.body) continue;
+      const dx = this.x - f.x;
+      const dy = (this.y - this.bodyH * 0.45) - f.y;
+      const d = Math.hypot(dx, dy);
+      if (d < 12 || d > radius) continue;
+      f.body.setVelocityX(f.body.velocity.x + (dx / d) * speed);
+      f.body.setVelocityY(f.body.velocity.y + (dy / d) * speed * 0.35);
+    }
+  }
+
+  restoreShrink() {
+    if (this._shrinkFrom == null || !this.rig) return;
+    this.rig.baseScale = this._shrinkFrom;
+    this._shrinkFrom = null;
   }
 
   weightNow() {

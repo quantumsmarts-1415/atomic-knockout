@@ -92,6 +92,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
       [0, '1'], [1, '2'], [2, '3'], [3, '4'], [4, '5'], [5, '6'], [6, '7'],
       [8, 'La'], [9, 'Ac'],
     ];
+    // Period 7 leaves column 2 empty, right before Rf. That gap labels the ghost row.
+    this.grid.add(this.add.text(2 * STRIDE_X + TILE_W / 2, 6 * STRIDE_Y + TILE_H / 2, 'GHOST\nRf–Og', {
+      fontFamily: 'Arial, sans-serif', fontSize: '10px', color: '#9ecfff', align: 'center',
+    }).setOrigin(0.5));
     for (const [row, text] of labels) {
       this.grid.add(this.add.text(-6, row * STRIDE_Y + TILE_H / 2, text, {
         fontFamily: 'Arial, sans-serif', fontSize: '11px', color: '#5c7a94',
@@ -120,15 +124,20 @@ export default class CharacterSelectScene extends Phaser.Scene {
       this.grid.add(photo);
     }
 
-    const numColor = unlocked ? '#ffffff' : '#8aa0b4';
-    const symColor = unlocked ? '#ffffff' : '#c5d4e0';
+    const numColor = unlocked ? '#ffffff' : (slot.soon ? '#d7ecff' : '#8aa0b4');
+    const symColor = unlocked ? '#ffffff' : (slot.soon ? '#d7ecff' : '#c5d4e0');
     this.grid.add(this.add.text(x + 8, y + 2, String(slot.n), {
       fontFamily: 'Arial, sans-serif', fontSize: '10px', color: numColor,
     }));
-    this.grid.add(this.add.text(x + TILE_W / 2 + 1, y + (hasPhoto ? TILE_H - 11 : TILE_H / 2 + 4), slot.sym, {
-      fontFamily: 'Georgia, serif', fontSize: hasPhoto ? '11px' : '16px', fontStyle: 'bold',
+    this.grid.add(this.add.text(x + TILE_W / 2 + 1, y + (hasPhoto ? TILE_H - 11 : TILE_H / 2 + (slot.soon ? 1 : 4)), slot.sym, {
+      fontFamily: 'Georgia, serif', fontSize: hasPhoto ? '11px' : (slot.soon ? '13px' : '16px'), fontStyle: 'bold',
       color: symColor,
     }).setOrigin(0.5));
+    if (slot.soon) {
+      this.grid.add(this.add.text(x + TILE_W / 2, y + TILE_H - 8, 'soon', {
+        fontFamily: 'Arial, sans-serif', fontSize: '8px', color: '#9ecfff',
+      }).setOrigin(0.5));
+    }
 
     const zone = this.add.zone(x, y, TILE_W, TILE_H).setOrigin(0, 0).setInteractive();
     zone.on('pointerover', () => {
@@ -272,7 +281,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
     p.previewName?.destroy();
     const slot = this.slots[p.cursor];
     if (!slot?.charId) {
-      p.previewName = this.add.text(p.previewX, PREVIEW_ANCHOR_Y - 36, `${slot.sym}  ${slot.n}\n${slot.element}\nNot forged yet`, {
+      const waiting = slot.soon ? 'Coming soon' : 'Not forged yet';
+      p.previewName = this.add.text(p.previewX, PREVIEW_ANCHOR_Y - 36, `${slot.sym}  ${slot.n}\n${slot.element}\n${waiting}`, {
         fontFamily: 'Arial Black, sans-serif', fontSize: '16px', color: '#8aa0b4', align: 'center',
       }).setOrigin(0.5);
       return;

@@ -81,6 +81,7 @@ export function characterFromImport(rec) {
     atomicNumber: rec.atomicNumber,
     tagline: rec.tagline ?? '',
     teach: rec.teach ?? '',
+    ghost: !!rec.ghost,
     art: {
       key: rec.art.key,
       file: rec.art.file,
@@ -223,6 +224,7 @@ export function importFighter(folder, options = {}) {
     atomicNumber: meta.atomicNumber,
     tagline: meta.tagline || '',
     teach: meta.teach || '',
+    ghost: !!meta.ghost,
     height: artHeight,
     facing: meta.facing ?? 1,
     airJumps: meta.airJumps ?? 1,

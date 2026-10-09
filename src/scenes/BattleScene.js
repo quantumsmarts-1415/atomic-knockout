@@ -674,6 +674,21 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   spawnProjectile(owner, move) {
+    if (move.rain > 1 && !move._rainChild) {
+      const n = move.rain | 0;
+      for (let i = 0; i < n; i++) {
+        const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
+        this.spawnProjectile(owner, {
+          ...move,
+          rain: 0,
+          _rainChild: true,
+          _vy: 260 + (i % 3) * 40,
+          projectileSpeed: 70 + Math.abs(t) * 220,
+          _flip: t < 0,
+        });
+      }
+      return;
+    }
     if (move.fanTypes?.length && !move._fanChild) {
       const types = move.fanTypes;
       const spread = move.fanSpread ?? 200;
@@ -710,13 +725,15 @@ export default class BattleScene extends Phaser.Scene {
     }
     const face = move._flip ? -owner.facing : owner.facing;
     const x = owner.x + face * (owner.bodyW / 2 + r + 4);
-    const y = owner.y - owner.bodyH * 0.65;
+    let y = owner.y - owner.bodyH * 0.65;
+    if (move.fromAbove) y -= 220;
+    if (move._rainChild) y -= 160;
     if (this.simFast) {
       this.projectiles.push({
         gfx: { x, y, destroy() {} },
         owner, move,
         vx: face * move.projectileSpeed,
-        vy,
+        vy: move.fromAbove ? (move.fallSpeed ?? 420) : vy,
         dieAt: this.time.now + move.projectileLife,
         born: this.time.now,
         armAt: move.delayMs ? this.time.now + move.delayMs : 0,
@@ -769,13 +786,13 @@ export default class BattleScene extends Phaser.Scene {
         orb.fillCircle(-r * 0.3, -r * 0.3, r * 0.35);
       }
     }
-    orb.x = owner.x + face * (owner.bodyW / 2 + r + 4);
-    orb.y = owner.y - owner.bodyH * 0.65;
+    orb.x = x;
+    orb.y = y;
 
     this.projectiles.push({
       gfx: orb, owner, move,
       vx: face * move.projectileSpeed,
-      vy,
+      vy: move.fromAbove ? (move.fallSpeed ?? 420) : vy,
       dieAt: this.time.now + move.projectileLife,
       born: this.time.now,
       armAt: move.delayMs ? this.time.now + move.delayMs : 0,
@@ -794,6 +811,11 @@ export default class BattleScene extends Phaser.Scene {
     for (const target of this.fighters) {
       if (!move.includeSelf && target === owner) continue;
       if (!target.alive || target.state === 'ko') continue;
+      if (move.unseen && target !== owner) {
+        const ahead = (target.x - owner.x) * (owner.facing || 1);
+        const dy = Math.abs((target.y - (target.bodyH ?? 0) * 0.4) - (owner.y - (owner.bodyH ?? 0) * 0.5));
+        if (ahead > 30 && dy < 90 && ahead < 340) continue;
+      }
       const rect = target.getHurtboxRect();
       const nearest = new Phaser.Geom.Point(
         Phaser.Math.Clamp(cx, rect.left, rect.right),
@@ -836,17 +858,26 @@ export default class BattleScene extends Phaser.Scene {
       }
     }
     if (move.chain && !move._chained) {
-      for (let i = 1; i <= move.chain.count; i++) {
-        const echo = {
-          ...move,
-          _chained: true,
-          chain: null,
-          damage: (move.damage ?? 0) * (move.chain.scale ?? 0.6),
-          radius: (move.radius ?? 70) * (0.7 + i * 0.15),
-        };
-        this.time.delayedCall((move.chain.delay ?? 160) * i, () => {
-          if (owner.alive) this.resolveBurst(owner, echo);
-        });
+      const spots = move.chain.fromHits && struck.size
+        ? [...struck].map((f) => ({ x: f.x, y: f.y - (f.bodyH ?? 80) * 0.4 }))
+        : [null];
+      for (const spot of spots) {
+        for (let i = 1; i <= move.chain.count; i++) {
+          const echo = {
+            ...move,
+            _chained: true,
+            chain: null,
+            unseen: false,
+            damage: move.chain.damage ?? (move.damage ?? 0) * (move.chain.scale ?? 0.6),
+            damage2: move.chain.type ? undefined : move.damage2,
+            type: move.chain.type ?? move.type,
+            type2: move.chain.type ? undefined : move.type2,
+            radius: (move.radius ?? 70) * (move.chain.radiusScale ?? (0.7 + i * 0.15)),
+          };
+          this.time.delayedCall((move.chain.delay ?? 160) * i, () => {
+            if (owner.alive) this.resolveBurst(owner, echo, spot || undefined);
+          });
+        }
       }
     }
   }
@@ -1362,8 +1393,32 @@ export default class BattleScene extends Phaser.Scene {
           }
         }
       }
+      if (p.move.orbitMs && !p.orbited && time < p.born + p.move.orbitMs && p.owner?.alive) {
+        const ang = ((time - p.born) / p.move.orbitMs) * Math.PI * 2;
+        const rad = p.move.orbitRadius ?? 52;
+        p.gfx.x = p.owner.x + Math.cos(ang) * rad;
+        p.gfx.y = p.owner.y - (p.owner.bodyH ?? 80) * 0.5 + Math.sin(ang) * rad * 0.45;
+        p.vx = (p.owner.facing || 1) * (p.move.projectileSpeed ?? 400);
+        p.vy = 0;
+      } else if (p.move.orbitMs && !p.orbited) {
+        p.orbited = true;
+      }
+      if (p.move.pulse && !p.pinned && time >= (p.pulseAt ?? p.born)) {
+        p.pulseAt = time + (p.move.pulse.every ?? 400);
+        if (time > p.born + 40) {
+          this.resolveBurst(p.owner, {
+            name: p.move.name,
+            type: p.move.pulse.type ?? p.move.type,
+            damage: p.move.pulse.damage ?? 2,
+            radius: p.move.pulse.radius ?? 48,
+            baseKnockback: 30,
+            knockbackGrowth: 0.4,
+            kind: 'burst',
+          }, { x: p.gfx.x, y: p.gfx.y });
+        }
+      }
       if (p.pinned) p.gfx.y += (90 * delta) / 1000;
-      else {
+      else if (!(p.move.orbitMs && !p.orbited && time < p.born + p.move.orbitMs)) {
         p.gfx.x += (p.vx * delta) / 1000;
         p.gfx.y += (p.vy * delta) / 1000 + Math.sin(time / 90) * 0.25;
       }
@@ -1431,6 +1486,11 @@ export default class BattleScene extends Phaser.Scene {
         let shot = p.move;
         if (shot.tipBonus && p.owner && Math.abs(p.gfx.x - p.owner.x) >= (shot.tipAt ?? 260)) {
           shot = { ...shot, damage: (shot.damage ?? 0) + shot.tipBonus };
+        }
+        if (shot.slowHit) {
+          const sp = Math.hypot(p.vx, p.vy);
+          const mul = Math.min(2.2, 280 / Math.max(80, sp));
+          shot = { ...shot, damage: (shot.damage ?? 0) * mul, damage2: shot.damage2 != null ? shot.damage2 * mul : shot.damage2 };
         }
         if (victim.state === 'defending' && victim.defenseMove?.softenProjectiles) {
           const mul = victim.defenseMove.softenProjectiles;

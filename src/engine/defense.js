@@ -94,6 +94,10 @@ export function interceptHit(defender, attacker, move, time) {
       },
     };
   }
+  if (defense.rewind && !move?.isCounterAttack && !move?.isSelf) {
+    return { result: 'negate', rewind: true };
+  }
+
   // phase:true dodges everything. phase:'overhead' still takes ground-tagged hits.
   if (defense.phase && !move?.breakPhase && !(defense.phase === 'overhead' && move?.ground)) {
     const ret = defense.phaseRetort;
@@ -128,6 +132,22 @@ export function interceptHit(defender, attacker, move, time) {
   const vertical = Math.abs((attacker?.y ?? defender.y) - defender.y) > (defender.bodyH ?? 80) * 0.5;
   if ((defense.kind === 'wall' || defense.frontOnly) && vertical && defense.kind !== 'counter') {
     return { result: 'pass' };
+  }
+
+  if (!move?.isCounterAttack && defense.replay) {
+    return {
+      result: 'counter',
+      counter: {
+        name: defense.name,
+        damage: move?.damage ?? 6,
+        type: move?.type ?? 'radiation',
+        type2: move?.type2,
+        damage2: move?.damage2,
+        baseKnockback: defense.counterKnockback ?? 140,
+        knockbackGrowth: defense.counterKnockbackGrowth ?? 2,
+        isCounterAttack: true,
+      },
+    };
   }
 
   if (!move?.isCounterAttack && defense.kind === 'counter') {

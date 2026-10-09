@@ -1,0 +1,56 @@
+{
+  "id": "cali",
+  "name": "Cali",
+  "element": "Californium",
+  "symbol": "Cf",
+  "atomicNumber": 98,
+  "tagline": "Neutron Kickstart",
+  "teach": "Californium-252 is a neutron source used to start reactors and to prospect for gold and oil. She surfs the neutron wave in.",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 0,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "actinide",
+    "metal": true,
+    "noble": false,
+    "density": 15.1,
+    "mohs": 4,
+    "tensile": 0,
+    "boiling": 1743,
+    "conductivity": null,
+    "en": 1.3
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15384759,
+      "body": 13658762,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15384759,
+      "body": 9456478,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15384759,
+      "body": 15253186,
+      "accent": 15048586,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15384759,
+      "body": 3939886,
+      "accent": 15048586,
+      "eye": 16055295
+    }
+  ]
+}

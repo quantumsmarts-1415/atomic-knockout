@@ -7,7 +7,7 @@ const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDire
 const TYPES = new Set(['kinetic', 'heat', 'electrical', 'chemical', 'radiation', 'physical']);
 
 test('every fighter has four named moves with legal damage types', () => {
-  assert.strictEqual(Object.keys(CHARACTERS).length, 85);
+  assert.strictEqual(Object.keys(CHARACTERS).length, 104);
   for (const c of Object.values(CHARACTERS)) {
     for (const slot of SLOTS) {
       const move = c.moves[slot];

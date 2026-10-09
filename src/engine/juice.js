@@ -368,7 +368,9 @@ export class Juice {
     img.setScale(Math.abs(spr.scaleX || 1) * face, spr.scaleY || 1);
     img.setRotation(spr.rotation || 0);
     const tint = GHOST[fighter.currentMove?.type] ?? 0xfff1c4;
-    img.setTint(tint);
+    // A ghost's sheet is already translucent. Multiply by white so the
+    // RGBA art stays, and let the fade alpha sit on top of that.
+    img.setTint(fighter.charDef?.ghost ? 0xffffff : tint);
     img.setBlendMode(Phaser.BlendModes.NORMAL);
     img.setAlpha(alpha);
     img.setDepth?.(6);

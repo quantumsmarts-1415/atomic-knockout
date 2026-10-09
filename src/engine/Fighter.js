@@ -1169,9 +1169,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
       return;
     }
     if (pressedAttack || toward) {
+      const lx = this.ledge.x;
+      const ly = this.ledge.y;
       this.leaveLedge();
       this.phasingUntil = time + 12 * step;
-      this.body.reset?.(this.ledge.x + this.facing * 36, this.ledge.y);
+      this.body.reset?.(lx + this.facing * 36, ly);
       this.state = 'idle';
       return;
     }

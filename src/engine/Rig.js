@@ -244,9 +244,10 @@ export class Rig extends Phaser.GameObjects.Container {
   }
 
   applyClipLayout(clipDef) {
-    // Visual only. Fighter physics uses the static art.bodyW/bodyH hitbox and
-    // does not follow per-clip visibleH/footY, so a clip with a different crop
-    // snaps sprite scale/origin against that same box.
+    // One scale and one foot line per clip, so the head-to-feet body stays
+    // art.height and the shoes stay on the fighter origin. The gameplay
+    // hurtbox is art.bodyW/bodyH on that same origin. It does not follow
+    // the raw cell, and this scale does not change it.
     let layout;
     try {
       layout = clipDisplayLayout(this.sheets, clipDef);
@@ -260,7 +261,7 @@ export class Rig extends Phaser.GameObjects.Container {
       return;
     }
     this.sprite.setOrigin(0.5, layout.footY);
-    this._layoutScale = displayH / layout.visibleH;
+    this._layoutScale = positiveFinite(layout.displayScale) ? layout.displayScale : displayH / layout.visibleH;
     this.sprite.setScale(this._layoutScale);
   }
 
@@ -311,7 +312,10 @@ export class Rig extends Phaser.GameObjects.Container {
     }
     const pose = clipPose(this.poseT ?? this.attackSwing ?? 0, clip.frames);
     const displayH = this.art?.height ?? this.charDef?.art?.height ?? 160;
-    const layout = positiveFinite(displayH) && positiveFinite(clip.visibleH) ? displayH / clip.visibleH : 1;
+    // visibleH is the head-to-feet body in the cell, same convention as sheets.
+    const layout = positiveFinite(clip.displayScale)
+      ? clip.displayScale
+      : (positiveFinite(displayH) && positiveFinite(clip.visibleH) ? displayH / clip.visibleH : 1);
     const ensure = (slot) => {
       if (this[slot]) return this[slot];
       const spr = this.scene.add.sprite(0, 0, tex, 0);
@@ -390,7 +394,8 @@ export class Rig extends Phaser.GameObjects.Container {
         this.sprite.y = Math.sin(t * 16) * 3;
         this.sprite.setScale(layout);
       } else if (!posed && state === 'defending') {
-        this.sprite.setScale(layout * 0.94, layout * 0.88);
+        // Brace inward. The head-to-feet height stays on the layout scale.
+        this.sprite.setScale(layout * 0.96, layout);
       } else {
         this.sprite.setScale(layout);
       }

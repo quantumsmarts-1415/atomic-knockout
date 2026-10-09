@@ -440,6 +440,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
   }
 
   getHurtboxRect() {
+    // Anchored at the feet, same origin as the sprite foot line. The height
+    // is the gameplay body, not the sprite cell, so a hair lock or a glow
+    // does not change who gets hit.
     return new Phaser.Geom.Rectangle(this.x - this.bodyW / 2, this.y - this.bodyH, this.bodyW, this.bodyH);
   }
 

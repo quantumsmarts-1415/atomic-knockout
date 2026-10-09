@@ -45,13 +45,13 @@ Cell size, `footY`, and `visibleH` default to that character's **idle** cell (no
 }
 ```
 
-`footY` is a Phaser origin from 0 to 1, the same value as the idle clip. Feet sit near 1. It is not a pixel row. `visibleH` is the pixel height of the body inside the cell; the fighter is scaled so that height matches the idle display height. `cellW` and `cellH` are the pixel size of one frame.
+`footY` is a Phaser origin from 0 to 1, the same value as the idle clip. Feet sit on it. It is not a pixel row. `visibleH` is the head-to-feet body inside the cell, excluding hair and effects, the same convention as `bodyH` on the idle sheet. The fighter is scaled so that body matches `art.height` on every clip. `cellW` and `cellH` are the pixel size of one frame.
 
 1 frame: the cell stays put and the body squashes, stretches, and lunges through anticipation, strike, and recovery. 2 frames: anticipation, then the strike, crossfaded. 3 frames: anticipation, strike, recovery, crossfaded, with the same squash and stretch. 4–8 frames: the strip is scrubbed across the move (`floor(t × count)`, last frame at the end). Defense loops. A charge scrub follows how full the charge is.
 
 Every roster move needs its own sprite clip. The sheets on disk are idle loops, plus a walk cycle for Hydra, Helen, Lillie, Ben, Bord, Carter, Nitra, Flora, Neo, and Natalie. Walk is a locomotion cycle. It does not read as a dash, a punch, a cast, or a guard, so it is not reused for any move. Idle is not reused as an attack pose either.
 
-Until a clip below exists, the fighter stays on the idle sheet. Charging adds a small vertical bob and defending squashes the sprite slightly, so the state is visible. The move itself is drawn by the effects layer (`src/engine/MoveVfx.js`): typed color, windup, hit flash, and a shape for the kind of move (burst, beam, projectile, wall, shield). That placeholder is temporary. It is not a stand-in pose.
+Until a clip below exists, the fighter stays on the idle sheet. Charging adds a small vertical bob and defending braces the sprite inward without changing its height, so the state is visible. The move itself is drawn by the effects layer (`src/engine/MoveVfx.js`): typed color, windup, hit flash, and a shape for the kind of move (burst, beam, projectile, wall, shield). That placeholder is temporary. It is not a stand-in pose.
 
 Generate each clip as a horizontal strip, **8 frames**, at the **idle cell size** listed for that character (not the walk cell, which is cropped differently). Play attack and special strips once, scrubbed across the move. Loop the defense and buff strips. Feet should sit on the same `footY` as that character's idle clip so the body does not pop when the clip changes.
 

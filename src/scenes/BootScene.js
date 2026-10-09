@@ -68,18 +68,26 @@ export function clipFrameSize(sheets, clipDef = {}) {
   return { frameW, frameH };
 }
 
-// Origin/scale for a clip. Each of frameW/frameH/footY/visibleH is independent:
-// a clip may override any subset; omitted fields fall back to sheets.*.
+// Origin/scale for a clip. Each of frameW/frameH/footY/visibleH/bodyH is
+// independent: a clip may override any subset; omitted fields fall back to sheets.*.
+// visibleH and bodyH are the head-to-feet body inside the cell, not the raw
+// alpha box. displayScale, when stored, is the sprite scale that fits that
+// body to art.height.
 export function clipDisplayLayout(sheets, clipDef = {}) {
   const footY = clipDef.footY ?? sheets.footY;
-  const visibleH = clipDef.visibleH ?? sheets.visibleH;
+  const visibleH = clipDef.bodyH ?? clipDef.visibleH ?? sheets.bodyH ?? sheets.visibleH;
+  const displayScale = clipDef.displayScale
+    ?? ((clipDef.bodyH == null && clipDef.visibleH == null) ? sheets.displayScale : null);
   if (!finiteNumber(footY)) {
     throw new RangeError(`Clip footY must be a finite number, got ${footY}`);
   }
   if (!positiveFinite(visibleH)) {
     throw new RangeError(`Clip visibleH must be finite and > 0, got ${visibleH}`);
   }
-  return { footY, visibleH };
+  if (displayScale != null && !positiveFinite(displayScale)) {
+    throw new RangeError(`Clip displayScale must be finite and > 0, got ${displayScale}`);
+  }
+  return { footY, visibleH, bodyH: visibleH, displayScale: displayScale ?? null };
 }
 
 export function loadRosterArt(loader, roster) {

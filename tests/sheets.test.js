@@ -95,18 +95,20 @@ test('clipDisplayLayout applies footY/visibleH independently of frameW/frameH', 
   assert.deepStrictEqual(clipDisplayLayout(sheets, sheets.clips.idle), {
     footY: 0.9823,
     visibleH: 668,
+    bodyH: 668,
+    displayScale: null,
   });
   assert.deepStrictEqual(
     clipDisplayLayout(sheets, { count: 8, footY: 0.5, visibleH: 100 }),
-    { footY: 0.5, visibleH: 100 },
+    { footY: 0.5, visibleH: 100, bodyH: 100, displayScale: null },
   );
   assert.deepStrictEqual(
     clipDisplayLayout(sheets, { count: 8, footY: 0.91 }),
-    { footY: 0.91, visibleH: 668 },
+    { footY: 0.91, visibleH: 668, bodyH: 668, displayScale: null },
   );
   assert.deepStrictEqual(
     clipDisplayLayout(sheets, { count: 8, frameW: 1074, frameH: 720 }),
-    { footY: 0.9823, visibleH: 668 },
+    { footY: 0.9823, visibleH: 668, bodyH: 668, displayScale: null },
   );
 });
 
@@ -114,7 +116,16 @@ test('clipDisplayLayout uses per-clip footY/visibleH when the clip has frameW/fr
   assert.deepStrictEqual(clipDisplayLayout(sheets, sheets.clips.walk), {
     footY: 0.97,
     visibleH: 700,
+    bodyH: 700,
+    displayScale: null,
   });
+});
+
+test('a stored displayScale is the sprite scale for that clip', () => {
+  assert.deepStrictEqual(
+    clipDisplayLayout(sheets, { footY: 0.8, bodyH: 500, displayScale: 0.25 }),
+    { footY: 0.8, visibleH: 500, bodyH: 500, displayScale: 0.25 },
+  );
 });
 
 test('clipDisplayLayout throws on invalid resolved visibleH or footY', () => {
@@ -327,6 +338,19 @@ test('Rig applies walk footY/visibleH even when the clip has no frameW/frameH', 
   assert.strictEqual(sprite.originY, 0.91);
   assert.strictEqual(sprite.scale, 122 / 500);
   assert.strictEqual(sprite.playKey, 'char-testhero-walk');
+});
+
+test('Rig uses a stored displayScale instead of art.height / visibleH', () => {
+  const sprite = makeSprite();
+  const charDef = fakeChar({
+    idle: { count: 14, fps: 3.6, loop: true, displayScale: 0.2, bodyH: 400 },
+    walk: { count: 12, fps: 10, loop: true, footY: 0.9, bodyH: 300, displayScale: 0.4 },
+  });
+  const rig = new Rig(makeSheetScene(sprite), charDef, 0);
+  assert.strictEqual(sprite.scale, 0.2);
+  rig.animate(0.016, 'walk');
+  assert.strictEqual(sprite.originY, 0.9);
+  assert.strictEqual(sprite.scale, 0.4);
 });
 
 test('Rig keeps the previous layout when a clip visibleH is invalid', () => {

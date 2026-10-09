@@ -172,6 +172,8 @@ export function idleCellOf(charDef) {
     cellW: idle.frameW ?? sheets?.frameW,
     cellH: idle.frameH ?? sheets?.frameH,
     footY: idle.footY ?? sheets?.footY,
-    visibleH: idle.visibleH ?? sheets?.visibleH,
+    // Body height, not the raw alpha box. A manifest that omits visibleH
+    // inherits the idle body so the clip matches the idle scale.
+    visibleH: idle.bodyH ?? idle.visibleH ?? sheets?.bodyH ?? sheets?.visibleH,
   };
 }

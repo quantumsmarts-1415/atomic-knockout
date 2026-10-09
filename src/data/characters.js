@@ -2270,7 +2270,8 @@ export const CHARACTERS = {
     art: {
       key: 'char-chroma',
       file: 'art-src/chroma-cut.png',
-      facing: -1,
+      // Source render faces right.
+      facing: 1,
       height: 130,
       bodyW: 36,
       bodyH: 114,

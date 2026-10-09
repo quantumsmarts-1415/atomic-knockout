@@ -27,6 +27,15 @@ export default class PauseMenuScene extends Phaser.Scene {
     this.add.text(W / 2, H / 2 + 56, 'Q — Quit to Title', {
       fontFamily: 'Arial Black, sans-serif', fontSize: '24px', color: '#d8ecff',
     }).setOrigin(0.5);
+    const shakeLabel = () => {
+      let mode = 'full';
+      try { mode = localStorage.getItem('ak-shake') || 'full'; } catch { /* ignore */ }
+      const name = mode === 'off' ? 'Off' : mode === 'reduced' ? 'Reduced' : 'Full';
+      return `Screen shake: ${name}`;
+    };
+    const shake = this.add.text(W / 2, H / 2 + 100, `R — ${shakeLabel()}`, {
+      fontFamily: 'Arial Black, sans-serif', fontSize: '20px', color: '#d8ecff',
+    }).setOrigin(0.5);
 
     const resume = () => {
       this.scene.stop();
@@ -36,6 +45,13 @@ export default class PauseMenuScene extends Phaser.Scene {
     kb.on('keydown-ESC', resume);
     kb.on('keydown-ENTER', resume);
     kb.on('keydown-P', resume);
+    kb.on('keydown-R', () => {
+      let mode = 'full';
+      try { mode = localStorage.getItem('ak-shake') || 'full'; } catch { /* ignore */ }
+      const next = mode === 'full' ? 'reduced' : mode === 'reduced' ? 'off' : 'full';
+      try { localStorage.setItem('ak-shake', next); } catch { /* ignore */ }
+      shake.setText(`R — ${shakeLabel()}`);
+    });
     kb.on('keydown-Q', () => {
       this.scene.stop(this.resumeKey);
       this.scene.stop();

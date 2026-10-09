@@ -12,6 +12,8 @@ import { playVfx, projectileStyle } from '../engine/MoveVfx.js';
 import { cleanse } from '../engine/kit.js';
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
+import { Juice } from '../engine/juice.js';
+import { FEEL, percentColor } from '../engine/feel.js';
 
 const GRAVITY = 1500;
 
@@ -88,6 +90,10 @@ export default class BattleScene extends Phaser.Scene {
     this.rng = this.setup.seed == null ? null : mulberry32(this.setup.seed);
     this.simSpeed = Math.max(1, this.setup.simSpeed || 1);
     this.simFast = this.simSpeed > 1;
+    this.timeScale = 1;
+    this.visualT = 0;
+    this.juice = this.simFast ? null : new Juice(this);
+    window.__akBattle = this;
     // Real-time play and the fast sim share one 60 Hz clock. The render loop
     // no longer steps arcade bodies: a hitch used to advance bot timers by
     // wall-clock time while physics only integrated once, and the old fast
@@ -134,12 +140,18 @@ export default class BattleScene extends Phaser.Scene {
   setupCamera() {
     this.camRig = null;
     this.uiCam = null;
-    const cfg = this.stage.camera;
-    if (!cfg) return;
+    const stageCam = this.stage.camera || {};
+    const cfg = {
+      padX: FEEL.camPadX, padTop: FEEL.camPadTop, padBottom: FEEL.camPadBottom,
+      lerpMs: FEEL.camPosTau, zoomOutMs: FEEL.camZoomOutTau, zoomInMs: FEEL.camZoomInTau,
+      ...stageCam,
+    };
     const { width: WW, height: WH } = this.world;
-    const minZoom = Math.min(1, Math.max(W / WW, H / WH, cfg.minZoom ?? 0));
+    const players = this.setup.players?.length || 2;
+    const cap = players >= 3 ? FEEL.camMaxMulti : FEEL.camMax1;
+    const minZoom = Math.min(1, Math.max(W / WW, H / WH, stageCam.minZoom ?? 0));
     this.camRig = {
-      cfg, minZoom, maxZoom: Math.max(minZoom, cfg.maxZoom ?? 1),
+      cfg, minZoom, maxZoom: Math.max(minZoom, cap, stageCam.maxZoom ?? 0),
       zoom: minZoom, cx: WW / 2, cy: WH / 2, first: true, uiMode: false,
     };
     const main = this.cameras.main;
@@ -184,17 +196,34 @@ export default class BattleScene extends Phaser.Scene {
     let ty = WH / 2;
     if (live.length) {
       let x0 = Infinity; let x1 = -Infinity; let y0 = Infinity; let y1 = -Infinity;
+      const blast = this.blast;
       for (const f of live) {
-        const fx = Phaser.Math.Clamp(f.x, 0, WW);
-        const fy = Phaser.Math.Clamp(f.y, 0, WH);
+        if (blast && (f.x < blast.left + 80 || f.x > blast.right - 80 || f.y < blast.top + 40 || f.y > blast.bottom - 40)) continue;
+        const vx = f.body?.velocity?.x || 0;
+        const vy = f.body?.velocity?.y || 0;
+        const fx = Phaser.Math.Clamp(f.x + vx * FEEL.camLook, 0, WW);
+        const fy = Phaser.Math.Clamp(f.y + vy * FEEL.camLook, 0, WH);
         x0 = Math.min(x0, fx - f.bodyW / 2); x1 = Math.max(x1, fx + f.bodyW / 2);
         y0 = Math.min(y0, fy - f.bodyH); y1 = Math.max(y1, fy);
       }
-      x0 -= cfg.padX ?? 240; x1 += cfg.padX ?? 240;
-      y0 -= cfg.padTop ?? 220; y1 += cfg.padBottom ?? 130;
-      tz = Phaser.Math.Clamp(Math.min(W / (x1 - x0), H / (y1 - y0)), rig.minZoom, rig.maxZoom);
-      tx = (x0 + x1) / 2;
-      ty = (y0 + y1) / 2;
+      if (x0 === Infinity) {
+        tx = rig.cx; ty = rig.cy; tz = rig.zoom;
+      } else {
+        x0 -= cfg.padX ?? FEEL.camPadX; x1 += cfg.padX ?? FEEL.camPadX;
+        y0 -= cfg.padTop ?? FEEL.camPadTop; y1 += cfg.padBottom ?? FEEL.camPadBottom;
+        const cap = this.koZoom || rig.maxZoom;
+        tz = Phaser.Math.Clamp(Math.min(W / Math.max(80, x1 - x0), H / Math.max(80, y1 - y0)), rig.minZoom, cap);
+        tx = (x0 + x1) / 2;
+        ty = (y0 + y1) / 2;
+        const dead = (W / Math.max(rig.zoom, 0.2)) * FEEL.camDead;
+        if (Math.abs(tx - rig.cx) < dead) tx = rig.cx;
+        if (Math.abs(ty - rig.cy) < dead) ty = rig.cy;
+      }
+    }
+    if (this.koPoint && this.koZoom) {
+      tx = this.koPoint.x;
+      ty = this.koPoint.y;
+      tz = Math.max(tz, this.koZoom);
     }
     const first = rig.first;
     rig.first = false;
@@ -205,9 +234,10 @@ export default class BattleScene extends Phaser.Scene {
     const k = first ? 1 : 1 - Math.exp(-delta / (cfg.lerpMs ?? 200));
     rig.cx += (Phaser.Math.Clamp(tx, hw, WW - hw) - rig.cx) * k;
     rig.cy += (Phaser.Math.Clamp(ty, hh, WH - hh) - rig.cy) * k;
-    rig.cx = Phaser.Math.Clamp(rig.cx, hw, WW - hw);
-    rig.cy = Phaser.Math.Clamp(rig.cy, hh, WH - hh);
-    this.cameras.main.setZoom(rig.zoom).centerOn(rig.cx, rig.cy);
+    rig.cx = Phaser.Math.Clamp(rig.cx, hw, Math.max(hw, WW - hw));
+    rig.cy = Phaser.Math.Clamp(rig.cy, hh, Math.max(hh, WH - hh));
+    const shake = this.juice?.shakeOffset(this.visualT || 0, rig.zoom) || { x: 0, y: 0, rot: 0 };
+    this.cameras.main.setZoom(rig.zoom).centerOn(rig.cx + shake.x, rig.cy + shake.y).setRotation(shake.rot || 0);
     this.drawOffscreenMarkers(live);
   }
 
@@ -334,6 +364,10 @@ export default class BattleScene extends Phaser.Scene {
       const zone = this.add.zone(s.x, topY + h / 2, s.w, h);
       this.physics.add.existing(zone, true);
       this.solids.add(zone);
+      const top = topY;
+      this.ledges ??= [];
+      this.ledges.push({ x: s.x - s.w / 2, y: top, facing: 1 });
+      this.ledges.push({ x: s.x + s.w / 2, y: top, facing: -1 });
     }
 
     for (const p of this.stage.platforms) {
@@ -354,6 +388,9 @@ export default class BattleScene extends Phaser.Scene {
       this.physics.add.existing(zone, true);
       this.platforms.add(zone);
       if (p.move) this.movers.push({ def: p, zone, visual, x: p.x, y: p.y });
+      this.ledges ??= [];
+      this.ledges.push({ x: p.x - p.w / 2, y: p.y, facing: 1 });
+      this.ledges.push({ x: p.x + p.w / 2, y: p.y, facing: -1 });
       // an elevator's lift image hangs below its walkable top -- keep it
       // behind the fighters but above the terrain (it already is: added later)
     }
@@ -538,15 +575,32 @@ export default class BattleScene extends Phaser.Scene {
     if (this.simFast) return;
     this.fighters.forEach((f, i) => {
       const h = this.hud[i];
-      h.percent.setText(`${Math.round(f.percent)}%`);
-      // percent text heats up as damage rises
-      const p = Phaser.Math.Clamp(f.percent / 150, 0, 1);
-      const col = Phaser.Display.Color.Interpolate.ColorWithColor(
-        Phaser.Display.Color.ValueToColor(0xffffff),
-        Phaser.Display.Color.ValueToColor(0xff3b30),
-        1, p,
-      );
-      h.percent.setColor(Phaser.Display.Color.RGBToString(col.r, col.g, col.b));
+      const shown = Math.round(f.percent);
+      if (h.shown !== shown) {
+        if (shown > (h.shown ?? 0)) {
+          h.punch = 1;
+          if (shown - (h.shown ?? 0) >= 15 && !this.simFast) {
+            const floater = this.add.text(h.percent.x, h.percent.y + 28, `+${shown - (h.shown ?? 0)}`, {
+              fontFamily: 'Arial Black, sans-serif', fontSize: '18px', color: '#ffe14a',
+            }).setOrigin(1, 0).setScrollFactor(0).setDepth(40);
+            this.tweens.add({
+              targets: floater, y: floater.y - 28, alpha: 0, duration: 500, ease: 'Quad.easeOut',
+              onComplete: () => floater.destroy(),
+            });
+          }
+        }
+        h.shown = shown;
+      }
+      h.percent.setText(`${shown}%`);
+      h.percent.setColor(percentColor(f.percent));
+      if (h.punch > 0) {
+        h.punch = Math.max(0, h.punch - 0.12);
+        const s = 1 + 0.35 * h.punch;
+        h.percent.setScale(s);
+        h.percent.x = (h.percentX ?? h.percent.x) + Math.sin(h.punch * 20) * 3 * h.punch;
+      } else if (h.percentX == null) {
+        h.percentX = h.percent.x;
+      }
       h.stocks.setText('●'.repeat(Math.max(0, f.stocks)) + '○'.repeat(Math.max(0, (this.setup.stocks ?? 3) - f.stocks)));
     });
   }
@@ -944,16 +998,42 @@ export default class BattleScene extends Phaser.Scene {
     const dmg = victim.takeHit(attacker, move, this.time.now, launchDir);
     if (dmg > 0) this.noteHit(attacker, victim, move);
     if (attacker !== victim) victim.lastHitBy = attacker;
-    const pauseMs = 45 + Math.min(dmg * 5, 70);
-    if (!this.simFast) {
-      sfx('hit');
-      this.hitSpark(victim.x, victim.y - victim.bodyH * 0.6);
-      this.cameras.main.shake(90 + dmg * 6, 0.004 + dmg * 0.0006);
-    }
-    // Same hit-stop in both clocks: freeze bodies, keep the match clock
-    // moving, resume when the delayed call elapses.
-    this.physics.world.pause();
-    this.time.delayedCall(pauseMs, () => this.physics.world.resume());
+    // Hitlag lives on the fighters (feel.js). The world clock keeps moving
+    // so other players, projectiles and the stage do not freeze.
+  }
+
+  beginFinish(victim, info) {
+    if (this.simFast || this.finishing) return;
+    this.finishing = true;
+    const finalBlow = !!(info?.final);
+    this.timeScale = finalBlow ? FEEL.koSlow : FEEL.stockSlow;
+    this.finishLeft = finalBlow ? FEEL.koSlowFrames : FEEL.stockSlowFrames;
+    this.koZoom = FEEL.koZoom;
+    this.koPoint = { x: victim.x, y: victim.y - victim.bodyH * 0.5 };
+    this.juice?.addTrauma(0.7);
+    if (finalBlow || info?.charged) this.flashFinish(info?.charged && !finalBlow ? 0x16325a : 0x6a1020);
+    if (!this.simFast) sfx('koHit');
+  }
+
+  flashFinish(color) {
+    const g = this.add.graphics().setScrollFactor(0).setDepth(70);
+    const draw = (alpha) => {
+      g.clear();
+      g.fillStyle(color, alpha);
+      for (let i = 0; i < 18; i++) {
+        const a = (Math.PI * 2 * i) / 18;
+        g.fillTriangle(
+          W / 2, H / 2,
+          W / 2 + Math.cos(a) * 900, H / 2 + Math.sin(a) * 900,
+          W / 2 + Math.cos(a + 0.08) * 900, H / 2 + Math.sin(a + 0.08) * 900,
+        );
+      }
+    };
+    draw(0.45);
+    this.tweens.add({
+      targets: g, alpha: 0, duration: 420, ease: 'Sine.easeOut',
+      onComplete: () => g.destroy(),
+    });
   }
 
   hitSpark(x, y) {
@@ -992,13 +1072,51 @@ export default class BattleScene extends Phaser.Scene {
   update() {
     if (this.simFast) return;
     const raw = this.game.loop.rawDelta || this.stepMs;
-    // A pause or a load stall must not replay as extra match time.
-    this.tickAccum += Math.min(raw, this.stepMs * 5);
+    this.present(Math.min(raw, this.stepMs * 5));
+  }
+
+  /** One rendered frame. Slow-motion scales how much sim time it contains. */
+  captureFrame() {
+    this.present(this.stepMs);
+  }
+
+  present(dt) {
+    this.visualT += dt / 1000;
+    if (this.finishLeft > 0) {
+      this.finishLeft -= 1;
+      if (this.finishLeft <= 0) {
+        this.ramping = FEEL.koRampFrames;
+        this.koZoom = null;
+      }
+    } else if (this.ramping > 0) {
+      this.ramping -= 1;
+      const t = 1 - this.ramping / FEEL.koRampFrames;
+      const from = this.timeScale < 0.4 ? FEEL.koSlow : FEEL.stockSlow;
+      this.timeScale = from + (1 - from) * t;
+      if (this.ramping <= 0) {
+        this.timeScale = 1;
+        this.finishing = false;
+      }
+    }
+    if (this.tweens) this.tweens.timeScale = this.timeScale || 1;
+    this.tickAccum += dt * (this.timeScale || 1);
     let guard = 0;
     while (this.tickAccum >= this.stepMs && guard < 5) {
       this.tickAccum -= this.stepMs;
       this.runSimSteps(1);
       guard++;
+    }
+    this.renderInterp();
+    this.juice?.update(dt / 1000);
+    if (!this.simFast) this.updateCamera(dt);
+  }
+
+  renderInterp() {
+    const alpha = this.stepMs ? Math.min(1, Math.max(0, this.tickAccum / this.stepMs)) : 1;
+    for (const f of this.fighters || []) {
+      if (f.prevX == null || !f.rig) continue;
+      f.rig.x = (f.prevX + (f.x - f.prevX) * alpha) - f.x + (f._shakeX || 0);
+      f.rig.y = (f.prevY + (f.y - f.prevY) * alpha) - f.y + (f._shakeY || 0);
     }
   }
 
@@ -1011,6 +1129,10 @@ export default class BattleScene extends Phaser.Scene {
     const world = this.physics.world;
     for (let i = 0; i < n; i++) {
       if (this.reportPublished) return;
+      for (const f of this.fighters || []) {
+        f.prevX = f.x;
+        f.prevY = f.y;
+      }
       this.simNow += stepMs;
       this.time.preUpdate();
       this.time.timeScale = 1;
@@ -1029,7 +1151,6 @@ export default class BattleScene extends Phaser.Scene {
     if (!this.simFast) {
       this.updateAmbient(time, delta);
       this.updateParallax(delta);
-      this.updateCamera(delta);
     }
     if (this.playtestUntil && !this.reportPublished && time >= this.playtestUntil) {
       this.matchOver = true;
@@ -1306,7 +1427,7 @@ export default class BattleScene extends Phaser.Scene {
           break;
         }
         // a projectile shoves you the way it was travelling
-        this.landHit(p.owner, victim, shot, Math.sign(p.vx) || p.owner.facing);
+        this.landHit(p.owner, victim, { ...shot, _projectile: true }, Math.sign(p.vx) || p.owner.facing);
         this.dropProjectileZone(p);
         if (!p.move.pierce) {
           p.gfx.destroy();
@@ -1358,6 +1479,9 @@ export default class BattleScene extends Phaser.Scene {
   koBlast(f) {
     if (this.simFast) return;
     sfx('ko');
+    sfx('cheer');
+    this.juice?.koLine(f);
+    this.juice?.addTrauma(0.5);
     // burst of lines at the blast point, clamped on-screen (to the camera
     // view on camera stages -- same as the screen everywhere else)
     const v = this.camRig ? this.cameras.main.worldView : { x: 0, y: 0, right: W, bottom: H };
@@ -1375,7 +1499,6 @@ export default class BattleScene extends Phaser.Scene {
         onComplete: () => line.destroy(),
       });
     }
-    this.cameras.main.shake(180, 0.012);
   }
 
   checkWin() {
@@ -1388,12 +1511,21 @@ export default class BattleScene extends Phaser.Scene {
     }
     sfx('gameEnd');
     const winner = alive[0] ?? null;
+    if (this.hud) {
+      for (const h of this.hud) {
+        h.percent?.setVisible(false);
+        h.stocks?.setVisible(false);
+        h.name?.setVisible(false);
+      }
+    }
 
-    const banner = this.asUi(() => this.add.text(W / 2, H / 2 - 40, 'GAME!', {
-      fontFamily: 'Arial Black, sans-serif', fontSize: '110px', color: '#ffffff',
-      stroke: '#1c2b4a', strokeThickness: 14,
-    }).setOrigin(0.5).setScale(0.2));
-    this.tweens.add({ targets: banner, scale: 1, duration: 320, ease: 'Back.Out' });
+    this.time.delayedCall(600, () => {
+      const banner = this.asUi(() => this.add.text(W / 2, H / 2 - 40, 'GAME!', {
+        fontFamily: 'Arial Black, sans-serif', fontSize: '110px', color: '#ffffff',
+        stroke: '#1c2b4a', strokeThickness: 14,
+      }).setOrigin(0.5).setScale(1.4));
+      this.tweens.add({ targets: banner, scale: 1, duration: 250, ease: 'Back.easeOut' });
+    });
 
     this.time.delayedCall(1800, () => {
       const results = this.fighters.map((f) => ({

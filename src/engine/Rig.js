@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { sheetKey, use3dSheets, clipDisplayLayout, positiveFinite } from '../scenes/BootScene.js';
 import { clipPose, moveClipFor, moveTextureKey } from './moveClip.js';
+import { stripIndex, idleBlend, attackPhase, poseTarget, spring, FEEL } from './feel.js';
 
 // ---------------------------------------------------------------------------
 // Rig — the code-drawn vector cartoon character.
@@ -340,6 +341,65 @@ export class Rig extends Phaser.GameObjects.Container {
     return true;
   }
 
+  blendToIdle(amount) {
+    if (!this.sprite || !this.sheetMode) return;
+    if (!(amount > 0.02) && !this.fadeSprite) return;
+    if (!this.fadeSprite) {
+      const key = this.sprite.texture?.key;
+      if (!key || !this.scene?.add?.sprite) return;
+      this.fadeSprite = this.scene.add.sprite(0, 0, key);
+      this.add(this.fadeSprite);
+      this.fadeSprite.setVisible(false);
+    }
+    if (!(amount > 0.02) || !this.sheets?.clips?.idle) {
+      this.fadeSprite.setVisible(false);
+      this.sprite.setAlpha(1);
+      return;
+    }
+    const idle = this.sheets.clips.idle;
+    this.fadeSprite.setTexture(sheetKey(this.art, 'idle'), 0);
+    this.fadeSprite.setOrigin(0.5, idle.footY ?? 1);
+    this.fadeSprite.setVisible(true).setAlpha(amount);
+    this.sprite.setAlpha(1 - amount * 0.75);
+  }
+
+  applyPose(dt, state, layout) {
+    if (state !== 'attack') this.blendToIdle(0);
+    const phase = this.frameData ? attackPhase(this.frameData, this.attackFrame || 0) : 'idle';
+    const target = poseTarget(state, {
+      facing: this.facing || 1,
+      phase,
+      t: this.animT || 0,
+      step: (this.animT || 0) * 10,
+      units: this.hurtUnits || 0,
+      hurtSign: this.hurtSign || 1,
+      landing: this.landing > 0,
+    });
+    this._pose ??= { rot: 0, sx: 1, sy: 1, x: 0, y: 0 };
+    this._poseV ??= { rot: 0, sx: 0, sy: 0, x: 0, y: 0 };
+    for (const k of ['rot', 'sx', 'sy', 'x', 'y']) {
+      const stepped = spring(this._pose[k], this._poseV[k], target[k] ?? 0, dt || 0.016);
+      this._pose[k] = stepped.cur;
+      this._poseV[k] = stepped.vel;
+    }
+    this.sprite.x = this._pose.x;
+    this.sprite.y = this._pose.y;
+    this.sprite.rotation = this._pose.rot;
+    this.sprite.setScale(layout * this._pose.sx, layout * this._pose.sy);
+    if (this.fadeSprite?.visible) {
+      this.fadeSprite.x = this.sprite.x;
+      this.fadeSprite.y = this.sprite.y;
+      this.fadeSprite.setScale(layout * this._pose.sx, layout * this._pose.sy);
+    }
+    if (state === 'hurt' && (this.hurtUnits || 0) > FEEL.tumbleAt) {
+      this._spin = (this._spin || 0) + (dt || 0.016) * 9 * (this.hurtSign || 1);
+      this.rotation = this._spin;
+    } else {
+      this.rotation = 0;
+    }
+    this.setScale((this.facing || 1) * (this.baseScale || 1), this.baseScale || 1);
+  }
+
   animate(dt, state, speedFactor = 1) {
     this.animT += dt;
     const t = this.animT;
@@ -363,26 +423,32 @@ export class Rig extends Phaser.GameObjects.Container {
       const info = this.sheets.clips[def];
 
       if ((def === 'attack' || def === 'special') && moveState) {
-        // Scrub these by the move's own progress rather than playing them at
-        // a fixed frame rate, so the swing always lines up with move.duration
-        // no matter how the move is retuned in characters.js.
-        const progress = state === 'attack' ? (this.attackSwing ?? 0) : (this.poseT ?? this.attackSwing ?? 0);
-        const i = Phaser.Math.Clamp(
-          Math.floor(progress * info.count), 0, info.count - 1,
-        );
+        // Wind-up, strike, hold the contact pose, then follow through.
+        // Charge holds the load frame. Defense holds the contact frame.
+        let i;
+        if (state === 'charging') i = Math.min(1, info.count - 1);
+        else if (state === 'defending') i = Math.min(3, info.count - 1);
+        else if (this.frameData && state === 'attack') i = stripIndex(info.count, this.frameData, this.attackFrame || 0);
+        else {
+          const progress = state === 'attack' ? (this.attackSwing ?? 0) : (this.poseT ?? this.attackSwing ?? 0);
+          i = Phaser.Math.Clamp(Math.floor(progress * info.count), 0, info.count - 1);
+        }
         this.sprite.anims.stop();
         this.sprite.setTexture(sheetKey(this.art, def), i);
         if (this.currentClip !== def) this.applyClipLayout(info);
         this.currentClip = def;
+        const blend = (this.frameData && state === 'attack') ? idleBlend(this.frameData, this.attackFrame || 0) : 0;
+        this.blendToIdle(blend);
       } else if (this.currentClip !== def) {
         this.currentClip = def;
         this.applyClipLayout(info);
         this.sprite.anims.play(sheetKey(this.art, def), true);
       }
 
-      // the run cycle speeds up and slows down with actual ground speed
+      // Feet follow ground speed. The old 0.55 floor held every slow walk
+      // on the same long pose; a very slow walk is allowed to be slow.
       this.sprite.anims.timeScale = def === 'walk'
-        ? Phaser.Math.Clamp(speedFactor, 0.55, 1.6)
+        ? Phaser.Math.Clamp(speedFactor, 0.2, 1.8)
         : 1;
 
       // the KO clip already tumbles him, so don't spin the container too
@@ -391,19 +457,8 @@ export class Rig extends Phaser.GameObjects.Container {
       // No attack/charge/defend sheet: stay on the idle clip. A small
       // telegraph marks the state; the move itself is the effects layer.
       // Do not scrub idle frames as if they were a swing.
-      const posed = def === wanted || ((def === 'attack' || def === 'special') && moveState);
       const layout = this._layoutScale ?? (Math.abs(this.sprite.scaleX) || 1);
-      this.sprite.x = 0;
-      this.sprite.y = 0;
-      if (!posed && state === 'charging') {
-        this.sprite.y = Math.sin(t * 16) * 3;
-        this.sprite.setScale(layout);
-      } else if (!posed && state === 'defending') {
-        // Brace inward. The head-to-feet height stays on the layout scale.
-        this.sprite.setScale(layout * 0.96, layout);
-      } else {
-        this.sprite.setScale(layout);
-      }
+      this.applyPose(dt, state, layout);
       return;
     }
 

@@ -5,7 +5,11 @@ import { resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, interceptHit } from './defense.js';
 import { applyOnCast, applyOnHit, bonusPackets, combatOpts, prepareMove, tickKit } from './kit.js';
 import { playVfx } from './MoveVfx.js';
-import { play as sfx } from './sfx.js';
+import { play as sfx, playHit } from './sfx.js';
+import {
+  FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, launchAngle,
+  launchVelocity, applyDI, decayLaunch, leavesBlast, takeBuffered, TYPE_COLOR,
+} from './feel.js';
 
 // ---------------------------------------------------------------------------
 // Fighter — one combatant. Reads everything character-specific from its
@@ -106,19 +110,60 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.defenseMove = null;   // the move def driving state === 'defending'
     this.wallLanded = null;    // Set of fighters already hit, for wall-kind defending
     this.dashUntil = 0;        // forward-velocity override window for kind:'dash' melee
+    this.buffer = [];
+    this.hitlagFrames = 0;
+    this.launch = null;
+    this.attackFrame = 0;
+    this.frameData = null;
+    this._shakeX = 0;
+    this._shakeY = 0;
   }
 
   get isBusy() {
     return this.state === 'attack' || this.state === 'hurt' || this.state === 'ko' || this.state === 'dead' ||
-      this.state === 'charging' || this.state === 'defending';
+      this.state === 'charging' || this.state === 'defending' || this.state === 'jumpsquat' || this.state === 'ledge';
   }
 
   update(time, dt) {
     if (this.state === 'dead') return;
+    if (this.state === 'ko' && this._koHide > 0) {
+      this._koHide -= 1;
+      if (this._koHide <= 0) this.setVisible(false);
+    }
     const stats = this.charDef.stats;
     const onGround = this.body.blocked.down || this.body.touching.down;
 
-    if (onGround) this.airJumpsLeft = stats.airJumps;
+    if (onGround) {
+      this.airJumpsLeft = stats.airJumps;
+      this.ledgeRegrab = false;
+      this.fastFell = false;
+      this.fallPeak = 0;
+    } else {
+      this.fallPeak = Math.max(this.fallPeak || 0, this.body.velocity.y);
+    }
+
+    const step = this.scene?.stepMs || FEEL.stepMs;
+    if (this.hitlagFrames > 0) {
+      this.shiftTimers(step);
+      this.hitlagFrames -= 1;
+      if (this.hitlagFrames === 0) this.releaseLaunch(time);
+      else this.body.setVelocity(0, 0);
+      this.shakeForHitlag();
+      const creep = this._hitlagRole === 'attacker' ? FEEL.hitlagCreep : 0;
+      this.rig?.animate?.((step / 1000) * creep, this._hitlagRole === 'attacker' ? (this.state === 'attack' ? 'attack' : 'idle') : 'hurt', 0);
+      this.captureEdges(time);
+      return;
+    }
+    this._shakeX = 0;
+    this._shakeY = 0;
+    this.peelLaunch();
+
+    if (this.state === 'ledge') {
+      this.holdLedge(time, step);
+      this.rig.facing = this.facing;
+      this.rig.animate?.(dt / 1000, 'ledge', 0);
+      return;
+    }
 
     // timed states expire
     if ((this.state === 'attack' || this.state === 'hurt' || this.state === 'defending') && time >= this.stateUntil) {
@@ -156,9 +201,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
       inp.left = inp.right;
       inp.right = left;
     }
-    const pressedJump = inp.jump && !this._prev.jump;
-    const pressedAttack = inp.attack && !this._prev.attack;
-    const pressedSpecial = inp.special && !this._prev.special;
+    let pressedJump = inp.jump && !this._prev.jump;
+    let pressedAttack = inp.attack && !this._prev.attack;
+    let pressedSpecial = inp.special && !this._prev.special;
     const releasedAttack = !inp.attack && this._prev.attack;
     this._prev.jump = inp.jump;
     this._prev.attack = inp.attack;
@@ -196,17 +241,60 @@ export default class Fighter extends Phaser.GameObjects.Container {
       // body part-way through the animation.
       if (vx !== 0 && this.state !== 'attack') this.facing = Math.sign(vx);
 
-      if (pressedJump) {
+      if (this.state === 'jumpsquat') {
+        this.body.setVelocity(0, 0);
+        this.squatLeft -= 1;
+        if (this.squatLeft <= 0) {
+          const held = !!(inp.jump || this._botJumpHold > 0);
+          this.body.setVelocityY(-stats.jumpVelocity * (held ? 1 : FEEL.shortHop));
+          this.state = 'jump';
+          if (!this.scene?.simFast) {
+            sfx('jump');
+            this.scene.juice?.dust?.(this.x, this.y, 1);
+          }
+        }
+      } else if (pressedJump) {
         if (onGround) {
-          this.body.setVelocityY(-stats.jumpVelocity);
-          sfx('jump');
+          this.state = 'jumpsquat';
+          this.squatLeft = FEEL.jumpSquat - 1;
+          this.body.setVelocity(0, 0);
+          if (this.isBot) this._botJumpHold = FEEL.jumpSquat;
         } else if (this.airJumpsLeft > 0) {
           this.airJumpsLeft -= 1;
           this.body.setVelocityY(-stats.jumpVelocity * 0.92);
-          sfx('jump');
+          if (!this.scene?.simFast) {
+            sfx('jump');
+            this.scene.juice?.dust?.(this.x, this.y, 1);
+          }
         }
       }
+      if (this._botJumpHold > 0) this._botJumpHold -= 1;
+      const pressedDown = inp.down && !this._prevDown;
+      this._prevDown = !!inp.down;
+      if (pressedDown && !onGround && this.body.velocity.y > 40 && !this.fastFell) {
+        this.fastFell = true;
+        this.body.setVelocityY(Math.max(this.body.velocity.y, FEEL.fastFallSpeed));
+        if (!this.scene?.simFast) this.scene.juice?.puff?.(this.x, this.y - 10, 0xd0e4ff, 0.35);
+      }
     }
+
+    if (onGround && this._wasAir) {
+      const hard = (this.fallPeak || 0) > FEEL.landingHardVy;
+      const lag = this.state === 'attack'
+        ? (this.currentMove?.landingLagF ?? FEEL.landingAerial)
+        : (hard ? FEEL.landingHard : FEEL.landingSoft);
+      if (this.state === 'attack') this.stateUntil += lag * step;
+      else if (this.state !== 'hurt' && this.state !== 'jumpsquat') this.lockedUntil = Math.max(this.lockedUntil || 0, time + lag * step);
+      this.landing = lag;
+      if (!this.scene?.simFast) {
+        sfx(hard ? 'landHeavy' : 'land');
+        this.scene.juice?.dust?.(this.x, this.y, -1);
+        this.scene.juice?.dust?.(this.x, this.y, 1);
+        if (hard) this.scene.juice?.addTrauma?.(0.2);
+      }
+    }
+    this._wasAir = !onGround;
+    if (!onGround && this.body.velocity.y >= 0 && this.state !== 'hurt' && this.state !== 'attack') this.tryLedge(time);
 
     // --- attacks
     // Each button has two variants gated on dirHeld: basicDirectional/
@@ -242,6 +330,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.defenseMove = null;
       this.rig.setFlash(null);
     } else if (!locked && !this.isBusy) {
+      const queued = this.takeBuffer(time);
+      if (queued && !pressedAttack && !pressedSpecial && !pressedJump) {
+        pressedAttack = queued.button === 'attack';
+        pressedSpecial = queued.button === 'special';
+        pressedJump = queued.button === 'jump';
+        if (queued.left) this.facing = -1;
+        if (queued.right) this.facing = 1;
+      }
       if (pressedAttack && time >= this.attackCooldownUntil) {
         if (dirHeld || !this.charDef.moves.basicCharge) {
           this.startMove(time, this.charDef.moves.basicDirectional, 'basic', 'basicDirectional');
@@ -255,7 +351,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
         } else {
           this.startDefense(time);
         }
+      } else if ((pressedAttack || pressedSpecial || pressedJump) && (this.isBusy || time < this.attackCooldownUntil)) {
+        this.pushBuffer(time, { attack: pressedAttack, special: pressedSpecial, jump: pressedJump });
       }
+    } else if (pressedAttack || pressedSpecial || (pressedJump && this.state !== 'jumpsquat')) {
+      this.pushBuffer(time, { attack: pressedAttack, special: pressedSpecial, jump: pressedJump && this.state !== 'jump' });
     }
 
     if (this.diveUntil || (this.dashUntil && time < this.dashUntil)) this.holdDiveOnDeck();
@@ -266,8 +366,26 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
     // drive attack swing progress for the rig
     if (this.state === 'attack' && this.currentMove) {
-      const total = this.currentMove.duration;
-      this.rig.attackSwing = Phaser.Math.Clamp(1 - (this.stateUntil - time) / total, 0, 1);
+      this.attackFrame = (this.attackFrame ?? 0) + 1;
+      const fd = this.frameData;
+      const span = Math.max(1, fd?.visible || 1);
+      this.rig.attackSwing = Phaser.Math.Clamp(this.attackFrame / span, 0, 1);
+      if (fd && this.attackFrame <= FEEL.reverseFrames) {
+        if (inp.left && this.facing !== -1) this.flipFacing(-1);
+        if (inp.right && this.facing !== 1) this.flipFacing(1);
+      }
+      if (fd && this.attackFrame === fd.startup && !this._whooshed) {
+        this._whooshed = true;
+        if (!this.scene?.simFast) {
+          sfx('whoosh');
+          this.scene.juice?.swing?.(this, this.currentMove);
+          this.scene.juice?.afterimage?.(this, 0.45);
+          this.scene.juice?.afterimage?.(this, 0.30);
+          this.scene.juice?.afterimage?.(this, 0.15);
+        }
+      }
+    } else {
+      this._whooshed = false;
     }
     if (this.state === 'charging') {
       this.rig.moveKey = 'basicCharge';
@@ -296,8 +414,22 @@ export default class Fighter extends Phaser.GameObjects.Container {
         animState = 'idle';
       }
     }
-    const speedFactor = Math.abs(this.body.velocity.x) / stats.speed;
+    const speedFactor = Math.abs(this.body.velocity.x) / Math.max(1, stats.speed);
+    this.applyLaunch();
     this.rig.facing = this.facing;
+    this.rig.frameData = this.frameData;
+    this.rig.attackFrame = this.attackFrame || 0;
+    this.rig.hurtUnits = this.hurtUnits || 0;
+    this.rig.hurtSign = this.hurtSign || 1;
+    this.rig.landing = this.landing || 0;
+    if (this.landing > 0) this.landing -= 1;
+    if (!this.scene?.simFast && animState === 'walk' && Math.floor(this.rig.animT * 8) !== this._foot) {
+      this._foot = Math.floor(this.rig.animT * 8);
+      if (this._foot % 4 === 0) {
+        sfx('foot');
+        this.scene.juice?.dust?.(this.x - this.facing * 8, this.y, -this.facing);
+      }
+    }
     this.rig.animate(dt / 1000, animState, speedFactor);
     if (this._px != null) this.travel = (this.travel ?? 0) + Math.abs(this.x - this._px);
     this._px = this.x;
@@ -339,7 +471,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.currentMoveKey = moveKey;
     this.rig.moveKey = moveKey;
     this.rig.moveSlot = slot; // sheet-mode rigs have separate basic/special clips
-    this.stateUntil = time + move.duration;
+    const step = this.scene?.stepMs || FEEL.stepMs;
+    const fd = frameData(move.duration, move.cooldown ?? 0, move, step);
+    this.frameData = fd;
+    this.attackFrame = 0;
+    this._whooshed = false;
+    this.stateUntil = time + fd.visible * step;
     this.scene.noteMove?.(this, move);
     if (slot === 'basic') this.attackCooldownUntil = time + move.duration + move.cooldown;
     else {
@@ -368,11 +505,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (move.kind === 'buff' || move.kind === 'zone') {
       if (move.zone) this.scene.spawnZone?.(this, move.zone, this.x, this.y - this.bodyH * (move.zone.low ? 0.15 : 0.5));
     } else if (move.kind === 'projectile') {
-      this.scene.spawnProjectile(this, move);
+      this.scene.time.delayedCall(fd.startup * step, () => {
+        if (this.alive && this.state === 'attack') this.scene.spawnProjectile(this, move);
+      });
     } else if (move.kind === 'beam') {
-      const fire = () => { if (this.alive) this.scene.resolveBeam?.(this, move); };
-      if (move.delayMs) this.scene.time.delayedCall(move.delayMs, fire);
-      else fire();
+      const fire = () => { if (this.alive && this.state === 'attack') this.scene.resolveBeam?.(this, move); };
+      this.scene.time.delayedCall(move.delayMs ?? fd.startup * step, fire);
     } else if (move.kind === 'dive') {
       const hop = move.dashSpeed ?? 160;
       this.diveVX = this.facing * hop;
@@ -385,7 +523,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       // burst hits everything in a radius partway through the animation.
       // Moves that can be interrupted on purpose (Supernova popping early)
       // still go off.
-      this.scene.time.delayedCall(move.duration * (commitBurst ? 0.05 : 0.4), () => {
+      this.scene.time.delayedCall((commitBurst ? 1 : fd.startup) * step, () => {
         if (this.state === 'attack' || commitBurst) this.scene.resolveBurst(this, move);
       });
     } else {
@@ -397,13 +535,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
       // static box in front of him -- active almost immediately/for nearly
       // the whole swing, plus a forward-velocity override (see update()).
       const isDash = move.kind === 'dash';
+      const activeF = isDash ? Math.max(fd.active, Math.round(fd.visible * 0.55)) : fd.active;
       this.activeHit = {
         move, dir: this.facing, landed: new Set(),
-        from: time + move.duration * (isDash ? 0.05 : 0.25),
-        until: time + move.duration * (isDash ? 0.95 : 0.8),
+        from: time + fd.startup * step,
+        until: time + (fd.startup + activeF) * step,
       };
       if (isDash) {
-        this.dashUntil = time + move.duration;
+        this.dashUntil = time + fd.visible * step;
         this.dashVX = this.facing * (move.dashSpeed ?? 500);
       }
     }
@@ -720,10 +859,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.creditDamage(attacker, dmg, incoming.type);
       if (!gate.noKnockback && !move.isSelf) {
         const kb = ((incoming.baseKnockback + this.percent * (incoming.knockbackGrowth ?? 0)) / this.weightNow()) * (1 - gate.reduction) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1);
-        const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
-        const away = Math.sign(this.x - (attacker?.x ?? this.x)) || attacker?.facing || 1;
-        const dir = launchDir || away;
-        this.body.setVelocity(kb * dir * Math.cos(0.45) * slip, kb * -0.9);
+        this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, false);
       }
       this.noteHeatAndRecoil(attacker, incoming, time, dealt);
       this.spreadPoison(attacker, time, this.poisonInherit && this.poisonUntil > time);
@@ -775,44 +911,275 @@ export default class Fighter extends Phaser.GameObjects.Container {
       return dmg;
     }
     let kb = (((incoming.baseKnockback ?? 0) + this.percent * (incoming.knockbackGrowth ?? 0)) / this.weightNow()) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1);
-    const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
     const pinned = this.state === 'defending' && this.defenseMove?.noKnockback && !incoming.isSelf;
     if (pinned) kb = 0;
-
-    // Launch direction.
-    //
-    // Directional moves (punches, projectiles) launch the way the ATTACK
-    // points, passed in as launchDir. Deriving it from relative position
-    // instead — which is what this used to do — breaks when the two bodies
-    // overlap: standing on top of someone put their centre behind the
-    // attacker's, so a punch aimed right launched them left, back through
-    // the puncher.
-    //
-    // Radial moves (H-Burst and anything else centred on the attacker) still
-    // launch away from the blast, which is the whole point of them. A move
-    // can force either rule with `launch: 'radial' | 'directional'`.
-    const radial = incoming.launch ? incoming.launch === 'radial' : incoming.kind === 'burst';
-    const away = Math.sign(this.x - (attacker?.x ?? this.x)) || attacker?.facing || 1;
-    const dir = (!radial && launchDir) ? launchDir : away;
-
-    const angle = incoming.lift ? -1.25 : -0.9; // lift sends them up (Balloon Bop)
-    let vx = kb * dir * Math.cos(0.45) * slip;
-    const grabbed = incoming.pull && attacker && !pinned && !(this.defenseMove?.grabImmune && this.state === 'defending');
-    if (grabbed) vx = Math.sign((attacker.x ?? this.x) - this.x || dir) * incoming.pull;
-    this.body.setVelocity(vx, kb * angle);
+    this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, !armored);
 
     applyOnHit(attacker, this, incoming, time);
     this.noteHeatAndRecoil(attacker, incoming, time, dealt);
     this.spreadPoison(attacker, time, contagious);
-    if (armored) return dmg;
-
-    this.state = 'hurt';
-    this.stateUntil = time + 320 + Math.min(this.percent * 2, 300); // more hitstun at high %
-    this.rig.setFlash(0xff5544);
-    this.scene.time.delayedCall(120, () => {
-      if (this.state !== 'ko' && this.state !== 'dead') this.rig.setFlash(null);
-    });
     return dmg;
+  }
+
+  /**
+   * Smash-style launch. The body freezes for hitlag; the velocity is applied
+   * on the last hitlag frame, after DI. `flinch` false keeps a defender in
+   * their stance (partial block) while still sliding.
+   */
+  applyKnockback(attacker, incoming, time, launchDir, kb, dmg, flinch) {
+    const radial = incoming.launch ? incoming.launch === 'radial' : incoming.kind === 'burst';
+    const away = Math.sign(this.x - (attacker?.x ?? this.x)) || attacker?.facing || 1;
+    const dir = (!radial && launchDir) ? launchDir : away;
+    const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
+    const grabbed = incoming.pull && attacker && kb > 0 && !(this.defenseMove?.grabImmune && this.state === 'defending');
+    const units = smashUnits(Math.max(0, kb) * slip);
+    const grounded = !!(this.body?.blocked?.down || this.body?.touching?.down);
+    let angle = launchAngle(incoming, grounded, units);
+    if (grabbed) {
+      angle = 0;
+    }
+    const players = this.scene?.fighters?.filter((f) => f.alive && f.state !== 'dead').length || 2;
+    const ko = units > 0 && this.predictKO(units, angle, grabbed ? Math.sign((attacker.x - this.x) || dir) : dir);
+    const hmult = incoming.hitlagMult ?? (incoming.multiHit ? FEEL.hitlagMultiHit : 1);
+    const frames = hitlagFrames(dmg, {
+      hitlagMult: hmult, type: incoming.type, type2: incoming.type2, players, ko,
+    });
+    this.pendingLaunch = units > 0 ? {
+      units, angle, dir: grabbed ? Math.sign((attacker.x - this.x) || dir) : dir,
+      type: incoming.type, pull: grabbed ? incoming.pull : 0,
+    } : null;
+    this.launch = null;
+    this._appliedLaunch = null;
+    this.hitlagFrames = Math.max(this.hitlagFrames || 0, frames);
+    this.hitlagTotal = this.hitlagFrames;
+    this.hitlagDmg = dmg;
+    this._hitlagRole = 'victim';
+    this._hitGrounded = grounded;
+    this.hurtUnits = units;
+    this.hurtSign = -dir;
+    this.body?.setVelocity(0, 0);
+    if (attacker && attacker !== this && !incoming._projectile && !incoming.isCounterAttack && attacker.hitlagFrames != null) {
+      attacker.hitlagFrames = Math.max(attacker.hitlagFrames || 0, frames);
+      attacker.hitlagTotal = attacker.hitlagFrames;
+      attacker._hitlagRole = 'attacker';
+      attacker.hitlagDmg = dmg;
+      attacker.body?.setVelocity?.(0, 0);
+    }
+    if (flinch && dmg > 0) {
+      const stun = Math.max(4, hitstunFrames(units));
+      this.state = 'hurt';
+      this.stateUntil = time + stun * (this.scene?.stepMs || FEEL.stepMs);
+      this.activeHit = null;
+    }
+    if (ko && flinch) this.scene?.beginFinish?.(this, { final: this.stocks <= 1, charged: (incoming._chargeFrac ?? 0) >= 0.95 });
+    if (!this.scene?.simFast && dmg > 0) {
+      playHit(dmg, incoming.type, ko && flinch);
+      this.scene.juice?.hit?.(this.x, this.y - this.bodyH * 0.55, dmg, incoming.type, angle);
+    }
+    if ((this.hitlagFrames || 0) <= 0 && this.pendingLaunch) this.releaseLaunch(time);
+  }
+
+  shiftTimers(ms) {
+    const keys = [
+      'stateUntil', 'attackCooldownUntil', 'specialCooldownUntil', 'vulnerableUntil', 'lockedUntil',
+      'dashUntil', 'diveUntil', 'diveArm', 'slowUntil', 'rootedUntil', 'speedBuffUntil', 'driftUntil',
+      'phasingUntil', 'weightBuffUntil', 'poisonUntil', 'stunUntil', 'freezeUntil', 'burnUntil',
+      'slipperyUntil', 'kineticResistUntil', 'heatedUntil',
+    ];
+    for (const k of keys) if (this[k] > 0) this[k] += ms;
+    if (this.chargeStart) this.chargeStart += ms;
+    if (this.defenseStart) this.defenseStart += ms;
+    if (this.activeHit) {
+      this.activeHit.from += ms;
+      this.activeHit.until += ms;
+    }
+  }
+
+  captureEdges(time) {
+    const inp = this.input || {};
+    const pressed = {
+      jump: !!inp.jump && !this._prev.jump,
+      attack: !!inp.attack && !this._prev.attack,
+      special: !!inp.special && !this._prev.special,
+    };
+    this._prev.jump = !!inp.jump;
+    this._prev.attack = !!inp.attack;
+    this._prev.special = !!inp.special;
+    if (pressed.jump || pressed.attack || pressed.special) this.pushBuffer(time, pressed);
+  }
+
+  pushBuffer(time, pressed) {
+    const frame = Math.round(time / (this.scene?.stepMs || FEEL.stepMs));
+    const inp = this.input || {};
+    for (const button of ['special', 'attack', 'jump']) {
+      if (!pressed[button]) continue;
+      this.buffer.push({
+        button, frame, left: !!inp.left, right: !!inp.right, down: !!inp.down, jump: !!inp.jump,
+      });
+    }
+    this.buffer = this.buffer.filter((b) => frame - b.frame <= FEEL.bufferFrames);
+  }
+
+  takeBuffer(time) {
+    const frame = Math.round(time / (this.scene?.stepMs || FEEL.stepMs));
+    const hit = takeBuffered(this.buffer, frame);
+    if (hit) this.buffer = [];
+    return hit;
+  }
+
+  shakeForHitlag() {
+    const total = Math.max(1, this.hitlagTotal || 1);
+    const frame = total - this.hitlagFrames;
+    if (this._hitlagRole === 'attacker') {
+      this._shakeX = 0;
+      this._shakeY = 0;
+      return;
+    }
+    const remain = Math.max(0, 1 - frame / total);
+    const amp = Math.min(2 + (this.hitlagDmg || 0) * 0.35, 9) * remain;
+    const sign = frame % 2 === 0 ? 1 : -1;
+    if (!this._hitGrounded && this.pendingLaunch) {
+      const a = this.pendingLaunch.angle || 0;
+      this._shakeX = Math.cos(a) * amp * sign * (this.pendingLaunch.dir || 1);
+      this._shakeY = Math.sin(a) * amp * sign;
+    } else {
+      this._shakeX = amp * sign;
+      this._shakeY = 0;
+    }
+    const spr = this.rig?.sprite;
+    if (!spr?.setTintFill) return;
+    if (frame < 2) spr.setTintFill(0xffffff);
+    else if (frame < 6) spr.setTint?.(TYPE_COLOR[this.pendingLaunch?.type] ?? 0xff5544);
+    else spr.clearTint?.();
+  }
+
+  releaseLaunch() {
+    const p = this.pendingLaunch;
+    this.pendingLaunch = null;
+    if (!p || !this.body) return;
+    const sx = (this.input?.right ? 1 : 0) - (this.input?.left ? 1 : 0);
+    const sy = (this.input?.down ? 1 : 0) - (this.input?.jump ? 1 : 0);
+    const angle = applyDI(p.angle, sx, sy);
+    const vel = launchVelocity(p.units, angle, p.dir || 1);
+    if (p.pull) vel.x = (p.dir || 1) * p.pull;
+    const stun = hitstunFrames(p.units);
+    this.launch = {
+      x: vel.x, y: vel.y, speed0: Math.hypot(vel.x, vel.y) || 1, type: p.type, units: p.units,
+      balloonLeft: stun > FEEL.balloonHitstun ? Math.min(FEEL.balloonCap, stun - FEEL.balloonHitstun) : 0,
+    };
+    this._diShow = 8;
+    this._diAngle = angle;
+  }
+
+  peelLaunch() {
+    if (!this._appliedLaunch || !this.body) return;
+    this.body.velocity.x -= this._appliedLaunch.x;
+    this.body.velocity.y -= this._appliedLaunch.y;
+    this.body.setVelocity(this.body.velocity.x, this.body.velocity.y);
+    this._appliedLaunch = null;
+  }
+
+  applyLaunch() {
+    if (this.hitlagFrames > 0 || !this.body) return;
+    if (this.launch) this.launch = decayLaunch(this.launch);
+    if (!this.launch) return;
+    this.body.velocity.x += this.launch.x;
+    this.body.velocity.y += this.launch.y;
+    this.body.setVelocity(this.body.velocity.x, this.body.velocity.y);
+    this._appliedLaunch = { x: this.launch.x, y: this.launch.y };
+    if ((this.hurtUnits || 0) > FEEL.tumbleAt) this.spin = (this.spin || 0) + this.launch.x * 0.0009;
+    if (!this.scene?.simFast) this.scene.juice?.trail?.(this);
+    if (this._diShow > 0) this._diShow -= 1;
+  }
+
+  predictKO(units, angle, dir) {
+    const blast = this.scene?.blast;
+    if (!blast) return false;
+    const vel = launchVelocity(units, angle, dir || 1);
+    const g = 1500 * (this.charDef?.stats?.gravityScale ?? 1);
+    return leavesBlast(this.x, this.y, vel.x, vel.y, g, blast);
+  }
+
+  flipFacing(dir) {
+    this.facing = dir;
+    if (this.activeHit) this.activeHit.dir = dir;
+    if (this.dashVX) this.dashVX = dir * Math.abs(this.dashVX);
+  }
+
+  tryLedge(time) {
+    const ledges = this.scene?.ledges;
+    if (!ledges?.length || (this.ledgeLock || 0) > time) return;
+    const handX = this.x + (this.facing || 1) * this.bodyW * 0.35;
+    const handY = this.y - this.bodyH * 0.85;
+    for (const L of ledges) {
+      if (Math.abs(handX - L.x) > FEEL.ledgeW) continue;
+      if (handY < L.y - FEEL.ledgeH || handY > L.y + 8) continue;
+      this.grabLedge(L, time);
+      return;
+    }
+  }
+
+  grabLedge(L, time) {
+    const step = this.scene?.stepMs || FEEL.stepMs;
+    this.state = 'ledge';
+    this.facing = L.facing;
+    this.ledge = L;
+    this.ledgeX = L.x + L.facing * this.bodyW * 0.2;
+    this.ledgeY = L.y + this.bodyH * 0.62;
+    this.ledgeFrames = 0;
+    this.launch = null;
+    this._appliedLaunch = null;
+    this.body.allowGravity = false;
+    this.body.setVelocity(0, 0);
+    this.body.reset?.(this.ledgeX, this.ledgeY);
+    if (!this.ledgeRegrab) {
+      this.phasingUntil = time + FEEL.ledgeIntang * step;
+      this.ledgeRegrab = true;
+    }
+    if (!this.scene?.simFast) sfx('ledge');
+  }
+
+  holdLedge(time, step) {
+    this.ledgeFrames = (this.ledgeFrames || 0) + 1;
+    this.body.allowGravity = false;
+    this.body.setVelocity(0, 0);
+    this.body.reset?.(this.ledgeX, this.ledgeY);
+    this.x = this.ledgeX;
+    this.y = this.ledgeY;
+    const inp = this.input || {};
+    const pressedJump = !!inp.jump && !this._prev.jump;
+    const pressedAttack = !!inp.attack && !this._prev.attack;
+    this._prev.jump = !!inp.jump;
+    this._prev.attack = !!inp.attack;
+    this._prev.special = !!inp.special;
+    const away = (this.facing === 1 && inp.left) || (this.facing === -1 && inp.right);
+    const toward = (this.facing === 1 && inp.right) || (this.facing === -1 && inp.left);
+    if (pressedJump || (inp.jump && toward)) {
+      this.leaveLedge();
+      this.body.setVelocity(-this.charDef.stats.jumpVelocity, 0);
+      this.body.setVelocityY(-this.charDef.stats.jumpVelocity);
+      this.body.setVelocityX(this.facing * 90);
+      this.state = 'jump';
+      return;
+    }
+    if (pressedAttack || toward) {
+      this.leaveLedge();
+      this.phasingUntil = time + 12 * step;
+      this.body.reset?.(this.ledge.x + this.facing * 36, this.ledge.y);
+      this.state = 'idle';
+      return;
+    }
+    if (inp.down || away || this.ledgeFrames > FEEL.ledgeMax) {
+      this.leaveLedge();
+      this.ledgeLock = time + 20 * step;
+      this.body.setVelocityY(140);
+      this.state = 'fall';
+    }
+  }
+
+  leaveLedge() {
+    if (this.body) this.body.allowGravity = true;
+    this.ledge = null;
   }
 
   weightNow() {
@@ -901,7 +1268,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.state = 'ko';
     this.body.setVelocity(0, 0);
     this.body.setEnable(false);
-    this.setVisible(false);
+    this.launch = null;
+    this._appliedLaunch = null;
+    this._koHide = this.scene?.simFast ? 0 : 2;
+    if (this._koHide <= 0) this.setVisible(false);
 
     if (this.stocks <= 0) {
       this.state = 'dead';
@@ -920,7 +1290,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.rig.setFlash(null);
       this.rig.rotation = 0;
       // brief respawn invulnerability flicker
-      this.scene.tweens.add({ targets: this, alpha: 0.35, yoyo: true, repeat: 5, duration: 120, onComplete: () => (this.alpha = 1) });
+      this.scene.tweens.add({ targets: this, alpha: 0.35, yoyo: true, repeat: 8, duration: 62, onComplete: () => (this.alpha = 1) });
     });
   }
 }

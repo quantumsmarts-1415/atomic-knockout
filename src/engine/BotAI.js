@@ -22,6 +22,10 @@ import { nodeAt, findPath, jumpReach, liftAt, reachableFrom } from './BotNav.js'
 
 export function computeBotInput(time, bot, fighters, bounds, nav = null) {
   const input = { left: false, right: false, jump: false, attack: false, special: false };
+  if (bot.state === 'ledge') {
+    input.jump = true;
+    return input;
+  }
 
   const targets = fighters.filter((f) => f !== bot && f.alive && f.state !== 'ko' && f.state !== 'dead');
   if (nav) return navBotInput(time, bot, targets, nav);

@@ -22,7 +22,14 @@ function die(scene, obj, ms = 280) {
   });
 }
 
+function sparkle(scene, x, y, color, n) {
+  if (!scene.juice?.sparkle) return false;
+  scene.juice.sparkle(x, y, color, n);
+  return true;
+}
+
 function ring(scene, x, y, color, radius, width = 4) {
+  if (sparkle(scene, x, y, color, Math.max(4, Math.round((radius || 40) / 18)))) return null;
   if (!scene.add?.graphics) return null;
   const g = scene.add.graphics();
   g.lineStyle?.(width, color, 0.95);
@@ -37,6 +44,7 @@ function ring(scene, x, y, color, radius, width = 4) {
 }
 
 function burst(scene, x, y, color, n = 10, speed = 140) {
+  if (sparkle(scene, x, y, color, Math.min(8, n))) return;
   if (!scene.add?.circle) return;
   for (let i = 0; i < n; i++) {
     const a = (Math.PI * 2 * i) / n;
@@ -53,6 +61,7 @@ function burst(scene, x, y, color, n = 10, speed = 140) {
 }
 
 function gather(scene, x, y, color) {
+  if (sparkle(scene, x, y, color, 5)) return;
   const core = scene.add.circle?.(x, y, 8, color, 0.55);
   if (core) die(scene, core, 180);
   ring(scene, x, y, color, 36, 2);
@@ -91,7 +100,7 @@ function shieldBubble(scene, fighter, color) {
   const y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
   const c = scene.add.circle?.(fighter.x, y, (fighter.bodyW ?? 40) * 0.95, color, 0.18);
   if (!c) return;
-  c.setStrokeStyle?.(3, 0xffffff, 0.8);
+  c.setStrokeStyle?.(2, color, 0.65);
   die(scene, c, 500);
 }
 

@@ -148,10 +148,13 @@ export default class BattleScene extends Phaser.Scene {
     };
     const { width: WW, height: WH } = this.world;
     const players = this.setup.players?.length || 2;
-    const cap = players >= 3 ? FEEL.camMaxMulti : FEEL.camMax1;
+    const feelCap = players >= 3 ? FEEL.camMaxMulti : FEEL.camMax1;
+    // A stage maxZoom is a ceiling (Carbon Skyhook must still show its
+    // whole world). It does not raise the close-fight cap.
+    const cap = stageCam.maxZoom != null ? Math.min(feelCap, stageCam.maxZoom) : feelCap;
     const minZoom = Math.min(1, Math.max(W / WW, H / WH, stageCam.minZoom ?? 0));
     this.camRig = {
-      cfg, minZoom, maxZoom: Math.max(minZoom, cap, stageCam.maxZoom ?? 0),
+      cfg, minZoom, maxZoom: Math.max(minZoom, cap),
       zoom: minZoom, cx: WW / 2, cy: WH / 2, first: true, uiMode: false,
     };
     const main = this.cameras.main;
@@ -197,20 +200,24 @@ export default class BattleScene extends Phaser.Scene {
     if (live.length) {
       let x0 = Infinity; let x1 = -Infinity; let y0 = Infinity; let y1 = -Infinity;
       const blast = this.blast;
+      const lead = FEEL.camBlastLead;
       for (const f of live) {
-        const near = blast && (f.x < blast.left + 120 || f.x > blast.right - 120 || f.y < blast.top + 60 || f.y > blast.bottom - 80);
-        if (near) {
-          // Keep a launched fighter in frame for a few frames so the zoom
-          // eases out instead of popping when they cross the margin.
-          f._camHold = (f._camHold ?? 0) - 1;
-          if (f._camHold < 0) continue;
-        } else {
-          f._camHold = 18;
-        }
         const vx = f.body?.velocity?.x || 0;
         const vy = f.body?.velocity?.y || 0;
-        const fx = Phaser.Math.Clamp(f.x + vx * FEEL.camLook, 0, WW);
-        const fy = Phaser.Math.Clamp(f.y + vy * FEEL.camLook, 0, WH);
+        // Launches stay in the box and pull it toward the blast line they
+        // are flying at, so the trajectory stays framed. The zoom eases;
+        // nobody is dropped after a few frames.
+        let leadX = vx * FEEL.camLook;
+        let leadY = vy * FEEL.camLook;
+        const flying = !!f.launch;
+        if (blast && flying) {
+          if (vx < -200 || f.x < blast.left + lead) leadX -= lead;
+          if (vx > 200 || f.x > blast.right - lead) leadX += lead;
+          if (vy < -200 || f.y < blast.top + lead) leadY -= lead;
+          if (vy > 200 || f.y > blast.bottom - lead) leadY += lead * 0.8;
+        }
+        const fx = Phaser.Math.Clamp(f.x + leadX, 0, WW);
+        const fy = Phaser.Math.Clamp(f.y + leadY, 0, WH);
         x0 = Math.min(x0, fx - f.bodyW / 2); x1 = Math.max(x1, fx + f.bodyW / 2);
         y0 = Math.min(y0, fy - f.bodyH); y1 = Math.max(y1, fy);
       }
@@ -231,6 +238,12 @@ export default class BattleScene extends Phaser.Scene {
         if (Math.abs(tx - rig.cx) < dead) tx = rig.cx;
         if (Math.abs(ty - rig.cy) < dead) ty = rig.cy;
       }
+    }
+    if (this.koVictim && this.koZoom) {
+      this.koPoint = {
+        x: this.koVictim.x,
+        y: this.koVictim.y - this.koVictim.bodyH * 0.5,
+      };
     }
     if (this.koPoint && this.koZoom) {
       tx = this.koPoint.x;
@@ -767,12 +780,12 @@ export default class BattleScene extends Phaser.Scene {
     } else {
       const fill = style.fill ?? pal.body;
       if (style.shape === 'balloon') {
-        orb.fillStyle(fill, 0.35);
+        orb.fillStyle(fill, 0.4);
         orb.fillEllipse(0, 0, r * 1.7, r * 2.1);
-        orb.lineStyle(2, 0xffffff, 0.85);
+        orb.lineStyle(2, fill, 0.95);
         orb.strokeEllipse(0, 0, r * 1.7, r * 2.1);
-        orb.fillStyle(0xffffff, 0.7);
-        orb.fillCircle(-r * 0.3, -r * 0.45, r * 0.28);
+        orb.fillStyle(0xfff6e4, 0.7);
+        orb.fillCircle(0, -r * 0.15, r * 0.22);
       } else if (style.shape === 'wave') {
         orb.lineStyle(4, fill, 0.9);
         orb.beginPath();
@@ -782,12 +795,24 @@ export default class BattleScene extends Phaser.Scene {
         orb.lineTo(r, r * 0.45);
         orb.strokePath();
       } else {
-        orb.fillStyle(fill, 0.55);
-        orb.fillCircle(0, 0, r);
-        orb.lineStyle(2.5, 0xffffff, 0.8);
-        orb.strokeCircle(0, 0, r);
-        orb.fillStyle(0xffffff, 0.55);
-        orb.fillCircle(-r * 0.3, -r * 0.3, r * 0.35);
+        // Traveling star in the element color. A white ring and a white
+        // dot read as a placeholder at any zoom.
+        const star = (len, hot) => {
+          orb.fillStyle(hot ? 0xfff4d2 : fill, hot ? 0.95 : 0.92);
+          for (let i = 0; i < 4; i++) {
+            const a = (Math.PI / 2) * i + (hot ? 0.4 : -0.2);
+            const L = hot ? len * 0.5 : len;
+            orb.fillTriangle(
+              Math.cos(a) * L, Math.sin(a) * L,
+              Math.cos(a + 0.55) * L * 0.28, Math.sin(a + 0.55) * L * 0.28,
+              Math.cos(a - 0.55) * L * 0.28, Math.sin(a - 0.55) * L * 0.28,
+            );
+          }
+        };
+        star(r * 1.45, false);
+        star(r * 0.75, true);
+        orb.fillStyle(fill, 1);
+        orb.fillCircle(0, 0, Math.max(2, r * 0.22));
       }
     }
     orb.x = x;
@@ -1057,34 +1082,37 @@ export default class BattleScene extends Phaser.Scene {
     if (this.simFast || this.finishing) return;
     this.finishing = true;
     const finalBlow = !!(info?.final);
-    this.timeScale = finalBlow ? FEEL.koSlow : FEEL.stockSlow;
+    this.finishFinal = finalBlow;
+    // Hold the hit, then drop into slow motion. The zoom tracks the victim.
+    this.timeScale = 0;
+    this.freezeLeft = FEEL.koFreezeFrames;
     this.finishLeft = finalBlow ? FEEL.koSlowFrames : FEEL.stockSlowFrames;
     this.koZoom = FEEL.koZoom;
+    this.koVictim = victim;
     this.koPoint = { x: victim.x, y: victim.y - victim.bodyH * 0.5 };
     this.juice?.addTrauma(0.7);
-    if (finalBlow || info?.charged) this.flashFinish(info?.charged && !finalBlow ? 0x16325a : 0x6a1020);
+    const color = info?.charged && !finalBlow ? 0x16325a : (finalBlow ? 0xff3a2a : 0x3a6cff);
+    this.juice?.koMoment(color, this.blastSide(victim));
     if (!this.simFast) sfx('koHit');
   }
 
-  flashFinish(color) {
-    const g = this.add.graphics().setScrollFactor(0).setDepth(70);
-    const draw = (alpha) => {
-      g.clear();
-      g.fillStyle(color, alpha);
-      for (let i = 0; i < 18; i++) {
-        const a = (Math.PI * 2 * i) / 18;
-        g.fillTriangle(
-          W / 2, H / 2,
-          W / 2 + Math.cos(a) * 900, H / 2 + Math.sin(a) * 900,
-          W / 2 + Math.cos(a + 0.08) * 900, H / 2 + Math.sin(a + 0.08) * 900,
-        );
-      }
-    };
-    draw(0.45);
-    this.tweens.add({
-      targets: g, alpha: 0, duration: 420, ease: 'Sine.easeOut',
-      onComplete: () => g.destroy(),
-    });
+  /** Which screen edge a launch is heading for. */
+  blastSide(victim) {
+    const blast = this.blast;
+    if (blast) {
+      const scores = [
+        ['left', victim.x - blast.left],
+        ['right', blast.right - victim.x],
+        ['top', victim.y - blast.top],
+        ['bottom', blast.bottom - victim.y],
+      ];
+      scores.sort((a, b) => a[1] - b[1]);
+      return scores[0][0];
+    }
+    const vx = victim.body?.velocity?.x || 0;
+    const vy = victim.body?.velocity?.y || 0;
+    if (Math.abs(vx) >= Math.abs(vy)) return vx < 0 ? 'left' : 'right';
+    return vy < 0 ? 'top' : 'bottom';
   }
 
   hitSpark(x, y) {
@@ -1133,11 +1161,19 @@ export default class BattleScene extends Phaser.Scene {
 
   present(dt) {
     this.visualT += dt / 1000;
-    if (this.finishLeft > 0) {
+    if (this.freezeLeft > 0) {
+      this.timeScale = 0;
+      this.freezeLeft -= 1;
+      if (this.freezeLeft <= 0) {
+        this.timeScale = this.finishFinal ? FEEL.koSlow : FEEL.stockSlow;
+      }
+    } else if (this.finishLeft > 0) {
       this.finishLeft -= 1;
       if (this.finishLeft <= 0) {
         this.ramping = FEEL.koRampFrames;
         this.koZoom = null;
+        this.koPoint = null;
+        this.koVictim = null;
       }
     } else if (this.ramping > 0) {
       this.ramping -= 1;
@@ -1158,6 +1194,7 @@ export default class BattleScene extends Phaser.Scene {
       guard++;
     }
     this.renderInterp();
+    for (const f of this.fighters || []) f.tickHitFlash?.();
     this.juice?.update(dt / 1000);
     if (!this.simFast) this.updateCamera(dt);
   }
@@ -1592,23 +1629,9 @@ export default class BattleScene extends Phaser.Scene {
     sfx('cheer');
     this.juice?.koLine(f);
     this.juice?.addTrauma(0.5);
-    // burst of lines at the blast point, clamped on-screen (to the camera
-    // view on camera stages -- same as the screen everywhere else)
-    const v = this.camRig ? this.cameras.main.worldView : { x: 0, y: 0, right: W, bottom: H };
-    const x = Phaser.Math.Clamp(f.x, v.x + 30, v.right - 30);
-    const y = Phaser.Math.Clamp(f.y, v.y + 30, v.bottom - 30);
-    const pal = f.charDef.palettes[f.paletteIndex];
-    for (let i = 0; i < 10; i++) {
-      const a = (Math.PI * 2 * i) / 10;
-      const line = this.add.rectangle(x, y, 34, 5, pal.body).setRotation(a);
-      this.tweens.add({
-        targets: line,
-        x: x + Math.cos(a) * 110,
-        y: y + Math.sin(a) * 110,
-        alpha: 0, scaleX: 0.2, duration: 320,
-        onComplete: () => line.destroy(),
-      });
-    }
+    // The exit burst is juice.koLine plus the screen-edge flash from
+    // beginFinish. Both fade on the render clock, including while a
+    // capture has the Phaser tween clock asleep.
   }
 
   checkWin() {

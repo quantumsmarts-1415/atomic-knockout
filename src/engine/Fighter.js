@@ -9,7 +9,7 @@ import { play as sfx, playHit } from './sfx.js';
 import {
   FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, launchAngle,
   launchVelocity, applyDI, decayLaunch, leavesBlast, takeBuffered, launchWeight,
-  hitlagShake, TYPE_COLOR,
+  hitlagShake,
 } from './feel.js';
 
 // ---------------------------------------------------------------------------
@@ -1128,6 +1128,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.hitlagTotal = this.hitlagFrames;
     this.hitlagDmg = dmg;
     this._hitlagRole = 'victim';
+    // Three rendered frames of flash. Counted in present(), not in sim
+    // frames, so KO slow-motion cannot stretch it into a white silhouette.
+    if (dmg > 0 && !incoming.isSelf) this._flashShow = 3;
     this._hitGrounded = grounded;
     this.hurtUnits = units;
     this.hurtSign = -dir;
@@ -1212,20 +1215,49 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const kick = hitlagShake(this.hitlagDmg || 0, frame);
     this._shakeX = kick.x;
     this._shakeY = kick.y;
-    const spr = this.rig?.sprite;
-    if (!spr?.setTint) return;
-    // Ghost sheets are translucent RGBA. A tint-fill would paint a solid
-    // silhouette. Multiply instead, so the alpha channel stays the art's.
-    if (this.charDef?.ghost) {
-      if (frame < 6) spr.setTint(frame < 2 ? 0xfff4e4 : (TYPE_COLOR[this.pendingLaunch?.type] ?? 0xff5544));
-      else if (this.rig.paletteTint) spr.setTint(this.rig.paletteTint);
+  }
+
+  /** Sprites that are actually on screen for this pose, including attack clips. */
+  hitFlashTargets() {
+    const rig = this.rig;
+    if (!rig) return [];
+    const out = [];
+    if (rig.sprite) out.push(rig.sprite);
+    if (rig.clipA && rig.clipA.visible) out.push(rig.clipA);
+    return out;
+  }
+
+  applyHitFlash() {
+    // ADD with a ~0.6 gray tint: the body brightens and stays the
+    // character. setTintFill would replace it with an opaque white shape,
+    // and a ghost's alpha would be flattened.
+    for (const spr of this.hitFlashTargets()) {
+      spr.setBlendMode?.(Phaser.BlendModes.ADD);
+      spr.setTint?.(0x999999);
+    }
+  }
+
+  clearHitFlash() {
+    const rig = this.rig;
+    if (!rig) return;
+    for (const spr of [rig.sprite, rig.clipA]) {
+      if (!spr) continue;
+      spr.setBlendMode?.(Phaser.BlendModes.NORMAL);
+      if (rig.paletteTint) spr.setTint?.(rig.paletteTint);
       else spr.clearTint?.();
+    }
+  }
+
+  /** Called once per rendered frame, including capture and KO freeze. */
+  tickHitFlash() {
+    if (this._flashShow == null) return;
+    if (this._flashShow > 0) {
+      this.applyHitFlash();
+      this._flashShow -= 1;
       return;
     }
-    if (!spr.setTintFill) return;
-    if (frame < 2) spr.setTintFill(0xffffff);
-    else if (frame < 6) spr.setTint?.(TYPE_COLOR[this.pendingLaunch?.type] ?? 0xff5544);
-    else spr.clearTint?.();
+    this.clearHitFlash();
+    this._flashShow = null;
   }
 
   releaseLaunch() {

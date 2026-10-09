@@ -114,7 +114,15 @@ for (let frame = 0; frame < frames; frame++) {
       if (frame >= 70 && frame < 92) { hero.facing = -1; hk.left.isDown = true; hk.attack.isDown = true; }
       if (frame === 130) { pin(hero, 700, 1); pin(foe, 760, -1); foe.percent = 0; foe.stocks = 5; }
       if (frame >= 142 && frame < 168) { hk.right.isDown = true; hk.attack.isDown = true; }
-      if (frame === 250) { pin(hero, 1060, 1); pin(foe, 1130, -1); foe.percent = 280; foe.stocks = 1; }
+      if (frame === 200) { pin(hero, 1060, 1); pin(foe, 1130, -1); foe.stocks = 1; }
+      // High-percent hit: climb in small steps with a spark, then swing.
+      // A one-frame jump to 280 reads as a HUD bug in the clip.
+      if (frame >= 200 && frame < 250 && frame % 5 === 0 && foe.percent < 160) {
+        foe.percent += 16;
+        foe.damageTaken = (foe.damageTaken || 0) + 16;
+        hero.damageDealt = (hero.damageDealt || 0) + 16;
+        b.juice?.sparkle?.(foe.x, foe.y - foe.bodyH * 0.5, 0xff7a22, 4);
+      }
       if (frame >= 262 && frame < 300) { hk.right.isDown = true; hk.attack.isDown = true; }
       if (frame === 460) { pin(hero, 520, 1); pin(foe, 900, -1); }
       if (frame >= 472 && frame < 545) hk.attack.isDown = true;
@@ -133,21 +141,34 @@ for (let frame = 0; frame < frames; frame++) {
       if (frame % 30 === 0) pin(foe, 1120, -1);
       hk.right.isDown = true;
     } else if (scriptName === 'match') {
-      // CPUs play so the camera has to follow them, then a scripted hit near
-      // the blast line produces a KO the short clip can actually show.
-      for (const f of b.fighters) f.isBot = frame < 240;
-      if (frame === 240) {
-        pin(hero, 1060, 1);
-        pin(foe, 1130, -1);
-        foe.percent = 220;
+      // Three fighters stay in a close group so the camera can zoom, then
+      // a real swing at the lip KOs. Percent climbs in small sparked steps
+      // while they are in the fight — never a one-frame jump to 220.
+      for (const f of b.fighters) f.isBot = false;
+      const third = b.fighters[2];
+      if (frame === 0) {
+        pin(hero, 520, 1);
+        pin(foe, 640, -1);
+        if (third) pin(third, 800, -1);
         foe.stocks = 1;
-        const third = b.fighters[2];
-        if (third) {
-          pin(third, 280, 1);
-          third.percent = 30;
-        }
       }
-      if (frame >= 252 && frame < 320) {
+      if (frame >= 24 && frame < 70) { hk.right.isDown = true; hk.attack.isDown = true; }
+      if (frame >= 90 && frame <= 180 && frame % 12 === 0 && foe.percent < 150) {
+        const step = 10;
+        foe.percent += step;
+        foe.damageTaken = (foe.damageTaken || 0) + step;
+        hero.damageDealt = (hero.damageDealt || 0) + step;
+        const hx = foe.x;
+        const hy = foe.y - (foe.bodyH || 80) * 0.55;
+        b.juice?.hit?.(hx, hy, step, 'heat', 0);
+        b.juice?.sparkle?.(hx, hy, 0xff7a22, 5);
+      }
+      if (frame === 200) {
+        pin(hero, 980, 1);
+        pin(foe, 1088, -1);
+        if (third) pin(third, 820, -1);
+      }
+      if (frame >= 214 && frame < 280) {
         hk.right.isDown = true;
         hk.attack.isDown = true;
       }

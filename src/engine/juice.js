@@ -393,6 +393,73 @@ export class Juice {
     });
   }
 
+  /**
+   * Charge ticks, projectile births and other one-shots. Textured stars
+   * and streaks in the element color, stepped here so a capture sees
+   * them fade. Not a white ring and not a row of dots.
+   */
+  sparkle(x, y, color, n = 6) {
+    if (this.fast) return;
+    const tint = color ?? 0xfff2a8;
+    const star = this.borrow(TEX.star);
+    if (star) {
+      star.setPosition(x, y).setTint(tint).setDepth(36).setBlendMode(Phaser.BlendModes.ADD);
+      this.track(star, { kind: 'spark', life: 0.22, scale0: 0.32, scale1: 0.85, alpha0: 0.9 });
+    }
+    const count = Math.max(3, Math.min(8, n | 0));
+    for (let i = 0; i < count; i++) {
+      const bit = this.borrow(i % 3 === 0 ? TEX.slash : TEX.streak);
+      if (!bit) break;
+      const a = (Math.PI * 2 * i) / count + i * 0.2;
+      bit.setPosition(x, y).setTint(tint).setRotation(a).setDepth(35).setBlendMode(Phaser.BlendModes.ADD);
+      this.track(bit, {
+        kind: 'line',
+        life: 0.16 + (i % 3) * 0.04,
+        scale0: 0.4,
+        scale1: 0.8,
+        alpha0: 0.85,
+        vx: Math.cos(a) * (140 + i * 22),
+        vy: Math.sin(a) * (110 + i * 16),
+      });
+    }
+  }
+
+  /**
+   * KO hit: a half-second screen flash plus a colored burst on the screen
+   * edge the victim is leaving. Lifetimes live on fx, not on a tween, so
+   * the capture clock fades them.
+   */
+  koMoment(color, side = 'right') {
+    if (this.fast) return;
+    const cam = this.scene.scale;
+    const W = cam?.width || 1280;
+    const H = cam?.height || 720;
+    const life = 0.5;
+    const flash = this.scene.add.rectangle(W / 2, H / 2, W + 8, H + 8, color, 0.5)
+      .setScrollFactor(0).setDepth(84);
+    this.fx.push({ kind: 'gfx', g: flash, life, max: life, alpha0: 0.5 });
+    const g = this.scene.add.graphics().setScrollFactor(0).setDepth(85);
+    g.fillStyle(color, 1);
+    const rays = 16;
+    const reach = 200;
+    if (side === 'left' || side === 'right') {
+      const x0 = side === 'right' ? W : 0;
+      const dir = side === 'right' ? -1 : 1;
+      for (let i = 0; i < rays; i++) {
+        const y = ((H + 40) / rays) * i - 10;
+        g.fillTriangle(x0, y, x0, y + 28, x0 + dir * reach, y + 14);
+      }
+    } else {
+      const y0 = side === 'bottom' ? H : 0;
+      const dir = side === 'bottom' ? -1 : 1;
+      for (let i = 0; i < rays; i++) {
+        const x = ((W + 40) / rays) * i - 10;
+        g.fillTriangle(x, y0, x + 40, y0, x + 20, y0 + dir * reach);
+      }
+    }
+    this.fx.push({ kind: 'gfx', g, life, max: life, alpha0: 0.8 });
+  }
+
   puff(x, y, color, scale = 0.6) {
     if (this.fast) return;
     const keys = [TEX.puff, TEX.puffB, TEX.puffC];

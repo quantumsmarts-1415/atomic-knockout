@@ -79,17 +79,17 @@ test('DI rotates the launch and a strong hit can leave the blast zone', () => {
 
 test('attack poses wind up, lunge along the swing, and overshoot on the way out', () => {
   const wind = poseTarget('attack', { facing: 1, phase: 'startup' });
-  assert.strictEqual(wind.x, -8);
-  assert.strictEqual(wind.sx, 1.08);
-  assert.strictEqual(wind.sy, 0.92);
+  assert.strictEqual(wind.x, -14);
+  assert.strictEqual(wind.sx, 1.14);
+  assert.strictEqual(wind.sy, 0.86);
   const strike = poseTarget('attack', { facing: 1, phase: 'active' });
-  assert.strictEqual(strike.x, 14);
-  assert.strictEqual(strike.sx, 1.1);
+  assert.strictEqual(strike.x, 24);
+  assert.strictEqual(strike.sx, 1.18);
   assert.ok(strike.sx > strike.sy);
   const back = poseTarget('attack', { facing: -1, phase: 'startup' });
-  assert.strictEqual(back.x, 8);
+  assert.strictEqual(back.x, 14);
   const follow = poseTarget('attack', { facing: 1, phase: 'recovery', recT: 0 });
-  assert.ok(follow.x >= 14 && follow.x <= 18);
+  assert.ok(follow.x >= 26 && follow.x <= 30);
   const mid = poseTarget('attack', { facing: 1, phase: 'recovery', recT: 0.5 });
   assert.ok(mid.x < -4, `follow-through should overshoot, got ${mid.x}`);
   const rest = poseTarget('attack', { facing: 1, phase: 'recovery', recT: 1 });
@@ -111,8 +111,11 @@ test('launch weight floors light gases and hitlag shake stays horizontal', () =>
   assert.ok(light.x >= 3 && light.x <= 4);
   assert.strictEqual(heavy.x, -5);
   const tight = frameZoom(80, 80, 1280, 720, 1, FEEL.camMax1);
-  assert.ok(tight <= FEEL.camMax1);
-  assert.ok(tight < 1.35);
+  assert.ok(tight <= FEEL.camMax1 + 1e-6);
+  assert.ok(tight >= 1.8 && tight <= 2.05, `close zoom ${tight}`);
+  assert.ok(FEEL.camMinSpanX <= 520 && FEEL.camMinSpanY <= 300);
+  const wide = frameZoom(2400, 1400, 1280, 720, 0.4, FEEL.camMax1);
+  assert.ok(wide < 0.7, `wide zoom ${wide}`);
 });
 
 test('attack strips hold contact instead of spreading frames evenly', () => {

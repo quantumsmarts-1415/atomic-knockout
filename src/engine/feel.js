@@ -87,30 +87,36 @@ export const FEEL = {
   traumaRot: 0.8 * Math.PI / 180,
   traumaReduced: 0.4,
 
-  // Camera.
-  camPadX: 180,
-  camPadTop: 220,
-  camPadBottom: 120,
+  // Camera. A close pair should fill about a quarter of the screen, the
+  // way a Smash 1v1 does, without snapping when someone steps in.
+  camPadX: 160,
+  camPadTop: 150,
+  camPadBottom: 100,
   camLook: 0.04,
-  camMax1: 1.2,
-  camMaxMulti: 1.12,
+  camMax1: 1.95,
+  camMaxMulti: 1.85,
   camPosTau: 200,
   camZoomOutTau: 420,
   camZoomInTau: 320,
-  koZoomTau: 140,
-  // Close fighters still frame this much world, so the zoom cannot snap tight.
-  camMinSpanX: 860,
-  camMinSpanY: 520,
-  camDead: 0.06,
-  koZoom: 1.6,
-  koZoomFrames: 6,
+  koZoomTau: 160,
+  // Floor on the framed world. Tighter than the old 860×520, which kept
+  // every close fight zoomed almost all the way out.
+  camMinSpanX: 520,
+  camMinSpanY: 300,
+  camDead: 0.04,
+  koZoom: 1.9,
+  koZoomFrames: 8,
+  // How far the frame leads a launch, so the blast line stays in view.
+  camBlastLead: 200,
 
-  // Big moments, in real rendered frames.
-  koSlow: 0.25,
-  koSlowFrames: 24,
+  // Big moments, in real rendered frames. Freeze, then about two-thirds
+  // of a second of slow motion, then a short ramp back to full speed.
+  koFreezeFrames: 8,
+  koSlow: 0.32,
+  koSlowFrames: 40,
   koRampFrames: 12,
   stockSlow: 0.5,
-  stockSlowFrames: 10,
+  stockSlowFrames: 16,
 
   particleCap: 400,
 };
@@ -295,8 +301,8 @@ export function launchWeight(weight) {
 
 /**
  * Zoom that frames `span` of the world, never tighter than the minimum span
- * and never past maxZoom. A pair standing together stays at the cap instead
- * of snapping to a close-up.
+ * and never past maxZoom. Close fighters land on the cap (about 1.8–2.0)
+ * instead of a wide establishing shot.
  */
 export function frameZoom(spanX, spanY, viewW, viewH, minZoom, maxZoom) {
   const sx = Math.max(FEEL.camMinSpanX, spanX || 0);
@@ -336,19 +342,20 @@ export function poseTarget(state, ctx) {
   }
   if (state === 'defending') return { rot: 0, sx: 0.96, sy: 1 + Math.sin((ctx.t || 0) * 6) * 0.02, x: 0, y: 0 };
   if (state === 'attack') {
-    // Wind-up pulls back ~8px and squashes ~8%. The strike lunges ~14px and
-    // stretches along the swing (wider, not taller). Follow-through eases
-    // back through a negative overshoot, then rests.
-    if (phase === 'startup') return { rot: -0.2 * facing, sx: 1.08, sy: 0.92, x: -8 * facing, y: 1 };
-    if (phase === 'active') return { rot: 0.16 * facing, sx: 1.1, sy: 0.92, x: 14 * facing, y: -2 };
+    // Wind-up pulls back and squashes. The strike lunges along the swing
+    // (wider, not taller). Follow-through eases back through a negative
+    // overshoot, then rests. Amounts are world pixels; at the close zoom
+    // they read as a real swing instead of a texture swap.
+    if (phase === 'startup') return { rot: -0.32 * facing, sx: 1.14, sy: 0.86, x: -14 * facing, y: 1 };
+    if (phase === 'active') return { rot: 0.26 * facing, sx: 1.18, sy: 0.86, x: 24 * facing, y: -2 };
     const rec = clamp(ctx.recT ?? 1, 0, 1);
     const e = easeOutBack(rec);
     const stretch = Math.max(0, 1 - rec * 1.6);
     return {
-      rot: 0.2 * (1 - e) * facing,
-      sx: 1 + 0.04 * stretch,
-      sy: 1 - 0.02 * stretch,
-      x: 16 * (1 - e) * facing,
+      rot: 0.28 * (1 - e) * facing,
+      sx: 1 + 0.06 * stretch,
+      sy: 1 - 0.03 * stretch,
+      x: 28 * (1 - e) * facing,
       y: 0,
     };
   }

@@ -1619,6 +1619,7 @@ export default class BattleScene extends Phaser.Scene {
           victim: f.charDef.id,
           killer: killer?.charDef.id ?? null,
           t: Math.round(time),
+          percent: Math.round(f.percent),
         });
         f.loseStock();
       }

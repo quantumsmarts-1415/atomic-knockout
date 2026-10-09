@@ -20,14 +20,16 @@ export const FEEL = {
   hitlagCreep: 0.05,
   koHitlagMult: 1.5,
 
-  // Knockback. kbRaw is the existing (base+percent*growth)/weight*scale.
-  // Dividing by kbUnit maps it onto Smash units, where ~100 is a solid hit
-  // and 80 is the tumble line. Lower kbUnit = more launch and more hitstun.
-  kbUnit: 15,
-  // <1 compresses the gap between a tap and a smash so a stray heavy
-  // does not stock the match at low percent. 1 is linear.
-  kbCurve: 0.75,
-  kbPivot: 22,
+  // Knockback. The move still supplies base and growth. Percent is the
+  // loud term: the base is quiet, growth is amplified, and every hit
+  // also adds kbPercent per point of damage so a weak move at 300%
+  // still leaves the stage. kbCurve above 1 stretches that gap further.
+  kbBaseMul: 0.36,
+  kbGrowthMul: 1.15,
+  kbPercent: 1.15,
+  kbUnit: 13,
+  kbCurve: 1.48,
+  kbPivot: 14,
   pxPerUnit: 10.4,
   launchPerUnit: 0.05,
   // Most of a hit's travel happens during hitstun, so fighters separate
@@ -185,8 +187,11 @@ export function idleBlend(fd, frame) {
 }
 
 export function knockbackRaw(base, growth, percent, weight, scale) {
-  const w = Math.max(weight || 1, 0.05);
-  return ((base + percent * (growth ?? 0)) / w) * scale;
+  const p = Math.max(0, percent || 0);
+  const shaped = (base ?? 0) * FEEL.kbBaseMul
+    + p * (growth ?? 0) * FEEL.kbGrowthMul
+    + p * FEEL.kbPercent;
+  return (shaped / launchWeight(weight)) * (scale ?? 1);
 }
 
 /** Smash-style units from the existing knockback number. */

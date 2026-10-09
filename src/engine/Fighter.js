@@ -8,7 +8,8 @@ import { playVfx } from './MoveVfx.js';
 import { play as sfx, playHit } from './sfx.js';
 import {
   FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, launchAngle,
-  launchVelocity, applyDI, decayLaunch, leavesBlast, takeBuffered, launchWeight,
+  knockbackRaw,
+  launchVelocity, applyDI, decayLaunch, leavesBlast, takeBuffered,
   hitlagShake,
 } from './feel.js';
 
@@ -1028,7 +1029,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.percent = Math.min(999, this.percent + dmg);
       this.creditDamage(attacker, dmg, incoming.type);
       if (!gate.noKnockback && !move.isSelf) {
-        const kb = ((incoming.baseKnockback + this.percent * (incoming.knockbackGrowth ?? 0)) / launchWeight(this.weightNow())) * (1 - gate.reduction) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1);
+        const kb = knockbackRaw(
+          incoming.baseKnockback,
+          incoming.knockbackGrowth,
+          this.percent,
+          this.weightNow(),
+          (1 - gate.reduction) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1),
+        );
         this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, false);
       }
       this.noteHeatAndRecoil(attacker, incoming, time, dealt);
@@ -1080,7 +1087,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
       return dmg;
     }
-    let kb = (((incoming.baseKnockback ?? 0) + this.percent * (incoming.knockbackGrowth ?? 0)) / launchWeight(this.weightNow())) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1);
+    let kb = knockbackRaw(
+      incoming.baseKnockback,
+      incoming.knockbackGrowth,
+      this.percent,
+      this.weightNow(),
+      TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1),
+    );
     const pinned = this.state === 'defending' && this.defenseMove?.noKnockback && !incoming.isSelf;
     if (pinned) kb = 0;
     this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, !armored);

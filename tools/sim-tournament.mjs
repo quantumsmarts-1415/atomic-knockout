@@ -145,6 +145,8 @@ function blank() {
   };
 }
 
+const koPercents = { sum: 0, n: 0 };
+
 function addMatch(table, report) {
   const start = report.matchStart ?? 0;
   for (const f of report.fighters) {
@@ -167,6 +169,10 @@ function addMatch(table, report) {
     if (ko.victim && table[ko.victim]) {
       table[ko.victim].koSuffered += 1;
       table[ko.victim].koSufferedTime += dt;
+    }
+    if (Number.isFinite(ko.percent)) {
+      koPercents.sum += ko.percent;
+      koPercents.n += 1;
     }
   }
 }
@@ -328,6 +334,8 @@ async function main() {
     reps: REPS,
     matches: queue.length,
     failures,
+    avgKoPercent: koPercents.n ? Math.round(koPercents.sum / koPercents.n) : null,
+    koCount: koPercents.n,
     outside,
     duels: duelRows,
     ffa: ffaRows,

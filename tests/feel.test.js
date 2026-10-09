@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import {
-  FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, decayLaunch,
+  FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, knockbackRaw, decayLaunch,
   launchVelocity, applyDI, leavesBlast, stripIndex, takeBuffered,
   poseTarget, launchWeight, hitlagShake, frameZoom, easeOutBack,
 } from '../src/engine/feel.js';
@@ -16,6 +16,19 @@ test('hitlag matches the Ultimate table', () => {
   const solo = hitlagFrames(40, { players: 2 });
   assert.ok(heavy < solo);
   assert.ok(hitlagFrames(40) <= FEEL.hitlagCap);
+});
+
+test('percent drives launch much harder than the move base', () => {
+  const scale = 0.72;
+  const strong = (p) => smashUnits(knockbackRaw(180, 5.4, p, 1, scale));
+  const weak = (p) => smashUnits(knockbackRaw(56, 1, p, 1, scale));
+  assert.ok(strong(0) < 8, `0% strong ${strong(0)}`);
+  assert.ok(strong(30) < 25, `30% strong ${strong(30)}`);
+  assert.ok(strong(100) > 60, `100% strong ${strong(100)}`);
+  assert.ok(strong(150) > strong(100) * 1.4, `150% should clearly beat 100%`);
+  assert.ok(weak(30) < 8, `30% weak ${weak(30)}`);
+  assert.ok(weak(300) > 50, `300% weak ${weak(300)}`);
+  assert.ok(hitstunFrames(strong(150)) > hitstunFrames(strong(30)));
 });
 
 test('hitstun is 0.4 knockback units and launch decay reaches zero', () => {

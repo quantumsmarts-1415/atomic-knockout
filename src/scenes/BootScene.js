@@ -256,7 +256,11 @@ export default class BootScene extends Phaser.Scene {
         };
         window.__akResolve = (report) => finish(null, report);
         try {
-          showScene(game.scene.getScene('Boot'), 'Battle', {
+          // The tournament pumps steps on this same call, so Battle has to
+          // exist before the function returns. The menu helper queues its
+          // start for the next frame, which is too late.
+          if (game.scene.isActive('Boot')) game.scene.stop('Boot');
+          game.scene.start('Battle', {
             stageId: opts.stageId || spec.stageId,
             stocks: opts.stocks ?? spec.stocks,
             playtestMs: ms,

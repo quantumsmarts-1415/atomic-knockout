@@ -472,7 +472,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.rig.moveKey = moveKey;
     this.rig.moveSlot = slot; // sheet-mode rigs have separate basic/special clips
     const step = this.scene?.stepMs || FEEL.stepMs;
-    const fd = frameData(move.duration, move.cooldown ?? 0, move, step);
+    const isDash = move.kind === 'dash';
+    const fdMove = isDash && move.startupF == null
+      ? { ...move, startupF: Math.max(1, Math.round(((move.duration ?? step) / step) * 0.05)) }
+      : move;
+    const fd = frameData(move.duration, move.cooldown ?? 0, fdMove, step);
     this.frameData = fd;
     this.attackFrame = 0;
     this._whooshed = false;
@@ -505,11 +509,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (move.kind === 'buff' || move.kind === 'zone') {
       if (move.zone) this.scene.spawnZone?.(this, move.zone, this.x, this.y - this.bodyH * (move.zone.low ? 0.15 : 0.5));
     } else if (move.kind === 'projectile') {
+      // The shot is committed when the move starts. Startup only delays the
+      // spawn, so a trade during the wind-up does not delete it.
       this.scene.time.delayedCall(fd.startup * step, () => {
-        if (this.alive && this.state === 'attack') this.scene.spawnProjectile(this, move);
+        if (this.alive) this.scene.spawnProjectile(this, move);
       });
     } else if (move.kind === 'beam') {
-      const fire = () => { if (this.alive && this.state === 'attack') this.scene.resolveBeam?.(this, move); };
+      const fire = () => { if (this.alive) this.scene.resolveBeam?.(this, move); };
       this.scene.time.delayedCall(move.delayMs ?? fd.startup * step, fire);
     } else if (move.kind === 'dive') {
       const hop = move.dashSpeed ?? 160;
@@ -523,7 +529,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
       // burst hits everything in a radius partway through the animation.
       // Moves that can be interrupted on purpose (Supernova popping early)
       // still go off.
-      this.scene.time.delayedCall((commitBurst ? 1 : fd.startup) * step, () => {
+      const burstAt = commitBurst ? step : Math.round((move.duration ?? step) * 0.4);
+      this.scene.time.delayedCall(burstAt, () => {
         if (this.state === 'attack' || commitBurst) this.scene.resolveBurst(this, move);
       });
     } else {
@@ -534,8 +541,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       // the fighter's own body sweeps forward as the hitbox instead of a
       // static box in front of him -- active almost immediately/for nearly
       // the whole swing, plus a forward-velocity override (see update()).
-      const isDash = move.kind === 'dash';
-      const activeF = isDash ? Math.max(fd.active, Math.round(fd.visible * 0.55)) : fd.active;
+      const activeF = isDash ? Math.max(fd.active, Math.round(fd.durF * 0.9)) : fd.active;
       this.activeHit = {
         move, dir: this.facing, landed: new Set(),
         from: time + fd.startup * step,
@@ -966,7 +972,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       attacker.body?.setVelocity?.(0, 0);
     }
     if (flinch && dmg > 0) {
-      const stun = Math.max(4, hitstunFrames(units));
+      const stun = Math.max(FEEL.hitstunMin, hitstunFrames(units));
       this.state = 'hurt';
       this.stateUntil = time + stun * (this.scene?.stepMs || FEEL.stepMs);
       this.activeHit = null;

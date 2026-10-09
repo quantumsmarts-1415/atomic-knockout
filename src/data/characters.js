@@ -2355,6 +2355,15 @@ for (const def of Object.values(CHARACTERS)) {
   };
   if (MOVESETS[def.id]) def.moves = MOVESETS[def.id];
 }
+// Helium's derived weight and gravity let the new launch carry her out at
+// low percent. Keep the float, but not enough to stock her for free.
+{
+  const helen = CHARACTERS.helen;
+  if (helen?.stats) {
+    helen.stats.weight = Math.max(helen.stats.weight, 0.92);
+    helen.stats.gravityScale = Math.max(helen.stats.gravityScale, 0.98);
+  }
+}
 
 export const ROSTER = Object.values(CHARACTERS);
 

@@ -912,7 +912,8 @@ export default class BattleScene extends Phaser.Scene {
           onHit: z.spec.onHit,
           bonusVsId: z.spec.bonusVsId,
           kind: 'burst',
-          name: z.spec.name ?? 'zone',
+          hitlagMult: 0,
+          _projectile: true,
         });
         if (z.spec.slide) {
           target.slipperyUntil = time + 280;

@@ -122,8 +122,12 @@ for (let frame = 0; frame < frames; frame++) {
       else if (phase >= 140 && phase < 175) hk.special.isDown = true;
       else if (phase >= 190 && phase < 215) { hk.right.isDown = true; hk.special.isDown = true; }
     } else if (scriptName === 'match') {
-      // Let the CPUs play so the camera and a KO can show.
-      for (const f of b.fighters) f.isBot = true;
+      // CPUs play so the camera moves. A high percent makes a KO likely
+      // inside a short clip without scripting the hit.
+      for (const f of b.fighters) {
+        f.isBot = true;
+        if (frame === 45) f.percent = Math.max(f.percent || 0, 140);
+      }
     }
     if (typeof b.captureFrame === 'function') b.captureFrame();
     else b.runSimSteps(1);

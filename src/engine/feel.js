@@ -23,10 +23,17 @@ export const FEEL = {
   // Knockback. kbRaw is the existing (base+percent*growth)/weight*scale.
   // Dividing by kbUnit maps it onto Smash units, where ~100 is a solid hit
   // and 80 is the tumble line. Lower kbUnit = more launch and more hitstun.
-  kbUnit: 14.7,
+  kbUnit: 15,
+  // <1 compresses the gap between a tap and a smash so a stray heavy
+  // does not stock the match at low percent. 1 is linear.
+  kbCurve: 0.75,
+  kbPivot: 22,
   pxPerUnit: 10.4,
-  launchPerUnit: 0.03,
-  launchDecay: 0.051,
+  launchPerUnit: 0.05,
+  // Most of a hit's travel happens during hitstun, so fighters separate
+  // before they can act, matching the old arcade spacing.
+  launchDecay: 0.04,
+  hitstunMin: 16,
   hitstunPerUnit: 0.4,
   tumbleAt: 80,
   trailAt: 60,
@@ -40,10 +47,10 @@ export const FEEL = {
   sakuraiLow: 80,
 
   // Attack frame data, derived from the move's duration and cooldown.
-  startupFrac: 0.30,
-  activeFrac: 0.18,
+  startupFrac: 0.25,
+  activeFrac: 0.55,
   activeMin: 2,
-  activeMax: 5,
+  activeMax: 40,
   endlagFromCooldown: 18,
   idleBlendFrames: 4,
 
@@ -167,7 +174,11 @@ export function knockbackRaw(base, growth, percent, weight, scale) {
 
 /** Smash-style units from the existing knockback number. */
 export function smashUnits(kbRaw) {
-  return Math.max(0, kbRaw) / FEEL.kbUnit;
+  const linear = Math.max(0, kbRaw) / FEEL.kbUnit;
+  const curve = FEEL.kbCurve ?? 1;
+  if (curve === 1 || linear <= 0) return linear;
+  const pivot = FEEL.kbPivot || 72;
+  return pivot * Math.pow(linear / pivot, curve);
 }
 
 export function hitstunFrames(units) {

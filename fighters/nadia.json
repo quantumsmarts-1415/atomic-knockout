@@ -1,0 +1,56 @@
+{
+  "id": "nadia",
+  "name": "Nadia",
+  "element": "Neodymium",
+  "symbol": "Nd",
+  "atomicNumber": 60,
+  "tagline": "Magnet Pull",
+  "teach": "Neodymium makes the strongest permanent magnets. She pulls every metal fighter on the stage toward her.",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "lanthanide",
+    "metal": true,
+    "noble": false,
+    "density": 7.007,
+    "mohs": 1.23,
+    "tensile": 155,
+    "boiling": 3347,
+    "conductivity": 1.6,
+    "en": 1.14
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 15188155,
+      "body": 12872346,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 15188155,
+      "body": 8997736,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 15188155,
+      "body": 14991048,
+      "accent": 14655379,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 15188155,
+      "body": 3743281,
+      "accent": 14655379,
+      "eye": 16055295
+    }
+  ]
+}

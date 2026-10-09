@@ -12,16 +12,18 @@ const PART1 = [
   'curie', 'pat', 'uri', 'neptune', 'pluto', 'amy', 'burke', 'cali', 'einstein',
   'mendel', 'noble', 'fermi', 'lars', 'duke', 'hoss', 'dash', 'copernicus', 'niko', 'flo',
 ];
-const FEMALE = new Set(['curie', 'pat', 'amy', 'cali', 'flo']);
-const GHOSTS = ['duke', 'hoss', 'dash', 'copernicus', 'niko', 'flo'];
+const PART2 = ['ogden', 'ford', 'boar', 'roger', 'gertrude', 'nadia', 'niobe', 'prometheus', 'zora'];
+const FEMALE = new Set(['curie', 'pat', 'amy', 'cali', 'flo', 'gertrude', 'nadia', 'niobe', 'zora']);
+const GHOSTS = ['duke', 'hoss', 'dash', 'copernicus', 'niko', 'flo', 'ford', 'boar', 'roger', 'ogden'];
+const PENDING = [106, 109, 115, 116, 117];
 const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
 
 test('wave 5 part 1 is on the roster with the doc genders', () => {
-  assert.strictEqual(Object.keys(CHARACTERS).length, 104);
-  for (const id of PART1) {
+  assert.strictEqual(Object.keys(CHARACTERS).length, 113);
+  for (const id of [...PART1, ...PART2]) {
     const c = CHARACTERS[id];
     assert.ok(c, id);
-    assert.strictEqual(c.atomicNumber > 90, true, id);
+    if (PART1.includes(id)) assert.strictEqual(c.atomicNumber > 90, true, id);
     for (const slot of SLOTS) assert.ok(c.moves[slot]?.name, `${id} ${slot}`);
     const teach = c.teach || '';
     if (FEMALE.has(id)) assert.match(teach, /\b(she|her)\b/i, id);
@@ -64,21 +66,19 @@ test('ghosts drain, stay light, and keep translucent sheets', () => {
   assert.strictEqual(ghost.percent, 11);
 });
 
-test('the ghost row shows part 1 and marks part 2 coming soon', () => {
+test('the ghost row is playable except the five pending portraits', () => {
   const slots = buildSelectSlots(CHARACTERS);
   const row = slots.filter((s) => s.n >= 104 && s.n <= 118);
   assert.strictEqual(row.length, 15);
   assert.deepStrictEqual(row.map((s) => s.row), Array(15).fill(6));
-  for (const id of GHOSTS) {
+  for (const id of ['ford', 'duke', 'boar', 'hoss', 'dash', 'roger', 'copernicus', 'niko', 'flo', 'ogden']) {
     assert.ok(row.some((s) => s.charId === id), id);
   }
   const soon = row.filter((s) => s.soon);
-  assert.strictEqual(soon.length, COMING_SOON.size);
-  for (const s of soon) {
-    assert.strictEqual(s.charId, null);
-    assert.ok(COMING_SOON.has(s.n));
-  }
-  assert.strictEqual(slots.filter((s) => s.charId).length, 104);
+  assert.deepStrictEqual(soon.map((s) => s.n), PENDING);
+  assert.strictEqual(COMING_SOON.size, 5);
+  for (const s of soon) assert.strictEqual(s.charId, null);
+  assert.strictEqual(slots.filter((s) => s.charId).length, 113);
 });
 
 test('wave 5 move flags change the hit the way the doc describes', () => {

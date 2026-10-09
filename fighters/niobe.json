@@ -1,0 +1,56 @@
+{
+  "id": "niobe",
+  "name": "Niobe",
+  "element": "Niobium",
+  "symbol": "Nb",
+  "atomicNumber": 41,
+  "tagline": "Particle Ring",
+  "teach": "Niobium makes superconducting magnets. She turns to stone, like the myth, and will not be knocked back.",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "transition",
+    "metal": true,
+    "noble": false,
+    "density": 8.582,
+    "mohs": 6,
+    "tensile": 275,
+    "boiling": 5017,
+    "conductivity": 6.7,
+    "en": 1.6
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 12897228,
+      "body": 4886486,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 12897228,
+      "body": 3761039,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 12897228,
+      "body": 11914463,
+      "accent": 10204084,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 12897228,
+      "body": 1975871,
+      "accent": 10204084,
+      "eye": 16055295
+    }
+  ]
+}

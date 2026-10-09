@@ -1335,6 +1335,18 @@ export default class BattleScene extends Phaser.Scene {
         p.returning = true;
         p.landed = new Set();
       }
+      if (p.move.arc && !p.pinned && p.vy) {
+        p.vy += Math.sign(p.vy) * p.move.arc * delta / 1000;
+      }
+      if (p.move.dragMetals && !p.pinned) {
+        const reach = p.move.dragRadius ?? 88;
+        for (const f of this.fighters) {
+          if (f === p.owner || !f.alive || !f.body || !f.charDef?.combat?.metal) continue;
+          if (Math.hypot(f.x - p.gfx.x, (f.y - f.bodyH * 0.5) - p.gfx.y) > reach) continue;
+          f.body.setVelocityX(f.body.velocity.x * 0.82 + p.vx * 0.18);
+          f.body.setVelocityY(f.body.velocity.y * 0.9 + p.vy * 0.06);
+        }
+      }
       if (p.move.homing && !p.pinned) {
         let best = null;
         let bestD = Infinity;

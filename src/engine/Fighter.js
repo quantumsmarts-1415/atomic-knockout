@@ -492,6 +492,19 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this._sharpen = 1;
       }
     }
+    if (move.echoWithin) {
+      const again = this._echoName === move.name && time - (this._echoAt ?? -1e9) < move.echoWithin;
+      this._echoName = move.name;
+      this._echoAt = time;
+      if (again) {
+        const mul = move.echoMult ?? 1.65;
+        move = {
+          ...move,
+          damage: (move.damage ?? 0) * mul,
+          damage2: move.damage2 != null ? move.damage2 * mul : move.damage2,
+        };
+      }
+    }
     this.openedStill = !!(this.body && Math.abs(this.body.velocity.x) < 36 && Math.abs(this.body.velocity.y) < 80);
     if (this.missNext > 0) {
       this.missNext -= 1;
@@ -574,7 +587,24 @@ export default class Fighter extends Phaser.GameObjects.Container {
       // still go off.
       const burstAt = commitBurst ? step : Math.round((move.duration ?? step) * 0.4);
       this.scene.time.delayedCall(burstAt, () => {
-        if (this.state === 'attack' || commitBurst) this.scene.resolveBurst(this, move);
+        if (this.state !== 'attack' && !commitBurst) return;
+        let at;
+        if (move.predict && this.scene?.fighters) {
+          let best = null;
+          let bestD = Infinity;
+          for (const f of this.scene.fighters) {
+            if (f === this || !f.alive || f.state === 'ko' || f.state === 'dead') continue;
+            const d = Math.hypot(f.x - this.x, f.y - this.y);
+            if (d < bestD) { bestD = d; best = f; }
+          }
+          if (best) {
+            const lead = move.predict.lead ?? 0.32;
+            const vx = best.body?.velocity?.x ?? 0;
+            const vy = best.body?.velocity?.y ?? 0;
+            at = { x: best.x + vx * lead, y: best.y - (best.bodyH ?? 80) * 0.45 + vy * lead };
+          }
+        }
+        this.scene.resolveBurst(this, move, at);
       });
     } else {
       // melee: hitbox becomes active partway through the swing. `dir` is
@@ -640,6 +670,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
       damage2: move.damage2 != null ? scale(move.damage2, move.chargeDamageMult) : move.damage2,
       baseKnockback: scale(move.baseKnockback ?? 0, move.chargeKnockbackMult),
       radius: move.radius != null ? scale(move.radius, move.chargeRadiusMult) : move.radius,
+      rangeW: move.rangeW != null && move.chargeRangeMult ? scale(move.rangeW, move.chargeRangeMult) : move.rangeW,
+      hits: Array.isArray(move.hits)
+        ? move.hits.map((h) => ({ ...h, damage: scale(h.damage ?? 0, move.chargeDamageMult) }))
+        : move.hits,
       projectileRadius: move.projectileRadius != null ? scale(move.projectileRadius, move.chargeRadiusMult) : move.projectileRadius,
       projectileSpeed: move.projectileSpeed != null && move.chargeSpeedMult != null
         ? scale(move.projectileSpeed, move.chargeSpeedMult)
@@ -663,6 +697,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (this._storedCharge && move.storeHits) {
       scaled.damage = (scaled.damage ?? 0) + this._storedCharge;
       this._storedCharge = 0;
+    }
+    if (move.stealHeat && this._storedHeat) {
+      scaled.type2 = scaled.type2 ?? 'heat';
+      scaled.damage2 = (scaled.damage2 ?? 0) + this._storedHeat;
+      this._storedHeat = 0;
     }
     if (move.clockWindow) {
       const period = move.clockWindow.period ?? 410;
@@ -804,6 +843,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (this.state === 'charging' && !move.isSelf && !move.isCounterAttack) {
       const store = this.charDef.moves.basicCharge?.storeHits;
       if (store) this._storedCharge = Math.min(store.cap ?? 24, (this._storedCharge ?? 0) + (store.per ?? 3));
+      const steal = this.charDef.moves.basicCharge?.stealHeat;
+      if (steal) {
+        const heat = (move.type === 'heat' ? (move.damage ?? 0) : 0)
+          + (move.type2 === 'heat' ? (move.damage2 ?? move.damage ?? 0) : 0);
+        if (heat) this._storedHeat = Math.min(steal.cap ?? 16, (this._storedHeat ?? 0) + heat * (steal.keep ?? 0.8));
+      }
     }
 
     let incoming = move;
@@ -1006,6 +1051,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const pinned = this.state === 'defending' && this.defenseMove?.noKnockback && !incoming.isSelf;
     if (pinned) kb = 0;
     this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, !armored);
+    if (incoming.onHit?.reverse && this.pendingLaunch) {
+      const back = Math.sign((attacker?.x ?? this.x) - this.x) || -(this.pendingLaunch.dir || 1);
+      this.pendingLaunch.dir = back;
+    }
 
     applyOnHit(attacker, this, incoming, time);
     this.noteHeatAndRecoil(attacker, incoming, time, dealt);
@@ -1282,6 +1331,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const speed = pull.speed ?? 90;
     for (const f of this.scene?.fighters ?? []) {
       if (f === this || !f.alive || f.state === 'ko' || f.state === 'dead' || !f.body) continue;
+      if (pull.metals && !f.charDef?.combat?.metal) continue;
       const dx = this.x - f.x;
       const dy = (this.y - this.bodyH * 0.45) - f.y;
       const d = Math.hypot(dx, dy);

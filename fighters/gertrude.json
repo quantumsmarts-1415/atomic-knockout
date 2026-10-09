@@ -1,0 +1,56 @@
+{
+  "id": "gertrude",
+  "name": "Gertrude",
+  "element": "Germanium",
+  "symbol": "Ge",
+  "atomicNumber": 32,
+  "tagline": "Mendeleev's Prediction",
+  "teach": "Mendeleev predicted germanium before anyone found it. She strikes the spot you are about to stand on.",
+  "height": 132,
+  "facing": 1,
+  "airJumps": 1,
+  "bodyW": 45,
+  "bodyH": 116,
+  "elementData": {
+    "state": "solid",
+    "family": "metalloid",
+    "metal": false,
+    "noble": false,
+    "density": 5.327,
+    "mohs": 6,
+    "tensile": 135,
+    "boiling": 3106,
+    "conductivity": 0.002,
+    "en": 2.01
+  },
+  "palettes": [
+    {
+      "name": "Standard",
+      "skin": 13814693,
+      "body": 8032074,
+      "accent": 11973479,
+      "eye": 16055295
+    },
+    {
+      "name": "Deep",
+      "skin": 13814693,
+      "body": 5792564,
+      "accent": 11973479,
+      "eye": 16055295
+    },
+    {
+      "name": "Pale",
+      "skin": 13814693,
+      "body": 13159593,
+      "accent": 11973479,
+      "eye": 16055295
+    },
+    {
+      "name": "Night",
+      "skin": 13814693,
+      "body": 2696736,
+      "accent": 11973479,
+      "eye": 16055295
+    }
+  ]
+}

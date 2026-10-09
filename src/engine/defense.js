@@ -98,6 +98,47 @@ export function interceptHit(defender, attacker, move, time) {
     return { result: 'negate', rewind: true };
   }
 
+  // Gold foil: most hits pass (phase, below). Every Nth one scatters back at full power.
+  if (defense.foilEvery && !move?.isCounterAttack) {
+    defender._foil = (defender._foil ?? 0) + 1;
+    if (defender._foil % defense.foilEvery === 0) {
+      return {
+        result: 'counter',
+        counter: {
+          name: defense.name,
+          damage: move?.damage ?? 8,
+          type: move?.type ?? 'kinetic',
+          type2: move?.type2,
+          damage2: move?.damage2,
+          baseKnockback: move?.baseKnockback ?? 180,
+          knockbackGrowth: move?.knockbackGrowth ?? 4,
+          isCounterAttack: true,
+        },
+      };
+    }
+  }
+
+  // Polarity flip: metal fighters bounce off. Everyone else is untouched.
+  if (defense.repelMetals && !move?.isCounterAttack) {
+    if (attacker?.charDef?.combat?.metal) {
+      const pow = defense.repelPower ?? 1;
+      return {
+        result: 'counter',
+        counter: {
+          name: defense.name,
+          damage: (move?.damage ?? 6) * pow,
+          type: move?.type ?? 'kinetic',
+          type2: move?.type2,
+          damage2: move?.damage2 != null ? move.damage2 * pow : undefined,
+          baseKnockback: defense.counterKnockback ?? 160,
+          knockbackGrowth: defense.counterKnockbackGrowth ?? 3,
+          isCounterAttack: true,
+        },
+      };
+    }
+    return { result: 'pass' };
+  }
+
   // phase:true dodges everything. phase:'overhead' still takes ground-tagged hits.
   if (defense.phase && !move?.breakPhase && !(defense.phase === 'overhead' && move?.ground)) {
     const ret = defense.phaseRetort;
@@ -230,7 +271,7 @@ export function interceptHit(defender, attacker, move, time) {
         result: 'counter',
         counter: {
           name: defense.name,
-          damage: move.damage ?? 6,
+          damage: (move.damage ?? 6) * (defense.reflectPower ?? 1),
           type: hit,
           baseKnockback: defense.counterKnockback ?? 120,
           knockbackGrowth: defense.counterKnockbackGrowth ?? 2,

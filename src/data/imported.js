@@ -739,6 +739,112 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "boar": {
+    "id": "boar",
+    "name": "Boar",
+    "element": "Bohrium",
+    "symbol": "Bh",
+    "atomicNumber": 107,
+    "tagline": "Quantum Leap",
+    "teach": "Bohrium is a ghost named for Niels Bohr. He leaps between orbits and gores with electrons around his tusks.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-boar",
+      "file": "art-src/imported/boar-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 97,
+        "frameH": 148,
+        "footY": 0.9392,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 97,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 5.1,
+            "loop": true,
+            "frameW": 111,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 202,
+            "frameH": 177,
+            "footY": 0.9096,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "brock": {
     "id": "brock",
     "name": "Brock",
@@ -2743,6 +2849,112 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "ford": {
+    "id": "ford",
+    "name": "Ford",
+    "element": "Rutherfordium",
+    "symbol": "Rf",
+    "atomicNumber": 104,
+    "tagline": "Dense Nucleus",
+    "teach": "Rutherfordium is a ghost. He packs a dense nucleus into his fist, and one hit in eight bounces off his gold foil.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-ford",
+      "file": "art-src/imported/ford-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 107,
+        "frameH": 151,
+        "footY": 0.9404,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 107,
+            "frameH": 151,
+            "footY": 0.9404,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.4,
+            "loop": true,
+            "frameW": 125,
+            "frameH": 152,
+            "footY": 0.9342,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 183,
+            "frameH": 168,
+            "footY": 0.9107,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "frank": {
     "id": "frank",
     "name": "Frank",
@@ -2943,6 +3155,112 @@ export const IMPORTED_ROSTER = {
             "fps": 12,
             "loop": false,
             "frameW": 137,
+            "frameH": 164,
+            "footY": 0.9085,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "gertrude": {
+    "id": "gertrude",
+    "name": "Gertrude",
+    "element": "Germanium",
+    "symbol": "Ge",
+    "atomicNumber": 32,
+    "tagline": "Mendeleev's Prediction",
+    "teach": "Mendeleev predicted germanium before anyone found it. She strikes the spot you are about to stand on.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 13814693,
+        "body": 8032074,
+        "accent": 11973479,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 13814693,
+        "body": 5792564,
+        "accent": 11973479,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 13814693,
+        "body": 13159593,
+        "accent": 11973479,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 13814693,
+        "body": 2696736,
+        "accent": 11973479,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "metalloid",
+      "metal": false,
+      "noble": false,
+      "density": 5.327,
+      "mohs": 6,
+      "tensile": 135,
+      "boiling": 3106,
+      "conductivity": 0.002,
+      "en": 2.01
+    },
+    "art": {
+      "key": "char-gertrude",
+      "file": "art-src/imported/gertrude-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 94,
+        "frameH": 148,
+        "footY": 0.9392,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 94,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.6,
+            "loop": true,
+            "frameW": 116,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 134,
+            "bodyH": 134,
+            "displayScale": 0.98507
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 162,
             "frameH": 164,
             "footY": 0.9085,
             "visibleH": 133,
@@ -4531,6 +4849,112 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "nadia": {
+    "id": "nadia",
+    "name": "Nadia",
+    "element": "Neodymium",
+    "symbol": "Nd",
+    "atomicNumber": 60,
+    "tagline": "Magnet Pull",
+    "teach": "Neodymium makes the strongest permanent magnets. She pulls every metal fighter on the stage toward her.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15188155,
+        "body": 12872346,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15188155,
+        "body": 8997736,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15188155,
+        "body": 14991048,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15188155,
+        "body": 3743281,
+        "accent": 14655379,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "lanthanide",
+      "metal": true,
+      "noble": false,
+      "density": 7.007,
+      "mohs": 1.23,
+      "tensile": 155,
+      "boiling": 3347,
+      "conductivity": 1.6,
+      "en": 1.14
+    },
+    "art": {
+      "key": "char-nadia",
+      "file": "art-src/imported/nadia-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 94,
+        "frameH": 147,
+        "footY": 0.9388,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 94,
+            "frameH": 147,
+            "footY": 0.9388,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 5.8,
+            "loop": true,
+            "frameW": 105,
+            "frameH": 146,
+            "footY": 0.9384,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 197,
+            "frameH": 163,
+            "footY": 0.908,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "neptune": {
     "id": "neptune",
     "name": "Neptune",
@@ -4848,6 +5272,112 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "niobe": {
+    "id": "niobe",
+    "name": "Niobe",
+    "element": "Niobium",
+    "symbol": "Nb",
+    "atomicNumber": 41,
+    "tagline": "Particle Ring",
+    "teach": "Niobium makes superconducting magnets. She turns to stone, like the myth, and will not be knocked back.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 8.582,
+      "mohs": 6,
+      "tensile": 275,
+      "boiling": 5017,
+      "conductivity": 6.7,
+      "en": 1.6
+    },
+    "art": {
+      "key": "char-niobe",
+      "file": "art-src/imported/niobe-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 143,
+        "frameH": 150,
+        "footY": 0.9333,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 143,
+            "frameH": 150,
+            "footY": 0.9333,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 4.8,
+            "loop": true,
+            "frameW": 169,
+            "frameH": 151,
+            "footY": 0.9404,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 177,
+            "frameH": 165,
+            "footY": 0.9091,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "noble": {
     "id": "noble",
     "name": "Noble",
@@ -4949,6 +5479,112 @@ export const IMPORTED_ROSTER = {
             "visibleH": 132,
             "bodyH": 132,
             "displayScale": 1
+          }
+        }
+      }
+    }
+  },
+  "ogden": {
+    "id": "ogden",
+    "name": "Ogden",
+    "element": "Oganesson",
+    "symbol": "Og",
+    "atomicNumber": 118,
+    "tagline": "End of the Table",
+    "teach": "Oganesson is the last element on the table, a ghost of a noble gas. He throws every damage type at once, then the beam is already gone.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 14074060,
+        "body": 9071318,
+        "accent": 12558260,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 14074060,
+        "body": 6507407,
+        "accent": 12558260,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 14074060,
+        "body": 13549279,
+        "accent": 12558260,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 14074060,
+        "body": 2891327,
+        "accent": 12558260,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "noble",
+      "metal": false,
+      "noble": true,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-ogden",
+      "file": "art-src/imported/ogden-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 101,
+        "frameH": 150,
+        "footY": 0.94,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 101,
+            "frameH": 150,
+            "footY": 0.94,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 5.6,
+            "loop": true,
+            "frameW": 115,
+            "frameH": 150,
+            "footY": 0.94,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 160,
+            "frameH": 166,
+            "footY": 0.9096,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
           }
         }
       }
@@ -5796,6 +6432,112 @@ export const IMPORTED_ROSTER = {
       }
     }
   },
+  "prometheus": {
+    "id": "prometheus",
+    "name": "Prometheus",
+    "element": "Promethium",
+    "symbol": "Pm",
+    "atomicNumber": 61,
+    "tagline": "Stolen Fire",
+    "teach": "Promethium powers nuclear batteries. He steals fire while he charges, the way his namesake stole it from the gods.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15188155,
+        "body": 12872346,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15188155,
+        "body": 8997736,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15188155,
+        "body": 14991048,
+        "accent": 14655379,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15188155,
+        "body": 3743281,
+        "accent": 14655379,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "lanthanide",
+      "metal": true,
+      "noble": false,
+      "density": 7.25,
+      "mohs": 0,
+      "tensile": 160,
+      "boiling": 3273,
+      "conductivity": 1.3,
+      "en": 1.13
+    },
+    "art": {
+      "key": "char-prometheus",
+      "file": "art-src/imported/prometheus-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 116,
+        "frameH": 149,
+        "footY": 0.9463,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 116,
+            "frameH": 149,
+            "footY": 0.9463,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.4,
+            "loop": true,
+            "frameW": 147,
+            "frameH": 154,
+            "footY": 0.9416,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 147,
+            "frameH": 208,
+            "footY": 0.9279,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "ray": {
     "id": "ray",
     "name": "Ray",
@@ -6106,6 +6848,112 @@ export const IMPORTED_ROSTER = {
             "visibleH": 132,
             "bodyH": 132,
             "displayScale": 1
+          }
+        }
+      }
+    }
+  },
+  "roger": {
+    "id": "roger",
+    "name": "Roger",
+    "element": "Roentgenium",
+    "symbol": "Rg",
+    "atomicNumber": 111,
+    "tagline": "X-Ray Vision",
+    "teach": "Roentgenium is a ghost named for the discoverer of X-rays. He sees through the stage, and his ray goes through shields.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-roger",
+      "file": "art-src/imported/roger-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 117,
+        "frameH": 150,
+        "footY": 0.9333,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 117,
+            "frameH": 150,
+            "footY": 0.9333,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 5.5,
+            "loop": true,
+            "frameW": 136,
+            "frameH": 150,
+            "footY": 0.9333,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 149,
+            "frameH": 171,
+            "footY": 0.9123,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
           }
         }
       }
@@ -8417,6 +9265,112 @@ export const IMPORTED_ROSTER = {
             "visibleH": 133,
             "bodyH": 133,
             "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "zora": {
+    "id": "zora",
+    "name": "Zora",
+    "element": "Zirconium",
+    "symbol": "Zr",
+    "atomicNumber": 40,
+    "tagline": "Ceramic Blade",
+    "teach": "Zirconium cladding wraps nuclear fuel. She forges a ceramic blade that never dulls and ignores a block.",
+    "ghost": false,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 6.505,
+      "mohs": 5,
+      "tensile": 330,
+      "boiling": 4650,
+      "conductivity": 2.4,
+      "en": 1.33
+    },
+    "art": {
+      "key": "char-zora",
+      "file": "art-src/imported/zora-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 167,
+        "frameH": 181,
+        "footY": 0.9503,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 167,
+            "frameH": 181,
+            "footY": 0.9503,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 8,
+            "loop": true,
+            "frameW": 167,
+            "frameH": 180,
+            "footY": 0.95,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 139,
+            "frameH": 163,
+            "footY": 0.908,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
           }
         }
       }

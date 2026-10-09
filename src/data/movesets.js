@@ -1946,8 +1946,8 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Deep Space Probe', {
       kind: 'projectile', type: R, damage: 0, pierce: true, vfx: 'spark', vfxColor: 0xffe08a,
-      pulse: { type: R, damage: 2.2, every: 420, radius: 52 },
-      projectileSpeed: 110, projectileRadius: 8, projectileLife: 3200,
+      pulse: { type: R, damage: 3.4, every: 360, radius: 58 },
+      projectileSpeed: 140, projectileRadius: 8, projectileLife: 2800,
       baseKnockback: 20, knockbackGrowth: 0.3, duration: 220, cooldown: 1100,
     }),
   },
@@ -2113,12 +2113,12 @@ export const MOVESETS = {
       baseKnockback: 130, knockbackGrowth: 2.2, duration: 220, cooldown: 860,
     }),
     basicDirectional: melee('Medal Swing', {
-      type: K, damage: 8, rangeW: 92, vfx: 'strike', vfxColor: 0xf0d24a,
-      baseKnockback: 130, knockbackGrowth: 2.2, duration: 230, cooldown: 440,
+      type: K, damage: 11, rangeW: 92, vfx: 'strike', vfxColor: 0xf0d24a,
+      baseKnockback: 160, knockbackGrowth: 3.0, duration: 210, cooldown: 380,
     }),
     specialDefense: m('Peace Prize', {
       kind: 'counter', counterDamage: 0, counterType: K, counterKnockback: 0, counterKnockbackGrowth: 0,
-      truce: { ms: 900, push: 300 },
+      truce: { ms: 480, push: 220 },
       duration: 420, cooldown: 1100, vfx: 'shield', vfxColor: 0xfff6d0,
     }),
     specialDirectional: m('Blasting Cap', {
@@ -2151,13 +2151,13 @@ export const MOVESETS = {
 
   duke: {
     basicCharge: m('Long Reign', {
-      kind: 'burst', type: K, damage: 12, type2: R, damage2: 10, perSecond: 1.1, perSecondCap: 16,
+      kind: 'burst', type: K, damage: 10, type2: R, damage2: 8, perSecond: 0.7, perSecondCap: 10,
       chargeDamageMult: 1.25, maxChargeMs: 700, radius: 62, vfx: 'spark', vfxColor: 0xfff2c0,
-      baseKnockback: 220, knockbackGrowth: 5.2, duration: 240, cooldown: 860,
+      baseKnockback: 170, knockbackGrowth: 3.6, duration: 240, cooldown: 860,
     }),
     basicDirectional: melee('Ducal Cleave', {
-      type: K, damage: 16, type2: R, damage2: 12, rangeW: 96, rangeH: 56, vfx: 'strike', vfxColor: 0xffe8a0,
-      baseKnockback: 260, knockbackGrowth: 6.0, duration: 320, cooldown: 560,
+      type: K, damage: 12, type2: R, damage2: 9, rangeW: 96, rangeH: 56, vfx: 'strike', vfxColor: 0xffe8a0,
+      baseKnockback: 190, knockbackGrowth: 4.2, duration: 320, cooldown: 560,
     }),
     specialDefense: m('Fission Split', {
       phase: true,
@@ -2165,17 +2165,17 @@ export const MOVESETS = {
       duration: 480, cooldown: 980, vfx: 'shield', vfxColor: 0xd8ffc0,
     }),
     specialDirectional: m('Heavy Ion Bolt', {
-      kind: 'projectile', type: K, damage: 16, type2: R, damage2: 12, vfx: 'spark', vfxColor: 0xfff6c0,
+      kind: 'projectile', type: K, damage: 12, type2: R, damage2: 9, vfx: 'spark', vfxColor: 0xfff6c0,
       projectileSpeed: 540, projectileRadius: 11, projectileLife: 520,
-      baseKnockback: 320, knockbackGrowth: 7.4, duration: 200, cooldown: 780,
+      baseKnockback: 200, knockbackGrowth: 4.4, duration: 200, cooldown: 780,
     }),
   },
 
   hoss: {
     basicCharge: m('Stampede', {
-      kind: 'dash', type: K, damage: 14, type2: R, damage2: 10, chargeDamageMult: 1.25, chargeDashMult: 1.2,
+      kind: 'dash', type: K, damage: 11, type2: R, damage2: 8, chargeDamageMult: 1.25, chargeDashMult: 1.2,
       maxChargeMs: 700, dashSpeed: 780, hyperArmor: true, rangeW: 110, rangeH: 80, vfx: 'dash', vfxColor: 0xffe0a0,
-      baseKnockback: 240, knockbackGrowth: 5.4, duration: 320, cooldown: 900,
+      baseKnockback: 180, knockbackGrowth: 3.8, duration: 320, cooldown: 900,
     }),
     basicDirectional: melee('Iron Hoof', {
       type: K, damage: 12, rangeW: 78, vfx: 'strike', vfxColor: 0xe8d8c0,
@@ -2187,9 +2187,9 @@ export const MOVESETS = {
       duration: 700, cooldown: 1000, vfx: 'shield', vfxColor: 0xf0e8d0,
     }),
     specialDirectional: m('Lucky Horseshoe', {
-      kind: 'projectile', type: K, damage: 14, luckyEvery: 4, ground: true, vfx: 'strike', vfxColor: 0xffd24a,
+      kind: 'projectile', type: K, damage: 12, luckyEvery: 4, ground: true, vfx: 'strike', vfxColor: 0xffd24a,
       projectileSpeed: 360, projectileRadius: 12, projectileLife: 640,
-      baseKnockback: 260, knockbackGrowth: 5.6, duration: 200, cooldown: 700,
+      baseKnockback: 190, knockbackGrowth: 4.0, duration: 200, cooldown: 700,
     }),
   },
 
@@ -2206,21 +2206,21 @@ export const MOVESETS = {
     }),
     specialDefense: m('Afterimage Decay', {
       phase: true, leaveAfterimage: true,
-      phaseRetort: { type: R, damage: 14, knockback: 160, growth: 3 },
+      phaseRetort: { type: R, damage: 9, knockback: 140, growth: 2.4 },
       duration: 420, cooldown: 860, vfx: 'shield', vfxColor: 0xe8f8ff,
     }),
     specialDirectional: m('Darmstadt Dart', {
-      kind: 'projectile', type: R, damage: 20, vfx: 'spark', vfxColor: 0xf4fbff,
-      projectileSpeed: 980, projectileRadius: 4, projectileLife: 280,
+      kind: 'projectile', type: R, damage: 14, vfx: 'spark', vfxColor: 0xf4fbff,
+      projectileSpeed: 780, projectileRadius: 4, projectileLife: 280,
       baseKnockback: 200, knockbackGrowth: 4.2, duration: 140, cooldown: 640,
     }),
   },
 
   copernicus: {
     basicCharge: m('Heliocentric', {
-      kind: 'burst', type: K, damage: 14, chargeDamageMult: 1.2, chargeRadiusMult: 1.35,
-      maxChargeMs: 800, radius: 120, pull: { radius: 180, speed: 110 }, vfx: 'gust', vfxColor: 0xfff2c8,
-      baseKnockback: 280, knockbackGrowth: 5.6, duration: 240, cooldown: 980,
+      kind: 'burst', type: K, damage: 16, chargeDamageMult: 1.25, chargeRadiusMult: 1.35,
+      maxChargeMs: 800, radius: 120, pull: { radius: 200, speed: 140 }, vfx: 'gust', vfxColor: 0xfff2c8,
+      baseKnockback: 200, knockbackGrowth: 4.0, duration: 240, cooldown: 860,
     }),
     basicDirectional: m('Revolution', {
       kind: 'burst', type: K, damage: 13, type2: R, damage2: 8, radius: 78, vfx: 'spark', vfxColor: 0xfff6d0,
@@ -2248,8 +2248,8 @@ export const MOVESETS = {
       baseKnockback: 80, knockbackGrowth: 1.6, duration: 280, cooldown: 460,
     }),
     specialDefense: m('Nine-Year Wait', {
-      kind: 'counter', counterType: R, counterDamage: 22,
-      counterKnockback: 280, counterKnockbackGrowth: 5.5,
+      kind: 'counter', counterType: R, counterDamage: 16,
+      counterKnockback: 200, counterKnockbackGrowth: 4.0,
       duration: 700, cooldown: 1100, vfx: 'shield', vfxColor: 0xffe0c0,
     }),
     specialDirectional: m('Zinc Ion Beam', {
@@ -2266,18 +2266,218 @@ export const MOVESETS = {
       baseKnockback: 160, knockbackGrowth: 3.4, duration: 240, cooldown: 1000,
     }),
     basicDirectional: melee('Riptide', {
-      kind: 'dash', type: K, damage: 14, type2: R, damage2: 10, angleDeg: 0, dashSpeed: 700,
+      kind: 'dash', type: K, damage: 11, type2: R, damage2: 8, angleDeg: 0, dashSpeed: 700,
       rangeW: 100, rangeH: 64, vfx: 'gust', vfxColor: 0xc8e8ff,
-      baseKnockback: 240, knockbackGrowth: 5.0, duration: 280, cooldown: 520,
+      baseKnockback: 170, knockbackGrowth: 3.6, duration: 280, cooldown: 520,
     }),
     specialDefense: m('Identity Crisis', {
       cycle: [K, C], cycleMs: 280,
       duration: 800, cooldown: 960, vfx: 'shield', vfxColor: 0xe8e0ff,
     }),
     specialDirectional: m('Magic Number', {
-      kind: 'projectile', type: R, damage: 22, vfx: 'spark', vfxColor: 0xf4fff0,
+      kind: 'projectile', type: R, damage: 15, vfx: 'spark', vfxColor: 0xf4fff0,
       projectileSpeed: 500, projectileRadius: 8, projectileLife: 480,
-      baseKnockback: 260, knockbackGrowth: 5.6, duration: 180, cooldown: 820,
+      baseKnockback: 190, knockbackGrowth: 4.0, duration: 180, cooldown: 820,
+    }),
+  },
+
+  zora: {
+    basicCharge: melee('Ceramic Blade', {
+      type: K, damage: 8, breaksBlock: true, chargeDamageMult: 1.5, chargeRangeMult: 1.85,
+      maxChargeMs: 850, rangeW: 64, rangeH: 46, vfx: 'strike', vfxColor: 0xe8eef4,
+      baseKnockback: 110, knockbackGrowth: 2.0, duration: 240, cooldown: 780,
+    }),
+    basicDirectional: melee('Cubic Cut', {
+      type: K, damage: 8, rangeW: 70, vfx: 'spark', vfxColor: 0xf4fbff,
+      baseKnockback: 120, knockbackGrowth: 2.1, duration: 190, cooldown: 400,
+    }),
+    specialDefense: m('Zircaloy Cladding', {
+      immune: [R], kind: 'block', onlyReduce: [H], blockReduction: 0.78,
+      duration: 720, cooldown: 880, vfx: 'shield', vfxColor: 0xd8e4ee,
+    }),
+    specialDirectional: m('Counterfeit Gem', {
+      kind: 'projectile', type: K, damage: 7, explodeOnly: true, explodeRadius: 54, vfx: 'spark', vfxColor: 0xf7fbff,
+      projectileSpeed: 420, projectileRadius: 8, projectileLife: 520,
+      baseKnockback: 100, knockbackGrowth: 1.8, duration: 200, cooldown: 640,
+    }),
+  },
+
+  niobe: {
+    basicCharge: m('Particle Ring', {
+      kind: 'beam', type: E, damage: 7, type2: R, damage2: 6, chargeDamageMult: 1.45, chargeLengthMult: 1.35,
+      maxChargeMs: 850, beamLen: 200, beamThick: 18, vfx: 'laser', vfxColor: 0xb8d0ff,
+      baseKnockback: 90, knockbackGrowth: 1.6, duration: 220, cooldown: 840,
+    }),
+    basicDirectional: melee('Anodized Edge', {
+      type: K, damage: 6, sharpen: { step: 1.5, cap: 8 }, rangeW: 76, vfx: 'strike', vfxColor: 0x9ad0ff,
+      baseKnockback: 90, knockbackGrowth: 1.7, duration: 180, cooldown: 380,
+    }),
+    specialDefense: m('Weeping Stone', {
+      kind: 'block', onlyReduce: [K, H], blockReduction: 0.82, noKnockback: true,
+      duration: 800, cooldown: 960, vfx: 'shield', vfxColor: 0xc8d0e0,
+    }),
+    specialDirectional: m('Magnet Quench', {
+      kind: 'projectile', type: E, damage: 7, type2: H, damage2: 6, explodeOnly: true, explodeRadius: 62,
+      vfx: 'spark', vfxColor: 0xffd0a0,
+      projectileSpeed: 440, projectileRadius: 10, projectileLife: 480,
+      baseKnockback: 110, knockbackGrowth: 1.9, duration: 200, cooldown: 700,
+    }),
+  },
+
+  gertrude: {
+    basicCharge: m("Mendeleev's Prediction", {
+      kind: 'burst', type: K, damage: 7, type2: E, damage2: 6, chargeDamageMult: 1.4, chargeRadiusMult: 1.2,
+      maxChargeMs: 800, radius: 46, predict: { lead: 0.34 }, vfx: 'spark', vfxColor: 0xd0e0ff,
+      baseKnockback: 100, knockbackGrowth: 1.8, duration: 260, cooldown: 860,
+    }),
+    basicDirectional: melee('Point Contact', {
+      type: K, damage: 5, type2: E, damage2: 5, echoWithin: 720, echoMult: 1.7, rangeW: 62,
+      vfx: 'spark', vfxColor: 0xc8dcff,
+      baseKnockback: 80, knockbackGrowth: 1.5, duration: 160, cooldown: 320,
+    }),
+    specialDefense: m('Thermal Lens', {
+      immune: [H], duration: 700, cooldown: 860, vfx: 'shield', vfxColor: 0xffe0c0,
+    }),
+    specialDirectional: m('Crystal Radio Wave', {
+      kind: 'projectile', type: E, damage: 8, angleable: true, arc: 160, vfx: 'spark', vfxColor: 0xb0d4ff,
+      projectileSpeed: 360, projectileRadius: 9, projectileLife: 700,
+      baseKnockback: 80, knockbackGrowth: 1.4, duration: 200, cooldown: 620,
+    }),
+  },
+
+  nadia: {
+    basicCharge: m('Magnet Pull', {
+      kind: 'burst', type: K, damage: 8, chargeDamageMult: 1.4, chargeRadiusMult: 1.15,
+      maxChargeMs: 800, radius: 70, pull: { radius: 240, speed: 160, metals: true }, vfx: 'gust', vfxColor: 0xd8c8ff,
+      baseKnockback: 140, knockbackGrowth: 2.4, duration: 240, cooldown: 900,
+    }),
+    basicDirectional: melee('Bass Drop Punch', {
+      type: K, damage: 7, rangeW: 72, vfx: 'strike', vfxColor: 0xc8b8f0,
+      baseKnockback: 210, knockbackGrowth: 4.4, duration: 220, cooldown: 480,
+    }),
+    specialDefense: m('Polarity Flip', {
+      repelMetals: true, reflectMetals: true, repelPower: 1.15,
+      counterKnockback: 170, counterKnockbackGrowth: 3.2,
+      duration: 640, cooldown: 860, vfx: 'shield', vfxColor: 0xd0c0ff,
+    }),
+    specialDirectional: m('Rotor Throw', {
+      kind: 'projectile', type: K, damage: 6, type2: E, damage2: 5, dragMetals: true, dragRadius: 96,
+      vfx: 'spark', vfxColor: 0xc8b8ff,
+      projectileSpeed: 400, projectileRadius: 12, projectileLife: 560,
+      baseKnockback: 90, knockbackGrowth: 1.6, duration: 200, cooldown: 680,
+    }),
+  },
+
+  prometheus: {
+    basicCharge: melee('Stolen Fire', {
+      type: H, damage: 8, stealHeat: { cap: 14, keep: 0.85 }, chargeDamageMult: 1.35,
+      maxChargeMs: 800, rangeW: 72, vfx: 'fire', vfxColor: 0xff7040,
+      baseKnockback: 110, knockbackGrowth: 2.0, duration: 200, cooldown: 760,
+    }),
+    basicDirectional: melee('Torchbearer Swing', {
+      type: K, damage: 6, type2: H, damage2: 6, rangeW: 80, vfx: 'fire', vfxColor: 0xff8844,
+      baseKnockback: 100, knockbackGrowth: 1.8, duration: 210, cooldown: 420,
+    }),
+    specialDefense: m('Chained to the Rock', {
+      noKnockback: true, regen: 3, regenEvery: 420,
+      duration: 900, cooldown: 1000, vfx: 'shield', vfxColor: 0xc8b090,
+    }),
+    specialDirectional: m('Beta Battery', {
+      kind: 'projectile', type: R, damage: 4, vfx: 'spark', vfxColor: 0xd0ffb0,
+      zone: { type: R, damage: 1.8, ms: 2200, radius: 40, tick: 360, color: 0xd0ffb0 },
+      projectileSpeed: 380, projectileRadius: 8, projectileLife: 520,
+      baseKnockback: 50, knockbackGrowth: 0.8, duration: 200, cooldown: 780,
+    }),
+  },
+
+  ford: {
+    basicCharge: melee('Dense Nucleus', {
+      type: K, damage: 12, type2: R, damage2: 10, chargeDamageMult: 1.35,
+      maxChargeMs: 750, rangeW: 78, rangeH: 52, vfx: 'spark', vfxColor: 0xfff0c0,
+      baseKnockback: 180, knockbackGrowth: 3.8, duration: 220, cooldown: 820,
+    }),
+    basicDirectional: melee('Backscatter', {
+      type: K, damage: 11, type2: R, damage2: 9, onHit: { reverse: true }, rangeW: 76,
+      vfx: 'strike', vfxColor: 0xffe8a0,
+      baseKnockback: 200, knockbackGrowth: 4.0, duration: 200, cooldown: 440,
+    }),
+    specialDefense: m('Gold Foil', {
+      phase: true, foilEvery: 8, duration: 700, cooldown: 960, vfx: 'shield', vfxColor: 0xffe8a0,
+    }),
+    specialDirectional: m('Transmute Ray', {
+      kind: 'beam', type: R, damage: 15, onHit: { scramble: 2200 }, beamLen: 240, beamThick: 16,
+      vfx: 'laser', vfxColor: 0xfff6c0,
+      baseKnockback: 160, knockbackGrowth: 3.4, duration: 180, cooldown: 900,
+    }),
+  },
+
+  boar: {
+    basicCharge: m('Quantum Leap', {
+      kind: 'burst', type: R, damage: 12, chargeDamageMult: 1.3, chargeRadiusMult: 1.2,
+      maxChargeMs: 650, radius: 58, leap: { dist: 190 }, vfx: 'spark', vfxColor: 0xd0f0ff,
+      baseKnockback: 160, knockbackGrowth: 3.4, duration: 200, cooldown: 780,
+    }),
+    basicDirectional: melee('Shell Gore', {
+      kind: 'dash', type: K, damage: 11, type2: E, damage2: 8, dashSpeed: 640, rangeW: 96, rangeH: 64,
+      vfx: 'dash', vfxColor: 0xc8e4ff,
+      baseKnockback: 180, knockbackGrowth: 3.8, duration: 240, cooldown: 460,
+    }),
+    specialDefense: m('Complementarity', {
+      immune: [K], duration: 640, cooldown: 900, vfx: 'shield', vfxColor: 0xd8ecff,
+    }),
+    specialDirectional: m('Spectral Line', {
+      kind: 'beam', type: R, damage: 15, beamLen: 300, beamThick: 8, vfx: 'laser', vfxColor: 0x9ad0ff,
+      baseKnockback: 140, knockbackGrowth: 3.0, duration: 160, cooldown: 820,
+    }),
+  },
+
+  roger: {
+    basicCharge: m('X-Ray Vision', {
+      kind: 'buff', revealAll: true, doubleNext: true, duration: 180, cooldown: 900,
+      vfx: 'spark', vfxColor: 0xe8f4ff,
+    }),
+    basicDirectional: melee('Skeleton Flash', {
+      type: K, damage: 12, type2: R, damage2: 10, onHit: { reveal: true }, rangeW: 74,
+      vfx: 'spark', vfxColor: 0xf4fbff,
+      baseKnockback: 180, knockbackGrowth: 3.8, duration: 160, cooldown: 420,
+    }),
+    specialDefense: m('Crookes Tube', {
+      retort: { type: R, damage: 9, knockback: 140, growth: 2.6 },
+      duration: 520, cooldown: 900, vfx: 'shield', vfxColor: 0xe8f0ff,
+    }),
+    specialDirectional: m('Penetrating Ray', {
+      kind: 'beam', type: R, damage: 16, breaksBlock: true, popShield: true, breakPhase: true,
+      beamLen: 340, beamThick: 14, vfx: 'laser', vfxColor: 0xf4fbff,
+      baseKnockback: 170, knockbackGrowth: 3.6, duration: 160, cooldown: 980,
+    }),
+  },
+
+  ogden: {
+    basicCharge: m('End of the Table', {
+      kind: 'burst', type: K, damage: 4,
+      hits: [
+        { type: H, damage: 4 },
+        { type: E, damage: 4 },
+        { type: C, damage: 4 },
+        { type: R, damage: 4 },
+      ],
+      chargeDamageMult: 1.4, chargeRadiusMult: 1.25,
+      maxChargeMs: 800, radius: 72, vfx: 'supernova', vfxColor: 0xe8e0ff,
+      baseKnockback: 170, knockbackGrowth: 3.6, duration: 240, cooldown: 980,
+    }),
+    basicDirectional: melee('Light-Speed Jab', {
+      type: K, damage: 11, type2: R, damage2: 8, rangeW: 68,
+      vfx: 'strike', vfxColor: 0xf4f0ff,
+      baseKnockback: 160, knockbackGrowth: 3.2, duration: 90, cooldown: 340,
+    }),
+    specialDefense: m('Broken Noble', {
+      reflectTypes: [C, E], reflectPower: 1.4,
+      counterKnockback: 180, counterKnockbackGrowth: 3.4,
+      duration: 640, cooldown: 900, vfx: 'shield', vfxColor: 0xe0d8ff,
+    }),
+    specialDirectional: m('Millisecond Beam', {
+      kind: 'beam', type: R, damage: 18, beamLen: 560, beamThick: 10, vfx: 'laser', vfxColor: 0xf4f0ff,
+      baseKnockback: 200, knockbackGrowth: 4.2, duration: 70, cooldown: 1400,
     }),
   },
 };

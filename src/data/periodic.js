@@ -44,9 +44,8 @@ export const PERIODIC_ELEMENTS = RAW.map(([n, sym, name]) => ({ n, sym, name, ..
 export const TABLE_ROWS = 10;
 export const TABLE_COLS = 18;
 
-// Superheavy ghosts still waiting on wave 5 part 2. Their cells stay on the
-// Rf–Og row and read as coming soon until those fighters are forged.
-export const COMING_SOON = new Set([104, 106, 107, 109, 111, 115, 116, 117, 118]);
+// Portraits still waiting on approval: Sarge (Sg), Mae (Mt), Mac (Mc), Liv (Lv), Tess (Ts).
+export const COMING_SOON = new Set([106, 109, 115, 116, 117]);
 
 /** row/col on an 18-column chart. Row 7 is the blank gap above the f-block. */
 export function tableCell(z) {

@@ -48,6 +48,7 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.markUntil = time + (fx.markMs ?? 3600);
     victim.markedBy = attacker?.charDef?.id ?? null;
   }
+  if (fx.scramble) victim.scrambleUntil = time + (typeof fx.scramble === 'number' ? fx.scramble : 2400);
   if (fx.weaken) {
     victim.weakenUntil = time + (fx.weaken.ms ?? 1600);
     victim.weakenMult = fx.weaken.mult ?? 0.75;
@@ -164,6 +165,17 @@ export function applyOnCast(fighter, move, time, frac = 1) {
   }
   if (move.cleanse) cleanse(fighter, move.cleanse);
   if (move.blinkMs) fighter.phasingUntil = time + move.blinkMs;
+  if (move.revealAll && fighter.scene?.fighters) {
+    for (const other of fighter.scene.fighters) other.phasingUntil = 0;
+  }
+  if (move.doubleNext) fighter.doubleNext = 1;
+  if (move.leap && fighter.body) {
+    const dist = move.leap.dist ?? 170;
+    const up = fighter.input?.jump ? -0.85 : fighter.input?.down ? 0.25 : -0.2;
+    const nx = fighter.x + (fighter.facing || 1) * dist;
+    const ny = fighter.y + up * dist;
+    fighter.body.reset(nx, ny);
+  }
   if (move.redox) {
     fighter.redox = Math.max(fighter.redox ?? 0, frac);
     fighter.bonusHits = 3;
@@ -315,6 +327,19 @@ export function prepareMove(move, attacker, defender, now = 0) {
   }
   if (attacker?.muteAllUntil > now) {
     next = { ...next, damage: 0, damage2: next.damage2 != null ? 0 : next.damage2 };
+  }
+  if (attacker?.scrambleUntil > now) {
+    const types = ['kinetic', 'heat', 'electrical', 'chemical', 'radiation'];
+    const type = types[Math.floor(now / 240) % types.length];
+    next = { ...next, type, type2: undefined, damage2: undefined };
+  }
+  if (attacker?.doubleNext && ((next.damage ?? 0) > 0 || (next.damage2 ?? 0) > 0)) {
+    attacker.doubleNext = 0;
+    next = {
+      ...next,
+      damage: (next.damage ?? 0) * 2,
+      damage2: next.damage2 != null ? next.damage2 * 2 : next.damage2,
+    };
   }
   if (move.sharpen && attacker?._sharpenName === move.name) {
     const bonus = Math.max(0, (attacker._sharpen ?? 1) - 1) * (move.sharpen.step ?? 2);

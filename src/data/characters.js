@@ -2284,7 +2284,12 @@ export const CHARACTERS = {
         bodyH: 667,
         displayScale: 0.1949,
         clips: {
-          idle: { count: 13, fps: 3.6, loop: true },
+          // Same foot line and scale on every frame. The cell does not
+          // refit when a stray pixel shows up, so she stays one size.
+          idle: {
+            count: 13, fps: 3.6, loop: true,
+            footY: 0.9802, visibleH: 667, bodyH: 667, displayScale: 0.1949,
+          },
         },
       },
     },

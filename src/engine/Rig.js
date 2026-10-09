@@ -403,6 +403,9 @@ export class Rig extends Phaser.GameObjects.Container {
       spr.y = this._pose.y;
       spr.rotation = this._pose.rot;
       spr.setScale(base * this._pose.sx, base * this._pose.sy);
+      // art.facing is the source render's native direction. Re-apply it
+      // every pose so a frame change cannot leave her looking backward.
+      spr.setFlipX((this.art?.facing ?? this.charDef?.art?.facing ?? 1) === -1);
     };
     if (this._posingClips) {
       paint(this.clipA);

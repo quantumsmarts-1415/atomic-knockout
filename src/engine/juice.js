@@ -380,16 +380,19 @@ export class Juice {
 
   swing(fighter, move) {
     if (this.fast || !fighter) return;
-    const g = this.scene.add.graphics().setDepth(20);
     const facing = fighter.facing || 1;
-    const reach = (move?.rangeW ?? 72) * 0.8;
-    const a0 = facing === 1 ? -60 * Math.PI / 180 : Math.PI - 40 * Math.PI / 180;
-    const a1 = facing === 1 ? 40 * Math.PI / 180 : Math.PI + 60 * Math.PI / 180;
-    this.arcs.push({
-      g, x: fighter.x + facing * fighter.bodyW * 0.2, y: fighter.y - fighter.bodyH * 0.65,
-      r: Math.max(36, reach), a0, a1,
-      color: SPARK[move?.type] ?? 0xffffff,
-      life: 8 * FEEL.stepMs / 1000, max: 8 * FEEL.stepMs / 1000,
+    const slash = this.borrow(TEX.slash);
+    if (!slash) return;
+    const color = SPARK[move?.type] ?? 0xfff2a8;
+    const reach = Math.max(0.55, (move?.rangeW ?? 72) / 90);
+    slash.setPosition(
+      fighter.x + facing * fighter.bodyW * 0.45,
+      fighter.y - fighter.bodyH * 0.58,
+    );
+    slash.setTint(color).setRotation(facing === 1 ? -0.35 : Math.PI + 0.35).setDepth(20);
+    slash.setBlendMode(Phaser.BlendModes.ADD);
+    this.track(slash, {
+      kind: 'spark', life: 0.16, scale0: reach * 0.75, scale1: reach * 1.35, alpha0: 0.92,
     });
   }
 

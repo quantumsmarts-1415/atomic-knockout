@@ -152,9 +152,11 @@ for (let frame = 0; frame < frames; frame++) {
         if (third) pin(third, 800, -1);
         foe.stocks = 1;
       }
-      if (frame >= 24 && frame < 70) { hk.right.isDown = true; hk.attack.isDown = true; }
-      if (frame >= 90 && frame <= 180 && frame % 12 === 0 && foe.percent < 150) {
-        const step = 10;
+      if (frame >= 24 && frame < 56) { hk.right.isDown = true; hk.attack.isDown = true; }
+      // Stepped damage so the HUD climbs with a spark. The lip swing needs
+      // a high percent to leave the blast line; one assignment of 220 does not.
+      if (frame >= 64 && frame <= 192 && frame % 8 === 0 && foe.percent < 220) {
+        const step = 14;
         foe.percent += step;
         foe.damageTaken = (foe.damageTaken || 0) + step;
         hero.damageDealt = (hero.damageDealt || 0) + step;
@@ -163,12 +165,12 @@ for (let frame = 0; frame < frames; frame++) {
         b.juice?.hit?.(hx, hy, step, 'heat', 0);
         b.juice?.sparkle?.(hx, hy, 0xff7a22, 5);
       }
-      if (frame === 200) {
-        pin(hero, 980, 1);
-        pin(foe, 1088, -1);
-        if (third) pin(third, 820, -1);
+      if (frame === 210) {
+        pin(hero, 1040, 1);
+        pin(foe, 1130, -1);
+        if (third) pin(third, 900, -1);
       }
-      if (frame >= 214 && frame < 280) {
+      if (frame >= 224 && frame < 310) {
         hk.right.isDown = true;
         hk.attack.isDown = true;
       }

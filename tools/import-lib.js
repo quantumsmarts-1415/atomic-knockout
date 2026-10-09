@@ -253,15 +253,33 @@ export function downscale(src, dw, dh) {
 }
 
 export function padFrames(frames, pad = 2) {
-  if (!pad) return frames;
+  return padBox(frames, { left: pad, right: pad, top: pad, bottom: pad });
+}
+
+/** Transparent margin. Attack clips use a wide edge so a sword or hammer
+ *  that was drawn to the cell border no longer sits on it. Every clip gets
+ *  a taller bottom pad so the sole is not the last texel. */
+export function clipPadding(clipName, frameW, frameH) {
+  const edge = clipName === 'attack'
+    ? Math.max(14, Math.round(Math.max(frameW, frameH) * 0.08))
+    : 3;
+  return { left: edge, right: edge, top: edge, bottom: Math.max(edge, 8) };
+}
+
+export function padBox(frames, pad) {
+  const left = pad.left ?? 0;
+  const right = pad.right ?? 0;
+  const top = pad.top ?? 0;
+  const bottom = pad.bottom ?? 0;
+  if (!left && !right && !top && !bottom) return frames;
   return frames.map((frame) => {
-    const w = frame.width + pad * 2;
-    const h = frame.height + pad * 2;
+    const w = frame.width + left + right;
+    const h = frame.height + top + bottom;
     const out = new PNG({ width: w, height: h });
     for (let y = 0; y < frame.height; y++) {
       for (let x = 0; x < frame.width; x++) {
         const si = (y * frame.width + x) << 2;
-        const di = ((y + pad) * w + (x + pad)) << 2;
+        const di = ((y + top) * w + (x + left)) << 2;
         out.data[di] = frame.data[si];
         out.data[di + 1] = frame.data[si + 1];
         out.data[di + 2] = frame.data[si + 2];
@@ -270,6 +288,64 @@ export function padFrames(frames, pad = 2) {
     }
     return out;
   });
+}
+
+export function opaqueSpan(frame) {
+  let x0 = frame.width;
+  let x1 = -1;
+  const { data, width, height } = frame;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (data[((y * width + x) << 2) + 3] <= ALPHA) continue;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+    }
+  }
+  return x1 < 0 ? 0 : x1 - x0 + 1;
+}
+
+function medianNum(values) {
+  if (!values.length) return 0;
+  const s = [...values].sort((a, b) => a - b);
+  return s[Math.floor((s.length - 1) / 2)];
+}
+
+/**
+ * Walk strips are often a shorter canvas with the same character squashed
+ * into it. Stretch Y until the body's width-to-height matches idle.
+ * The comparison uses the measured body and the ink width, not the cell.
+ * Returns 1 when walk is already as tall as idle, and never shrinks a walk.
+ */
+export function walkStretch(idleFrames, walkFrames) {
+  const idleM = measureFrames(idleFrames);
+  const walkM = measureFrames(walkFrames);
+  if (!idleM?.bodyH || !walkM?.bodyH) return 1;
+  const idleW = medianNum(idleFrames.map(opaqueSpan));
+  const walkW = medianNum(walkFrames.map(opaqueSpan));
+  if (!(idleW > 0) || !(walkW > 0)) return 1;
+  const mul = (walkW / walkM.bodyH) / (idleW / idleM.bodyH);
+  if (mul < 1.08) return 1;
+  return Math.min(1.8, mul);
+}
+
+/** Minimum transparent pixels from opaque ink to each side of a frame. */
+export function inkMargin(frame) {
+  let x0 = frame.width;
+  let y0 = frame.height;
+  let x1 = -1;
+  let y1 = -1;
+  const { data, width, height } = frame;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (data[((y * width + x) << 2) + 3] <= ALPHA) continue;
+      if (x < x0) x0 = x;
+      if (y < y0) y0 = y;
+      if (x > x1) x1 = x;
+      if (y > y1) y1 = y;
+    }
+  }
+  if (x1 < 0) return { left: width, right: width, top: height, bottom: height };
+  return { left: x0, right: width - 1 - x1, top: y0, bottom: height - 1 - y1 };
 }
 
 export function packGrid(frames) {

@@ -11,7 +11,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { PNG } from 'pngjs';
 import {
   readPng, resolveStrip, sliceFrames, unionBounds, cropFrames, measureFrames,
-  downscale, packGrid, padFrames, scaleForBody, layoutNumbers, fitPortrait,
+  downscale, packGrid, padBox, clipPadding, walkStretch, scaleForBody, layoutNumbers, fitPortrait,
 } from './import-lib.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -116,7 +116,7 @@ export function characterFromImport(rec) {
   writeFileSync(ROSTER_JS, js);
 }
 
-function buildClip(folder, clipName, manifest, artHeight) {
+function buildClip(folder, clipName, manifest, artHeight, referenceFrames) {
   const file = path.join(folder, `${clipName}.png`);
   if (!existsSync(file)) throw new Error(`missing ${clipName}.png in ${folder}`);
   const spec = manifest.clips?.[clipName];
@@ -129,11 +129,20 @@ function buildClip(folder, clipName, manifest, artHeight) {
   let frames = sliceFrames(png, strip.count, strip.frameW, strip.frameH);
   const box = unionBounds(frames, 2);
   frames = cropFrames(frames, box);
+  let stretch = 1;
+  if (clipName === 'walk' && referenceFrames?.length) {
+    stretch = walkStretch(referenceFrames, frames);
+    if (stretch > 1) {
+      const dh = Math.max(1, Math.round(frames[0].height * stretch));
+      frames = frames.map((frame) => downscale(frame, frame.width, dh));
+    }
+  }
   const measured = measureFrames(frames);
   const scale = scaleForBody(measured, artHeight);
   const dw = Math.max(8, Math.round(frames[0].width * scale));
   const dh = Math.max(8, Math.round(frames[0].height * scale));
-  const scaled = padFrames(frames.map((frame) => downscale(frame, dw, dh)), 2);
+  const fitted = frames.map((frame) => downscale(frame, dw, dh));
+  const scaled = padBox(fitted, clipPadding(clipName, dw, dh));
   const layoutMeasure = measureFrames(scaled) ?? {
     bodyH: Math.max(1, Math.round((measured?.bodyH ?? artHeight) * scale)),
     footY: measured?.footY ?? manifest.footY ?? 0.95,
@@ -145,8 +154,11 @@ function buildClip(folder, clipName, manifest, artHeight) {
   return {
     strip,
     sheet: packGrid(scaled),
-    frameW: dw,
-    frameH: dh,
+    frames: scaled,
+    cropped: clipName === 'idle' ? frames : null,
+    stretch,
+    frameW: scaled[0].width,
+    frameH: scaled[0].height,
     count: strip.count,
     fps: spec.fps ?? (clipName === 'walk' ? 10 : clipName === 'attack' ? 12 : 6),
     loop: clipName === 'attack' ? false : spec.loop !== false,
@@ -167,7 +179,9 @@ export function importFighter(folder, options = {}) {
   if (!meta.palettes?.length) throw new Error(`${metaPath} needs at least one palette`);
   const artHeight = Number(options.height || meta.height || 132);
   const built = {};
-  for (const clip of CLIPS) built[clip] = buildClip(folder, clip, manifest, artHeight);
+  for (const clip of CLIPS) {
+    built[clip] = buildClip(folder, clip, manifest, artHeight, clip === 'walk' ? built.idle?.cropped : null);
+  }
 
   mkdirSync(SHEET_DIR, { recursive: true });
   mkdirSync(PORTRAIT_DIR, { recursive: true });
@@ -263,7 +277,8 @@ function main() {
     const note = b.manifestCount !== b.count ? ` manifest said ${b.manifestCount}` : '';
     console.log(
       `  ${clip}: ${b.count} frames ${b.frameW}x${b.frameH} via ${b.strip.how}${note}`
-      + `  footY ${b.footY} bodyH ${b.bodyH} scale ${b.displayScale}`,
+      + `  footY ${b.footY} bodyH ${b.bodyH} scale ${b.displayScale}`
+      + (b.stretch > 1 ? `  walk×${b.stretch.toFixed(2)}` : ''),
     );
   }
 }

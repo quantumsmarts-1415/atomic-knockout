@@ -10,6 +10,7 @@ import { buildNavGraph } from '../engine/BotNav.js';
 import { startStageIntro } from '../engine/stageIntros.js';
 import { playVfx, projectileStyle } from '../engine/MoveVfx.js';
 import { mulberry32 } from '../engine/rng.js';
+import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 
 const GRAVITY = 1500;
 
@@ -500,30 +501,32 @@ export default class BattleScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------- HUD
   buildHud() {
-    const n = this.fighters.length;
-    // 2 players keeps the original fixed 240px-from-edge layout; 3+ spread
-    // evenly across a narrower band and shrink so panels don't overlap.
-    const margin = n <= 2 ? 240 : 120;
-    const panelW = n <= 2 ? 260 : Math.max(150, (W - margin * 2) / (n - 1) - 20);
-    const scale = panelW / 260;
+    const slots = hudLayout(this.fighters.length, W, H);
     this.hud = this.fighters.map((f, i) => {
-      const x = n === 1 ? W / 2 : margin + (i * (W - margin * 2)) / (n - 1);
+      const slot = slots[i];
+      const { x, panelW, top } = slot;
+      const scale = panelW / 260;
       const pal = f.charDef.palettes[f.paletteIndex];
       // HUD chrome uses the glass-panel look; the border keeps the player's
       // own palette color (thin, not bold) since that's identity, not decor.
       const panel = this.add.graphics();
       panel.fillStyle(0xffffff, 0.03);
-      panel.fillRoundedRect(x - panelW / 2, H - 96, panelW, 78, 16);
+      panel.fillRoundedRect(slot.left, top, panelW, slot.panelH, 16);
       panel.lineStyle(1.5, pal.body, 0.85);
-      panel.strokeRoundedRect(x - panelW / 2, H - 96, panelW, 78, 16);
+      panel.strokeRoundedRect(slot.left, top, panelW, slot.panelH, 16);
 
-      const name = this.add.text(x - panelW / 2 + 18, H - 88, `${f.charDef.name} · ${f.charDef.symbol}${f.isBot ? ' (CPU)' : ''}`, {
-        fontFamily: 'Arial Black, sans-serif', fontSize: `${Math.round(16 * scale)}px`, color: '#d8ecff',
+      const label = `${f.charDef.name} · ${f.charDef.symbol}${f.isBot ? ' (CPU)' : ''}`;
+      const percentSize = Math.max(18, Math.round(28 * scale));
+      const nameMax = panelW - 28 - percentSize * 2.4;
+      const name = this.add.text(slot.left + 14, top + 8, label, {
+        fontFamily: 'Arial Black, sans-serif',
+        fontSize: `${fitLabelSize(label, nameMax, Math.round(16 * scale))}px`,
+        color: '#d8ecff',
       });
-      const percent = this.add.text(x + panelW / 2 - 70 * scale, H - 82, '0%', {
-        fontFamily: 'Arial Black, sans-serif', fontSize: `${Math.round(30 * scale)}px`, color: '#eaf9ff',
-      }).setOrigin(0.5, 0);
-      const stocks = this.add.text(x - panelW / 2 + 18, H - 52, '', {
+      const percent = this.add.text(slot.right - 14, top + 6, '0%', {
+        fontFamily: 'Arial Black, sans-serif', fontSize: `${percentSize}px`, color: '#eaf9ff',
+      }).setOrigin(1, 0);
+      const stocks = this.add.text(slot.left + 14, top + 40, '', {
         fontFamily: 'Arial, sans-serif', fontSize: `${Math.round(20 * scale)}px`, color: '#4ad6ff',
       });
       return { percent, stocks, name };

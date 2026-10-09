@@ -82,8 +82,8 @@ export const MOVESETS = {
       secondHit: { atFull: true, scale: 0.55, radius: 100 },
     }),
     basicDirectional: melee('Precision Strike', {
-      type: K, damage: 7, sweetSpot: 5, rangeW: 78, vfx: 'strike',
-      duration: 200, cooldown: 300,
+      type: K, damage: 7, sweetSpot: 5, rangeW: 70, vfx: 'strike',
+      duration: 250, cooldown: 540,
     }),
     specialDefense: m('Rigid Stance', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.72, noKnockback: true,
@@ -94,7 +94,7 @@ export const MOVESETS = {
       kind: 'projectile', type: K, damage: 9, vfx: 'spark',
       returns: true, angleable: true, pierce: false,
       projectileSpeed: 460, projectileRadius: 12, projectileLife: 1100,
-      baseKnockback: 190, duration: 240, cooldown: 780,
+      baseKnockback: 190, duration: 240, cooldown: 1000,
     }),
   },
 
@@ -129,8 +129,8 @@ export const MOVESETS = {
       baseKnockback: 210, duration: 240, cooldown: 720,
     }),
     basicDirectional: melee('Diamond Cross', {
-      type: K, damage: 9, baseKnockback: 200, rangeW: 76, vfx: 'strike',
-      duration: 220, cooldown: 340,
+      type: K, damage: 9, baseKnockback: 200, rangeW: 70, vfx: 'strike',
+      duration: 250, cooldown: 460,
     }),
     specialDefense: m('Diamond Plating', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.78,
@@ -261,7 +261,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Flare Jab', {
       type: K, damage: 5, type2: H, damage2: 5, vfx: 'fire',
-      duration: 200, cooldown: 300,
+      duration: 250, cooldown: 520,
     }),
     specialDefense: m('Ribbon Guard', {
       blocks: [K],
@@ -269,8 +269,8 @@ export const MOVESETS = {
       duration: 650, cooldown: 680, vfx: 'shield', vfxColor: 0xfff2c9,
     }),
     specialDirectional: m('Blinding Flare', {
-      kind: 'burst', type: H, damage: 11, radius: 96, vfx: 'fire', vfxColor: 0xfff6e0,
-      onHit: { blind: 900 }, baseKnockback: 160, duration: 260, cooldown: 880,
+      kind: 'burst', type: H, damage: 11, radius: 86, vfx: 'fire', vfxColor: 0xfff6e0,
+      onHit: { blind: 900 }, baseKnockback: 160, duration: 260, cooldown: 1040,
     }),
   },
 
@@ -300,7 +300,7 @@ export const MOVESETS = {
       overclock: { speed: 1.4, ms: 2800, selfHeat: 7 }, vfx: 'spark', vfxColor: 0x4ad6ff,
     }),
     basicDirectional: melee('Crystal Blade', {
-      type: K, damage: 9, rangeW: 80, vfx: 'strike', duration: 210, cooldown: 330,
+      type: K, damage: 9, rangeW: 74, vfx: 'strike', duration: 260, cooldown: 520,
     }),
     specialDefense: m('Silica Pane', {
       blocks: [H, C],
@@ -366,7 +366,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Toxic Jab', {
       type: C, damage: 8, vfx: 'cloud', vfxColor: 0xd4e857,
-      duration: 190, cooldown: 300,
+      duration: 240, cooldown: 500,
     }),
     specialDefense: m('Salt Bond', {
       kind: 'counter', counterDamage: 6, counterType: C, counterKnockback: 120,
@@ -375,7 +375,7 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Gas Cloud', {
       kind: 'zone', type: C, damage: 3, vfx: 'cloud', vfxColor: 0xd4e857,
-      zone: { type: C, damage: 3.5, ms: 2400, radius: 78, tick: 360, low: true, color: 0xd4e857 },
+      zone: { type: C, damage: 3.5, ms: 2400, radius: 70, tick: 360, low: true, color: 0xd4e857 },
       baseKnockback: 40, duration: 260, cooldown: 980,
     }),
   },
@@ -471,8 +471,8 @@ export const MOVESETS = {
       baseKnockback: 230, duration: 280, cooldown: 700,
     }),
     basicDirectional: melee('Lance Jab', {
-      type: K, damage: 8, rangeW: 118, rangeH: 36, vfx: 'strike',
-      duration: 230, cooldown: 340,
+      type: K, damage: 8, rangeW: 94, rangeH: 36, vfx: 'strike',
+      duration: 270, cooldown: 520,
     }),
     specialDefense: m('Aerospace Plating', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.62, blocks: [C], noKnockback: true,
@@ -492,7 +492,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Alloy Fist', {
       type: K, damage: 9, breaksBlock: 'weak', vfx: 'strike',
-      baseKnockback: 200, duration: 230, cooldown: 350,
+      baseKnockback: 200, duration: 270, cooldown: 580,
     }),
     specialDefense: m('Four-State Guard', {
       cycle: [E, C, H, K], cycleMs: 360,
@@ -511,8 +511,8 @@ export const MOVESETS = {
       baseKnockback: 150, duration: 200, cooldown: 720,
     }),
     basicDirectional: melee('Chrome Edge', {
-      type: K, damage: 10, rangeW: 80, vfx: 'strike', vfxColor: 0xe8eef2,
-      baseKnockback: 190, duration: 210, cooldown: 330,
+      type: K, damage: 10, rangeW: 74, vfx: 'strike', vfxColor: 0xe8eef2,
+      baseKnockback: 190, duration: 260, cooldown: 560,
     }),
     specialDefense: m('Mirror Chrome', {
       reflectProjectiles: true, duration: 700, cooldown: 720,

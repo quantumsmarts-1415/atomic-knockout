@@ -34,7 +34,7 @@ export const MOVESETS = {
     basicDirectional: melee('Flame Dash', {
       kind: 'dash', type: K, damage: 7, type2: H, damage2: 6,
       dashSpeed: 720, rangeW: 96, rangeH: 100, baseKnockback: 180,
-      knockbackGrowth: 3.4, duration: 300, cooldown: 700, vfx: 'fire',
+      knockbackGrowth: 3.4, duration: 300, cooldown: 780, vfx: 'fire',
     }),
     specialDefense: m('Fire Wall', {
       kind: 'wall', frontOnly: true, duration: 520, cooldown: 680,

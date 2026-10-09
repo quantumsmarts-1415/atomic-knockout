@@ -1135,6 +1135,7 @@ export default class BattleScene extends Phaser.Scene {
       for (const victim of this.fighters) {
         if (victim === attacker || !victim.alive || victim.state === 'ko' || !victim.visible) continue;
         const hit = attacker.activeHit;
+        if (!hit) break;
         if (hit.landed.has(victim)) continue;
         if (hit.next && time < (hit.next.get(victim) ?? 0)) continue;
         if (Phaser.Geom.Rectangle.Overlaps(hb, victim.getHurtboxRect())) {

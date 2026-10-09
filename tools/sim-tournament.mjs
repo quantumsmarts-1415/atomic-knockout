@@ -167,13 +167,13 @@ function finish(table) {
 
 function markdown(rows) {
   const lines = [
-    '| fighter | matches | win% | dealt | taken | KO time (ms) | dealt by type |',
-    '|---|---:|---:|---:|---:|---:|---|',
+    '| fighter | matches | win% | KOs | KOd | dealt | taken | KO time (ms) | dealt by type |',
+    '|---|---:|---:|---:|---:|---:|---:|---:|---|',
   ];
   for (const r of rows) {
     const types = TYPES.map((t) => `${t.slice(0, 4)} ${r.avgDealtByType[t]}`).join(', ');
     const ko = r.avgKoTimeScored == null ? '—' : String(r.avgKoTimeScored);
-    lines.push(`| ${r.id} | ${r.matches} | ${(r.winRate * 100).toFixed(1)} | ${r.avgDamageDealt} | ${r.avgDamageTaken} | ${ko} | ${types} |`);
+    lines.push(`| ${r.id} | ${r.matches} | ${(r.winRate * 100).toFixed(1)} | ${r.kosScored} | ${r.kosSuffered} | ${r.avgDamageDealt} | ${r.avgDamageTaken} | ${ko} | ${types} |`);
   }
   return lines.join('\n');
 }
@@ -205,7 +205,7 @@ async function ensureServer() {
 
 async function openPage(browser) {
   const page = await browser.newPage({ viewport: { width: 480, height: 270 } });
-  page.setDefaultTimeout(90000);
+  page.setDefaultTimeout(Math.max(180000, MS * 4));
   const errors = [];
   page.on('pageerror', (err) => errors.push(String(err)));
   await page.goto(`http://127.0.0.1:${PORT}/?sim=1&stage=${STAGE}&stocks=${STOCKS}&ms=${MS}&speed=8`, {

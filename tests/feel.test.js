@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import {
   FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, decayLaunch,
   launchVelocity, applyDI, leavesBlast, stripIndex, takeBuffered,
+  poseTarget, launchWeight, hitlagShake, frameZoom, easeOutBack,
 } from '../src/engine/feel.js';
 
 test('hitlag matches the Ultimate table', () => {
@@ -74,6 +75,44 @@ test('DI rotates the launch and a strong hit can leave the blast zone', () => {
     left: -140, right: 1420, top: -308, bottom: 860,
   });
   assert.strictEqual(typeof gone, 'boolean');
+});
+
+test('attack poses wind up, lunge along the swing, and overshoot on the way out', () => {
+  const wind = poseTarget('attack', { facing: 1, phase: 'startup' });
+  assert.strictEqual(wind.x, -8);
+  assert.strictEqual(wind.sx, 1.08);
+  assert.strictEqual(wind.sy, 0.92);
+  const strike = poseTarget('attack', { facing: 1, phase: 'active' });
+  assert.strictEqual(strike.x, 14);
+  assert.strictEqual(strike.sx, 1.1);
+  assert.ok(strike.sx > strike.sy);
+  const back = poseTarget('attack', { facing: -1, phase: 'startup' });
+  assert.strictEqual(back.x, 8);
+  const follow = poseTarget('attack', { facing: 1, phase: 'recovery', recT: 0 });
+  assert.ok(follow.x >= 14 && follow.x <= 18);
+  const mid = poseTarget('attack', { facing: 1, phase: 'recovery', recT: 0.5 });
+  assert.ok(mid.x < -4, `follow-through should overshoot, got ${mid.x}`);
+  const rest = poseTarget('attack', { facing: 1, phase: 'recovery', recT: 1 });
+  assert.ok(Math.abs(rest.x) < 0.01);
+  assert.ok(easeOutBack(0.5) > 1);
+  const land = poseTarget('idle', { landing: true, facing: 1 });
+  assert.strictEqual(land.sx, 1.15);
+  assert.strictEqual(land.sy, 0.85);
+});
+
+test('launch weight floors light gases and hitlag shake stays horizontal', () => {
+  assert.strictEqual(launchWeight(0.624), FEEL.launchWeightFloor);
+  assert.strictEqual(launchWeight(1.113), 1.113);
+  assert.ok(FEEL.launchWeightFloor >= 0.86 && FEEL.launchWeightFloor <= 0.9);
+  const light = hitlagShake(4, 0);
+  const heavy = hitlagShake(20, 1);
+  assert.strictEqual(light.y, 0);
+  assert.strictEqual(heavy.y, 0);
+  assert.ok(light.x >= 3 && light.x <= 4);
+  assert.strictEqual(heavy.x, -5);
+  const tight = frameZoom(80, 80, 1280, 720, 1, FEEL.camMax1);
+  assert.ok(tight <= FEEL.camMax1);
+  assert.ok(tight < 1.35);
 });
 
 test('attack strips hold contact instead of spreading frames evenly', () => {

@@ -70,9 +70,16 @@ export const FEEL = {
   ledgeIntang: 30,
   ledgeMax: 300,
 
-  // Pose spring. k and damp are per 60 Hz frame, scaled by dt.
+  // Pose spring. Kept for callers that ease a value; the rig snaps to
+  // poseTarget so a short wind-up actually reaches the pose.
   poseK: 600,
   poseDamp: 0.72,
+  // Knockback never divides by a weight below this, so a light gas is not
+  // launched ~1.6× farther than the rest of the cast. Movement weight is unchanged.
+  launchWeightFloor: 0.87,
+  afterimageCap: 4,
+  afterimageAlpha: 0.42,
+  afterimageFrames: 9,
 
   // Trauma shake (screen pixels before the zoom correction).
   traumaDecay: 1.6,
@@ -84,12 +91,16 @@ export const FEEL = {
   camPadX: 180,
   camPadTop: 220,
   camPadBottom: 120,
-  camLook: 0.12,
-  camMax1: 1.35,
-  camMaxMulti: 1.15,
-  camPosTau: 160,
-  camZoomOutTau: 180,
-  camZoomInTau: 700,
+  camLook: 0.04,
+  camMax1: 1.2,
+  camMaxMulti: 1.12,
+  camPosTau: 200,
+  camZoomOutTau: 420,
+  camZoomInTau: 320,
+  koZoomTau: 140,
+  // Close fighters still frame this much world, so the zoom cannot snap tight.
+  camMinSpanX: 860,
+  camMinSpanY: 520,
   camDead: 0.06,
   koZoom: 1.6,
   koZoomFrames: 6,
@@ -269,13 +280,45 @@ export function spring(cur, vel, target, dt) {
   return { cur, vel };
 }
 
+/** Robert Penner easeOutBack. c1 ~4.2 overshoots a 16px lunge by about 6px. */
+export function easeOutBack(t, c1 = 4.2) {
+  const u = clamp(t, 0, 1);
+  const c3 = c1 + 1;
+  return 1 + c3 * (u - 1) ** 3 + c1 * (u - 1) ** 2;
+}
+
+/** Weight used only as the knockback divisor. */
+export function launchWeight(weight) {
+  const w = Number.isFinite(weight) && weight > 0 ? weight : 1;
+  return Math.max(w, FEEL.launchWeightFloor);
+}
+
+/**
+ * Zoom that frames `span` of the world, never tighter than the minimum span
+ * and never past maxZoom. A pair standing together stays at the cap instead
+ * of snapping to a close-up.
+ */
+export function frameZoom(spanX, spanY, viewW, viewH, minZoom, maxZoom) {
+  const sx = Math.max(FEEL.camMinSpanX, spanX || 0);
+  const sy = Math.max(FEEL.camMinSpanY, spanY || 0);
+  const z = Math.min(viewW / sx, viewH / sy);
+  return clamp(z, minZoom, maxZoom);
+}
+
+/** Horizontal hitstop jitter, ±3px at low damage and ±5px from 16 damage up. */
+export function hitlagShake(dmg, frame) {
+  const amp = 3 + 2 * Math.min(1, Math.max(0, dmg || 0) / 16);
+  const sign = (frame % 2 === 0) ? 1 : -1;
+  return { x: amp * sign, y: 0 };
+}
+
 /** Pose targets. facing is ±1. phase is startup|active|recovery|idle. */
 export function poseTarget(state, ctx) {
   const facing = ctx.facing || 1;
   const phase = ctx.phase;
   const neutral = { rot: 0, sx: 1, sy: 1, x: 0, y: 0 };
   if (state === 'jumpsquat' || ctx.landing) {
-    return { rot: 0, sx: 1.14, sy: 0.86, x: 0, y: 4 };
+    return { rot: 0, sx: 1.15, sy: 0.85, x: 0, y: 6 };
   }
   if (state === 'jump') return { rot: -0.06 * facing, sx: 0.94, sy: 1.08, x: 0, y: 0 };
   if (state === 'fall') {
@@ -293,9 +336,21 @@ export function poseTarget(state, ctx) {
   }
   if (state === 'defending') return { rot: 0, sx: 0.96, sy: 1 + Math.sin((ctx.t || 0) * 6) * 0.02, x: 0, y: 0 };
   if (state === 'attack') {
-    if (phase === 'startup') return { rot: -0.08 * facing, sx: 1.08, sy: 0.92, x: -6 * facing, y: 0 };
-    if (phase === 'active') return { rot: 0.10 * facing, sx: 0.96, sy: 1.06, x: 14 * facing, y: 0 };
-    return { rot: 0, sx: 1, sy: 1, x: 0, y: 0 };
+    // Wind-up pulls back ~8px and squashes ~8%. The strike lunges ~14px and
+    // stretches along the swing (wider, not taller). Follow-through eases
+    // back through a negative overshoot, then rests.
+    if (phase === 'startup') return { rot: -0.2 * facing, sx: 1.08, sy: 0.92, x: -8 * facing, y: 1 };
+    if (phase === 'active') return { rot: 0.16 * facing, sx: 1.1, sy: 0.92, x: 14 * facing, y: -2 };
+    const rec = clamp(ctx.recT ?? 1, 0, 1);
+    const e = easeOutBack(rec);
+    const stretch = Math.max(0, 1 - rec * 1.6);
+    return {
+      rot: 0.2 * (1 - e) * facing,
+      sx: 1 + 0.04 * stretch,
+      sy: 1 - 0.02 * stretch,
+      x: 16 * (1 - e) * facing,
+      y: 0,
+    };
   }
   if (state === 'walk') {
     const s = Math.sin(ctx.step || 0);

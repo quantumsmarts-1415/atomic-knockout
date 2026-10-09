@@ -13,7 +13,7 @@ import { cleanse } from '../engine/kit.js';
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 import { Juice } from '../engine/juice.js';
-import { FEEL, percentColor } from '../engine/feel.js';
+import { FEEL, frameZoom, percentColor } from '../engine/feel.js';
 
 const GRAVITY = 1500;
 
@@ -198,7 +198,15 @@ export default class BattleScene extends Phaser.Scene {
       let x0 = Infinity; let x1 = -Infinity; let y0 = Infinity; let y1 = -Infinity;
       const blast = this.blast;
       for (const f of live) {
-        if (blast && (f.x < blast.left + 80 || f.x > blast.right - 80 || f.y < blast.top + 40 || f.y > blast.bottom - 40)) continue;
+        const near = blast && (f.x < blast.left + 120 || f.x > blast.right - 120 || f.y < blast.top + 60 || f.y > blast.bottom - 80);
+        if (near) {
+          // Keep a launched fighter in frame for a few frames so the zoom
+          // eases out instead of popping when they cross the margin.
+          f._camHold = (f._camHold ?? 0) - 1;
+          if (f._camHold < 0) continue;
+        } else {
+          f._camHold = 18;
+        }
         const vx = f.body?.velocity?.x || 0;
         const vy = f.body?.velocity?.y || 0;
         const fx = Phaser.Math.Clamp(f.x + vx * FEEL.camLook, 0, WW);
@@ -211,10 +219,14 @@ export default class BattleScene extends Phaser.Scene {
       } else {
         x0 -= cfg.padX ?? FEEL.camPadX; x1 += cfg.padX ?? FEEL.camPadX;
         y0 -= cfg.padTop ?? FEEL.camPadTop; y1 += cfg.padBottom ?? FEEL.camPadBottom;
+        const boxCx = (x0 + x1) / 2;
+        const boxCy = (y0 + y1) / 2;
+        const spanX = Math.max(FEEL.camMinSpanX, x1 - x0);
+        const spanY = Math.max(FEEL.camMinSpanY, y1 - y0);
         const cap = this.koZoom || rig.maxZoom;
-        tz = Phaser.Math.Clamp(Math.min(W / Math.max(80, x1 - x0), H / Math.max(80, y1 - y0)), rig.minZoom, cap);
-        tx = (x0 + x1) / 2;
-        ty = (y0 + y1) / 2;
+        tz = frameZoom(spanX, spanY, W, H, rig.minZoom, cap);
+        tx = boxCx;
+        ty = boxCy;
         const dead = (W / Math.max(rig.zoom, 0.2)) * FEEL.camDead;
         if (Math.abs(tx - rig.cx) < dead) tx = rig.cx;
         if (Math.abs(ty - rig.cy) < dead) ty = rig.cy;
@@ -227,8 +239,11 @@ export default class BattleScene extends Phaser.Scene {
     }
     const first = rig.first;
     rig.first = false;
-    const zMs = tz < rig.zoom ? (cfg.zoomOutMs ?? 220) : (cfg.zoomInMs ?? 650);
-    rig.zoom += (tz - rig.zoom) * (first ? 1 : 1 - Math.exp(-delta / zMs));
+    const ko = this.koPoint && this.koZoom;
+    const zMs = ko
+      ? FEEL.koZoomTau
+      : (tz < rig.zoom ? (cfg.zoomOutMs ?? FEEL.camZoomOutTau) : (cfg.zoomInMs ?? FEEL.camZoomInTau));
+    rig.zoom += (tz - rig.zoom) * (first ? 1 : 1 - Math.exp(-Math.max(0, delta) / zMs));
     const hw = W / (2 * rig.zoom);
     const hh = H / (2 * rig.zoom);
     const k = first ? 1 : 1 - Math.exp(-delta / (cfg.lerpMs ?? 200));

@@ -235,11 +235,11 @@ export const MOVESETS = {
       chargeDamageMult: 2.3, chargeKnockbackMult: 2, chargeRadiusMult: 1.8,
       maxChargeMs: 1000, detonateAtFull: true, includeSelf: true,
       radius: 60, vfx: 'supernova', vfxColor: 0xffc14a,
-      baseKnockback: 420, knockbackGrowth: 9, duration: 280, cooldown: 860,
+      baseKnockback: 280, knockbackGrowth: 6.5, duration: 280, cooldown: 860,
     }),
     basicDirectional: melee('Flame Fist', {
-      type: K, damage: 14, type2: H, damage2: 14, vfx: 'fire', vfxColor: 0xffc14a,
-      baseKnockback: 240, knockbackGrowth: 6,
+      type: K, damage: 9, type2: H, damage2: 9, vfx: 'fire', vfxColor: 0xffc14a,
+      baseKnockback: 165, knockbackGrowth: 4.2,
       duration: 240, cooldown: 500,
     }),
     specialDefense: m('Oil Bath', {

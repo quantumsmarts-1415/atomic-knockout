@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { sheetKey, use3dSheets, clipDisplayLayout, positiveFinite } from '../scenes/BootScene.js';
 import { clipPose, moveClipFor, moveTextureKey } from './moveClip.js';
-import { stripIndex, idleBlend, attackPhase, poseTarget, spring, FEEL } from './feel.js';
+import { stripIndex, idleBlend, attackPhase, poseTarget, FEEL } from './feel.js';
 
 // ---------------------------------------------------------------------------
 // Rig — the code-drawn vector cartoon character.
@@ -306,6 +306,7 @@ export class Rig extends Phaser.GameObjects.Container {
     const posing = clip && tex && this.scene.textures.exists(tex)
       && (state === 'attack' || state === 'charging' || state === 'defending');
     if (!posing) {
+      this._posingClips = false;
       this.clipA?.setVisible(false);
       this.clipB?.setVisible(false);
       this.sprite?.setVisible?.(true);
@@ -325,16 +326,17 @@ export class Rig extends Phaser.GameObjects.Container {
       this[slot] = spr;
       return spr;
     };
+    // Frame choice stays on the strip. Position and scale are the pose layer,
+    // applied afterwards, so a still strip (n >= 4) still winds up and lunges.
     const paint = (spr, frame, alpha) => {
       spr.setVisible(alpha > 0.001);
       spr.setAlpha(alpha);
       spr.setTexture(tex, frame);
       spr.setOrigin(0.5, clip.footY);
-      spr.setScale(layout * pose.scaleX, layout * pose.scaleY);
-      spr.x = pose.lunge;
-      spr.y = pose.y;
     };
     if (this.sprite) this.sprite.setVisible(false);
+    this._clipLayout = layout;
+    this._posingClips = true;
     const blend = pose.mode === 'tween' ? pose.blend : 0;
     paint(ensure('clipA'), pose.frame, 1 - blend);
     paint(ensure('clipB'), pose.frameB, blend);
@@ -365,31 +367,49 @@ export class Rig extends Phaser.GameObjects.Container {
 
   applyPose(dt, state, layout) {
     if (state !== 'attack') this.blendToIdle(0);
-    const phase = this.frameData ? attackPhase(this.frameData, this.attackFrame || 0) : 'idle';
+    const fd = this.frameData;
+    const frame = this.attackFrame || 0;
+    const phase = fd ? attackPhase(fd, frame) : 'idle';
+    let recT = 1;
+    if (fd && phase === 'recovery') {
+      const recStart = fd.startup + fd.active;
+      const recLen = Math.max(1, fd.recovery || 1);
+      recT = Math.min(1, Math.max(0, (frame - recStart) / recLen));
+    }
     const target = poseTarget(state, {
       facing: this.facing || 1,
       phase,
+      recT,
       t: this.animT || 0,
       step: (this.animT || 0) * 10,
       units: this.hurtUnits || 0,
       hurtSign: this.hurtSign || 1,
       landing: this.landing > 0,
+      vy: this.vy || 0,
     });
-    this._pose ??= { rot: 0, sx: 1, sy: 1, x: 0, y: 0 };
-    this._poseV ??= { rot: 0, sx: 0, sy: 0, x: 0, y: 0 };
-    for (const k of ['rot', 'sx', 'sy', 'x', 'y']) {
-      const stepped = spring(this._pose[k], this._poseV[k], target[k] ?? 0, dt || 0.016);
-      this._pose[k] = stepped.cur;
-      this._poseV[k] = stepped.vel;
-    }
-    this.sprite.x = this._pose.x;
-    this.sprite.y = this._pose.y;
-    this.sprite.rotation = this._pose.rot;
-    this.sprite.setScale(layout * this._pose.sx, layout * this._pose.sy);
-    if (this.fadeSprite?.visible) {
-      this.fadeSprite.x = this.sprite.x;
-      this.fadeSprite.y = this.sprite.y;
-      this.fadeSprite.setScale(layout * this._pose.sx, layout * this._pose.sy);
+    // Snap to the target. The old spring moved ~1px per frame, so a 3-frame
+    // wind-up never left neutral and the lunge was invisible.
+    this._pose = {
+      rot: target.rot || 0,
+      sx: target.sx ?? 1,
+      sy: target.sy ?? 1,
+      x: target.x || 0,
+      y: target.y || 0,
+    };
+    const base = layout || this._layoutScale || 1;
+    const paint = (spr) => {
+      if (!spr?.setScale) return;
+      spr.x = this._pose.x;
+      spr.y = this._pose.y;
+      spr.rotation = this._pose.rot;
+      spr.setScale(base * this._pose.sx, base * this._pose.sy);
+    };
+    if (this._posingClips) {
+      paint(this.clipA);
+      paint(this.clipB);
+    } else {
+      paint(this.sprite);
+      if (this.fadeSprite?.visible) paint(this.fadeSprite);
     }
     if (state === 'hurt' && (this.hurtUnits || 0) > FEEL.tumbleAt) {
       this._spin = (this._spin || 0) + (dt || 0.016) * 9 * (this.hurtSign || 1);
@@ -397,6 +417,8 @@ export class Rig extends Phaser.GameObjects.Container {
     } else {
       this.rotation = 0;
     }
+    // Facing lives on the container. Pose scale stays on the sprite so the
+    // next frame's layout scale cannot multiply the lunge back in.
     this.setScale((this.facing || 1) * (this.baseScale || 1), this.baseScale || 1);
   }
 
@@ -405,8 +427,7 @@ export class Rig extends Phaser.GameObjects.Container {
     const t = this.animT;
 
     if (this.showMoveClip(state)) {
-      this.rotation = 0;
-      this.setScale(this.facing * this.baseScale, this.baseScale);
+      this.applyPose(dt, state, this._clipLayout || 1);
       return;
     }
 
@@ -451,71 +472,19 @@ export class Rig extends Phaser.GameObjects.Container {
         ? Phaser.Math.Clamp(speedFactor, 0.2, 1.8)
         : 1;
 
-      // the KO clip already tumbles him, so don't spin the container too
-      this.rotation = 0;
-      this.setScale(this.facing * this.baseScale, this.baseScale);
-      // No attack/charge/defend sheet: stay on the idle clip. A small
-      // telegraph marks the state; the move itself is the effects layer.
-      // Do not scrub idle frames as if they were a swing.
-      const layout = this._layoutScale ?? (Math.abs(this.sprite.scaleX) || 1);
-      this.applyPose(dt, state, layout);
+      // Layout scale is the body's fitted size. Never read it back from
+      // scaleX: applyPose writes the pose into that value.
+      this.applyPose(dt, state, this._layoutScale || 1);
       return;
     }
 
     if (this.spriteMode) {
-      let sx = 1;
-      let sy = 1;
-      this.sprite.x = 0;
-      switch (state) {
-        case 'walk':
-          this.sprite.y = -Math.abs(Math.sin(t * 10)) * 4;
-          this.sprite.rotation = Math.sin(t * 10) * 0.035;
-          break;
-        case 'jump':
-          this.sprite.y = 0; this.sprite.rotation = -0.06;
-          sy = 1.05; sx = 0.96;
-          break;
-        case 'fall':
-          this.sprite.y = 0; this.sprite.rotation = 0.045;
-          sy = 0.97;
-          break;
-        case 'attack': {
-          const s = Math.sin(this.attackSwing * Math.PI);
-          this.sprite.y = 0;
-          this.sprite.rotation = -s * 0.17;
-          this.sprite.x = s * 11; // forward lunge of the cutout; not a drawn attack pose
-          sx = 1 + s * 0.05;
-          break;
-        }
-        case 'charging':
-          this.sprite.y = Math.sin(t * 16) * 3;
-          this.sprite.rotation = Math.sin(t * 10) * 0.05;
-          break;
-        case 'defending':
-          this.sprite.y = 2;
-          this.sprite.rotation = 0;
-          sx = 0.94;
-          sy = 0.88;
-          break;
-        case 'hurt':
-          this.sprite.y = 0; this.sprite.rotation = 0.22;
-          sx = 1.06; sy = 0.94;
-          break;
-        case 'ko':
-          this.rotation += dt * 14;
-          this.setScale(this.facing * this.baseScale, this.baseScale);
-          return;
-        case 'idle':
-        default: {
-          const bob = Math.sin(t * 3.2);
-          this.sprite.y = bob * 2.2;
-          this.sprite.rotation = bob * 0.015;
-          sy = 1 + bob * 0.008;
-          break;
-        }
+      if (state === 'ko') {
+        this.rotation += dt * 14;
+        this.setScale(this.facing * this.baseScale, this.baseScale);
+        return;
       }
-      this.rotation = 0;
-      this.setScale(this.facing * this.baseScale * sx, this.baseScale * sy);
+      this.applyPose(dt, state, 1);
       return;
     }
 

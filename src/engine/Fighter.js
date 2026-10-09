@@ -8,7 +8,8 @@ import { playVfx } from './MoveVfx.js';
 import { play as sfx, playHit } from './sfx.js';
 import {
   FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, launchAngle,
-  launchVelocity, applyDI, decayLaunch, leavesBlast, takeBuffered, TYPE_COLOR,
+  launchVelocity, applyDI, decayLaunch, leavesBlast, takeBuffered, launchWeight,
+  hitlagShake, TYPE_COLOR,
 } from './feel.js';
 
 // ---------------------------------------------------------------------------
@@ -379,9 +380,17 @@ export default class Fighter extends Phaser.GameObjects.Container {
         if (!this.scene?.simFast) {
           sfx('whoosh');
           this.scene.juice?.swing?.(this, this.currentMove);
-          this.scene.juice?.afterimage?.(this, 0.45);
-          this.scene.juice?.afterimage?.(this, 0.30);
-          this.scene.juice?.afterimage?.(this, 0.15);
+          this.scene.juice?.afterimage?.(this);
+        }
+      }
+      // Dashes leave a short trail of ghosts, still capped per fighter.
+      if (!this.scene?.simFast && this.dashUntil && time < this.dashUntil && this.attackFrame % 5 === 0) {
+        const dx = this.x - (this._ghostX ?? this.x);
+        const dy = this.y - (this._ghostY ?? this.y);
+        if (dx * dx + dy * dy > 144) {
+          this.scene.juice?.afterimage?.(this, 0.36);
+          this._ghostX = this.x;
+          this._ghostY = this.y;
         }
       }
     } else {
@@ -422,6 +431,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.rig.hurtUnits = this.hurtUnits || 0;
     this.rig.hurtSign = this.hurtSign || 1;
     this.rig.landing = this.landing || 0;
+    this.rig.vy = this.body?.velocity?.y || 0;
     if (this.landing > 0) this.landing -= 1;
     if (!this.scene?.simFast && animState === 'walk' && Math.floor(this.rig.animT * 8) !== this._foot) {
       this._foot = Math.floor(this.rig.animT * 8);
@@ -864,7 +874,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.percent = Math.min(999, this.percent + dmg);
       this.creditDamage(attacker, dmg, incoming.type);
       if (!gate.noKnockback && !move.isSelf) {
-        const kb = ((incoming.baseKnockback + this.percent * (incoming.knockbackGrowth ?? 0)) / this.weightNow()) * (1 - gate.reduction) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1);
+        const kb = ((incoming.baseKnockback + this.percent * (incoming.knockbackGrowth ?? 0)) / launchWeight(this.weightNow())) * (1 - gate.reduction) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1);
         this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, false);
       }
       this.noteHeatAndRecoil(attacker, incoming, time, dealt);
@@ -916,7 +926,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
       return dmg;
     }
-    let kb = (((incoming.baseKnockback ?? 0) + this.percent * (incoming.knockbackGrowth ?? 0)) / this.weightNow()) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1);
+    let kb = (((incoming.baseKnockback ?? 0) + this.percent * (incoming.knockbackGrowth ?? 0)) / launchWeight(this.weightNow())) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1);
     const pinned = this.state === 'defending' && this.defenseMove?.noKnockback && !incoming.isSelf;
     if (pinned) kb = 0;
     this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, !armored);
@@ -1041,17 +1051,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this._shakeY = 0;
       return;
     }
-    const remain = Math.max(0, 1 - frame / total);
-    const amp = Math.min(2 + (this.hitlagDmg || 0) * 0.35, 9) * remain;
-    const sign = frame % 2 === 0 ? 1 : -1;
-    if (!this._hitGrounded && this.pendingLaunch) {
-      const a = this.pendingLaunch.angle || 0;
-      this._shakeX = Math.cos(a) * amp * sign * (this.pendingLaunch.dir || 1);
-      this._shakeY = Math.sin(a) * amp * sign;
-    } else {
-      this._shakeX = amp * sign;
-      this._shakeY = 0;
-    }
+    const kick = hitlagShake(this.hitlagDmg || 0, frame);
+    this._shakeX = kick.x;
+    this._shakeY = kick.y;
     const spr = this.rig?.sprite;
     if (!spr?.setTintFill) return;
     if (frame < 2) spr.setTintFill(0xffffff);

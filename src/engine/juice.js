@@ -1,17 +1,49 @@
 // ---------------------------------------------------------------------------
 // Juice — pooled hit sparks, trails, dust, afterimages and trauma shake.
 // Visual only. Every entry point returns immediately when scene.simFast.
+//
+// Lifetimes are stepped in update(), which present() calls even while the
+// capture loop has the Phaser game loop asleep. Tweens do not run then, and
+// that is what left solid silhouettes on the stage.
 // ---------------------------------------------------------------------------
 import * as Phaser from 'phaser';
-import { FEEL, TYPE_COLOR, traumaForHit, traumaOffset } from './feel.js';
+import { FEEL, traumaForHit, traumaOffset } from './feel.js';
 
 const TEX = {
   dot: 'juice-dot',
   streak: 'juice-streak',
   star: 'juice-star',
+  slash: 'juice-slash',
+  jag: 'juice-jag',
   puff: 'juice-puff',
+  puffB: 'juice-puff-b',
+  puffC: 'juice-puff-c',
   ring: 'juice-ring',
 };
+
+// Spark tints. TYPE_COLOR stays as-is for shields and other VFX; sparks
+// follow the element read the review asked for.
+const SPARK = {
+  kinetic: 0xfff2a8,
+  physical: 0xfff2a8,
+  heat: 0xff7a22,
+  electrical: 0x5ce1ff,
+  chemical: 0xc57bff,
+  radiation: 0x3dff62,
+};
+
+const GHOST = {
+  kinetic: 0xfff1c4,
+  physical: 0xfff1c4,
+  heat: 0xff6a1a,
+  electrical: 0x6ec6ff,
+  chemical: 0xc57bff,
+  radiation: 0x3dff62,
+};
+
+function sparkColor(type) {
+  return SPARK[type] ?? 0xfff2a8;
+}
 
 function makeTextures(scene) {
   if (scene.textures.exists(TEX.dot)) return;
@@ -21,35 +53,75 @@ function makeTextures(scene) {
     g.generateTexture(key, w, h);
     g.destroy();
   };
-  paint(TEX.dot, 32, 32, (g) => {
+  paint(TEX.dot, 16, 16, (g) => {
     g.fillStyle(0xffffff, 1);
-    g.fillCircle(16, 16, 14);
-    g.fillStyle(0xffffff, 0.45);
-    g.fillCircle(16, 16, 8);
+    g.fillCircle(8, 8, 3);
   });
-  paint(TEX.streak, 48, 12, (g) => {
-    g.fillStyle(0xffffff, 1);
-    g.fillRoundedRect(0, 2, 48, 8, 4);
+  paint(TEX.streak, 48, 10, (g) => {
+    g.fillStyle(0xffffff, 0.95);
+    g.fillTriangle(0, 5, 48, 1, 48, 9);
+  });
+  paint(TEX.slash, 72, 28, (g) => {
+    g.fillStyle(0xffffff, 0.95);
+    g.fillTriangle(2, 14, 70, 2, 70, 26);
+    g.fillStyle(0xffffff, 0.55);
+    g.fillTriangle(10, 14, 58, 7, 58, 21);
   });
   paint(TEX.star, 64, 64, (g) => {
     g.fillStyle(0xffffff, 1);
     for (let i = 0; i < 8; i++) {
       const a = (Math.PI / 4) * i;
-      const len = i % 2 === 0 ? 30 : 16;
+      const len = i % 2 === 0 ? 30 : 14;
       g.fillTriangle(
         32 + Math.cos(a) * len, 32 + Math.sin(a) * len,
-        32 + Math.cos(a + 0.4) * 5, 32 + Math.sin(a + 0.4) * 5,
-        32 + Math.cos(a - 0.4) * 5, 32 + Math.sin(a - 0.4) * 5,
+        32 + Math.cos(a + 0.35) * 4, 32 + Math.sin(a + 0.35) * 4,
+        32 + Math.cos(a - 0.35) * 4, 32 + Math.sin(a - 0.35) * 4,
       );
     }
+    g.fillCircle(32, 32, 5);
   });
-  paint(TEX.puff, 48, 48, (g) => {
-    g.fillStyle(0xffffff, 0.55);
-    g.fillCircle(24, 24, 18);
-    g.fillStyle(0xffffff, 0.35);
-    g.fillCircle(16, 20, 10);
-    g.fillCircle(32, 22, 9);
+  paint(TEX.jag, 64, 64, (g) => {
+    g.lineStyle(3, 0xffffff, 1);
+    const bolt = (ox, oy, turns) => {
+      let x = ox;
+      let y = oy;
+      g.beginPath();
+      g.moveTo(x, y);
+      for (let i = 0; i < turns; i++) {
+        x += 6 + (i % 2) * 4;
+        y += (i % 2 === 0 ? -10 : 8);
+        g.lineTo(x, y);
+      }
+      g.strokePath();
+    };
+    bolt(8, 34, 6);
+    bolt(14, 40, 5);
+    bolt(20, 28, 5);
   });
+  const puff = (key, seeds) => {
+    paint(key, 64, 64, (g) => {
+      for (const s of seeds) {
+        g.fillStyle(0xffffff, s.a);
+        g.fillCircle(s.x, s.y, s.r);
+      }
+    });
+  };
+  puff(TEX.puff, [
+    { x: 32, y: 36, r: 22, a: 0.12 },
+    { x: 32, y: 34, r: 16, a: 0.22 },
+    { x: 30, y: 32, r: 10, a: 0.4 },
+    { x: 34, y: 30, r: 6, a: 0.55 },
+  ]);
+  puff(TEX.puffB, [
+    { x: 28, y: 34, r: 18, a: 0.14 },
+    { x: 38, y: 30, r: 14, a: 0.2 },
+    { x: 32, y: 36, r: 9, a: 0.38 },
+  ]);
+  puff(TEX.puffC, [
+    { x: 34, y: 30, r: 20, a: 0.1 },
+    { x: 26, y: 38, r: 12, a: 0.24 },
+    { x: 36, y: 34, r: 7, a: 0.45 },
+  ]);
   paint(TEX.ring, 64, 64, (g) => {
     g.lineStyle(4, 0xffffff, 1);
     g.strokeCircle(32, 32, 26);
@@ -60,6 +132,7 @@ export class Juice {
   constructor(scene) {
     this.scene = scene;
     this.pool = [];
+    this.fx = [];
     this.live = 0;
     this.trauma = 0;
     this.flash = null;
@@ -83,19 +156,43 @@ export class Juice {
     img.setTexture(key);
     img.setActive(true).setVisible(true);
     img.setAlpha(1).setScale(1).setRotation(0).clearTint();
-    img.setBlendMode(Phaser.BlendModes.ADD);
+    img.setBlendMode(Phaser.BlendModes.NORMAL);
+    if (img.setTintFill) img.tintFill = null;
     this.live++;
     return img;
   }
 
-  release(img, delay) {
-    const done = () => {
-      if (!img.active) return;
-      img.setActive(false).setVisible(false);
-      this.live = Math.max(0, this.live - 1);
-    };
-    if (delay > 0) this.scene.time.delayedCall(delay, done);
-    else done();
+  release(img) {
+    if (!img?.active) return;
+    img.setActive(false).setVisible(false);
+    img.setAlpha(0);
+    this.live = Math.max(0, this.live - 1);
+  }
+
+  track(img, spec) {
+    if (!img) return null;
+    const row = { img, life: spec.life, max: spec.life, ...spec };
+    this.fx.push(row);
+    return row;
+  }
+
+  expire(row) {
+    if (!row || row.dead) return;
+    row.dead = true;
+    if (row.img) this.release(row.img);
+    if (row.g && !row.g.dead) row.g.destroy();
+    const i = this.fx.indexOf(row);
+    if (i >= 0) this.fx.splice(i, 1);
+  }
+
+  ghostsOf(owner) {
+    return this.fx.filter((f) => f.kind === 'ghost' && f.owner === owner && !f.dead);
+  }
+
+  /** Active afterimages, sparks, puffs, arcs and one-shot graphics. */
+  effectCount() {
+    const fx = this.fx.filter((f) => !f.dead).length;
+    return fx + this.arcs.length + (this.flash && !this.flash.dead ? 1 : 0);
   }
 
   addTrauma(amount) {
@@ -106,16 +203,50 @@ export class Juice {
   shakeOffset(timeSec, zoom) {
     let mode = 'full';
     try { mode = localStorage.getItem('ak-shake') || 'full'; } catch { /* node tests */ }
-    const off = traumaOffset(this.trauma, timeSec, zoom, mode);
-    return off;
+    return traumaOffset(this.trauma, timeSec, zoom, mode);
   }
 
   update(dt) {
     if (this.fast) return;
-    this.trauma = Math.max(0, this.trauma - FEEL.traumaDecay * dt);
+    const step = Math.max(0, Number.isFinite(dt) ? dt : 0);
+    this.trauma = Math.max(0, this.trauma - FEEL.traumaDecay * step);
+    for (let i = this.fx.length - 1; i >= 0; i--) {
+      const f = this.fx[i];
+      f.life -= step;
+      const u = f.max > 0 ? Math.max(0, f.life / f.max) : 0;
+      if (f.life <= 0) {
+        this.expire(f);
+        continue;
+      }
+      if (f.img) {
+        if (f.vx || f.vy) {
+          f.img.x += (f.vx || 0) * step;
+          f.img.y += (f.vy || 0) * step;
+        }
+        if (!f.holdScale) {
+          const grow = f.scale0 + ((f.scale1 ?? f.scale0) - f.scale0) * (1 - u);
+          f.img.setScale(grow);
+        }
+        f.img.setAlpha((f.alpha0 ?? 1) * u);
+        if (f.spin) f.img.rotation += f.spin * step;
+      }
+      if (f.g) {
+        f.g.setAlpha((f.alpha0 ?? 1) * u);
+      }
+    }
+    if (this.flash && !this.flash.dead) {
+      this.flash.life -= step;
+      const u = Math.max(0, this.flash.life / this.flash.max);
+      this.flash.setAlpha(0.28 * u);
+      if (this.flash.life <= 0) {
+        this.flash.destroy();
+        this.flash.dead = true;
+        this.flash = null;
+      }
+    }
     for (let i = this.arcs.length - 1; i >= 0; i--) {
       const a = this.arcs[i];
-      a.life -= dt;
+      a.life -= step;
       if (a.life <= 0) {
         a.g.destroy();
         this.arcs.splice(i, 1);
@@ -136,130 +267,118 @@ export class Juice {
 
   hit(x, y, dmg, type, angle = 0) {
     if (this.fast) return;
-    const s = Math.min(1, Math.max(0, dmg / 20));
-    const color = TYPE_COLOR[type] ?? 0xffffff;
-    const star = this.borrow(TEX.star);
+    const s = 0.55 + 0.9 * Math.min(1, Math.max(0, dmg / 20));
+    const color = sparkColor(type);
+    const life = (8 + Math.min(6, dmg * 0.25)) * FEEL.stepMs / 1000;
+    const starKey = type === 'electrical' ? TEX.jag : TEX.star;
+    const star = this.borrow(starKey);
     if (star) {
-      star.setPosition(x, y).setTint(color).setScale(0.35 + 0.2 * s);
-      this.scene.tweens.add({
-        targets: star,
-        scale: 0.6 + 0.9 * s,
-        alpha: 0,
-        duration: (6 + 6 * s) * FEEL.stepMs,
-        ease: 'Quad.easeOut',
-        onComplete: () => this.release(star, 0),
+      star.setPosition(x, y).setTint(color).setRotation(angle).setDepth(40);
+      this.track(star, { kind: 'spark', life, scale0: 0.35 * s, scale1: 1.15 * s, alpha0: 0.95 });
+    }
+    const slash = this.borrow(TEX.slash);
+    if (slash) {
+      slash.setPosition(x, y).setTint(color).setRotation(angle).setDepth(41);
+      this.track(slash, {
+        kind: 'spark', life: life * 0.8, scale0: 0.55 * s, scale1: 1.05 * s, alpha0: 0.9,
       });
     }
-    for (let r = 0; r < (dmg >= 12 ? 2 : 1); r++) {
-      const ring = this.borrow(TEX.ring);
-      if (!ring) break;
-      ring.setPosition(x, y).setTint(color).setScale(0.2);
-      this.scene.tweens.add({
-        targets: ring,
-        scale: (30 + 50 * s) / 32,
-        alpha: 0,
-        duration: 10 * FEEL.stepMs,
-        ease: 'Quad.easeOut',
-        delay: r * 30,
-        onComplete: () => this.release(ring, 0),
-      });
-    }
-    const n = 6 + Math.round(14 * s);
+    const n = 4 + Math.round(Math.min(3, dmg / 8));
     for (let i = 0; i < n; i++) {
-      const bit = this.borrow(i % 3 === 0 ? TEX.streak : TEX.dot);
+      const bit = this.borrow(TEX.streak);
       if (!bit) break;
-      const along = (i / n) < 0.7;
-      const spread = along ? (Math.random() - 0.5) * 0.8 : (Math.random() - 0.5) * Math.PI;
-      const a = angle + Math.PI + spread;
-      const dist = (40 + Math.random() * (80 + 120 * s));
-      bit.setPosition(x, y).setTint(color).setRotation(a);
-      bit.setScale(type === 'chemical' ? 0.35 : 0.25 + Math.random() * 0.3);
-      const spec = {
-        targets: bit,
-        x: x + Math.cos(a) * dist,
-        y: y + Math.sin(a) * dist + (type === 'heat' ? -30 - 40 * Math.random() : type === 'chemical' ? 20 + 30 * Math.random() : 0),
-        alpha: 0,
-        duration: 120 + Math.random() * 140 + (type === 'heat' ? 200 : 0),
-        ease: 'Quad.easeOut',
-        onComplete: () => this.release(bit, 0),
-      };
-      this.scene.tweens.add(spec);
+      const spread = (i - (n - 1) / 2) * 0.28;
+      const a = angle + spread;
+      bit.setPosition(x, y).setTint(color).setRotation(a).setDepth(39);
+      const speed = 220 + dmg * 8 + i * 30;
+      this.track(bit, {
+        kind: 'line',
+        life: (6 + i) * FEEL.stepMs / 1000,
+        scale0: 0.45 + 0.15 * s,
+        scale1: 0.9 + 0.2 * s,
+        alpha0: 0.9,
+        vx: Math.cos(a) * speed,
+        vy: Math.sin(a) * speed,
+      });
     }
-    if (type === 'electrical') this.bolt(x, y, color);
-    if (type === 'radiation') this.pulseRing(x, y, color);
+    if (type === 'electrical') this.bolt(x, y, color, angle);
+    if (type === 'radiation') {
+      const ring = this.borrow(TEX.ring);
+      if (ring) {
+        ring.setPosition(x, y).setTint(color).setDepth(38);
+        this.track(ring, { kind: 'ring', life: 10 * FEEL.stepMs / 1000, scale0: 0.25, scale1: 1.3, alpha0: 0.7 });
+      }
+    }
     if (dmg >= 15) this.impactFlash();
     this.addTrauma(traumaForHit(dmg, false));
   }
 
-  bolt(x, y, color) {
-    const g = this.scene.add.graphics().setBlendMode(Phaser.BlendModes.ADD);
-    const draw = () => {
-      g.clear();
-      g.lineStyle(2, color, 0.9);
-      for (let b = 0; b < 3; b++) {
-        let px = x;
-        let py = y;
-        g.beginPath();
-        g.moveTo(px, py);
-        const ang = -Math.PI / 2 + (b - 1) * 0.7;
-        for (let s = 0; s < 5; s++) {
-          px += Math.cos(ang) * 14 + (Math.random() - 0.5) * 16;
-          py += Math.sin(ang) * 14 + (Math.random() - 0.5) * 16;
-          g.lineTo(px, py);
-        }
-        g.strokePath();
+  bolt(x, y, color, angle) {
+    const g = this.scene.add.graphics().setDepth(42);
+    g.lineStyle(2, color, 0.95);
+    for (let b = 0; b < 3; b++) {
+      let px = x;
+      let py = y;
+      g.beginPath();
+      g.moveTo(px, py);
+      const ang = angle + (b - 1) * 0.55;
+      for (let s = 0; s < 5; s++) {
+        px += Math.cos(ang) * 16 + ((s % 2) - 0.5) * 14;
+        py += Math.sin(ang) * 16 + ((s % 2 === 0 ? 1 : -1) * 8);
+        g.lineTo(px, py);
       }
-    };
-    draw();
-    this.scene.time.delayedCall(6 * FEEL.stepMs, () => g.destroy());
-  }
-
-  pulseRing(x, y, color) {
-    for (let i = 0; i < 2; i++) {
-      const ring = this.borrow(TEX.ring);
-      if (!ring) return;
-      ring.setPosition(x, y).setTint(color).setScale(0.3);
-      this.scene.tweens.add({
-        targets: ring, scale: 1.4, alpha: 0, duration: 220, delay: i * 90,
-        ease: 'Sine.easeOut', onComplete: () => this.release(ring, 0),
-      });
+      g.strokePath();
     }
+    this.fx.push({
+      kind: 'gfx', g, life: 7 * FEEL.stepMs / 1000, max: 7 * FEEL.stepMs / 1000, alpha0: 1,
+    });
   }
 
   impactFlash() {
     const cam = this.scene.cameras?.main;
     if (!cam || this.flash) return;
-    const rect = this.scene.add.rectangle(cam.midPoint.x, cam.midPoint.y, 1400, 800, 0xffffff, 0.35)
-      .setScrollFactor(0).setDepth(5000).setBlendMode(Phaser.BlendModes.ADD);
+    const rect = this.scene.add.rectangle(cam.midPoint.x, cam.midPoint.y, 1400, 800, 0xffffff, 0.28)
+      .setScrollFactor(0).setDepth(5000);
+    rect.life = 3 * FEEL.stepMs / 1000;
+    rect.max = rect.life;
     this.flash = rect;
-    this.scene.tweens.add({
-      targets: rect, alpha: 0, duration: 50, ease: 'Quad.easeOut',
-      onComplete: () => { rect.destroy(); this.flash = null; },
-    });
   }
 
-  afterimage(fighter, alpha) {
-    if (this.fast || !fighter?.rig?.sprite) return;
-    const spr = fighter.rig.sprite;
-    if (!spr.texture?.key) return;
+  bodySprite(fighter) {
+    const rig = fighter?.rig;
+    if (!rig) return null;
+    if (rig.clipA?.visible && rig.sprite && rig.sprite.visible === false) return rig.clipA;
+    return rig.sprite || rig.clipA || null;
+  }
+
+  afterimage(fighter, alpha = FEEL.afterimageAlpha) {
+    if (this.fast || !fighter) return;
+    const spr = this.bodySprite(fighter);
+    if (!spr?.texture?.key) return;
+    const owner = fighter;
+    const mine = this.ghostsOf(owner);
+    while (mine.length >= FEEL.afterimageCap) this.expire(mine.shift());
     const img = this.borrow(spr.texture.key);
     if (!img) return;
     const frame = spr.frame?.name;
-    if (frame != null) img.setFrame(frame);
-    img.setPosition(fighter.x + (fighter.rig.x || 0), fighter.y + (fighter.rig.y || 0));
-    img.setOrigin(spr.originX, spr.originY);
-    img.setScale(spr.scaleX * (fighter.facing || 1), spr.scaleY);
-    img.setTintFill(TYPE_COLOR[fighter.currentMove?.type] ?? 0xffffff);
+    if (frame != null && img.setFrame) img.setFrame(frame);
+    img.setPosition(fighter.x + (fighter.rig?.x || 0), fighter.y + (fighter.rig?.y || 0));
+    img.setOrigin?.(spr.originX ?? 0.5, spr.originY ?? 1);
+    const face = fighter.facing || 1;
+    img.setScale(Math.abs(spr.scaleX || 1) * face, spr.scaleY || 1);
+    img.setRotation(spr.rotation || 0);
+    const tint = GHOST[fighter.currentMove?.type] ?? 0xfff1c4;
+    img.setTint(tint);
+    img.setBlendMode(Phaser.BlendModes.NORMAL);
     img.setAlpha(alpha);
-    this.scene.tweens.add({
-      targets: img, alpha: 0, duration: 90, ease: 'Quad.easeOut',
-      onComplete: () => this.release(img, 0),
-    });
+    img.setDepth?.(6);
+    const life = FEEL.afterimageFrames * FEEL.stepMs / 1000;
+    this.track(img, { kind: 'ghost', owner, life, scale0: Math.abs(spr.scaleX || 1), scale1: Math.abs(spr.scaleX || 1), alpha0: alpha, holdScale: true });
   }
 
   swing(fighter, move) {
     if (this.fast || !fighter) return;
-    const g = this.scene.add.graphics().setBlendMode(Phaser.BlendModes.ADD).setDepth(20);
+    const g = this.scene.add.graphics().setDepth(20);
     const facing = fighter.facing || 1;
     const reach = (move?.rangeW ?? 72) * 0.8;
     const a0 = facing === 1 ? -60 * Math.PI / 180 : Math.PI - 40 * Math.PI / 180;
@@ -267,36 +386,46 @@ export class Juice {
     this.arcs.push({
       g, x: fighter.x + facing * fighter.bodyW * 0.2, y: fighter.y - fighter.bodyH * 0.65,
       r: Math.max(36, reach), a0, a1,
-      color: TYPE_COLOR[move?.type] ?? 0xffffff,
+      color: SPARK[move?.type] ?? 0xffffff,
       life: 8 * FEEL.stepMs / 1000, max: 8 * FEEL.stepMs / 1000,
     });
   }
 
   puff(x, y, color, scale = 0.6) {
     if (this.fast) return;
-    const img = this.borrow(TEX.puff);
+    const keys = [TEX.puff, TEX.puffB, TEX.puffC];
+    const key = keys[Math.abs(Math.round(x + y * 3)) % keys.length];
+    const img = this.borrow(key);
     if (!img) return;
-    img.setPosition(x, y).setTint(color).setScale(scale * 0.5).setAlpha(0.6);
-    this.scene.tweens.add({
-      targets: img, scale: scale * 1.4, alpha: 0, duration: 500, ease: 'Quad.easeOut',
-      onComplete: () => this.release(img, 0),
+    const size = scale * (0.65 + ((Math.abs(Math.round(x * 7 + y)) % 5) / 10));
+    img.setPosition(x, y).setTint(color).setDepth(12).setAlpha(0.55);
+    const life = (10 + (Math.abs(Math.round(x)) % 4)) * FEEL.stepMs / 1000;
+    this.track(img, {
+      kind: 'puff',
+      life,
+      scale0: size,
+      scale1: size * 0.35,
+      alpha0: 0.5,
+      vx: ((Math.round(x) % 7) - 3) * 8,
+      vy: -28 - (Math.abs(Math.round(y)) % 5) * 6,
     });
   }
 
   dust(x, y, dir = 1) {
     if (this.fast) return;
-    for (let i = 0; i < 4; i++) {
-      const bit = this.borrow(TEX.puff);
+    for (let i = 0; i < 3; i++) {
+      const bit = this.borrow(i === 1 ? TEX.puffB : TEX.puff);
       if (!bit) return;
-      bit.setPosition(x, y).setScale(0.25).setAlpha(0.7).setTint(0xd8d2c4);
-      this.scene.tweens.add({
-        targets: bit,
-        x: x + dir * (20 + Math.random() * 40),
-        y: y - 6 - Math.random() * 14,
-        alpha: 0,
-        duration: 250,
-        ease: 'Quad.easeOut',
-        onComplete: () => this.release(bit, 0),
+      const size = 0.28 + i * 0.08;
+      bit.setPosition(x + i * 4 * dir, y).setTint(0xd8d2c4).setDepth(8);
+      this.track(bit, {
+        kind: 'dust',
+        life: (8 + i * 2) * FEEL.stepMs / 1000,
+        scale0: size,
+        scale1: size * 0.4,
+        alpha0: 0.45,
+        vx: dir * (40 + i * 24),
+        vy: -16 - i * 10,
       });
     }
   }
@@ -308,9 +437,9 @@ export class Juice {
     if (speed < (L.speed0 || speed) * 0.4) return;
     if ((fighter._trailTick = (fighter._trailTick || 0) + 1) % 2) return;
     const tint = (fighter._trailTick % 8 === 0)
-      ? (TYPE_COLOR[L.type] ?? 0x9aa3b2)
-      : 0x9aa3b2;
-    this.puff(fighter.x, fighter.y - fighter.bodyH * 0.55, tint, 0.55);
+      ? sparkColor(L.type)
+      : 0xb7c0ce;
+    this.puff(fighter.x, fighter.y - fighter.bodyH * 0.55, tint, 0.7 + Math.min(0.5, speed / 4000));
   }
 
   koLine(fighter) {
@@ -320,7 +449,7 @@ export class Juice {
     const x = Phaser.Math.Clamp(fighter.x, view.x + 20, view.right - 20);
     const y = Phaser.Math.Clamp(fighter.y, view.y + 20, view.bottom - 20);
     const pal = fighter.charDef.palettes[fighter.paletteIndex]?.body ?? 0xffffff;
-    const g = this.scene.add.graphics().setDepth(80).setBlendMode(Phaser.BlendModes.ADD);
+    const g = this.scene.add.graphics().setDepth(80);
     const ang = Math.atan2(view.centerY - y, view.centerX - x);
     g.fillStyle(pal, 0.9);
     const tip = (d, a) => [x + Math.cos(ang + a) * d, y + Math.sin(ang + a) * d];
@@ -328,21 +457,21 @@ export class Juice {
     const [bx, by] = tip(36, -0.9);
     const [cx, cy] = tip(600, 0);
     g.fillTriangle(ax, ay, bx, by, cx, cy);
-    this.scene.tweens.add({
-      targets: g, alpha: 0, duration: 300, ease: 'Quad.easeOut',
-      onComplete: () => g.destroy(),
-    });
-    for (let i = 0; i < 24; i++) {
+    const life = 14 * FEEL.stepMs / 1000;
+    this.fx.push({ kind: 'gfx', g, life, max: life, alpha0: 0.9 });
+    for (let i = 0; i < 8; i++) {
       const bit = this.borrow(TEX.streak);
       if (!bit) break;
-      const a = ang + (Math.random() - 0.5) * 0.8;
-      bit.setPosition(x, y).setTint(pal).setRotation(a).setScale(0.4);
-      this.scene.tweens.add({
-        targets: bit,
-        x: x + Math.cos(a) * (80 + Math.random() * 180),
-        y: y + Math.sin(a) * (80 + Math.random() * 180),
-        alpha: 0, duration: 280, ease: 'Quad.easeOut',
-        onComplete: () => this.release(bit, 0),
+      const a = ang + (i - 4) * 0.12;
+      bit.setPosition(x, y).setTint(pal).setRotation(a).setDepth(81);
+      this.track(bit, {
+        kind: 'line',
+        life: 10 * FEEL.stepMs / 1000,
+        scale0: 0.5,
+        scale1: 0.8,
+        alpha0: 0.85,
+        vx: Math.cos(a) * 280,
+        vy: Math.sin(a) * 280,
       });
     }
     this.impactFlash();

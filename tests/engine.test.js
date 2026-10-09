@@ -22,7 +22,7 @@ mock.module(phaserPath, {
   }
 });
 
-const { default: Fighter } = await import('../src/engine/Fighter.js');
+const { default: Fighter, diveVelocityX } = await import('../src/engine/Fighter.js');
 
 test('applyDefense reduces damage by 5% per point', () => {
   const defense = { physical: 4, heat: 0 };
@@ -263,4 +263,11 @@ test('Block and Counter mechanics', () => {
   assert.strictEqual(dmg2, 0);
   assert.strictEqual(fCounter.percent, 0);
   assert.strictEqual(attackerHit, true);
+});
+
+test('a dive stops at the ledge and hops back if it is already past it', () => {
+  const isle = [{ x: 640, w: 990 }];
+  assert.strictEqual(diveVelocityX(640, 220, isle), 220);
+  assert.strictEqual(diveVelocityX(1088, 220, isle, 0.2), 0);
+  assert.ok(diveVelocityX(1200, 220, isle) < 0);
 });

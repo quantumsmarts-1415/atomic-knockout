@@ -39,15 +39,7 @@ export function computeBotInput(time, bot, fighters, bounds, nav = null) {
 
   const dx = target.x - bot.x;
   const dist = Math.abs(dx);
-  // Bots only ever use the directional variants (2026-08-05 move-architecture
-  // change) -- they never hold "down"/neutral, so basicCharge/specialDefense
-  // never fire for them. Teaching bots to charge/counter is a future AI
-  // enhancement, not required for the directional moves to keep working.
-  const basic = bot.charDef.moves.basicDirectional;
-  const special = bot.charDef.moves.specialDirectional;
-  const basicRange = (basic.rangeW ?? 60) + 20;
-  const specialRange = special.kind === 'burst' ? (special.radius ?? 90) : 240;
-
+  const basicRange = (bot.charDef.moves.basicDirectional.rangeW ?? 60) + 20;
   // Stage-edge safety takes priority over chasing -- a bot that walks itself
   // off the platform to reach a target isn't "standing in for a player."
   if (bot.x < bounds.minX + 60) {
@@ -72,24 +64,20 @@ export function computeBotInput(time, bot, fighters, bounds, nav = null) {
   if (grounded && walled && time >= ai.nextJumpAt) {
     input.jump = true;
     ai.nextJumpAt = time + 400;
-  } else if (time >= ai.nextJumpAt) {
-    const shouldJump = (target.y < bot.y - 60 && Math.random() < 0.35) || Math.random() < 0.01;
-    if (shouldJump) {
-      input.jump = true;
-      ai.nextJumpAt = time + 500;
-    }
+  } else if (time >= ai.nextJumpAt && roll(bot) < 0.008) {
+    input.jump = true;
+    ai.nextJumpAt = time + 500;
+  }
+  // Side platforms are one-way. If the opponent is on the floor below,
+  // drop back down instead of camping where short moves cannot reach.
+  // Down does not fall through the solid stage, so this is a no-op there.
+  if (grounded && target.y > bot.y + 100) {
+    input.down = true;
+    input.jump = false;
   }
 
-  if (dist <= basicRange && time >= ai.nextAttackAt) {
-    input.attack = true;
-    ai.nextAttackAt = time + basic.duration + basic.cooldown + 80;
-  }
-  if (dist <= specialRange && time >= ai.nextSpecialAt && Math.random() < 0.5) {
-    input.special = true;
-    ai.nextSpecialAt = time + special.duration + special.cooldown + 200;
-  }
-
-  return input;
+  tryAttacks(time, bot, target, ai, input, bounds);
+  return applyScriptedSlots(time, bot, input);
 }
 
 // ------------------------------------------------------------ nav (big stages)
@@ -132,16 +120,16 @@ function navBotInput(time, bot, targets, nav) {
 
   if (!grounded) {
     airControl(time, bot, target, nav, ai, input, moveTo);
-    if (target) tryAttacks(time, bot, target, ai, input);
-    return input;
+    if (target) tryAttacks(time, bot, target, ai, input, deckOf(nav, ai));
+    return applyScriptedSlots(time, bot, input);
   }
   if (!cur) {
     // standing on something the graph doesn't know (rare): walk to the
     // nearest known surface point at this height
     if (target) moveTo(target.x, 30);
-    return input;
+    return applyScriptedSlots(time, bot, input);
   }
-  if (!target) { moveTo(cur.cx, 30); return input; }
+  if (!target) { moveTo(cur.cx, 30); return applyScriptedSlots(time, bot, input); }
 
   // ---- plan: path to the target's surface, or as close as we can get
   const now = new Set();
@@ -175,12 +163,12 @@ function navBotInput(time, bot, targets, nav) {
 
   if (!e) {
     engage(time, bot, target, cur, nav, ai, input, moveTo);
-    return input;
+    return applyScriptedSlots(time, bot, input);
   }
   followEdge(time, bot, e, cur, nav, ai, input, moveTo);
   // opportunistic swings at anyone level with us on the way
-  tryAttacks(time, bot, target, ai, input);
-  return input;
+  tryAttacks(time, bot, target, ai, input, deckOf(nav, ai));
+  return applyScriptedSlots(time, bot, input);
 }
 
 // The surface the target is on (or will land on), null if over the void.
@@ -301,27 +289,127 @@ function engage(time, bot, target, cur, nav, ai, input, moveTo) {
   const b = bot.body;
   const walled = (input.right && (b.blocked.right || b.touching.right)) || (input.left && (b.blocked.left || b.touching.left));
   if (walled && time >= ai.nextJumpAt) { input.jump = true; ai.nextJumpAt = time + 400; }
-  else if (time >= ai.nextJumpAt && Math.random() < 0.006 && bot.x > lo + 60 && bot.x < hi - 60) {
+  else if (time >= ai.nextJumpAt && roll(bot) < 0.006 && bot.x > lo + 60 && bot.x < hi - 60) {
     input.jump = true; // the odd hop so they don't look glued down
     ai.nextJumpAt = time + 600;
   }
-  tryAttacks(time, bot, target, ai, input);
+  tryAttacks(time, bot, target, ai, input, deckOf(nav, ai));
 }
 
-function tryAttacks(time, bot, target, ai, input) {
+function roll(bot) {
+  const rng = bot.scene?.rng;
+  return typeof rng === 'function' ? rng() : Math.random();
+}
+
+function deckOf(nav, ai) {
+  if (ai.deck) return ai.deck;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  for (const n of nav.nodes) {
+    if (n.kind === 'stop') continue;
+    if (n.x0 < minX) minX = n.x0;
+    if (n.x1 > maxX) maxX = n.x1;
+  }
+  ai.deck = { minX, maxX };
+  return ai.deck;
+}
+
+function diveLeavesDeck(bot, input, target, bounds) {
+  const move = bot.charDef?.moves?.specialDirectional;
+  if (!bounds || move?.kind !== 'dive') return false;
+  let dir = 0;
+  if (input.right && !input.left) dir = 1;
+  else if (input.left && !input.right) dir = -1;
+  else dir = Math.sign((target?.x ?? bot.x) - bot.x) || bot.facing || 1;
+  const travel = (move.dashSpeed ?? 160) * 0.9 + 80;
+  if (dir > 0) return bot.x + travel > bounds.maxX;
+  return bot.x - travel < bounds.minX;
+}
+
+function tryAttacks(time, bot, target, ai, input, bounds) {
   if (input.down) return;
   const basic = bot.charDef.moves.basicDirectional;
   const special = bot.charDef.moves.specialDirectional;
   const basicRange = (basic.rangeW ?? 60) + 20;
-  const specialRange = special.kind === 'burst' ? (special.radius ?? 90) : 240;
+  const specialRange = specialRangeOf(special);
   const dist = Math.abs(target.x - bot.x);
   const dy = Math.abs(target.y - bot.y);
-  if (dist <= basicRange && dy < ATTACK_DY && time >= ai.nextAttackAt) {
+  const ready = bot.state !== 'attack' && bot.state !== 'hurt' && bot.state !== 'ko'
+    && bot.state !== 'charging' && bot.state !== 'defending' && bot.state !== 'dead';
+  let wantBasic = ready && dist <= basicRange && dy < ATTACK_DY
+    && time >= ai.nextAttackAt && time >= (bot.attackCooldownUntil ?? 0);
+  let wantSpecial = ready && dist <= specialRange && dy < ATTACK_DY + 20
+    && time >= ai.nextSpecialAt && time >= (bot.specialCooldownUntil ?? 0);
+  // Both buttons are edge-triggered on the same frame; attack would eat the
+  // special press. Alternate so a bot actually uses both directional moves.
+  if (wantSpecial && diveLeavesDeck(bot, input, target, bounds)) wantSpecial = false;
+  if (wantBasic && wantSpecial) {
+    if ((ai.swing ?? 0) % 2 === 0) wantSpecial = false;
+    else wantBasic = false;
+    ai.swing = (ai.swing ?? 0) + 1;
+  }
+  if (wantBasic || wantSpecial) {
+    // In range the bot otherwise holds still. A neutral press would charge
+    // or block instead of the directional move, so face the target for
+    // this one press.
+    if (!input.left && !input.right && !input.down && !input.jump) {
+      if (target.x >= bot.x) input.right = true;
+      else input.left = true;
+    }
+  }
+  if (wantBasic) {
     input.attack = true;
     ai.nextAttackAt = time + basic.duration + basic.cooldown + 80;
   }
-  if (dist <= specialRange && dy < ATTACK_DY + 20 && time >= ai.nextSpecialAt && Math.random() < 0.5) {
+  if (wantSpecial) {
     input.special = true;
     ai.nextSpecialAt = time + special.duration + special.cooldown + 200;
   }
+}
+
+function specialRangeOf(special) {
+  if (special.kind === 'burst' || special.kind === 'zone') return (special.radius ?? special.zone?.radius ?? 90) + 24;
+  if (special.kind === 'beam') return (special.beamLen ?? 160) + 20;
+  return 240;
+}
+
+// A fixed cycle so every bot presses all four slots: directional attacks,
+// then a neutral charge long enough to pass fizzleBelow / detonateAtFull,
+// then a neutral defense hold. Directional chasing is left alone outside
+// those windows (t = 1000 stays a walk, which the stage CPU test relies on).
+const SLOT_CYCLE = 6400;
+
+function applyScriptedSlots(time, bot, input) {
+  const t = time % SLOT_CYCLE;
+  const neutral = () => {
+    input.left = false;
+    input.right = false;
+    input.jump = false;
+    input.down = false;
+  };
+  // A held button is not a new press. If the fighter is busy when the
+  // window opens, let go until they are free so the slot still fires.
+  const busy = bot.state === 'attack' || bot.state === 'hurt' || bot.state === 'defending' || bot.state === 'ko';
+  if (t >= 2500 && t < 2620) {
+    neutral();
+    input.attack = false;
+    input.special = false;
+  } else if (t >= 2620 && t < 4100) {
+    neutral();
+    input.special = false;
+    input.attack = bot.state === 'charging' || !busy;
+  } else if (t >= 4100 && t < 4220) {
+    neutral();
+    input.attack = false;
+    input.special = false;
+  } else if (t >= 4220 && t < 5300) {
+    neutral();
+    input.attack = false;
+    input.special = bot.state === 'defending' || !busy;
+  } else if (t >= 5300 && t < 5420) {
+    neutral();
+    input.attack = false;
+    input.special = false;
+  }
+  return input;
 }

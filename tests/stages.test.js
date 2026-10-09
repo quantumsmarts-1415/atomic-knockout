@@ -306,12 +306,14 @@ function fakeFighter(charId, x, y, { grounded = true, vy = 0 } = {}) {
 test('big-stage CPU: a tank heads for the lift to reach the summit; nobody walks into the void', () => {
   const st = STAGES.find((s) => s.id === 'carbon-skyhook');
   const nav = buildNavGraph(st);
-  // tank on the lower deck, target up on the summit -> walk toward the lift (parked at the bottom)
-  const bord = fakeFighter('bord', 800, st.groundY);
+  // Densest grounded fighter on the lower deck, target up on the summit.
+  // Density now sets jump height, so the old hand-tuned tanks (Bord) can
+  // hop the first gap. Van still cannot, and should walk to the lift.
+  const van = fakeFighter('van', 800, st.groundY);
   const foe = fakeFighter('hydra', 1065, 560);
-  const inp = computeBotInput(1000, bord, [bord, foe], getStageBounds(st), nav);
-  assert.ok(inp.right && !inp.left, 'tank should walk right toward the lift');
-  assert.match(bord._ai.lastEdge, /^board/);
+  const inp = computeBotInput(1000, van, [van, foe], getStageBounds(st), nav);
+  assert.ok(inp.right && !inp.left, 'heavy should walk right toward the lift');
+  assert.match(van._ai.lastEdge, /^board/);
   // on the outer dock, target hanging off-stage to the left: hold the ledge
   const dockX = 280 + 24;
   const guard = fakeFighter('natalie', dockX, 1120);

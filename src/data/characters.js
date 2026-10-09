@@ -1,15 +1,17 @@
+import { deriveProfile } from './balance.js';
+import { ELEMENTS } from './elements.js';
+import { MOVESETS } from './movesets.js';
+
 // ---------------------------------------------------------------------------
 // CHARACTER DATA — the single source of truth for the roster.
 // Adding a new element character = adding one entry here. No engine changes.
 //
-// Damage types (2026-08-05 migration, was heat/current/kinetic): every move
-// is heat, physical, electrical, chemical, or radiation. Every character has
-// per-type defense (0-10) for heat/physical/electrical/chemical -- chemical
-// defense is per-element and gets set during that character's own moveset
-// design session (starts at 0 as a placeholder, NOT a real balance number).
-// Radiation is NOT a per-character stat -- it affects every character
-// equally (see RADIATION_DEFENSE in applyDefense below). Defense reduces
-// incoming damage of that type by 5% per point.
+// Damage types: kinetic (older moves may still say "physical"), heat,
+// electrical, chemical, radiation. A move may deal more than one.
+// Combat numbers come from src/data/elements.js through src/data/balance.js
+// (modifiers on a shared base; 0 means no modifier). The per-character
+// `defense` objects further down are the retired 0–10 table and are not
+// used once a fighter has a `combat` profile.
 //
 // Moves (2026-08-05: expanded from 2 slots to 4, keyed off whether a
 // direction -- left/right/up/down, "up" = jump key held -- is held when the
@@ -69,13 +71,15 @@ export const CHARACTERS = {
         frameW: 609,
         frameH: 720,
         // Measured from the extracted+cropped Gemini frames' alpha bbox.
-        footY: 0.9823,
-        visibleH: 668,
+        footY: 0.9806,
+        visibleH: 638,
+        bodyH: 638,
+        displayScale: 0.19122,
         // Optional per-clip frameW/frameH/footY/visibleH override sheets.*.
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 1242, frameH: 720, footY: 0.9741, visibleH: 674 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1242, frameH: 720, footY: 0.9736, visibleH: 660, bodyH: 660, displayScale: 0.18485 },
         },
       },
     },
@@ -224,15 +228,16 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 446,
         frameH: 720,
-        // Measured from the extracted+cropped Gemini frames' alpha bbox
-        // (average across the 14-frame idle loop -- some jitter is
-        // inherent to video-generated animation, unlike the Blender rig).
-        footY: 0.978,
-        visibleH: 690,
+        // bodyH is head-to-feet. The tall side lock of hair is outside it,
+        // so idle and walk share one on-screen body height.
+        footY: 0.9736,
+        visibleH: 634,
+        bodyH: 634,
+        displayScale: 0.21767,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 1244, frameH: 692, footY: 0.9665, visibleH: 621 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1244, frameH: 692, footY: 0.9639, visibleH: 602, bodyH: 602, displayScale: 0.22924 },
         },
       },
     },
@@ -351,8 +356,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 698,
         frameH: 720,
-        footY: 0.992,
-        visibleH: 693,
+        footY: 0.9903,
+        visibleH: 685,
+        bodyH: 685,
+        displayScale: 0.18686,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
         },
@@ -468,12 +475,14 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 620,
         frameH: 720,
-        footY: 0.9735,
-        visibleH: 674,
+        footY: 0.9708,
+        visibleH: 664,
+        bodyH: 664,
+        displayScale: 0.17771,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 692, frameH: 706, footY: 0.9942, visibleH: 672 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 692, frameH: 706, footY: 0.9929, visibleH: 634, bodyH: 634, displayScale: 0.18612 },
         },
       },
     },
@@ -504,13 +513,13 @@ export const CHARACTERS = {
       basicDirectional: {
         name: 'Spark Jab',
         type: 'physical',
-        damage: 6,
+        damage: 8,
         baseKnockback: 140,
         knockbackGrowth: 5,
-        rangeW: 60,
+        rangeW: 88,
         rangeH: 44,
         duration: 180,
-        cooldown: 280,
+        cooldown: 260,
       },
       specialDirectional: {
         name: 'Water Reaction',
@@ -519,7 +528,7 @@ export const CHARACTERS = {
         damage: 11,
         baseKnockback: 230,
         knockbackGrowth: 6,
-        radius: 85,
+        radius: 110,
         duration: 300,
         cooldown: 400,
         teach: 'Lithium reacts violently with water, releasing hydrogen gas and heat -- pure lithium metal is stored in oil to keep it away from moisture in the air.',
@@ -534,7 +543,7 @@ export const CHARACTERS = {
         chargeKnockbackMult: 2.5,
         knockbackGrowth: 5.5,
         dashSpeed: 650, // softened from 700 to 650 -- she is fast, but 700 is a bit far for a tiny metal
-        rangeW: 65,
+        rangeW: 82,
         rangeH: 45,
         duration: 200,
         cooldown: 250,
@@ -571,9 +580,8 @@ export const CHARACTERS = {
     // pipeline. His hexagonal energy-glow effect genuinely reaches the
     // frame edges in some poses, so the idle sheet is UNCROPPED (full
     // 720x1280 video frame) rather than tightly cropped like the others --
-    // cropping would have clipped the glow. footY/visibleH below are a
-    // visual estimate from one frame rather than the usual bbox
-    // measurement, worth double-checking on screen.
+    // cropping would have clipped the glow. footY sits on the shoes.
+    // The hex glow hangs past that line and is not part of bodyH.
     art: {
       key: 'char-ben',
       file: 'art-src/ben-cut.png',
@@ -588,9 +596,11 @@ export const CHARACTERS = {
         frameH: 1280,
         footY: 0.9336,
         visibleH: 1180,
+        bodyH: 1180,
+        displayScale: 0.10593,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 454, frameH: 716, footY: 0.9782, visibleH: 670 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 454, frameH: 716, footY: 0.9818, visibleH: 675, bodyH: 675, displayScale: 0.18519 },
         },
       },
     },
@@ -697,12 +707,14 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 639,
         frameH: 720,
-        footY: 0.9807,
-        visibleH: 672,
+        footY: 0.9764,
+        visibleH: 641,
+        bodyH: 641,
+        displayScale: 0.18721,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 1116, frameH: 708, footY: 0.9759, visibleH: 661 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1116, frameH: 708, footY: 0.9647, visibleH: 619, bodyH: 619, displayScale: 0.19386 },
         },
       },
     },
@@ -814,11 +826,13 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 928,
         frameH: 720,
-        footY: 0.9818,
-        visibleH: 679,
+        footY: 0.9819,
+        visibleH: 650,
+        bodyH: 650,
+        displayScale: 0.18462,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 1110, frameH: 700, footY: 0.9630, visibleH: 646 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 1110, frameH: 700, footY: 0.9629, visibleH: 645, bodyH: 645, displayScale: 0.18605 },
         },
       },
     },
@@ -920,8 +934,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 915,
         frameH: 703,
-        footY: 0.9729,
-        visibleH: 657,
+        footY: 0.9659,
+        visibleH: 638,
+        bodyH: 638,
+        displayScale: 0.18809,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           // walk frames mirrored in place (PIL ImageOps.mirror per 735x667
@@ -929,7 +945,7 @@ export const CHARACTERS = {
           // faces left natively) and the Rig flips every clip by art.facing,
           // so unmirrored she walked backwards. Same fix as Natalie's walk.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 735, frameH: 667, footY: 0.9686, visibleH: 617 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 735, frameH: 667, footY: 0.9685, visibleH: 618, bodyH: 618, displayScale: 0.19417 },
         },
       },
     },
@@ -1032,12 +1048,14 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 664,
         frameH: 719,
-        footY: 0.9756,
-        visibleH: 668,
+        footY: 0.975,
+        visibleH: 648,
+        bodyH: 648,
+        displayScale: 0.19136,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 13, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 452, frameH: 701, footY: 0.9801, visibleH: 659 },
+          walk: { count: 33, fps: 10, loop: true, frameW: 452, frameH: 701, footY: 0.98, visibleH: 653, bodyH: 653, displayScale: 0.18989 },
         },
       },
     },
@@ -1119,12 +1137,14 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 852,
         frameH: 696,
-        footY: 0.9713,
-        visibleH: 642,
+        footY: 0.9684,
+        visibleH: 638,
+        bodyH: 638,
+        displayScale: 0.19436,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 13, fps: 3.6, loop: true },
-          walk: { count: 29, fps: 10, loop: true, frameW: 458, frameH: 674, footY: 0.9844, visibleH: 634 },
+          walk: { count: 29, fps: 10, loop: true, frameW: 458, frameH: 674, footY: 0.9837, visibleH: 636, bodyH: 636, displayScale: 0.19497 },
         },
       },
     },
@@ -1221,12 +1241,14 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 511,
         frameH: 705,
-        footY: 0.9730,
-        visibleH: 658,
+        footY: 0.9716,
+        visibleH: 643,
+        bodyH: 643,
+        displayScale: 0.20529,
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 29, fps: 10, loop: true, frameW: 442, frameH: 719, footY: 0.9702, visibleH: 668 },
+          walk: { count: 29, fps: 10, loop: true, frameW: 442, frameH: 719, footY: 0.9694, visibleH: 660, bodyH: 660, displayScale: 0.2 },
         },
       },
     },
@@ -1324,8 +1346,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 496,
         frameH: 699,
-        footY: 0.9697,
-        visibleH: 650,
+        footY: 0.9685,
+        visibleH: 640,
+        bodyH: 640,
+        displayScale: 0.2,
         clips: {
           // walk: Gemini blue-key video (videos/natalie_walk_v1.mp4, walks in place):
           // node tools/walk-sheet-from-video.mjs ... --fps 24 --start 128 --end 158
@@ -1338,7 +1362,7 @@ export const CHARACTERS = {
           // art.facing, so unmirrored she walked backwards. All clips in a
           // sheet must share the idle's native orientation.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 11, fps: 8, loop: true, frameW: 443, frameH: 710, footY: 0.9686, visibleH: 661 },
+          walk: { count: 11, fps: 8, loop: true, frameW: 443, frameH: 710, footY: 0.969, visibleH: 666, bodyH: 666, displayScale: 0.19219 },
         },
       },
     },
@@ -1433,8 +1457,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 728,
         frameH: 720,
-        footY: 0.9831,
-        visibleH: 696,
+        footY: 0.9806,
+        visibleH: 686,
+        bodyH: 686,
+        displayScale: 0.18367,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
         },
@@ -1547,8 +1573,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 922,
         frameH: 720,
-        footY: 0.9896,
-        visibleH: 696,
+        footY: 0.9736,
+        visibleH: 680,
+        bodyH: 680,
+        displayScale: 0.19706,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
         },
@@ -1634,6 +1662,8 @@ export const CHARACTERS = {
         frameH: 1280,
         footY: 0.9938,
         visibleH: 1270,
+        bodyH: 1270,
+        displayScale: 0.10709,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
         },
@@ -1700,8 +1730,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 466,
         frameH: 716,
-        footY: 0.9749,
-        visibleH: 674,
+        footY: 0.9735,
+        visibleH: 665,
+        bodyH: 665,
+        displayScale: 0.2015,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -1766,8 +1798,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 603,
         frameH: 720,
-        footY: 0.9722,
-        visibleH: 669,
+        footY: 0.9708,
+        visibleH: 657,
+        bodyH: 657,
+        displayScale: 0.22527,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -1833,8 +1867,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 401,
         frameH: 703,
-        footY: 0.9778,
-        visibleH: 664,
+        footY: 0.9772,
+        visibleH: 656,
+        bodyH: 656,
+        displayScale: 0.19512,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -1899,8 +1935,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 549,
         frameH: 700,
-        footY: 0.9729,
-        visibleH: 657,
+        footY: 0.9714,
+        visibleH: 646,
+        bodyH: 646,
+        displayScale: 0.21362,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -1966,8 +2004,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 551,
         frameH: 710,
-        footY: 0.9731,
-        visibleH: 666,
+        footY: 0.9718,
+        visibleH: 651,
+        bodyH: 651,
+        displayScale: 0.20891,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -2034,8 +2074,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 428,
         frameH: 698,
-        footY: 0.9706,
-        visibleH: 653,
+        footY: 0.9685,
+        visibleH: 640,
+        bodyH: 640,
+        displayScale: 0.225,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -2101,7 +2143,9 @@ export const CHARACTERS = {
         frameW: 726,
         frameH: 720,
         footY: 0.9986,
-        visibleH: 680,
+        visibleH: 671,
+        bodyH: 671,
+        displayScale: 0.19672,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -2166,8 +2210,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 1222,
         frameH: 720,
-        footY: 0.9899,
-        visibleH: 684,
+        footY: 0.9889,
+        visibleH: 652,
+        bodyH: 652,
+        displayScale: 0.22393,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -2232,8 +2278,10 @@ export const CHARACTERS = {
         dir: 'art-src/gemini-test/sheets/',
         frameW: 883,
         frameH: 707,
-        footY: 0.9830,
-        visibleH: 671,
+        footY: 0.9802,
+        visibleH: 667,
+        bodyH: 667,
+        displayScale: 0.1949,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
         },
@@ -2279,14 +2327,32 @@ export const CHARACTERS = {
   },
 };
 
+// Derived combat profiles overwrite the hand-tuned speed / jump / weight /
+// gravity. airJumps stays a per-character choice (the design doc doesn't
+// assign extra jumps). `defense` below is the old 0–10 table and is no
+// longer consulted once `combat` exists — see src/data/balance.js.
+for (const def of Object.values(CHARACTERS)) {
+  const el = ELEMENTS[def.id];
+  if (!el) continue;
+  def.elementData = el;
+  def.combat = deriveProfile(el);
+  const airJumps = def.stats?.airJumps ?? 1;
+  def.stats = {
+    speed: def.combat.speed,
+    jumpVelocity: def.combat.jumpVelocity,
+    weight: def.combat.weight,
+    gravityScale: def.combat.gravityScale,
+    airJumps,
+  };
+  if (MOVESETS[def.id]) def.moves = MOVESETS[def.id];
+}
+
 export const ROSTER = Object.values(CHARACTERS);
 
-// Damage after per-type defense: 5% reduction per defense point.
-//
-// Radiation is deliberately universal -- every character takes radiation
-// damage identically, so it's a single shared constant rather than a
-// per-character stat (Benjamin: "Radiation will affect all elements
-// equally"). Everything else reads the character's own `defense` object.
+// Legacy 5%-per-point defense. Fighters with a derived `combat` profile
+// (see balance.js) do not use this — Fighter.dealtDamage() does.
+// Kept so older call sites and the engine tests still have a defined path
+// for a character that has no element record yet.
 const RADIATION_DEFENSE = 0;
 export function applyDefense(rawDamage, damageType, defense) {
   const points = damageType === 'radiation' ? RADIATION_DEFENSE : (defense?.[damageType] ?? 0);

@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { sheetKey, use3dSheets, clipDisplayLayout, positiveFinite } from '../scenes/BootScene.js';
+import { clipPose, moveClipFor, moveTextureKey } from './moveClip.js';
 
 // ---------------------------------------------------------------------------
 // Rig — the code-drawn vector cartoon character.
@@ -243,9 +244,10 @@ export class Rig extends Phaser.GameObjects.Container {
   }
 
   applyClipLayout(clipDef) {
-    // Visual only. Fighter physics uses the static art.bodyW/bodyH hitbox and
-    // does not follow per-clip visibleH/footY, so a clip with a different crop
-    // snaps sprite scale/origin against that same box.
+    // One scale and one foot line per clip, so the head-to-feet body stays
+    // art.height and the shoes stay on the fighter origin. The gameplay
+    // hurtbox is art.bodyW/bodyH on that same origin. It does not follow
+    // the raw cell, and this scale does not change it.
     let layout;
     try {
       layout = clipDisplayLayout(this.sheets, clipDef);
@@ -259,7 +261,8 @@ export class Rig extends Phaser.GameObjects.Container {
       return;
     }
     this.sprite.setOrigin(0.5, layout.footY);
-    this.sprite.setScale(displayH / layout.visibleH);
+    this._layoutScale = positiveFinite(layout.displayScale) ? layout.displayScale : displayH / layout.visibleH;
+    this.sprite.setScale(this._layoutScale);
   }
 
   // Approx full display height, used for physics body sizing.
@@ -293,9 +296,59 @@ export class Rig extends Phaser.GameObjects.Container {
    * Procedural animation. state: 'idle' | 'walk' | 'jump' | 'fall' |
    * 'attack' | 'hurt' | 'ko'. speedFactor 0..1 scales the walk cycle.
    */
+  // A shipped strip replaces the idle telegraph for this move. Effects stay
+  // on the scene, above this container, so the body clip never covers them.
+  showMoveClip(state) {
+    const key = this.moveKey;
+    const clip = key ? moveClipFor(this.charDef?.id, key) : null;
+    const tex = clip ? moveTextureKey(this.charDef.id, key) : null;
+    const posing = clip && tex && this.scene.textures.exists(tex)
+      && (state === 'attack' || state === 'charging' || state === 'defending');
+    if (!posing) {
+      this.clipA?.setVisible(false);
+      this.clipB?.setVisible(false);
+      this.sprite?.setVisible?.(true);
+      return false;
+    }
+    const pose = clipPose(this.poseT ?? this.attackSwing ?? 0, clip.frames);
+    const displayH = this.art?.height ?? this.charDef?.art?.height ?? 160;
+    // visibleH is the head-to-feet body in the cell, same convention as sheets.
+    const layout = positiveFinite(clip.displayScale)
+      ? clip.displayScale
+      : (positiveFinite(displayH) && positiveFinite(clip.visibleH) ? displayH / clip.visibleH : 1);
+    const ensure = (slot) => {
+      if (this[slot]) return this[slot];
+      const spr = this.scene.add.sprite(0, 0, tex, 0);
+      if ((this.art?.facing ?? this.charDef?.art?.facing ?? 1) === -1) spr.setFlipX(true);
+      this.add(spr);
+      this[slot] = spr;
+      return spr;
+    };
+    const paint = (spr, frame, alpha) => {
+      spr.setVisible(alpha > 0.001);
+      spr.setAlpha(alpha);
+      spr.setTexture(tex, frame);
+      spr.setOrigin(0.5, clip.footY);
+      spr.setScale(layout * pose.scaleX, layout * pose.scaleY);
+      spr.x = pose.lunge;
+      spr.y = pose.y;
+    };
+    if (this.sprite) this.sprite.setVisible(false);
+    const blend = pose.mode === 'tween' ? pose.blend : 0;
+    paint(ensure('clipA'), pose.frame, 1 - blend);
+    paint(ensure('clipB'), pose.frameB, blend);
+    return true;
+  }
+
   animate(dt, state, speedFactor = 1) {
     this.animT += dt;
     const t = this.animT;
+
+    if (this.showMoveClip(state)) {
+      this.rotation = 0;
+      this.setScale(this.facing * this.baseScale, this.baseScale);
+      return;
+    }
 
     if (this.sheetMode) {
       // 'attack' covers both move slots; pick the clip the move actually is
@@ -330,6 +383,22 @@ export class Rig extends Phaser.GameObjects.Container {
       // the KO clip already tumbles him, so don't spin the container too
       this.rotation = 0;
       this.setScale(this.facing * this.baseScale, this.baseScale);
+      // No attack/charge/defend sheet: stay on the idle clip. A small
+      // telegraph marks the state; the move itself is the effects layer.
+      // Do not scrub idle frames as if they were a swing.
+      const posed = def === clip;
+      const layout = this._layoutScale ?? (Math.abs(this.sprite.scaleX) || 1);
+      this.sprite.x = 0;
+      this.sprite.y = 0;
+      if (!posed && state === 'charging') {
+        this.sprite.y = Math.sin(t * 16) * 3;
+        this.sprite.setScale(layout);
+      } else if (!posed && state === 'defending') {
+        // Brace inward. The head-to-feet height stays on the layout scale.
+        this.sprite.setScale(layout * 0.96, layout);
+      } else {
+        this.sprite.setScale(layout);
+      }
       return;
     }
 
@@ -354,10 +423,20 @@ export class Rig extends Phaser.GameObjects.Container {
           const s = Math.sin(this.attackSwing * Math.PI);
           this.sprite.y = 0;
           this.sprite.rotation = -s * 0.17;
-          this.sprite.x = s * 11; // forward lunge
+          this.sprite.x = s * 11; // forward lunge of the cutout; not a drawn attack pose
           sx = 1 + s * 0.05;
           break;
         }
+        case 'charging':
+          this.sprite.y = Math.sin(t * 16) * 3;
+          this.sprite.rotation = Math.sin(t * 10) * 0.05;
+          break;
+        case 'defending':
+          this.sprite.y = 2;
+          this.sprite.rotation = 0;
+          sx = 0.94;
+          sy = 0.88;
+          break;
         case 'hurt':
           this.sprite.y = 0; this.sprite.rotation = 0.22;
           sx = 1.06; sy = 0.94;
@@ -422,6 +501,21 @@ export class Rig extends Phaser.GameObjects.Container {
         this.torso.rotation = -s * 0.18;
         this.frontLeg.rotation = s * 0.2;
         this.backLeg.rotation = -s * 0.25;
+        break;
+      }
+      case 'charging': {
+        const bob = Math.sin(t * 16);
+        this.frontArm.rotation = -0.4 + bob * 0.15;
+        this.backArm.rotation = 0.4 - bob * 0.15;
+        this.head.y = this.baseHeadY + bob * 2;
+        break;
+      }
+      case 'defending': {
+        this.frontArm.rotation = -1.4;
+        this.backArm.rotation = 1.4;
+        this.torso.rotation = 0.08;
+        squashX = 1.06;
+        squashY = 0.9;
         break;
       }
       case 'hurt': {

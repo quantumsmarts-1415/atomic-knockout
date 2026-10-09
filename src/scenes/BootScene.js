@@ -1,7 +1,42 @@
 import * as Phaser from 'phaser';
 import { showScene } from '../ui/flow.js';
 import { loadStageArt } from '../data/stages.js';
-import { ROSTER } from '../data/characters.js';
+import { CHARACTERS, ROSTER } from '../data/characters.js';
+import { collectMoveStrips } from '../engine/moveClip.js';
+
+/** `?playtest=hydra,helen,kyle` boots straight into a CPU match and only
+ *  loads those fighters' cutouts, so a headless run doesn't pull every sheet. */
+export function playtestSpec() {
+  if (typeof window === 'undefined' || !window.location?.search) return null;
+  const params = new URLSearchParams(window.location.search);
+  const speed = Math.min(30, Math.max(1, Number(params.get('speed')) || 1));
+  const seedRaw = params.get('seed');
+  const seed = seedRaw == null || seedRaw === '' || !Number.isFinite(Number(seedRaw)) ? null : Number(seedRaw);
+  if (params.get('sim') === '1') {
+    return {
+      sim: true,
+      ids: [],
+      stageId: params.get('stage') || 'elemental-isle',
+      stocks: Number(params.get('stocks')) || 3,
+      ms: Number(params.get('ms')) || 14000,
+      speed,
+      seed,
+    };
+  }
+  const raw = params.get('playtest');
+  if (!raw) return null;
+  const ids = raw.split(',').map((s) => s.trim()).filter((id) => CHARACTERS[id]);
+  if (!ids.length) return null;
+  return {
+    ids,
+    stageId: params.get('stage') || 'elemental-isle',
+    stocks: Number(params.get('stocks')) || 2,
+    ms: Number(params.get('ms')) || 20000,
+    speed: 1,
+    sim: false,
+    seed,
+  };
+}
 
 // A character can supply art in two forms:
 //   - a single render (art.file) -> puppet-animated by the Rig
@@ -34,18 +69,26 @@ export function clipFrameSize(sheets, clipDef = {}) {
   return { frameW, frameH };
 }
 
-// Origin/scale for a clip. Each of frameW/frameH/footY/visibleH is independent:
-// a clip may override any subset; omitted fields fall back to sheets.*.
+// Origin/scale for a clip. Each of frameW/frameH/footY/visibleH/bodyH is
+// independent: a clip may override any subset; omitted fields fall back to sheets.*.
+// visibleH and bodyH are the head-to-feet body inside the cell, not the raw
+// alpha box. displayScale, when stored, is the sprite scale that fits that
+// body to art.height.
 export function clipDisplayLayout(sheets, clipDef = {}) {
   const footY = clipDef.footY ?? sheets.footY;
-  const visibleH = clipDef.visibleH ?? sheets.visibleH;
+  const visibleH = clipDef.bodyH ?? clipDef.visibleH ?? sheets.bodyH ?? sheets.visibleH;
+  const displayScale = clipDef.displayScale
+    ?? ((clipDef.bodyH == null && clipDef.visibleH == null) ? sheets.displayScale : null);
   if (!finiteNumber(footY)) {
     throw new RangeError(`Clip footY must be a finite number, got ${footY}`);
   }
   if (!positiveFinite(visibleH)) {
     throw new RangeError(`Clip visibleH must be finite and > 0, got ${visibleH}`);
   }
-  return { footY, visibleH };
+  if (displayScale != null && !positiveFinite(displayScale)) {
+    throw new RangeError(`Clip displayScale must be finite and > 0, got ${displayScale}`);
+  }
+  return { footY, visibleH, bodyH: visibleH, displayScale: displayScale ?? null };
 }
 
 export function loadRosterArt(loader, roster) {
@@ -126,6 +169,8 @@ export function attachBootLoadUi(scene, {
   }
 
   function destroy() {
+    scene.load.off?.('progress', setProgress);
+    scene.load.off?.('complete', destroy);
     bg.destroy();
     bar.destroy();
     track.destroy();
@@ -149,11 +194,25 @@ export default class BootScene extends Phaser.Scene {
     // Show progress immediately — roster sheets are huge, and without this
     // remote playable previews sit on a blank #0d1220 canvas for minutes.
     attachBootLoadUi(this);
-    // character renders (Benjamin-supplied art) — characters without an art
-    // entry fall back to the code-drawn vector rig automatically
-    loadRosterArt(this.load, ROSTER);
-    // painted stage layers + every stage's select-screen thumbnail/preview
-    loadStageArt(this.load);
+    const spec = playtestSpec();
+    if (spec?.sim) {
+      for (const c of ROSTER) {
+        if (c.art) this.load.image(c.art.key, c.art.file);
+      }
+    } else if (spec) {
+      // Cutouts only. Sheets are hundreds of megabytes and this path is for
+      // timed CPU matches, not for admiring walk cycles.
+      for (const id of spec.ids) {
+        const art = CHARACTERS[id].art;
+        if (art) this.load.image(art.key, art.file);
+      }
+    } else {
+      // character renders (Benjamin-supplied art) — characters without an art
+      // entry fall back to the code-drawn vector rig automatically
+      loadRosterArt(this.load, ROSTER);
+      // painted stage layers + every stage's select-screen thumbnail/preview
+      loadStageArt(this.load);
+    }
   }
 
   create() {
@@ -171,11 +230,89 @@ export default class BootScene extends Phaser.Scene {
         });
       }
     }
-    // Portraits are in the texture cache now (preload finished). Wait for the
-    // bundled faces too, so the title doesn't draw fallback type and then swap.
-    const fonts = (typeof document !== 'undefined' && document.fonts) ? document.fonts.ready : Promise.resolve();
-    Promise.resolve(fonts).then(() => {
-      if (this.scene.isActive()) showScene(this, 'Title');
-    });
+    const spec = playtestSpec();
+    if (spec?.sim) {
+      // One page loads every cutout, then the tournament driver restarts Battle
+      // and pumps fixed steps on the sim clock (no real-time wait).
+      const game = this.game;
+      window.__akRun = (opts) => new Promise((resolve, reject) => {
+        const ms = opts.ms ?? spec.ms;
+        const speed = Math.max(1, opts.speed ?? spec.speed);
+        const timer = setTimeout(() => reject(new Error('match timeout')), 60000);
+        let settled = false;
+        const finish = (err, report) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          window.__akResolve = null;
+          if (err) reject(err);
+          else resolve(report);
+        };
+        window.__akResolve = (report) => finish(null, report);
+        try {
+          showScene(game.scene.getScene('Boot'), 'Battle', {
+            stageId: opts.stageId || spec.stageId,
+            stocks: opts.stocks ?? spec.stocks,
+            playtestMs: ms,
+            simSpeed: speed,
+            seed: opts.seed == null ? spec.seed : opts.seed,
+            players: opts.ids.map((charId, i) => ({ charId, palette: i % 4, slot: 100 + i })),
+          });
+          const battle = game.scene.getScene('Battle');
+          const steps = Math.ceil(ms / (1000 / 60)) + 3;
+          const chunk = Math.max(1, speed);
+          for (let i = 0; i < steps && !battle.reportPublished; i += chunk) {
+            battle.runSimSteps(Math.min(chunk, steps - i));
+          }
+          if (!battle.reportPublished) {
+            battle.matchOver = true;
+            battle.publishPlaytestReport();
+          }
+        } catch (err) {
+          finish(err);
+        }
+      });
+      window.__akReady = true;
+      return;
+    }
+    const roster = spec
+      ? spec.ids.map((id) => CHARACTERS[id]).filter(Boolean)
+      : ROSTER;
+    const proceed = () => {
+      if (spec) {
+        showScene(this, 'Battle', {
+          stageId: spec.stageId,
+          stocks: spec.stocks,
+          playtestMs: spec.ms,
+          simSpeed: spec.speed,
+          seed: spec.seed,
+          players: spec.ids.map((charId, i) => ({ charId, palette: i % 4, slot: 100 + i })),
+        });
+        return;
+      }
+      // Portraits are in the texture cache now (preload finished). Wait for the
+      // bundled faces too, so the title doesn't draw fallback type and then swap.
+      const fonts = (typeof document !== 'undefined' && document.fonts) ? document.fonts.ready : Promise.resolve();
+      Promise.resolve(fonts).then(() => {
+        if (this.scene.isActive()) showScene(this, 'Title');
+      });
+    };
+    // Optional strips. A missing manifest is the idle telegraph, not an error.
+    collectMoveStrips(roster).then((jobs) => {
+      const pending = jobs.filter((j) => !this.textures.exists(j.textureKey));
+      if (!pending.length) {
+        proceed();
+        return;
+      }
+      for (const j of pending) {
+        this.load.spritesheet(j.textureKey, j.url, {
+          frameWidth: j.cellW,
+          frameHeight: j.cellH,
+          endFrame: j.frames - 1,
+        });
+      }
+      this.load.once('complete', proceed);
+      this.load.start();
+    }).catch(() => proceed());
   }
 }

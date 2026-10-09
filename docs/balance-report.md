@@ -1,5 +1,80 @@
 # Balance report
 
+The move pass below is the current roster. The curve pass under it is the baseline those edits started from. Every 1v1 rate in the final table is inside 40–60%.
+
+## Move pass
+
+Same seeded tournament as the curve pass: Elemental Isle, 16 seconds, 3 stocks, every pair three times (828 duels) plus 16 three-player free-for-alls. `TUNING` was left alone. Move damage was changed only where a kit could not land a hit at all. The usual change was recovery, cooldown, or reach.
+
+Three sims, one after each commit. The jab-recovery sim pulled Chloe, Silas, and Maggie into the band and lifted Cal, Aaron, Bord, and Neo over 40%, but Titan stayed at 75% and Phillip and Natalie crossed 60% once the other jabs slowed. The second sim put the called-out lows in range and overshot Chroma to 39%. The third sim, below, is the one where all 24 sit inside the band.
+
+### 1v1 after the move pass
+
+| Fighter | Win rate | Before | Damage dealt | Damage taken | Avg KO time (ms) | Damage dealt by type |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| nitra | 59.4% | 27.5% | 84 | 35 | 9330 | kinetic 19, heat 65 |
+| cal | 58.0% | 39.1% | 61 | 73 | 8596 | kinetic 37, heat 12, chemical 12 |
+| titan | 58.0% | 72.5% | 63 | 73 | 8378 | kinetic 62, heat 1 |
+| bord | 55.1% | 31.9% | 79 | 81 | 8972 | kinetic 79 |
+| natalie | 55.1% | 55.1% | 68 | 109 | 8006 | kinetic 32, heat 36 |
+| phillip | 55.1% | 56.5% | 57 | 73 | 10418 | kinetic 17, heat 40 |
+| silas | 55.1% | 66.7% | 66 | 64 | 9542 | kinetic 36, electrical 30 |
+| hydra | 53.6% | 53.6% | 88 | 69 | 8500 | kinetic 21, heat 46, radiation 21 |
+| ben | 52.2% | 73.9% | 61 | 63 | 9533 | kinetic 61 |
+| lillie | 52.2% | 26.1% | 68 | 60 | 9595 | kinetic 28, heat 38, electrical 1 |
+| sully | 52.2% | 49.3% | 65 | 85 | 8751 | kinetic 20, heat 32, chemical 14 |
+| kyle | 50.7% | 52.2% | 81 | 64 | 7735 | kinetic 20, electrical 61 |
+| maggie | 49.3% | 69.6% | 58 | 65 | 9111 | kinetic 16, heat 42 |
+| allen | 47.8% | 43.5% | 60 | 70 | 9082 | kinetic 34, heat 5, electrical 21 |
+| chloe | 47.8% | 65.2% | 72 | 48 | 8204 | chemical 72 |
+| flora | 47.8% | 50.7% | 82 | 61 | 10158 | heat 1, chemical 80 |
+| van | 46.4% | 75.4% | 59 | 83 | 8177 | kinetic 21, electrical 38 |
+| carter | 44.9% | 62.3% | 67 | 75 | 9339 | kinetic 40, electrical 26 |
+| neo | 44.9% | 37.7% | 64 | 54 | 8281 | kinetic 16, electrical 48 |
+| scarlett | 44.9% | 11.6% | 65 | 66 | 8882 | kinetic 63, heat 1 |
+| aaron | 43.5% | 39.1% | 51 | 66 | 8047 | kinetic 23, electrical 29 |
+| helen | 43.5% | 29.0% | 47 | 52 | 6959 | kinetic 47 |
+| oxana | 42.0% | 34.8% | 62 | 59 | 8466 | kinetic 23, heat 19, chemical 20 |
+| chroma | 40.6% | 76.8% | 55 | 78 | 9925 | kinetic 48, heat 7 |
+
+Before is the curve-pass rate (shorter global knockback, owner blasts at 75% damage and 40% knockback). Dealt, taken, KO time, and type are the move-pass match.
+
+### Changelog
+
+- **Nitra** 27.5% → 59.4%. The knockback cut had left her cold too short to KO, so heavier kits outlasted the same ~60 damage. Cryo Vortex now leaves a larger, longer cold (tick 3.2 for 2.6s, radius 96, knockback 240). Frost Fang slows for 1.2s and reaches 84.
+- **Cal** 39.1% → 58.0%. No move edit. Bone Crush was already a solid hit; he rose when the spam jabs in front of him slowed down.
+- **Titan** 72.5% → 58.0%. Lance Jab reach 118 → 84, recovery 230/340 → 280/700. Aero Lance flies at 480 instead of 640 and waits 1100 instead of 780. Damage stays 8 and 11.
+- **Bord** 31.9% → 55.1%. No move edit. The crystal smash was already hard; he was losing the race to faster pokes.
+- **Natalie** 55.1% → 55.1%. Flame Fist recovery 210/300 → 240/500, because the first jab pass pushed her to 62% and this put her back. Lake Drop is unchanged.
+- **Phillip** 56.5% → 55.1%. Glow Strike recovery 210/330 → 250/560, for the same reason. The ignition zone is unchanged.
+- **Silas** 66.7% → 55.1%. Crystal Blade reach 80 → 74, recovery 210/330 → 260/520. Damage stays 9.
+- **Hydra** 53.6% → 53.6%. No move edit.
+- **Ben** 73.9% → 52.2%. Precision Strike reach 78 → 70, recovery 200/300 → 250/740. The sweet spot stays. Gyro Disc still returns; cooldown 780 → 1180.
+- **Lillie** 26.1% → 52.2%. Spark Jab damage 6 → 8 and reach 60 → 88. Water Reaction stays 11 damage and grows from radius 85 to 110. Volt Dash stays at speed 650 and reaches 82.
+- **Sully** 49.3% → 52.2%. No move edit.
+- **Kyle** 52.2% → 50.7%. No move edit.
+- **Maggie** 69.6% → 49.3%. Flare Jab recovery 200/300 → 250/520. Blinding Flare radius 96 → 86, cooldown 880 → 1040. The 11 heat stays.
+- **Allen** 43.5% → 47.8%. He dipped to 35% once the other lows started landing. Turbine Strike is still three light hits, now 5 each at reach 90, cooldown 300.
+- **Chloe** 65.2% → 47.8%. Toxic Jab recovery 190/300 → 240/500. Gas Cloud radius 78 → 70. The chlorine tick is unchanged.
+- **Flora** 50.7% → 47.8%. No move edit.
+- **Van** 75.4% → 46.4%. Alloy Fist recovery 230/350 → 270/800. Prism Surge radius 90 → 82, cooldown 800 → 1100. Damage stays 9 and 12. Redox Flow is unchanged.
+- **Carter** 62.3% → 44.9%. Diamond Cross reach 76 → 70, recovery 220/340 → 250/660. Graphene Wave radius 92 → 82, cooldown 820 → 980. Diamond damage stays 9.
+- **Neo** 37.7% → 44.9%. Staff Crack reach 84 → 94, cooldown 320 → 280. Neon Flare radius 90 → 102. Damage stays 5+5 and 11.
+- **Scarlett** 11.6% → 44.9%. Aerial Dive was a 780 launch at run speed, and air control kept that speed after the hop, so she left the island. It is now a 460 hop at speed 160, the horizontal speed stops at the lip of the deck (and hops back if she is already past it), and the bot will not aim the dive off the open side. The landing burst radius is 88. Wing Slash cooldown 340 → 290. Damage stays 11 and 8.
+- **Aaron** 39.1% → 43.5%. No move edit.
+- **Helen** 29.0% → 43.5%. Balloon Bop stays her charge. The bubble is slower and larger (speed 240, radius 28, life 1800, damage 10) so it hangs in front of her. Noble Gust reach 64 → 82, damage 5 → 7. Air Wave speed 360, radius 36, life 1100, damage 10. Still all kinetic. Helium has no Mohs bonus, so the hits had to actually connect.
+- **Oxana** 34.8% → 42.0%. Bellows Breath life 520 → 1100, radius 26 → 32, speed 380. Vortex Kick reach 74 → 88. Oxidation Burst radius 86 → 108.
+- **Chroma** 76.8% → 40.6%. Chrome Edge reach 80 → 74, recovery 210/330 → 280/660. Prismatic Shatter radius 92 → 80, cooldown 840 → 960. Damage stays 10 and 12. A harder version of this recovery dropped her under 40%, so the edge cooldown was eased back to 660.
+
+Dashes use the same lip clamp as the dive, so a ram or a rush stops at the edge of the deck instead of carrying its owner off.
+
+Free-for-all counts are two matches each and were not used to tune. They are in `/opt/cursor/artifacts/balance-move.json` with the duel totals. The two earlier sims are `balance-move-1.json` and `balance-move-2.json`.
+
+Seed 42 still matches between real-time and fast sim, with no fall-throughs: Chroma vs Helen at 5 seconds (Helen ahead 21–17, both on the floor) and Chroma vs Lillie at 8 seconds (Chroma ahead 43–37, both on the floor).
+
+## Curve pass
+
+
 Headless CPU tournament on Elemental Isle. 24 fighters, every pair three times (828 duels) plus 16 three-player free-for-alls. 16 seconds, 3 stocks. Each match uses a fixed seed. Win rate is stocks, then lower percent, then higher damage dealt. Average KO time counts only KOs that happened. Damage dealt does not include self-hits.
 
 The before column is the original element curves (Mohs max 0.50, tensile max 0.42, full knockback) after the fast sim was locked to the same 60 Hz step as real-time play. Earlier win rates, from when heavy fighters fell through the floor, are not used.

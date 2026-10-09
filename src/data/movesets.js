@@ -2151,23 +2151,23 @@ export const MOVESETS = {
 
   duke: {
     basicCharge: m('Long Reign', {
-      kind: 'burst', type: K, damage: 10, type2: R, damage2: 8, perSecond: 0.7, perSecondCap: 10,
+      kind: 'burst', type: K, damage: 9.4, type2: R, damage2: 7.52, perSecond: 0.66, perSecondCap: 9.4,
       chargeDamageMult: 1.25, maxChargeMs: 700, radius: 62, vfx: 'spark', vfxColor: 0xfff2c0,
-      baseKnockback: 170, knockbackGrowth: 3.6, duration: 240, cooldown: 860,
+      baseKnockback: 159.8, knockbackGrowth: 3.38, duration: 240, cooldown: 860,
     }),
     basicDirectional: melee('Ducal Cleave', {
-      type: K, damage: 12, type2: R, damage2: 9, rangeW: 96, rangeH: 56, vfx: 'strike', vfxColor: 0xffe8a0,
-      baseKnockback: 190, knockbackGrowth: 4.2, duration: 320, cooldown: 560,
+      type: K, damage: 11.28, type2: R, damage2: 8.46, rangeW: 96, rangeH: 56, vfx: 'strike', vfxColor: 0xffe8a0,
+      baseKnockback: 178.6, knockbackGrowth: 3.95, duration: 320, cooldown: 560,
     }),
     specialDefense: m('Fission Split', {
       phase: true,
-      zone: { type: R, damage: 4, ms: 500, radius: 70, tick: 200, color: 0xc8ff9a },
+      zone: { type: R, damage: 3.76, ms: 500, radius: 70, tick: 200, color: 0xc8ff9a },
       duration: 480, cooldown: 980, vfx: 'shield', vfxColor: 0xd8ffc0,
     }),
     specialDirectional: m('Heavy Ion Bolt', {
-      kind: 'projectile', type: K, damage: 12, type2: R, damage2: 9, vfx: 'spark', vfxColor: 0xfff6c0,
+      kind: 'projectile', type: K, damage: 11.28, type2: R, damage2: 8.46, vfx: 'spark', vfxColor: 0xfff6c0,
       projectileSpeed: 540, projectileRadius: 11, projectileLife: 520,
-      baseKnockback: 200, knockbackGrowth: 4.4, duration: 200, cooldown: 780,
+      baseKnockback: 188, knockbackGrowth: 4.14, duration: 200, cooldown: 780,
     }),
   },
 

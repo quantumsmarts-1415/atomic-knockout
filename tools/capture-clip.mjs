@@ -57,20 +57,21 @@ await page.waitForFunction(() => {
 }, null, { timeout: 30000 });
 
 // Land, then hand the clock to us.
-await page.evaluate(async () => {
+await page.evaluate(async (scriptName) => {
   const b = window.game.scene.getScene('Battle');
   window.__akBattle = b;
   window.game.loop.sleep();
   for (let i = 0; i < 80; i++) b.runSimSteps(1);
+  const keepBots = scriptName === 'match';
   for (const f of b.fighters) {
-    f.isBot = false;
+    if (!keepBots) f.isBot = false;
     const slot = f.controlSlot;
     b.keymaps[slot] = {
       left: { isDown: false }, right: { isDown: false }, jump: { isDown: false },
       down: { isDown: false }, attack: { isDown: false }, special: { isDown: false },
     };
   }
-});
+}, scriptName);
 
 console.log(`recording ${frames} frames → ${out}`);
 
@@ -84,6 +85,7 @@ for (let frame = 0; frame < frames; frame++) {
     const keys = (f) => b.keymaps[f.controlSlot];
     const clear = (f) => {
       const k = keys(f);
+      if (!k?.left) return;
       k.left.isDown = k.right.isDown = k.jump.isDown = false;
       k.down.isDown = k.attack.isDown = k.special.isDown = false;
     };
@@ -122,11 +124,24 @@ for (let frame = 0; frame < frames; frame++) {
       else if (phase >= 140 && phase < 175) hk.special.isDown = true;
       else if (phase >= 190 && phase < 215) { hk.right.isDown = true; hk.special.isDown = true; }
     } else if (scriptName === 'match') {
-      // CPUs play so the camera moves. A high percent makes a KO likely
-      // inside a short clip without scripting the hit.
-      for (const f of b.fighters) {
-        f.isBot = true;
-        if (frame === 45) f.percent = Math.max(f.percent || 0, 140);
+      // CPUs play so the camera moves, then a scripted hit at high percent
+      // produces a KO the short clip can actually show.
+      for (const f of b.fighters) f.isBot = frame < 360;
+      if (frame === 360) {
+        const ground = b.stage?.groundY ?? 560;
+        pin(hero, 560, 1);
+        pin(foe, 700, -1);
+        foe.percent = 160;
+        foe.stocks = 1;
+        const third = b.fighters[2];
+        if (third) {
+          pin(third, 980, -1);
+          third.percent = 40;
+        }
+      }
+      if (frame >= 372 && frame < 430) {
+        hk.right.isDown = true;
+        hk.attack.isDown = true;
       }
     }
     if (typeof b.captureFrame === 'function') b.captureFrame();

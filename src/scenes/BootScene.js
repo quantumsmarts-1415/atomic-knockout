@@ -22,6 +22,9 @@ export function playtestSpec() {
       seed,
     };
   }
+  if (params.get('select') === '1') {
+    return { select: true, ids: [], speed: 1, seed };
+  }
   const raw = params.get('playtest');
   if (!raw) return null;
   const ids = raw.split(',').map((s) => s.trim()).filter((id) => CHARACTERS[id]);
@@ -198,13 +201,16 @@ export default class BootScene extends Phaser.Scene {
       for (const c of ROSTER) {
         if (c.art) this.load.image(c.art.key, c.art.file);
       }
-    } else if (spec) {
-      // Cutouts only. Sheets are hundreds of megabytes and this path is for
-      // timed CPU matches, not for admiring walk cycles.
-      for (const id of spec.ids) {
-        const art = CHARACTERS[id].art;
-        if (art) this.load.image(art.key, art.file);
+    } else if (spec?.select) {
+      // Portraits only. The table is the thing under test; full sheets are
+      // hundreds of megabytes and the preview falls back to the cutout.
+      for (const c of ROSTER) {
+        if (c.art) this.load.image(c.art.key, c.art.file);
       }
+    } else if (spec) {
+      // Just the fighters in this match, sheets included, so idle/walk/attack
+      // can be checked without pulling the rest of the roster.
+      loadRosterArt(this.load, spec.ids.map((id) => CHARACTERS[id]).filter(Boolean));
     } else {
       // character renders (Benjamin-supplied art) — characters without an art
       // entry fall back to the code-drawn vector rig automatically
@@ -279,6 +285,10 @@ export default class BootScene extends Phaser.Scene {
       ? spec.ids.map((id) => CHARACTERS[id]).filter(Boolean)
       : ROSTER;
     const proceed = () => {
+      if (spec?.select) {
+        this.scene.start('CharacterSelect', { playerSeeds: [{ slot: 0 }, { slot: 1 }] });
+        return;
+      }
       if (spec) {
         this.scene.start('Battle', {
           stageId: spec.stageId,

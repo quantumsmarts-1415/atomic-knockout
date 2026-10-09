@@ -18,6 +18,7 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.freeze) lock(victim, time, fx.freeze, true);
   if (fx.root) victim.rootedUntil = Math.max(victim.rootedUntil ?? 0, time + fx.root);
   if (fx.blind) victim.blindUntil = time + fx.blind;
+  if (fx.drift) victim.driftUntil = time + fx.drift;
   if (fx.interrupt) lock(victim, time, fx.interrupt, true);
   if (fx.burn) {
     victim.burnUntil = time + (fx.burn.ms ?? 1200);
@@ -120,6 +121,47 @@ function grantBuff(fighter, buff, time) {
     fighter.slipperyUntil = time + ms;
     fighter.slipperyMult = buff.slippery;
   }
+  if (buff.heated) fighter.heatedUntil = Math.max(fighter.heatedUntil ?? 0, time + ms);
+  if (buff.armDash) {
+    fighter.armedDash = {
+      until: time + ms,
+      heat: buff.armDash.heat ?? 7,
+      dashSpeed: buff.armDash.dashSpeed ?? 560,
+    };
+  }
+}
+
+/** Per-target damage tweaks that stay on the move instead of a character branch. */
+export function prepareMove(move, attacker, defender, now = 0) {
+  if (!move) return move;
+  let next = move;
+  const id = defender?.charDef?.id;
+  if (move.bonusVsId && id && move.bonusVsId[id]) {
+    const mult = move.bonusVsId[id];
+    next = {
+      ...next,
+      damage: (next.damage ?? 0) * mult,
+      damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
+    };
+  }
+  const state = defender?.charDef?.combat?.state;
+  if (move.bonusVsState && state && move.bonusVsState[state]) {
+    const mult = move.bonusVsState[state];
+    next = {
+      ...next,
+      damage: (next.damage ?? 0) * mult,
+      damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
+    };
+  }
+  const hot = defender && (defender.burnUntil > now || defender.heatedUntil > now || defender.heatOnHitUntil > now);
+  if (move.vsHot && hot) {
+    next = { ...next, type2: undefined, damage2: undefined, ...move.vsHot };
+  }
+  const selfHot = attacker && (attacker.burnUntil > now || attacker.heatedUntil > now);
+  if (move.heatEmpower && selfHot) {
+    next = { ...next, damage: (next.damage ?? 0) + move.heatEmpower };
+  }
+  return next;
 }
 
 export function combatOpts(defender) {

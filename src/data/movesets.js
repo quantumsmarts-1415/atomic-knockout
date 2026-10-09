@@ -523,4 +523,115 @@ export const MOVESETS = {
       baseKnockback: 210, duration: 280, cooldown: 960,
     }),
   },
+
+  // --- pilot roster (Ta, W, Re, Os, Pt). Numbers are the balance pass. ---
+  // Knockback growth is set below the kit default (5.4) on the pokes that were
+  // launching gases off Elemental Isle while those gases were ahead on percent.
+  tara: {
+    basicCharge: m('Capacitor Dump', {
+      kind: 'beam', type: E, damage: 8, chargeDamageMult: 1.75, chargeLengthMult: 2.15,
+      maxChargeMs: 760, beamLen: 148, beamThick: 24, vfx: 'laser', vfxColor: 0x7ec8ff,
+      baseKnockback: 150, duration: 200, cooldown: 740,
+    }),
+    basicDirectional: melee('Tantalizing Hook', {
+      type: K, damage: 7, pull: 210, rangeW: 92, rangeH: 42, vfx: 'spark',
+      baseKnockback: 40, knockbackGrowth: 1.2, duration: 240, cooldown: 460,
+    }),
+    specialDefense: m('Tantalus Guard', {
+      immune: [C], duration: 820, cooldown: 760, vfx: 'shield', vfxColor: 0xb7f27a,
+    }),
+    specialDirectional: m('Implant Pin', {
+      kind: 'projectile', type: K, damage: 7, visualShape: 'spearhead', vfx: 'strike',
+      onHit: { root: 780 }, projectileSpeed: 500, projectileRadius: 7, projectileLife: 520,
+      baseKnockback: 70, knockbackGrowth: 2, duration: 220, cooldown: 860,
+    }),
+  },
+
+  wolf: {
+    basicCharge: m('White-Hot Filament', {
+      kind: 'burst', type: H, damage: 7, chargeDamageMult: 1.9, chargeRadiusMult: 1.85,
+      maxChargeMs: 1200, radius: 56, vfx: 'fire', vfxColor: 0xfff1c2,
+      baseKnockback: 160, duration: 280, cooldown: 1100,
+    }),
+    basicDirectional: melee('Tin Eater', {
+      kind: 'dash', type: K, damage: 7, dashSpeed: 440, rangeW: 84, rangeH: 72,
+      bonusVsId: { sandy: 2 }, vfx: 'dash', baseKnockback: 170, knockbackGrowth: 3.8,
+      duration: 280, cooldown: 760,
+    }),
+    specialDefense: m('Unmeltable', {
+      immune: [H], kind: 'block', onlyReduce: [K], blockReduction: 0.22,
+      duration: 780, cooldown: 760, vfx: 'shield', vfxColor: 0xffe2a8,
+    }),
+    specialDirectional: m('Armor Piercer', {
+      kind: 'projectile', type: K, damage: 7, breaksBlock: true, pierce: true,
+      visualShape: 'spearhead', vfx: 'strike',
+      projectileSpeed: 580, projectileRadius: 7, projectileLife: 460,
+      baseKnockback: 190, duration: 220, cooldown: 1280,
+    }),
+  },
+
+  rex: {
+    basicCharge: m('High Octane', {
+      kind: 'buff', duration: 200, cooldown: 1200, maxChargeMs: 700, vfx: 'fire', vfxColor: 0xff9a2a,
+      buff: { ms: 2200, speed: 1.18, heated: true, armDash: { heat: 5, dashSpeed: 520 } },
+    }),
+    basicDirectional: melee("King's Edge", {
+      type: K, damage: 6, heatEmpower: 3, rangeW: 76, vfx: 'strike',
+      baseKnockback: 170, knockbackGrowth: 3.6, duration: 250, cooldown: 720,
+    }),
+    specialDefense: m('Creep Resistance', {
+      kind: 'block', onlyReduce: [K], blockReduction: 0.32, noKnockback: true,
+      debuffImmune: true, grabImmune: true,
+      duration: 700, cooldown: 960, vfx: 'shield', vfxColor: 0xd9dde6,
+    }),
+    specialDirectional: melee('Thermocouple Lash', {
+      type: E, damage: 6, rangeW: 112, rangeH: 30, vfx: 'spark', vfxColor: 0xffb45a,
+      vsHot: { type: H, damage: 10 },
+      baseKnockback: 150, duration: 240, cooldown: 980,
+    }),
+  },
+
+  oz: {
+    basicCharge: m('Densest Slam', {
+      kind: 'burst', type: K, damage: 7, chargeDamageMult: 1.75, chargeRadiusMult: 2.15,
+      maxChargeMs: 900, radius: 54, vfx: 'strike',
+      baseKnockback: 190, knockbackGrowth: 3.2, duration: 300, cooldown: 1120,
+    }),
+    basicDirectional: melee('Nib Stab', {
+      type: K, damage: 7, sweetSpot: 2, rangeW: 46, rangeH: 28, vfx: 'strike',
+      baseKnockback: 140, knockbackGrowth: 2, duration: 200, cooldown: 680,
+    }),
+    specialDefense: m('Immovable Object', {
+      kind: 'block', onlyReduce: [K], blockReduction: 0.55, noKnockback: true,
+      recoil: { type: K, damage: 4, knockback: 120 },
+      duration: 780, cooldown: 980, vfx: 'shield', vfxColor: 0x9aa4b8,
+    }),
+    specialDirectional: m('Tetroxide Puff', {
+      kind: 'burst', type: C, damage: 5, radius: 68, vfx: 'cloud', vfxColor: 0xc6f07a,
+      onHit: { drift: 900 },
+      zone: { type: C, damage: 1.8, ms: 1800, radius: 60, tick: 420, color: 0xc6f07a },
+      baseKnockback: 110, knockbackGrowth: 2.4, duration: 280, cooldown: 1100,
+    }),
+  },
+
+  pit: {
+    basicCharge: m('Catalyst Ignition', {
+      kind: 'burst', type: H, damage: 7, chargeDamageMult: 1.55, chargeRadiusMult: 1.45,
+      maxChargeMs: 800, radius: 88, bonusVsState: { gas: 1.7 }, igniteGases: true, gasCloud: 6,
+      vfx: 'fire', vfxColor: 0xfff6d0, baseKnockback: 150, duration: 260, cooldown: 980,
+    }),
+    basicDirectional: melee('Record Scratch', {
+      type: K, damage: 6, rangeW: 78, onHit: { interrupt: 220 }, vfx: 'strike',
+      baseKnockback: 110, knockbackGrowth: 2, duration: 210, cooldown: 480,
+    }),
+    specialDefense: m('Cisplatin Clamp', {
+      kind: 'counter', counterDamage: 7, counterType: C, rootMs: 700,
+      duration: 560, cooldown: 860, vfx: 'shield', vfxColor: 0xe7eef2,
+    }),
+    specialDirectional: m('Flame Test', {
+      kind: 'projectile', type: H, damage: 5, type2: C, damage2: 5, vfx: 'fire',
+      projectileSpeed: 460, projectileRadius: 12, projectileLife: 680,
+      baseKnockback: 150, duration: 230, cooldown: 900,
+    }),
+  },
 };

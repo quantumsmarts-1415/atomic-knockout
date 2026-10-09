@@ -1,0 +1,527 @@
+{
+  "oz": {
+    "id": "oz",
+    "name": "Oz",
+    "element": "Osmium",
+    "symbol": "Os",
+    "atomicNumber": 76,
+    "tagline": "The densest thing on the table.",
+    "teach": "Osmium is the densest element. Its name comes from the Greek for smell, after the sharp vapor of osmium tetroxide.",
+    "height": 138,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 50,
+    "bodyH": 122,
+    "palettes": [
+      {
+        "name": "Dense",
+        "skin": 13816538,
+        "body": 1712432,
+        "accent": 7374945,
+        "eye": 12648384
+      },
+      {
+        "name": "Nib",
+        "skin": 14540253,
+        "body": 2632752,
+        "accent": 12632256,
+        "eye": 16777215
+      },
+      {
+        "name": "Tetroxide",
+        "skin": 13816538,
+        "body": 2238514,
+        "accent": 10092288,
+        "eye": 12648384
+      },
+      {
+        "name": "Ingot",
+        "skin": 16316664,
+        "body": 6908265,
+        "accent": 4243647,
+        "eye": 2148682
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 22.587,
+      "mohs": 7,
+      "tensile": 1000,
+      "boiling": 5281,
+      "conductivity": 12,
+      "en": 2.2
+    },
+    "art": {
+      "key": "char-oz",
+      "file": "art-src/imported/oz-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 90,
+        "frameH": 143,
+        "footY": 0.9864,
+        "visibleH": 139,
+        "bodyH": 139,
+        "displayScale": 0.99281,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 90,
+            "frameH": 143,
+            "footY": 0.9864,
+            "visibleH": 139,
+            "bodyH": 139,
+            "displayScale": 0.99281
+          },
+          "walk": {
+            "count": 8,
+            "fps": 10,
+            "loop": true,
+            "frameW": 129,
+            "frameH": 145,
+            "footY": 0.9799,
+            "visibleH": 139,
+            "bodyH": 139,
+            "displayScale": 0.99281
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 152,
+            "frameH": 144,
+            "footY": 0.9865,
+            "visibleH": 139,
+            "bodyH": 139,
+            "displayScale": 0.99281
+          }
+        }
+      }
+    }
+  },
+  "pit": {
+    "id": "pit",
+    "name": "Pit",
+    "element": "Platinum",
+    "symbol": "Pt",
+    "atomicNumber": 78,
+    "tagline": "Touch hydrogen and it catches.",
+    "teach": "Platinum sponge sets hydrogen alight on contact, the trick inside Döbereiner's lamp. Cisplatin, a platinum drug, binds DNA and stops a cell in its tracks.",
+    "height": 132,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 44,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Sponge",
+        "skin": 16316664,
+        "body": 11584734,
+        "accent": 5299164,
+        "eye": 2148682
+      },
+      {
+        "name": "Record",
+        "skin": 13816538,
+        "body": 2238514,
+        "accent": 12632256,
+        "eye": 10079487
+      },
+      {
+        "name": "Flame",
+        "skin": 15721958,
+        "body": 5330272,
+        "accent": 16744448,
+        "eye": 16766771
+      },
+      {
+        "name": "Clinic",
+        "skin": 16382457,
+        "body": 13882323,
+        "accent": 3454513,
+        "eye": 2148682
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 21.452,
+      "mohs": 3.5,
+      "tensile": 183,
+      "boiling": 4098,
+      "conductivity": 9.4,
+      "en": 2.28
+    },
+    "art": {
+      "key": "char-pit",
+      "file": "art-src/imported/pit-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 68,
+        "frameH": 133,
+        "footY": 0.9854,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 68,
+            "frameH": 133,
+            "footY": 0.9854,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 10,
+            "loop": true,
+            "frameW": 92,
+            "frameH": 134,
+            "footY": 0.9855,
+            "visibleH": 134,
+            "bodyH": 134,
+            "displayScale": 0.98507
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 95,
+            "frameH": 134,
+            "footY": 0.9855,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "rex": {
+    "id": "rex",
+    "name": "Rex",
+    "element": "Rhenium",
+    "symbol": "Re",
+    "atomicNumber": 75,
+    "tagline": "Still sharp when the turbine is glowing.",
+    "teach": "Rhenium superalloys keep jet-turbine blades from creeping out of shape, and rhenium catalysts reform fuel into high-octane gasoline.",
+    "height": 134,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 46,
+    "bodyH": 118,
+    "palettes": [
+      {
+        "name": "Superalloy",
+        "skin": 15721958,
+        "body": 3026478,
+        "accent": 16744448,
+        "eye": 16763080
+      },
+      {
+        "name": "Catalyst",
+        "skin": 15658734,
+        "body": 2172460,
+        "accent": 4351765,
+        "eye": 16763080
+      },
+      {
+        "name": "Turbine",
+        "skin": 13816538,
+        "body": 1713964,
+        "accent": 12632256,
+        "eye": 10079487
+      },
+      {
+        "name": "Octane",
+        "skin": 16316664,
+        "body": 3947580,
+        "accent": 16753920,
+        "eye": 16775138
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 21.01,
+      "mohs": 7,
+      "tensile": 1070,
+      "boiling": 5903,
+      "conductivity": 5.6,
+      "en": 1.9
+    },
+    "art": {
+      "key": "char-rex",
+      "file": "art-src/imported/rex-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 120,
+        "frameH": 140,
+        "footY": 0.9861,
+        "visibleH": 136,
+        "bodyH": 136,
+        "displayScale": 0.98529,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 120,
+            "frameH": 140,
+            "footY": 0.9861,
+            "visibleH": 136,
+            "bodyH": 136,
+            "displayScale": 0.98529
+          },
+          "walk": {
+            "count": 8,
+            "fps": 10,
+            "loop": true,
+            "frameW": 140,
+            "frameH": 138,
+            "footY": 0.9789,
+            "visibleH": 134,
+            "bodyH": 134,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 170,
+            "frameH": 139,
+            "footY": 0.986,
+            "visibleH": 136,
+            "bodyH": 136,
+            "displayScale": 0.98529
+          }
+        }
+      }
+    }
+  },
+  "tara": {
+    "id": "tara",
+    "name": "Tara",
+    "element": "Tantalum",
+    "symbol": "Ta",
+    "atomicNumber": 73,
+    "tagline": "The capacitor that holds the charge.",
+    "teach": "Tantalum capacitors sit inside phones and medical implants. The metal barely reacts with acid, which is why surgeons trust it.",
+    "height": 130,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 44,
+    "bodyH": 114,
+    "palettes": [
+      {
+        "name": "Capacitor",
+        "skin": 15721958,
+        "body": 5330272,
+        "accent": 4243647,
+        "eye": 16766771
+      },
+      {
+        "name": "Anode",
+        "skin": 15721958,
+        "body": 2632752,
+        "accent": 16753920,
+        "eye": 16766771
+      },
+      {
+        "name": "Surgical",
+        "skin": 16316664,
+        "body": 11584734,
+        "accent": 3454513,
+        "eye": 2148682
+      },
+      {
+        "name": "Night",
+        "skin": 13816538,
+        "body": 1711408,
+        "accent": 5299164,
+        "eye": 10079487
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 16.678,
+      "mohs": 6.5,
+      "tensile": 200,
+      "boiling": 5731,
+      "conductivity": 7.7,
+      "en": 1.5
+    },
+    "art": {
+      "key": "char-tara",
+      "file": "art-src/imported/tara-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 58,
+        "frameH": 132,
+        "footY": 0.9853,
+        "visibleH": 131,
+        "bodyH": 131,
+        "displayScale": 0.99237,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 58,
+            "frameH": 132,
+            "footY": 0.9853,
+            "visibleH": 131,
+            "bodyH": 131,
+            "displayScale": 0.99237
+          },
+          "walk": {
+            "count": 8,
+            "fps": 10,
+            "loop": true,
+            "frameW": 97,
+            "frameH": 134,
+            "footY": 0.9783,
+            "visibleH": 130,
+            "bodyH": 130,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 122,
+            "frameH": 132,
+            "footY": 0.9853,
+            "visibleH": 131,
+            "bodyH": 131,
+            "displayScale": 0.99237
+          }
+        }
+      }
+    }
+  },
+  "wolf": {
+    "id": "wolf",
+    "name": "Wolf",
+    "element": "Tungsten",
+    "symbol": "W",
+    "atomicNumber": 74,
+    "tagline": "The filament that will not melt.",
+    "teach": "Tungsten has the highest melting point of any metal. Its old name, wolfram, came from the way it ate tin during smelting.",
+    "height": 136,
+    "facing": 1,
+    "airJumps": 0,
+    "bodyW": 48,
+    "bodyH": 120,
+    "palettes": [
+      {
+        "name": "Filament",
+        "skin": 15721958,
+        "body": 3947580,
+        "accent": 16758528,
+        "eye": 16775138
+      },
+      {
+        "name": "Ore",
+        "skin": 14540253,
+        "body": 2631720,
+        "accent": 10053120,
+        "eye": 16775138
+      },
+      {
+        "name": "Penetrator",
+        "skin": 13882323,
+        "body": 1713203,
+        "accent": 12632256,
+        "eye": 14540253
+      },
+      {
+        "name": "Bulb",
+        "skin": 16382457,
+        "body": 6908265,
+        "accent": 16766720,
+        "eye": 16777215
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 19.254,
+      "mohs": 7.5,
+      "tensile": 585,
+      "boiling": 6203,
+      "conductivity": 20,
+      "en": 2.36
+    },
+    "art": {
+      "key": "char-wolf",
+      "file": "art-src/imported/wolf-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 109,
+        "frameH": 143,
+        "footY": 0.9864,
+        "visibleH": 138,
+        "bodyH": 138,
+        "displayScale": 0.98551,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 109,
+            "frameH": 143,
+            "footY": 0.9864,
+            "visibleH": 138,
+            "bodyH": 138,
+            "displayScale": 0.98551
+          },
+          "walk": {
+            "count": 8,
+            "fps": 10,
+            "loop": true,
+            "frameW": 184,
+            "frameH": 145,
+            "footY": 0.9799,
+            "visibleH": 136,
+            "bodyH": 136,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 170,
+            "frameH": 145,
+            "footY": 0.9799,
+            "visibleH": 136,
+            "bodyH": 136,
+            "displayScale": 1
+          }
+        }
+      }
+    }
+  }
+}

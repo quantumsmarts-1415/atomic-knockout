@@ -2,8 +2,8 @@ import * as Phaser from 'phaser';
 import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
-import { interceptHit } from './defense.js';
-import { applyOnCast, applyOnHit, bonusPackets, combatOpts, tickKit } from './kit.js';
+import { applyImmunities, interceptHit } from './defense.js';
+import { applyOnCast, applyOnHit, bonusPackets, combatOpts, prepareMove, tickKit } from './kit.js';
 import { playVfx } from './MoveVfx.js';
 import { play as sfx } from './sfx.js';
 
@@ -32,11 +32,12 @@ const GRAVITY = 1500;
 /** Damage after the derived combat profile, or the legacy 5%-per-point
  *  table when the defender has no element record (engine tests). */
 function dealtDamage(attacker, move, defender) {
+  const now = defender.scene?.time?.now ?? 0;
+  move = prepareMove(move, attacker, defender, now);
   const opts = combatOpts(defender);
   if (move?.chemDealtMult) opts.chemDealtMult = move.chemDealtMult;
   if (defender.charDef?.combat) {
     const resolved = resolveMoveDamage(move, attacker?.charDef, defender.charDef, opts);
-    const now = defender.scene?.time?.now ?? 0;
     for (const bonus of bonusPackets(attacker, now)) {
       const dealt = resolvePacket(bonus.damage, bonus.type, attacker?.charDef?.combat, defender.charDef.combat, opts);
       resolved.packets.push({ type: bonus.type, base: bonus.damage, dealt, bonus: true });
@@ -132,6 +133,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
     tickKit(this, time);
 
     const inp = this.input;
+    if (this.driftUntil > time && Math.floor(time / 180) % 2 === 0) {
+      const left = inp.left;
+      inp.left = inp.right;
+      inp.right = left;
+    }
     const pressedJump = inp.jump && !this._prev.jump;
     const pressedAttack = inp.attack && !this._prev.attack;
     const pressedSpecial = inp.special && !this._prev.special;
@@ -273,6 +279,18 @@ export default class Fighter extends Phaser.GameObjects.Container {
   }
 
   startMove(time, move, slot, moveKey = null) {
+    if (moveKey === 'basicDirectional' && this.armedDash && time < this.armedDash.until) {
+      const arm = this.armedDash;
+      this.armedDash = null;
+      move = {
+        ...move,
+        kind: 'dash',
+        dashSpeed: arm.dashSpeed ?? 560,
+        type2: 'heat',
+        damage2: (move.damage2 ?? 0) + (arm.heat ?? 7),
+        vfx: 'fire',
+      };
+    }
     this.state = 'attack';
     this.currentMove = move;
     this.currentMoveKey = moveKey;
@@ -459,6 +477,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
 
     let incoming = move;
+    if (this.state === 'defending' && this.defenseMove?.immune?.length && !move.isSelf && !move.isCounterAttack) {
+      const stripped = applyImmunities(incoming, this.defenseMove);
+      if (stripped.emptied) {
+        this.rig.setFlash(0xaee6ff);
+        return 0;
+      }
+      incoming = stripped.move;
+    }
     if (move.bonusVsBlock && this.state === 'defending') {
       const bump = 1 + move.bonusVsBlock;
       incoming = {
@@ -522,6 +548,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         const dir = launchDir || away;
         this.body.setVelocity(kb * dir * Math.cos(0.45) * slip, kb * -0.9);
       }
+      this.noteHeatAndRecoil(attacker, incoming, time, dealt);
       return dmg;
     }
 
@@ -562,8 +589,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
       return dmg;
     }
 
-    const kb = (((incoming.baseKnockback ?? 0) + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1);
+    let kb = (((incoming.baseKnockback ?? 0) + this.percent * (incoming.knockbackGrowth ?? 0)) / this.charDef.stats.weight) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1);
     const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
+    const pinned = this.state === 'defending' && this.defenseMove?.noKnockback && !incoming.isSelf;
+    if (pinned) kb = 0;
 
     // Launch direction.
     //
@@ -583,10 +612,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
     const angle = incoming.lift ? -1.25 : -0.9; // lift sends them up (Balloon Bop)
     let vx = kb * dir * Math.cos(0.45) * slip;
-    if (incoming.pull && attacker) vx = Math.sign((attacker.x ?? this.x) - this.x || dir) * incoming.pull;
+    const grabbed = incoming.pull && attacker && !pinned && !(this.defenseMove?.grabImmune && this.state === 'defending');
+    if (grabbed) vx = Math.sign((attacker.x ?? this.x) - this.x || dir) * incoming.pull;
     this.body.setVelocity(vx, kb * angle);
 
     applyOnHit(attacker, this, incoming, time);
+    this.noteHeatAndRecoil(attacker, incoming, time, dealt);
 
     this.state = 'hurt';
     this.stateUntil = time + 320 + Math.min(this.percent * 2, 300); // more hitstun at high %
@@ -595,6 +626,26 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (this.state !== 'ko' && this.state !== 'dead') this.rig.setFlash(null);
     });
     return dmg;
+  }
+
+  noteHeatAndRecoil(attacker, incoming, time, dealt) {
+    if (dealt?.packets?.some((p) => p.type === 'heat' && p.dealt > 0)) {
+      this.heatedUntil = Math.max(this.heatedUntil ?? 0, time + 2200);
+    }
+    const defense = this.defenseMove;
+    if (this.state !== 'defending' || !defense?.recoil || !attacker || attacker === this) return;
+    if (incoming.isCounterAttack || incoming.isSelf) return;
+    const r = defense.recoil;
+    const echo = {
+      name: defense.name,
+      type: r.type ?? 'kinetic',
+      damage: r.damage ?? 5,
+      baseKnockback: r.knockback ?? 140,
+      knockbackGrowth: r.growth ?? 3,
+      isCounterAttack: true,
+    };
+    const cdmg = attacker.takeHit(this, echo, time, this.facing);
+    if (cdmg > 0) this.scene.noteHit?.(this, attacker, echo);
   }
 
   /** Damage taken always counts. Damage dealt counts only when someone else landed it. */

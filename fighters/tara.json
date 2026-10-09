@@ -1,0 +1,32 @@
+{
+  "id": "tara",
+  "name": "Tara",
+  "element": "Tantalum",
+  "symbol": "Ta",
+  "atomicNumber": 73,
+  "tagline": "The capacitor that holds the charge.",
+  "teach": "Tantalum capacitors sit inside phones and medical implants. The metal barely reacts with acid, which is why surgeons trust it.",
+  "height": 130,
+  "facing": 1,
+  "airJumps": 0,
+  "bodyW": 44,
+  "bodyH": 114,
+  "elementData": {
+    "state": "solid",
+    "family": "transition",
+    "metal": true,
+    "noble": false,
+    "density": 16.678,
+    "mohs": 6.5,
+    "tensile": 200,
+    "boiling": 5731,
+    "conductivity": 7.7,
+    "en": 1.5
+  },
+  "palettes": [
+    { "name": "Capacitor", "skin": 15721958, "body": 5330272, "accent": 4243647, "eye": 16766771 },
+    { "name": "Anode", "skin": 15721958, "body": 2632752, "accent": 16753920, "eye": 16766771 },
+    { "name": "Surgical", "skin": 16316664, "body": 11584734, "accent": 3454513, "eye": 2148682 },
+    { "name": "Night", "skin": 13816538, "body": 1711408, "accent": 5299164, "eye": 10079487 }
+  ]
+}

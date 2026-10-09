@@ -653,6 +653,30 @@ export default class BattleScene extends Phaser.Scene {
         if (owner.alive) this.resolveBurst(owner, { ...move, _retried: true, missRetry: false });
       });
     }
+    if (move.igniteGases && this.zones?.length) {
+      const sparks = [];
+      for (const z of this.zones) {
+        if (z.dead) continue;
+        const reach = (move.radius ?? 80) + (z.radius ?? 0);
+        if (Phaser.Math.Distance.Between(cx, cy, z.x, z.y) <= reach) {
+          sparks.push({ x: z.x, y: z.y, radius: Math.max(36, (z.radius ?? 40) * 0.65) });
+        }
+      }
+      for (const s of sparks) {
+        this.resolveBurst(owner, {
+          ...move,
+          igniteGases: false,
+          bonusVsState: null,
+          type: 'heat',
+          damage: move.gasCloud ?? 6,
+          type2: undefined,
+          damage2: undefined,
+          radius: s.radius,
+          chain: null,
+          zone: null,
+        }, { x: s.x, y: s.y });
+      }
+    }
     if (move.chain && !move._chained) {
       for (let i = 1; i <= move.chain.count; i++) {
         const echo = {

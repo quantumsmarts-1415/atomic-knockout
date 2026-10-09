@@ -1,6 +1,7 @@
 import { deriveProfile } from './balance.js';
 import { ELEMENTS } from './elements.js';
 import { MOVESETS } from './movesets.js';
+import { IMPORTED_ROSTER, characterFromImport } from './imported.js';
 
 // ---------------------------------------------------------------------------
 // CHARACTER DATA — the single source of truth for the roster.
@@ -2326,6 +2327,14 @@ export const CHARACTERS = {
     },
   },
 };
+
+// Imported fighters (tools/import-fighter.js) join the same table. A moveset
+// in movesets.js still replaces the placeholder kit below.
+for (const rec of Object.values(IMPORTED_ROSTER)) {
+  if (!rec?.id || CHARACTERS[rec.id]) continue;
+  ELEMENTS[rec.id] = rec.elementData;
+  CHARACTERS[rec.id] = characterFromImport(rec);
+}
 
 // Derived combat profiles overwrite the hand-tuned speed / jump / weight /
 // gravity. airJumps stays a per-character choice (the design doc doesn't

@@ -1,0 +1,32 @@
+{
+  "id": "wolf",
+  "name": "Wolf",
+  "element": "Tungsten",
+  "symbol": "W",
+  "atomicNumber": 74,
+  "tagline": "The filament that will not melt.",
+  "teach": "Tungsten has the highest melting point of any metal. Its old name, wolfram, came from the way it ate tin during smelting.",
+  "height": 136,
+  "facing": 1,
+  "airJumps": 0,
+  "bodyW": 48,
+  "bodyH": 120,
+  "elementData": {
+    "state": "solid",
+    "family": "transition",
+    "metal": true,
+    "noble": false,
+    "density": 19.254,
+    "mohs": 7.5,
+    "tensile": 585,
+    "boiling": 6203,
+    "conductivity": 20,
+    "en": 2.36
+  },
+  "palettes": [
+    { "name": "Filament", "skin": 15721958, "body": 3947580, "accent": 16758528, "eye": 16775138 },
+    { "name": "Ore", "skin": 14540253, "body": 2631720, "accent": 10053120, "eye": 16775138 },
+    { "name": "Penetrator", "skin": 13882323, "body": 1713203, "accent": 12632256, "eye": 14540253 },
+    { "name": "Bulb", "skin": 16382457, "body": 6908265, "accent": 16766720, "eye": 16777215 }
+  ]
+}

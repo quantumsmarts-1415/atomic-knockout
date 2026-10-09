@@ -351,19 +351,24 @@ export class Rig extends Phaser.GameObjects.Container {
     }
 
     if (this.sheetMode) {
-      // 'attack' covers both move slots; pick the clip the move actually is
-      const clip = state === 'attack'
+      // 'attack' covers both move slots; pick the clip the move actually is.
+      // Charge, defense, and specials with no sheet of their own play the
+      // attack clip under the effect layer.
+      const wanted = state === 'attack'
         ? (this.moveSlot === 'special' ? 'special' : 'attack')
         : state;
-      const def = this.sheets.clips[clip] ? clip : 'idle';
+      let def = this.sheets.clips[wanted] ? wanted : 'idle';
+      const moveState = state === 'attack' || state === 'charging' || state === 'defending';
+      if (def === 'idle' && moveState && this.sheets.clips.attack) def = 'attack';
       const info = this.sheets.clips[def];
 
-      if (def === 'attack' || def === 'special') {
+      if ((def === 'attack' || def === 'special') && moveState) {
         // Scrub these by the move's own progress rather than playing them at
         // a fixed frame rate, so the swing always lines up with move.duration
         // no matter how the move is retuned in characters.js.
+        const progress = state === 'attack' ? (this.attackSwing ?? 0) : (this.poseT ?? this.attackSwing ?? 0);
         const i = Phaser.Math.Clamp(
-          Math.floor(this.attackSwing * info.count), 0, info.count - 1,
+          Math.floor(progress * info.count), 0, info.count - 1,
         );
         this.sprite.anims.stop();
         this.sprite.setTexture(sheetKey(this.art, def), i);
@@ -386,7 +391,7 @@ export class Rig extends Phaser.GameObjects.Container {
       // No attack/charge/defend sheet: stay on the idle clip. A small
       // telegraph marks the state; the move itself is the effects layer.
       // Do not scrub idle frames as if they were a swing.
-      const posed = def === clip;
+      const posed = def === wanted || ((def === 'attack' || def === 'special') && moveState);
       const layout = this._layoutScale ?? (Math.abs(this.sprite.scaleX) || 1);
       this.sprite.x = 0;
       this.sprite.y = 0;

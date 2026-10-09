@@ -30,6 +30,25 @@ function rootMs(defense, attacker) {
   return ms;
 }
 
+/** Drop packets a defense is fully immune to. emptied means nothing remains. */
+export function applyImmunities(move, defense) {
+  const immune = defense?.immune;
+  if (!immune?.length || !move) return { move, emptied: false };
+  const types = typesOf(move);
+  if (types.length && types.every((t) => immune.includes(t))) return { move, emptied: true };
+  const next = { ...move };
+  if (next.type && immune.includes(canonicalType(next.type))) {
+    next.damage = 0;
+    next.type = undefined;
+  }
+  if (next.type2 && immune.includes(canonicalType(next.type2))) {
+    next.damage2 = 0;
+    next.type2 = undefined;
+  }
+  const left = typesOf(next);
+  return { move: next, emptied: left.length === 0 };
+}
+
 /**
  * @returns {{ result: 'pass'|'negate'|'pop'|'partial'|'counter', reduction?: number, noKnockback?: boolean, counter?: object }}
  */

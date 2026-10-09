@@ -3,6 +3,7 @@
 //
 //   npm run sim
 //   SIM_LIMIT=2 SIM_TAG=smoke npm run sim
+//   SIM_PAIR=1 SIM_ONLY=helen,tara npm run sim   # just those matchups, with a pair log
 //
 // Writes an aggregate JSON (win rate, damage, KO time, damage by type)
 // to SIM_OUT (default /tmp/ak-sim/<tag>.json). Duels and 3-player FFAs
@@ -27,6 +28,8 @@ const CHROME = process.env.PLAYWRIGHT_CHROME
   || (fs.existsSync('/usr/bin/google-chrome') ? '/usr/bin/google-chrome' : '/usr/local/bin/google-chrome');
 
 const IDS = ROSTER.map((c) => c.id);
+const ONLY = (process.env.SIM_ONLY || '').split(',').map((s) => s.trim()).filter(Boolean);
+const PAIR = process.env.SIM_PAIR === '1';
 const TYPES = ['kinetic', 'heat', 'electrical', 'chemical', 'radiation'];
 
 const TRIOS = [
@@ -38,6 +41,10 @@ const TRIOS = [
   ['sully', 'chloe', 'aaron'],
   ['kyle', 'cal', 'scarlett'],
   ['titan', 'van', 'chroma'],
+  ['tara', 'wolf', 'rex'],
+  ['oz', 'pit', 'chroma'],
+  ['tara', 'hydra', 'helen'],
+  ['wolf', 'van', 'titan'],
 ];
 
 function matchSeed(kind, ids, rep) {
@@ -51,13 +58,15 @@ function jobs() {
   const list = [];
   for (let i = 0; i < IDS.length; i++) {
     for (let j = i + 1; j < IDS.length; j++) {
+      if (ONLY.length && !ONLY.includes(IDS[i]) && !ONLY.includes(IDS[j])) continue;
+      if (PAIR && ONLY.length && !(ONLY.includes(IDS[i]) && ONLY.includes(IDS[j]))) continue;
       for (let r = 0; r < REPS; r++) {
         const pair = r % 2 === 0 ? [IDS[i], IDS[j]] : [IDS[j], IDS[i]];
         list.push({ kind: 'duel', ids: pair, seed: matchSeed('duel', pair, r) });
       }
     }
   }
-  for (const trio of TRIOS) {
+  if (!ONLY.length) for (const trio of TRIOS) {
     for (let r = 0; r < 2; r++) {
       const ids = r % 2 === 0 ? trio : [trio[1], trio[2], trio[0]];
       list.push({ kind: 'ffa', ids, seed: matchSeed('ffa', ids, r) });
@@ -208,6 +217,7 @@ async function main() {
   const duels = {};
   const ffas = {};
   const failures = [];
+  const pairLog = [];
   let done = 0;
   const started = Date.now();
   try {
@@ -223,6 +233,13 @@ async function main() {
           const report = await runOne(slot, job);
           if (job.kind === 'ffa') addMatch(ffas, report);
           else addMatch(duels, report);
+          if (PAIR && job.kind === 'duel') {
+            pairLog.push({
+              ids: job.ids.join(' vs '),
+              winner: report.winnerId,
+              dealt: Object.fromEntries((report.fighters ?? []).map((f) => [f.id, Math.round(f.damageDealt ?? 0)])),
+            });
+          }
           if (report.consoleErrors?.length) {
             failures.push({ ids: job.ids, errors: report.consoleErrors.slice(0, 3) });
           }
@@ -265,6 +282,10 @@ async function main() {
   const file = path.join(OUT, `${TAG}.json`);
   fs.writeFileSync(file, JSON.stringify(payload, null, 2));
   const played = (rows) => markdown(rows.filter((r) => r.matches > 0));
+  if (pairLog.length) {
+    console.log('\nPAIRS');
+    for (const row of pairLog) console.log(`${row.ids} -> ${row.winner} ${JSON.stringify(row.dealt)}`);
+  }
   console.log(`\nDUELS\n${played(duelRows)}`);
   if (ffaRows.some((r) => r.matches)) console.log(`\nFFA\n${played(ffaRows)}`);
   console.log(`\nwrote ${file}`);

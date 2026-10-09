@@ -147,7 +147,7 @@ function blank() {
 
 const koPercents = { sum: 0, n: 0 };
 const koHist = {};
-const clock = { finished: 0, timedOut: 0, koTimeSum: 0, koTimeN: 0, elapsedSum: 0, elapsedMax: 0 };
+const clock = { finished: 0, timedOut: 0, koTimeSum: 0, koTimeN: 0, elapsedSum: 0, elapsedMax: 0, collisionUsSum: 0, collisionN: 0 };
 
 function addMatch(table, report) {
   const start = report.matchStart ?? 0;
@@ -186,6 +186,10 @@ function addMatch(table, report) {
   else clock.finished += 1;
   const elapsed = report.elapsedMs ?? 0;
   clock.elapsedSum += elapsed;
+  if (Number.isFinite(report.collisionUs)) {
+    clock.collisionUsSum += report.collisionUs;
+    clock.collisionN += 1;
+  }
   if (elapsed > clock.elapsedMax) clock.elapsedMax = elapsed;
 }
 
@@ -347,6 +351,7 @@ async function main() {
     matches: queue.length,
     failures,
     avgKoPercent: koPercents.n ? Math.round(koPercents.sum / koPercents.n) : null,
+    avgCollisionUs: clock.collisionN ? Math.round(clock.collisionUsSum / clock.collisionN) : null,
     koCount: koPercents.n,
     koHist,
     avgKoTimeMs: clock.koTimeN ? Math.round(clock.koTimeSum / clock.koTimeN) : null,
@@ -372,6 +377,7 @@ async function main() {
   console.log(`\nDUELS\n${played(duelRows)}`);
   if (ffaRows.some((r) => r.matches)) console.log(`\nFFA\n${played(ffaRows)}`);
   console.log(`\nwrote ${file}`);
+  console.log(`avg KO% ${payload.avgKoPercent}  collision ${payload.avgCollisionUs} µs/step  outside ${outside.length}`);
   if (failures.length) console.log(`failures ${failures.length}`);
 }
 

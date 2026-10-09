@@ -5,7 +5,7 @@ import { resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, interceptHit } from './defense.js';
 import { applyOnCast, applyOnHit, bonusPackets, combatOpts, prepareMove, tickKit, weakestType } from './kit.js';
 import { playVfx } from './MoveVfx.js';
-import { hurtboxes, hurtUnion, hitboxes, pushbox } from './boxes.js';
+import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
 import { play as sfx, playHit } from './sfx.js';
 import {
   FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, launchAngle,
@@ -966,13 +966,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
   // Axis-aligned hitbox in world space for the current melee attack.
   // One rectangle covering every live strike box, for callers that want a tip.
   getHitboxRect() {
-    const list = hitboxes(this);
-    if (!list.length) return null;
-    const x0 = Math.min(...list.map((r) => r.x));
-    const y0 = Math.min(...list.map((r) => r.y));
-    const x1 = Math.max(...list.map((r) => r.x + r.width));
-    const y1 = Math.max(...list.map((r) => r.y + r.height));
-    return new Phaser.Geom.Rectangle(x0, y0, x1 - x0, y1 - y0);
+    const hb = hitAabb(this);
+    if (!hb) return null;
+    return new Phaser.Geom.Rectangle(hb.x, hb.y, hb.width, hb.height);
   }
 
   getHurtboxRect() {

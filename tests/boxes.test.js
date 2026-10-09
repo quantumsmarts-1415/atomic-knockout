@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ROSTER } from '../src/data/characters.js';
-import { HURTBOXES } from '../src/data/hurtboxes.js';
 import {
-  hurtboxes, poseName, strikeRect, hitboxes, resolvePush, projectileSpriteSize, rectsOverlap,
+  poseName, arcReach, strikeHits, resolvePush, projectileSpriteSize, projectileHits, rectsOverlap,
+  fittedSize, maskBook, debugHitCells,
 } from '../src/engine/boxes.js';
+
+const POSE = { rot: 0, sx: 1, sy: 1, x: 0, y: 0 };
 
 function fighter(id, extra = {}) {
   const char = ROSTER.find((c) => c.id === id);
@@ -24,6 +26,7 @@ function fighter(id, extra = {}) {
     phasingUntil: extra.phasingUntil ?? 0,
     defenseMove: extra.defenseMove ?? null,
     scene: { simNow: extra.now ?? 1000 },
+    rig: extra.rig === undefined ? { maskClip: 'idle', maskFrame: 0, _pose: POSE } : extra.rig,
     body: {
       blocked: { down: extra.grounded !== false },
       touching: { down: false },
@@ -37,56 +40,68 @@ function fighter(id, extra = {}) {
   };
 }
 
-test('every fighter has head, torso, and leg boxes that sit on the feet', () => {
+test('every fighter has a body mask that stands on the feet', () => {
   for (const c of ROSTER) {
-    const book = HURTBOXES[c.id];
-    assert.ok(book?.idle?.head && book.idle.torso && book.idle.legs, c.id);
-    assert.ok(book.walk && book.crouch && book.jump && book.attack, c.id);
-    const parts = Object.values(book.idle);
-    const foot = Math.max(...parts.map((b) => b.y + b.h));
-    const top = Math.min(...parts.map((b) => b.y));
-    assert.ok(foot < 8 && foot > -12, `${c.id} feet at ${foot}`);
-    const h = foot - top;
-    assert.ok(h > c.art.bodyH * 0.5 && h < c.art.bodyH * 1.85, `${c.id} height ${h}`);
-    assert.ok(book.crouch.head.h < book.idle.head.h, `${c.id} crouch`);
+    const book = maskBook(c.id);
+    const idle = book?.clips?.idle?.[0];
+    assert.ok(idle?.n > 8, c.id);
+    assert.ok(idle.maxY < 12 && idle.maxY > -24, `${c.id} feet at ${idle.maxY}`);
+    const h = idle.maxY - idle.minY;
+    const bodyH = c.art.bodyH || 100;
+    assert.ok(h > bodyH * 0.35 && h < bodyH * 2.4, `${c.id} height ${h} vs ${bodyH}`);
+    assert.ok(book.push && book.push.w >= 10 && book.push.h > 16, c.id);
   }
 });
 
-test('crouch and jump change the live hurtboxes', () => {
-  const stand = hurtboxes(fighter('hydra'));
-  const crouch = hurtboxes(fighter('hydra', { state: 'jumpsquat' }));
-  const air = hurtboxes(fighter('hydra', { state: 'jump', grounded: false }));
-  const standH = Math.max(...stand.map((r) => r.y + r.height)) - Math.min(...stand.map((r) => r.y));
-  const crouchH = Math.max(...crouch.map((r) => r.y + r.height)) - Math.min(...crouch.map((r) => r.y));
-  const airW = Math.max(...air.map((r) => r.x + r.width)) - Math.min(...air.map((r) => r.x));
-  const standW = Math.max(...stand.map((r) => r.x + r.width)) - Math.min(...stand.map((r) => r.x));
-  assert.ok(crouchH < standH * 0.8);
-  assert.ok(airW < standW);
+test('crouch squashes the mask and jump narrows it', () => {
+  const stand = fighter('hydra');
+  const crouch = fighter('hydra', { state: 'jumpsquat', rig: null });
+  const air = fighter('hydra', { state: 'jump', grounded: false, rig: null });
+  assert.ok(fittedSize(crouch).h < fittedSize(stand).h * 0.92);
+  assert.ok(fittedSize(air).w < fittedSize(stand).w);
   assert.equal(poseName(fighter('hydra', { state: 'walk' })), 'walk');
   assert.equal(poseName(fighter('hydra', { state: 'attack' })), 'attack');
 });
 
-test('a strike grows across the active frames and stays in front', () => {
+test('a swept arc grows across the active frames and pixel strikes hit', () => {
   const f = fighter('titan');
-  f.frameData = { startup: 4, active: 6 };
+  f.frameData = { startup: 4, active: 6, recovery: 4 };
   f.activeHit = { move: { rangeW: 80, rangeH: 36, kind: 'melee' }, dir: 1, from: 0, until: 5000 };
   f.attackFrame = 4;
-  const early = strikeRect(f);
+  const early = arcReach(f);
   f.attackFrame = 9;
-  const late = strikeRect(f);
-  assert.ok(early && late);
-  assert.ok(late.width > early.width);
-  assert.ok(early.x > f.x);
+  const late = arcReach(f);
+  assert.ok(early > 0 && late > early);
   f.attackFrame = 2;
-  assert.equal(strikeRect(f), null);
-  f.attackFrame = 6;
-  f.activeHit.move.kind = 'dash';
-  const dash = hitboxes(f);
-  assert.equal(dash.length, 3);
+  assert.equal(arcReach(f), 0);
+
+  const hog = fighter('hog');
+  hog.frameData = { startup: 2, active: 8, recovery: 4 };
+  hog.activeHit = { move: { rangeW: 70, rangeH: 36, kind: 'melee' }, dir: 1, from: 0, until: 9000 };
+  hog.attackFrame = 4;
+  hog.rig = { maskClip: 'attack', maskFrame: 0, _pose: POSE };
+  let cells = [];
+  const n = maskBook('hog').clips.attack.length;
+  for (let i = 0; i < n; i++) {
+    hog.rig.maskFrame = i;
+    cells = debugHitCells(hog);
+    if (cells.length >= 3) break;
+  }
+  assert.ok(cells.length >= 3, 'hog has a pixel strike');
+  const spot = cells[Math.floor(cells.length / 2)];
+  const victim = fighter('hydra', { x: spot.x + spot.w / 2, y: spot.y + spot.h / 2 + 30 });
+  assert.equal(strikeHits(hog, victim), true);
+  const far = fighter('hydra', { x: hog.x - 400, y: hog.y });
+  assert.equal(strikeHits(hog, far), false);
+
+  hog.activeHit.move.kind = 'dash';
+  const near = fighter('hydra', { x: hog.x + 12, y: hog.y });
+  assert.equal(strikeHits(hog, near), true);
+  assert.equal(strikeHits(hog, far), false);
 });
 
 test('grounded fighters push apart and airborne fighters do not', () => {
-  const a = fighter('sully', { x: 200, weight: 1.4 });
+  const a = fighter('sully', { x: 200 });
   const b = fighter('hydra', { x: 230 });
   a.charDef = { ...a.charDef, stats: { ...a.charDef.stats, weight: 1.4 } };
   const ax = a.x;
@@ -95,7 +110,6 @@ test('grounded fighters push apart and airborne fighters do not', () => {
   assert.ok(a.x < ax, 'heavy still yields some ground');
   assert.ok(b.x > bx, 'light gets pushed more');
   assert.ok(b.x - a.x > bx - ax);
-  const gap = b.x - a.x;
   const air = fighter('hydra', { x: a.x + 20, grounded: false, state: 'fall' });
   const before = air.x;
   resolvePush([a, air]);
@@ -106,7 +120,7 @@ test('grounded fighters push apart and airborne fighters do not', () => {
   assert.equal(dodge.x, dodgeX);
 });
 
-test('projectile boxes match the drawn sprite', () => {
+test('projectile shapes match the drawn sprite and hit a body', () => {
   const orb = projectileSpriteSize({ projectileRadius: 10 });
   const spear = projectileSpriteSize({ projectileRadius: 10, visualShape: 'spearhead' });
   const balloon = projectileSpriteSize({ projectileRadius: 10, vfx: 'balloon' });
@@ -116,4 +130,14 @@ test('projectile boxes match the drawn sprite', () => {
     { x: 0, y: 0, width: orb.w, height: orb.h },
     { x: orb.w - 1, y: 0, width: 4, height: 4 },
   ));
+  const hog = fighter('hog', { x: 300, y: 400 });
+  const shot = {
+    gfx: { x: hog.x, y: hog.y - 50 },
+    move: { projectileRadius: 14, vfx: 'gust' },
+    radius: 14,
+    owner: { facing: 1 },
+  };
+  assert.equal(projectileHits(shot, hog), true);
+  shot.gfx = { x: hog.x + 400, y: hog.y };
+  assert.equal(projectileHits(shot, hog), false);
 });

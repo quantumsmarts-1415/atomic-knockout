@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------------
 import * as Phaser from 'phaser';
 import { FEEL, traumaForHit, traumaOffset } from './feel.js';
-import { strikeRect } from './boxes.js';
+import { slashPolyline } from './boxes.js';
 
 const TEX = {
   dot: 'juice-dot',
@@ -381,39 +381,46 @@ export class Juice {
 
   swing(fighter, move) {
     if (this.fast || !fighter) return;
-    const facing = fighter.facing || 1;
-    const slash = this.borrow(TEX.slash);
-    if (!slash) return;
-    const color = SPARK[move?.type] ?? 0xfff2a8;
-    const rect = strikeRect(fighter);
-    const reach = rect ? rect.width / 72 : Math.max(0.55, (move?.rangeW ?? 72) / 90);
-    const thick = rect ? Math.max(0.4, rect.height / 28) : reach;
-    slash.setPosition(
-      rect ? rect.x + rect.width / 2 : fighter.x + facing * fighter.bodyW * 0.45,
-      rect ? rect.y + rect.height / 2 : fighter.y - fighter.bodyH * 0.58,
-    );
-    slash.setTint(color).setRotation(facing === 1 ? -0.35 : Math.PI + 0.35).setDepth(20);
-    slash.setBlendMode(Phaser.BlendModes.ADD);
-    const frames = fighter.frameData?.active ?? 8;
-    this.track(slash, {
-      kind: 'spark', life: (frames * FEEL.stepMs) / 1000, scale0: reach, scale1: reach, alpha0: 0.92, holdScale: true,
-    });
+    if (move?.kind === 'dash' || move?.kind === 'projectile' || move?.kind === 'burst' || move?.kind === 'beam') return;
     this._swings ??= new Map();
-    this._swings.set(fighter, slash);
-    if (rect) slash.setScale(reach, thick);
+    let g = this._swings.get(fighter);
+    if (!g?.scene) {
+      g = this.scene.add.graphics();
+      g.setDepth(20);
+      g.setBlendMode(Phaser.BlendModes.ADD);
+      this._swings.set(fighter, g);
+    }
+    this.paintSlash(g, fighter, move);
   }
 
-  // Keep the slash on the live hitbox so the graphic and the box are the same reach.
+  paintSlash(g, fighter, move) {
+    const slash = slashPolyline(fighter, 16);
+    g.clear();
+    if (!slash?.pts?.length) return;
+    const color = SPARK[move?.type] ?? 0xfff2a8;
+    const thick = Math.max(7, slash.thick * 0.55);
+    g.lineStyle(thick, color, 0.9);
+    g.beginPath();
+    slash.pts.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)));
+    g.strokePath();
+    g.lineStyle(Math.max(3, thick * 0.35), 0xffffff, 0.85);
+    g.beginPath();
+    slash.pts.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)));
+    g.strokePath();
+  }
+
+  // The slash is the same swept arc the hit uses, grown with the active frames
+  // or fitted through the strike pixels.
   syncStrikes() {
     if (!this._swings) return;
-    for (const [fighter, slash] of this._swings) {
-      const rect = strikeRect(fighter);
-      if (!rect || slash.alpha <= 0.02) {
+    for (const [fighter, g] of this._swings) {
+      const slash = slashPolyline(fighter, 16);
+      if (!slash || !g.scene) {
+        g.destroy?.();
         this._swings.delete(fighter);
         continue;
       }
-      slash.setPosition(rect.x + rect.width / 2, rect.y + rect.height / 2);
-      slash.setScale(rect.width / 72, Math.max(0.4, rect.height / 28));
+      this.paintSlash(g, fighter, fighter.activeHit?.move);
     }
   }
 

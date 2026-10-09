@@ -365,6 +365,11 @@ export class Rig extends Phaser.GameObjects.Container {
     this.sprite.setAlpha(1 - amount * 0.75);
   }
 
+  rememberMask(clip, frame) {
+    this.maskClip = clip || 'idle';
+    this.maskFrame = frame | 0;
+  }
+
   applyPose(dt, state, layout) {
     if (state !== 'attack') this.blendToIdle(0);
     const fd = this.frameData;
@@ -430,6 +435,7 @@ export class Rig extends Phaser.GameObjects.Container {
     const t = this.animT;
 
     if (this.showMoveClip(state)) {
+      this.rememberMask('idle', 0);
       this.applyPose(dt, state, this._clipLayout || 1);
       return;
     }
@@ -446,6 +452,7 @@ export class Rig extends Phaser.GameObjects.Container {
       if (def === 'idle' && moveState && this.sheets.clips.attack) def = 'attack';
       const info = this.sheets.clips[def];
 
+      let frameIndex = this.sprite?.anims?.currentFrame?.index ?? 0;
       if ((def === 'attack' || def === 'special') && moveState) {
         // Wind-up, strike, hold the contact pose, then follow through.
         // Charge holds the load frame. Defense holds the contact frame.
@@ -461,13 +468,16 @@ export class Rig extends Phaser.GameObjects.Container {
         this.sprite.setTexture(sheetKey(this.art, def), i);
         if (this.currentClip !== def) this.applyClipLayout(info);
         this.currentClip = def;
+        frameIndex = i;
         const blend = (this.frameData && state === 'attack') ? idleBlend(this.frameData, this.attackFrame || 0) : 0;
         this.blendToIdle(blend);
       } else if (this.currentClip !== def) {
         this.currentClip = def;
         this.applyClipLayout(info);
         this.sprite.anims.play(sheetKey(this.art, def), true);
+        frameIndex = this.sprite?.anims?.currentFrame?.index ?? 0;
       }
+      this.rememberMask(def, frameIndex);
 
       // Feet follow ground speed. The old 0.55 floor held every slow walk
       // on the same long pose; a very slow walk is allowed to be slow.
@@ -481,6 +491,7 @@ export class Rig extends Phaser.GameObjects.Container {
       return;
     }
 
+    this.rememberMask('idle', 0);
     if (this.spriteMode) {
       if (state === 'ko') {
         this.rotation += dt * 14;

@@ -16,7 +16,10 @@ import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 import { Juice } from '../engine/juice.js';
 import { FEEL, frameZoom, percentColor } from '../engine/feel.js';
-import { resolvePush, rectsOverlap, circleHitsRects, projectileRect, projectileSpriteSize } from '../engine/boxes.js';
+import {
+  resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
+  debugCells, debugHitCells, slashPolyline, projectileShape,
+} from '../engine/boxes.js';
 
 const GRAVITY = 1500;
 
@@ -90,6 +93,8 @@ export default class BattleScene extends Phaser.Scene {
       fallThroughs: [],
     };
     this.lowestY = {};
+    this.collisionMs = 0;
+    this.collisionSteps = 0;
     this.rng = this.setup.seed == null ? null : mulberry32(this.setup.seed);
     this.simSpeed = Math.max(1, this.setup.simSpeed || 1);
     this.simFast = this.simSpeed > 1;
@@ -865,7 +870,7 @@ export default class BattleScene extends Phaser.Scene {
         const dy = Math.abs((target.y - (target.bodyH ?? 0) * 0.4) - (owner.y - (owner.bodyH ?? 0) * 0.5));
         if (ahead > 30 && dy < 90 && ahead < 340) continue;
       }
-      if (circleHitsRects(cx, cy, move.radius ?? 70, target.getHurtboxes())) {
+      if (hurtHitsCircle(target, cx, cy, move.radius ?? 70)) {
         this.landHit(owner, target, move);
         struck.add(target);
         hits += 1;
@@ -936,7 +941,7 @@ export default class BattleScene extends Phaser.Scene {
     const struck = new Set();
     for (const target of this.fighters) {
       if (target === owner || !target.alive || target.state === 'ko') continue;
-      if (target.getHurtboxes().some((hurt) => rectsOverlap(rect, hurt))) {
+      if (hurtHitsRect(target, rect)) {
         this.landHit(owner, target, move, owner.facing);
         struck.add(target);
       }
@@ -989,7 +994,7 @@ export default class BattleScene extends Phaser.Scene {
       z.tickDamage = (tickDamage ?? 0) + (z.spec.ramp ?? 0);
       for (const target of this.fighters) {
         if (target === z.owner || !target.alive || target.state === 'ko') continue;
-        if (!circleHitsRects(z.x, z.y, z.radius, target.getHurtboxes())) continue;
+        if (!hurtHitsCircle(target, z.x, z.y, z.radius)) continue;
         this.landHit(z.owner, target, {
           name: z.spec.name ?? 'zone',
           type: z.spec.type,
@@ -1070,6 +1075,9 @@ export default class BattleScene extends Phaser.Scene {
       fallThroughs: this.matchReport.fallThroughs,
       lowestY: Object.fromEntries(Object.entries(this.lowestY).map(([id, y]) => [id, Math.round(y)])),
       seed: this.setup.seed ?? null,
+      collisionMs: Math.round((this.collisionMs || 0) * 100) / 100,
+      collisionSteps: this.collisionSteps || 0,
+      collisionUs: this.collisionSteps ? Math.round((this.collisionMs * 1000) / this.collisionSteps) : 0,
     };
   }
 
@@ -1219,26 +1227,47 @@ export default class BattleScene extends Phaser.Scene {
     if (!this.showBoxes) return;
     for (const f of this.fighters || []) {
       if (f.state === 'dead') continue;
-      for (const r of f.getHurtboxes?.() || []) {
-        this.boxGfx.lineStyle(2, 0x3dff7a, 0.95);
-        this.boxGfx.strokeRect(r.x, r.y, r.width, r.height);
-      }
+      this.boxGfx.fillStyle(0x3dff7a, 0.38);
+      for (const r of debugCells(f)) this.boxGfx.fillRect(r.x, r.y, r.w, r.h);
       const push = f.getPushbox?.();
       if (push) {
         this.boxGfx.lineStyle(2, 0x4aa3ff, 0.95);
         this.boxGfx.strokeRect(push.x, push.y, push.width, push.height);
       }
-      for (const h of f.getHitboxes?.() || []) {
-        this.boxGfx.lineStyle(2, 0xff4040, 1);
-        this.boxGfx.strokeRect(h.x, h.y, h.width, h.height);
+      this.boxGfx.fillStyle(0xff4040, 0.55);
+      for (const r of debugHitCells(f)) this.boxGfx.fillRect(r.x, r.y, r.w, r.h);
+      const slash = slashPolyline(f, 14);
+      if (slash?.pts?.length) {
+        this.boxGfx.lineStyle(Math.max(3, slash.thick * 0.35), 0xff4040, 0.95);
+        this.boxGfx.beginPath();
+        slash.pts.forEach((p, i) => (i ? this.boxGfx.lineTo(p.x, p.y) : this.boxGfx.moveTo(p.x, p.y)));
+        this.boxGfx.strokePath();
       }
     }
     for (const p of this.projectiles || []) {
       if (p.dead || !p.gfx) continue;
-      const r = projectileRect(p);
-      this.boxGfx.lineStyle(2, 0xff4040, 1);
-      this.boxGfx.strokeRect(r.x, r.y, r.width, r.height);
+      this.strokeProjectile(p);
     }
+  }
+
+  strokeProjectile(p) {
+    const shape = projectileShape(p);
+    this.boxGfx.lineStyle(2, 0xff4040, 1);
+    if (shape.kind === 'poly') {
+      const c = Math.cos(shape.rot || 0);
+      const s = Math.sin(shape.rot || 0);
+      this.boxGfx.beginPath();
+      shape.points.forEach((pt, i) => {
+        const x = shape.x + pt[0] * c - pt[1] * s;
+        const y = shape.y + pt[0] * s + pt[1] * c;
+        if (i) this.boxGfx.lineTo(x, y);
+        else this.boxGfx.moveTo(x, y);
+      });
+      this.boxGfx.closePath();
+      this.boxGfx.strokePath();
+      return;
+    }
+    this.boxGfx.strokeEllipse(shape.x, shape.y, (shape.rx || 8) * 2, (shape.ry || 8) * 2);
   }
 
   renderInterp() {
@@ -1346,6 +1375,7 @@ export default class BattleScene extends Phaser.Scene {
     });
 
     for (const f of this.fighters) f.update(time, delta);
+    const collisionStart = globalThis.performance.now();
     resolvePush(this.fighters);
     this.updateZones(time);
 
@@ -1364,7 +1394,7 @@ export default class BattleScene extends Phaser.Scene {
         const rect = new Phaser.Geom.Rectangle(wx, y - m.wallRangeH / 2, m.wallRangeW, m.wallRangeH);
         for (const target of this.fighters) {
           if (target === f || !target.alive || target.state === 'ko' || f.wallLanded.has(target)) continue;
-          if (target.getHurtboxes().some((hurt) => rectsOverlap(rect, hurt))) {
+          if (hurtHitsRect(target, rect)) {
             f.wallLanded.add(target);
             if (m.wallRootMs && time - (f.defenseStart ?? time) < m.wallRootMs) {
               target.rootedUntil = time + 480;
@@ -1382,17 +1412,14 @@ export default class BattleScene extends Phaser.Scene {
 
     // melee hit detection
     for (const attacker of this.fighters) {
-      const boxes = attacker.getHitboxes();
-      if (!boxes.length) continue;
-      const hb = attacker.getHitboxRect();
+      if (!attacker.activeHit) continue;
       for (const victim of this.fighters) {
         if (victim === attacker || !victim.alive || victim.state === 'ko' || !victim.visible) continue;
         const hit = attacker.activeHit;
         if (!hit) break;
         if (hit.landed.has(victim)) continue;
         if (hit.next && time < (hit.next.get(victim) ?? 0)) continue;
-        const hurts = victim.getHurtboxes();
-        if (boxes.some((box) => hurts.some((hurt) => rectsOverlap(box, hurt)))) {
+        if (strikeHits(attacker, victim)) {
           const cap = hit.move.multiHit ?? 1;
           const n = (hit.counts?.get(victim) ?? 0) + 1;
           hit.counts ??= new Map();
@@ -1404,8 +1431,9 @@ export default class BattleScene extends Phaser.Scene {
           }
           let swing = hit.move;
           if (swing.sweetSpot) {
-            const tip = hit.dir === 1 ? hb.right : hb.left;
-            if (Math.abs(victim.x - tip) < hb.width * 0.38) {
+            const hb = attacker.getHitboxRect();
+            const tip = hb ? (hit.dir === 1 ? hb.right : hb.left) : attacker.x;
+            if (hb && Math.abs(victim.x - tip) < hb.width * 0.38) {
               swing = { ...swing, damage: (swing.damage ?? 0) + swing.sweetSpot };
             }
           }
@@ -1569,8 +1597,7 @@ export default class BattleScene extends Phaser.Scene {
       if (p.pinned || (p.armAt && time < p.armAt)) continue;
       for (const victim of this.fighters) {
         if (victim === p.owner || !victim.alive || victim.state === 'ko' || !victim.visible || p.landed.has(victim)) continue;
-        const shotBox = projectileRect(p);
-        if (!victim.getHurtboxes().some((hurt) => rectsOverlap(shotBox, hurt))) continue;
+        if (!projectileHits(p, victim)) continue;
         const def = victim.defenseMove;
         const perfect = def?.reflectProjectiles === 'perfect'
           && time - (victim.defenseStart ?? time) <= (def.perfectMs ?? 200);
@@ -1627,6 +1654,8 @@ export default class BattleScene extends Phaser.Scene {
       }
     }
     this.projectiles = this.projectiles.filter((p) => !p.dead);
+    this.collisionMs += globalThis.performance.now() - collisionStart;
+    this.collisionSteps += 1;
 
     // blast zones
     for (const f of this.fighters) {

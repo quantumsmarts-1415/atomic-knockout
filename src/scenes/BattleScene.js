@@ -719,13 +719,17 @@ export default class BattleScene extends Phaser.Scene {
     const r = style.radius;
     let vy = move._vy ?? 0;
     if (move.ground) vy = Math.max(vy, 180);
+    if (move.lob != null && move._vy == null) {
+      const up = typeof move.lob === 'number' ? move.lob : (move.lob.vy ?? 460);
+      vy = -Math.abs(up);
+    }
     if (!move._vy && move.angleable) {
       if (owner.input?.jump) vy = -240;
       else if (owner.input?.down) vy = 220;
     }
     const face = move._flip ? -owner.facing : owner.facing;
-    const x = owner.x + face * (owner.bodyW / 2 + r + 4);
-    let y = owner.y - owner.bodyH * 0.65;
+    const x = move._from?.x ?? (owner.x + face * (owner.bodyW / 2 + r + 4));
+    let y = move._from?.y ?? (owner.y - owner.bodyH * 0.65);
     if (move.fromAbove) y -= 220;
     if (move._rainChild) y -= 160;
     if (this.simFast) {
@@ -1335,6 +1339,10 @@ export default class BattleScene extends Phaser.Scene {
         p.returning = true;
         p.landed = new Set();
       }
+      if (p.move.lob && !p.pinned) {
+        const g = typeof p.move.lob === 'object' ? (p.move.lob.g ?? 1200) : 1200;
+        p.vy += g * delta / 1000;
+      }
       if (p.move.arc && !p.pinned && p.vy) {
         p.vy += Math.sign(p.vy) * p.move.arc * delta / 1000;
       }
@@ -1517,6 +1525,20 @@ export default class BattleScene extends Phaser.Scene {
         // a projectile shoves you the way it was travelling
         this.landHit(p.owner, victim, { ...shot, _projectile: true }, Math.sign(p.vx) || p.owner.facing);
         this.dropProjectileZone(p);
+        if (p.move.splitOnHit && !p._splitChild && p.owner) {
+          const spread = p.move.splitSpread ?? 150;
+          const child = {
+            ...p.move,
+            splitOnHit: null,
+            damage: p.move.splitDamage ?? p.move.damage,
+            delayMs: 40,
+            _splitChild: true,
+            _from: { x: p.gfx.x + Math.sign(p.vx || 1) * 18, y: p.gfx.y },
+          };
+          this.spawnProjectile(p.owner, { ...child, _vy: -spread * 0.35 });
+          this.spawnProjectile(p.owner, { ...child, _vy: spread * 0.35 });
+          p._splitChild = true;
+        }
         if (!p.move.pierce) {
           p.gfx.destroy();
           p.dead = true;

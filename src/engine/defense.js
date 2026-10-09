@@ -272,7 +272,7 @@ export function interceptHit(defender, attacker, move, time) {
         counter: {
           name: defense.name,
           damage: (move.damage ?? 6) * (defense.reflectPower ?? 1),
-          type: hit,
+          type: defense.reflectAs ?? hit,
           baseKnockback: defense.counterKnockback ?? 120,
           knockbackGrowth: defense.counterKnockbackGrowth ?? 2,
           isCounterAttack: true,

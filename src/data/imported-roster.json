@@ -79,8 +79,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.4,
+            "count": 12,
+            "fps": 9.6,
             "loop": true,
             "frameW": 112,
             "frameH": 148,
@@ -184,8 +184,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 7.4,
+            "count": 12,
+            "fps": 11.1,
             "loop": true,
             "frameW": 92,
             "frameH": 146,
@@ -395,8 +395,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 7.4,
+            "count": 12,
+            "fps": 11.1,
             "loop": true,
             "frameW": 200,
             "frameH": 151,
@@ -500,8 +500,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6,
+            "count": 12,
+            "fps": 9,
             "loop": true,
             "frameW": 107,
             "frameH": 147,
@@ -605,8 +605,8 @@
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 5.6,
+            "count": 12,
+            "fps": 8.5,
             "loop": true,
             "frameW": 113,
             "frameH": 152,
@@ -710,8 +710,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.9,
+            "count": 12,
+            "fps": 10.3,
             "loop": true,
             "frameW": 104,
             "frameH": 146,
@@ -816,8 +816,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 5.1,
+            "count": 12,
+            "fps": 7.6,
             "loop": true,
             "frameW": 111,
             "frameH": 149,
@@ -921,8 +921,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.4,
+            "count": 12,
+            "fps": 9.6,
             "loop": true,
             "frameW": 107,
             "frameH": 150,
@@ -1027,8 +1027,8 @@
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 6.9,
+            "count": 12,
+            "fps": 10.3,
             "loop": true,
             "frameW": 108,
             "frameH": 146,
@@ -1132,8 +1132,8 @@
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 8,
+            "count": 12,
+            "fps": 12,
             "loop": true,
             "frameW": 135,
             "frameH": 150,
@@ -1238,8 +1238,8 @@
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 6.9,
+            "count": 12,
+            "fps": 10.3,
             "loop": true,
             "frameW": 101,
             "frameH": 146,
@@ -1343,8 +1343,8 @@
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 7.4,
+            "count": 12,
+            "fps": 11.1,
             "loop": true,
             "frameW": 108,
             "frameH": 147,
@@ -1553,8 +1553,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 8,
+            "count": 12,
+            "fps": 12,
             "loop": true,
             "frameW": 107,
             "frameH": 147,
@@ -1658,8 +1658,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 5.6,
+            "count": 12,
+            "fps": 8.5,
             "loop": true,
             "frameW": 116,
             "frameH": 147,
@@ -1764,8 +1764,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 4,
+            "count": 12,
+            "fps": 6,
             "loop": true,
             "frameW": 107,
             "frameH": 149,
@@ -1870,8 +1870,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 7.7,
+            "count": 12,
+            "fps": 11.5,
             "loop": true,
             "frameW": 94,
             "frameH": 147,
@@ -1976,8 +1976,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 4.8,
+            "count": 12,
+            "fps": 7.2,
             "loop": true,
             "frameW": 109,
             "frameH": 148,
@@ -2081,8 +2081,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 5.6,
+            "count": 12,
+            "fps": 8.5,
             "loop": true,
             "frameW": 117,
             "frameH": 150,
@@ -2187,8 +2187,8 @@
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 7.1,
+            "count": 12,
+            "fps": 10.7,
             "loop": true,
             "frameW": 127,
             "frameH": 150,
@@ -2398,8 +2398,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 9.6,
+            "count": 12,
+            "fps": 14.4,
             "loop": true,
             "frameW": 134,
             "frameH": 147,
@@ -2503,8 +2503,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 8,
+            "count": 12,
+            "fps": 12,
             "loop": true,
             "frameW": 92,
             "frameH": 147,
@@ -2714,8 +2714,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 5.6,
+            "count": 12,
+            "fps": 8.5,
             "loop": true,
             "frameW": 144,
             "frameH": 146,
@@ -2820,8 +2820,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.4,
+            "count": 12,
+            "fps": 9.6,
             "loop": true,
             "frameW": 131,
             "frameH": 149,
@@ -3031,8 +3031,8 @@
             "displayScale": 0.98507
           },
           "walk": {
-            "count": 8,
-            "fps": 7.1,
+            "count": 12,
+            "fps": 10.7,
             "loop": true,
             "frameW": 113,
             "frameH": 147,
@@ -3136,8 +3136,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.4,
+            "count": 12,
+            "fps": 9.6,
             "loop": true,
             "frameW": 104,
             "frameH": 148,
@@ -3242,8 +3242,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.6,
+            "count": 12,
+            "fps": 9.9,
             "loop": true,
             "frameW": 116,
             "frameH": 149,
@@ -3347,8 +3347,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.9,
+            "count": 12,
+            "fps": 10.3,
             "loop": true,
             "frameW": 93,
             "frameH": 148,
@@ -3557,8 +3557,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 7.7,
+            "count": 12,
+            "fps": 11.5,
             "loop": true,
             "frameW": 87,
             "frameH": 147,
@@ -3662,8 +3662,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 6.6,
+            "count": 12,
+            "fps": 9.9,
             "loop": true,
             "frameW": 99,
             "frameH": 147,
@@ -3768,8 +3768,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 5.6,
+            "count": 12,
+            "fps": 8.5,
             "loop": true,
             "frameW": 138,
             "frameH": 148,
@@ -3873,8 +3873,8 @@
             "displayScale": 0.99248
           },
           "walk": {
-            "count": 8,
-            "fps": 7.4,
+            "count": 12,
+            "fps": 11.1,
             "loop": true,
             "frameW": 109,
             "frameH": 147,
@@ -4083,8 +4083,8 @@
             "displayScale": 1
           },
           "walk": {
-            "count": 8,
-            "fps": 6.4,
+            "count": 12,
+            "fps": 9.6,
             "loop": true,
             "frameW": 108,
             "frameH": 147,
@@ -4188,8 +4188,8 @@
             "displayScale": 0.98507
           },
           "walk": {
-            "count": 8,
-            "fps": 5.8,
+            "count": 12,
+            "fps": 8.7,
             "loop": true,
             "frameW": 100,
             "frameH": 146,
@@ -4424,6 +4424,112 @@
       }
     }
   },
+  "liv": {
+    "id": "liv",
+    "name": "Liv",
+    "element": "Livermorium",
+    "symbol": "Lv",
+    "atomicNumber": 116,
+    "tagline": "192 Beams",
+    "teach": "Livermorium is a ghost of the fusion lab. She holds 192 beams until a full charge ignites, and she seals heat and lasers into a hohlraum.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12898999,
+        "body": 4892810,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12898999,
+        "body": 3765342,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12898999,
+        "body": 11916738,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12898999,
+        "body": 1977134,
+        "accent": 10207626,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "post-transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-liv",
+      "file": "art-src/imported/liv-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 96,
+        "frameH": 150,
+        "footY": 0.94,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 96,
+            "frameH": 150,
+            "footY": 0.94,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 4.6,
+            "loop": true,
+            "frameW": 113,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 154,
+            "frameH": 184,
+            "footY": 0.9185,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "lucy": {
     "id": "lucy",
     "name": "Lucy",
@@ -4524,6 +4630,218 @@
             "visibleH": 133,
             "bodyH": 133,
             "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
+  "mac": {
+    "id": "mac",
+    "name": "Mac",
+    "element": "Moscovium",
+    "symbol": "Mc",
+    "atomicNumber": 115,
+    "tagline": "Decay Cascade",
+    "teach": "Moscovium is a ghost that lasts less than a second. He dumps the decay chain as five radiation bursts, then sheds a layer each time he blocks.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12898999,
+        "body": 4892810,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12898999,
+        "body": 3765342,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12898999,
+        "body": 11916738,
+        "accent": 10207626,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12898999,
+        "body": 1977134,
+        "accent": 10207626,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "post-transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-mac",
+      "file": "art-src/imported/mac-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 121,
+        "frameH": 148,
+        "footY": 0.9392,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 121,
+            "frameH": 148,
+            "footY": 0.9392,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 5.8,
+            "loop": true,
+            "frameW": 143,
+            "frameH": 151,
+            "footY": 0.9338,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "attack": {
+            "count": 5,
+            "fps": 12,
+            "loop": false,
+            "frameW": 163,
+            "frameH": 180,
+            "footY": 0.9111,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          }
+        }
+      }
+    }
+  },
+  "mae": {
+    "id": "mae",
+    "name": "Mae",
+    "element": "Meitnerium",
+    "symbol": "Mt",
+    "atomicNumber": 109,
+    "tagline": "Liquid Drop Split",
+    "teach": "Meitnerium is a ghost of the fission model. She splits a droplet both ways, then slips past a hit and answers with radiation.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-mae",
+      "file": "art-src/imported/mae-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 96,
+        "frameH": 149,
+        "footY": 0.9396,
+        "visibleH": 133,
+        "bodyH": 133,
+        "displayScale": 0.99248,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 96,
+            "frameH": 149,
+            "footY": 0.9396,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          },
+          "walk": {
+            "count": 8,
+            "fps": 4.7,
+            "loop": true,
+            "frameW": 112,
+            "frameH": 148,
+            "footY": 0.9324,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 152,
+            "frameH": 165,
+            "footY": 0.903,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
           }
         }
       }
@@ -7585,6 +7903,112 @@
       }
     }
   },
+  "sarge": {
+    "id": "sarge",
+    "name": "Sarge",
+    "element": "Seaborgium",
+    "symbol": "Sg",
+    "atomicNumber": 106,
+    "tagline": "Sound Off",
+    "teach": "Seaborgium is a ghost on the superheavy row. He barks a charge that stacks onto his next swing, and a full bark makes that swing unblockable.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 12897228,
+        "body": 4886486,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 12897228,
+        "body": 3761039,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 12897228,
+        "body": 11914463,
+        "accent": 10204084,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 12897228,
+        "body": 1975871,
+        "accent": 10204084,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "transition",
+      "metal": true,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-sarge",
+      "file": "art-src/imported/sarge-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 108,
+        "frameH": 149,
+        "footY": 0.9329,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 108,
+            "frameH": 149,
+            "footY": 0.9329,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 7.4,
+            "loop": true,
+            "frameW": 138,
+            "frameH": 150,
+            "footY": 0.9333,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 6,
+            "fps": 12,
+            "loop": false,
+            "frameW": 144,
+            "frameH": 166,
+            "footY": 0.9036,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
+          }
+        }
+      }
+    }
+  },
   "selena": {
     "id": "selena",
     "name": "Selena",
@@ -8210,6 +8634,112 @@
             "visibleH": 134,
             "bodyH": 134,
             "displayScale": 0.98507
+          }
+        }
+      }
+    }
+  },
+  "tess": {
+    "id": "tess",
+    "name": "Tess",
+    "element": "Tennessine",
+    "symbol": "Ts",
+    "atomicNumber": 117,
+    "tagline": "Electron Hunger",
+    "teach": "Tennessine is a ghost halogen, one electron short. She yanks the nearest fighter in, then hides in a blue haze that burns anyone inside.",
+    "ghost": true,
+    "height": 132,
+    "facing": 1,
+    "airJumps": 1,
+    "bodyW": 45,
+    "bodyH": 116,
+    "palettes": [
+      {
+        "name": "Standard",
+        "skin": 15193253,
+        "body": 12890186,
+        "accent": 14665319,
+        "eye": 16055295
+      },
+      {
+        "name": "Deep",
+        "skin": 15193253,
+        "body": 9009460,
+        "accent": 14665319,
+        "eye": 16055295
+      },
+      {
+        "name": "Pale",
+        "skin": 15193253,
+        "body": 14997673,
+        "accent": 14665319,
+        "eye": 16055295
+      },
+      {
+        "name": "Night",
+        "skin": 15193253,
+        "body": 3747104,
+        "accent": 14665319,
+        "eye": 16055295
+      }
+    ],
+    "elementData": {
+      "state": "solid",
+      "family": "halogen",
+      "metal": false,
+      "noble": false,
+      "density": 0,
+      "mohs": 0,
+      "tensile": 0,
+      "boiling": 0,
+      "conductivity": 0,
+      "en": 0
+    },
+    "art": {
+      "key": "char-tess",
+      "file": "art-src/imported/tess-cut.png",
+      "facing": 1,
+      "sheets": {
+        "dir": "art-src/imported/sheets/",
+        "frameW": 109,
+        "frameH": 150,
+        "footY": 0.9333,
+        "visibleH": 132,
+        "bodyH": 132,
+        "displayScale": 1,
+        "clips": {
+          "idle": {
+            "count": 6,
+            "fps": 6,
+            "loop": true,
+            "frameW": 109,
+            "frameH": 150,
+            "footY": 0.9333,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "walk": {
+            "count": 8,
+            "fps": 6.4,
+            "loop": true,
+            "frameW": 134,
+            "frameH": 150,
+            "footY": 0.9333,
+            "visibleH": 132,
+            "bodyH": 132,
+            "displayScale": 1
+          },
+          "attack": {
+            "count": 7,
+            "fps": 12,
+            "loop": false,
+            "frameW": 149,
+            "frameH": 166,
+            "footY": 0.9036,
+            "visibleH": 133,
+            "bodyH": 133,
+            "displayScale": 0.99248
           }
         }
       }

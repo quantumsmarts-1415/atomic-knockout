@@ -56,12 +56,12 @@ function defaultMeta(id) {
   return existsSync(file) ? file : null;
 }
 
-function loadRoster() {
+export function loadRoster() {
   if (!existsSync(ROSTER_JSON)) return {};
   return readJson(ROSTER_JSON);
 }
 
-function writeRoster(roster) {
+export function writeRoster(roster) {
   const ordered = {};
   for (const id of Object.keys(roster).sort()) ordered[id] = roster[id];
   writeFileSync(ROSTER_JSON, `${JSON.stringify(ordered, null, 2)}\n`);

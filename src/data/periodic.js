@@ -44,8 +44,8 @@ export const PERIODIC_ELEMENTS = RAW.map(([n, sym, name]) => ({ n, sym, name, ..
 export const TABLE_ROWS = 10;
 export const TABLE_COLS = 18;
 
-// Portraits still waiting on approval: Sarge (Sg), Mae (Mt), Mac (Mc), Liv (Lv), Tess (Ts).
-export const COMING_SOON = new Set([106, 109, 115, 116, 117]);
+// Every element has a fighter. Kept as an empty set so a later holdout can return.
+export const COMING_SOON = new Set();
 
 /** row/col on an 18-column chart. Row 7 is the blank gap above the f-block. */
 export function tableCell(z) {

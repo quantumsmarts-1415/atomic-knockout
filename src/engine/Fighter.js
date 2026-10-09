@@ -510,6 +510,18 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.missNext -= 1;
       move = { ...move, damage: 0, damage2: 0, onHit: null, zone: null };
     }
+    // Charge barks (Sound Off) bank damage and an unblock onto the next real swing.
+    const banked = (move.damage ?? 0) > 0 || (move.damage2 ?? 0) > 0;
+    if (banked && move.kind !== 'buff') {
+      if (this._nextBonus) {
+        move = { ...move, damage: (move.damage ?? 0) + this._nextBonus };
+        this._nextBonus = 0;
+      }
+      if (this.unblockNext) {
+        move = { ...move, breaksBlock: true };
+        this.unblockNext = false;
+      }
+    }
     if (moveKey === 'basicDirectional' && this.armedDash && time < this.armedDash.until) {
       const arm = this.armedDash;
       this.armedDash = null;
@@ -584,28 +596,34 @@ export default class Fighter extends Phaser.GameObjects.Container {
     } else if (move.kind === 'burst') {
       // burst hits everything in a radius partway through the animation.
       // Moves that can be interrupted on purpose (Supernova popping early)
-      // still go off.
+      // still go off. `pulses` releases that same burst as a timed chain.
       const burstAt = commitBurst ? step : Math.round((move.duration ?? step) * 0.4);
-      this.scene.time.delayedCall(burstAt, () => {
-        if (this.state !== 'attack' && !commitBurst) return;
-        let at;
-        if (move.predict && this.scene?.fighters) {
-          let best = null;
-          let bestD = Infinity;
-          for (const f of this.scene.fighters) {
-            if (f === this || !f.alive || f.state === 'ko' || f.state === 'dead') continue;
-            const d = Math.hypot(f.x - this.x, f.y - this.y);
-            if (d < bestD) { bestD = d; best = f; }
+      const pulses = move.pulses?.length ? move.pulses : [{ damage: move.damage, delay: 0 }];
+      for (const pulse of pulses) {
+        const shot = move.pulses?.length
+          ? { ...move, damage: pulse.damage ?? move.damage, radius: pulse.radius ?? move.radius, pulses: null }
+          : move;
+        this.scene.time.delayedCall(burstAt + (pulse.delay ?? 0), () => {
+          if (this.state !== 'attack' && !commitBurst) return;
+          let at;
+          if (shot.predict && this.scene?.fighters) {
+            let best = null;
+            let bestD = Infinity;
+            for (const f of this.scene.fighters) {
+              if (f === this || !f.alive || f.state === 'ko' || f.state === 'dead') continue;
+              const d = Math.hypot(f.x - this.x, f.y - this.y);
+              if (d < bestD) { bestD = d; best = f; }
+            }
+            if (best) {
+              const lead = shot.predict.lead ?? 0.32;
+              const vx = best.body?.velocity?.x ?? 0;
+              const vy = best.body?.velocity?.y ?? 0;
+              at = { x: best.x + vx * lead, y: best.y - (best.bodyH ?? 80) * 0.45 + vy * lead };
+            }
           }
-          if (best) {
-            const lead = move.predict.lead ?? 0.32;
-            const vx = best.body?.velocity?.x ?? 0;
-            const vy = best.body?.velocity?.y ?? 0;
-            at = { x: best.x + vx * lead, y: best.y - (best.bodyH ?? 80) * 0.45 + vy * lead };
-          }
-        }
-        this.scene.resolveBurst(this, move, at);
-      });
+          this.scene.resolveBurst(this, shot, at);
+        });
+      }
     } else {
       // melee: hitbox becomes active partway through the swing. `dir` is
       // captured now and drives both the hitbox side and the launch, so the
@@ -674,6 +692,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
       hits: Array.isArray(move.hits)
         ? move.hits.map((h) => ({ ...h, damage: scale(h.damage ?? 0, move.chargeDamageMult) }))
         : move.hits,
+      pulses: Array.isArray(move.pulses)
+        ? move.pulses.map((p) => ({ ...p, damage: scale(p.damage ?? move.damage ?? 0, move.chargeDamageMult) }))
+        : move.pulses,
       projectileRadius: move.projectileRadius != null ? scale(move.projectileRadius, move.chargeRadiusMult) : move.projectileRadius,
       projectileSpeed: move.projectileSpeed != null && move.chargeSpeedMult != null
         ? scale(move.projectileSpeed, move.chargeSpeedMult)
@@ -727,6 +748,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (move.zone && move.chargeRadiusMult) {
       scaled.zone = { ...move.zone, radius: scale(move.zone.radius ?? 70, move.chargeRadiusMult) };
     }
+    if (move.chargeStack) {
+      const every = move.chargeStack.every ?? 1000;
+      const stepDmg = move.chargeStack.damage ?? 4;
+      const cap = move.chargeStack.cap ?? 16;
+      this._nextBonus = Math.min(cap, Math.floor(heldMs / every) * stepDmg);
+    }
+    if (move.unblockAtFull) this.unblockNext = frac >= (move.unblockAt ?? 0.95);
     if (move.onHit && move.chargeControlMult) {
       const mul = 1 + ((move.chargeControlMult ?? 1) - 1) * frac;
       const onHit = {};
@@ -939,7 +967,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.defenseMove = null;
       } else if (this.defenseMove?.crackAfterHits) {
         this.wallHits = (this.wallHits ?? 0) + 1;
+        if (this.defenseMove.shellShrink && this.rig) {
+          if (this._shrinkFrom == null) this._shrinkFrom = this.rig.baseScale ?? 1;
+          this.rig.baseScale = this._shrinkFrom * (this.defenseMove.shellShrink ** this.wallHits);
+        }
         if (this.wallHits >= this.defenseMove.crackAfterHits) {
+          this.restoreShrink();
           this.state = 'idle';
           this.defenseMove = null;
         }

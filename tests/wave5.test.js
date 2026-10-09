@@ -14,12 +14,11 @@ const PART1 = [
 ];
 const PART2 = ['ogden', 'ford', 'boar', 'roger', 'gertrude', 'nadia', 'niobe', 'prometheus', 'zora'];
 const FEMALE = new Set(['curie', 'pat', 'amy', 'cali', 'flo', 'gertrude', 'nadia', 'niobe', 'zora']);
-const GHOSTS = ['duke', 'hoss', 'dash', 'copernicus', 'niko', 'flo', 'ford', 'boar', 'roger', 'ogden'];
-const PENDING = [106, 109, 115, 116, 117];
+const GHOSTS = ['duke', 'hoss', 'dash', 'copernicus', 'niko', 'flo', 'ford', 'boar', 'roger', 'ogden', 'sarge', 'mae', 'mac', 'liv', 'tess'];
 const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
 
 test('wave 5 part 1 is on the roster with the doc genders', () => {
-  assert.strictEqual(Object.keys(CHARACTERS).length, 113);
+  assert.strictEqual(Object.keys(CHARACTERS).length, 118);
   for (const id of [...PART1, ...PART2]) {
     const c = CHARACTERS[id];
     assert.ok(c, id);
@@ -66,19 +65,18 @@ test('ghosts drain, stay light, and keep translucent sheets', () => {
   assert.strictEqual(ghost.percent, 11);
 });
 
-test('the ghost row is playable except the five pending portraits', () => {
+test('the ghost row is fully playable', () => {
   const slots = buildSelectSlots(CHARACTERS);
   const row = slots.filter((s) => s.n >= 104 && s.n <= 118);
   assert.strictEqual(row.length, 15);
   assert.deepStrictEqual(row.map((s) => s.row), Array(15).fill(6));
-  for (const id of ['ford', 'duke', 'boar', 'hoss', 'dash', 'roger', 'copernicus', 'niko', 'flo', 'ogden']) {
+  for (const id of ['ford', 'duke', 'sarge', 'boar', 'hoss', 'mae', 'dash', 'roger', 'copernicus', 'niko', 'flo', 'mac', 'liv', 'tess', 'ogden']) {
     assert.ok(row.some((s) => s.charId === id), id);
   }
-  const soon = row.filter((s) => s.soon);
-  assert.deepStrictEqual(soon.map((s) => s.n), PENDING);
-  assert.strictEqual(COMING_SOON.size, 5);
-  for (const s of soon) assert.strictEqual(s.charId, null);
-  assert.strictEqual(slots.filter((s) => s.charId).length, 113);
+  assert.strictEqual(row.filter((s) => s.soon).length, 0);
+  assert.strictEqual(COMING_SOON.size, 0);
+  assert.strictEqual(slots.filter((s) => s.soon).length, 0);
+  assert.strictEqual(slots.filter((s) => s.charId).length, 118);
 });
 
 test('wave 5 move flags change the hit the way the doc describes', () => {

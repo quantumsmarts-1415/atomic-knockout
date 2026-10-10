@@ -68,7 +68,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Spark Jab', {
       type: K, damage: 4, type2: E, damage2: 3,
-      combo: { hits: 3, window: 480, scales: [1, 1.2, 1.55], knockbacks: [120, 140, 220] },
+      combo: { hits: 3, window: 520, scales: [1, 1.2, 1.55], knockbacks: [40, 55, 230], launch: [0, 0, 1] },
       rangeW: 78, rangeH: 40, baseKnockback: 140, knockbackGrowth: 3.2,
       // Startup 3. Endlag 10. Same-button lock ~17 frames, inside the on-hit window.
       startupF: 3, endlagF: 10, duration: 150, cooldown: 120, vfx: 'spark',

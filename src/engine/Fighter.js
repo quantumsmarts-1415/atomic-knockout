@@ -646,11 +646,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this._comboUntil = time + (move.combo.window ?? 480);
       const scale = move.combo.scales?.[step - 1] ?? 1;
       const kb = move.combo.knockbacks?.[step - 1];
+      const launch = move.combo.launch?.[step - 1];
       move = {
         ...move,
         damage: (move.damage ?? 0) * scale,
         damage2: move.damage2 != null ? move.damage2 * scale : move.damage2,
         baseKnockback: kb ?? move.baseKnockback,
+        launchMult: launch ?? move.launchMult,
         _comboStep: step,
       };
     }

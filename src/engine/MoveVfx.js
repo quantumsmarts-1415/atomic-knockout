@@ -1,7 +1,7 @@
 // Code-driven move effects. Body clips stay on idle/walk unless a real
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
-import { artFor, drawFxOneShot, fxAnchor, fxGameplayScale } from './fxArt.js';
+import { artFor, drawFxOneShot, fxAnchor, fxGameplayScale, spawnFxDetonate } from './fxArt.js';
 
 export const TYPE_COLORS = {
   kinetic: 0xffe7b0,
@@ -147,7 +147,8 @@ export function syncChargeGlow(scene) {
     }
     const max = move.maxChargeMs || 1;
     const frac = Math.max(0, Math.min(1, ((scene.simNow ?? 0) - fighter.chargeStart) / max));
-    const minR = move.radius ?? 48;
+    const painted = artFor(fighter.charDef?.id, move.name);
+    const minR = painted?.reach > 0 ? painted.reach : (move.radius ?? 48);
     const reach = minR * (1 + ((move.chargeRadiusMult ?? 1) - 1) * frac);
     const y = fighter.y - (fighter.bodyH ?? 80) * 0.55;
     glow.clear();
@@ -172,12 +173,20 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (!scene?.add || !fighter || scene.simFast) return;
   if (phase === 'release' || phase === 'defense') {
     const art = artFor(fighter.charDef?.id, move?.name);
+    if (art?.anchor === 'trail' || art?.anchor === 'ground-front') return;
+    if (art?.detonate && move?.kind === 'burst') {
+      spawnFxDetonate(scene, fighter, move, extra.x ?? fighter.x, extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55));
+      return;
+    }
+    if (art?.detonate && move?.kind === 'projectile') return;
     const replaced = art?.frames?.length
       && art.objectType !== 'projectile'
       && art.objectType !== 'thrown'
       && art.objectType !== 'slash arc'
       && art.objectType !== 'extend';
     if (replaced) {
+      // A burst is drawn once, at the blast, when resolveBurst supplies a point.
+      if (move.kind === 'burst' && extra?.x == null) return;
       const anchor = fxAnchor(fighter, move);
       const x = anchor?.x ?? extra.x ?? fighter.x;
       const y = anchor?.y ?? extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);

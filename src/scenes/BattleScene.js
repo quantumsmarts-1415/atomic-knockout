@@ -20,7 +20,7 @@ import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, fxAnchor, fxGameplayScale, fxHits, fxProjectileView, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
+import { artFor, collectFxArt, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
 
 const GRAVITY = 1500;
 
@@ -883,8 +883,7 @@ export default class BattleScene extends Phaser.Scene {
         const dy = Math.abs((target.y - (target.bodyH ?? 0) * 0.4) - (owner.y - (owner.bodyH ?? 0) * 0.5));
         if (ahead > 30 && dy < 90 && ahead < 340) continue;
       }
-      const fxScale = fxGameplayScale(move, artFor(owner?.charDef?.id, move?.name));
-      const fxHit = fxHits(owner, move, cx, cy, target, fxScale);
+      const fxHit = fxBurstHits(this, owner, move, cx, cy, target);
       if (fxHit === true || (fxHit == null && hurtHitsCircle(target, cx, cy, move.radius ?? 70))) {
         this.landHit(owner, target, move);
         struck.add(target);
@@ -1448,7 +1447,8 @@ export default class BattleScene extends Phaser.Scene {
         const rect = new Phaser.Geom.Rectangle(wx, y - m.wallRangeH / 2, m.wallRangeW, m.wallRangeH);
         for (const target of this.fighters) {
           if (target === f || !target.alive || target.state === 'ko' || f.wallLanded.has(target)) continue;
-          if (hurtHitsRect(target, rect)) {
+          const artHit = fxWallTest(f, m, target, time);
+          if (artHit === true || (artHit == null && hurtHitsRect(target, rect))) {
             f.wallLanded.add(target);
             if (m.wallRootMs && time - (f.defenseStart ?? time) < m.wallRootMs) {
               target.rootedUntil = time + 480;

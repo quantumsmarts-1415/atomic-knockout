@@ -31,16 +31,19 @@ export const MOVESETS = {
       // with that same radius.
       chargeDamageMult: 3, chargeKnockbackMult: 3, chargeRadiusMult: 3,
       maxChargeMs: 900, radius: 64, baseKnockback: 200, knockbackGrowth: 6,
-      duration: 280, cooldown: 720, vfx: 'supernova', fxScale: 'radius',
+      // Startup stays 4 frames. Endlag 22 → 11. Cooldown 43 → 22 frames.
+      duration: 280, cooldown: 360, startupF: 4, endlagF: 11, vfx: 'supernova', fxScale: 'radius',
       selfDamage: { type: H, damage: 4, chargeMult: 1.5 }, releaseOnHit: true,
     }),
     basicDirectional: melee('Flame Dash', {
       kind: 'dash', type: K, damage: 3, type2: H, damage2: 3,
       dashSpeed: 720, rangeW: 96, rangeH: 100, baseKnockback: 180,
-      knockbackGrowth: 3.4, duration: 300, cooldown: 780, vfx: 'fire',
+      // Startup stays 1 frame. Endlag 25 → 12. Cooldown 47 → 23 frames.
+      knockbackGrowth: 3.4, duration: 300, cooldown: 390, endlagF: 12, vfx: 'fire',
     }),
     specialDefense: m('Fire Wall', {
-      kind: 'wall', frontOnly: true, duration: 520, cooldown: 680,
+      // The wall itself is the lock: 31 → 19 frames. Cooldown 41 → 20 frames.
+      kind: 'wall', frontOnly: true, duration: 320, cooldown: 340,
       blocks: [K, H, C], vfx: 'wall', vfxColor: 0xff5a1f,
       wallDamage: 8, wallType: H, wallKnockback: 200, wallKnockbackGrowth: 5,
       wallRangeW: 28, wallRangeH: 110, wallYFrac: 0.7,
@@ -49,7 +52,8 @@ export const MOVESETS = {
       kind: 'projectile', type: H, damage: 6, type2: R, damage2: 4,
       explodeOnly: true, explodeRadius: 74, vfx: 'mushroom',
       projectileSpeed: 420, projectileRadius: 10, projectileLife: 700,
-      baseKnockback: 190, knockbackGrowth: 3.6, duration: 260, cooldown: 980,
+      // Startup stays 4 frames. Endlag 21 → 11. Cooldown 59 → 29 frames.
+      baseKnockback: 190, knockbackGrowth: 3.6, duration: 260, cooldown: 490, startupF: 4, endlagF: 11,
     }),
   },
 

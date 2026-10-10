@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { frameData, STEP_MS } from '../src/engine/feel.js';
 import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
@@ -58,6 +59,25 @@ test('owner-locked kits stay as specified', () => {
   assert.equal(grown(nova.baseKnockback, nova.chargeKnockbackMult, 1), 600);
   assert.equal(grown(nova.selfDamage.damage, nova.selfDamage.chargeMult, 0), 4);
   assert.equal(grown(nova.selfDamage.damage, nova.selfDamage.chargeMult, 1), 6);
+  const novaFrames = frameData(nova.duration, nova.cooldown, nova);
+  assert.equal(novaFrames.startup, 4);
+  assert.equal(novaFrames.recovery, 11);
+  assert.equal(novaFrames.coolF, 22);
+  const dash = h.basicDirectional;
+  const dashFrames = frameData(dash.duration, dash.cooldown, {
+    ...dash,
+    startupF: Math.max(1, Math.round((dash.duration / STEP_MS) * 0.05)),
+  });
+  assert.equal(dashFrames.startup, 1);
+  assert.equal(dashFrames.recovery, 12);
+  assert.equal(dashFrames.coolF, 23);
+  const bomb = h.specialDirectional;
+  const bombFrames = frameData(bomb.duration, bomb.cooldown, bomb);
+  assert.equal(bombFrames.startup, 4);
+  assert.equal(bombFrames.recovery, 11);
+  assert.equal(bombFrames.coolF, 29);
+  assert.equal(Math.round(h.specialDefense.duration / STEP_MS), 19);
+  assert.equal(Math.round(h.specialDefense.cooldown / STEP_MS), 20);
   assert.strictEqual(CHARACTERS.helen.moves.basicCharge.name, 'Balloon Bop');
   assert.strictEqual(CHARACTERS.helen.moves.specialDirectional.name, 'Air Wave');
   assert.strictEqual(CHARACTERS.natalie.moves.specialDirectional.name, 'Brine Burst');

@@ -1,0 +1,22 @@
+{
+  "blend": "add",
+  "black": 16,
+  "projectile": {
+    "file": "object.png",
+    "fit": "max",
+    "heightFrac": 0.25,
+    "spin": 2.4,
+    "pulse": 0.08
+  },
+  "detonate": {
+    "file": "sheet.png",
+    "frames": 8,
+    "fps": 12,
+    "smokeFrom": 4,
+    "anchor": "ground",
+    "crop": "frame",
+    "fit": "height",
+    "heightFrac": 1.5,
+    "pivot": "bottom"
+  }
+}

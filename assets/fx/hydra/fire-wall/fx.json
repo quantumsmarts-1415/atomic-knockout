@@ -1,0 +1,13 @@
+{
+  "blend": "add",
+  "black": 16,
+  "frames": 6,
+  "fps": 14,
+  "loop": true,
+  "anchor": "ground-front",
+  "crop": "frame",
+  "fit": "height",
+  "heightFrac": 1.3,
+  "pivot": "bottom",
+  "frontGap": 16
+}

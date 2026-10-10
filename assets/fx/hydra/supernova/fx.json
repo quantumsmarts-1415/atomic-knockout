@@ -1,0 +1,15 @@
+{
+  "blend": "add",
+  "black": 16,
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 12,
+  "smokeFrom": 5,
+  "scaleWith": "radius",
+  "fit": "width",
+  "fitFrame": 4,
+  "heightFrac": 1.5,
+  "peak": "peak.png",
+  "peakFrame": 4
+}

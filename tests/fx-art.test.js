@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { blackThreshold, fxGameplayScale, keyNearBlack, rasterAlpha, sliceHorizontal } from '../src/engine/fxArt.js';
+import { blackThreshold, contentSpan, fxGameplayScale, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sliceGrid, sliceHorizontal } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 
 test('every move has a folder, a type, and a score', () => {
@@ -81,6 +81,40 @@ test('near-black pixels drop out of an additive hit mask', () => {
   });
   assert.ok(mask.n > 0);
   assert.ok(mask.minX >= -2);
+});
+
+test('a grid sheet is row-major', () => {
+  const width = 4;
+  const height = 2;
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let i = 0; i < width * height; i++) data[i * 4] = i + 1;
+  const bottomLeft = sliceGrid(data, width, height, 2, 2, 2);
+  assert.equal(bottomLeft.width, 2);
+  assert.equal(bottomLeft.height, 1);
+  assert.equal(bottomLeft.data[0], 5);
+  assert.equal(sliceGrid(data, width, height, 2, 2, 0).data[0], 1);
+  assert.equal(sliceGrid(data, width, height, 2, 2, 1).data[0], 3);
+  assert.equal(sliceGrid(data, width, height, 2, 2, 3).data[0], 7);
+});
+
+test('luminance alpha keeps mid-gray smoke and clears near-black', () => {
+  const data = new Uint8ClampedArray(8);
+  data.set([4, 4, 4, 255, 90, 70, 40, 255]);
+  const out = lumaToAlpha(data, 2, 1, blackThreshold({ blend: 'add' }));
+  assert.equal(out[3], 0);
+  assert.ok(out[7] > 80 && out[7] < 255);
+  assert.equal(out[4], 90);
+  assert.equal(out[5], 70);
+  assert.equal(out[6], 40);
+});
+
+test('visible pixels, not the canvas, set the on-screen size', () => {
+  const height = 122;
+  const span = contentSpan({ w: 653, h: 400 }, 'width');
+  const px = pixelsPerSource(height, 1.5, span);
+  assert.equal(span, 653);
+  assert.ok(Math.abs(653 * px - height * 1.5) < 0.001);
+  assert.ok(Math.abs(pixelsPerSource(height, 1.3, 1513) * 1513 - height * 1.3) < 0.001);
 });
 
 test('a horizontal sheet splits into even frames', () => {

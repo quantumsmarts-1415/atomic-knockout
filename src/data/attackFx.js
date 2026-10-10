@@ -165,7 +165,9 @@ function specFor(folder, objectType, box) {
     `Optional frame-0.png through frame-7.png replace object.png and play at 8 fps.`,
     `Optional fx.json. "blend": "add" uses additive blending for art painted on pure black.`,
     `Pixels at or below a luminance of 16, or "black": <number>, are transparent in the picture and in the hit mask.`,
-    `"frames": N and "fps" read a horizontal sheet.png of N frames.`,
+    `"frames": N and "fps" read sheet.png. "cols" and "rows" slice a grid in row-major order; without them the sheet is one horizontal row.`,
+    `"smokeFrom": N plays that frame and the ones after it with luminance alpha and a normal blend, so dark smoke stays visible.`,
+    `"heightFrac" sizes the visible pixels against the fighter's on-screen height. "fit" is "width", "height", or "max".`,
     `"scaleWith": "radius" multiplies the sprite by the charged radius over the tap radius.`,
     `No tiling.`,
   ].join(' ');

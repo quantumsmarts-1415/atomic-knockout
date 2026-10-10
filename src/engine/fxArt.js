@@ -50,6 +50,101 @@ export function sliceHorizontal(data, width, height, frames, index) {
   return { data: out, width: fw, height: h };
 }
 
+/** One cell of a grid, row-major. Leftover pixels on the right and bottom are unused. */
+export function sliceGrid(data, width, height, cols, rows, index) {
+  const c = Math.max(1, cols | 0);
+  const r = Math.max(1, rows | 0);
+  const count = c * r;
+  const fw = Math.max(1, Math.floor((width || 1) / c));
+  const fh = Math.max(1, Math.floor((height || 1) / r));
+  const i = Math.max(0, Math.min(count - 1, index | 0));
+  const col = i % c;
+  const row = Math.floor(i / c);
+  const out = new Uint8ClampedArray(fw * fh * 4);
+  const src = data || new Uint8ClampedArray(0);
+  const srcW = width || fw;
+  for (let y = 0; y < fh; y++) {
+    const from = ((row * fh + y) * srcW + col * fw) * 4;
+    out.set(src.subarray(from, from + fw * 4), y * fw * 4);
+  }
+  return { data: out, width: fw, height: fh };
+}
+
+/** Dark smoke on black: near-black clears, and the remaining luminance becomes
+ *  alpha so a normal blend still shows the gray. RGB stays the smoke color. */
+export function lumaToAlpha(data, width, height, threshold) {
+  const out = new Uint8ClampedArray(data);
+  const limit = threshold ?? BLACK_LUMA;
+  const n = Math.min(out.length, (width || 0) * (height || 0) * 4);
+  const denom = 255 - limit || 1;
+  for (let i = 0; i < n; i += 4) {
+    const lum = 0.2126 * out[i] + 0.7152 * out[i + 1] + 0.0722 * out[i + 2];
+    if (out[i + 3] === 0 || lum <= limit) {
+      out[i + 3] = 0;
+      continue;
+    }
+    const t = (lum - limit) / denom;
+    out[i + 3] = Math.max(0, Math.min(255, Math.round(t ** 0.45 * 255)));
+  }
+  return out;
+}
+
+export function contentBounds(data, width, height) {
+  const w = width || 0;
+  const h = height || 0;
+  let minX = w;
+  let minY = h;
+  let maxX = -1;
+  let maxY = -1;
+  const src = data || new Uint8ClampedArray(0);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (src[(y * w + x) * 4 + 3] <= 8) continue;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX < 0) return { x: 0, y: 0, w: Math.max(1, w), h: Math.max(1, h) };
+  return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+}
+
+export function cropPixels(data, width, height, box) {
+  const w = Math.max(1, box?.w | 0);
+  const h = Math.max(1, box?.h | 0);
+  const out = new Uint8ClampedArray(w * h * 4);
+  const src = data || new Uint8ClampedArray(0);
+  const srcW = width || w;
+  for (let y = 0; y < h; y++) {
+    const from = (((box?.y | 0) + y) * srcW + (box?.x | 0)) * 4;
+    const row = src.subarray(from, from + w * 4);
+    if (row.length === w * 4) out.set(row, y * w * 4);
+  }
+  return out;
+}
+
+/** Source pixels of the visible effect for a fit mode. */
+export function contentSpan(bounds, fit) {
+  const w = bounds?.w || 1;
+  const h = bounds?.h || 1;
+  if (fit === 'height') return h;
+  if (fit === 'max') return Math.max(w, h);
+  return w;
+}
+
+/** Display pixels per source pixel so the visible span is heightPx * frac. */
+export function pixelsPerSource(heightPx, heightFrac, span) {
+  if (!(heightPx > 0) || !(heightFrac > 0) || !(span > 0)) return 0;
+  return (heightPx * heightFrac) / span;
+}
+
+export function fighterHeight(char) {
+  const h = char?.art?.height;
+  if (h > 0) return h;
+  return char?.art?.bodyH > 0 ? char.art.bodyH : 100;
+}
+
 /** Sprite scale driven by the move. `radius` uses the charged radius over the tap radius. */
 export function fxGameplayScale(move, art) {
   const extra = art?.scale > 0 ? art.scale : 1;
@@ -217,7 +312,7 @@ function frameFromPixels(scene, key, data, width, height, box, pivotX, pivotY, t
 }
 
 async function loadFrame(scene, rel, key, box, pivotX, pivotY, meta) {
-  const img = await loadBitmap(`/${rel}`);
+  const img = await loadBitmap(fxUrl(rel));
   if (!img) return null;
   const pix = pixelsOf(img);
   return frameFromPixels(
@@ -229,7 +324,7 @@ async function loadFxMeta(folder, index) {
   const rel = `${folder}/fx.json`;
   if (!listed(index, rel)) return {};
   try {
-    const res = await fetch(`/${rel}`);
+    const res = await fetch(fxUrl(rel));
     if (!res.ok) return {};
     const json = await res.json();
     return json && typeof json === 'object' ? json : {};
@@ -256,7 +351,22 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     timed: extra.fps > 0,
     scale: extra.scale > 0 ? extra.scale : 1,
     scaleWith: extra.scaleWith || null,
+    anchor: extra.anchor || null,
+    loop: !!extra.loop,
+    hit: extra.hit !== false,
+    flicker: !!extra.flicker,
+    spin: extra.spin > 0 ? extra.spin : 0,
+    pulse: extra.pulse > 0 ? extra.pulse : 0,
+    reach: extra.reach > 0 ? extra.reach : 0,
+    peak: extra.peak || null,
+    peakFrame: extra.peakFrame ?? -1,
+    detonate: extra.detonate || null,
+    frontGap: extra.frontGap > 0 ? extra.frontGap : 16,
   };
+}
+
+function fxUrl(rel) {
+  return `/assets/fx/${String(rel || '').replace(/^\/+/, '')}`;
 }
 
 export async function collectFxArt(scene) {
@@ -319,6 +429,106 @@ function composeBeam(start, tile, end, length, thick, threshold = 0) {
   return { canvas, mask };
 }
 
+function finishFrame(scene, key, data, width, height, displayW, displayH, pivotX, pivotY, blend) {
+  const mask = rasterAlpha({
+    data, width, height, displayW, displayH, pivotX, pivotY,
+  });
+  return {
+    key: rememberTexture(scene, key, canvasFromPixels(data, width, height)),
+    mask,
+    displayW,
+    displayH,
+    blend: blend === 'add' ? 'add' : 'normal',
+  };
+}
+
+function pivotFrom(spec, fallback) {
+  if (spec?.pivot === 'bottom') return { x: 0.5, y: 1 };
+  if (spec?.pivot === 'right') return { x: 1, y: 0.5 };
+  if (spec?.pivot === 'left') return { x: 0, y: 0.5 };
+  if (spec?.pivot === 'center') return { x: 0.5, y: 0.5 };
+  return fallback;
+}
+
+function padBounds(bounds, width, height, pad = 2) {
+  const x = Math.max(0, bounds.x - pad);
+  const y = Math.max(0, bounds.y - pad);
+  const right = Math.min(width, bounds.x + bounds.w + pad);
+  const bottom = Math.min(height, bounds.y + bounds.h + pad);
+  return { x, y, w: Math.max(1, right - x), h: Math.max(1, bottom - y) };
+}
+
+function refSpan(bounds, spec) {
+  const fit = spec?.fit || 'width';
+  if (spec?.fitFrame != null && bounds[spec.fitFrame]) return contentSpan(bounds[spec.fitFrame], fit);
+  let best = 0;
+  for (const box of bounds) best = Math.max(best, contentSpan(box, fit));
+  return best || 1;
+}
+
+async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH, box, prefix) {
+  const count = spec?.frames | 0;
+  const file = spec?.file || (count > 1 ? 'sheet.png' : 'object.png');
+  const rel = `${folder}/${file}`;
+  if (!listed(index, rel)) return null;
+  const img = await loadBitmap(fxUrl(rel));
+  if (!img) return null;
+  const pix = pixelsOf(img);
+  const cols = spec?.cols | 0;
+  const rows = spec?.rows | 0;
+  const n = count > 1 ? count : 1;
+  const slices = [];
+  for (let i = 0; i < n; i++) {
+    let slice;
+    if (n === 1) slice = { data: pix.data, width: pix.width, height: pix.height };
+    else if (cols > 1 || rows > 1) slice = sliceGrid(pix.data, pix.width, pix.height, cols || n, rows || 1, i);
+    else slice = sliceHorizontal(pix.data, pix.width, pix.height, n, i);
+    const smoke = spec?.smokeFrom != null && i >= (spec.smokeFrom | 0);
+    const thresh = blackThreshold({ blend: spec?.blend, black: spec?.black });
+    const keyed = smoke
+      ? lumaToAlpha(slice.data, slice.width, slice.height, thresh || BLACK_LUMA)
+      : (thresh > 0 ? keyNearBlack(slice.data, slice.width, slice.height, thresh) : slice.data);
+    slices.push({
+      keyed,
+      width: slice.width,
+      height: slice.height,
+      blend: smoke ? 'normal' : (spec?.blend === 'add' ? 'add' : 'normal'),
+    });
+  }
+  const bounds = slices.map((slice) => contentBounds(slice.keyed, slice.width, slice.height));
+  const fitMode = spec?.fit || null;
+  const px = fitMode ? pixelsPerSource(charH, spec?.heightFrac, refSpan(bounds, spec)) : 0;
+  const crop = spec?.crop === 'frame';
+  const frames = [];
+  for (let i = 0; i < slices.length; i++) {
+    let data = slices[i].keyed;
+    let w = slices[i].width;
+    let h = slices[i].height;
+    if (crop) {
+      const box = padBounds(bounds[i], w, h);
+      data = cropPixels(data, w, h, box);
+      w = box.w;
+      h = box.h;
+    }
+    const displayW = px > 0 ? Math.max(CELL, w * px) : fit(box, w, h).w;
+    const displayH = px > 0 ? Math.max(CELL, h * px) : fit(box, w, h).h;
+    frames.push(finishFrame(
+      scene,
+      `fx-${id}-${slug}-${prefix || ''}${i}`,
+      data,
+      w,
+      h,
+      displayW,
+      displayH,
+      pivot.x,
+      pivot.y,
+      slices[i].blend,
+    ));
+  }
+  const reach = fitMode === 'width' && spec?.heightFrac > 0 ? (charH * spec.heightFrac) / 2 : 0;
+  return { frames, reach };
+}
+
 async function loadMoveArt(scene, char, slot, move, index) {
   const id = char.id;
   const folder = fxFolder(id, move.name).replace(/^assets\/fx\//, '');
@@ -328,35 +538,68 @@ async function loadMoveArt(scene, char, slot, move, index) {
     ? { x: 0, y: 0.5 }
     : { x: 0.5, y: 0.5 };
   const meta = await loadFxMeta(folder, index);
+  const charH = fighterHeight(char);
+  const slug = moveSlug(move.name);
   const look = {
     blend: meta.blend,
     fps: meta.fps,
     scale: meta.scale,
     scaleWith: meta.scaleWith || null,
+    anchor: meta.anchor || null,
+    loop: !!meta.loop,
+    hit: meta.hit !== false,
+    flicker: !!meta.flicker,
+    spin: meta.spin,
+    pulse: meta.pulse,
+    frontGap: meta.frontGap,
   };
+  const inherit = { blend: meta.blend, black: meta.black };
 
-  const sheetFrames = meta.frames | 0;
-  const sheetRel = `${folder}/sheet.png`;
-  if (sheetFrames > 1 && listed(index, sheetRel)) {
-    const img = await loadBitmap(`/${sheetRel}`);
-    if (img) {
-      const pix = pixelsOf(img);
-      const frames = [];
-      for (let i = 0; i < sheetFrames; i++) {
-        const slice = sliceHorizontal(pix.data, pix.width, pix.height, sheetFrames, i);
-        frames.push(frameFromPixels(
-          scene,
-          `fx-${id}-${moveSlug(move.name)}-${i}`,
-          slice.data,
-          slice.width,
-          slice.height,
-          sized,
-          pivot.x,
-          pivot.y,
-          blackThreshold(meta),
-        ));
+  if (meta.projectile?.file || meta.detonate?.file) {
+    const shotSpec = { ...inherit, ...(meta.projectile || { file: 'object.png' }) };
+    const shotPivot = pivotFrom(shotSpec, { x: 0.5, y: 0.5 });
+    const shot = await loadSpecFrames(scene, id, slug, folder, shotSpec, index, shotPivot, charH, sized, 'shot-');
+    const detSpec = meta.detonate ? { ...inherit, ...meta.detonate } : null;
+    const det = detSpec
+      ? await loadSpecFrames(scene, id, slug, folder, detSpec, index, pivotFrom(detSpec, { x: 0.5, y: 1 }), charH, sized, 'det-')
+      : null;
+    if (!shot?.frames?.length) return null;
+    const detonate = det?.frames?.length
+      ? artRecord(objectType, sized, pivotFrom(detSpec, { x: 0.5, y: 1 }), det.frames, {
+        ...look, blend: detSpec.blend, fps: detSpec.fps, anchor: detSpec.anchor || 'ground', beam: null,
+      })
+      : null;
+    return artRecord(objectType, sized, shotPivot, shot.frames, {
+      ...look,
+      blend: shotSpec.blend,
+      spin: shotSpec.spin,
+      pulse: shotSpec.pulse,
+      reach: shot.reach,
+      detonate,
+      beam: null,
+    });
+  }
+
+  const useSheet = (meta.frames | 0) > 1 && listed(index, `${folder}/sheet.png`);
+  const useObject = !useSheet && (meta.anchor || meta.heightFrac || meta.fit) && listed(index, `${folder}/object.png`);
+  if (useSheet || useObject) {
+    const spec = { ...inherit, ...meta, file: useSheet ? 'sheet.png' : 'object.png' };
+    const usedPivot = pivotFrom(spec, pivot);
+    const loaded = await loadSpecFrames(scene, id, slug, folder, spec, index, usedPivot, charH, sized, '');
+    if (loaded?.frames?.length) {
+      let peak = null;
+      if (meta.peak && listed(index, `${folder}/${meta.peak}`)) {
+        const peakSpec = {
+          ...inherit, file: meta.peak, blend: 'add', fit: spec.fit || 'width', heightFrac: spec.heightFrac, black: spec.black,
+        };
+        const peakLoaded = await loadSpecFrames(
+          scene, id, slug, folder, peakSpec, index, { x: 0.5, y: 0.5 }, charH, sized, 'peak-',
+        );
+        peak = peakLoaded?.frames?.[0] || null;
       }
-      if (frames.length) return artRecord(objectType, sized, pivot, frames, { ...look, beam: null });
+      return artRecord(objectType, sized, usedPivot, loaded.frames, {
+        ...look, reach: loaded.reach, peak, peakFrame: meta.peakFrame ?? -1, beam: null,
+      });
     }
   }
 
@@ -366,9 +609,9 @@ async function loadMoveArt(scene, char, slot, move, index) {
   const endRel = `${folder}/cap-end.png`;
   if (wantBeam && listed(index, capRel) && listed(index, tileRel) && listed(index, endRel)) {
     const [start, tile, end] = await Promise.all([
-      loadBitmap(`/${capRel}`),
-      loadBitmap(`/${tileRel}`),
-      loadBitmap(`/${endRel}`),
+      loadBitmap(fxUrl(capRel)),
+      loadBitmap(fxUrl(tileRel)),
+      loadBitmap(fxUrl(endRel)),
     ]);
     if (start && tile && end) {
       const composed = composeBeam(start, tile, end, sized.w, sized.h, blackThreshold(meta));
@@ -405,9 +648,11 @@ export function fxProjectileView(scene, owner, move, x, y) {
   const scale = fxGameplayScale(move, art);
   img.setDisplaySize(frame.displayW * scale, frame.displayH * scale);
   img.setDepth(16);
-  if (art.blend === 'add') img.setBlendMode?.('ADD');
-  const face = owner?.facing || 1;
-  img.rotation = face === -1 ? Math.PI : 0;
+  if ((frame.blend || art.blend) === 'add') img.setBlendMode?.('ADD');
+  if (!art.spin) {
+    const face = owner?.facing || 1;
+    img.rotation = face === -1 ? Math.PI : 0;
+  }
   return {
     gfx: img,
     fxMask: art.frames[art.hitIndex ?? 0]?.mask || frame.mask,
@@ -417,6 +662,8 @@ export function fxProjectileView(scene, owner, move, x, y) {
     fxFps: art.fps || 8,
     fxDisplayW: frame.displayW * scale,
     fxDisplayH: frame.displayH * scale,
+    fxSpin: art.spin || 0,
+    fxPulse: art.pulse || 0,
   };
 }
 
@@ -430,6 +677,14 @@ export function stepFxProjectile(p, time) {
     p.fxMask = p.fxMasks?.[i] || p.fxMask;
     if (p.fxDisplayW) p.gfx.setDisplaySize(p.fxDisplayW, p.fxDisplayH);
   }
+  if (p.fxSpin) {
+    p.gfx.rotation = ((time - (p.born || 0)) / 1000) * p.fxSpin;
+    if (p.fxPulse && p.fxDisplayW) {
+      const s = 1 + Math.sin((time - (p.born || 0)) / 150) * p.fxPulse;
+      p.gfx.setDisplaySize(p.fxDisplayW * s, p.fxDisplayH * s);
+    }
+    return;
+  }
   p.gfx.rotation = Math.atan2(p.vy || 0, p.vx || 1);
 }
 
@@ -439,27 +694,45 @@ function placeStill(scene, art, x, y, rot) {
   img.setOrigin(art.pivotX, art.pivotY);
   img.setDisplaySize(frame.displayW, frame.displayH);
   img.setDepth(16);
-  if (art.blend === 'add') img.setBlendMode?.('ADD');
+  applyFrameLook(img, frame, art, 1);
   img.rotation = rot || 0;
   return img;
 }
 
-function playSheet(scene, img, art, displayW, displayH) {
-  if (!art?.frames || art.frames.length < 2 || !scene?.time?.addEvent) return;
+function applyFrameLook(img, frame, art, scale) {
+  if (!img || !frame) return;
+  img.setTexture?.(frame.key);
+  img.setDisplaySize(frame.displayW * scale, frame.displayH * scale);
+  const blend = frame.blend || art?.blend;
+  img.setBlendMode?.(blend === 'add' ? 'ADD' : 'NORMAL');
+}
+
+export function fxFrameIndex(art, elapsed) {
+  const n = art?.frames?.length || 1;
+  if (n <= 1) return 0;
   const fps = art.fps > 0 ? art.fps : 8;
-  let i = 0;
-  scene.time.addEvent({
-    delay: 1000 / fps,
-    repeat: art.frames.length - 1,
-    callback: () => {
-      if (!img?.scene) return;
-      i += 1;
-      const frame = art.frames[i];
-      if (!frame) return;
-      img.setTexture(frame.key);
-      img.setDisplaySize(displayW, displayH);
-    },
-  });
+  const i = Math.floor(Math.max(0, elapsed) / (1000 / fps));
+  return art.loop ? ((i % n) + n) % n : Math.min(n - 1, i);
+}
+
+/** Nearest floor at or below a blast, so a cloud can sit on the ground. */
+export function groundTop(scene, x, fromY) {
+  const stage = scene?.stage;
+  if (!stage) return fromY ?? 0;
+  let best = null;
+  const take = (top, left, right) => {
+    if (top == null || left == null || right == null) return;
+    if (x < left - 12 || x > right + 12) return;
+    if (fromY != null && top < fromY - 24) return;
+    if (best == null || top < best) best = top;
+  };
+  for (const solid of stage.solids || []) {
+    take(solid.y ?? stage.groundY, solid.x - solid.w / 2, solid.x + solid.w / 2);
+  }
+  for (const plat of stage.platforms || []) {
+    take(plat.y, plat.x - plat.w / 2, plat.x + plat.w / 2);
+  }
+  return best ?? stage.groundY ?? fromY ?? 0;
 }
 
 export function fxAnchor(fighter, move) {
@@ -475,6 +748,13 @@ export function fxAnchor(fighter, move) {
       scale: move._beamScale > 0 ? move._beamScale : 1,
     };
   }
+  if (art.anchor === 'ground-front' || (art.objectType === 'shield' && move.kind === 'wall' && art.anchor)) {
+    return {
+      x: fighter.x + face * (bodyW / 2 + (art.frontGap ?? 16)),
+      y: fighter.y,
+      scale: 1,
+    };
+  }
   if (art.objectType === 'shield' && move.kind === 'wall') {
     return {
       x: fighter.x + face * (bodyW / 2 + 16),
@@ -488,33 +768,96 @@ export function fxAnchor(fighter, move) {
   return null;
 }
 
+const oneShots = [];
+
+function trackOneShot(scene, img, art, scale, peak) {
+  const fps = art.fps > 0 ? art.fps : 8;
+  const frames = art.frames?.length || 1;
+  const life = frames > 1 ? (frames / fps) * 1000 + 70 : (art.objectType === 'shield' ? 500 : art.objectType === 'beam' ? 220 : 320);
+  oneShots.push({
+    img, art, scale, peak, born: scene.simNow ?? 0, life,
+  });
+}
+
+function stepOneShots(scene) {
+  const now = scene.simNow ?? 0;
+  for (let i = oneShots.length - 1; i >= 0; i--) {
+    const shot = oneShots[i];
+    if (!shot.img?.scene) {
+      shot.peak?.destroy?.();
+      oneShots.splice(i, 1);
+      continue;
+    }
+    const elapsed = now - shot.born;
+    const frame = shot.art.frames[fxFrameIndex(shot.art, elapsed)] || shot.art.frames[0];
+    applyFrameLook(shot.img, frame, shot.art, shot.scale);
+    if (shot.peak?.scene) {
+      const on = shot.art.peakFrame === fxFrameIndex(shot.art, elapsed);
+      shot.peak.setVisible(on);
+      shot.peak.setPosition(shot.img.x, shot.img.y);
+      shot.peak.setDisplaySize(shot.peak._fxW * shot.scale, shot.peak._fxH * shot.scale);
+      shot.peak.setAlpha(on ? 0.72 : 0);
+    }
+    if (elapsed >= shot.life) {
+      shot.img.destroy?.();
+      shot.peak?.destroy?.();
+      oneShots.splice(i, 1);
+    }
+  }
+}
+
 export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   const art = artFor(fighter?.charDef?.id, move?.name);
   if (!art?.frames?.length || !scene?.add?.image) return null;
+  if (art.anchor === 'trail' || art.anchor === 'ground-front') return null;
   if (art.objectType === 'projectile' || art.objectType === 'thrown') return null;
   if (art.objectType === 'slash arc' || art.objectType === 'extend') return null;
   const face = fighter?.facing || 1;
   const rot = art.objectType === 'beam' && face === -1 ? Math.PI : 0;
   const img = placeStill(scene, art, x, y, rot);
-  const dw = art.frames[0].displayW * scale;
-  const dh = art.frames[0].displayH * scale;
-  if (scale !== 1) img.setDisplaySize(dw, dh);
-  playSheet(scene, img, art, dw, dh);
-  const life = move?.kind === 'zone'
-    ? (move.zone?.ms ?? 1600)
-    : art.objectType === 'shield' ? 500 : art.objectType === 'beam' ? 220 : 320;
-  scene.tweens?.add?.({
-    targets: img, alpha: 0, duration: life, onComplete: () => img.destroy?.(),
-  });
+  applyFrameLook(img, art.frames[0], art, scale);
+  let peak = null;
+  if (art.peak?.key) {
+    peak = scene.add.image(x, y, art.peak.key);
+    peak.setOrigin(0.5, 0.5);
+    peak.setDepth(17);
+    peak.setBlendMode?.('ADD');
+    peak.setVisible(false);
+    peak._fxW = art.peak.displayW;
+    peak._fxH = art.peak.displayH;
+  }
+  trackOneShot(scene, img, art, scale, peak);
   return {
     image: img,
     placement: { mask: (art.frames[art.hitIndex ?? 0] || art.frames[0]).mask, x, y, rot, scale },
   };
 }
 
-export function fxHits(fighter, move, x, y, target, scale = 1) {
+export function fxDetonatePlacement(scene, fighter, move, x, y) {
+  const det = artFor(fighter?.charDef?.id, move?.name)?.detonate;
+  if (!det?.frames?.length) return null;
+  const frame = det.frames[det.hitIndex ?? 0] || det.frames[0];
+  if (!frame?.mask) return null;
+  return { mask: frame.mask, x, y: groundTop(scene, x, y), rot: 0, scale: 1 };
+}
+
+export function spawnFxDetonate(scene, fighter, move, x, y) {
   const art = artFor(fighter?.charDef?.id, move?.name);
-  const frame = art?.frames?.[art.hitIndex ?? 0] || art?.frames?.[0];
+  const det = art?.detonate;
+  const placed = fxDetonatePlacement(scene, fighter, move, x, y);
+  if (!placed || !det?.frames?.length || !scene?.add?.image || scene.simFast) return placed;
+  const img = placeStill(scene, det, placed.x, placed.y, 0);
+  img.setDepth(15);
+  trackOneShot(scene, img, det, 1, null);
+  return placed;
+}
+
+export function fxHits(fighter, move, x, y, target, scale = 1, frameIndex = null) {
+  const art = artFor(fighter?.charDef?.id, move?.name);
+  if (!art || art.hit === false) return null;
+  const frame = frameIndex != null
+    ? art.frames?.[frameIndex] || art.frames?.[0]
+    : art.frames?.[art.hitIndex ?? 0] || art.frames?.[0];
   if (!frame?.mask || !target) return null;
   const face = fighter?.facing || 1;
   const rot = (art.objectType === 'beam' || art.objectType === 'slash arc' || art.objectType === 'extend') && face === -1
@@ -523,11 +866,83 @@ export function fxHits(fighter, move, x, y, target, scale = 1) {
   return fxPlacementHits({ mask: frame.mask, x, y, rot, scale }, target);
 }
 
+export function fxBurstHits(scene, fighter, move, x, y, target) {
+  const art = artFor(fighter?.charDef?.id, move?.name);
+  if (art?.detonate && (move?.kind === 'burst' || move?.explodeOnly)) {
+    const placed = fxDetonatePlacement(scene, fighter, move, x, y);
+    if (!placed) return null;
+    return fxPlacementHits(placed, target);
+  }
+  return fxHits(fighter, move, x, y, target, fxGameplayScale(move, art));
+}
+
+export function fxWallTest(fighter, move, target, now) {
+  const art = artFor(fighter?.charDef?.id, move?.name);
+  if (!art?.frames?.length || art.anchor !== 'ground-front' || art.hit === false) return null;
+  const anchor = fxAnchor(fighter, move);
+  if (!anchor) return null;
+  const elapsed = (now ?? 0) - (fighter.defenseStart ?? now ?? 0);
+  return fxHits(fighter, move, anchor.x, anchor.y, target, anchor.scale || 1, fxFrameIndex(art, elapsed));
+}
+
 const liveSlash = new WeakMap();
+const liveAttached = new WeakMap();
+
+function attachedWant(scene, fighter) {
+  const now = scene.simNow ?? 0;
+  if (fighter.state === 'defending' && fighter.defenseMove?.kind === 'wall') {
+    const art = artFor(fighter.charDef?.id, fighter.defenseMove.name);
+    if (art?.anchor === 'ground-front' && art.frames?.length) {
+      return { art, kind: 'wall', elapsed: now - (fighter.defenseStart ?? now) };
+    }
+  }
+  if (fighter.state === 'attack' && fighter.dashUntil && now < fighter.dashUntil) {
+    const art = artFor(fighter.charDef?.id, fighter.currentMove?.name);
+    if (art?.anchor === 'trail' && art.frames?.length) {
+      return { art, kind: 'trail', elapsed: now - (fighter.dashUntil - (fighter.frameData?.visible || 1) * (scene.stepMs || 16.667)) };
+    }
+  }
+  return null;
+}
+
+function syncAttached(scene, fighter) {
+  const want = attachedWant(scene, fighter);
+  let live = liveAttached.get(fighter);
+  if (!want) {
+    if (live?.img) live.img.destroy?.();
+    if (live) liveAttached.delete(fighter);
+    return;
+  }
+  if (!live?.img?.scene || live.kind !== want.kind) {
+    live?.img?.destroy?.();
+    live = { img: placeStill(scene, want.art, fighter.x, fighter.y, 0), kind: want.kind };
+    live.img.setDepth(want.kind === 'trail' ? -2 : 10);
+    liveAttached.set(fighter, live);
+  }
+  const art = want.art;
+  const frame = art.frames[fxFrameIndex(art, want.elapsed)] || art.frames[0];
+  applyFrameLook(live.img, frame, art, 1);
+  const face = fighter.facing || 1;
+  if (want.kind === 'wall') {
+    const anchor = fxAnchor(fighter, fighter.defenseMove);
+    live.img.setPosition(anchor?.x ?? fighter.x, anchor?.y ?? fighter.y);
+    return;
+  }
+  const bodyW = fighter.bodyW ?? 40;
+  live.img.setPosition(fighter.x - face * bodyW * 0.35, fighter.y - frame.displayH * 0.5);
+  const sx = Math.abs(live.img.scaleX || 1);
+  const sy = Math.abs(live.img.scaleY || 1);
+  live.img.setScale(face * sx, sy);
+  if (art.flicker) {
+    live.img.setAlpha(0.9 + 0.1 * Math.sin((scene.simNow || 0) * 0.05));
+  }
+}
 
 export function syncFxActors(scene) {
   if (!scene?.fighters) return;
+  stepOneShots(scene);
   for (const fighter of scene.fighters) {
+    syncAttached(scene, fighter);
     const move = fighter.currentMove;
     const art = artFor(fighter?.charDef?.id, move?.name);
     const swinging = art && (art.objectType === 'slash arc' || art.objectType === 'extend')
@@ -572,4 +987,5 @@ function frameInActive(fighter) {
 export function clearFxIndexCache() {
   indexSet = undefined;
   byKey.clear();
+  oneShots.length = 0;
 }

@@ -265,16 +265,27 @@ export function interceptHit(defender, attacker, move, time) {
   }
 
   if (defense.reflectTypes?.length && !move?.isCounterAttack) {
-    const hit = types.find((t) => defense.reflectTypes.includes(t));
-    if (hit) {
+    const reflected = types.filter((t) => defense.reflectTypes.includes(t));
+    if (reflected.length) {
+      const keep = types.filter((t) => !defense.reflectTypes.includes(t));
+      const pow = defense.reflectPower ?? 1;
+      const packet = (t) => {
+        if (move?.type && canonicalType(move.type) === t) return (move.damage ?? 0) * pow;
+        if (move?.type2 && canonicalType(move.type2) === t) return (move.damage2 ?? 0) * pow;
+        return 0;
+      };
       return {
         result: 'counter',
+        negate: keep.length === 0,
+        keepTypes: keep,
         counter: {
           name: defense.name,
-          damage: (move.damage ?? 6) * (defense.reflectPower ?? 1),
-          type: defense.reflectAs ?? hit,
-          baseKnockback: defense.counterKnockback ?? 120,
-          knockbackGrowth: defense.counterKnockbackGrowth ?? 2,
+          damage: packet(reflected[0]) || (move.damage ?? 6) * pow,
+          type: defense.reflectAs ?? reflected[0],
+          type2: reflected[1],
+          damage2: reflected[1] ? packet(reflected[1]) : undefined,
+          baseKnockback: defense.counterKnockback ?? move.baseKnockback ?? 160,
+          knockbackGrowth: defense.counterKnockbackGrowth ?? move.knockbackGrowth ?? 3,
           isCounterAttack: true,
         },
       };

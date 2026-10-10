@@ -163,18 +163,17 @@ test('Anti-spam timing validation: duration + cooldown vs hitstun', () => {
   lillie.input = { left: true, attack: true, special: false }; lillie.update(1000, 16);
   assert.strictEqual(lillie.state, 'attack');
   
-  const lDur = lillieDef.moves.basicDirectional.duration;
-  const lCool = lillieDef.moves.basicDirectional.cooldown;
-  const lStartup = lDur * 0.25; 
-  
-  const lHitLandedTime = 1000 + lStartup;
-  const lHitstunEnd = lHitLandedTime + 340; // 340ms is base hitstun
-  
+  const jab = lillieDef.moves.basicDirectional;
+  assert.equal(jab.combo.hits, 3);
+  const lDur = jab.duration;
+  const lCool = jab.cooldown;
+  const lStartup = (jab.startupF ?? 3) * (1000 / 60);
   const lNextAttackAvailable = 1000 + lDur + lCool;
-  const lNextEarliestHit = lNextAttackAvailable + lStartup;
-  
-  // The next hit MUST land AFTER hitstun ends to break the true combo
-  assert.ok(lNextEarliestHit > lHitstunEnd, `Lillie true combo possible! Next hit: ${lNextEarliestHit}, Hitstun end: ${lHitstunEnd}`);
+  // Spark Jab is a real on-hit chain: the follow-up is pressable inside the combo window.
+  assert.ok(
+    lNextAttackAvailable < 1000 + lStartup + jab.combo.window,
+    `Spark Jab follow-up misses the combo window: next ${lNextAttackAvailable}`,
+  );
   
   // Ben timing check
   const ben = new Fighter(mockScene, 0, 0, benDef, 0, 0);

@@ -1,7 +1,7 @@
 // Four-move kits from the character design doc.
 // Charge = basicCharge (hold normal). Normal = basicDirectional.
 // Defense = specialDefense (hold special). Special = specialDirectional.
-// Lillie is intentionally absent — her in-game kit stays as written.
+// Review batch 1 (Lillie, Ben, Bord, Carter, Nitra, Oxana) lives here too.
 
 const K = 'kinetic';
 const H = 'heat';
@@ -57,6 +57,36 @@ export const MOVESETS = {
     }),
   },
 
+  lillie: {
+    basicCharge: m('Mega Discharge', {
+      kind: 'burst', type: E, damage: 8,
+      chargeDamageMult: 1.8, chargeRadiusMult: 1.6, maxChargeMs: 700,
+      radius: 70, bankCap: 18, baseKnockback: 200, knockbackGrowth: 5.2,
+      // Startup 5. Endlag 14. Same-button lock ~41 frames.
+      duration: 260, cooldown: 420, startupF: 5, endlagF: 14,
+      vfx: 'spark', fxScale: 'radius',
+    }),
+    basicDirectional: melee('Spark Jab', {
+      type: K, damage: 4, type2: E, damage2: 3,
+      combo: { hits: 3, window: 480, scales: [1, 1.2, 1.55], knockbacks: [120, 140, 220] },
+      rangeW: 78, rangeH: 40, baseKnockback: 140, knockbackGrowth: 3.2,
+      // Startup 3. Endlag 10. Same-button lock ~17 frames, inside the on-hit window.
+      startupF: 3, endlagF: 10, duration: 150, cooldown: 120, vfx: 'spark',
+    }),
+    specialDefense: m('Absorb', {
+      immune: [H, E, C, R], powersCharge: true,
+      duration: 800, cooldown: 280, vfx: 'bubble', vfxColor: 0xf4f7ff,
+    }),
+    specialDirectional: m('Crimson Tide', {
+      kind: 'projectile', type: C, damage: 4, type2: H, damage2: 5,
+      roll: true, pierce: true, carry: true, multiHit: 2, hitGap: 140,
+      baseKnockback: 40, knockbackGrowth: 0.4,
+      pop: { type: H, damage: 4, knockback: 240, growth: 4 },
+      projectileSpeed: 260, projectileRadius: 22, projectileLife: 1400,
+      startupF: 5, endlagF: 14, duration: 260, cooldown: 400, vfx: 'tide',
+    }),
+  },
+
   helen: {
     // Owner: keep her existing bubble attack as Charge. Air Wave moves to Special.
     basicCharge: m('Balloon Bop', {
@@ -83,25 +113,26 @@ export const MOVESETS = {
   },
 
   ben: {
-    basicCharge: melee('Resonant Strike', {
-      type: K, damage: 5, chargeDamageMult: 2.2, chargeKnockbackMult: 1.7,
-      maxChargeMs: 800, baseKnockback: 200, vfx: 'spark',
-      secondHit: { atFull: true, scale: 0.55, radius: 100 },
+    basicCharge: melee('Emerald Lance', {
+      type: K, damage: 6, chargeDamageMult: 2.2, chargeKnockbackMult: 1.6,
+      chargeRangeMult: 2.4, maxChargeMs: 800, rangeW: 70, rangeH: 28,
+      baseKnockback: 200, vfx: 'lance',
+      startupF: 6, endlagF: 12, duration: 240, cooldown: 360,
     }),
     basicDirectional: melee('Precision Strike', {
       type: K, damage: 4, sweetSpot: 5, rangeW: 70, vfx: 'strike',
-      baseKnockback: 160, knockbackGrowth: 3.6, duration: 250, cooldown: 740,
+      baseKnockback: 160, knockbackGrowth: 3.6,
+      startupF: 4, endlagF: 11, duration: 240, cooldown: 370,
     }),
-    specialDefense: m('Rigid Stance', {
-      kind: 'block', onlyReduce: [K], blockReduction: 0.72, noKnockback: true,
-      retort: { when: R, type: R, damage: 7, knockback: 160 },
-      duration: 700, cooldown: 640, vfx: 'shield',
+    specialDefense: m('Beryllium Mirror', {
+      reflectTypes: [H, E, C, R], reflectPower: 1, counterKnockback: 160,
+      duration: 420, cooldown: 340, vfx: 'shield', vfxColor: 0xb7f5cf,
     }),
     specialDirectional: m('Gyro Disc', {
-      kind: 'projectile', type: K, damage: 6, vfx: 'spark',
+      kind: 'projectile', type: K, damage: 6, visualShape: 'disc', vfx: 'spark',
       returns: true, angleable: true, pierce: false,
       projectileSpeed: 460, projectileRadius: 12, projectileLife: 1100,
-      baseKnockback: 190, duration: 240, cooldown: 1180,
+      baseKnockback: 190, startupF: 4, endlagF: 10, duration: 240, cooldown: 590,
     }),
   },
 
@@ -111,84 +142,96 @@ export const MOVESETS = {
       chargeKnockbackMult: 1.8, chargeDashMult: 1.35, maxChargeMs: 800,
       breaksBlock: 'full', dashSpeed: 560, rangeW: 88, rangeH: 80,
       baseKnockback: 180, knockbackGrowth: 2.4, vfx: 'dash',
+      endlagF: 12, cooldown: 200,
     }),
     basicDirectional: melee('Crystal Smash', {
       type: K, damage: 8, baseKnockback: 160, knockbackGrowth: 3.0, rangeW: 70, vfx: 'strike',
-      duration: 240, cooldown: 480,
+      startupF: 4, endlagF: 12, duration: 240, cooldown: 240,
     }),
     specialDefense: m('Boron Carbide Wall', {
       kind: 'wall', frontOnly: true, blocks: [K, H, R], crackAfterHits: 3,
-      duration: 800, cooldown: 900, vfx: 'wall', vfxColor: 0x9ad7ff,
+      duration: 400, cooldown: 450, vfx: 'wall', vfxColor: 0x9ad7ff,
       wallDamage: 6, wallType: K, wallKnockback: 180, wallKnockbackGrowth: 4,
       wallRangeW: 30, wallRangeH: 100, wallYFrac: 0.7,
     }),
     specialDirectional: m('Ground Shatter', {
       kind: 'burst', type: K, damage: 9, radius: 88, vfx: 'strike',
-      baseKnockback: 160, knockbackGrowth: 2.6, duration: 300, cooldown: 820,
+      baseKnockback: 160, knockbackGrowth: 2.6,
+      startupF: 5, endlagF: 14, duration: 300, cooldown: 410,
     }),
   },
 
   carter: {
-    basicCharge: m('Diamond Shard', {
-      kind: 'projectile', type: K, damage: 6, chargeDamageMult: 2.1,
-      chargeRadiusMult: 1.6, maxChargeMs: 800, breaksBlock: true, vfx: 'spark',
-      projectileSpeed: 540, projectileRadius: 10, projectileLife: 700,
-      baseKnockback: 210, duration: 240, cooldown: 720,
+    basicCharge: m('Diamond Storm', {
+      kind: 'projectile', type: K, damage: 5, chargeDamageMult: 2,
+      maxChargeMs: 800, visualShape: 'diamond', orbitRelease: true,
+      orbitWhileCharging: {
+        count: 8, radius: 76, damage: 2, type: K, touch: 22, gap: 300, period: 900, knockback: 36,
+      },
+      projectileSpeed: 480, projectileRadius: 10, projectileLife: 520,
+      baseKnockback: 200, vfx: 'spark',
+      startupF: 2, endlagF: 12, duration: 220, cooldown: 360,
     }),
     basicDirectional: melee('Diamond Cross', {
       type: K, damage: 6, baseKnockback: 200, rangeW: 70, vfx: 'strike',
-      duration: 250, cooldown: 660,
+      startupF: 4, endlagF: 12, duration: 220, cooldown: 330,
     }),
     specialDefense: m('Diamond Plating', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.78,
-      duration: 700, cooldown: 680, vfx: 'shield', vfxColor: 0xd6f4ff,
+      duration: 350, cooldown: 340, vfx: 'shield', vfxColor: 0xd6f4ff,
     }),
     specialDirectional: m('Graphene Wave', {
       kind: 'burst', type: E, damage: 8, radius: 82, vfx: 'spark',
-      baseKnockback: 200, duration: 280, cooldown: 980,
+      baseKnockback: 200, startupF: 4, endlagF: 12, duration: 280, cooldown: 490,
     }),
   },
 
   nitra: {
-    basicCharge: melee('Nitrogen Rush', {
-      kind: 'dash', type: K, damage: 7, chargeDamageMult: 2, chargeDashMult: 1.4,
-      maxChargeMs: 750, dashSpeed: 680, rangeW: 90, rangeH: 88,
-      whileCharging: { keep: 0.42, except: [R] },
-      baseKnockback: 210, vfx: 'ice',
+    basicCharge: m('Mini Tornado', {
+      kind: 'projectile', type: K, damage: 4, visualShape: 'tornado',
+      chargeDamageMult: 1.8, chargeRadiusMult: 1.8, maxChargeMs: 800,
+      pierce: true, carry: true, multiHit: 3, hitGap: 180, popKnockback: 280,
+      projectileSpeed: 300, projectileRadius: 18, projectileLife: 980,
+      baseKnockback: 50, knockbackGrowth: 0.6, vfx: 'ice',
+      startupF: 5, endlagF: 14, duration: 260, cooldown: 420,
     }),
-    basicDirectional: melee('Frost Fang', {
-      type: K, damage: 4, type2: H, damage2: 4,
-      onHit: { slow: 1200 }, rangeW: 84, vfx: 'ice', duration: 200, cooldown: 300,
+    basicDirectional: melee('Gust', {
+      type: K, damage: 3, launchMult: 2, rangeW: 96, rangeH: 48,
+      baseKnockback: 180, knockbackGrowth: 4.2, vfx: 'gust',
+      startupF: 3, endlagF: 12, duration: 200, cooldown: 220,
     }),
-    specialDefense: m('Inert Shield', {
-      kind: 'shield', duration: 900, cooldown: 700, vfx: 'bubble', vfxColor: 0xd8fff8,
+    specialDefense: m('Nitride Shell', {
+      chargeMs: 3000, onReady: { mult: 0.45, ms: 5000 },
+      duration: 3100, cooldown: 200, vfx: 'shield', vfxColor: 0xd7ecff,
     }),
-    specialDirectional: m('Cryo Vortex', {
-      kind: 'burst', type: H, damage: 9, radius: 96, vfx: 'ice',
-      zone: { type: H, damage: 3.2, ms: 2600, radius: 90, tick: 400, slide: true, color: 0xbff6ff },
-      baseKnockback: 240, duration: 300, cooldown: 860,
+    specialDirectional: m('Cryo Splash', {
+      kind: 'burst', type: H, damage: 6, radius: 78, offsetX: 70,
+      onHit: { freeze: 3000 }, vfx: 'cryo',
+      baseKnockback: 90, knockbackGrowth: 1.2,
+      startupF: 5, endlagF: 14, duration: 260, cooldown: 400,
     }),
   },
 
   oxana: {
     basicCharge: m('Bellows Breath', {
-      kind: 'projectile', type: K, damage: 6, flareHeat: 9,
+      kind: 'projectile', type: K, damage: 6, flareHeat: 9, visualShape: 'breath',
       chargeDamageMult: 1.6, maxChargeMs: 700, vfx: 'gust',
       baseKnockback: 260, knockbackGrowth: 6,
       projectileSpeed: 380, projectileRadius: 32, projectileLife: 1100,
-      duration: 240, cooldown: 640,
+      startupF: 4, endlagF: 12, duration: 240, cooldown: 320,
     }),
     basicDirectional: melee('Vortex Kick', {
-      type: K, damage: 10, flareHeat: 6, rangeW: 88, vfx: 'gust',
-      duration: 230, cooldown: 320,
+      type: K, damage: 8, rangeW: 88, vfx: 'spin',
+      baseKnockback: 170, startupF: 4, endlagF: 12, duration: 230, cooldown: 160,
     }),
     specialDefense: m('Ozone Layer', {
-      blocks: [R], duration: 800, cooldown: 720, vfx: 'shield', vfxColor: 0x9ad7ff,
+      blocks: [R], hold: false, lingerImmune: { types: [R], ms: 15000 },
+      duration: 360, cooldown: 400, vfx: 'shield', vfxColor: 0x8eb6ff,
     }),
     specialDirectional: m('Oxidation Burst', {
       kind: 'burst', type: H, damage: 9, type2: C, damage2: 8,
-      radius: 108, rustMetals: true, vfx: 'acid',
-      baseKnockback: 190, duration: 280, cooldown: 840,
+      radius: 108, vfx: 'acid',
+      baseKnockback: 190, startupF: 5, endlagF: 12, duration: 280, cooldown: 420,
     }),
   },
 

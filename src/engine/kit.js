@@ -15,7 +15,10 @@ export function applyOnHit(attacker, victim, move, time) {
 
   if (fx.slow) victim.slowUntil = time + fx.slow;
   if (fx.stun) lock(victim, time, fx.stun, true);
-  if (fx.freeze) lock(victim, time, fx.freeze, true);
+  if (fx.freeze) {
+    lock(victim, time, fx.freeze, true);
+    victim.frozenUntil = Math.max(victim.frozenUntil ?? 0, time + fx.freeze);
+  }
   if (fx.root) victim.rootedUntil = Math.max(victim.rootedUntil ?? 0, time + fx.root);
   if (fx.blind) victim.blindUntil = time + fx.blind;
   if (fx.miss) victim.missNext = (victim.missNext ?? 0) + (fx.miss === true ? 1 : fx.miss);
@@ -169,6 +172,10 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     for (const other of fighter.scene.fighters) other.phasingUntil = 0;
   }
   if (move.doubleNext) fighter.doubleNext = 1;
+  if (move.lingerImmune) {
+    fighter.lingerImmune = move.lingerImmune.types;
+    fighter.lingerImmuneUntil = time + (move.lingerImmune.ms ?? 15000);
+  }
   if (move.leap && fighter.body) {
     const dist = move.leap.dist ?? 170;
     const up = fighter.input?.jump ? -0.85 : fighter.input?.down ? 0.25 : -0.2;

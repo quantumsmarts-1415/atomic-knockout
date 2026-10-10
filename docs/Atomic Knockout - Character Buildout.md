@@ -43,10 +43,10 @@ Alkali Metal:
 	Boiling Point: 1617 K
 	Electrical conductivity: 11 MS/m
 	Electronegativity: 0.98
-	Charge Move: "Mega Discharge" All direction electric shock. Deals electric damage. [from your Character Buildout sheet; the game currently has "Volt Dash": electrical dash attack, hold to charge]
-	Normal Move: "Spark Jab" Lillie snaps out a quick jab wrapped in sparks, dealing kinetic and electrical damage. It's the fastest-starting normal on the alkali roster and chains into itself. (draft) [currently in the game: physical close-range hit]
-	Defense Move: "Absorb" Absorbs any electric damage. Mega Discharge deals 5% more damage on next use. [from your Character Buildout sheet; the game currently has "Reactive Armor": counter]
-	Special Move: "Water Reaction" Lillie splashes water at her feet and it fizzes into a crimson lithium flame, dealing heat damage in a small area. It's gentler than Natalie's version, but the flame lingers for a moment. (draft) [currently in the game: heat area burst around them]
+	Charge Move: "Mega Discharge" Lillie releases an electric shock in every direction. Damage and radius grow with charge, and energy stored by Absorb is added to the blast.
+	Normal Move: "Spark Jab" Lillie snaps out a quick jab wrapped in sparks, dealing kinetic and electrical damage. It chains into a 2–3 hit combo when pressed again on hit.
+	Defense Move: "Absorb" Lillie raises a shield that soaks heat, electrical, chemical, and radiation. Kinetic hits still land. Soaked damage powers up her next Mega Discharge.
+	Special Move: "Crimson Tide" Lillie slaps water down and a burning wave rolls forward along the ground, dealing chemical and heat damage. It carries enemies, then pops them up.
 -Sodium
 	Name: Natalie
 	Natural State: Solid
@@ -123,10 +123,10 @@ Alkaline Earth Metal:
 	Boiling Point: 2742 K
 	Electrical conductivity: 25 MS/m
 	Electronegativity: 1.57
-	Charge Move: "Resonant Strike" Ben charges a strike that hums with beryllium's extreme stiffness, dealing kinetic damage that grows with charge. Fully charged, it rings out a shockwave that hits a second time. (draft) [currently in the game: physical close-range hit, hold to charge]
-	Normal Move: "Precision Strike" Ben jabs with the precision of a space-telescope mirror, dealing kinetic damage. The hitbox is tight, but a sweet spot at the tip deals extra damage. (draft) [currently in the game: physical close-range hit]
-	Defense Move: "Rigid Stance" Ben locks into a stiff stance that reduces kinetic damage and stops knockback. Radiation attacks bounce off him like neutrons off a reactor reflector, back toward the attacker. (draft) [currently in the game: block that reduces damage]
-	Special Move: "Gyro Disc" Ben hurls a spinning beryllium gyroscope disc that flies perfectly straight, dealing kinetic damage. It can be angled with the direction pressed and returns to him if it misses. (draft) [currently in the game: physical projectile]
+	Charge Move: "Emerald Lance" Ben grows a green beryl-crystal spear and thrusts it. The lance gets longer and stronger the longer he charges.
+	Normal Move: "Precision Strike" Ben jabs with the precision of a space-telescope mirror, dealing kinetic damage. The hitbox is tight, but a sweet spot at the tip deals extra damage.
+	Defense Move: "Beryllium Mirror" Ben raises a beryl mirror that reflects heat, electrical, chemical, and radiation back at the attacker. Kinetic hits still land.
+	Special Move: "Gyro Disc" Ben hurls a spinning beryllium gyroscope disc that flies perfectly straight, dealing kinetic damage. It can be angled with the direction pressed and returns to him if it misses.
 -Magnesium
 	Name: Maggie
 	Natural State: Solid
@@ -349,7 +349,7 @@ Transition Metal:
 	Charge Move: "Ceramic Blade" Zora forges a zirconia ceramic blade while charging, and it grows longer the longer she holds. On release she sweeps it for kinetic damage, and since ceramic never dulls, it ignores block reductions. (draft)
 	Normal Move: "Cubic Cut" Zora strikes with sparkling cubic zirconia knuckles, dealing kinetic damage. (draft)
 	Defense Move: "Zircaloy Cladding" Zora wraps herself in the zirconium cladding used on nuclear fuel rods. Radiation passes straight through her without harm, and heat damage is blocked. (draft)
-	Special Move: "Counterfeit Gem" Zora throws a flawless fake diamond that shatters into glittering shards on impact, dealing kinetic damage. It looks exactly like Carter's real Diamond Shard. (draft)
+	Special Move: "Counterfeit Gem" Zora throws a flawless fake diamond that shatters into glittering shards on impact, dealing kinetic damage. It looks exactly like one of Carter's diamonds. (draft)
 -Niobium
 	Name: Niobe
 	Natural State: Solid
@@ -766,10 +766,10 @@ Metalloid:
 	Boiling Point: 4200 K
 	Electrical conductivity: ≈0 MS/m (1×10⁻¹⁰ MS/m; semiconductor, varies with purity)
 	Electronegativity: 2.04
-	Charge Move: "Heavy Ram" Bord lowers into a boron-hard battering stance while charging, then rams forward. Damage and knockback grow with charge, and fully charged, it breaks through blocks. (draft) [currently in the game: physical dash attack, hold to charge]
-	Normal Move: "Crystal Smash" Bord smashes forward with a fist of hard boron crystal, dealing high kinetic damage. (draft) [currently in the game: physical close-range hit]
-	Defense Move: "Boron Carbide Wall" Bord raises a slab of boron carbide, the material in tank and body armor, that blocks kinetic and heat damage. Boron soaks up neutrons, so it blocks radiation too, but it cracks after enough hits. (draft) [currently in the game: physical wall]
-	Special Move: "Ground Shatter" Bord slams the ground and it shatters into sharp boron crystals around him, dealing kinetic damage in an area. (draft) [currently in the game: physical area burst around them]
+	Charge Move: "Heavy Ram" Bord lowers into a boron-hard battering stance while charging, then rams forward. Damage and knockback grow with charge, and fully charged, it breaks through blocks.
+	Normal Move: "Crystal Smash" Bord smashes forward with a fist of hard boron crystal, dealing high kinetic damage.
+	Defense Move: "Boron Carbide Wall" Bord raises a slab of boron carbide, the material in tank and body armor, that blocks kinetic and heat damage. Boron soaks up neutrons, so it blocks radiation too, but it cracks after enough hits.
+	Special Move: "Ground Shatter" Bord slams the ground and it shatters into sharp boron crystals around him, dealing kinetic damage in an area.
 -Silicon
 	Name: Silas
 	Natural State: Solid
@@ -846,10 +846,10 @@ Reactive Nonmetal:
 	Boiling Point: 3915 K (sublimes; no liquid at normal pressure)
 	Electrical conductivity: 0.1 MS/m (graphite) / ≈0 (diamond, insulator)
 	Electronegativity: 2.55
-	Charge Move: "Diamond Shard" Carter grows a diamond shard while charging, bigger the longer he holds, then fires it straight ahead for heavy kinetic damage that cuts through blocks. (draft) [currently in the game: physical projectile, hold to charge]
-	Normal Move: "Diamond Cross" Carter crosses two diamond-edged arms in a quick X slash, dealing the hardest-hitting kinetic damage of any normal on the roster (Mohs 10). (draft) [currently in the game: physical close-range hit]
-	Defense Move: "Diamond Plating" Carter coats himself in diamond plating that greatly reduces kinetic damage. Heat attacks can still get through it, since diamond burns. (draft) [currently in the game: block that reduces damage]
-	Special Move: "Graphene Wave" Carter spreads a one-atom-thick sheet of graphene around himself and sends a wave of electricity through it, dealing electrical damage in an area. (draft) [currently in the game: electrical area burst around them]
+	Charge Move: "Diamond Storm" While Carter charges, diamonds spin around him and damage enemies that touch them. The diamonds do not block attacks. On release they launch outward.
+	Normal Move: "Diamond Cross" Carter crosses two diamond-edged arms in a quick X slash, dealing the hardest-hitting kinetic damage of any normal on the roster (Mohs 10).
+	Defense Move: "Diamond Plating" Carter coats himself in diamond plating that greatly reduces kinetic damage. Heat attacks can still get through it, since diamond burns.
+	Special Move: "Graphene Wave" Carter spreads a one-atom-thick sheet of graphene around himself and sends a wave of electricity through it, dealing electrical damage in an area.
 -Nitrogen
 	Name: Nitra
 	Natural State: Gas
@@ -859,10 +859,10 @@ Reactive Nonmetal:
 	Boiling Point: 77.36 K
 	Electrical conductivity: N/A (gas; ≈0, insulator)
 	Electronegativity: 3.04
-	Charge Move: "Nitrogen Rush" Nitra nitrides her surface while charging, reducing all incoming damage except radiation, then rushes forward in her hardened shell for kinetic damage scaled by charge. (draft) [currently in the game: physical dash attack, hold to charge]
-	Normal Move: "Frost Fang" Nitra bites with liquid-nitrogen fangs, dealing kinetic and heat damage (cold) and briefly slowing the target. (draft) [currently in the game: physical close-range hit]
-	Defense Move: "Inert Shield" Nitra wraps herself in a blanket of inert nitrogen gas that absorbs one hit of any type. Fire and chemical attacks fizzle out in it completely. (draft) [currently in the game: shield that absorbs one hit]
-	Special Move: "Cryo Vortex" Nitra spins a vortex of liquid-nitrogen vapor around herself, dealing heat damage (cold) and freezing the floor so fighters slide. (draft) [currently in the game: heat area burst around them]
+	Charge Move: "Mini Tornado" Nitra spins up a tornado that grows with charge, then launches it forward. It carries characters and hits three times along its path.
+	Normal Move: "Gust" Nitra flicks a gust that deals little kinetic damage but throws characters twice the normal distance.
+	Defense Move: "Nitride Shell" Nitra hardens a nitride shell. It takes 3 seconds to charge, and if she is not hit she then takes considerably less damage.
+	Special Move: "Cryo Splash" Nitra splashes cryogenic vapor that freezes anyone it hits for 3 seconds. They cannot move or attack, and vapor rises off the ice.
 -Oxygen
 	Name: Oxana
 	Natural State: Gas
@@ -872,10 +872,10 @@ Reactive Nonmetal:
 	Boiling Point: 90.19 K
 	Electrical conductivity: N/A (gas; ≈0, insulator)
 	Electronegativity: 3.44
-	Charge Move: "Bellows Breath" Oxana breathes in while charging, then blows out a stream of pure oxygen that shoves fighters back with light kinetic damage. Any fire, burn or heat effect it touches flares up for big extra heat damage. (draft)
-	Normal Move: "Vortex Kick" Oxana spins into a whirling kick that drags air with it, dealing kinetic damage and feeding oxygen into any flames it touches. (draft) [currently in the game: physical close-range hit]
-	Defense Move: "Ozone Layer" Oxana spreads a thin ozone layer around herself that blocks radiation damage, the way ozone blocks the sun's UV. (draft)
-	Special Move: "Oxidation Burst" Oxana releases a burst of pure oxygen that oxidizes everything around her, dealing heat and chemical damage. Metal fighters caught in it rust, lowering their kinetic defense for a few seconds. (draft) [currently in the game: heat area burst around them]
+	Charge Move: "Bellows Breath" Oxana breathes in while charging, then blows out a stream of pure oxygen that shoves fighters back with light kinetic damage. Any fire, burn or heat effect it touches flares up for big extra heat damage.
+	Normal Move: "Vortex Kick" Oxana spins into a plain whirling kick that deals kinetic damage.
+	Defense Move: "Ozone Layer" Oxana spreads a thin ozone layer that blocks radiation for 15 seconds.
+	Special Move: "Oxidation Burst" Oxana releases a burst of pure oxygen that oxidizes everything around her, dealing heat and chemical damage in an area.
 -Fluorine
 	Name: Flora
 	Natural State: Gas

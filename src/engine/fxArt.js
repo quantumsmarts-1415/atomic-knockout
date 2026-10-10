@@ -677,6 +677,14 @@ export function stepFxProjectile(p, time) {
     p.fxMask = p.fxMasks?.[i] || p.fxMask;
     if (p.fxDisplayW) p.gfx.setDisplaySize(p.fxDisplayW, p.fxDisplayH);
   }
+  if (p.move?.roll) {
+    const face = (p.vx || 1) < 0 ? -1 : 1;
+    p.gfx.rotation = 0;
+    const sx = Math.abs(p.gfx.scaleX || 1);
+    const sy = Math.abs(p.gfx.scaleY || 1);
+    p.gfx.setScale(face * sx, sy);
+    return;
+  }
   if (p.fxSpin) {
     p.gfx.rotation = ((time - (p.born || 0)) / 1000) * p.fxSpin;
     if (p.fxPulse && p.fxDisplayW) {

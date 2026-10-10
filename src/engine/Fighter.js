@@ -298,6 +298,18 @@ export default class Fighter extends Phaser.GameObjects.Container {
       return;
     }
 
+    if (this.state === 'defending' && this.defenseMove?.chargeMs && !this._shellBroken
+      && time >= this.defenseStart + this.defenseMove.chargeMs && !this._shellDone) {
+      this._shellDone = true;
+      const buff = this.defenseMove.onReady || { mult: 0.45, ms: 5000 };
+      this.mitigateMult = buff.mult ?? 0.45;
+      this.mitigateUntil = time + (buff.ms ?? 5000);
+      this.lingerHardening(time);
+      this.state = 'idle';
+      this.defenseMove = null;
+      this.rig.setFlash(0xd7ecff);
+    }
+
     // timed states expire
     if ((this.state === 'attack' || this.state === 'hurt' || this.state === 'defending') && time >= this.stateUntil) {
       if (this.state === 'defending' && this.defenseMove?.openAfter) {
@@ -623,6 +635,25 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this._sharpen = 1;
       }
     }
+    if (move.combo) {
+      const hits = move.combo.hits ?? 3;
+      const open = this._comboName === move.name && this._comboHit && time <= (this._comboUntil ?? 0);
+      let step = open ? (this._comboStep ?? 1) + 1 : 1;
+      if (step > hits) step = 1;
+      this._comboName = move.name;
+      this._comboStep = step;
+      this._comboHit = false;
+      this._comboUntil = time + (move.combo.window ?? 480);
+      const scale = move.combo.scales?.[step - 1] ?? 1;
+      const kb = move.combo.knockbacks?.[step - 1];
+      move = {
+        ...move,
+        damage: (move.damage ?? 0) * scale,
+        damage2: move.damage2 != null ? move.damage2 * scale : move.damage2,
+        baseKnockback: kb ?? move.baseKnockback,
+        _comboStep: step,
+      };
+    }
     if (move.echoWithin) {
       const again = this._echoName === move.name && time - (this._echoAt ?? -1e9) < move.echoWithin;
       this._echoName = move.name;
@@ -854,7 +885,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (move.overhold.damage2 != null) scaled.damage2 = move.overhold.damage2;
       if (move.overhold.radius != null) scaled.radius = move.overhold.radius;
     }
-    if (this._storedCharge && move.storeHits) {
+    if (this._storedCharge && (move.storeHits || move.bankCap)) {
       scaled.damage = (scaled.damage ?? 0) + this._storedCharge;
       this._storedCharge = 0;
     }
@@ -917,6 +948,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.wallLanded = move.kind === 'wall' ? new Set() : null;
     this.wallHits = 0;
     this.hardenStacks = 0;
+    this._shellDone = false;
+    this._shellBroken = false;
     this.defenseStart = time;
     this._drainAt = time + (move.drain?.every ?? 1000);
     this._regenAt = time + (move.regenEvery ?? 800);
@@ -1024,8 +1057,25 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
 
     let incoming = move;
+    if (!move.isSelf && this.lingerImmuneUntil > time && this.lingerImmune?.length) {
+      const ward = applyImmunities(incoming, { immune: this.lingerImmune });
+      if (ward.emptied) {
+        this.rig.setFlash(0x9ad7ff);
+        return 0;
+      }
+      incoming = ward.move;
+    }
     if (this.state === 'defending' && this.defenseMove?.immune?.length && !move.isSelf && !move.isCounterAttack) {
       const stripped = applyImmunities(incoming, this.defenseMove);
+      if (this.defenseMove.powersCharge) {
+        const before = (move.damage ?? 0) + (move.damage2 ?? 0);
+        const after = stripped.emptied ? 0 : (stripped.move.damage ?? 0) + (stripped.move.damage2 ?? 0);
+        const soaked = before - after;
+        if (soaked > 0) {
+          const cap = this.charDef.moves.basicCharge?.bankCap ?? 18;
+          this._storedCharge = Math.min(cap, (this._storedCharge ?? 0) + soaked * 0.6);
+        }
+      }
       if (stripped.emptied) {
         if (this.defenseMove.capture && move.type) {
           this.captured = {
@@ -1140,7 +1190,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         attacker.body.reset(this.x, this.y);
         this.body.reset(ax, ay);
       }
-      if (gate.negate !== false && attacker && attacker !== this && attacker.takeHit) {
+      if (attacker && attacker !== this && attacker.takeHit && gate.counter) {
         const cdmg = attacker.takeHit(this, gate.counter, time, this.facing);
         if (cdmg > 0) this.scene.noteHit?.(this, attacker, gate.counter);
         if (gate.counter.rootMs && attacker.rootedUntil != null) {
@@ -1154,7 +1204,18 @@ export default class Fighter extends Phaser.GameObjects.Container {
         if (this.state !== 'ko' && this.state !== 'dead') this.rig.setFlash(null);
       });
       if (gate.negate === false) {
-        // fall through and also take the (reduced) hit — vulcanized rubber
+        if (gate.keepTypes?.length) {
+          const keep = new Set(gate.keepTypes);
+          const typeOk = incoming.type && keep.has(incoming.type);
+          const type2Ok = incoming.type2 && keep.has(incoming.type2);
+          incoming = {
+            ...incoming,
+            damage: typeOk ? incoming.damage : 0,
+            type: typeOk ? incoming.type : undefined,
+            damage2: type2Ok ? incoming.damage2 : 0,
+            type2: type2Ok ? incoming.type2 : undefined,
+          };
+        }
       } else {
         return 0;
       }
@@ -1206,6 +1267,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       const except = charging.whileCharging.except ?? [];
       if (!except.includes(incoming.type) && incoming.type !== 'radiation') dmg *= charging.whileCharging.keep ?? 0.5;
     }
+    if (this.mitigateUntil > time) dmg *= this.mitigateMult ?? 0.45;
     if (this.currentMove?.guardStrike && this.state === 'attack') dmg *= (1 - this.currentMove.guardStrike);
     const ownBlast = attacker === this && !move.isSelf;
     const contagious = this.poisonInherit && this.poisonUntil > time;
@@ -1235,8 +1297,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
       incoming.knockbackGrowth,
       this.percent,
       this.weightNow(),
-      TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1),
+      TUNING.knockbackScale * (incoming.launchMult ?? 1) * (ownBlast ? TUNING.selfKnockbackScale : 1),
     );
+    if (this.state === 'defending' && this.defenseMove?.chargeMs && !this._shellDone && dmg > 0) {
+      this._shellBroken = true;
+    }
     const pinned = this.state === 'defending' && this.defenseMove?.noKnockback && !incoming.isSelf;
     if (pinned) kb = 0;
     this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, !armored);
@@ -1318,6 +1383,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       'dashUntil', 'diveUntil', 'diveArm', 'slowUntil', 'rootedUntil', 'speedBuffUntil', 'driftUntil',
       'phasingUntil', 'weightBuffUntil', 'poisonUntil', 'stunUntil', 'freezeUntil', 'burnUntil',
       'slipperyUntil', 'kineticResistUntil', 'heatedUntil',
+      'mitigateUntil', 'lingerImmuneUntil', 'frozenUntil',
     ];
     for (const k of keys) if (this[k] > 0) this[k] += ms;
     if (this.chargeStart) this.chargeStart += ms;

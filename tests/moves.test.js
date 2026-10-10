@@ -17,10 +17,8 @@ test('every fighter has four named moves with legal damage types', () => {
       for (const t of [move.type, move.type2, move.wallType, move.counterType].filter(Boolean)) {
         assert.ok(TYPES.has(t), `${c.id} ${move.name} type ${t}`);
       }
-      if (c.id !== 'lillie') {
-        for (const t of [move.type, move.type2].filter(Boolean)) {
-          assert.notStrictEqual(t, 'physical', `${c.id} ${move.name} still says physical`);
-        }
+      for (const t of [move.type, move.type2].filter(Boolean)) {
+        assert.notStrictEqual(t, 'physical', `${c.id} ${move.name} still says physical`);
       }
       if (move.kind === 'wall') {
         for (const k of ['wallRangeW', 'wallRangeH', 'wallYFrac', 'wallKnockbackGrowth']) {
@@ -33,12 +31,16 @@ test('every fighter has four named moves with legal damage types', () => {
 
 test('owner-locked kits stay as specified', () => {
   const l = CHARACTERS.lillie.moves;
-  assert.strictEqual(l.basicDirectional.name, 'Spark Jab');
-  assert.strictEqual(l.specialDirectional.name, 'Water Reaction');
-  assert.strictEqual(l.basicCharge.name, 'Volt Dash');
-  assert.strictEqual(l.specialDefense.name, 'Reactive Armor');
-  assert.strictEqual(l.specialDirectional.damage, 11);
-  assert.strictEqual(l.basicCharge.dashSpeed, 650);
+  assert.deepStrictEqual(
+    [l.basicCharge.name, l.basicDirectional.name, l.specialDefense.name, l.specialDirectional.name],
+    ['Mega Discharge', 'Spark Jab', 'Absorb', 'Crimson Tide'],
+  );
+  assert.equal(l.basicDirectional.combo.hits, 3);
+  assert.deepStrictEqual(l.specialDefense.immune, ['heat', 'electrical', 'chemical', 'radiation']);
+  assert.equal(l.specialDefense.powersCharge, true);
+  assert.equal(l.basicCharge.bankCap, 18);
+  assert.equal(l.specialDirectional.roll, true);
+  assert.equal(l.specialDirectional.carry, true);
 
   const h = CHARACTERS.hydra.moves;
   assert.deepStrictEqual(

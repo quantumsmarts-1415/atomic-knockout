@@ -193,6 +193,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       const scale = anchor?.scale ?? fxGameplayScale(move, art);
       if (drawFxOneShot(scene, fighter, move, x, y, scale)) return;
     }
+    if (art?.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) return;
   }
   const color = extra.color ?? colorOf(move);
   const x = extra.x ?? fighter.x;
@@ -214,6 +215,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       return;
     }
     if (style === 'bubble' || style === 'shield') {
+      if (move?.powersCharge || move?.chargeMs || move?.lingerImmune) return;
       shieldBubble(scene, fighter, color);
       return;
     }
@@ -256,6 +258,38 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       burst(scene, x, y, 0xbff6ff, 8, 60);
       ring(scene, x, y, 0xe8fbff, 50, 3);
       break;
+    case 'tide': {
+      const dir = fighter.facing || 1;
+      const feet = fighter.y - 6;
+      const splash = scene.add.circle?.(x + dir * 24, feet, 18, 0x7ec8ff, 0.6);
+      if (splash) die(scene, splash, 240);
+      for (let i = 0; i < 5; i++) {
+        const flame = scene.add.circle?.(
+          x + dir * (30 + i * 14), feet - 8 - (i % 2) * 10, 7 + i * 2, i < 2 ? 0xfff0c2 : 0xd6303a, 0.75,
+        );
+        if (flame) die(scene, flame, 300);
+      }
+      break;
+    }
+    case 'cryo':
+      burst(scene, x, y, 0xd8fbff, 12, 80);
+      ring(scene, x, y, 0xbff6ff, move.radius ?? 78, 4);
+      break;
+    case 'lance': {
+      const dir = fighter.facing || 1;
+      const len = move.rangeW ?? 90;
+      const streak = scene.add.rectangle?.(x + dir * len * 0.3, y, len, 8, 0x37d67a, 0.9);
+      if (streak) die(scene, streak, 180);
+      break;
+    }
+    case 'spin': {
+      const arc = scene.add.circle?.(x + (fighter.facing || 1) * 22, y, 30, 0xffe7b0, 0.12);
+      if (arc) {
+        arc.setStrokeStyle?.(3, 0xfff4d2, 0.85);
+        die(scene, arc, 200);
+      }
+      break;
+    }
     case 'acid':
     case 'cloud':
       for (let i = 0; i < 6; i++) {

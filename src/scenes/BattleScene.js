@@ -12,6 +12,7 @@ import { computeBotInput } from '../engine/BotAI.js';
 import { buildNavGraph } from '../engine/BotNav.js';
 import { startStageIntro } from '../engine/stageIntros.js';
 import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
+import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
 import { cleanse } from '../engine/kit.js';
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
@@ -743,6 +744,30 @@ export default class BattleScene extends Phaser.Scene {
       this.spawnProjectile(owner, { ...move, alsoBehind: false, _behindChild: true, _flip: true });
       return;
     }
+    if (move.orbitRelease && !move._orbitChild) {
+      const spec = move.orbitWhileCharging || {};
+      const n = spec.count || 8;
+      const rad = spec.radius ?? 76;
+      const spin = (this.time.now / (spec.period ?? 900)) * Math.PI * 2;
+      const speed = move.projectileSpeed || 480;
+      for (let i = 0; i < n; i++) {
+        const ang = spin + (i / n) * Math.PI * 2;
+        const ox = Math.cos(ang);
+        const oy = Math.sin(ang);
+        const want = Math.sign(ox) || owner.facing || 1;
+        this.spawnProjectile(owner, {
+          ...move,
+          orbitRelease: false,
+          fan: null,
+          _orbitChild: true,
+          _from: { x: owner.x + ox * rad, y: owner.y - owner.bodyH * 0.45 + oy * rad * 0.62 },
+          _vy: oy * speed * 0.7,
+          projectileSpeed: Math.max(80, Math.abs(ox) * speed),
+          _flip: want !== (owner.facing || 1),
+        });
+      }
+      return;
+    }
     if (move.fan > 1 && !move._fanChild) {
       const n = move.fan | 0;
       const spread = move.fanSpread ?? 220;
@@ -766,7 +791,7 @@ export default class BattleScene extends Phaser.Scene {
     }
     const face = move._flip ? -owner.facing : owner.facing;
     const x = move._from?.x ?? (owner.x + face * (owner.bodyW / 2 + r + 4));
-    let y = move._from?.y ?? (owner.y - owner.bodyH * 0.65);
+    let y = move._from?.y ?? (move.roll ? owner.y : owner.y - owner.bodyH * 0.65);
     if (move.fromAbove) y -= 220;
     if (move._rainChild) y -= 160;
     const born = this.time.now;
@@ -814,7 +839,7 @@ export default class BattleScene extends Phaser.Scene {
       orb.fillStyle(0xffffff, 0.6);
       orb.fillCircle(r * 0.4, 0, r * 0.25);
       orb.rotation = owner.facing === -1 ? Math.PI : 0;
-    } else {
+    } else if (!paintShot(orb, move, r)) {
       const fill = style.fill ?? pal.body;
       if (style.shape === 'balloon') {
         orb.fillStyle(fill, 0.4);
@@ -1265,6 +1290,7 @@ export default class BattleScene extends Phaser.Scene {
     this.juice?.syncStrikes?.();
     syncFxActors(this);
     syncChargeGlow(this);
+    syncMoveFx(this);
     this.drawDebug();
     if (!this.simFast) this.updateCamera(dt);
   }
@@ -1452,6 +1478,7 @@ export default class BattleScene extends Phaser.Scene {
     this.prevPadPause = padPause;
 
     for (const f of this.fighters) f.update(time, delta);
+    tickChargeOrbits(this, time);
     const collisionStart = globalThis.performance.now();
     resolvePush(this.fighters);
     this.updateZones(time);
@@ -1508,6 +1535,10 @@ export default class BattleScene extends Phaser.Scene {
             hit.next.set(victim, time + 90);
           }
           let swing = hit.move;
+          if (swing.combo) {
+            attacker._comboHit = true;
+            attacker._comboUntil = time + (swing.combo.window ?? 480);
+          }
           if (swing.sweetSpot) {
             const hb = attacker.getHitboxRect();
             const tip = hb ? (hit.dir === 1 ? hb.right : hb.left) : attacker.x;
@@ -1626,7 +1657,11 @@ export default class BattleScene extends Phaser.Scene {
         }
       }
       if (p.pinned) p.gfx.y += (90 * delta) / 1000;
-      else if (!(p.move.orbitMs && !p.orbited && time < p.born + p.move.orbitMs)) {
+      else if (p.move.roll) {
+        p.gfx.x += (p.vx * delta) / 1000;
+        p.vy = 0;
+        stepFxProjectile(p, time);
+      } else if (!(p.move.orbitMs && !p.orbited && time < p.born + p.move.orbitMs)) {
         p.gfx.x += (p.vx * delta) / 1000;
         p.gfx.y += (p.vy * delta) / 1000 + Math.sin(time / 90) * 0.25;
         stepFxProjectile(p, time);
@@ -1648,8 +1683,30 @@ export default class BattleScene extends Phaser.Scene {
           }
         }
       }
+      if (p.carried && p.move.carry && !p.pinned) {
+        const want = p.move.multiHit ?? 1;
+        for (const carried of p.carried) {
+          if (!carried.alive || !carried.body || carried.state === 'ko') continue;
+          if ((p.counts?.get(carried) ?? 0) >= want) continue;
+          carried.body.setVelocity(p.vx * 0.95, Math.min(-28, carried.body.velocity.y));
+        }
+      }
       const off = p.gfx.x < -80 || p.gfx.x > this.world.width + 80 || p.gfx.y > this.world.height + 80;
       if (time > p.dieAt || off) {
+        if (p.move.pop && p.carried && !p.pinned) {
+          for (const carried of p.carried) {
+            if (!carried.alive || carried.state === 'ko') continue;
+            this.landHit(p.owner, carried, {
+              name: p.move.name,
+              type: p.move.pop.type ?? p.move.type2 ?? p.move.type,
+              damage: p.move.pop.damage ?? 4,
+              baseKnockback: p.move.pop.knockback ?? 240,
+              knockbackGrowth: p.move.pop.growth ?? 4,
+              lift: true,
+              kind: 'burst',
+            });
+          }
+        }
         if (p.move.explodeOnly && !p.pinned) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
         if (!p.pinned) this.dropProjectileZone(p);
         p.gfx.destroy();
@@ -1676,6 +1733,7 @@ export default class BattleScene extends Phaser.Scene {
       if (p.pinned || (p.armAt && time < p.armAt)) continue;
       for (const victim of this.fighters) {
         if (victim === p.owner || !victim.alive || victim.state === 'ko' || !victim.visible || p.landed.has(victim)) continue;
+        if (p.next && time < (p.next.get(victim) ?? 0)) continue;
         if (!projectileHits(p, victim)) continue;
         const def = victim.defenseMove;
         const perfect = def?.reflectProjectiles === 'perfect'
@@ -1688,8 +1746,19 @@ export default class BattleScene extends Phaser.Scene {
           p.dead = true;
           break;
         }
-        p.landed.add(victim);
+        const want = p.move.multiHit ?? 1;
+        const n = (p.counts?.get(victim) ?? 0) + 1;
+        p.counts ??= new Map();
+        p.counts.set(victim, n);
+        if (n >= want) p.landed.add(victim);
+        else {
+          p.next ??= new Map();
+          p.next.set(victim, time + (p.move.hitGap ?? 170));
+        }
         let shot = p.move;
+        if (p.move.carry && n >= want) {
+          shot = { ...shot, lift: true, baseKnockback: shot.popKnockback ?? shot.baseKnockback ?? 220 };
+        }
         if (shot.tipBonus && p.owner && Math.abs(p.gfx.x - p.owner.x) >= (shot.tipAt ?? 260)) {
           shot = { ...shot, damage: (shot.damage ?? 0) + shot.tipBonus };
         }
@@ -1710,6 +1779,11 @@ export default class BattleScene extends Phaser.Scene {
         }
         // a projectile shoves you the way it was travelling
         this.landHit(p.owner, victim, { ...shot, _projectile: true }, Math.sign(p.vx) || p.owner.facing);
+        if (p.move.carry && victim.body && n < want) {
+          victim.body.setVelocity(p.vx * 0.9, Math.min(victim.body.velocity.y, -60));
+          p.carried ??= new Set();
+          p.carried.add(victim);
+        }
         this.dropProjectileZone(p);
         if (p.move.splitOnHit && !p._splitChild && p.owner) {
           const spread = p.move.splitSpread ?? 150;
@@ -1725,7 +1799,7 @@ export default class BattleScene extends Phaser.Scene {
           this.spawnProjectile(p.owner, { ...child, _vy: spread * 0.35 });
           p._splitChild = true;
         }
-        if (!p.move.pierce) {
+        if (!p.move.pierce && n >= want) {
           p.gfx.destroy();
           p.dead = true;
           break;

@@ -1,0 +1,13 @@
+{
+  "blend": "add",
+  "black": 16,
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 14,
+  "fit": "width",
+  "heightFrac": 2.0,
+  "scaleWith": "radius",
+  "peak": "peak.png",
+  "peakFrame": 4
+}

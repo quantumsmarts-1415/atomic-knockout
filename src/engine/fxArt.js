@@ -909,14 +909,22 @@ function syncAttached(scene, fighter) {
   const want = attachedWant(scene, fighter);
   let live = liveAttached.get(fighter);
   if (!want) {
+    if (live?.kind === 'trail') fighter.rig?.setDepth?.(0);
     if (live?.img) live.img.destroy?.();
     if (live) liveAttached.delete(fighter);
     return;
   }
   if (!live?.img?.scene || live.kind !== want.kind) {
+    if (live?.kind === 'trail') fighter.rig?.setDepth?.(0);
     live?.img?.destroy?.();
     live = { img: placeStill(scene, want.art, fighter.x, fighter.y, 0), kind: want.kind };
-    live.img.setDepth(want.kind === 'trail' ? -2 : 10);
+    // Above the stage (depth 0) and behind Hydra, so the streak is not hidden by the sky.
+    if (want.kind === 'trail') {
+      fighter.rig?.setDepth?.(5);
+      live.img.setDepth(4);
+    } else {
+      live.img.setDepth(10);
+    }
     liveAttached.set(fighter, live);
   }
   const art = want.art;

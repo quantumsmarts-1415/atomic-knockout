@@ -10,7 +10,7 @@ import { phoneNet } from '../net/PhoneNet.js';
 import { computeBotInput } from '../engine/BotAI.js';
 import { buildNavGraph } from '../engine/BotNav.js';
 import { startStageIntro } from '../engine/stageIntros.js';
-import { playVfx, projectileStyle } from '../engine/MoveVfx.js';
+import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { cleanse } from '../engine/kit.js';
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
@@ -20,7 +20,7 @@ import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, fxAnchor, fxHits, fxProjectileView, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
+import { artFor, collectFxArt, fxAnchor, fxGameplayScale, fxHits, fxProjectileView, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
 
 const GRAVITY = 1500;
 
@@ -883,7 +883,8 @@ export default class BattleScene extends Phaser.Scene {
         const dy = Math.abs((target.y - (target.bodyH ?? 0) * 0.4) - (owner.y - (owner.bodyH ?? 0) * 0.5));
         if (ahead > 30 && dy < 90 && ahead < 340) continue;
       }
-      const fxHit = fxHits(owner, move, cx, cy, target);
+      const fxScale = fxGameplayScale(move, artFor(owner?.charDef?.id, move?.name));
+      const fxHit = fxHits(owner, move, cx, cy, target, fxScale);
       if (fxHit === true || (fxHit == null && hurtHitsCircle(target, cx, cy, move.radius ?? 70))) {
         this.landHit(owner, target, move);
         struck.add(target);
@@ -1254,6 +1255,7 @@ export default class BattleScene extends Phaser.Scene {
     this.juice?.update(dt / 1000);
     this.juice?.syncStrikes?.();
     syncFxActors(this);
+    syncChargeGlow(this);
     this.drawDebug();
     if (!this.simFast) this.updateCamera(dt);
   }

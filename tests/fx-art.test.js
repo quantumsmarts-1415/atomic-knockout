@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { rasterAlpha } from '../src/engine/fxArt.js';
+import { blackThreshold, fxGameplayScale, keyNearBlack, rasterAlpha, sliceHorizontal } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 
 test('every move has a folder, a type, and a score', () => {
@@ -52,6 +52,57 @@ test('alpha above half fills a hit mask and clear pixels do not', () => {
     data: new Uint8ClampedArray(16), width: 2, height: 2, displayW: 10, displayH: 10, pivotX: 0.5, pivotY: 0.5,
   });
   assert.equal(clear.n, 0);
+});
+
+test('near-black pixels drop out of an additive hit mask', () => {
+  const width = 8;
+  const height = 4;
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let i = 0; i < width * height; i++) {
+    const x = i % width;
+    const o = i * 4;
+    data[o] = x < 4 ? 4 : 255;
+    data[o + 1] = x < 4 ? 4 : 220;
+    data[o + 2] = x < 4 ? 4 : 80;
+    data[o + 3] = 255;
+  }
+  const keyed = keyNearBlack(data, width, height, blackThreshold({ blend: 'add' }));
+  let dark = 0;
+  let bright = 0;
+  for (let x = 0; x < width; x++) {
+    const a = keyed[(x) * 4 + 3];
+    if (x < 4) dark += a;
+    else bright += a;
+  }
+  assert.equal(dark, 0);
+  assert.ok(bright > 0);
+  const mask = rasterAlpha({
+    data: keyed, width, height, displayW: 40, displayH: 20, pivotX: 0.5, pivotY: 0.5,
+  });
+  assert.ok(mask.n > 0);
+  assert.ok(mask.minX >= -2);
+});
+
+test('a horizontal sheet splits into even frames', () => {
+  const data = new Uint8ClampedArray(8 * 2 * 4);
+  for (let x = 0; x < 8; x++) {
+    data[x * 4] = x < 4 ? 10 : 200;
+    data[x * 4 + 3] = 255;
+  }
+  const right = sliceHorizontal(data, 8, 1, 2, 1);
+  assert.equal(right.width, 4);
+  assert.equal(right.data[0], 200);
+  assert.equal(sliceHorizontal(data, 8, 1, 2, 0).data[0], 10);
+});
+
+test('charged radius scales a supernova sprite from 1x to 3x', () => {
+  const tap = { radius: 64, _baseRadius: 64, fxScale: 'radius' };
+  const half = { radius: 128, _baseRadius: 64, fxScale: 'radius' };
+  const full = { radius: 192, _baseRadius: 64, fxScale: 'radius' };
+  assert.equal(fxGameplayScale(tap, null), 1);
+  assert.equal(fxGameplayScale(half, { scaleWith: 'radius' }), 2);
+  assert.equal(fxGameplayScale(full, { scaleWith: 'radius', scale: 1 }), 3);
+  assert.equal(fxGameplayScale({ radius: 80 }, null), 1);
 });
 
 test('a dropped-in mask hits the body it covers and misses when it is moved away', () => {

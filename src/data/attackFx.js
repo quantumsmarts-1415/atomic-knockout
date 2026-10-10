@@ -155,6 +155,7 @@ function specFor(folder, objectType, box) {
       `cap-end pivots at the right center (1, 0.50) so the tip meets the last tile.`,
       `A single ${folder}/object.png is used instead when the three-part set is absent, fitted inside ${boxText}, pivot at the left center.`,
       objectType === 'extend' ? `Optional frame-0.png through frame-7.png, played at 8 fps while the swing is active.` : `No frame animation.`,
+      `Optional fx.json with "blend": "add", a luminance "black" cutoff, and "scaleWith": "radius".`,
     ].join(' ');
   }
   const pivot = objectType === 'slash arc' ? 'left center (0, 0.50)' : 'center (0.50, 0.50)';
@@ -162,6 +163,10 @@ function specFor(folder, objectType, box) {
     `${folder}/object.png.`,
     `Transparent PNG at full resolution, pointing right, fitted inside ${boxText}, pivot at the ${pivot}.`,
     `Optional frame-0.png through frame-7.png replace object.png and play at 8 fps.`,
+    `Optional fx.json. "blend": "add" uses additive blending for art painted on pure black.`,
+    `Pixels at or below a luminance of 16, or "black": <number>, are transparent in the picture and in the hit mask.`,
+    `"frames": N and "fps" read a horizontal sheet.png of N frames.`,
+    `"scaleWith": "radius" multiplies the sprite by the charged radius over the tap radius.`,
     `No tiling.`,
   ].join(' ');
 }

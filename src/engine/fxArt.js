@@ -9,8 +9,58 @@ import { fxPlacementHits } from './boxes.js';
 const CELL = 5;
 const ALPHA = 127;
 const FILL = 0.22;
+const BLACK_LUMA = 16;
 const byKey = new Map();
 let indexSet = undefined;
+
+/** Luminance key for art painted on pure black. Pixels at or under the
+ *  threshold lose their alpha, so the hit mask and the sprite agree. */
+export function keyNearBlack(data, width, height, threshold) {
+  const out = new Uint8ClampedArray(data);
+  const limit = threshold ?? 0;
+  if (!(limit > 0) || !(width > 0) || !(height > 0)) return out;
+  const n = Math.min(out.length, width * height * 4);
+  for (let i = 0; i < n; i += 4) {
+    const lum = 0.2126 * out[i] + 0.7152 * out[i + 1] + 0.0722 * out[i + 2];
+    if (out[i + 3] === 0 || lum <= limit) out[i + 3] = 0;
+  }
+  return out;
+}
+
+export function blackThreshold(meta) {
+  if (!meta) return 0;
+  if (typeof meta.black === 'number' && meta.black > 0) return meta.black;
+  if (meta.black === false) return 0;
+  if (meta.blend === 'add' || meta.black === true) return BLACK_LUMA;
+  return 0;
+}
+
+/** One cell of a horizontal strip. Leftover columns on the right are unused. */
+export function sliceHorizontal(data, width, height, frames, index) {
+  const count = Math.max(1, frames | 0);
+  const fw = Math.max(1, Math.floor((width || 1) / count));
+  const h = height || 1;
+  const i = Math.max(0, Math.min(count - 1, index | 0));
+  const out = new Uint8ClampedArray(fw * h * 4);
+  const src = data || new Uint8ClampedArray(0);
+  for (let y = 0; y < h; y++) {
+    const from = (y * (width || fw) + i * fw) * 4;
+    out.set(src.subarray(from, from + fw * 4), y * fw * 4);
+  }
+  return { data: out, width: fw, height: h };
+}
+
+/** Sprite scale driven by the move. `radius` uses the charged radius over the tap radius. */
+export function fxGameplayScale(move, art) {
+  const extra = art?.scale > 0 ? art.scale : 1;
+  const mode = art?.scaleWith || move?.fxScale;
+  if (mode === 'radius') {
+    const base = move?._baseRadius ?? move?.radius;
+    const now = move?.radius;
+    if (base > 0 && now > 0) return extra * (now / base);
+  }
+  return extra;
+}
 
 export function fxKey(fighterId, moveName) {
   return `${fighterId}/${moveSlug(moveName)}`;
@@ -143,21 +193,70 @@ function rememberTexture(scene, key, img) {
   return key;
 }
 
-async function loadFrame(scene, rel, key, box, pivotX, pivotY) {
+function canvasFromPixels(data, width, height) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d').putImageData(new ImageData(data, width, height), 0, 0);
+  return canvas;
+}
+
+function frameFromPixels(scene, key, data, width, height, box, pivotX, pivotY, threshold) {
+  const keyed = threshold > 0 ? keyNearBlack(data, width, height, threshold) : data;
+  const source = threshold > 0 ? canvasFromPixels(keyed, width, height) : null;
+  const fitted = fit(box, width, height);
+  const mask = rasterAlpha({
+    data: keyed, width, height, displayW: fitted.w, displayH: fitted.h, pivotX, pivotY,
+  });
+  return {
+    key: rememberTexture(scene, key, source || canvasFromPixels(keyed, width, height)),
+    mask,
+    displayW: fitted.w,
+    displayH: fitted.h,
+  };
+}
+
+async function loadFrame(scene, rel, key, box, pivotX, pivotY, meta) {
   const img = await loadBitmap(`/${rel}`);
   if (!img) return null;
   const pix = pixelsOf(img);
-  const fitted = fit(box, pix.width, pix.height);
-  const mask = rasterAlpha({
-    data: pix.data,
-    width: pix.width,
-    height: pix.height,
-    displayW: fitted.w,
-    displayH: fitted.h,
-    pivotX,
-    pivotY,
-  });
-  return { key: rememberTexture(scene, key, img), mask, displayW: fitted.w, displayH: fitted.h };
+  return frameFromPixels(
+    scene, key, pix.data, pix.width, pix.height, box, pivotX, pivotY, blackThreshold(meta),
+  );
+}
+
+async function loadFxMeta(folder, index) {
+  const rel = `${folder}/fx.json`;
+  if (!listed(index, rel)) return {};
+  try {
+    const res = await fetch(`/${rel}`);
+    if (!res.ok) return {};
+    const json = await res.json();
+    return json && typeof json === 'object' ? json : {};
+  } catch {
+    return {};
+  }
+}
+
+function artRecord(objectType, sized, pivot, frames, extra) {
+  let hitIndex = 0;
+  for (let i = 1; i < frames.length; i++) {
+    if ((frames[i].mask?.n || 0) > (frames[hitIndex].mask?.n || 0)) hitIndex = i;
+  }
+  return {
+    objectType,
+    box: sized,
+    pivotX: pivot.x,
+    pivotY: pivot.y,
+    frames,
+    hitIndex,
+    beam: extra.beam || null,
+    blend: extra.blend === 'add' ? 'add' : 'normal',
+    fps: extra.fps > 0 ? extra.fps : 8,
+    timed: extra.fps > 0,
+    scale: extra.scale > 0 ? extra.scale : 1,
+    scaleWith: extra.scaleWith || null,
+  };
 }
 
 export async function collectFxArt(scene) {
@@ -191,7 +290,7 @@ function imageSize(img) {
   };
 }
 
-function composeBeam(start, tile, end, length, thick) {
+function composeBeam(start, tile, end, length, thick, threshold = 0) {
   const canvas = document.createElement('canvas');
   const w = Math.max(1, Math.round(length));
   const h = Math.max(1, Math.round(thick));
@@ -211,7 +310,11 @@ function composeBeam(start, tile, end, length, thick) {
     ctx.drawImage(tile, 0, 0, ts.w * (piece / tw), ts.h, x, 0, piece, h);
   }
   ctx.drawImage(end, endX, 0, ew, h);
-  const data = ctx.getImageData(0, 0, w, h).data;
+  let data = ctx.getImageData(0, 0, w, h).data;
+  if (threshold > 0) {
+    data = keyNearBlack(data, w, h, threshold);
+    ctx.putImageData(new ImageData(data, w, h), 0, 0);
+  }
   const mask = rasterAlpha({ data, width: w, height: h, displayW: length, displayH: thick, pivotX: 0, pivotY: 0.5 });
   return { canvas, mask };
 }
@@ -224,6 +327,38 @@ async function loadMoveArt(scene, char, slot, move, index) {
   const pivot = objectType === 'slash arc' || objectType === 'extend' || objectType === 'beam'
     ? { x: 0, y: 0.5 }
     : { x: 0.5, y: 0.5 };
+  const meta = await loadFxMeta(folder, index);
+  const look = {
+    blend: meta.blend,
+    fps: meta.fps,
+    scale: meta.scale,
+    scaleWith: meta.scaleWith || null,
+  };
+
+  const sheetFrames = meta.frames | 0;
+  const sheetRel = `${folder}/sheet.png`;
+  if (sheetFrames > 1 && listed(index, sheetRel)) {
+    const img = await loadBitmap(`/${sheetRel}`);
+    if (img) {
+      const pix = pixelsOf(img);
+      const frames = [];
+      for (let i = 0; i < sheetFrames; i++) {
+        const slice = sliceHorizontal(pix.data, pix.width, pix.height, sheetFrames, i);
+        frames.push(frameFromPixels(
+          scene,
+          `fx-${id}-${moveSlug(move.name)}-${i}`,
+          slice.data,
+          slice.width,
+          slice.height,
+          sized,
+          pivot.x,
+          pivot.y,
+          blackThreshold(meta),
+        ));
+      }
+      if (frames.length) return artRecord(objectType, sized, pivot, frames, { ...look, beam: null });
+    }
+  }
 
   const wantBeam = objectType === 'beam' || objectType === 'extend';
   const capRel = `${folder}/cap-start.png`;
@@ -236,19 +371,12 @@ async function loadMoveArt(scene, char, slot, move, index) {
       loadBitmap(`/${endRel}`),
     ]);
     if (start && tile && end) {
-      const composed = composeBeam(start, tile, end, sized.w, sized.h);
+      const composed = composeBeam(start, tile, end, sized.w, sized.h, blackThreshold(meta));
       const key = `fx-${id}-${moveSlug(move.name)}-beam`;
       if (scene.textures?.exists(key)) scene.textures.remove(key);
       scene.textures.addImage(key, composed.canvas);
       const mask = composed.mask;
-      return {
-        objectType,
-        box: sized,
-        pivotX: 0,
-        pivotY: 0.5,
-        frames: [{ key, mask, displayW: sized.w, displayH: sized.h }],
-        beam: true,
-      };
+      return artRecord(objectType, sized, { x: 0, y: 0.5 }, [{ key, mask, displayW: sized.w, displayH: sized.h }], { ...look, beam: true });
     }
   }
 
@@ -256,17 +384,16 @@ async function loadMoveArt(scene, char, slot, move, index) {
   for (let i = 0; i < 8; i++) {
     const rel = `${folder}/frame-${i}.png`;
     if (index && !index.has(rel)) break;
-    const frame = await loadFrame(scene, rel, `fx-${id}-${moveSlug(move.name)}-${i}`, sized, pivot.x, pivot.y);
+    const frame = await loadFrame(scene, rel, `fx-${id}-${moveSlug(move.name)}-${i}`, sized, pivot.x, pivot.y, meta);
     if (!frame) break;
     frames.push(frame);
   }
   if (!frames.length && listed(index, `${folder}/object.png`)) {
-    const one = await loadFrame(scene, `${folder}/object.png`, `fx-${id}-${moveSlug(move.name)}`, sized, pivot.x, pivot.y);
+    const one = await loadFrame(scene, `${folder}/object.png`, `fx-${id}-${moveSlug(move.name)}`, sized, pivot.x, pivot.y, meta);
     if (one) frames.push(one);
   }
-  if (!frames.length && !wantBeam) return null;
   if (!frames.length) return null;
-  return { objectType, box: sized, pivotX: pivot.x, pivotY: pivot.y, frames, beam: null };
+  return artRecord(objectType, sized, pivot, frames, { ...look, beam: null });
 }
 
 export function fxProjectileView(scene, owner, move, x, y) {
@@ -275,26 +402,33 @@ export function fxProjectileView(scene, owner, move, x, y) {
   if (!frame || !scene?.add?.image) return null;
   const img = scene.add.image(x, y, frame.key);
   img.setOrigin(art.pivotX, art.pivotY);
-  img.setDisplaySize(frame.displayW, frame.displayH);
+  const scale = fxGameplayScale(move, art);
+  img.setDisplaySize(frame.displayW * scale, frame.displayH * scale);
   img.setDepth(16);
+  if (art.blend === 'add') img.setBlendMode?.('ADD');
   const face = owner?.facing || 1;
   img.rotation = face === -1 ? Math.PI : 0;
   return {
     gfx: img,
-    fxMask: frame.mask,
+    fxMask: art.frames[art.hitIndex ?? 0]?.mask || frame.mask,
     fxFrames: art.frames.map((f) => f.key),
     fxMasks: art.frames.map((f) => f.mask),
-    fxScale: 1,
+    fxScale: scale,
+    fxFps: art.fps || 8,
+    fxDisplayW: frame.displayW * scale,
+    fxDisplayH: frame.displayH * scale,
   };
 }
 
 export function stepFxProjectile(p, time) {
   if (!p?.fxFrames || !p.gfx?.setTexture) return;
-  const i = Math.floor(Math.max(0, time - (p.born || 0)) / 125) % p.fxFrames.length;
+  const fps = p.fxFps > 0 ? p.fxFps : 8;
+  const i = Math.floor(Math.max(0, time - (p.born || 0)) / (1000 / fps)) % p.fxFrames.length;
   if (i !== p._fxFrame) {
     p._fxFrame = i;
     p.gfx.setTexture(p.fxFrames[i]);
     p.fxMask = p.fxMasks?.[i] || p.fxMask;
+    if (p.fxDisplayW) p.gfx.setDisplaySize(p.fxDisplayW, p.fxDisplayH);
   }
   p.gfx.rotation = Math.atan2(p.vy || 0, p.vx || 1);
 }
@@ -305,8 +439,27 @@ function placeStill(scene, art, x, y, rot) {
   img.setOrigin(art.pivotX, art.pivotY);
   img.setDisplaySize(frame.displayW, frame.displayH);
   img.setDepth(16);
+  if (art.blend === 'add') img.setBlendMode?.('ADD');
   img.rotation = rot || 0;
   return img;
+}
+
+function playSheet(scene, img, art, displayW, displayH) {
+  if (!art?.frames || art.frames.length < 2 || !scene?.time?.addEvent) return;
+  const fps = art.fps > 0 ? art.fps : 8;
+  let i = 0;
+  scene.time.addEvent({
+    delay: 1000 / fps,
+    repeat: art.frames.length - 1,
+    callback: () => {
+      if (!img?.scene) return;
+      i += 1;
+      const frame = art.frames[i];
+      if (!frame) return;
+      img.setTexture(frame.key);
+      img.setDisplaySize(displayW, displayH);
+    },
+  });
 }
 
 export function fxAnchor(fighter, move) {
@@ -343,7 +496,10 @@ export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   const face = fighter?.facing || 1;
   const rot = art.objectType === 'beam' && face === -1 ? Math.PI : 0;
   const img = placeStill(scene, art, x, y, rot);
-  if (scale !== 1) img.setDisplaySize(art.frames[0].displayW * scale, art.frames[0].displayH * scale);
+  const dw = art.frames[0].displayW * scale;
+  const dh = art.frames[0].displayH * scale;
+  if (scale !== 1) img.setDisplaySize(dw, dh);
+  playSheet(scene, img, art, dw, dh);
   const life = move?.kind === 'zone'
     ? (move.zone?.ms ?? 1600)
     : art.objectType === 'shield' ? 500 : art.objectType === 'beam' ? 220 : 320;
@@ -352,13 +508,13 @@ export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   });
   return {
     image: img,
-    placement: { mask: art.frames[0].mask, x, y, rot, scale },
+    placement: { mask: (art.frames[art.hitIndex ?? 0] || art.frames[0]).mask, x, y, rot, scale },
   };
 }
 
 export function fxHits(fighter, move, x, y, target, scale = 1) {
   const art = artFor(fighter?.charDef?.id, move?.name);
-  const frame = art?.frames?.[0];
+  const frame = art?.frames?.[art.hitIndex ?? 0] || art?.frames?.[0];
   if (!frame?.mask || !target) return null;
   const face = fighter?.facing || 1;
   const rot = (art.objectType === 'beam' || art.objectType === 'slash arc' || art.objectType === 'extend') && face === -1
@@ -394,8 +550,12 @@ export function syncFxActors(scene) {
     img.rotation = face === -1 ? Math.PI : 0;
     const frames = art.frames;
     if (frames.length > 1) {
-      const t = fighter.attackFrame || 0;
-      img.setTexture(frames[t % frames.length].key);
+      const t = art.timed && art.fps > 0 && scene.simNow != null
+        ? Math.floor(scene.simNow / (1000 / art.fps))
+        : (fighter.attackFrame || 0);
+      const frame = frames[t % frames.length];
+      img.setTexture(frame.key);
+      img.setDisplaySize(frame.displayW, frame.displayH);
     }
   }
 }

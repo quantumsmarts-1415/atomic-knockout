@@ -26,10 +26,13 @@ export const MOVESETS = {
   hydra: {
     basicCharge: m('Supernova', {
       kind: 'burst', type: H, damage: 5, type2: R, damage2: 3,
-      chargeDamageMult: 2.2, chargeKnockbackMult: 1.8, chargeRadiusMult: 2.1,
+      // A tap is the small burst. Full charge is 3x the radius, damage, and
+      // knockback. Self-damage only creeps up. fxScale grows dropped-in art
+      // with that same radius.
+      chargeDamageMult: 3, chargeKnockbackMult: 3, chargeRadiusMult: 3,
       maxChargeMs: 900, radius: 64, baseKnockback: 200, knockbackGrowth: 6,
-      duration: 280, cooldown: 720, vfx: 'supernova',
-      selfDamage: { type: H, damage: 4 }, releaseOnHit: true,
+      duration: 280, cooldown: 720, vfx: 'supernova', fxScale: 'radius',
+      selfDamage: { type: H, damage: 4, chargeMult: 1.5 }, releaseOnHit: true,
     }),
     basicDirectional: melee('Flame Dash', {
       kind: 'dash', type: K, damage: 3, type2: H, damage2: 3,

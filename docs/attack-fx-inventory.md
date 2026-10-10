@@ -25,6 +25,8 @@ Nothing in the game is a 4 or a 5 yet. Those scores are what a dropped-in PNG is
 
 Put a transparent PNG in the folder named in the spec. The game picks it up on the next match and stops drawing the code version for that move. The hit shape becomes the alpha of the image, packed on a 5 pixel grid, the same grid the body masks use. Pixels with alpha at or below 50% are empty. No file in the folder means the old drawing and the old hit stay.
 
+An `fx.json` in that folder can set `"blend": "add"` for art painted on pure black. Pixels at or below a luminance of 16 (or `"black": <number>`) become transparent in the sprite and in the hit mask. `"frames": N` with `"fps"` reads a horizontal `sheet.png` of N frames and plays them at that rate. `"scaleWith": "radius"` multiplies the sprite by the move's current radius divided by its uncharged radius, so Supernova's art grows with the blast. No `fx.json` leaves the transparent-PNG path as it was.
+
 Beams and extenders prefer three files: `cap-start.png`, `tile.png`, and `cap-end.png`. The tile repeats along the length. A lone `object.png` is used when those three are absent. Every other type uses `object.png`. `frame-0.png` through `frame-7.png` replace the still image and play at 8 frames a second.
 
 Art points right. A projectile or a burst pivots at its center. A slash or an extender pivots at the left center, which stays on the hand while the image aims outward. Beam caps pivot at the seam: start and tile on the left center, end cap on the right center.

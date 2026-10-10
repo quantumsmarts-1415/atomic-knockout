@@ -815,6 +815,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const scaled = {
       ...move,
       _chargeFrac: frac,
+      _baseRadius: move.radius,
       damage: move.damage != null ? scale(move.damage, move.chargeDamageMult) : move.damage,
       damage2: move.damage2 != null ? scale(move.damage2, move.chargeDamageMult) : move.damage2,
       baseKnockback: scale(move.baseKnockback ?? 0, move.chargeKnockbackMult),
@@ -833,6 +834,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
       dashSpeed: move.dashSpeed != null ? scale(move.dashSpeed, move.chargeDashMult) : move.dashSpeed,
       _beamScale: 1 + ((move.chargeLengthMult ?? 1) - 1) * frac,
     };
+    if (move.selfDamage?.chargeMult != null) {
+      scaled.selfDamage = {
+        ...move.selfDamage,
+        damage: scale(move.selfDamage.damage ?? 4, move.selfDamage.chargeMult),
+        withCharge: false,
+      };
+    }
     if (move.perTravel) {
       const extra = Math.min(move.perTravelCap ?? 5, (this.travel ?? 0) / move.perTravel);
       if (scaled.damage != null) scaled.damage += extra;

@@ -1,7 +1,7 @@
 // Code-driven move effects. Body clips stay on idle/walk unless a real
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
-import { artFor, drawFxOneShot, fxAnchor } from './fxArt.js';
+import { artFor, drawFxOneShot, fxAnchor, fxGameplayScale } from './fxArt.js';
 
 export const TYPE_COLORS = {
   kinetic: 0xffe7b0,
@@ -97,6 +97,69 @@ function mushroom(scene, x, y, color) {
   ring(scene, x, y, color, 70, 5);
 }
 
+function supernovaBlast(scene, x, y, radius, color) {
+  const r = Math.max(18, radius || 64);
+  const disc = scene.add.circle?.(x, y, r, 0xfff6d8, 0.38);
+  if (disc) {
+    disc.setBlendMode?.('ADD');
+    disc.setDepth?.(15);
+    die(scene, disc, 280);
+  }
+  const core = scene.add.circle?.(x, y, r * 0.42, color, 0.62);
+  if (core) {
+    core.setBlendMode?.('ADD');
+    core.setDepth?.(16);
+    die(scene, core, 200);
+  }
+  const edge = scene.add.circle?.(x, y, Math.max(10, r * 0.28), 0xfff6d8, 0);
+  if (!edge) return;
+  edge.setStrokeStyle?.(Math.max(4, r * 0.045), 0xfff1c9, 0.95);
+  edge.setBlendMode?.('ADD');
+  edge.setDepth?.(16);
+  const end = r / Math.max(10, r * 0.28);
+  if (!scene.tweens) { edge.destroy?.(); return; }
+  scene.tweens.add({
+    targets: edge, scale: end, alpha: 0, duration: 320,
+    onComplete: () => edge.destroy(),
+  });
+}
+
+const chargeGlows = new WeakMap();
+
+/** A glow that grows with hold time, so a charge reads before it fires. */
+export function syncChargeGlow(scene) {
+  if (!scene?.fighters || scene.simFast || !scene.add?.graphics) return;
+  for (const fighter of scene.fighters) {
+    let glow = chargeGlows.get(fighter);
+    const move = fighter.charDef?.moves?.basicCharge;
+    const charging = fighter.state === 'charging' && fighter.chargeStart != null && move;
+    if (!charging) {
+      if (glow) {
+        glow.destroy?.();
+        chargeGlows.delete(fighter);
+      }
+      continue;
+    }
+    if (!glow?.scene) {
+      glow = scene.add.graphics().setDepth(6);
+      glow.setBlendMode?.('ADD');
+      chargeGlows.set(fighter, glow);
+    }
+    const max = move.maxChargeMs || 1;
+    const frac = Math.max(0, Math.min(1, ((scene.simNow ?? 0) - fighter.chargeStart) / max));
+    const minR = move.radius ?? 48;
+    const reach = minR * (1 + ((move.chargeRadiusMult ?? 1) - 1) * frac);
+    const y = fighter.y - (fighter.bodyH ?? 80) * 0.55;
+    glow.clear();
+    glow.fillStyle(0xff5a1f, 0.12 + frac * 0.18);
+    glow.fillCircle(fighter.x, y, reach * 0.72);
+    glow.fillStyle(0xfff6d8, 0.2 + frac * 0.38);
+    glow.fillCircle(fighter.x, y, Math.max(12, reach * 0.26));
+    glow.lineStyle(3, 0xfff6d8, 0.28 + frac * 0.5);
+    glow.strokeCircle(fighter.x, y, reach);
+  }
+}
+
 function shieldBubble(scene, fighter, color) {
   const y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
   const c = scene.add.circle?.(fighter.x, y, (fighter.bodyW ?? 40) * 0.95, color, 0.18);
@@ -118,7 +181,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       const anchor = fxAnchor(fighter, move);
       const x = anchor?.x ?? extra.x ?? fighter.x;
       const y = anchor?.y ?? extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
-      if (drawFxOneShot(scene, fighter, move, x, y, anchor?.scale || 1)) return;
+      const scale = anchor?.scale ?? fxGameplayScale(move, art);
+      if (drawFxOneShot(scene, fighter, move, x, y, scale)) return;
     }
   }
   const color = extra.color ?? colorOf(move);
@@ -127,7 +191,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   const style = move?.vfx ?? move?.kind ?? 'strike';
 
   if (phase === 'charge') {
-    gather(scene, x, y - 10, color);
+    if (style !== 'supernova') gather(scene, x, y - 10, color);
     return;
   }
   if (phase === 'fizzle') {
@@ -154,10 +218,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
 
   switch (style) {
     case 'supernova':
-      ring(scene, x, y, 0xfff6d8, move.radius ?? 90, 8);
-      ring(scene, x, y, color, (move.radius ?? 90) * 0.62, 5);
-      burst(scene, x, y, 0xfff6d8, 16, 180);
-      scene.cameras?.main?.shake(160, 0.01);
+      supernovaBlast(scene, x, y, move.radius ?? 64, color);
+      scene.cameras?.main?.shake(160, Math.min(0.02, 0.004 + (move.radius ?? 64) / 12000));
       break;
     case 'mushroom':
       mushroom(scene, x, y, color);

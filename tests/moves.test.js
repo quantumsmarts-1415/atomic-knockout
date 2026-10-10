@@ -44,6 +44,20 @@ test('owner-locked kits stay as specified', () => {
     [h.basicCharge.name, h.basicDirectional.name, h.specialDefense.name, h.specialDirectional.name],
     ['Supernova', 'Flame Dash', 'Fire Wall', 'Hydrogen Bomb'],
   );
+  const nova = h.basicCharge;
+  assert.equal(nova.releaseOnHit, true);
+  assert.equal(nova.fxScale, 'radius');
+  assert.equal(nova.chargeRadiusMult, 3);
+  assert.equal(nova.chargeDamageMult, 3);
+  assert.equal(nova.chargeKnockbackMult, 3);
+  const grown = (base, mult, frac) => base * (1 + (mult - 1) * frac);
+  assert.equal(grown(nova.radius, nova.chargeRadiusMult, 0), 64);
+  assert.equal(grown(nova.radius, nova.chargeRadiusMult, 0.5), 128);
+  assert.equal(grown(nova.radius, nova.chargeRadiusMult, 1), 192);
+  assert.equal(grown(nova.damage, nova.chargeDamageMult, 1), 15);
+  assert.equal(grown(nova.baseKnockback, nova.chargeKnockbackMult, 1), 600);
+  assert.equal(grown(nova.selfDamage.damage, nova.selfDamage.chargeMult, 0), 4);
+  assert.equal(grown(nova.selfDamage.damage, nova.selfDamage.chargeMult, 1), 6);
   assert.strictEqual(CHARACTERS.helen.moves.basicCharge.name, 'Balloon Bop');
   assert.strictEqual(CHARACTERS.helen.moves.specialDirectional.name, 'Air Wave');
   assert.strictEqual(CHARACTERS.natalie.moves.specialDirectional.name, 'Brine Burst');

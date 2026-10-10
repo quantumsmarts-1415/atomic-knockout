@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { ROSTER } from '../src/data/characters.js';
 import {
   poseName, arcReach, strikeHits, resolvePush, projectileSpriteSize, projectileHits, rectsOverlap,
-  fittedSize, maskBook, debugHitCells,
+  fittedSize, maskBook, debugHitCells, maskShown, debugCells,
 } from '../src/engine/boxes.js';
 
 const POSE = { rot: 0, sx: 1, sy: 1, x: 0, y: 0 };
@@ -140,4 +140,22 @@ test('projectile shapes match the drawn sprite and hit a body', () => {
   assert.equal(projectileHits(shot, hog), true);
   shot.gfx = { x: hog.x + 400, y: hog.y };
   assert.equal(projectileHits(shot, hog), false);
+});
+
+test('the overlay skips hidden and KO fighters', () => {
+  const hog = fighter('hog');
+  assert.equal(maskShown(hog), true);
+  assert.ok(debugCells(hog).length > 10);
+  hog.visible = false;
+  assert.equal(maskShown(hog), false);
+  assert.equal(debugCells(hog).length, 0);
+  hog.visible = true;
+  hog.state = 'ko';
+  assert.equal(maskShown(hog), false);
+  hog.state = 'idle';
+  hog.rig.x = 40;
+  const moved = debugCells(hog);
+  const home = fighter('hog');
+  const still = debugCells(home);
+  assert.ok(Math.abs(moved[0].x - still[0].x - 40) < 0.01);
 });

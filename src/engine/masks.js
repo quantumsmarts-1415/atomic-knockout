@@ -110,30 +110,63 @@ function trig(pose) {
   return pose;
 }
 
-function xform(fighter, pose, gx, gy, out) {
+function bodyScale(fighter) {
+  const s = fighter?.rig?.baseScale;
+  return s > 0 ? s : 1;
+}
+
+// visual: the overlay follows the sprite, including the one-frame render
+// offset on the rig. Hit tests stay on the sim position.
+function originOf(fighter, visual) {
+  if (!visual) return { x: fighter.x, y: fighter.y };
+  const rig = fighter.rig;
+  return {
+    x: fighter.x + (rig?.x || 0),
+    y: fighter.y + (rig?.y || 0),
+  };
+}
+
+function xform(fighter, pose, gx, gy, out, visual) {
   const t = trig(pose);
   const c = t._c;
   const s = t._s;
-  const ux = gx * (pose.sx || 1);
-  const uy = gy * (pose.sy || 1);
+  const bs = bodyScale(fighter);
+  const ux = gx * (pose.sx || 1) * bs;
+  const uy = gy * (pose.sy || 1) * bs;
   const rx = ux * c - uy * s;
   const ry = ux * s + uy * c;
   const facing = fighter.facing || 1;
-  out.x = fighter.x + facing * ((pose.x || 0) + rx);
-  out.y = fighter.y + (pose.y || 0) + ry;
+  const o = originOf(fighter, visual);
+  out.x = o.x + facing * ((pose.x || 0) * bs + rx);
+  out.y = o.y + (pose.y || 0) * bs + ry;
   return out;
 }
 
 function fromWorld(fighter, pose, wx, wy, out) {
   const facing = fighter.facing || 1;
-  const lx = (wx - fighter.x) * facing - (pose.x || 0);
-  const ly = (wy - fighter.y) - (pose.y || 0);
+  const bs = bodyScale(fighter);
+  const lx = (wx - fighter.x) * facing - (pose.x || 0) * bs;
+  const ly = (wy - fighter.y) - (pose.y || 0) * bs;
   const t = trig(pose);
   const c = t._c;
   const s = t._s;
-  out.x = (lx * c + ly * s) / (pose.sx || 1);
-  out.y = (-lx * s + ly * c) / (pose.sy || 1);
+  out.x = (lx * c + ly * s) / ((pose.sx || 1) * bs);
+  out.y = (-lx * s + ly * c) / ((pose.sy || 1) * bs);
   return out;
+}
+
+// The H overlay draws whoever is on screen right now. Hidden, KO'd, and
+// dead fighters keep their last sim spot, and drawing those masks leaves
+// body-shaped blobs in the sky.
+export function maskShown(fighter) {
+  if (!fighter || fighter.alive === false) return false;
+  if (fighter.state === 'dead' || fighter.state === 'ko') return false;
+  if (fighter.visible === false) return false;
+  const rig = fighter.rig;
+  if (rig && rig.visible === false) return false;
+  if (rig?._posingClips) return true;
+  if (rig?.sprite && rig.sprite.visible === false) return false;
+  return true;
 }
 
 function writeAabb(fighter, mask, pose, out) {
@@ -547,13 +580,15 @@ export function hitAabb(fighter) {
 }
 
 function cellWorldRect(fighter, pose, gx, gy) {
-  xform(fighter, pose, gx, gy, PT);
-  const w = CELL * Math.abs(pose.sx || 1);
-  const h = CELL * Math.abs(pose.sy || 1);
+  xform(fighter, pose, gx, gy, PT, true);
+  const bs = bodyScale(fighter);
+  const w = CELL * Math.abs(pose.sx || 1) * bs;
+  const h = CELL * Math.abs(pose.sy || 1) * bs;
   return { x: PT.x - w / 2, y: PT.y - h / 2, w, h };
 }
 
 export function debugCells(fighter) {
+  if (!maskShown(fighter)) return [];
   const mask = currentMask(fighter);
   if (!mask?.n) return [];
   const pose = poseOf(fighter);
@@ -567,6 +602,7 @@ export function debugCells(fighter) {
 }
 
 export function debugHitCells(fighter) {
+  if (!maskShown(fighter)) return [];
   if (!activeMelee(fighter)) return [];
   const strike = strikeMask(fighter);
   if (!strike?.n) return [];
@@ -645,7 +681,7 @@ export function slashPolyline(fighter, steps = 12) {
     const a = arc.a0 + (arc.a1 - arc.a0) * (i / steps);
     const gx = arc.ox + Math.cos(a) * arc.rMid;
     const gy = arc.oy - Math.sin(a) * arc.rMid;
-    xform(fighter, pose, gx, gy, PT);
+    xform(fighter, pose, gx, gy, PT, true);
     pts.push({ x: PT.x, y: PT.y });
   }
   return { pts, thick: arc.thick, pixel: !!arc.pixel };

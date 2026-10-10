@@ -1,5 +1,5 @@
-// Mask center against the visible-pixel center, both facings.
-// A miss bigger than 10% of the body width fails.
+// Stored mask center against the source-sheet pixels, both facings.
+// On-screen alignment is tests/mask-render.test.js, which reads the canvas.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';

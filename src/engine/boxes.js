@@ -3,12 +3,13 @@
 import {
   currentMask, hurtAabb, hitAabb, localPush, posedRect, debugCells, debugHitCells,
   strikeHits, hurtHitsCircle, hurtHitsRect, projectileHits, projectileShape,
-  slashPolyline, parametricArc, fittedSize, maskLocalCenter, maskBook,
+  slashPolyline, parametricArc, fittedSize, maskLocalCenter, maskBook, maskShown,
 } from './masks.js';
 
 export {
   strikeHits, hurtHitsCircle, hurtHitsRect, projectileHits, projectileShape,
   slashPolyline, debugCells, debugHitCells, fittedSize, maskLocalCenter, maskBook, hitAabb,
+  maskShown,
 };
 
 export function poseName(fighter) {

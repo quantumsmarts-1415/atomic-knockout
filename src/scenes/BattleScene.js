@@ -18,7 +18,7 @@ import { Juice } from '../engine/juice.js';
 import { FEEL, frameZoom, percentColor } from '../engine/feel.js';
 import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
-  debugCells, debugHitCells, slashPolyline, projectileShape,
+  debugCells, debugHitCells, slashPolyline, projectileShape, maskShown,
 } from '../engine/boxes.js';
 
 const GRAVITY = 1500;
@@ -1226,7 +1226,7 @@ export default class BattleScene extends Phaser.Scene {
     this.boxGfx.clear();
     if (!this.showBoxes) return;
     for (const f of this.fighters || []) {
-      if (f.state === 'dead') continue;
+      if (!maskShown(f)) continue;
       this.boxGfx.fillStyle(0x3dff7a, 0.38);
       for (const r of debugCells(f)) this.boxGfx.fillRect(r.x, r.y, r.w, r.h);
       const push = f.getPushbox?.();

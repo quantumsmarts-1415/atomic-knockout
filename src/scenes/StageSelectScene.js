@@ -5,6 +5,7 @@ import { STAGES, stageKey } from '../data/stages.js';
 import { play as sfx } from '../engine/sfx.js';
 import { showScene } from '../ui/flow.js';
 import { phoneNet } from '../net/PhoneNet.js';
+import { isGamepadSlot, menuInputForSlot, pollGamepads } from '../engine/gamepad.js';
 
 const BOT_SLOT_BASE = 100;
 
@@ -215,10 +216,12 @@ export default class StageSelectScene extends Phaser.Scene {
     });
     for (const p of this.setup.players) {
       const slot = p.slot ?? -1;
-      if (slot >= 2 && slot < BOT_SLOT_BASE) this.sources.push({ kind: 'phone', slot, prev: {} });
+      if (isGamepadSlot(slot)) this.sources.push({ kind: 'pad', slot, prev: {} });
+      else if (slot >= 2 && slot < BOT_SLOT_BASE) this.sources.push({ kind: 'phone', slot, prev: {} });
     }
     // A button still held from CharacterSelect must not count as a fresh
     // press on the first frame here.
+    pollGamepads();
     for (const src of this.sources) src.prev = this.readSource(src);
   }
 
@@ -228,6 +231,7 @@ export default class StageSelectScene extends Phaser.Scene {
       for (const [k, list] of Object.entries(src.keys)) out[k] = list.some((key) => key.isDown);
       return out;
     }
+    if (src.kind === 'pad') return menuInputForSlot(src.slot);
     return phoneNet.getInput(src.slot);
   }
 
@@ -283,6 +287,7 @@ export default class StageSelectScene extends Phaser.Scene {
 
   update() {
     if (this.leaving) return;
+    pollGamepads();
     // keyboard: every press since last frame, in order
     for (const a of this.keyPresses.splice(0)) {
       this.apply(a);

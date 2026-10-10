@@ -7,6 +7,7 @@ import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { showScene } from '../ui/flow.js';
 import { FONT_BODY, FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME } from '../ui/theme.js';
 import { phoneNet } from '../net/PhoneNet.js';
+import { fighterInputForSlot, isGamepadSlot, padBySlot, pollGamepads, rumbleSlot } from '../engine/gamepad.js';
 import { computeBotInput } from '../engine/BotAI.js';
 import { buildNavGraph } from '../engine/BotNav.js';
 import { startStageIntro } from '../engine/stageIntros.js';
@@ -1128,7 +1129,16 @@ export default class BattleScene extends Phaser.Scene {
 
   landHit(attacker, victim, move, launchDir) {
     const dmg = victim.takeHit(attacker, move, this.time.now, launchDir);
-    if (dmg > 0) this.noteHit(attacker, victim, move);
+    if (dmg > 0) {
+      this.noteHit(attacker, victim, move);
+      if (!this.simFast) {
+        rumbleSlot(victim.controlSlot, {
+          duration: 150,
+          strong: Math.min(1, 0.4 + dmg / 28),
+          weak: 0.35,
+        });
+      }
+    }
     if (attacker !== victim) victim.lastHitBy = attacker;
     // Hitlag lives on the fighters (feel.js). The world clock keeps moving
     // so other players, projectiles and the stage do not freeze.
@@ -1372,21 +1382,24 @@ export default class BattleScene extends Phaser.Scene {
     this.updateMovingPlatforms(delta);
     if (this.nav) for (const L of this.nav.lifts) this.nav.setLiftY(L.mover, this.movers[L.mover].y);
 
-    // feed input into fighters — slots 0/1 read the keyboard, 2-5 read
-    // whatever their phone last sent (or all-false if it's disconnected, so
-    // a dropped phone just leaves its fighter standing idle instead of
-    // crashing the match), and bots run the basic CPU controller instead of
-    // any real input source.
+    // feed input into fighters — slots 0/1 read the keyboard, 20+ read a
+    // gamepad, 2-5 read whatever their phone last sent (or all-false if it's
+    // disconnected, so a dropped phone just leaves its fighter standing idle
+    // instead of crashing the match), and bots run the CPU controller.
     const introLocked = this.intro?.active || this.simNow < this.introLockUntil;
+    if (!this.simFast) pollGamepads();
     if (this.intro?.active) {
-      // phone attack button skips the intro (edge-triggered)
+      // phone attack, or X/Square on a gamepad, skips the intro (edge-triggered)
       for (const f of this.fighters) {
         if (f.isBot || this.keymaps[f.controlSlot]) continue;
-        const c = phoneNet.getInput(f.controlSlot).confirm;
+        const c = isGamepadSlot(f.controlSlot)
+          ? fighterInputForSlot(f.controlSlot).attack
+          : phoneNet.getInput(f.controlSlot).confirm;
         if (c && !this.introPhonePrev[f.controlSlot]) this.intro.skip();
         this.introPhonePrev[f.controlSlot] = c;
       }
     }
+    let padPause = false;
     this.fighters.forEach((f) => {
       if (introLocked) {
         f.input.left = f.input.right = f.input.jump = f.input.down = false;
@@ -1413,6 +1426,15 @@ export default class BattleScene extends Phaser.Scene {
         f.input.down = map.down.isDown;
         f.input.attack = map.attack.isDown;
         f.input.special = map.special.isDown;
+      } else if (isGamepadSlot(f.controlSlot)) {
+        const pad = fighterInputForSlot(f.controlSlot);
+        f.input.left = pad.left;
+        f.input.right = pad.right;
+        f.input.jump = pad.jump;
+        f.input.down = pad.down;
+        f.input.attack = pad.attack;
+        f.input.special = pad.special;
+        if (padBySlot(f.controlSlot)?.input.pause) padPause = true;
       } else {
         const net = phoneNet.getInput(f.controlSlot);
         f.input.left = net.left;
@@ -1426,6 +1448,8 @@ export default class BattleScene extends Phaser.Scene {
         f.input.special = net.back;
       }
     });
+    if (padPause && !this.prevPadPause) this.togglePause();
+    this.prevPadPause = padPause;
 
     for (const f of this.fighters) f.update(time, delta);
     const collisionStart = globalThis.performance.now();

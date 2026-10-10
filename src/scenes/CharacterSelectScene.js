@@ -5,6 +5,7 @@ import { Rig } from '../engine/Rig.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
+import { isGamepadSlot, menuInputForSlot, padBySlot, pollGamepads } from '../engine/gamepad.js';
 import {
   drawMenuBackground, FONT_BODY, FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME,
 } from '../ui/theme.js';
@@ -165,6 +166,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
   makePlayer(slot, index) {
     const isKeyboard = slot === 0 || slot === 1;
     const isBot = slot >= BOT_SLOT_BASE;
+    const isGamepad = isGamepadSlot(slot);
     const kb = this.input.keyboard;
     let keys = null;
     if (isKeyboard) {
@@ -183,7 +185,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     const randomPalette = Math.floor(Math.random() * CHARACTERS[this.slots[randomSlotIdx].charId].palettes.length);
     const start = isBot ? randomSlotIdx : Math.min(index, this.slots.length - 1);
     return {
-      slot, index, isKeyboard, isBot, keys,
+      slot, index, isKeyboard, isBot, isGamepad, keys,
       color: PLAYER_COLORS[index % PLAYER_COLORS.length],
       label: `P${index + 1}${isBot ? ' (CPU)' : ''}`,
       cursor: start,
@@ -211,6 +213,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
         confirm: p.keys.confirm.isDown, back: p.keys.back.isDown,
       };
     }
+    if (p.isGamepad) return menuInputForSlot(p.slot);
     return phoneNet.getInput(p.slot);
   }
 
@@ -324,7 +327,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     }
     const phases = this.players.map((p) => p.phase);
     if (phases.every((ph) => ph === 'locked')) this.hint.setText('Everyone locked in — starting…');
-    else this.hint.setText('Move: D-pad/WASD/Arrows/phone · Confirm: attack · Color: ←→ · Back: special');
+    else this.hint.setText('Move: stick/D-pad/WASD/phone · Confirm: attack/X · Color: ←→ · Back: special/B');
     this.drawScrollbar();
   }
 
@@ -340,8 +343,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    pollGamepads();
     for (const p of this.players) {
-      if (!p.isKeyboard && !p.isBot && !phoneNet.hasSlot(p.slot) && p.phase !== 'locked') {
+      const connected = p.isGamepad ? !!padBySlot(p.slot) : phoneNet.hasSlot(p.slot);
+      if (!p.isKeyboard && !p.isBot && !connected && p.phase !== 'locked') {
         if (!this.slots[p.cursor].charId) p.cursor = this.playable[0] ?? 0;
         if (p.phase === 'picking') this.buildPreview(p);
         p.phase = 'locked';

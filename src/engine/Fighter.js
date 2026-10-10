@@ -18,8 +18,8 @@ import {
 // Fighter — one combatant. Reads everything character-specific from its
 // charDef (see src/data/characters.js); contains zero per-character logic.
 //
-// Input is abstracted: each frame the owner (keyboard mapper, bot AI, or
-// phone controller) writes into fighter.input = { left, right, down, jump,
+// Input is abstracted: each frame the owner (keyboard mapper, gamepad, bot
+// AI, or phone controller) writes into fighter.input = { left, right, down, jump,
 // attack, special } booleans. `jump/attack/special` are edge-triggered by
 // this class; `left/right/down` are read as held state, and `jump` doubles
 // as the held "up" signal for move-slot gating (see dirHeld in update()).

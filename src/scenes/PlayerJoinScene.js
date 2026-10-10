@@ -7,6 +7,7 @@ import {
 } from '../ui/theme.js';
 import { showScene } from '../ui/flow.js';
 import { attachPhoneJoin } from '../ui/phoneJoin.js';
+import { drawPadIcon, pollGamepads, syncPadSeats } from '../engine/gamepad.js';
 
 // Layout is fixed in 1280x720 game pixels. Scale.FIT letterboxes other
 // aspect ratios, so these rectangles never slide over each other.
@@ -35,6 +36,8 @@ const TYPES_NO_KEYBOARD = ['controller', 'bot', 'empty'];
 // skip Keyboard. Defaults to Keyboard in the first two seats, Empty in the
 // rest. A "Controller" seat waits for the next phone that joins over WiFi;
 // a "Bot" seat is a CPU stand-in (Phase 8's basic AI, pulled forward).
+// A Bluetooth or USB gamepad that connects here shows up in the dock.
+// Pressing one of its buttons claims the next empty seat.
 // ---------------------------------------------------------------------------
 export default class PlayerJoinScene extends Phaser.Scene {
   constructor() {
@@ -53,7 +56,7 @@ export default class PlayerJoinScene extends Phaser.Scene {
     this.add.text(W - GRID.margin, 36, 'W/S select seat    A/D change type', {
       fontFamily: FONT_BODY, fontSize: '14px', color: THEME.mistCss,
     }).setOrigin(1, 0).setDepth(4);
-    this.add.text(W - GRID.margin, 58, 'Enter to start    Esc to back out', {
+    this.add.text(W - GRID.margin, 58, 'Enter to start    Esc back    button on a pad joins', {
       fontFamily: FONT_BODY, fontSize: '14px', color: THEME.dimCss,
     }).setOrigin(1, 0).setDepth(4);
 
@@ -98,10 +101,10 @@ export default class PlayerJoinScene extends Phaser.Scene {
       this.seatWho.push(this.add.text(SEAT_LEFT + 48, midY, '', {
         fontFamily: FONT_DISPLAY, fontSize: '20px', color: THEME.mistCss,
       }).setOrigin(0, 0.5).setDepth(4));
-      this.seatKind.push(this.add.text(SEAT_LEFT + 130, midY - 10, '', {
+      this.seatKind.push(this.add.text(SEAT_LEFT + 156, midY - 10, '', {
         fontFamily: FONT_BODY, fontSize: '16px', color: THEME.mistCss,
       }).setOrigin(0, 0.5).setDepth(4));
-      this.seatDetail.push(this.add.text(SEAT_LEFT + 130, midY + 12, '', {
+      this.seatDetail.push(this.add.text(SEAT_LEFT + 156, midY + 12, '', {
         fontFamily: FONT_BODY, fontSize: '14px', color: THEME.mistCss,
       }).setOrigin(0, 0.5).setDepth(4));
       this.seatFlag.push(this.add.text(SEAT_LEFT + seatWidth() - 22, midY, '', {
@@ -113,6 +116,13 @@ export default class PlayerJoinScene extends Phaser.Scene {
       zone.on('pointerout', () => { if (this.hover === i) this.hover = -1; this.refresh(); });
       zone.on('pointerdown', () => { this.cursor = i; sfx('menuMove'); this.refresh(); });
     }
+
+    this.prevPadDown = {};
+    this.livePads = [];
+    this.padDock = this.add.graphics().setDepth(4);
+    this.padLine = this.add.text(SEAT_LEFT, 646, '', {
+      fontFamily: FONT_BODY, fontSize: '14px', color: THEME.tealCss,
+    }).setOrigin(0, 0).setDepth(4);
 
     this.refresh();
     this.unsub = phoneNet.onChange(() => { this.reconcileBindings(); this.refresh(); });
@@ -132,6 +142,19 @@ export default class PlayerJoinScene extends Phaser.Scene {
     kb.on('keydown-ENTER', start);
     kb.on('keydown-F', start);
     kb.on('keydown-ESC', () => showScene(this, 'Title'));
+  }
+
+  update() {
+    const pads = pollGamepads();
+    const { seats, prevDown } = syncPadSeats(this.seats, pads, this.prevPadDown);
+    const sig = `${seats.map((s) => `${s.type}:${s.padIndex ?? ''}`).join(',')}#${pads.map((p) => `${p.index}:${p.family}`).join('|')}`;
+    this.seats = seats;
+    this.prevPadDown = prevDown;
+    this.livePads = pads;
+    if (sig !== this.padSig) {
+      this.padSig = sig;
+      this.refresh();
+    }
   }
 
   moveCursor(dy) {
@@ -181,6 +204,11 @@ export default class PlayerJoinScene extends Phaser.Scene {
         ? { who: `P${n}`, kind: 'Controller', detail: phoneNet.nameOf(seat.boundSlot), flag: 'LINKED', tone: 'live' }
         : { who: `P${n}`, kind: 'Controller', detail: 'Waiting for a phone', flag: 'WAIT', tone: 'wait' };
     }
+    if (seat.type === 'gamepad') {
+      const pad = this.livePads.find((item) => item.index === seat.padIndex);
+      const name = pad ? pad.label : 'Controller';
+      return { who: `P${n}`, kind: 'Gamepad', detail: `${name}  ·  A jump   X attack   B special`, flag: 'LIVE', tone: 'live' };
+    }
     return { who: `P${n}`, kind: 'Empty', detail: 'Open seat', flag: '—', tone: 'empty' };
   }
 
@@ -210,6 +238,7 @@ export default class PlayerJoinScene extends Phaser.Scene {
           g.strokeCircle(dotX, dotY, 12);
         }
       }
+      if (seat.type === 'gamepad') drawPadIcon(g, SEAT_LEFT + 108, dotY, pip);
 
       const kindColor = info.tone === 'empty' ? '#F2F7FF' : THEME.mistCss;
       const detailColor = selected ? '#F7FBFF' : '#E4EEF8';
@@ -218,6 +247,23 @@ export default class PlayerJoinScene extends Phaser.Scene {
       this.seatDetail[i].setText(info.detail).setColor(detailColor);
       this.seatFlag[i].setText(info.flag).setColor(selected ? THEME.goldCss : THEME.tealCss);
     });
+    this.drawPadDock();
+  }
+
+  drawPadDock() {
+    const g = this.padDock;
+    g.clear();
+    const claimed = new Set(this.seats.filter((s) => s.type === 'gamepad').map((s) => s.padIndex));
+    const waiting = (this.livePads || []).filter((pad) => !claimed.has(pad.index));
+    if (!waiting.length) {
+      this.padLine.setText('Plug in a controller, then press a button to join');
+      return;
+    }
+    waiting.forEach((pad, i) => {
+      drawPadIcon(g, SEAT_LEFT + 16 + i * 36, 628, THEME.teal);
+    });
+    const names = waiting.map((pad) => pad.label).join(', ');
+    this.padLine.setText(`${names} connected — press a button to claim a seat`);
   }
 
   tryStart() {

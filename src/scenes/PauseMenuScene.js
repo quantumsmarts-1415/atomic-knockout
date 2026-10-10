@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { showScene } from '../ui/flow.js';
 import { FONT_BODY, FONT_DISPLAY, FONT_MONO, THEME, paintPill } from '../ui/theme.js';
+import { pollGamepads } from '../engine/gamepad.js';
 
 export default class PauseMenuScene extends Phaser.Scene {
   constructor() {
@@ -26,7 +27,7 @@ export default class PauseMenuScene extends Phaser.Scene {
     this.add.text(W / 2, H / 2 - 52, 'RESUME', {
       fontFamily: FONT_BODY, fontSize: '18px', color: THEME.mistCss,
     }).setOrigin(0.5);
-    this.add.text(W / 2, H / 2 - 4, 'ESC  /  ENTER', {
+    this.add.text(W / 2, H / 2 - 4, 'ESC  /  ENTER  /  START', {
       fontFamily: FONT_MONO, fontSize: '13px', color: THEME.goldCss,
     }).setOrigin(0.5);
 
@@ -50,6 +51,9 @@ export default class PauseMenuScene extends Phaser.Scene {
       this.scene.stop();
       this.scene.resume(this.resumeKey);
     };
+    this.resumeMatch = resume;
+    // Start is still held from the press that opened this menu.
+    this.prevStart = true;
     const kb = this.input.keyboard;
     kb.on('keydown-ESC', resume);
     kb.on('keydown-ENTER', resume);
@@ -62,5 +66,11 @@ export default class PauseMenuScene extends Phaser.Scene {
       shake.setText(shakeLabel());
     });
     kb.on('keydown-Q', () => showScene(this, 'Title'));
+  }
+
+  update() {
+    const start = pollGamepads().some((pad) => pad.input.pause);
+    if (start && !this.prevStart) this.resumeMatch?.();
+    this.prevStart = start;
   }
 }

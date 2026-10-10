@@ -9,6 +9,7 @@
 import * as Phaser from 'phaser';
 import { FEEL, traumaForHit, traumaOffset } from './feel.js';
 import { slashPolyline } from './boxes.js';
+import { fxReplacesSlash } from './fxArt.js';
 
 const TEX = {
   dot: 'juice-dot',
@@ -381,6 +382,7 @@ export class Juice {
 
   swing(fighter, move) {
     if (this.fast || !fighter) return;
+    if (fxReplacesSlash(fighter, move)) return;
     if (move?.kind === 'dash' || move?.kind === 'projectile' || move?.kind === 'burst' || move?.kind === 'beam') return;
     this._swings ??= new Map();
     let g = this._swings.get(fighter);

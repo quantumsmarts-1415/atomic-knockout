@@ -1,6 +1,7 @@
 // Code-driven move effects. Body clips stay on idle/walk unless a real
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
+import { artFor, drawFxOneShot, fxAnchor } from './fxArt.js';
 
 export const TYPE_COLORS = {
   kinetic: 0xffe7b0,
@@ -106,6 +107,20 @@ function shieldBubble(scene, fighter, color) {
 
 export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (!scene?.add || !fighter || scene.simFast) return;
+  if (phase === 'release' || phase === 'defense') {
+    const art = artFor(fighter.charDef?.id, move?.name);
+    const replaced = art?.frames?.length
+      && art.objectType !== 'projectile'
+      && art.objectType !== 'thrown'
+      && art.objectType !== 'slash arc'
+      && art.objectType !== 'extend';
+    if (replaced) {
+      const anchor = fxAnchor(fighter, move);
+      const x = anchor?.x ?? extra.x ?? fighter.x;
+      const y = anchor?.y ?? extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
+      if (drawFxOneShot(scene, fighter, move, x, y, anchor?.scale || 1)) return;
+    }
+  }
   const color = extra.color ?? colorOf(move);
   const x = extra.x ?? fighter.x;
   const y = extra.y ?? fighter.y - (fighter.bodyH ?? 80) * 0.55;

@@ -6,7 +6,7 @@
 // Run with: npm run dev  (then open http://localhost:5173)
 import http from 'node:http';
 import os from 'node:os';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
@@ -52,6 +52,21 @@ const server = http.createServer(async (req, res) => {
       await mkdir(join(root, 'art-src'), { recursive: true });
       await writeFile(join(root, 'art-src', `${name}.png`), Buffer.concat(chunks));
       res.writeHead(200).end('saved');
+      return;
+    }
+    if (req.method === 'GET' && new URL(req.url, 'http://x').pathname === '/fx-index') {
+      const rows = [];
+      const walk = async (dir, prefix) => {
+        let entries = [];
+        try { entries = await readdir(dir, { withFileTypes: true }); } catch { return; }
+        for (const entry of entries) {
+          const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+          if (entry.isDirectory()) await walk(join(dir, entry.name), rel);
+          else if (entry.name.endsWith('.png')) rows.push(rel);
+        }
+      };
+      await walk(join(root, 'assets/fx'), '');
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' }).end(JSON.stringify(rows));
       return;
     }
     if (req.method === 'GET' && req.url === '/lan-ip') {

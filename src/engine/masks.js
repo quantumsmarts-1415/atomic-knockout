@@ -517,7 +517,60 @@ function pointInProjectile(p, wx, wy, pad) {
   return pointInEllipse(lx, ly, shape.rx + pad, shape.ry + pad);
 }
 
+// A dropped-in effect image. Local space is game pixels, origin at the pivot,
+// +x along the art (pointing right at rotation 0).
+export function fxPlacementHits(placement, fighter) {
+  const stamp = placement?.mask;
+  if (!stamp?.n || !fighter) return false;
+  const body = currentMask(fighter);
+  if (!body?.n) return false;
+  const pose = poseOf(fighter);
+  const scale = placement.scale > 0 ? placement.scale : 1;
+  const rot = placement.rot || 0;
+  const c = Math.cos(rot);
+  const s = Math.sin(rot);
+  const x = placement.x || 0;
+  const y = placement.y || 0;
+  writeAabb(fighter, body, pose, BB1);
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  const corners = [
+    [stamp.minX, stamp.minY],
+    [stamp.maxX, stamp.minY],
+    [stamp.minX, stamp.maxY],
+    [stamp.maxX, stamp.maxY],
+  ];
+  for (const [lx, ly] of corners) {
+    const wx = x + (lx * c - ly * s) * scale;
+    const wy = y + (lx * s + ly * c) * scale;
+    if (wx < x0) x0 = wx;
+    if (wy < y0) y0 = wy;
+    if (wx > x1) x1 = wx;
+    if (wy > y1) y1 = wy;
+  }
+  const pad = CELL * 0.5;
+  if (x1 + pad < BB1.x0 || x0 - pad > BB1.x1 || y1 + pad < BB1.y0 || y0 - pad > BB1.y1) return false;
+  for (let i = 0; i < body.n; i++) {
+    const gx = body.ox + (body.col[i] + 0.5) * CELL;
+    const gy = body.oy + (body.row[i] + 0.5) * CELL;
+    xform(fighter, pose, gx, gy, PT);
+    const dx = PT.x - x;
+    const dy = PT.y - y;
+    const lx = (dx * c + dy * s) / scale;
+    const ly = (-dx * s + dy * c) / scale;
+    if (solidAt(stamp, lx, ly)) return true;
+  }
+  return false;
+}
+
 export function projectileHits(p, fighter) {
+  if (p?.fxMask && p.gfx && !p.dead) {
+    return fxPlacementHits({
+      mask: p.fxMask, x: p.gfx.x, y: p.gfx.y, rot: p.gfx.rotation || 0, scale: p.fxScale || 1,
+    }, fighter);
+  }
   const mask = currentMask(fighter);
   if (!mask?.n || !p?.gfx || p.dead) return false;
   const shape = projectileShape(p);

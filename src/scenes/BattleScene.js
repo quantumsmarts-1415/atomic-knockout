@@ -20,6 +20,7 @@ import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
+import { artFor, collectFxArt, fxAnchor, fxHits, fxProjectileView, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
 
 const GRAVITY = 1500;
 
@@ -557,6 +558,7 @@ export default class BattleScene extends Phaser.Scene {
         return b.velocity.y >= 0 && prevBottom <= plat.body.top + 2;
       });
     }
+    void collectFxArt(this);
   }
 
   bindKeyboard() {
@@ -766,20 +768,31 @@ export default class BattleScene extends Phaser.Scene {
     let y = move._from?.y ?? (owner.y - owner.bodyH * 0.65);
     if (move.fromAbove) y -= 220;
     if (move._rainChild) y -= 160;
+    const born = this.time.now;
+    const shot = {
+      owner, move,
+      vx: face * move.projectileSpeed,
+      vy: move.fromAbove ? (move.fallSpeed ?? 420) : vy,
+      dieAt: born + move.projectileLife,
+      born,
+      armAt: move.delayMs ? born + move.delayMs : 0,
+      landed: new Set(),
+      radius: r,
+      spriteW: projectileSpriteSize(move).w,
+      spriteH: projectileSpriteSize(move).h,
+    };
     if (this.simFast) {
+      const frame = artFor(owner.charDef?.id, move.name)?.frames?.[0];
       this.projectiles.push({
+        ...shot,
         gfx: { x, y, destroy() {} },
-        owner, move,
-        vx: face * move.projectileSpeed,
-        vy: move.fromAbove ? (move.fallSpeed ?? 420) : vy,
-        dieAt: this.time.now + move.projectileLife,
-        born: this.time.now,
-        armAt: move.delayMs ? this.time.now + move.delayMs : 0,
-        landed: new Set(),
-        radius: r,
-        spriteW: projectileSpriteSize(move).w,
-        spriteH: projectileSpriteSize(move).h,
+        fxMask: frame?.mask,
       });
+      return;
+    }
+    const painted = fxProjectileView(this, owner, move, x, y);
+    if (painted) {
+      this.projectiles.push({ ...shot, ...painted });
       return;
     }
     const pal = owner.charDef.palettes[owner.paletteIndex];
@@ -870,7 +883,8 @@ export default class BattleScene extends Phaser.Scene {
         const dy = Math.abs((target.y - (target.bodyH ?? 0) * 0.4) - (owner.y - (owner.bodyH ?? 0) * 0.5));
         if (ahead > 30 && dy < 90 && ahead < 340) continue;
       }
-      if (hurtHitsCircle(target, cx, cy, move.radius ?? 70)) {
+      const fxHit = fxHits(owner, move, cx, cy, target);
+      if (fxHit === true || (fxHit == null && hurtHitsCircle(target, cx, cy, move.radius ?? 70))) {
         this.landHit(owner, target, move);
         struck.add(target);
         hits += 1;
@@ -937,7 +951,20 @@ export default class BattleScene extends Phaser.Scene {
     const x = owner.facing === 1 ? owner.x + owner.bodyW * 0.2 : owner.x - owner.bodyW * 0.2 - len;
     const y = owner.y - owner.bodyH * 0.62;
     const rect = new Phaser.Geom.Rectangle(x, y - thick / 2, len, thick);
+    const anchor = fxAnchor(owner, move);
     playVfx(this, owner, move, 'release');
+    if (anchor) {
+      const struck = new Set();
+      for (const target of this.fighters) {
+        if (target === owner || !target.alive || target.state === 'ko') continue;
+        if (fxHits(owner, move, anchor.x, anchor.y, target, anchor.scale)) {
+          this.landHit(owner, target, move, owner.facing);
+          struck.add(target);
+        }
+      }
+      this.sweepMarked(owner, move, struck);
+      return;
+    }
     const struck = new Set();
     for (const target of this.fighters) {
       if (target === owner || !target.alive || target.state === 'ko') continue;
@@ -952,6 +979,15 @@ export default class BattleScene extends Phaser.Scene {
   spawnZone(owner, spec, x, y) {
     const radius = spec.radius ?? 70;
     if (this.simFast) {
+      this.zones.push({
+        owner, spec, x, y, radius,
+        gfx: { destroy() {} },
+        until: this.time.now + (spec.ms ?? 1600),
+        next: this.time.now + (spec.delay ?? 0),
+      });
+      return;
+    }
+    if (artFor(owner?.charDef?.id, owner?.currentMove?.name)?.frames?.length) {
       this.zones.push({
         owner, spec, x, y, radius,
         gfx: { destroy() {} },
@@ -1217,6 +1253,7 @@ export default class BattleScene extends Phaser.Scene {
     for (const f of this.fighters || []) f.tickHitFlash?.();
     this.juice?.update(dt / 1000);
     this.juice?.syncStrikes?.();
+    syncFxActors(this);
     this.drawDebug();
     if (!this.simFast) this.updateCamera(dt);
   }
@@ -1566,6 +1603,7 @@ export default class BattleScene extends Phaser.Scene {
       else if (!(p.move.orbitMs && !p.orbited && time < p.born + p.move.orbitMs)) {
         p.gfx.x += (p.vx * delta) / 1000;
         p.gfx.y += (p.vy * delta) / 1000 + Math.sin(time / 90) * 0.25;
+        stepFxProjectile(p, time);
       }
       if (p.move.ricochet && !p.pinned) {
         const cap = p.move.ricochet === true ? 2 : p.move.ricochet;

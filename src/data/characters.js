@@ -696,10 +696,13 @@ export const CHARACTERS = {
     // rather than fighting for the original ask). He also came out
     // gripping a crystal maul despite "no weapon" in the brief; kept that
     // too since it fits the tank/smasher concept naturally.
+    // The render faces the viewer's left, crystal leading. facing -1 flips
+    // that so Crystal Smash points the crystal with the punch, and the
+    // container mirrors it when he faces left.
     art: {
       key: 'char-bord',
       file: 'art-src/bord-cut.png',
-      facing: 1,
+      facing: -1,
       height: 120,
       bodyW: 50,
       bodyH: 102,

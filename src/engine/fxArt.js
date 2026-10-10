@@ -893,8 +893,62 @@ export function fxWallTest(fighter, move, target, now) {
   return fxHits(fighter, move, anchor.x, anchor.y, target, anchor.scale || 1, fxFrameIndex(art, elapsed));
 }
 
+const CONTACT_KITS = new Set(['lillie', 'ben', 'bord', 'carter', 'nitra', 'oxana']);
+
+/** Fist-height point on the leading edge of a melee hitbox. */
+export function meleeContactPoint(fighter, move) {
+  const face = fighter?.facing || 1;
+  const bodyH = fighter?.bodyH ?? fighter?.charDef?.art?.bodyH ?? 80;
+  const bodyW = fighter?.bodyW ?? fighter?.charDef?.art?.bodyW ?? 40;
+  const chest = (fighter?.y ?? 0) - bodyH * 0.55;
+  const hb = fighter?.getHitboxRect?.();
+  if (hb && hb.width > 0) {
+    const y = Math.max(hb.top, Math.min(hb.bottom, chest));
+    return { x: face >= 0 ? hb.right : hb.left, y };
+  }
+  const reach = move?.rangeW ?? Math.round(bodyW * 1.7);
+  return { x: (fighter?.x ?? 0) + face * (bodyW * 0.12 + reach), y: chest };
+}
+
+/** Per-hit spark or strike on the six new kits, drawn at the fist instead of the torso. */
+export function wantsContactSpark(fighter, move) {
+  if (!CONTACT_KITS.has(fighter?.charDef?.id)) return false;
+  if (move?.kind && move.kind !== 'melee') return false;
+  const style = move?.vfx || 'strike';
+  return style === 'spark' || style === 'strike';
+}
+
 const liveSlash = new WeakMap();
 const liveAttached = new WeakMap();
+
+function dropAttached(fighter, live) {
+  if (live?.kind === 'trail') fighter.rig?.setDepth?.(0);
+  live?.img?.destroy?.();
+  live?.front?.destroy?.();
+  live?.lead?.destroy?.();
+  if (live) liveAttached.delete(fighter);
+}
+
+function ensureTrailLayer(scene, live, slot, frame) {
+  let img = live[slot];
+  if (!img?.scene) {
+    img?.destroy?.();
+    img = scene.add.image(0, 0, frame.key);
+    img.setDepth(slot === 'lead' ? 9 : 7);
+    img.setBlendMode?.('ADD');
+    live[slot] = img;
+  }
+  return img;
+}
+
+/** Right-edge crop of a trail texture. Origin stays on the full frame, so the
+ *  visible flame still ends at the pivot. */
+function cropTrailHead(img, frac) {
+  const tw = img.width || 1;
+  const th = img.height || 1;
+  const w = Math.max(1, Math.round(tw * frac));
+  img.setCrop(tw - w, 0, w, th);
+}
 
 function attachedWant(scene, fighter) {
   const now = scene.simNow ?? 0;
@@ -917,14 +971,11 @@ function syncAttached(scene, fighter) {
   const want = attachedWant(scene, fighter);
   let live = liveAttached.get(fighter);
   if (!want) {
-    if (live?.kind === 'trail') fighter.rig?.setDepth?.(0);
-    if (live?.img) live.img.destroy?.();
-    if (live) liveAttached.delete(fighter);
+    dropAttached(fighter, live);
     return;
   }
   if (!live?.img?.scene || live.kind !== want.kind) {
-    if (live?.kind === 'trail') fighter.rig?.setDepth?.(0);
-    live?.img?.destroy?.();
+    dropAttached(fighter, live);
     live = { img: placeStill(scene, want.art, fighter.x, fighter.y, 0), kind: want.kind };
     // Above the stage (depth 0) and behind Hydra, so the streak is not hidden by the sky.
     if (want.kind === 'trail') {
@@ -945,13 +996,36 @@ function syncAttached(scene, fighter) {
     return;
   }
   const bodyW = fighter.bodyW ?? 40;
-  live.img.setPosition(fighter.x - face * bodyW * 0.35, fighter.y - frame.displayH * 0.5);
+  const bodyH = fighter.bodyH ?? 80;
+  // The art's right edge is the bright head. Sit that head on his front so
+  // the streak runs back through his body, then paint the head over him.
+  const tipX = fighter.x + face * bodyW * 0.85;
+  const y = fighter.y - bodyH * 0.52;
+  live.img.setPosition(tipX, y);
   const sx = Math.abs(live.img.scaleX || 1);
   const sy = Math.abs(live.img.scaleY || 1);
   live.img.setScale(face * sx, sy);
-  if (art.flicker) {
-    live.img.setAlpha(0.9 + 0.1 * Math.sin((scene.simNow || 0) * 0.05));
-  }
+  const alpha = art.flicker ? 0.88 + 0.12 * Math.sin((scene.simNow || 0) * 0.05) : 1;
+  live.img.setAlpha(alpha);
+
+  const front = ensureTrailLayer(scene, live, 'front', frame);
+  front.setTexture(frame.key);
+  front.setOrigin(art.pivotX, art.pivotY);
+  front.setDisplaySize(frame.displayW, frame.displayH);
+  cropTrailHead(front, 0.28);
+  front.setPosition(tipX, y);
+  front.setScale(face * Math.abs(front.scaleX || 1), Math.abs(front.scaleY || 1));
+  front.setAlpha(Math.min(1, alpha + 0.06));
+
+  const lead = ensureTrailLayer(scene, live, 'lead', frame);
+  lead.setTexture(frame.key);
+  lead.setOrigin(art.pivotX, art.pivotY);
+  lead.setDisplaySize(frame.displayW * 1.08, frame.displayH * 0.72);
+  cropTrailHead(lead, 0.12);
+  lead.setPosition(tipX + face * bodyW * 0.42, y);
+  lead.setScale(face * Math.abs(lead.scaleX || 1), Math.abs(lead.scaleY || 1));
+  lead.setTint?.(0xfff4c8);
+  lead.setAlpha(1);
 }
 
 export function syncFxActors(scene) {
@@ -976,8 +1050,15 @@ export function syncFxActors(scene) {
       liveSlash.set(fighter, img);
     }
     const face = fighter.facing || 1;
-    const y = fighter.y - (fighter.bodyH ?? 80) * 0.55;
-    img.setPosition(fighter.x, y);
+    let x = fighter.x;
+    let y = fighter.y - (fighter.bodyH ?? 80) * 0.55;
+    if (art.anchor === 'contact') {
+      const tip = meleeContactPoint(fighter, move);
+      x = tip.x;
+      y = tip.y;
+      img.setOrigin(0.5, 0.5);
+    }
+    img.setPosition(x, y);
     img.rotation = face === -1 ? Math.PI : 0;
     const frames = art.frames;
     if (frames.length > 1) {

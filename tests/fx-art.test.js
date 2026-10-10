@@ -129,13 +129,14 @@ test('a horizontal sheet splits into even frames', () => {
   assert.equal(sliceHorizontal(data, 8, 1, 2, 0).data[0], 10);
 });
 
-test('charged radius scales a supernova sprite from 1x to 3x', () => {
+test('charged radius scales a supernova sprite from 1x to 2x', () => {
   const tap = { radius: 64, _baseRadius: 64, fxScale: 'radius' };
-  const half = { radius: 128, _baseRadius: 64, fxScale: 'radius' };
-  const full = { radius: 192, _baseRadius: 64, fxScale: 'radius' };
+  const half = { radius: 96, _baseRadius: 64, fxScale: 'radius' };
+  const full = { radius: 128, _baseRadius: 64, fxScale: 'radius' };
   assert.equal(fxGameplayScale(tap, null), 1);
-  assert.equal(fxGameplayScale(half, { scaleWith: 'radius' }), 2);
-  assert.equal(fxGameplayScale(full, { scaleWith: 'radius', scale: 1 }), 3);
+  assert.equal(fxGameplayScale(half, { scaleWith: 'radius' }), 1.5);
+  assert.equal(fxGameplayScale(full, { scaleWith: 'radius', scale: 1 }), 2);
+  assert.equal(fxGameplayScale({ radius: 192, _baseRadius: 64, fxScale: 'radius' }, { scaleWith: 'radius' }), 3);
   assert.equal(fxGameplayScale({ radius: 80 }, null), 1);
 });
 

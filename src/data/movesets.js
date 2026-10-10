@@ -26,10 +26,10 @@ export const MOVESETS = {
   hydra: {
     basicCharge: m('Supernova', {
       kind: 'burst', type: H, damage: 5, type2: R, damage2: 3,
-      // A tap is the small burst. Full charge is 3x the radius, damage, and
-      // knockback. Self-damage only creeps up. fxScale grows dropped-in art
-      // with that same radius.
-      chargeDamageMult: 3, chargeKnockbackMult: 3, chargeRadiusMult: 3,
+      // A tap is the small burst. Full charge is 2x the radius, and damage
+      // and knockback scale with that same ratio. Self-damage only creeps up.
+      // fxScale grows dropped-in art with that radius.
+      chargeDamageMult: 2, chargeKnockbackMult: 2, chargeRadiusMult: 2,
       maxChargeMs: 900, radius: 64, baseKnockback: 200, knockbackGrowth: 6,
       // Startup stays 4 frames. Endlag 22 → 11. Cooldown 43 → 22 frames.
       duration: 280, cooldown: 360, startupF: 4, endlagF: 11, vfx: 'supernova', fxScale: 'radius',

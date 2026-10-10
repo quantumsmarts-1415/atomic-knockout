@@ -16,7 +16,7 @@
     "anchor": "ground",
     "crop": "frame",
     "fit": "height",
-    "heightFrac": 1.5,
+    "heightFrac": 2,
     "pivot": "bottom"
   }
 }

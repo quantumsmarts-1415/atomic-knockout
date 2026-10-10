@@ -1,7 +1,7 @@
 // Code-driven move effects. Body clips stay on idle/walk unless a real
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
-import { artFor, drawFxOneShot, fxAnchor, fxGameplayScale, spawnFxDetonate } from './fxArt.js';
+import { artFor, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, wantsContactSpark } from './fxArt.js';
 
 export const TYPE_COLORS = {
   kinetic: 0xffe7b0,
@@ -196,8 +196,15 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (art?.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) return;
   }
   const color = extra.color ?? colorOf(move);
-  const x = extra.x ?? fighter.x;
-  const y = extra.y ?? fighter.y - (fighter.bodyH ?? 80) * 0.55;
+  let x = extra.x ?? fighter.x;
+  let y = extra.y ?? fighter.y - (fighter.bodyH ?? 80) * 0.55;
+  let contact = false;
+  if (phase === 'release' && extra?.x == null && wantsContactSpark(fighter, move)) {
+    const tip = meleeContactPoint(fighter, move);
+    x = tip.x;
+    y = tip.y;
+    contact = true;
+  }
   const style = move?.vfx ?? move?.kind ?? 'strike';
 
   if (phase === 'charge') {
@@ -310,7 +317,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       } else if (move?.kind === 'projectile') {
         burst(scene, x, y, color, 6, 40);
       } else {
-        burst(scene, x + (fighter.facing || 1) * 24, y, color, 7, 50);
+        burst(scene, contact ? x : x + (fighter.facing || 1) * 24, y, color, 7, 50);
       }
   }
 }

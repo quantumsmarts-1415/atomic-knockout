@@ -7,6 +7,8 @@
   "fps": 12,
   "crop": "frame",
   "fit": "height",
-  "heightFrac": 0.75,
-  "pivot": "left"
+  "heightFrac": 0.4,
+  "pivot": "center",
+  "anchor": "contact",
+  "hit": false
 }

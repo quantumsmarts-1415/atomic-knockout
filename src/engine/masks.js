@@ -616,6 +616,17 @@ export function debugHitCells(fighter) {
   return out;
 }
 
+// A dash hits with the body. The overlay paints those same cells red
+// for as long as the dash window is open.
+export function activeDash(fighter) {
+  return inWindow(fighter) && fighter.activeHit?.move?.kind === 'dash';
+}
+
+export function debugDashCells(fighter) {
+  if (!activeDash(fighter)) return [];
+  return debugCells(fighter);
+}
+
 function fitArc(mask) {
   let cx = 0;
   let cy = 0;
@@ -672,6 +683,13 @@ export function slashArc(fighter) {
   return parametricArc(fighter);
 }
 
+function arcPoint(fighter, pose, arc, radius, angle, out) {
+  const gx = arc.ox + Math.cos(angle) * radius;
+  const gy = arc.oy - Math.sin(angle) * radius;
+  xform(fighter, pose, gx, gy, out, true);
+  return { x: out.x, y: out.y };
+}
+
 export function slashPolyline(fighter, steps = 12) {
   const arc = slashArc(fighter);
   if (!arc) return null;
@@ -679,12 +697,25 @@ export function slashPolyline(fighter, steps = 12) {
   const pts = [];
   for (let i = 0; i <= steps; i++) {
     const a = arc.a0 + (arc.a1 - arc.a0) * (i / steps);
-    const gx = arc.ox + Math.cos(a) * arc.rMid;
-    const gy = arc.oy - Math.sin(a) * arc.rMid;
-    xform(fighter, pose, gx, gy, PT, true);
-    pts.push({ x: PT.x, y: PT.y });
+    pts.push(arcPoint(fighter, pose, arc, arc.rMid, a, PT));
   }
   return { pts, thick: arc.thick, pixel: !!arc.pixel };
+}
+
+// Code-drawn slashes have no strike pixels. The filled band is the same
+// swept arc the hit test uses, so the overlay shows a red volume at contact.
+export function slashRibbon(fighter, steps = 12) {
+  const arc = slashArc(fighter);
+  if (!arc || arc.pixel) return null;
+  const pose = poseOf(fighter);
+  const outer = [];
+  const inner = [];
+  for (let i = 0; i <= steps; i++) {
+    const a = arc.a0 + (arc.a1 - arc.a0) * (i / steps);
+    outer.push(arcPoint(fighter, pose, arc, arc.r1, a, PT));
+    inner.push(arcPoint(fighter, pose, arc, arc.r0, a, PT));
+  }
+  return { outer, inner, thick: arc.thick };
 }
 
 export function localPush(fighter) {

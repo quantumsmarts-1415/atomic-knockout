@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { ROSTER } from '../src/data/characters.js';
 import {
   poseName, arcReach, strikeHits, resolvePush, projectileSpriteSize, projectileHits, rectsOverlap,
-  fittedSize, maskBook, debugHitCells, maskShown, debugCells,
+  fittedSize, maskBook, debugHitCells, debugDashCells, slashRibbon, hitAabb, maskShown, debugCells,
 } from '../src/engine/boxes.js';
 
 const POSE = { rot: 0, sx: 1, sy: 1, x: 0, y: 0 };
@@ -140,6 +140,37 @@ test('projectile shapes match the drawn sprite and hit a body', () => {
   assert.equal(projectileHits(shot, hog), true);
   shot.gfx = { x: hog.x + 400, y: hog.y };
   assert.equal(projectileHits(shot, hog), false);
+});
+
+test('an armed attack draws the volume that lands the hit', () => {
+  const boar = fighter('boar', { state: 'attack' });
+  boar.frameData = { startup: 1, active: 8, recovery: 4 };
+  boar.attackFrame = 3;
+  boar.activeHit = { move: { kind: 'dash', rangeW: 96 }, dir: 1, from: 0, until: 5000 };
+  assert.ok(debugDashCells(boar).length > 10, 'dash body is the red hit');
+  const neighbor = fighter('hydra', { x: boar.x + 12, y: boar.y });
+  assert.equal(strikeHits(boar, neighbor), true);
+  boar.activeHit = null;
+  assert.equal(debugDashCells(boar).length, 0);
+
+  const hog = fighter('hog', { state: 'attack' });
+  hog.frameData = { startup: 2, active: 8, recovery: 4 };
+  hog.attackFrame = 4;
+  hog.activeHit = { move: { kind: 'melee', rangeW: 124, rangeH: 28 }, dir: 1, from: 0, until: 9000 };
+  hog.rig.maskClip = 'attack';
+  hog.rig.maskFrame = 2;
+  assert.ok(debugHitCells(hog).length >= 3, 'blade cells are on the active frame');
+  assert.equal(slashRibbon(hog), null);
+
+  const van = fighter('van', { state: 'attack' });
+  van.frameData = { startup: 2, active: 8, recovery: 4 };
+  van.attackFrame = 4;
+  van.activeHit = { move: { rangeW: 72, rangeH: 48 }, dir: 1, from: 0, until: 9000 };
+  const ribbon = slashRibbon(van, 8);
+  assert.ok(ribbon?.outer?.length >= 8 && ribbon.inner.length >= 8);
+  const hb = hitAabb(van);
+  const fist = fighter('hydra', { x: (hb.left + hb.right) / 2, y: (hb.top + hb.bottom) / 2 + 20 });
+  assert.equal(strikeHits(van, fist), true);
 });
 
 test('the overlay skips hidden and KO fighters', () => {

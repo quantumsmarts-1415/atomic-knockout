@@ -2,14 +2,14 @@
 // Masks are game pixels from the feet, art facing right, then posed and mirrored.
 import {
   currentMask, hurtAabb, hitAabb, localPush, posedRect, debugCells, debugHitCells,
-  strikeHits, hurtHitsCircle, hurtHitsRect, projectileHits, projectileShape,
-  slashPolyline, parametricArc, fittedSize, maskLocalCenter, maskBook, maskShown,
+  debugDashCells, strikeHits, hurtHitsCircle, hurtHitsRect, projectileHits, projectileShape,
+  slashPolyline, slashRibbon, parametricArc, fittedSize, maskLocalCenter, maskBook, maskShown,
 } from './masks.js';
 
 export {
   strikeHits, hurtHitsCircle, hurtHitsRect, projectileHits, projectileShape,
-  slashPolyline, debugCells, debugHitCells, fittedSize, maskLocalCenter, maskBook, hitAabb,
-  maskShown,
+  slashPolyline, slashRibbon, debugCells, debugHitCells, debugDashCells,
+  fittedSize, maskLocalCenter, maskBook, hitAabb, maskShown,
 };
 
 export function poseName(fighter) {

@@ -18,7 +18,7 @@ import { Juice } from '../engine/juice.js';
 import { FEEL, frameZoom, percentColor } from '../engine/feel.js';
 import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
-  debugCells, debugHitCells, slashPolyline, projectileShape, maskShown,
+  debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
 
 const GRAVITY = 1500;
@@ -1236,6 +1236,16 @@ export default class BattleScene extends Phaser.Scene {
       }
       this.boxGfx.fillStyle(0xff4040, 0.55);
       for (const r of debugHitCells(f)) this.boxGfx.fillRect(r.x, r.y, r.w, r.h);
+      for (const r of debugDashCells(f)) this.boxGfx.fillRect(r.x, r.y, r.w, r.h);
+      const ribbon = slashRibbon(f, 14);
+      if (ribbon?.outer?.length) {
+        this.boxGfx.fillStyle(0xff4040, 0.5);
+        this.boxGfx.beginPath();
+        ribbon.outer.forEach((p, i) => (i ? this.boxGfx.lineTo(p.x, p.y) : this.boxGfx.moveTo(p.x, p.y)));
+        for (let i = ribbon.inner.length - 1; i >= 0; i--) this.boxGfx.lineTo(ribbon.inner[i].x, ribbon.inner[i].y);
+        this.boxGfx.closePath();
+        this.boxGfx.fillPath();
+      }
       const slash = slashPolyline(f, 14);
       if (slash?.pts?.length) {
         this.boxGfx.lineStyle(Math.max(3, slash.thick * 0.35), 0xff4040, 0.95);
@@ -1252,6 +1262,7 @@ export default class BattleScene extends Phaser.Scene {
 
   strokeProjectile(p) {
     const shape = projectileShape(p);
+    this.boxGfx.fillStyle(0xff4040, 0.5);
     this.boxGfx.lineStyle(2, 0xff4040, 1);
     if (shape.kind === 'poly') {
       const c = Math.cos(shape.rot || 0);
@@ -1264,10 +1275,14 @@ export default class BattleScene extends Phaser.Scene {
         else this.boxGfx.moveTo(x, y);
       });
       this.boxGfx.closePath();
+      this.boxGfx.fillPath();
       this.boxGfx.strokePath();
       return;
     }
-    this.boxGfx.strokeEllipse(shape.x, shape.y, (shape.rx || 8) * 2, (shape.ry || 8) * 2);
+    const w = (shape.rx || 8) * 2;
+    const h = (shape.ry || 8) * 2;
+    this.boxGfx.fillEllipse(shape.x, shape.y, w, h);
+    this.boxGfx.strokeEllipse(shape.x, shape.y, w, h);
   }
 
   renderInterp() {

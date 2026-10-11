@@ -467,6 +467,40 @@ test('a looping sheet crossfades its tail into the first frame', () => {
   assert.equal(fs.existsSync('assets/fx/nitra/mini-tornado/tornado-anim.png'), true);
 });
 
+test('push 2 flow sheets replace the batch 2 stills', () => {
+  const expect = {
+    'assets/fx/helen/air-wave/fx.json': { file: 'air-wave-anim.png', frames: 24, blend: 'add', fps: 9.796, luma: undefined },
+    'assets/fx/sully/black-powder/fx.json': { file: 'black-powder-blast-anim.png', frames: 24, blend: 'screen', fps: 10.435, luma: true },
+    'assets/fx/sully/volcanic-eruption/fx.json': { file: 'volcanic-eruption-anim.png', frames: 24, blend: 'add', fps: 11.321, luma: undefined },
+    'assets/fx/chloe/gas-cloud/fx.json': { file: 'gas-cloud-anim.png', frames: 23, blend: 'screen', fps: 11.129, luma: true },
+    'assets/fx/aaron/noble-discharge/fx.json': { file: 'noble-discharge-anim.png', frames: 24, blend: 'add', fps: 11.429, luma: undefined },
+    'assets/fx/cal/slime-splash/fx.json': { file: 'quicklime-splash-anim.png', frames: 24, blend: 'screen', fps: 15, luma: true },
+    'assets/fx/scarlett/afterburner/fx.json': { file: 'afterburner-plume-anim.png', frames: 24, blend: 'add', fps: 10.286, luma: undefined, loop: true },
+  };
+  for (const [path, want] of Object.entries(expect)) {
+    const meta = JSON.parse(fs.readFileSync(path, 'utf8'));
+    assert.equal(meta.file, want.file);
+    assert.equal(meta.frames, want.frames);
+    assert.equal(meta.cols, 4);
+    assert.equal(meta.rows, 6);
+    assert.equal(meta.blend, want.blend);
+    assert.equal(meta.fps, want.fps);
+    assert.equal(meta.loop, want.loop ?? false);
+    assert.equal(meta.scale, 1.25);
+    assert.equal(meta.luma, want.luma);
+    assert.equal(meta.crop, undefined);
+    assert.equal(meta.hit, false);
+    assert.equal(fs.existsSync(path.replace(/fx\.json$/, want.file)), true);
+  }
+  const powder = JSON.parse(fs.readFileSync('assets/fx/sully/black-powder/fx.json', 'utf8'));
+  assert.equal(powder.scaleWith, 'radius');
+  const cloud = JSON.parse(fs.readFileSync('assets/fx/chloe/gas-cloud/fx.json', 'utf8'));
+  assert.equal(cloud.anchor, 'ground');
+  const plume = JSON.parse(fs.readFileSync('assets/fx/scarlett/afterburner/fx.json', 'utf8'));
+  assert.equal(plume.anchor, 'trail');
+  assert.deepEqual(plume.order, [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]);
+});
+
 test('flow sheets replace the still supernova and keep the charge scale', () => {
   const nova = JSON.parse(fs.readFileSync('assets/fx/hydra/supernova/fx.json', 'utf8'));
   assert.equal(nova.file, 'supernova-peak-anim.png');

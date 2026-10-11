@@ -441,12 +441,14 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     case 'balloon':
       shieldBubble(scene, { x, y: y + 20, bodyH: 40, bodyW: move.projectileRadius ?? 20 }, 0xbfefff);
       break;
-    case 'gust':
+    case 'gust': {
+      if (artFor(fighter.charDef?.id, move?.name)?.frames?.length) break;
       for (let i = 0; i < 4; i++) {
         const streak = scene.add.rectangle?.(x + (fighter.facing || 1) * (20 + i * 18), y, 28, 3, 0xd7f4ff, 0.7);
         if (streak) die(scene, streak, 200);
       }
       break;
+    }
     case 'laser':
     case 'beam':
       beam(scene, fighter, color, (move.beamLen ?? 180) * (move._beamScale ?? 1), move);
@@ -682,6 +684,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     }
     case 'dash':
     case 'fire':
+      if (artFor(fighter.charDef?.id, move?.name)?.frames?.length) break;
       burst(scene, x, y, color, 12, 110);
       ring(scene, x, y, color, 40, 3);
       break;

@@ -4,6 +4,7 @@
 // loaded image, packed on the same 5 px grid as body masks.
 
 import { effectBox, fxFolder, moveSlug, objectTypeOf } from '../data/attackFx.js';
+import { sheetFxPoint } from './moveSheet.js';
 import { fxPlacementHits } from './boxes.js';
 import { coatSpec } from './coat.js';
 
@@ -1356,6 +1357,8 @@ const CONTACT_KITS = new Set(['lillie', 'ben', 'bord', 'carter', 'nitra', 'oxana
 
 /** Fist-height point on the leading edge of a melee hitbox. */
 export function meleeContactPoint(fighter, move) {
+  const posed = sheetFxPoint(fighter, 'melee');
+  if (posed) return posed;
   const face = fighter?.facing || 1;
   const bodyH = fighter?.bodyH ?? fighter?.charDef?.art?.bodyH ?? 80;
   const bodyW = fighter?.bodyW ?? fighter?.charDef?.art?.bodyW ?? 40;
@@ -1833,7 +1836,8 @@ function syncHeld(scene, fighter) {
     }
     live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 1);
     const shot = 1 + ((charge.chargeRadiusMult ?? 1) - 1) * frac;
-    live.img.setPosition(fighter.x + face * bodyW * 0.65, fighter.y);
+    const hand = sheetFxPoint(fighter, 'shot');
+    live.img.setPosition(hand?.x ?? (fighter.x + face * bodyW * 0.65), hand?.y ?? fighter.y);
     live.img.setScale(face * Math.abs(live.img.scaleX || 1) * shot, Math.abs(live.img.scaleY || 1) * shot);
     return;
   }

@@ -109,7 +109,8 @@ export function loadRosterArt(loader, roster) {
         console.error(`Skipping spritesheet ${c.id}_${clip}: ${err.message}`);
         continue;
       }
-      loader.spritesheet(sheetKey(c.art, clip), `${s.dir}${c.id}_${clip}.png`, {
+      const file = def.file || `${c.id}_${clip}.png`;
+      loader.spritesheet(sheetKey(c.art, clip), `${s.dir}${file}`, {
         frameWidth: frameW,
         frameHeight: frameH,
         // sheets are padded out to a full grid; stop at the real frame count

@@ -5,6 +5,7 @@ import { canonicalType, resolveMoveDamage, resolvePacket, TUNING } from '../data
 import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defense.js';
 import { applyOnCast, applyOnHit, bonusPackets, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, tickKit, weakestType } from './kit.js';
 import { playVfx } from './MoveVfx.js';
+import { clipNameForMove, sheetMeta } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
 import { play as sfx, playHit } from './sfx.js';
@@ -624,6 +625,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.rig.facing = this.facing;
     this.rig.frameData = this.frameData;
     this.rig.attackFrame = this.attackFrame || 0;
+    this.rig.comboStep = this._comboStep || 0;
     this.rig.hurtUnits = this.hurtUnits || 0;
     this.rig.hurtSign = this.hurtSign || 1;
     this.rig.landing = this.landing || 0;
@@ -637,6 +639,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
     }
     this.rig.animate(dt / 1000, animState, speedFactor);
+    if (this._sheetFxFrame && this.state === 'attack' && this.attackFrame === this._sheetFxFrame && this.currentMove) {
+      this._sheetFxFrame = 0;
+      playVfx(this.scene, this, this.currentMove, 'release', { fromSheet: true });
+    }
     if (this._px != null) this.travel = (this.travel ?? 0) + Math.abs(this.x - this._px);
     this._px = this.x;
   }
@@ -808,7 +814,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.captured = null;
       }
     }
-    playVfx(this.scene, this, move, 'release');
+    const sheet = sheetMeta(this.charDef.id, clipNameForMove(this.charDef.id, moveKey));
+    if (sheet?.release != null) this._sheetFxFrame = fd.startup;
+    else {
+      this._sheetFxFrame = 0;
+      playVfx(this.scene, this, move, 'release');
+    }
     applyOnCast(this, move, time, move._chargeFrac ?? 1);
     const commitBurst = !!(move.releaseOnHit || move.detonateAtFull || move.includeSelf || move.commit);
 

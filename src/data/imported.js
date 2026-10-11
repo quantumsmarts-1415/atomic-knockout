@@ -9681,15 +9681,15 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.132
           },
           "attack": {
-            "count": 6,
-            "fps": 12,
+            "count": 12,
+            "fps": 18,
             "loop": false,
-            "frameW": 138,
-            "frameH": 180,
-            "footY": 0.9222,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 730,
+            "frameH": 1032,
+            "footY": 0.9874,
+            "visibleH": 1000,
+            "bodyH": 1000,
+            "displayScale": 0.132
           }
         }
       }

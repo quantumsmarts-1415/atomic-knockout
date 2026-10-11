@@ -48,7 +48,7 @@ async function main() {
     names.sort((a, b) => (a === 'idle' ? -1 : b === 'idle' ? 1 : a.localeCompare(b)));
     for (const name of names) {
       const def = sheets.clips[name];
-      const file = join(root, `${sheets.dir}${c.id}_${name}.png`);
+      const file = join(root, `${sheets.dir}${def.file || `${c.id}_${name}.png`}`);
       if (!existsSync(file) || art.use3d === false) continue;
       const png = loadPng(file);
       const lay = clipScale(art, sheets, def);

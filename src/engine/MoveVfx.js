@@ -2,6 +2,7 @@
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
 import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, wantsContactSpark } from './fxArt.js';
+import { sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 
 export const TYPE_COLORS = {
@@ -343,8 +344,13 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       // A burst is drawn once, at the blast, when resolveBurst supplies a point.
       if (move.kind === 'burst' && extra?.x == null) return;
       const anchor = fxAnchor(fighter, move);
-      const x = anchor?.x ?? extra.x ?? fighter.x;
-      const y = anchor?.y ?? extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
+      let x = anchor?.x ?? extra.x ?? fighter.x;
+      let y = anchor?.y ?? extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
+      if (extra?.fromSheet) {
+        const kind = art?.anchor === 'ground' ? 'ground' : 'shot';
+        const posed = sheetReleasePoint(fighter, kind) || sheetFxPoint(fighter, kind);
+        if (posed) { x = posed.x; y = posed.y; }
+      }
       const scale = anchor?.scale ?? fxGameplayScale(move, art);
       if (drawFxOneShot(scene, fighter, move, x, y, scale)) {
         if (move.vfx === 'binary') {
@@ -359,6 +365,10 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   let x = extra.x ?? fighter.x;
   let y = extra.y ?? fighter.y - (fighter.bodyH ?? 80) * 0.55;
   let contact = false;
+  if (phase === 'release' && (extra?.fromSheet || extra?.x == null)) {
+    const posed = sheetFxPoint(fighter, 'melee') || sheetReleasePoint(fighter, 'melee');
+    if (posed) { x = posed.x; y = posed.y; contact = true; }
+  }
   if (phase === 'release' && extra?.x == null && wantsContactSpark(fighter, move)) {
     const tip = meleeContactPoint(fighter, move);
     x = tip.x;

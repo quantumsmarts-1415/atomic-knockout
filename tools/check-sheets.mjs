@@ -49,7 +49,7 @@ async function main() {
     for (const clip of CLIPS) {
       const def = s.clips?.[clip];
       if (!def) continue;
-      const file = join(root, `${s.dir}${c.id}_${clip}.png`);
+      const file = join(root, `${s.dir}${def.file || `${c.id}_${clip}.png`}`);
       if (!existsSync(file)) { console.log(`FAIL ${c.id} ${clip}: missing ${file}`); failed++; continue; }
       const png = PNG.sync.read(readFileSync(file));
       const m = measureSheet(png, def.frameW || s.frameW, def.frameH || s.frameH, def.count);

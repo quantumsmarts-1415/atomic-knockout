@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { sheetKey, use3dSheets, clipDisplayLayout, positiveFinite } from '../scenes/BootScene.js';
 import { clipPose, moveClipFor, moveTextureKey } from './moveClip.js';
 import { stripIndex, idleBlend, attackPhase, poseTarget, FEEL } from './feel.js';
+import { authoredClipName, sheetFrameIndex, sheetMeta } from './moveSheet.js';
 
 // ---------------------------------------------------------------------------
 // Rig — the code-drawn vector cartoon character.
@@ -381,27 +382,33 @@ export class Rig extends Phaser.GameObjects.Container {
       const recLen = Math.max(1, fd.recovery || 1);
       recT = Math.min(1, Math.max(0, (frame - recStart) / recLen));
     }
-    const target = poseTarget(state, {
-      facing: this.facing || 1,
-      phase,
-      recT,
-      t: this.animT || 0,
-      step: (this.animT || 0) * 10,
-      units: this.hurtUnits || 0,
-      hurtSign: this.hurtSign || 1,
-      tripped: !!this.tripped,
-      landing: this.landing > 0,
-      vy: this.vy || 0,
-    });
-    // Snap to the target. The old spring moved ~1px per frame, so a 3-frame
-    // wind-up never left neutral and the lunge was invisible.
-    this._pose = {
-      rot: target.rot || 0,
-      sx: target.sx ?? 1,
-      sy: target.sy ?? 1,
-      x: target.x || 0,
-      y: target.y || 0,
-    };
+    // An authored move sheet already has its foot travel. One origin per
+    // clip, and no extra lunge or squash on top of it.
+    if (this._authoredSheet) {
+      this._pose = { rot: 0, sx: 1, sy: 1, x: 0, y: 0 };
+    } else {
+      const target = poseTarget(state, {
+        facing: this.facing || 1,
+        phase,
+        recT,
+        t: this.animT || 0,
+        step: (this.animT || 0) * 10,
+        units: this.hurtUnits || 0,
+        hurtSign: this.hurtSign || 1,
+        tripped: !!this.tripped,
+        landing: this.landing > 0,
+        vy: this.vy || 0,
+      });
+      // Snap to the target. The old spring moved ~1px per frame, so a 3-frame
+      // wind-up never left neutral and the lunge was invisible.
+      this._pose = {
+        rot: target.rot || 0,
+        sx: target.sx ?? 1,
+        sy: target.sy ?? 1,
+        x: target.x || 0,
+        y: target.y || 0,
+      };
+    }
     const base = layout || this._layoutScale || 1;
     const paint = (spr) => {
       if (!spr?.setScale) return;
@@ -444,6 +451,9 @@ export class Rig extends Phaser.GameObjects.Container {
   animate(dt, state, speedFactor = 1) {
     this.animT += dt;
     const t = this.animT;
+    this._authoredSheet = false;
+    this.sheetClip = null;
+    this.sheetFrame = 0;
 
     if (this.showMoveClip(state)) {
       this.rememberMask('idle', 0);
@@ -452,6 +462,31 @@ export class Rig extends Phaser.GameObjects.Container {
     }
 
     if (this.sheetMode) {
+      const authored = authoredClipName(this.charDef?.id, state, this.moveKey);
+      if (authored && this.sheets.clips[authored] && sheetMeta(this.charDef.id, authored)) {
+        const info = this.sheets.clips[authored];
+        const meta = sheetMeta(this.charDef.id, authored);
+        const i = sheetFrameIndex(meta, {
+          state,
+          fd: this.frameData,
+          attackFrame: this.attackFrame || 0,
+          comboStep: this.comboStep || 0,
+          animT: this.animT,
+        });
+        this.sprite.anims.stop();
+        this.sprite.setTexture(sheetKey(this.art, authored), i);
+        if (this.currentClip !== authored) this.applyClipLayout(info);
+        this.currentClip = authored;
+        this.sheetClip = authored;
+        this.sheetFrame = i;
+        this._authoredSheet = true;
+        const blend = (this.frameData && state === 'attack') ? idleBlend(this.frameData, this.attackFrame || 0) : 0;
+        this.blendToIdle(blend);
+        this.rememberMask(authored, i);
+        this.sprite.anims.timeScale = 1;
+        this.applyPose(dt, state, this._layoutScale || 1);
+        return;
+      }
       // 'attack' covers both move slots; pick the clip the move actually is.
       // Charge, defense, and specials with no sheet of their own play the
       // attack clip under the effect layer.
@@ -460,7 +495,11 @@ export class Rig extends Phaser.GameObjects.Container {
         : state;
       let def = this.sheets.clips[wanted] ? wanted : 'idle';
       const moveState = state === 'attack' || state === 'charging' || state === 'defending';
-      if (def === 'idle' && moveState && this.sheets.clips.attack) def = 'attack';
+      // An authored attack sheet belongs to that one move. Other slots with
+      // no sheet of their own stay on idle instead of borrowing it.
+      if (def === 'idle' && moveState && this.sheets.clips.attack && !sheetMeta(this.charDef?.id, 'attack')) {
+        def = 'attack';
+      }
       const info = this.sheets.clips[def];
 
       let frameIndex = this.sprite?.anims?.currentFrame?.index ?? 0;
@@ -498,6 +537,7 @@ export class Rig extends Phaser.GameObjects.Container {
 
       // Layout scale is the body's fitted size. Never read it back from
       // scaleX: applyPose writes the pose into that value.
+      if (moveState && sheetMeta(this.charDef?.id, def)) this._authoredSheet = true;
       this.applyPose(dt, state, this._layoutScale || 1);
       return;
     }

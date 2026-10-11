@@ -26,6 +26,7 @@ import {
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
 import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, spawnContactFx, spawnFlareShower, spawnFxSprite, spawnMoveExtra, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
+import { sheetReleasePoint } from '../engine/moveSheet.js';
 
 const GRAVITY = 1500;
 
@@ -931,8 +932,9 @@ export default class BattleScene extends Phaser.Scene {
       else if (owner.input?.down) vy = 220;
     }
     const face = move._flip ? -owner.facing : owner.facing;
-    const x = move._from?.x ?? (owner.x + face * (owner.bodyW / 2 + r + 4));
-    let y = move._from?.y ?? (move.roll ? owner.y : owner.y - owner.bodyH * 0.65);
+    const posed = move._from ? null : sheetReleasePoint(owner, move.roll ? 'roll' : 'shot');
+    const x = move._from?.x ?? posed?.x ?? (owner.x + face * (owner.bodyW / 2 + r + 4));
+    let y = move._from?.y ?? posed?.y ?? (move.roll ? owner.y : owner.y - owner.bodyH * 0.65);
     if (move.fromAbove) y -= 220;
     if (move._rainChild && move._from == null) y -= 160;
     if (!move._orbitChild && !move._fanChild && !move._rainChild && !move._behindChild && !move._salvoChild) {
@@ -1057,7 +1059,7 @@ export default class BattleScene extends Phaser.Scene {
   resolveBurst(owner, move, at) {
     const cx = at?.x ?? owner.x + (owner.facing || 1) * (move.offsetX ?? 0);
     const cy = at?.y ?? owner.y - owner.bodyH / 2;
-    playVfx(this, owner, move, 'release', { x: cx, y: cy });
+    playVfx(this, owner, move, 'release', { x: cx, y: cy, fromSheet: at == null });
 
     let hits = 0;
     const struck = new Set();

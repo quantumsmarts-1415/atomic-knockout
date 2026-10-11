@@ -481,9 +481,14 @@ export const CHARACTERS = {
         bodyH: 664,
         displayScale: 0.17771,
         clips: {
-          // idle + walk (Gemini). Other clips still fall back to idle.
+          // idle + walk (Gemini). Move sheets play the body for each slot.
+          // Absorb reuses the Mega Discharge gather.
           idle: { count: 14, fps: 3.6, loop: true },
           walk: { count: 33, fps: 10, loop: true, frameW: 692, frameH: 706, footY: 0.9929, visibleH: 634, bodyH: 634, displayScale: 0.18612 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 746, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 640, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678 },
+          defense: { count: 12, fps: 18, loop: true, frameW: 640, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678, file: 'lillie_charge.png' },
+          special: { count: 12, fps: 18, loop: false, frameW: 492, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678 },
         },
       },
     },
@@ -943,13 +948,17 @@ export const CHARACTERS = {
         bodyH: 638,
         displayScale: 0.18809,
         clips: {
-          // idle + walk (Gemini). Other clips still fall back to idle.
+          // idle + walk (Gemini). Move sheets face left, same as idle, so the
+          // rig flip is the facing correction. Do not mirror those pixels.
           // walk frames mirrored in place (PIL ImageOps.mirror per 735x667
           // cell): the Gemini walk faces RIGHT but art.facing is -1 (her idle
           // faces left natively) and the Rig flips every clip by art.facing,
           // so unmirrored she walked backwards. Same fix as Natalie's walk.
           idle: { count: 14, fps: 3.6, loop: true },
           walk: { count: 33, fps: 10, loop: true, frameW: 735, frameH: 667, footY: 0.9685, visibleH: 618, bodyH: 618, displayScale: 0.19417 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 754, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 614, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
+          special: { count: 12, fps: 18, loop: false, frameW: 578, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
         },
       },
     },
@@ -1146,9 +1155,12 @@ export const CHARACTERS = {
         bodyH: 638,
         displayScale: 0.19436,
         clips: {
-          // idle + walk (Gemini). Other clips still fall back to idle.
+          // idle + walk (Gemini). Move sheets play the body for each slot.
           idle: { count: 13, fps: 3.6, loop: true },
           walk: { count: 29, fps: 10, loop: true, frameW: 458, frameH: 674, footY: 0.9837, visibleH: 636, bodyH: 636, displayScale: 0.19497 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 710, frameH: 734, footY: 0.9782, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 712, frameH: 743, footY: 0.9664, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
+          special: { count: 12, fps: 18, loop: false, frameW: 710, frameH: 734, footY: 0.9782, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
         },
       },
     },

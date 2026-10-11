@@ -14,6 +14,24 @@ export const COATS = {
   'Diamond Plating': { color: 0xf4f8ff, mode: 'lighten', amount: 0.26, gloss: 0.34, sweepMs: 240, sparkle: true },
   'Nitride Shell': { color: 0x6d849c, mode: 'multiply', amount: 0.7, gloss: 0.1, sweepMs: 3000, paceCharge: true },
   'Red Phosphorus Form': { color: 0x7a2e2e, mode: 'multiply', amount: 0.74, gloss: 0, sweepMs: 280, matte: true },
+  'Vulcanized Rubber': { color: 0x3a322c, mode: 'multiply', amount: 0.74, gloss: 0, sweepMs: 260, matte: true },
+  'Calcify': { color: 0xe7e0d4, mode: 'lighten', amount: 0.52, gloss: 0.06, sweepMs: 280, matte: true },
+  'Aerospace Plating': { color: 0x9eb4c8, mode: 'multiply', amount: 0.55, gloss: 0.3, sweepMs: 260 },
+  'Mirror Chrome': { color: 0xd8dee6, mode: 'lighten', amount: 0.42, gloss: 0.62, sweepMs: 240, sparkle: true },
+  'Work Hardening': { color: 0x8a9098, mode: 'multiply', amount: 0.38, gloss: 0.1, sweepMs: 260, deepen: 0.08 },
+  'Superalloy Shell': { color: 0x3e4c5c, mode: 'multiply', amount: 0.72, gloss: 0.08, sweepMs: 280 },
+  'Blue Glaze': { color: 0x1d4ed8, mode: 'multiply', amount: 0.64, gloss: 0.55, sweepMs: 240 },
+  'Electroplate': { color: 0xc5ccd4, mode: 'lighten', amount: 0.42, gloss: 0.36, sweepMs: 250 },
+  'Hot-Dip Galvanize': { color: 0xb7c4d4, mode: 'lighten', amount: 0.4, gloss: 0.24, sweepMs: 260, sparkle: true },
+  'Sacrificial Anode': { color: 0xd5d3ce, mode: 'lighten', amount: 0.5, gloss: 0, sweepMs: 260, matte: true },
+  'Salt Crust': { color: 0xf4f1ea, mode: 'lighten', amount: 0.58, gloss: 0.04, sweepMs: 200, matte: true },
+  'Tyrian Stain': { color: 0x6a1b9a, mode: 'multiply', amount: 0.64, gloss: 0.16, sweepMs: 220 },
+  'Flash Tube Counter': { color: 0xe8dcff, mode: 'lighten', amount: 0.48, gloss: 0.22, sweepMs: 200 },
+  'Embrittle': { color: 0xc8ccd0, mode: 'lighten', amount: 0.22, gloss: 0.06, sweepMs: 200 },
+  'Four-State Guard': {
+    color: 0x7a3dff, mode: 'multiply', amount: 0.55, gloss: 0.12, sweepMs: 180,
+    cycle: [0x7a3dff, 0x2fbf62, 0x3a78ff, 0xf0c43a], cycleMs: 360,
+  },
 };
 
 const FADE_MS = 220;
@@ -204,6 +222,28 @@ export function sparkleAt(x, y, bucket) {
   return x % 14 === (bucket * 3) % 14 && y % 14 === (bucket * 5) % 14;
 }
 
+function paintedSpec(spec, fighter, elapsed = 0) {
+  let next = spec;
+  if (spec.cycle?.length) {
+    const step = spec.cycleMs ?? 360;
+    const i = Math.floor(Math.max(0, elapsed) / step) % spec.cycle.length;
+    next = { ...spec, color: spec.cycle[i] };
+  }
+  if (spec.deepen && fighter?.hardenStacks) {
+    next = {
+      ...next,
+      amount: Math.min(0.92, (spec.amount ?? 0.4) + fighter.hardenStacks * spec.deepen),
+    };
+  }
+  return next;
+}
+
+function heldCoat(name, fighter, now) {
+  const spec = coatSpec({ name });
+  if (!spec) return null;
+  return { spec: paintedSpec(spec, fighter, 9999), move: { name }, sweep: 1, phase: 'hold' };
+}
+
 function moveCoat(fighter, move, now, phase) {
   const spec = coatSpec(move);
   if (!spec || fighter._coatFlaked) return null;
@@ -214,7 +254,7 @@ function moveCoat(fighter, move, now, phase) {
     const ms = spec.paceCharge && move?.chargeMs ? move.chargeMs : (spec.sweepMs ?? 260);
     sweep = clamp01(elapsed / ms);
   }
-  return { spec, move, sweep, phase };
+  return { spec: paintedSpec(spec, fighter, elapsed), move, sweep, phase };
 }
 
 /** The coat that should be on the sprite right now, or null. */
@@ -233,6 +273,18 @@ export function coatWindow(fighter, now) {
     const shell = fighter.charDef?.moves?.specialDefense;
     const live = moveCoat(fighter, shell, now, 'hold');
     if (live?.spec.paceCharge) return live;
+  }
+  if (fighter.debuffCoatUntil > now && fighter.debuffCoat) {
+    const mark = heldCoat(fighter.debuffCoat, fighter, now);
+    if (mark) return mark;
+  }
+  if (fighter.buffCoatUntil > now && fighter.buffCoat) {
+    const buff = heldCoat(fighter.buffCoat, fighter, now);
+    if (buff) return buff;
+  }
+  if (fighter.state !== 'defending' && fighter.kineticResistUntil > now && fighter._hardenCoat) {
+    const hard = heldCoat(fighter._hardenCoat, fighter, now);
+    if (hard) return hard;
   }
   return null;
 }

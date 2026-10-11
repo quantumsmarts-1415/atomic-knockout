@@ -89,6 +89,7 @@ export default class BattleScene extends Phaser.Scene {
     this.bindKeyboard();
 
     this.projectiles = [];
+    this.lingeringWalls = [];
     this.zones = [];
     this.matchReport = {
       movesFired: {},
@@ -694,11 +695,58 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   dropPins(fighter) {
+    const fling = !!fighter.defenseMove?.catchMetals;
     for (const p of this.projectiles ?? []) {
       if (p.pinOwner !== fighter || p.dead) continue;
+      if (fling && p.caught && p.gfx) {
+        const dir = Math.sign((p.gfx.x ?? fighter.x) - fighter.x) || (fighter.facing || 1);
+        p.pinned = false;
+        p.pinOwner = null;
+        p.caught = false;
+        p.owner = fighter;
+        p.vx = dir * (p._caughtSpeed || 460);
+        p.vy = -20;
+        p.landed = new Set();
+        p.dieAt = (this.time?.now ?? 0) + 700;
+        continue;
+      }
       p.move = { ...p.move, explodeOnly: false, dropZone: null, igniteAt: 0 };
       p.gfx?.destroy?.();
       p.dead = true;
+    }
+  }
+
+  pourWall(fighter, move, time) {
+    const y = fighter.y - fighter.bodyH * (move.wallYFrac ?? 0.75);
+    const front = fighter.facing === 1
+      ? fighter.x + fighter.bodyW / 2
+      : fighter.x - fighter.bodyW / 2 - move.wallRangeW;
+    const sides = move.frontOnly
+      ? [front]
+      : [fighter.x - fighter.bodyW / 2 - move.wallRangeW, fighter.x + fighter.bodyW / 2];
+    this.lingeringWalls = this.lingeringWalls ?? [];
+    for (const wx of sides) {
+      this.lingeringWalls.push({
+        owner: fighter, move, wx, y, born: time, until: time + move.wallLingerMs, landed: new Set(),
+      });
+    }
+  }
+
+  touchWall(owner, move, wx, y, landed, born, time) {
+    const rect = new Phaser.Geom.Rectangle(wx, y - move.wallRangeH / 2, move.wallRangeW, move.wallRangeH);
+    for (const target of this.fighters) {
+      if (target === owner || !target.alive || target.state === 'ko' || landed.has(target)) continue;
+      const artHit = fxWallTest(owner, move, target, time);
+      if (artHit === true || (artHit == null && hurtHitsRect(target, rect))) {
+        landed.add(target);
+        if (move.wallRootMs && time - born < move.wallRootMs) target.rootedUntil = time + 480;
+        this.landHit(owner, target, {
+          name: move.name,
+          damage: move.wallDamage, type: move.wallType,
+          baseKnockback: move.wallKnockback, knockbackGrowth: move.wallKnockbackGrowth ?? 0,
+          kind: 'burst',
+        });
+      }
     }
   }
 
@@ -1603,32 +1651,21 @@ export default class BattleScene extends Phaser.Scene {
     // active hazard: two zones flanking the fighter that damage anyone who
     // touches them, once per activation (tracked in f.wallLanded).
     for (const f of this.fighters) {
-      if (f.state !== 'defending' || f.defenseMove?.kind !== 'wall') continue;
+      if (f.state !== 'defending' || f.defenseMove?.kind !== 'wall' || f.defenseMove.wallLingerMs) continue;
       const m = f.defenseMove;
       const y = f.y - f.bodyH * (m.wallYFrac ?? 0.75);
       const front = f.facing === 1 ? f.x + f.bodyW / 2 : f.x - f.bodyW / 2 - m.wallRangeW;
       const sides = m.frontOnly
         ? [front]
         : [f.x - f.bodyW / 2 - m.wallRangeW, f.x + f.bodyW / 2];
-      for (const wx of sides) {
-        const rect = new Phaser.Geom.Rectangle(wx, y - m.wallRangeH / 2, m.wallRangeW, m.wallRangeH);
-        for (const target of this.fighters) {
-          if (target === f || !target.alive || target.state === 'ko' || f.wallLanded.has(target)) continue;
-          const artHit = fxWallTest(f, m, target, time);
-          if (artHit === true || (artHit == null && hurtHitsRect(target, rect))) {
-            f.wallLanded.add(target);
-            if (m.wallRootMs && time - (f.defenseStart ?? time) < m.wallRootMs) {
-              target.rootedUntil = time + 480;
-            }
-            this.landHit(f, target, {
-              name: m.name,
-              damage: m.wallDamage, type: m.wallType,
-              baseKnockback: m.wallKnockback, knockbackGrowth: m.wallKnockbackGrowth ?? 0,
-              kind: 'burst', // radial launch -- away from the wall, like a burst
-            });
-          }
-        }
+      for (const wx of sides) this.touchWall(f, m, wx, y, f.wallLanded, f.defenseStart ?? time, time);
+    }
+    if (this.lingeringWalls?.length) {
+      for (const w of this.lingeringWalls) {
+        if (time >= w.until) continue;
+        this.touchWall(w.owner, w.move, w.wx, w.y, w.landed, w.born, time);
       }
+      this.lingeringWalls = this.lingeringWalls.filter((w) => time < w.until);
     }
 
     // melee hit detection
@@ -1782,8 +1819,11 @@ export default class BattleScene extends Phaser.Scene {
           }, { x: p.gfx.x, y: p.gfx.y });
         }
       }
+      const holdSky = p.armAt && time < p.armAt && p.move.fromAbove;
       if (p.pinned) p.gfx.y += (90 * delta) / 1000;
-      else if (p.move.roll) {
+      else if (holdSky) {
+        // A delayed call-down stays overhead until its timer, then falls.
+      } else if (p.move.roll) {
         p.gfx.x += (p.vx * delta) / 1000;
         p.vy = 0;
         stepFxProjectile(p, time);
@@ -1866,6 +1906,15 @@ export default class BattleScene extends Phaser.Scene {
         const perfect = def?.reflectProjectiles === 'perfect'
           && time - (victim.defenseStart ?? time) <= (def.perfectMs ?? 200);
         const metalShot = !!(p.owner?.charDef?.combat?.metal);
+        if (victim.state === 'defending' && def?.catchMetals && metalShot && !p.pinned) {
+          p.pinned = true;
+          p.pinOwner = victim;
+          p.caught = true;
+          p._caughtSpeed = Math.hypot(p.vx, p.vy) || p.move.projectileSpeed || 420;
+          p.vx = 0;
+          p.vy = 0;
+          break;
+        }
         const reflect = def?.reflectProjectiles === true || perfect || (def?.reflectMetals && metalShot);
         if (victim.state === 'defending' && reflect) {
           this.landHit(victim, p.owner, { ...p.move, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, -Math.sign(p.vx) || victim.facing);

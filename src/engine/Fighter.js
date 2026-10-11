@@ -180,6 +180,7 @@ function dealtDamage(attacker, move, defender) {
       resolved.packets.push({ type: 'heat', base: move.flareHeat, dealt, bonus: true });
       resolved.total += dealt;
     }
+    applyAttackPower(attacker, resolved, now);
     const band = BAND_DAMAGE[attacker?.charDef?.id];
     if (band && band !== 1) {
       resolved.total *= band;
@@ -194,7 +195,21 @@ function dealtDamage(attacker, move, defender) {
     total += extra;
     packets.push({ type: move.type2, dealt: extra });
   }
-  return { total, packets };
+  if (move.type3) {
+    const extra = applyDefense(move.damage3 ?? 0, move.type3, defender.charDef?.defense);
+    total += extra;
+    packets.push({ type: move.type3, dealt: extra });
+  }
+  const resolved = { total, packets };
+  applyAttackPower(attacker, resolved, now);
+  return resolved;
+}
+
+function applyAttackPower(attacker, resolved, now) {
+  if (!(attacker?.attackPowerUntil > now) || !(attacker.attackPower > 0)) return;
+  const mul = attacker.attackPower;
+  resolved.total *= mul;
+  for (const p of resolved.packets) p.dealt *= mul;
 }
 
 export default class Fighter extends Phaser.GameObjects.Container {
@@ -318,15 +333,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.vulnerableUntil = time + openMs;
         this.lockedUntil = Math.max(this.lockedUntil || 0, time + openMs);
       }
-      if (this.state === 'defending') {
-        const coat = this.defenseMove;
-        this.lingerHardening(time);
-        this.scene?.dropPins?.(this);
-        this.restoreShrink();
-        playVfx(this.scene, this, coat, 'letgo');
-        const ready = rearmDefense(coat, time);
-        if (ready != null) this.specialCooldownUntil = ready;
-      }
+      if (this.state === 'defending') this.onDefenseEnd(time);
       this.state = 'idle';
       this.rig.setFlash(null);
       this.rig.attackSwing = 0;
@@ -497,13 +504,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.fireCharge(time);
       }
     } else if (this.state === 'defending' && this.defenseMove?.hold !== false && !inp.special) {
-      const coat = this.defenseMove;
-      this.lingerHardening(time);
-      this.scene?.dropPins?.(this);
-      this.restoreShrink();
-      playVfx(this.scene, this, coat, 'letgo');
-      const ready = rearmDefense(coat, time);
-      if (ready != null) this.specialCooldownUntil = ready;
+      this.onDefenseEnd(time);
       this.state = 'idle';
       this.defenseMove = null;
       this.rig.setFlash(null);
@@ -518,7 +519,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
       if (pressedAttack && time >= this.attackCooldownUntil) {
         if (dirHeld || !this.charDef.moves.basicCharge) {
-          this.startMove(time, this.charDef.moves.basicDirectional, 'basic', 'basicDirectional');
+          let swing = this.charDef.moves.basicDirectional;
+          if (this.copiedMove && !((this.moveLock?.[this.copiedMove.name] ?? 0) > time)) {
+            swing = this.copiedMove;
+            this.copiedMove = null;
+          }
+          this.startMove(time, swing, 'basic', 'basicDirectional');
         } else {
           this.state = 'charging';
           this.chargeStart = time;
@@ -631,11 +637,39 @@ export default class Fighter extends Phaser.GameObjects.Container {
   lingerHardening(time) {
     const d = this.defenseMove;
     if (!d?.harden || !this.hardenStacks) return;
+    this._hardenCoat = d.name;
     this.kineticResistMult = Math.max(0.55, 1 - this.hardenStacks * (d.hardenLingerStep ?? 0.07));
     this.kineticResistUntil = time + (d.hardenLinger ?? 1800);
   }
 
+  onDefenseEnd(time) {
+    const coat = this.defenseMove;
+    if (!coat) return;
+    this.lingerHardening(time);
+    this.scene?.dropPins?.(this);
+    this.restoreShrink();
+    playVfx(this.scene, this, coat, 'letgo');
+    if (coat.letgoBurst) {
+      this.scene?.resolveBurst?.(this, {
+        name: coat.name,
+        kind: 'burst',
+        isCounterAttack: true,
+        baseKnockback: 80,
+        knockbackGrowth: 1.4,
+        ...coat.letgoBurst,
+      });
+    }
+    const ready = rearmDefense(coat, time);
+    if (ready != null) this.specialCooldownUntil = ready;
+  }
+
   startMove(time, move, slot, moveKey = null) {
+    if (move?.name && (this.moveLock?.[move.name] ?? 0) > time) {
+      this.state = 'idle';
+      this.attackCooldownUntil = Math.max(this.attackCooldownUntil ?? 0, time + 180);
+      playVfx(this.scene, this, move, 'fizzle');
+      return;
+    }
     if (move.luckyEvery) {
       this._lucky = (this._lucky ?? 0) + 1;
       if (this._lucky % move.luckyEvery === 0) {
@@ -678,15 +712,18 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
     if (move.echoWithin) {
       const again = this._echoName === move.name && time - (this._echoAt ?? -1e9) < move.echoWithin;
-      this._echoName = move.name;
-      this._echoAt = time;
       if (again) {
-        const mul = move.echoMult ?? 1.65;
+        this._echoName = null;
+        const mul = move.echoMult ?? 2;
         move = {
           ...move,
           damage: (move.damage ?? 0) * mul,
           damage2: move.damage2 != null ? move.damage2 * mul : move.damage2,
+          damage3: move.damage3 != null ? move.damage3 * mul : move.damage3,
         };
+      } else {
+        this._echoName = move.name;
+        this._echoAt = time;
       }
     }
     this.openedStill = !!(this.body && Math.abs(this.body.velocity.x) < 36 && Math.abs(this.body.velocity.y) < 80);
@@ -836,6 +873,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
       const zy = this.y - this.bodyH * (move.zone.low ? 0.2 : 0.45);
       this.scene.spawnZone?.(this, move.zone, zx, zy);
     }
+    if (move.also && move.kind !== 'projectile') {
+      const extra = { ...move.also, name: move.also.name ?? move.name, delayMs: 0 };
+      this.scene?.time?.delayedCall(move.also.delayMs ?? 140, () => {
+        if (this.alive) this.scene.spawnProjectile?.(this, extra);
+      });
+    }
     if (move.secondHit?.atFull && (move._chargeFrac ?? 0) >= 0.95) {
       const echo = {
         ...move,
@@ -875,6 +918,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       _baseRadius: move.radius,
       damage: move.damage != null ? scale(move.damage, move.chargeDamageMult) : move.damage,
       damage2: move.damage2 != null ? scale(move.damage2, move.chargeDamageMult) : move.damage2,
+      damage3: move.damage3 != null ? scale(move.damage3, move.chargeDamageMult) : move.damage3,
       baseKnockback: scale(move.baseKnockback ?? 0, move.chargeKnockbackMult),
       radius: move.radius != null ? scale(move.radius, move.chargeRadiusMult) : move.radius,
       rangeW: move.rangeW != null && move.chargeRangeMult ? scale(move.rangeW, move.chargeRangeMult) : move.rangeW,
@@ -979,6 +1023,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.wallLanded = move.kind === 'wall' ? new Set() : null;
     this.wallHits = 0;
     this.hardenStacks = 0;
+    this._blockCharges = move.blockCharges ? { ...move.blockCharges } : null;
+    if (move.kind === 'wall' && move.wallLingerMs) this.scene?.pourWall?.(this, move, time);
     this._shellDone = false;
     this._shellBroken = false;
     this._coatFlaked = false;
@@ -1115,12 +1161,23 @@ export default class Fighter extends Phaser.GameObjects.Container {
         }
       }
       if (stripped.emptied) {
+        if (this.defenseMove.copyMove && move?.name) {
+          const snap = { ...move };
+          delete snap.isCounterAttack;
+          delete snap.isSelf;
+          delete snap._projectile;
+          delete snap._hitAt;
+          delete snap._chargeFrac;
+          this.copiedMove = snap;
+        }
         if (this.defenseMove.capture && move.type) {
           this.captured = {
             type: move.type,
             damage: move.damage ?? 0,
             type2: move.type2,
             damage2: move.damage2,
+            type3: move.type3,
+            damage3: move.damage3,
           };
         }
         const fuelTypes = [move.type, move.type2].filter(Boolean);
@@ -1134,6 +1191,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
         }
         if (this.defenseMove.fuelHeal) this.percent = Math.max(0, this.percent - this.defenseMove.fuelHeal);
         this.retortFromImmune(attacker, move, time);
+        if (this.defenseMove.crackAfterHits) {
+          this.wallHits = (this.wallHits ?? 0) + 1;
+          if (this.wallHits >= this.defenseMove.crackAfterHits) {
+            this.state = 'idle';
+            this.defenseMove = null;
+          }
+        }
         this.rig.setFlash(0xaee6ff);
         return 0;
       }
@@ -1157,6 +1221,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         ...move,
         damage: (move.damage ?? 0) * bump,
         damage2: move.damage2 != null ? move.damage2 * bump : move.damage2,
+        damage3: move.damage3 != null ? move.damage3 * bump : move.damage3,
       };
     }
 
@@ -1170,6 +1235,21 @@ export default class Fighter extends Phaser.GameObjects.Container {
         type: dropType(incoming.type) ? undefined : incoming.type,
         damage2: dropType(incoming.type2) ? 0 : incoming.damage2,
         type2: dropType(incoming.type2) ? undefined : incoming.type2,
+        damage3: dropType(incoming.type3) ? 0 : incoming.damage3,
+        type3: dropType(incoming.type3) ? undefined : incoming.type3,
+      };
+    }
+    if (gate.typeScale) {
+      const scaled = (type, amount) => {
+        if (!type || amount == null) return amount;
+        const keep = gate.typeScale[canonicalType(type)];
+        return keep == null ? amount : amount * keep;
+      };
+      incoming = {
+        ...incoming,
+        damage: scaled(incoming.type, incoming.damage),
+        damage2: scaled(incoming.type2, incoming.damage2),
+        damage3: scaled(incoming.type3, incoming.damage3),
       };
     }
     if (gate.damageMult && gate.damageMult !== 1) {
@@ -1177,6 +1257,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         ...incoming,
         damage: (incoming.damage ?? 0) * gate.damageMult,
         damage2: incoming.damage2 != null ? incoming.damage2 * gate.damageMult : incoming.damage2,
+        damage3: incoming.damage3 != null ? incoming.damage3 * gate.damageMult : incoming.damage3,
       };
     }
     if (gate.result === 'pop' || gate.result === 'negate') {
@@ -1197,7 +1278,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.percent = Math.max(0, this.percent - this.defenseMove.healOnBlock);
       }
       if (gate.endDefense) {
-        const regrow = this.defenseMove?.regrow ?? 1600;
+        const def = this.defenseMove;
+        if (def?.lockAttackMs && attacker && attacker !== this && move?.name) {
+          attacker.moveLock = attacker.moveLock ?? {};
+          attacker.moveLock[move.name] = time + def.lockAttackMs;
+        }
+        const regrow = def?.regrow ?? 1600;
         this.specialCooldownUntil = Math.max(this.specialCooldownUntil ?? 0, time + regrow);
         this.scene?.dropPins?.(this);
         this.state = 'idle';

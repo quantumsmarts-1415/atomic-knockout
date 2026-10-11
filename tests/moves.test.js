@@ -17,7 +17,7 @@ test('every fighter has four named moves with legal damage types', () => {
       const move = c.moves[slot];
       assert.ok(move?.name, `${c.id} missing ${slot}`);
       assert.ok(move.duration > 0 && move.cooldown >= 0, `${c.id} ${move.name} timing`);
-      for (const t of [move.type, move.type2, move.wallType, move.counterType].filter(Boolean)) {
+      for (const t of [move.type, move.type2, move.type3, move.wallType, move.counterType].filter(Boolean)) {
         assert.ok(TYPES.has(t), `${c.id} ${move.name} type ${t}`);
       }
       for (const t of [move.type, move.type2].filter(Boolean)) {
@@ -83,8 +83,8 @@ test('owner-locked kits stay as specified', () => {
   assert.equal(bombFrames.coolF, 29);
   assert.equal(Math.round(h.specialDefense.duration / STEP_MS), 19);
   assert.equal(Math.round(h.specialDefense.cooldown / STEP_MS), 20);
-  assert.strictEqual(CHARACTERS.helen.moves.basicCharge.name, 'Balloon Bop');
-  assert.strictEqual(CHARACTERS.helen.moves.specialDirectional.name, 'Air Wave');
+  assert.strictEqual(CHARACTERS.helen.moves.basicCharge.name, 'Air Wave');
+  assert.strictEqual(CHARACTERS.helen.moves.specialDirectional.name, 'Balloon Bop');
   assert.strictEqual(CHARACTERS.natalie.moves.specialDirectional.name, 'Brine Burst');
   assert.notStrictEqual(
     CHARACTERS.natalie.moves.specialDirectional.name,
@@ -94,6 +94,13 @@ test('owner-locked kits stay as specified', () => {
 
 test('a dive bot will not launch toward the open side of the deck', () => {
   const bot = fake('scarlett', 900, 500);
+  bot.charDef = {
+    ...bot.charDef,
+    moves: {
+      ...bot.charDef.moves,
+      specialDirectional: { ...bot.charDef.moves.specialDirectional, kind: 'dive', dashSpeed: 160 },
+    },
+  };
   bot.facing = 1;
   const foe = fake('helen', 1040, 500);
   const bounds = { minX: 240, maxX: 1040 };
@@ -429,6 +436,80 @@ test('pilot fighters use the element doc kits', () => {
   assert.ok(CHARACTERS.oz.combat.speed <= CHARACTERS.chroma.combat.speed);
   assert.strictEqual(CHARACTERS.tara.moves.specialDefense.immune[0], 'chemical');
   assert.strictEqual(CHARACTERS.wolf.moves.specialDefense.immune[0], 'heat');
+});
+
+test('batch 2 kits match the edited move doc', () => {
+  const tide = CHARACTERS.lillie.moves.specialDirectional;
+  assert.strictEqual(tide.type, 'kinetic');
+  assert.strictEqual(tide.type2, 'chemical');
+  assert.strictEqual(tide.type3, 'heat');
+  assert.strictEqual(tide.pop, undefined);
+  assert.strictEqual(tide.carry, true);
+  const whip = CHARACTERS.allen.moves.basicDirectional;
+  assert.ok(whip.pull > 0);
+  assert.strictEqual(whip.multiHit, undefined);
+  const helen = CHARACTERS.helen.moves;
+  assert.strictEqual(helen.basicCharge.kind, 'projectile');
+  assert.strictEqual(helen.basicDirectional.damage < 8, true);
+  assert.strictEqual(helen.specialDirectional.angleable, true);
+  assert.strictEqual(helen.specialDirectional.lift, true);
+  assert.strictEqual(helen.specialDefense.kind, 'shield');
+  const kyle = CHARACTERS.kyle.moves;
+  assert.strictEqual(kyle.basicCharge.maxChargeMs, 1500);
+  assert.strictEqual(kyle.basicCharge.fizzleBelow, 1);
+  assert.strictEqual(kyle.basicCharge.roll, true);
+  assert.strictEqual(kyle.specialDirectional.name, 'Nerve Shock');
+  assert.strictEqual(CHARACTERS.gail.moves.specialDefense.name, 'Body-Heat Melt');
+  assert.strictEqual(CHARACTERS.arsenio.moves.specialDirectional.name, 'Green Wallpaper');
+  const fey = CHARACTERS.fey.moves.specialDirectional;
+  assert.strictEqual(fey.name, 'Thermite');
+  assert.strictEqual(fey.breaksBlock, undefined);
+  assert.strictEqual(fey.onHit.burn.dps, 3);
+  assert.strictEqual(fey.onHit.burn.ms, 3500);
+  assert.strictEqual(CHARACTERS.fey.moves.specialDefense.catchMetals, true);
+  assert.strictEqual(CHARACTERS.scarlett.moves.specialDirectional.name, 'Micro Rocket');
+  assert.strictEqual(CHARACTERS.scarlett.moves.specialDirectional.kind, 'projectile');
+  assert.strictEqual(CHARACTERS.cal.moves.specialDirectional.name, 'Slime Splash');
+  assert.strictEqual(CHARACTERS.cal.moves.specialDefense.wallLingerMs, 7000);
+  assert.strictEqual(CHARACTERS.cooper.moves.basicCharge.name, 'Tesla Coil');
+  assert.strictEqual(CHARACTERS.cooper.moves.specialDirectional.name, 'Bronze Sword');
+  assert.strictEqual(CHARACTERS.aaron.moves.basicCharge.kind, 'buff');
+  assert.strictEqual(CHARACTERS.aaron.moves.basicCharge.buff.ms, 10000);
+  assert.strictEqual(CHARACTERS.selena.moves.specialDefense.copyMove, true);
+  assert.strictEqual(CHARACTERS.selena.moves.basicDirectional.replayCapture, undefined);
+  assert.strictEqual(CHARACTERS.zane.moves.specialDefense.lockAttackMs, 10000);
+  assert.strictEqual(CHARACTERS.zane.moves.specialDefense.drain.damage, 1);
+  assert.strictEqual(CHARACTERS.gertrude.moves.basicCharge.predict.lead, 1);
+  assert.strictEqual(CHARACTERS.gertrude.moves.basicDirectional.echoMult, 2);
+  assert.strictEqual(CHARACTERS.ruben.moves.specialDirectional.type, 'kinetic');
+  assert.strictEqual(CHARACTERS.ruben.moves.specialDirectional.igniteType, 'heat');
+  assert.strictEqual(CHARACTERS.ruben.moves.basicCharge.onHit.freeze, 240);
+  const guard = {
+    state: 'defending', defenseStart: 0, defenseMove: CHARACTERS.van.moves.specialDefense,
+    facing: 1, x: 0, y: 0, bodyH: 100,
+  };
+  assert.strictEqual(interceptHit(guard, { x: 40 }, { type: 'electrical', damage: 6 }, 0).result, 'negate');
+  assert.strictEqual(interceptHit(guard, { x: 40 }, { type: 'kinetic', damage: 6 }, 0).result, 'pass');
+  const mixed = interceptHit(guard, { x: 40 }, { type: 'electrical', damage: 4, type2: 'kinetic', damage2: 5 }, 0);
+  assert.strictEqual(mixed.result, 'pass');
+  assert.deepStrictEqual(mixed.stripTypes, ['electrical']);
+  const rubber = {
+    state: 'defending', defenseMove: CHARACTERS.sully.moves.specialDefense,
+    _blockCharges: { chemical: 3, kinetic: 2, heat: 1 },
+    facing: 1, x: 0, y: 0, bodyH: 100,
+  };
+  assert.strictEqual(interceptHit(rubber, { x: 40 }, { type: 'chemical', damage: 4 }, 10).result, 'negate');
+  assert.strictEqual(rubber._blockCharges.chemical, 2);
+  assert.strictEqual(interceptHit(rubber, { x: 40 }, { type: 'heat', damage: 4 }, 10).result, 'negate');
+  assert.strictEqual(interceptHit(rubber, { x: 40 }, { type: 'heat', damage: 4 }, 10).result, 'pass');
+  const chrome = {
+    state: 'defending', defenseMove: CHARACTERS.chroma.moves.specialDefense,
+    facing: 1, x: 0, y: 0, bodyH: 100,
+  };
+  const scaled = interceptHit(chrome, { x: 40 }, { type: 'heat', damage: 8, type2: 'kinetic', damage2: 6 }, 0);
+  assert.strictEqual(scaled.result, 'pass');
+  assert.strictEqual(scaled.typeScale.heat, 0.5);
+  assert.strictEqual(scaled.typeScale.kinetic, undefined);
 });
 
 function fake(id, x, y) {

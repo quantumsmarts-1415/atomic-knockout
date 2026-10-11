@@ -242,7 +242,7 @@ export function resolvePacket(amount, type, atkCombat, defCombat, opts = {}) {
   return dmg < 0 ? 0 : dmg;
 }
 
-/** Sum every packet on a move. Accepts type/damage plus type2/damage2. */
+/** Sum every packet on a move. Accepts type/damage, type2/damage2, and type3/damage3. */
 export function resolveMoveDamage(move, attackerDef, defenderDef, opts = {}) {
   const packets = [];
   const push = (type, amount) => {
@@ -250,6 +250,7 @@ export function resolveMoveDamage(move, attackerDef, defenderDef, opts = {}) {
   };
   push(move.type, move.damage);
   push(move.type2, move.damage2);
+  push(move.type3, move.damage3);
   if (Array.isArray(move.hits)) {
     for (const h of move.hits) push(h.type, h.damage);
   }

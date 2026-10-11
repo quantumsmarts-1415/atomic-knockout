@@ -43,7 +43,8 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.poisonUntil = time + (p.ms ?? 1600);
     victim.poisonDps = (p.dps ?? 1.4) * chem;
     victim.poisonRamp = (p.ramp ?? 0) * chem;
-    victim.poisonTick = time + (p.delay ?? 280);
+    victim.poisonTick = time + (p.delay ?? p.every ?? 280);
+    victim.poisonEvery = p.every ?? 280;
     if (p.inherit) victim.poisonInherit = true;
   }
   if (fx.heal && attacker) attacker.percent = Math.max(0, (attacker.percent ?? 0) - fx.heal);
@@ -59,6 +60,10 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.mark = fx.mark;
     victim.markUntil = time + (fx.markMs ?? 3600);
     victim.markedBy = attacker?.charDef?.id ?? null;
+  }
+  if (fx.coat) {
+    victim.debuffCoat = fx.coat;
+    victim.debuffCoatUntil = time + (fx.coatMs ?? fx.markMs ?? 2000);
   }
   if (fx.scramble) victim.scrambleUntil = time + (typeof fx.scramble === 'number' ? fx.scramble : 2400);
   if (fx.weaken) {
@@ -116,6 +121,8 @@ export function stripBuffs(fighter) {
   fighter.heatResistUntil = 0;
   if (!fighter.burnSticky) fighter.burnUntil = 0;
   fighter.kinDefMultUntil = 0;
+  fighter.attackPowerUntil = 0;
+  fighter.buffCoatUntil = 0;
   // Unquenchable stays lit. White phosphorus (burnSticky) stays lit.
   // Water, cold, and heat do not clear either one.
 }
@@ -134,7 +141,7 @@ export function tickKit(fighter, time) {
     applyDot(fighter, fighter.burnDps ?? 2, 'heat');
   }
   if (fighter.poisonUntil && time < fighter.poisonUntil && time >= (fighter.poisonTick ?? 0)) {
-    fighter.poisonTick = time + 280;
+    fighter.poisonTick = time + (fighter.poisonEvery ?? 280);
     const dmg = fighter.poisonDps ?? 1.4;
     applyDot(fighter, dmg, 'chemical');
     fighter.poisonDps = dmg + (fighter.poisonRamp ?? 0);
@@ -197,10 +204,16 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     fighter.takeHit(fighter, selfMove, time);
     fighter.scene?.noteHit?.(fighter, fighter, selfMove);
   }
+  if (move.chargeHeal) {
+    fighter.percent = Math.max(0, (fighter.percent ?? 0) - move.chargeHeal * frac);
+  }
   if (move.buff) {
-    const buff = move.buff.scaleWithCharge && move.buff.bonus
-      ? { ...move.buff, bonus: { ...move.buff.bonus, damage: (move.buff.bonus.damage ?? 0) * frac } }
-      : move.buff;
+    let buff = move.buff;
+    if (move.buff.scaleWithCharge) {
+      buff = { ...move.buff };
+      if (buff.bonus) buff.bonus = { ...buff.bonus, damage: (buff.bonus.damage ?? 0) * frac };
+      if (buff.attackPower) buff.attackPower = 1 + (buff.attackPower - 1) * frac;
+    }
     grantBuff(fighter, buff, time);
   }
   if (move.cleanse) cleanse(fighter, move.cleanse);
@@ -260,6 +273,14 @@ function grantBuff(fighter, buff, time) {
   if (buff.kineticTaken != null) {
     fighter.kineticResistMult = buff.kineticTaken;
     fighter.kineticResistUntil = time + ms;
+  }
+  if (buff.attackPower) {
+    fighter.attackPower = buff.attackPower;
+    fighter.attackPowerUntil = time + ms;
+  }
+  if (buff.coat) {
+    fighter.buffCoat = buff.coat;
+    fighter.buffCoatUntil = time + ms;
   }
   if (buff.bonus) {
     fighter.bonusHits = buff.bonus.hits ?? 1;

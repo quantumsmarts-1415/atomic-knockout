@@ -6,6 +6,7 @@ function typesOf(move) {
   const out = [];
   if (move?.type) out.push(canonicalType(move.type));
   if (move?.type2) out.push(canonicalType(move.type2));
+  if (move?.type3) out.push(canonicalType(move.type3));
   return out;
 }
 
@@ -30,13 +31,18 @@ function breaksBlock(move, defense) {
   return false;
 }
 
-function counterHitFx(defense, retort) {
+function counterHitFx(defense, retort, extra) {
   const on = {};
   if (defense?.counterStun) on.stun = defense.counterStun;
   if (defense?.counterBlind) on.blind = defense.counterBlind;
   if (retort?.stun) on.stun = retort.stun;
   if (retort?.blind) on.blind = retort.blind;
   if (retort?.slow) on.slow = retort.slow;
+  if (extra?.root) on.root = extra.root;
+  if (extra?.coat) {
+    on.coat = extra.coat;
+    on.coatMs = extra.coatMs ?? extra.root ?? 800;
+  }
   return Object.keys(on).length ? on : undefined;
 }
 
@@ -71,6 +77,10 @@ export function applyImmunities(move, defense) {
   if (next.type2 && immune.includes(canonicalType(next.type2))) {
     next.damage2 = 0;
     next.type2 = undefined;
+  }
+  if (next.type3 && immune.includes(canonicalType(next.type3))) {
+    next.damage3 = 0;
+    next.type3 = undefined;
   }
   const left = typesOf(next);
   return { move: next, emptied: left.length === 0 };
@@ -202,6 +212,7 @@ export function interceptHit(defender, attacker, move, time) {
   if (!move?.isCounterAttack && defense.kind === 'counter') {
     const on = defense.counterOnTypes;
     if (!on || types.some((t) => on.includes(t))) {
+      const rooted = rootMs(defense, attacker);
       return {
         result: 'counter',
         counter: {
@@ -211,8 +222,12 @@ export function interceptHit(defender, attacker, move, time) {
           baseKnockback: defense.counterKnockback ?? 180,
           knockbackGrowth: defense.counterKnockbackGrowth ?? 4,
           isCounterAttack: true,
-          rootMs: rootMs(defense, attacker),
-          onHit: counterHitFx(defense),
+          rootMs: rooted,
+          onHit: counterHitFx(defense, null, {
+            root: rooted || undefined,
+            coat: defense.counterCoat,
+            coatMs: rooted || defense.counterCoatMs,
+          }),
         },
       };
     }
@@ -264,23 +279,40 @@ export function interceptHit(defender, attacker, move, time) {
     const i = Math.floor(Math.max(0, time - (defender.defenseStart ?? time)) / step) % defense.cycle.length;
     const cur = defense.cycle[i];
     defender.cycleShowing = cur;
-    if (types.length && types.every((t) => t === cur)) {
-      if (defense.cycleReflect) {
-        return {
-          result: 'counter',
-          counter: {
-            name: defense.name,
-            damage: move.damage ?? defense.counterDamage ?? 6,
-            type: cur,
-            baseKnockback: defense.counterKnockback ?? 140,
-            knockbackGrowth: defense.counterKnockbackGrowth ?? 2,
-            isCounterAttack: true,
-          },
-        };
+    if (types.includes(cur)) {
+      if (types.every((t) => t === cur)) {
+        if (defense.cycleReflect) {
+          return {
+            result: 'counter',
+            counter: {
+              name: defense.name,
+              damage: move.damage ?? defense.counterDamage ?? 6,
+              type: cur,
+              baseKnockback: defense.counterKnockback ?? 140,
+              knockbackGrowth: defense.counterKnockbackGrowth ?? 2,
+              isCounterAttack: true,
+            },
+          };
+        }
+        return { result: 'negate' };
       }
-      return { result: 'negate' };
+      return { result: 'pass', stripTypes: [cur] };
     }
-    return { result: 'partial', reduction: 0.4 };
+    return { result: 'pass' };
+  }
+
+  if (defense.blockCharges && defender._blockCharges) {
+    const charges = defender._blockCharges;
+    const blocked = types.filter((t) => (charges[t] ?? 0) > 0);
+    if (blocked.length) {
+      for (const t of blocked) charges[t] -= 1;
+      if (blocked.length === types.length) return { result: 'negate' };
+      return { result: 'pass', stripTypes: blocked };
+    }
+  }
+
+  if (defense.reduceTypes) {
+    return { result: 'pass', typeScale: defense.reduceTypes };
   }
 
   if (defense.reflectTypes?.length && !move?.isCounterAttack) {

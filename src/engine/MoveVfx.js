@@ -155,7 +155,12 @@ export function syncChargeGlow(scene) {
     }
     const max = move.maxChargeMs || 1;
     const frac = Math.max(0, Math.min(1, ((scene.simNow ?? 0) - fighter.chargeStart) / max));
-    if (move.tubeCharge && !artFor(fighter.charDef?.id, move.name)?.frames?.length) {
+    const tubeArt = move.tubeCharge ? artFor(fighter.charDef?.id, move.name) : null;
+    if (move.tubeCharge && (tubeArt?.frames?.length || tubeArt?.charge?.frames?.length)) {
+      glow.clear();
+      continue;
+    }
+    if (move.tubeCharge) {
       const len = (move.beamLen ?? 150) * (1 + ((move.chargeLengthMult ?? 1) - 1) * frac);
       const dir = fighter.facing || 1;
       const bodyH = fighter.bodyH ?? 80;
@@ -206,6 +211,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   }
   if (phase === 'release' || phase === 'defense') {
     const art = artFor(fighter.charDef?.id, move?.name);
+    if (phase === 'release' && art?.objectType === 'beam' && art.frames?.length && !extra?.fired) return;
     if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance') return;
     if (art?.detonate && move?.kind === 'burst') {
       spawnFxDetonate(scene, fighter, move, extra.x ?? fighter.x, extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55));
@@ -241,7 +247,10 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   const style = move?.vfx ?? move?.kind ?? 'strike';
 
   if (phase === 'charge') {
-    if (style !== 'supernova') gather(scene, x, y - 10, color);
+    const painted = artFor(fighter.charDef?.id, move?.name);
+    const heldArt = painted?.charge?.frames?.length || painted?.orbit?.frames?.length
+      || painted?.anchor === 'lance' || painted?.anchor === 'feet';
+    if (!heldArt && style !== 'supernova') gather(scene, x, y - 10, color);
     return;
   }
   if (phase === 'fizzle') {

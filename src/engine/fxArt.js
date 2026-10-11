@@ -378,6 +378,8 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     fadeAfter: !!extra.fadeAfter,
     fadeMs: extra.fadeMs > 0 ? extra.fadeMs : 280,
     paceCharge: !!extra.paceCharge,
+    stretch: extra.stretch === 'length' ? 'length' : null,
+    sign: !!extra.sign,
   };
 }
 
@@ -587,8 +589,20 @@ async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH
       w = box.w;
       h = box.h;
     }
-    const displayW = px > 0 ? Math.max(CELL, w * px) : fit(box, w, h).w;
-    const displayH = px > 0 ? Math.max(CELL, h * px) : fit(box, w, h).h;
+    let displayW;
+    let displayH;
+    if (spec?.fit === 'length' && box?.w > 0) {
+      // An edge-to-edge beam maps onto the uncharged length. Charge scale stretches width only.
+      displayW = Math.max(CELL, box.w);
+      displayH = Math.max(CELL, box.w * (h / Math.max(1, w)));
+    } else if (px > 0) {
+      displayW = Math.max(CELL, w * px);
+      displayH = Math.max(CELL, h * px);
+    } else {
+      const fitted = fit(box, w, h);
+      displayW = fitted.w;
+      displayH = fitted.h;
+    }
     frames.push(finishFrame(
       scene,
       `fx-${id}-${slug}-${prefix || ''}${i}`,
@@ -651,6 +665,8 @@ async function loadMoveArt(scene, char, slot, move, index) {
     loop: !!meta.loop,
     hit: meta.hit !== false,
     flicker: !!meta.flicker,
+    stretch: meta.stretch === 'length' ? 'length' : null,
+    sign: !!meta.sign,
     spin: meta.spin,
     pulse: meta.pulse,
     frontGap: meta.frontGap,
@@ -823,7 +839,9 @@ function placeStill(scene, art, x, y, rot) {
 function applyFrameLook(img, frame, art, scale) {
   if (!img || !frame) return;
   img.setTexture?.(frame.key);
-  img.setDisplaySize(frame.displayW * scale, frame.displayH * scale);
+  const along = scale > 0 ? scale : 1;
+  const across = art?.stretch === 'length' ? 1 : along;
+  img.setDisplaySize(frame.displayW * along, frame.displayH * across);
   const blend = frame.blend || art?.blend;
   img.setBlendMode?.(blend === 'add' ? 'ADD' : 'NORMAL');
 }
@@ -832,6 +850,25 @@ function applyFrameLook(img, frame, art, scale) {
 export function sheetPlayOrder(folder) {
   if (folder === 'allen/thermite-burn') return [0, 3, 1, 2];
   return null;
+}
+
+/** Steady frames 1–2, then flickering frames 3–4 once the sign has been held. */
+export function vacancySignFrame(frameCount, held, now, vacancyAt = 540) {
+  const n = frameCount | 0;
+  if (n < 4) return 0;
+  if ((held || 0) >= vacancyAt) return 2 + (Math.floor(Math.max(0, now || 0) / 70) % 2);
+  return Math.floor(Math.max(0, held || 0) / 180) % 2;
+}
+
+/** World point at the middle of the sign, where the in-game words sit. */
+export function vacancySignPoint(fighter, art) {
+  const face = fighter?.facing || 1;
+  const bodyW = fighter?.bodyW ?? 40;
+  const frame = art?.frames?.[0];
+  const x = (fighter?.x ?? 0) + face * bodyW * 0.9;
+  const py = art?.pivotY ?? 1;
+  const y = (fighter?.y ?? 0) + (0.5 - py) * (frame?.displayH || 0);
+  return { x, y };
 }
 
 export function fxFrameIndex(art, elapsed) {
@@ -1158,7 +1195,10 @@ function syncAttached(scene, fighter) {
   }
   const art = want.art;
   let index = fxFrameIndex(art, want.elapsed);
-  if (want.holdLast) index = art.frames.length - 1;
+  if (art.sign) {
+    const warn = fighter.defenseMove?.vacancyAt ?? 540;
+    index = vacancySignFrame(art.frames.length, want.elapsed, scene.simNow ?? 0, warn);
+  } else if (want.holdLast) index = art.frames.length - 1;
   else if (art.paceCharge && fighter.defenseMove?.chargeMs) {
     const frac = Math.min(1, Math.max(0, ((scene.simNow ?? 0) - (fighter.defenseStart ?? 0)) / fighter.defenseMove.chargeMs));
     index = Math.min(art.frames.length - 1, Math.round(frac * (art.frames.length - 1)));
@@ -1175,7 +1215,13 @@ function syncAttached(scene, fighter) {
     const bodyH = fighter.bodyH ?? 80;
     const bodyW = fighter.bodyW ?? 40;
     if (want.kind === 'front') {
-      live.img.setPosition(fighter.x + face * bodyW * 0.72, fighter.y - bodyH * 0.55);
+      if (art.sign) {
+        const at = vacancySignPoint(fighter, art);
+        live.img.setOrigin(art.pivotX, art.pivotY);
+        live.img.setPosition(at.x, fighter.y);
+      } else {
+        live.img.setPosition(fighter.x + face * bodyW * 0.72, fighter.y - bodyH * 0.55);
+      }
       live.img.setScale(face * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
     } else if (want.kind === 'body') {
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
@@ -1384,8 +1430,13 @@ function syncHeld(scene, fighter) {
     const max = charge.maxChargeMs || 1;
     const frac = Math.min(1, Math.max(0, (now - (fighter.chargeStart ?? now)) / max));
     const frame = frames[Math.min(frames.length - 1, Math.round(frac * (frames.length - 1)))];
-    live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 1);
     applyFrameLook(live.img, frame, want.art, 1);
+    if (want.art.anchor === 'body') {
+      live.img.setOrigin(0.5, 0.5);
+      live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
+      return;
+    }
+    live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 1);
     const shot = 1 + ((charge.chargeRadiusMult ?? 1) - 1) * frac;
     live.img.setPosition(fighter.x + face * bodyW * 0.65, fighter.y);
     live.img.setScale(face * Math.abs(live.img.scaleX || 1) * shot, Math.abs(live.img.scaleY || 1) * shot);

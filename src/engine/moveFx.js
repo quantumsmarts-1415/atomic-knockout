@@ -2,7 +2,7 @@
 // orbit, absorb, shell, ozone, and freeze visuals that have to stay on the
 // fighter instead of playing once.
 
-import { artFor, fxNamed } from './fxArt.js';
+import { artFor, fxNamed, vacancySignPoint } from './fxArt.js';
 import { coatSpec } from './coat.js';
 import { FONT_DISPLAY } from '../ui/theme.js';
 
@@ -86,9 +86,12 @@ function drawVacancy(scene, g, fighter, time) {
   const flicker = held >= warn;
   const dim = flicker && Math.floor(time / 70) % 2 === 0;
   const face = fighter.facing || 1;
-  const x = fighter.x + face * ((fighter.bodyW ?? 40) * 0.95);
-  const y = fighter.y - (fighter.bodyH ?? 80) * 0.62;
-  if (!artFor(fighter.charDef?.id, move.name)?.frames?.length) {
+  const art = artFor(fighter.charDef?.id, move.name);
+  const painted = !!art?.frames?.length && art.sign;
+  const at = painted ? vacancySignPoint(fighter, art) : null;
+  const x = at ? at.x : fighter.x + face * ((fighter.bodyW ?? 40) * 0.95);
+  const y = at ? at.y : fighter.y - (fighter.bodyH ?? 80) * 0.62;
+  if (!art?.frames?.length) {
     const w = 108;
     const h = 40;
     const alpha = dim ? 0.28 : 0.95;
@@ -101,12 +104,13 @@ function drawVacancy(scene, g, fighter, time) {
     label?.destroy?.();
     label = scene.add.text(x, y, '', {
       fontFamily: FONT_DISPLAY,
-      fontSize: '13px',
+      fontSize: painted ? '12px' : '13px',
       color: '#fff6e8',
     }).setOrigin(0.5, 0.5).setDepth(19);
     vacancyLabels.set(fighter, label);
   }
   label.setPosition(x, y);
+  label.setFontSize(painted ? 12 : 13);
   label.setText(flicker ? 'VACANCY' : 'NO VACANCY');
   label.setAlpha(dim ? 0.35 : 1);
   label.setColor(flicker ? '#ffb4a2' : '#fff6e8');

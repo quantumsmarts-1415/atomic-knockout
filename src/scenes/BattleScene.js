@@ -982,9 +982,10 @@ export default class BattleScene extends Phaser.Scene {
     const x = owner.facing === 1 ? owner.x + owner.bodyW * 0.2 : owner.x - owner.bodyW * 0.2 - len;
     const y = owner.y - owner.bodyH * 0.62;
     const rect = new Phaser.Geom.Rectangle(x, y - thick / 2, len, thick);
+    const art = artFor(owner.charDef?.id, move.name);
     const anchor = fxAnchor(owner, move);
-    playVfx(this, owner, move, 'release');
-    if (anchor) {
+    playVfx(this, owner, move, 'release', { fired: true });
+    if (anchor && art?.hit !== false) {
       const struck = new Set();
       for (const target of this.fighters) {
         if (target === owner || !target.alive || target.state === 'ko') continue;

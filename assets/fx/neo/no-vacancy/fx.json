@@ -1,0 +1,12 @@
+{
+  "blend": "add",
+  "black": 16,
+  "frames": 4,
+  "crop": "frame",
+  "fit": "height",
+  "heightFrac": 2.15,
+  "pivot": "bottom",
+  "anchor": "front",
+  "hit": false,
+  "sign": true
+}

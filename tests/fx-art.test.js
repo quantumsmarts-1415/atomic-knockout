@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { blackThreshold, contentSpan, fxFadeAlpha, fxFrameIndex, fxGameplayScale, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, sliceGrid, sliceHorizontal } from '../src/engine/fxArt.js';
+import { blackThreshold, contentSpan, fxFadeAlpha, fxFrameIndex, fxGameplayScale, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, sliceGrid, sliceHorizontal, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 
 test('every move has a folder, a type, and a score', () => {
@@ -166,6 +166,43 @@ test('flora sheets keep the jet, the coat flash, and both cascade sides', () => 
   assert.equal(cascade.crop, undefined);
   const jab = read('etching-jab');
   assert.equal(jab.anchor, 'contact');
+});
+
+test('neo tube rings run dim to bright and the sign flickers after the steady pair', () => {
+  const read = (folder) => JSON.parse(fs.readFileSync(`assets/fx/neo/${folder}/fx.json`, 'utf8'));
+  const tube = read('high-voltage-tube');
+  assert.equal(tube.blend, 'add');
+  assert.equal(tube.hit, false);
+  assert.equal(tube.stretch, 'length');
+  assert.equal(tube.fit, 'length');
+  assert.equal(tube.pivot, 'left');
+  assert.equal(tube.charge.frames, 7);
+  assert.equal(tube.charge.anchor, 'body');
+  assert.equal(fs.existsSync('assets/fx/neo/high-voltage-tube/object.png'), true);
+  assert.equal(fs.existsSync('assets/fx/neo/high-voltage-tube/sheet.png'), true);
+  const sign = read('no-vacancy');
+  assert.equal(sign.frames, 4);
+  assert.equal(sign.sign, true);
+  assert.equal(sign.anchor, 'front');
+  assert.equal(sign.hit, false);
+  assert.equal(vacancySignFrame(4, 0, 0, 540), 0);
+  assert.equal(vacancySignFrame(4, 180, 180, 540), 1);
+  assert.equal(vacancySignFrame(4, 360, 360, 540), 0);
+  assert.equal(vacancySignFrame(4, 540, 0, 540), 2);
+  assert.equal(vacancySignFrame(4, 600, 70, 540), 3);
+  assert.equal(vacancySignFrame(4, 700, 140, 540), 2);
+  const at = vacancySignPoint(
+    { x: 100, y: 400, facing: 1, bodyW: 40 },
+    { pivotY: 1, frames: [{ displayH: 200 }] },
+  );
+  assert.equal(at.x, 136);
+  assert.equal(at.y, 300);
+  const staff = read('staff-crack');
+  assert.equal(staff.anchor, 'contact');
+  assert.equal(staff.hit, false);
+  const flash = read('neon-flash');
+  assert.equal(flash.blend, 'add');
+  assert.equal(flash.hit, false);
 });
 
 test('a horizontal sheet splits into even frames', () => {

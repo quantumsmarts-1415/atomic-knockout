@@ -1613,9 +1613,10 @@ export const CHARACTERS = {
           idle: { count: 14, fps: 3.6, loop: true },
           // The walk faces left, the same way the idle does.
           walk: { count: 12, fps: 9.6, loop: true, frameW: 922, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
-          // Power-Line Whips, Thermite Burn, and Turbine Vortex face left, the same way the idle does. The whip sheet is the cable.
+          // Power-Line Whips, Thermite Burn, Turbine Vortex, and Oxide Skin face left, the same way the idle does. The whip sheet is the cable.
           attack: { count: 12, fps: 18, loop: false, frameW: 2272, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
           charge: { count: 12, fps: 18, loop: false, frameW: 922, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 922, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
           special: { count: 12, fps: 18, loop: false, frameW: 956, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
         },
       },
@@ -1926,8 +1927,11 @@ export const CHARACTERS = {
         displayScale: 0.19512,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          // The attack sheet faces right. sheetFacing keeps it unflipped.
+          // Bleach Out, Salt Bond, Gas Cloud, and the jab face right. sheetFacing keeps them unflipped.
           attack: { count: 12, fps: 18, loop: false, frameW: 718, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 1188, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 696, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
+          special: { count: 12, fps: 18, loop: false, frameW: 824, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
         },
       },
     },
@@ -1996,9 +2000,11 @@ export const CHARACTERS = {
         displayScale: 0.21362,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          // Blue-steel walk and Inert Guard Strike face right, the same way the idle does.
+          // The walk, Lazy Haymaker, Inert Guard Strike, and Noble Discharge face right, the same way the idle does.
           walk: { count: 12, fps: 10.29, loop: true, frameW: 549, frameH: 700, footY: 0.9729, visibleH: 657, bodyH: 657, displayScale: 138 / 657 },
-          attack: { count: 12, fps: 18, loop: false, frameW: 595, frameH: 700, footY: 0.9729, visibleH: 657, bodyH: 657, displayScale: 138 / 657 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 621, frameH: 700, footY: 0.9729, visibleH: 657, bodyH: 657, displayScale: 138 / 657 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 549, frameH: 700, footY: 0.9729, visibleH: 657, bodyH: 657, displayScale: 138 / 657 },
+          special: { count: 12, fps: 18, loop: false, frameW: 549, frameH: 700, footY: 0.9729, visibleH: 657, bodyH: 657, displayScale: 138 / 657 },
         },
       },
     },
@@ -2140,9 +2146,11 @@ export const CHARACTERS = {
         displayScale: 0.225,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          // The walk and the attack face right while the idle faces left.
+          // The walk, the attack, Quick-Set Cement, and Slime Splash face right while the idle faces left.
           walk: { count: 12, fps: 7.38, loop: true, frameW: 428, frameH: 698, footY: 0.9706, visibleH: 653, bodyH: 653, displayScale: 144 / 653, sheetFacing: 1 },
           attack: { count: 12, fps: 18, loop: false, frameW: 454, frameH: 698, footY: 0.9706, visibleH: 653, bodyH: 653, displayScale: 144 / 653, sheetFacing: 1 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 428, frameH: 698, footY: 0.9706, visibleH: 653, bodyH: 653, displayScale: 144 / 653, sheetFacing: 1 },
+          special: { count: 12, fps: 18, loop: false, frameW: 602, frameH: 698, footY: 0.9706, visibleH: 653, bodyH: 653, displayScale: 144 / 653, sheetFacing: 1 },
         },
       },
     },
@@ -2353,8 +2361,11 @@ export const CHARACTERS = {
         displayScale: 0.1949,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          // Chrome Edge faces right while the idle faces left.
+          // Ruby Laser, Mirror Chrome, Prismatic Shatter, and Chrome Edge face right while the idle faces left.
           attack: { count: 12, fps: 18, loop: false, frameW: 1180, frameH: 1221, footY: 0.9885, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 784, frameH: 1036, footY: 0.9865, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 752, frameH: 1067, footY: 0.9831, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
+          special: { count: 12, fps: 18, loop: false, frameW: 834, frameH: 1036, footY: 0.9865, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
         },
       },
     },

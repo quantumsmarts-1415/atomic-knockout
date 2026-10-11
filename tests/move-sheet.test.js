@@ -272,8 +272,8 @@ test('call 5 attack sheets match their clip cells', () => {
     const cells = (png.w / def.frameW) * (png.h / def.frameH);
     assert.ok(cells >= def.count, `${id} cells ${cells}`);
     assert.equal(def.displayScale, art.height / def.visibleH);
-    assert.equal(MOVE_SHEETS[id].charge, undefined);
-    if (id !== 'van' && id !== 'sully') assert.equal(MOVE_SHEETS[id].special, undefined);
+    if (id !== 'chloe' && id !== 'cal') assert.equal(MOVE_SHEETS[id].charge, undefined);
+    if (id !== 'van' && id !== 'sully' && id !== 'chloe' && id !== 'cal') assert.equal(MOVE_SHEETS[id].special, undefined);
   }
   assert.equal(CHARACTERS.sully.art.sheets.clips.attack.count, 11);
   assert.equal(CHARACTERS.rhoda.art.sheets.clips.attack.count, 8);
@@ -449,8 +449,10 @@ test('call 4 sheets match their clip cells', () => {
       assert.ok(cells >= def.count, `${id} ${name} cells ${cells}`);
       assert.equal(def.displayScale, art.height / def.visibleH);
     }
-    assert.equal(MOVE_SHEETS[id].charge, undefined);
-    assert.equal(MOVE_SHEETS[id].special, undefined);
+    if (id !== 'aaron' && id !== 'chroma') {
+      assert.equal(MOVE_SHEETS[id].charge, undefined);
+      assert.equal(MOVE_SHEETS[id].special, undefined);
+    }
   }
   const walk = CHARACTERS.aaron.art.sheets.clips.walk;
   assert.equal(walk.count, 12);
@@ -495,6 +497,77 @@ test('embrittle opens on the grab, and a right-facing attack stays in front', ()
     );
     assert.ok(ahead.x > 400, id);
   }
+});
+
+test('push 2 call 3 body sheets match their clip cells', () => {
+  const expect = {
+    aaron: ['attack', 'charge', 'special'],
+    allen: ['defense'],
+    cal: ['defense', 'special'],
+    chloe: ['charge', 'defense', 'special'],
+    chroma: ['charge', 'defense', 'special'],
+  };
+  const facing = {
+    aaron: undefined,
+    allen: undefined,
+    cal: 1,
+    chloe: 1,
+    chroma: 1,
+  };
+  for (const [id, names] of Object.entries(expect)) {
+    const art = CHARACTERS[id].art;
+    for (const name of names) {
+      const def = art.sheets.clips[name];
+      const file = `${art.sheets.dir}${def.file || `${id}_${name}.png`}`;
+      const png = pngSize(file);
+      assert.equal(png.w % def.frameW, 0, `${id} ${name} width`);
+      assert.equal(png.h % def.frameH, 0, `${id} ${name} height`);
+      const cells = (png.w / def.frameW) * (png.h / def.frameH);
+      assert.ok(cells >= def.count, `${id} ${name} cells ${cells}`);
+      assert.equal(def.displayScale, art.height / def.visibleH);
+      assert.equal(def.sheetFacing, facing[id]);
+    }
+  }
+  assert.equal(CHARACTERS.aaron.art.sheets.clips.attack.frameW, 621);
+  assert.equal(sheetMeta('aaron', 'attack').release, 6);
+  const haymaker = sheetMeta('aaron', 'charge');
+  assert.equal(sheetFrameIndex(haymaker, { state: 'charging', animT: 0 }), 0);
+  assert.equal(sheetFrameIndex(haymaker, { state: 'charging', animT: 5 / 18 }), 5);
+  assert.equal(sheetFrameIndex(haymaker, { state: 'charging', animT: 6 / 18 }), 0);
+  assert.equal(sheetMeta('aaron', 'special').release, 6);
+  const oxide = sheetMeta('allen', 'defense');
+  assert.equal(oxide.gather, true);
+  assert.deepEqual(oxide.loop, [3, 8]);
+  assert.equal(sheetFrameIndex(oxide, { state: 'defending', animT: 0 }), 3);
+  assert.equal(sheetFrameIndex(oxide, { state: 'defending', animT: 5 / 18 }), 8);
+  assert.equal(sheetFrameIndex(oxide, { state: 'defending', animT: 6 / 18 }), 3);
+  assert.equal(oxide.anchors.feet[0][0], 284);
+  assert.ok(oxide.anchors.feet[0][0] < CHARACTERS.allen.art.sheets.clips.defense.frameW / 2);
+  const chrome = sheetMeta('chroma', 'defense');
+  assert.equal(chrome.gather, true);
+  assert.deepEqual(chrome.loop, [3, 8]);
+  assert.equal(sheetFrameIndex(chrome, { state: 'defending', animT: 0 }), 3);
+  const pour = sheetMeta('cal', 'defense');
+  const bond = sheetMeta('chloe', 'defense');
+  assert.equal(pour.gather, true);
+  assert.deepEqual(pour.loop, [0, 11]);
+  assert.equal(sheetFrameIndex(pour, { state: 'defending', animT: 0 }), 0);
+  assert.equal(sheetFrameIndex(pour, { state: 'defending', animT: 11 / 18 }), 11);
+  assert.equal(sheetFrameIndex(pour, { state: 'defending', animT: 12 / 18 }), 0);
+  assert.deepEqual(bond.loop, [0, 11]);
+  assert.equal(sheetMeta('chloe', 'charge').release, 6);
+  assert.equal(sheetMeta('chloe', 'special').release, 5);
+  assert.equal(sheetMeta('cal', 'special').release, 6);
+  assert.equal(sheetMeta('chroma', 'charge').release, 5);
+  assert.equal(sheetMeta('chroma', 'special').release, 6);
+  assert.equal(sheetMeta('chroma', 'special').anchors.feet[10], null);
+  const guard = CHARACTERS.aaron.art.sheets.clips.attack;
+  const fist = MOVE_SHEETS.aaron.attack.anchors.fist[6];
+  assert.ok(fist[0] > guard.frameW / 2);
+  const world = frameToWorld(
+    fist, guard.frameW, guard.frameH, guard.footY, guard.displayScale, 1, 1, 400, 500,
+  );
+  assert.ok(world.x > 400);
 });
 
 test('call 6 walks match their clip cells', () => {

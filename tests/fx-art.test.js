@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, flareCover, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, sliceGrid, sliceHorizontal, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, sliceGrid, sliceHorizontal, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 
 test('every move has a folder, a type, and a score', () => {
@@ -182,13 +182,16 @@ test('allen and silas sheets key solid metal and keep the break frames', () => {
   assert.equal(whip.anchor, 'contact');
   assert.equal(whip.hit, false);
   const burn = read('allen/thermite-burn');
+  assert.equal(burn.file, 'thermite-spray-anim.png');
+  assert.equal(burn.frames, 24);
   assert.equal(burn.blend, 'add');
+  assert.equal(burn.scale, 1.25);
   assert.equal(burn.pivot, 'left');
   assert.equal(burn.hit, false);
   assert.equal(burn.stretch, 'length');
   assert.equal(burn.cling.frames, 4);
   assert.equal(burn.cling.loop, true);
-  assert.equal(fs.existsSync('assets/fx/allen/thermite-burn/object.png'), true);
+  assert.equal(fs.existsSync('assets/fx/allen/thermite-burn/thermite-spray-anim.png'), true);
   assert.equal(fs.existsSync('assets/fx/allen/thermite-burn/sheet.png'), true);
   const vortex = read('allen/turbine-vortex');
   assert.equal(vortex.cols, 3);
@@ -283,8 +286,14 @@ test('neo tube rings run dim to bright and the sign flickers after the steady pa
   assert.equal(staff.anchor, 'contact');
   assert.equal(staff.hit, false);
   const flash = read('neon-flash');
+  assert.equal(flash.file, 'neon-flash-burst-anim.png');
+  assert.equal(flash.frames, 24);
   assert.equal(flash.blend, 'add');
+  assert.equal(flash.scale, 1.25);
+  assert.equal(flash.tint, '#ff5a2a');
+  assert.ok(flash.tintAmount > 0.5);
   assert.equal(flash.hit, false);
+  assert.equal(fs.existsSync('assets/fx/neo/neon-flash/neon-flash-burst-anim.png'), true);
 });
 
 test('maggie ribbon wraps then holds the guard, and the flare sits on contact', () => {
@@ -373,10 +382,14 @@ test('phillip sheets keep the upright flare and the five-round tracer', () => {
   assert.equal(fxFrameIndex(formed, step * 4), 2);
   const wp = read('spontaneous-ignition');
   assert.equal(wp.hit, false);
-  assert.equal(wp.impact.file, 'burst.png');
+  assert.equal(wp.impact.file, 'wp-burst-anim.png');
+  assert.equal(wp.impact.frames, 24);
+  assert.equal(wp.impact.blend, 'screen');
+  assert.equal(wp.impact.luma, true);
+  assert.equal(wp.impact.scale, 1.25);
   assert.equal(wp.cling.frames, 4);
   assert.equal(wp.cling.loop, true);
-  assert.equal(fs.existsSync('assets/fx/phillip/spontaneous-ignition/burst.png'), true);
+  assert.equal(fs.existsSync('assets/fx/phillip/spontaneous-ignition/wp-burst-anim.png'), true);
   assert.equal(fs.existsSync('assets/fx/phillip/spontaneous-ignition/sheet.png'), true);
   const cling = { frames: ['wp'] };
   const shared = { frames: ['fire'] };
@@ -395,6 +408,40 @@ test('a horizontal sheet splits into even frames', () => {
   assert.equal(right.width, 4);
   assert.equal(right.data[0], 200);
   assert.equal(sliceHorizontal(data, 8, 1, 2, 0).data[0], 10);
+});
+
+test('a looping sheet crossfades its tail into the first frame', () => {
+  const px = (r) => {
+    const data = new Uint8ClampedArray(4);
+    data[0] = r;
+    data[3] = 255;
+    return { keyed: data, width: 1, height: 1 };
+  };
+  const slices = [px(0), px(100), px(200), px(255)];
+  fadeLoopFrames(slices, 3);
+  assert.equal(slices[0].keyed[0], 0);
+  assert.equal(slices[1].keyed[0], 75);
+  assert.equal(slices[2].keyed[0], 100);
+  assert.equal(slices[3].keyed[0], 64);
+  const [r, g] = tintToward(220, 160, 40, 0xff5a2a, 0.62);
+  assert.ok(r > g, `${r},${g}`);
+  assert.ok(g < 160);
+  const mega = JSON.parse(fs.readFileSync('assets/fx/lillie/mega-discharge/fx.json', 'utf8'));
+  assert.equal(mega.file, 'mega-discharge-peak-anim.png');
+  assert.equal(mega.frames, 24);
+  assert.equal(mega.blend, 'add');
+  assert.equal(mega.scale, 1.25);
+  assert.equal(mega.scaleWith, 'radius');
+  assert.equal(mega.peak, undefined);
+  const tornado = JSON.parse(fs.readFileSync('assets/fx/nitra/mini-tornado/fx.json', 'utf8'));
+  assert.equal(tornado.projectile.file, 'tornado-anim.png');
+  assert.equal(tornado.projectile.frames, 24);
+  assert.equal(tornado.projectile.loop, true);
+  assert.equal(tornado.projectile.loopFade, 3);
+  assert.equal(tornado.projectile.scaleWith, 'shot');
+  assert.equal(tornado.charge.file, 'grow.png');
+  assert.equal(fs.existsSync('assets/fx/lillie/mega-discharge/mega-discharge-peak-anim.png'), true);
+  assert.equal(fs.existsSync('assets/fx/nitra/mini-tornado/tornado-anim.png'), true);
 });
 
 test('flow sheets replace the still supernova and keep the charge scale', () => {

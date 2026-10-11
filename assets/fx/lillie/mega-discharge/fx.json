@@ -1,15 +1,15 @@
 {
+  "file": "mega-discharge-peak-anim.png",
   "blend": "add",
   "black": 16,
-  "frames": 8,
+  "frames": 24,
   "cols": 4,
-  "rows": 2,
-  "fps": 14,
-  "crop": "frame",
+  "rows": 6,
+  "fps": 15.96,
+  "loop": false,
+  "scale": 1.25,
+  "scaleWith": "radius",
   "fit": "width",
   "heightFrac": 2.0,
-  "scaleWith": "radius",
-  "peak": "peak.png",
-  "peakFrame": 4,
   "pivot": "center"
 }

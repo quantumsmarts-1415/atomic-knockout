@@ -3,12 +3,19 @@
   "black": 16,
   "hit": false,
   "impact": {
-    "file": "burst.png",
+    "file": "wp-burst-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 14.4,
+    "loop": false,
+    "blend": "screen",
+    "luma": true,
+    "black": 16,
+    "scale": 1.25,
     "fit": "height",
     "heightFrac": 1.45,
-    "crop": "frame",
-    "pivot": "center",
-    "lifeMs": 360
+    "pivot": "center"
   },
   "cling": {
     "file": "sheet.png",

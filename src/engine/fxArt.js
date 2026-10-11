@@ -90,6 +90,71 @@ export function lumaToAlpha(data, width, height, threshold) {
   return out;
 }
 
+/** Shift a pixel toward a neon color without dulling a white-hot core. */
+export function tintToward(r, g, b, color, amount) {
+  const cr = (color >> 16) & 255;
+  const cg = (color >> 8) & 255;
+  const cb = color & 255;
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const sat = max > 0 ? (max - min) / max : 0;
+  const a = Math.max(0, Math.min(1, (amount || 0) * (0.35 + 0.65 * sat)));
+  const neonLum = 0.2126 * cr + 0.7152 * cg + 0.0722 * cb || 1;
+  const k = lum / neonLum;
+  const tr = Math.min(255, cr * k);
+  const tg = Math.min(255, cg * k);
+  const tb = Math.min(255, cb * k);
+  return [
+    Math.round(r * (1 - a) + tr * a),
+    Math.round(g * (1 - a) + tg * a),
+    Math.round(b * (1 - a) + tb * a),
+  ];
+}
+
+function parseTint(value) {
+  if (typeof value === 'number' && value > 0) return value;
+  if (typeof value === 'string') {
+    const n = Number.parseInt(value.replace('#', ''), 16);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
+
+function tintPixels(data, width, height, color, amount) {
+  const n = Math.min(data.length, (width || 0) * (height || 0) * 4);
+  for (let i = 0; i < n; i += 4) {
+    if (data[i + 3] < 8) continue;
+    const [r, g, b] = tintToward(data[i], data[i + 1], data[i + 2], color, amount);
+    data[i] = r;
+    data[i + 1] = g;
+    data[i + 2] = b;
+  }
+}
+
+/** Blend the last frames toward frame 0 so a looping sheet does not hitch. */
+export function fadeLoopFrames(slices, fadeCount) {
+  const n = slices?.length || 0;
+  const fade = Math.max(0, Math.min(fadeCount | 0, n - 1));
+  if (fade < 1) return slices;
+  const first = slices[0]?.keyed;
+  if (!first) return slices;
+  for (let i = 0; i < fade; i++) {
+    const src = slices[n - fade + i];
+    if (!src?.keyed || src.keyed.length !== first.length) continue;
+    const t = (i + 1) / (fade + 1);
+    const out = new Uint8ClampedArray(src.keyed);
+    for (let p = 0; p < out.length; p += 4) {
+      out[p] = Math.round(out[p] * (1 - t) + first[p] * t);
+      out[p + 1] = Math.round(out[p + 1] * (1 - t) + first[p + 1] * t);
+      out[p + 2] = Math.round(out[p + 2] * (1 - t) + first[p + 2] * t);
+      out[p + 3] = Math.round(out[p + 3] * (1 - t) + first[p + 3] * t);
+    }
+    slices[n - fade + i] = { ...src, keyed: out };
+  }
+  return slices;
+}
+
 export function contentBounds(data, width, height) {
   const w = width || 0;
   const h = height || 0;
@@ -598,6 +663,12 @@ async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH
       blend,
     });
   }
+  if (spec?.loopFade > 0) fadeLoopFrames(slices, spec.loopFade);
+  const tint = parseTint(spec?.tint);
+  if (tint > 0) {
+    const amount = spec.tintAmount > 0 ? spec.tintAmount : 0.55;
+    for (const slice of slices) tintPixels(slice.keyed, slice.width, slice.height, tint, amount);
+  }
   const bounds = slices.map((slice) => contentBounds(slice.keyed, slice.width, slice.height));
   const fitMode = spec?.fit || null;
   const px = fitMode ? pixelsPerSource(charH, spec?.heightFrac, refSpan(bounds, spec)) : 0;
@@ -671,6 +742,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       shrinkAfter: !!merged.shrinkAfter,
       fadeMs: merged.fadeMs,
       squash: merged.squash,
+      scale: merged.scale,
       lifeMs: merged.lifeMs,
       order: merged.order,
     });
@@ -892,8 +964,12 @@ function applyFrameLook(img, frame, art, scale, box) {
     img.setDisplaySize(box.w, box.h);
   } else {
     const along = scale > 0 ? scale : 1;
-    const across = art?.stretch === 'length' ? 1 : along;
-    img.setDisplaySize(frame.displayW * along, frame.displayH * across);
+    const extra = art?.scale > 0 ? art.scale : 1;
+    if (art?.stretch === 'length') {
+      img.setDisplaySize(frame.displayW * along * extra, frame.displayH * extra);
+    } else {
+      img.setDisplaySize(frame.displayW * along, frame.displayH * along);
+    }
   }
   img.setBlendMode?.(phaserBlend(frame.blend || art?.blend));
 }
@@ -1665,9 +1741,10 @@ function syncHeld(scene, fighter) {
 function playPacked(scene, art, x, y, face = 1) {
   if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return;
   const img = placeStill(scene, art, x, y, 0);
-  applyFrameLook(img, art.frames[0], art, 1);
+  const drawn = art.scale > 0 ? art.scale : 1;
+  applyFrameLook(img, art.frames[0], art, drawn);
   applyFacing(img, face);
-  trackOneShot(scene, img, art, 1, null, face);
+  trackOneShot(scene, img, art, drawn, null, face);
 }
 
 export function spawnMoveExtra(scene, fighter, move, which, x, y, face = 1) {

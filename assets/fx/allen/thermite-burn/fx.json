@@ -1,9 +1,15 @@
 {
+  "file": "thermite-spray-anim.png",
   "blend": "add",
   "black": 16,
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 14.4,
+  "loop": false,
+  "scale": 1.25,
   "fit": "length",
   "stretch": "length",
-  "crop": "frame",
   "pivot": "left",
   "hit": false,
   "cling": {

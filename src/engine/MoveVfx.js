@@ -68,18 +68,25 @@ function gather(scene, x, y, color) {
   ring(scene, x, y, color, 36, 2);
 }
 
-function beam(scene, fighter, color, length) {
+function beam(scene, fighter, color, length, move) {
   if (!scene.add?.rectangle) return;
   const dir = fighter.facing || 1;
   const w = Math.max(40, length);
-  const rect = scene.add.rectangle(
-    fighter.x + dir * w / 2,
-    fighter.y - (fighter.bodyH ?? 80) * 0.62,
-    w, 14, color, 0.85,
-  );
+  const y = fighter.y - (fighter.bodyH ?? 80) * 0.62;
+  const x = fighter.x + dir * w / 2;
+  if (move?.tubeCharge) {
+    const frac = move._chargeFrac ?? 0;
+    const halo = scene.add.rectangle(x, y, w, 18 + frac * 10, color, 0.22 + frac * 0.28);
+    halo.setBlendMode?.('ADD');
+    die(scene, halo, 240);
+    const core = scene.add.rectangle(x, y, w, 4, 0xfff6e8, 0.65 + frac * 0.3);
+    core.setBlendMode?.('ADD');
+    die(scene, core, 200);
+  }
+  const rect = scene.add.rectangle(x, y, w, 14, color, 0.85);
   rect.setBlendMode?.('ADD');
   die(scene, rect, 220);
-  burst(scene, fighter.x + dir * w, fighter.y - (fighter.bodyH ?? 80) * 0.62, color, 6, 40);
+  burst(scene, fighter.x + dir * w, y, 0xfff6e8, 6, 40);
 }
 
 function column(scene, x, y, color, h = 110) {
@@ -147,6 +154,23 @@ export function syncChargeGlow(scene) {
     }
     const max = move.maxChargeMs || 1;
     const frac = Math.max(0, Math.min(1, ((scene.simNow ?? 0) - fighter.chargeStart) / max));
+    if (move.tubeCharge && !artFor(fighter.charDef?.id, move.name)?.frames?.length) {
+      const len = (move.beamLen ?? 150) * (1 + ((move.chargeLengthMult ?? 1) - 1) * frac);
+      const dir = fighter.facing || 1;
+      const bodyH = fighter.bodyH ?? 80;
+      const y = fighter.y - bodyH * 0.62;
+      const x0 = fighter.x + dir * (fighter.bodyW ?? 40) * 0.35;
+      glow.clear();
+      glow.lineStyle(16, 0xff5a2a, 0.16 + frac * 0.3);
+      glow.lineBetween(x0, y, x0 + dir * len, y);
+      glow.lineStyle(5, 0xfff6e8, 0.35 + frac * 0.6);
+      glow.lineBetween(x0, y, x0 + dir * len, y);
+      glow.fillStyle(0xff5a2a, 0.08 + frac * 0.28);
+      glow.fillCircle(fighter.x, fighter.y - bodyH * 0.5, 14 + frac * 20);
+      glow.fillStyle(0xfff6e8, 0.2 + frac * 0.5);
+      glow.fillCircle(fighter.x, fighter.y - bodyH * 0.55, 7 + frac * 7);
+      continue;
+    }
     const painted = artFor(fighter.charDef?.id, move.name);
     const minR = painted?.reach > 0 ? painted.reach : (move.radius ?? 48);
     const reach = minR * (1 + ((move.chargeRadiusMult ?? 1) - 1) * frac);
@@ -221,6 +245,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       column(scene, fighter.x + dir * ((fighter.bodyW ?? 40) / 2 + 16), fighter.y, color, 120);
       return;
     }
+    if (style === 'sign') return;
     if (style === 'bubble' || style === 'shield') {
       if (move?.powersCharge || move?.chargeMs || move?.lingerImmune) return;
       shieldBubble(scene, fighter, color);
@@ -254,8 +279,55 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       break;
     case 'laser':
     case 'beam':
-      beam(scene, fighter, color, (move.beamLen ?? 180) * (move._beamScale ?? 1));
+      beam(scene, fighter, color, (move.beamLen ?? 180) * (move._beamScale ?? 1), move);
       break;
+    case 'staff': {
+      const tip = meleeContactPoint(fighter, move);
+      const dir = fighter.facing || 1;
+      const x0 = fighter.x + dir * (fighter.bodyW ?? 40) * 0.15;
+      const y0 = fighter.y - (fighter.bodyH ?? 80) * 0.42;
+      const dx = tip.x - x0;
+      const dy = tip.y - y0;
+      const len = Math.max(24, Math.hypot(dx, dy));
+      const midX = (x0 + tip.x) / 2;
+      const midY = (y0 + tip.y) / 2;
+      const rot = Math.atan2(dy, dx);
+      const tube = scene.add.rectangle?.(midX, midY, len, 8, color, 0.9);
+      const core = scene.add.rectangle?.(midX, midY, len * 0.92, 3, 0xfff6e8, 0.95);
+      for (const piece of [tube, core]) {
+        if (!piece) continue;
+        piece.rotation = rot;
+        piece.setBlendMode?.('ADD');
+        die(scene, piece, 180);
+      }
+      burst(scene, tip.x, tip.y, 0xfff6e8, 8, 34);
+      break;
+    }
+    case 'flash': {
+      const r = Math.max(36, move.radius ?? 100);
+      const disc = scene.add.circle?.(x, y, r, color, 0.32);
+      if (disc) {
+        disc.setBlendMode?.('ADD');
+        die(scene, disc, 240);
+      }
+      const core = scene.add.circle?.(x, y, r * 0.28, 0xfff6e8, 0.88);
+      if (core) {
+        core.setBlendMode?.('ADD');
+        die(scene, core, 160);
+      }
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2;
+        const ray = scene.add.rectangle?.(
+          x + Math.cos(a) * r * 0.42, y + Math.sin(a) * r * 0.42, r * 0.5, 4, color, 0.75,
+        );
+        if (!ray) continue;
+        ray.rotation = a;
+        ray.setBlendMode?.('ADD');
+        die(scene, ray, 200);
+      }
+      ring(scene, x, y, 0xfff6e8, r, 4);
+      break;
+    }
     case 'dash':
     case 'fire':
       burst(scene, x, y, color, 12, 110);

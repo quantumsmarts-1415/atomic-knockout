@@ -42,7 +42,7 @@ These are the lowest scores, and among the placeholders the largest on screen. T
 | 1 | Fermi | Fermi Paradox | area or burst | 920×920 | 1 |
 | 2 | Lillie | Water Reaction | area or burst | 220×220 | 1 |
 | 3 | Oxana | Oxidation Burst | area or burst | 216×216 | 1 |
-| 4 | Neo | Neon Flare | area or burst | 204×204 | 1 |
+| 4 | Neo | Neon Flash | area or burst | 204×204 | 1 |
 | 5 | Allen | Turbine Vortex | area or burst | 200×200 | 1 |
 | 6 | Nitra | Cryo Vortex | area or burst | 192×192 | 1 |
 | 7 | Sully | Volcanic Eruption | area or burst | 192×192 | 1 |
@@ -117,7 +117,7 @@ These are the lowest scores, and among the placeholders the largest on screen. T
 | Neo | High-Voltage Tube | beam | code-drawn shape: flat rectangle | 150×22 | aimed with facing, no spin | appears for about 220 ms and fades | 1 |
 | Neo | Staff Crack | slash arc | code-drawn shape: thick slash stroke | 94×48 | the stroke sweeps from about -60° to +26° | the idle body during the swing; the stroke grows across the active frames | 2 |
 | Neo | No Vacancy | shield | code-drawn shape: translucent circle | 72×72 | no rotation | fades over about 500 ms | 1 |
-| Neo | Neon Flare | area or burst | procedural particles: tinted star and streaks | 204×204 | streaks fly outward, no spin on the core | fades over about 160–320 ms | 1 |
+| Neo | Neon Flash | area or burst | procedural particles: tinted star and streaks | 204×204 | streaks fly outward, no spin on the core | fades over about 160–320 ms | 1 |
 | Natalie | Lake Drop | area or burst | procedural particles: tinted star and streaks | 120×120 | streaks fly outward, no spin on the core | fades over about 160–320 ms | 1 |
 | Natalie | Flame Fist | slash arc | code-drawn shape: thick slash stroke | 72×48 | the stroke sweeps from about -60° to +26° | the idle body during the swing; the stroke grows across the active frames | 2 |
 | Natalie | Oil Bath | shield | code-drawn shape: translucent circle | 70×70 | no rotation | fades over about 500 ms | 1 |
@@ -727,9 +727,9 @@ assets/fx/neo/staff-crack/object.png. Transparent PNG at full resolution, pointi
 
 assets/fx/neo/no-vacancy/object.png. Transparent PNG at full resolution, pointing right, fitted inside 72×72 px, pivot at the center (0.50, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
 
-### Neo — Neon Flare
+### Neo — Neon Flash
 
-assets/fx/neo/neon-flare/object.png. Transparent PNG at full resolution, pointing right, fitted inside 204×204 px, pivot at the center (0.50, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
+assets/fx/neo/neon-flash/object.png. Transparent PNG at full resolution, pointing right, fitted inside 204×204 px, pivot at the center (0.50, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
 
 ### Natalie — Lake Drop
 

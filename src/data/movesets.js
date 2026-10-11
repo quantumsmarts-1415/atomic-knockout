@@ -262,20 +262,26 @@ export const MOVESETS = {
     basicCharge: m('High-Voltage Tube', {
       kind: 'beam', type: E, damage: 8, chargeDamageMult: 1.8,
       chargeLengthMult: 2.5, maxChargeMs: 850, beamLen: 150, beamThick: 22,
-      vfx: 'laser', vfxColor: 0xff5a2a, baseKnockback: 170,
-      duration: 220, cooldown: 700,
+      tubeCharge: true, vfx: 'laser', vfxColor: 0xff5a2a, baseKnockback: 170,
+      // Startup 4. Endlag 12. Same-button lock ~36 frames (was ~55).
+      startupF: 4, endlagF: 12, duration: 240, cooldown: 360,
     }),
     basicDirectional: melee('Staff Crack', {
-      type: K, damage: 5, type2: E, damage2: 4, vfx: 'spark',
-      rangeW: 94, duration: 210, cooldown: 340,
+      type: K, damage: 5, type2: E, damage2: 4, vfx: 'staff', vfxColor: 0xff5a2a,
+      rangeW: 94, baseKnockback: 180,
+      // Startup 3. Endlag 10. Same-button lock ~22 frames (was ~33).
+      startupF: 3, endlagF: 10, duration: 200, cooldown: 160,
     }),
     specialDefense: m('No Vacancy', {
-      blocks: [K, H, E, C, R], frontOnly: true, openAfter: true, vulnerableMs: 650,
-      duration: 900, cooldown: 400, vfx: 'shield', vfxColor: 0xff5a2a,
+      blocks: [K, H, E, C, R], frontOnly: true, backOpen: true,
+      openAfter: true, vulnerableMs: 560, vacancySign: true, vacancyAt: 540,
+      duration: 900, cooldown: 220, vfx: 'sign', vfxColor: 0xff5a2a,
     }),
-    specialDirectional: m('Neon Flare', {
-      kind: 'burst', type: E, damage: 11, radius: 102, vfx: 'spark', vfxColor: 0xff5a2a,
-      onHit: { blind: 800 }, baseKnockback: 170, duration: 260, cooldown: 820,
+    specialDirectional: m('Neon Flash', {
+      kind: 'burst', type: E, damage: 11, radius: 102, vfx: 'flash', vfxColor: 0xff5a2a,
+      onHit: { dazzle: 800 }, baseKnockback: 170,
+      // Startup 5. Endlag 12. Same-button lock ~39 frames (was ~65).
+      startupF: 5, endlagF: 12, duration: 250, cooldown: 400,
     }),
   },
 

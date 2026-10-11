@@ -313,7 +313,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
     // timed states expire
     if ((this.state === 'attack' || this.state === 'hurt' || this.state === 'defending') && time >= this.stateUntil) {
       if (this.state === 'defending' && this.defenseMove?.openAfter) {
-        this.vulnerableUntil = time + (this.defenseMove.vulnerableMs ?? 650);
+        const openMs = this.defenseMove.vulnerableMs ?? 650;
+        this.vulnerableUntil = time + openMs;
+        this.lockedUntil = Math.max(this.lockedUntil || 0, time + openMs);
       }
       if (this.state === 'defending') {
         this.lingerHardening(time);
@@ -343,6 +345,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
     const inp = this.input;
     if (this.driftUntil > time && Math.floor(time / 180) % 2 === 0) {
+      const left = inp.left;
+      inp.left = inp.right;
+      inp.right = left;
+    }
+    if (this.dazzleUntil > time) {
       const left = inp.left;
       inp.left = inp.right;
       inp.right = left;

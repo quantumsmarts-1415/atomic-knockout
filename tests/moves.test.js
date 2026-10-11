@@ -3,6 +3,7 @@ import { frameData, STEP_MS } from '../src/engine/feel.js';
 import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
+import { interceptHit } from '../src/engine/defense.js';
 
 const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
 const TYPES = new Set(['kinetic', 'heat', 'electrical', 'chemical', 'radiation', 'physical']);
@@ -115,6 +116,38 @@ test('bots cycle a neutral charge and a neutral defense without walking', () => 
   assert.strictEqual(defense.special, true);
   assert.strictEqual(defense.attack, false);
   assert.strictEqual(!!(defense.left || defense.right), false);
+});
+
+test('neo uses the approved neon kit', () => {
+  const moves = CHARACTERS.neo.moves;
+  assert.strictEqual(moves.basicCharge.name, 'High-Voltage Tube');
+  assert.strictEqual(moves.basicCharge.kind, 'beam');
+  assert.strictEqual(moves.basicCharge.chargeLengthMult, 2.5);
+  assert.strictEqual(moves.basicCharge.tubeCharge, true);
+  assert.strictEqual(moves.basicDirectional.name, 'Staff Crack');
+  assert.strictEqual(moves.basicDirectional.type, 'kinetic');
+  assert.strictEqual(moves.basicDirectional.type2, 'electrical');
+  const sign = moves.specialDefense;
+  assert.strictEqual(sign.name, 'No Vacancy');
+  assert.deepStrictEqual(sign.blocks, ['kinetic', 'heat', 'electrical', 'chemical', 'radiation']);
+  assert.strictEqual(sign.frontOnly, true);
+  assert.strictEqual(sign.backOpen, true);
+  assert.strictEqual(sign.openAfter, true);
+  assert.strictEqual(sign.vacancySign, true);
+  assert.ok(sign.vacancyAt < sign.duration);
+  const neo = { state: 'defending', defenseMove: sign, facing: 1, x: 100, y: 500, bodyH: 116 };
+  assert.strictEqual(interceptHit(neo, { x: 220, y: 500 }, { type: 'radiation', damage: 8 }, 0).result, 'negate');
+  assert.strictEqual(interceptHit(neo, { x: 20, y: 500 }, { type: 'kinetic', damage: 8 }, 0).result, 'pass');
+  const flash = moves.specialDirectional;
+  assert.strictEqual(flash.name, 'Neon Flash');
+  assert.strictEqual(flash.type, 'electrical');
+  assert.strictEqual(flash.onHit.dazzle, 800);
+  const tube = frameData(moves.basicCharge.duration, moves.basicCharge.cooldown, moves.basicCharge);
+  assert.strictEqual(tube.recovery, 12);
+  assert.ok(tube.total < 45, 'tube wait is shortened');
+  for (const c of Object.values(CHARACTERS)) {
+    for (const slot of SLOTS) assert.notStrictEqual(c.moves[slot].name, 'Neon Flare');
+  }
 });
 
 test('pilot fighters use the element doc kits', () => {

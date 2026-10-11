@@ -1296,7 +1296,7 @@ export const CHARACTERS = {
         cooldown: 130,
       },
       specialDirectional: {
-        name: 'Neon Flare',
+        name: 'Neon Flash',
         kind: 'burst',
         type: 'electrical',
         damage: 12,

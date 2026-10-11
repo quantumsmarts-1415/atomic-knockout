@@ -147,7 +147,7 @@ Her move names and numbers stay as they are in game. She still has no attack she
 | High-Voltage Tube | Charge | 8 | 511×705 | Grips a tube in both hands. It flares from a short orange line into a long beam. |
 | Staff Crack | Normal | 8 | 511×705 | A staff crack across the body, one sharp hit, electrical snap at the tip. |
 | No Vacancy | Defense | 8, loop | 511×705 | Holds a lit "no vacancy" guard, one arm barring the front. The last frames should read as the sign going dark when the guard ends. |
-| Neon Flare | Special | 8 | 511×705 | Throws both hands up. A blinding orange flare fills the space around him. |
+| Neon Flash | Special | 8 | 511×705 | Throws both hands up. A blinding orange flare fills the space around him. |
 
 ## Natalie (Sodium) — idle 496×699
 

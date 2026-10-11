@@ -3,6 +3,7 @@
 // fighter instead of playing once.
 
 import { artFor, fxNamed } from './fxArt.js';
+import { FONT_DISPLAY } from '../ui/theme.js';
 
 function orbitSpec(fighter) {
   const move = fighter.charDef?.moves?.basicCharge;
@@ -64,6 +65,64 @@ export function syncMoveFx(scene) {
     drawOzone(g, fighter, time);
     drawLance(g, fighter, time);
     drawFreeze(g, fighter, time);
+    drawDazzle(g, fighter, time);
+    drawVacancy(scene, g, fighter, time);
+  }
+}
+
+const vacancyLabels = new WeakMap();
+
+function drawVacancy(scene, g, fighter, time) {
+  const move = fighter.state === 'defending' ? fighter.defenseMove : null;
+  let label = vacancyLabels.get(fighter);
+  if (!move?.vacancySign) {
+    label?.destroy?.();
+    if (label) vacancyLabels.delete(fighter);
+    return;
+  }
+  const held = time - (fighter.defenseStart ?? time);
+  const warn = move.vacancyAt ?? (move.duration ?? 900) * 0.62;
+  const flicker = held >= warn;
+  const dim = flicker && Math.floor(time / 70) % 2 === 0;
+  const face = fighter.facing || 1;
+  const x = fighter.x + face * ((fighter.bodyW ?? 40) * 0.95);
+  const y = fighter.y - (fighter.bodyH ?? 80) * 0.62;
+  if (!artFor(fighter.charDef?.id, move.name)?.frames?.length) {
+    const w = 108;
+    const h = 40;
+    const alpha = dim ? 0.28 : 0.95;
+    g.lineStyle(4, 0xff5a2a, alpha);
+    g.strokeRect(x - w / 2, y - h / 2, w, h);
+    g.lineStyle(2, 0xfff6e8, alpha * 0.85);
+    g.strokeRect(x - w / 2 + 5, y - h / 2 + 5, w - 10, h - 10);
+  }
+  if (!label?.scene) {
+    label?.destroy?.();
+    label = scene.add.text(x, y, '', {
+      fontFamily: FONT_DISPLAY,
+      fontSize: '13px',
+      color: '#fff6e8',
+    }).setOrigin(0.5, 0.5).setDepth(19);
+    vacancyLabels.set(fighter, label);
+  }
+  label.setPosition(x, y);
+  label.setText(flicker ? 'VACANCY' : 'NO VACANCY');
+  label.setAlpha(dim ? 0.35 : 1);
+  label.setColor(flicker ? '#ffb4a2' : '#fff6e8');
+}
+
+function drawDazzle(g, fighter, time) {
+  if (!(fighter.dazzleUntil > time)) return;
+  const y = fighter.y - (fighter.bodyH ?? 80) * 0.88;
+  const spin = time / 160;
+  for (let i = 0; i < 5; i++) {
+    const a = spin + (i / 5) * Math.PI * 2;
+    const x = fighter.x + Math.cos(a) * 26;
+    const yy = y + Math.sin(a) * 9;
+    g.fillStyle(0xfff6e8, 0.95);
+    g.fillCircle(x, yy, 3.2);
+    g.fillStyle(0xff5a2a, 0.9);
+    g.fillCircle(x, yy, 1.4);
   }
 }
 

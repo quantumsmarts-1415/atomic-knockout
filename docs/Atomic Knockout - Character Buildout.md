@@ -991,10 +991,10 @@ Noble Gas:
 	Boiling Point: 27.10 K
 	Electrical conductivity: N/A (gas; ≈0, insulator)
 	Electronegativity: none
-	Charge Move: "High-Voltage Tube" Neo pushes more and more voltage through his neon tubes while charging, glowing brighter, then fires a red-orange beam of light that deals electrical damage. The longer he charges, the longer the beam. (draft)
-	Normal Move: "Staff Crack" Neo cracks a glowing neon-tube staff into the target, dealing kinetic and electrical damage. (draft) [currently in the game: electrical close-range hit]
-	Defense Move: "No Vacancy" Neo flashes a NO VACANCY sign that blocks every attack from the front. If he holds it too long, it flickers to VACANCY and leaves him wide open for a moment. (draft)
-	Special Move: "Neon Flare" Neo flares like a sign switching on, bursting red-orange light around him that deals electrical damage and dazzles nearby fighters. (draft) [currently in the game: electrical area burst around them]
+	Charge Move: "High-Voltage Tube" Neo pushes more and more voltage through his neon tubes while charging, glowing brighter, then fires a red-orange beam of light that deals electrical damage. The longer he charges, the longer the beam.
+	Normal Move: "Staff Crack" Neo cracks a glowing neon-tube staff into the target, dealing kinetic and electrical damage.
+	Defense Move: "No Vacancy" Neo flashes a NO VACANCY sign that blocks every attack from the front. If he holds it too long, it flickers to VACANCY and leaves him wide open for a moment.
+	Special Move: "Neon Flash" Neo flares like a sign switching on, bursting red-orange light around him that deals electrical damage and dazzles nearby fighters.
 -Argon
 	Name: Aaron
 	Natural State: Gas

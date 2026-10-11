@@ -21,6 +21,11 @@ export function applyOnHit(attacker, victim, move, time) {
   }
   if (fx.root) victim.rootedUntil = Math.max(victim.rootedUntil ?? 0, time + fx.root);
   if (fx.blind) victim.blindUntil = time + fx.blind;
+  if (fx.dazzle) {
+    const ms = typeof fx.dazzle === 'number' ? fx.dazzle : (fx.blind ?? 800);
+    victim.dazzleUntil = time + ms;
+    victim.blindUntil = Math.max(victim.blindUntil ?? 0, victim.dazzleUntil);
+  }
   if (fx.miss) victim.missNext = (victim.missNext ?? 0) + (fx.miss === true ? 1 : fx.miss);
   if (fx.reveal) victim.phasingUntil = 0;
   if (fx.chemVulnerable) {
@@ -82,7 +87,10 @@ export function cleanse(fighter, kinds) {
   const list = kinds ?? [];
   if (list.includes('poison')) fighter.poisonUntil = 0;
   if (list.includes('burn')) fighter.burnUntil = 0;
-  if (list.includes('blind')) fighter.blindUntil = 0;
+  if (list.includes('blind')) {
+    fighter.blindUntil = 0;
+    fighter.dazzleUntil = 0;
+  }
   if (list.includes('slow')) fighter.slowUntil = 0;
   if (list.includes('mark')) fighter.markUntil = 0;
   if (list.includes('debuff')) stripBuffs(fighter);

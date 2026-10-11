@@ -59,7 +59,7 @@ Before is the curve-pass rate (shorter global knockback, owner blasts at 75% dam
 - **Flora** 50.7% → 47.8%. No move edit.
 - **Van** 75.4% → 46.4%. Alloy Fist recovery 230/350 → 270/800. Prism Surge radius 90 → 82, cooldown 800 → 1100. Damage stays 9 and 12. Redox Flow is unchanged.
 - **Carter** 62.3% → 44.9%. Diamond Cross reach 76 → 70, recovery 220/340 → 250/660. Graphene Wave radius 92 → 82, cooldown 820 → 980. Diamond damage stays 9.
-- **Neo** 37.7% → 44.9%. Staff Crack reach 84 → 94, cooldown 320 → 280. Neon Flare radius 90 → 102. Damage stays 5+5 and 11.
+- **Neo** 37.7% → 44.9%. Staff Crack reach 84 → 94, cooldown 320 → 280. Neon Flash radius 90 → 102. Damage stays 5+5 and 11.
 - **Scarlett** 11.6% → 44.9%. Aerial Dive was a 780 launch at run speed, and air control kept that speed after the hop, so she left the island. It is now a 460 hop at speed 160, the horizontal speed stops at the lip of the deck (and hops back if she is already past it), and the bot will not aim the dive off the open side. The landing burst radius is 88. Wing Slash cooldown 340 → 290. Damage stays 11 and 8.
 - **Aaron** 39.1% → 43.5%. No move edit.
 - **Helen** 29.0% → 43.5%. Balloon Bop stays her charge. The bubble is slower and larger (speed 240, radius 28, life 1800, damage 10) so it hangs in front of her. Noble Gust reach 64 → 82, damage 5 → 7. Air Wave speed 360, radius 36, life 1100, damage 10. Still all kinetic. Helium has no Mohs bonus, so the hits had to actually connect.

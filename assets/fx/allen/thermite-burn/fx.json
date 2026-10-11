@@ -1,0 +1,21 @@
+{
+  "blend": "add",
+  "black": 16,
+  "fit": "length",
+  "stretch": "length",
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false,
+  "cling": {
+    "file": "sheet.png",
+    "frames": 4,
+    "fps": 10,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.42,
+    "crop": "frame",
+    "pivot": "center"
+  }
+}

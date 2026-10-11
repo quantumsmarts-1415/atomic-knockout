@@ -1,7 +1,7 @@
 // Code-driven move effects. Body clips stay on idle/walk unless a real
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
-import { artFor, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, wantsContactSpark } from './fxArt.js';
+import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, wantsContactSpark } from './fxArt.js';
 import { coatSpec } from './coat.js';
 
 export const TYPE_COLORS = {
@@ -199,6 +199,11 @@ export function syncChargeGlow(scene) {
       continue;
     }
     if (move.overclock) {
+      const painted = artFor(fighter.charDef?.id, move.name);
+      if (painted?.frames?.length) {
+        glow.clear();
+        continue;
+      }
       const bodyH = fighter.bodyH ?? 80;
       const bodyW = fighter.bodyW ?? 40;
       const y = fighter.y - bodyH * 0.5;
@@ -341,7 +346,12 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       const x = anchor?.x ?? extra.x ?? fighter.x;
       const y = anchor?.y ?? extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
       const scale = anchor?.scale ?? fxGameplayScale(move, art);
-      if (drawFxOneShot(scene, fighter, move, x, y, scale)) return;
+      if (drawFxOneShot(scene, fighter, move, x, y, scale)) {
+        if (move.vfx === 'binary') {
+          drawBinaryDigit(scene, fighter, x, y, move._retried ? '0' : '1');
+        }
+        return;
+      }
     }
     if (art?.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) return;
   }
@@ -389,6 +399,16 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     return;
   }
   if (phase === 'shatter') {
+    const burst = breakFrames(artFor(fighter.charDef?.id, move?.name));
+    if (burst) {
+      spawnFxSprite(scene, burst, x, y, 1);
+      if (extra.both) {
+        const ox = extra.otherX ?? x + (fighter.facing || 1) * 48;
+        const oy = extra.otherY ?? y;
+        spawnFxSprite(scene, burst, ox, oy, 1);
+      }
+      return;
+    }
     sprayShards(scene, x, y);
     if (extra.both) {
       const dir = fighter.facing || 1;

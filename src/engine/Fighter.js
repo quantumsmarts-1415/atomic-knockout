@@ -1213,6 +1213,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
           this._coatFlaked = true;
           this._coatShed = { color: shed.color, until: time + 520 };
           this._coatShedPlayed = false;
+          playVfx(this.scene, this, this.defenseMove, 'shatter', {
+            x: this.x,
+            y: this.y - (this.bodyH ?? 80) * 0.5,
+          });
         }
         this.state = 'idle';
         this.defenseMove = null;
@@ -1264,6 +1268,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
           x: this.x,
           y: this.y - (this.bodyH ?? 80) * 0.5,
           both: true,
+          otherX: attacker?.x,
+          otherY: attacker ? attacker.y - (attacker.bodyH ?? 80) * 0.5 : undefined,
         });
       }
       if (gate.selfHit && attacker && attacker !== this) {

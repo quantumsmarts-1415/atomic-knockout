@@ -1,0 +1,15 @@
+{
+  "blend": "normal",
+  "black": 16,
+  "frames": 4,
+  "fps": 10,
+  "crop": "frame",
+  "fit": "height",
+  "heightFrac": 1.28,
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false,
+  "overCoat": true,
+  "holdAt": 1,
+  "breakFrom": 2
+}

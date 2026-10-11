@@ -1,0 +1,19 @@
+{
+  "blend": "normal",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.36,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "contact",
+  "hit": false,
+  "shatter": {
+    "file": "shatter.png",
+    "blend": "normal",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.72,
+    "crop": "frame",
+    "pivot": "center"
+  }
+}

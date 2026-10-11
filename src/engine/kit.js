@@ -74,6 +74,8 @@ export function applyOnHit(attacker, victim, move, time) {
       victim.burnEvery = fx.burn.every ?? 280;
       victim.burnTick = time + victim.burnEvery;
       victim.burnSticky = sticky;
+      victim.burnOwnerId = attacker?.charDef?.id ?? null;
+      victim.burnMove = move.name;
     }
   }
   if (fx.corrode) {

@@ -384,6 +384,10 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     guardAt: extra.guardAt > 0 ? extra.guardAt | 0 : 0,
     spriteAura: !!extra.spriteAura,
     squash: extra.squash > 0 ? extra.squash : 0,
+    holdAt: typeof extra.holdAt === 'number' ? extra.holdAt | 0 : -1,
+    breakFrom: typeof extra.breakFrom === 'number' ? extra.breakFrom | 0 : -1,
+    overCoat: !!extra.overCoat,
+    heatAt: typeof extra.heatAt === 'number' ? extra.heatAt | 0 : -1,
   };
 }
 
@@ -628,6 +632,7 @@ async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH
 const SIDE_SPECS = [
   ['orbit', 'orbit-'], ['burst', 'burst-'], ['splash', 'splash-'], ['impact', 'impact-'], ['charge', 'charge-'],
   ['ignite', 'ignite-'], ['stars', 'stars-'], ['texture', 'texture-'],
+  ['cling', 'cling-'], ['shatter', 'shatter-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -740,6 +745,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
         ...look, reach: loaded.reach, peak, peakFrame: meta.peakFrame ?? -1, beam: null,
         holdLast: !!meta.holdLast, flip: !!meta.flip, bothSides: !!meta.bothSides, releaseFlash: !!meta.releaseFlash, comboFrames: !!meta.comboFrames, crackFrames: !!meta.crackFrames,
         order: meta.order, fadeAfter: !!meta.fadeAfter, fadeMs: meta.fadeMs, paceCharge: !!meta.paceCharge,
+        holdAt: meta.holdAt, breakFrom: meta.breakFrom, overCoat: meta.overCoat, heatAt: meta.heatAt,
       });
       await attachSides(scene, id, slug, folder, meta, index, charH, sized, record);
       return record;
@@ -862,8 +868,51 @@ function applyFrameLook(img, frame, art, scale) {
 }
 
 /** Source-frame order for a sheet whose cells are not played left to right. */
-export function sheetPlayOrder(folder) {
-  if (folder === 'allen/thermite-burn') return [0, 3, 1, 2];
+export function sheetPlayOrder() {
+  return null;
+}
+
+/** Frame while a shell is held. holdAt keeps the form from playing into the break. */
+export function shellFrame(art, elapsed) {
+  const n = art?.frames?.length || 1;
+  const cap = typeof art?.holdAt === 'number' && art.holdAt >= 0 ? art.holdAt : n - 1;
+  const fps = art?.fps > 0 ? art.fps : 8;
+  const i = Math.floor(Math.max(0, elapsed || 0) / (1000 / fps));
+  return Math.max(0, Math.min(cap, i, n - 1));
+}
+
+/** Cyan frames while Overclock is building, red-orange frames once he overheats. */
+export function auraFrame(frameCount, heatAt, hot, frac, now, fps = 12) {
+  const n = Math.max(1, frameCount | 0);
+  const hotAt = heatAt >= 0 ? Math.min(n - 1, heatAt | 0) : Math.max(0, n - 2);
+  if (hot) {
+    const hotN = Math.max(1, n - hotAt);
+    return hotAt + (Math.floor(Math.max(0, now || 0) / 90) % hotN);
+  }
+  if (typeof frac === 'number') {
+    return Math.max(0, Math.min(Math.max(0, hotAt - 1), Math.floor(Math.max(0, frac) * Math.max(1, hotAt))));
+  }
+  const cool = Math.max(1, hotAt);
+  const rate = fps > 0 ? fps : 8;
+  return Math.floor(Math.max(0, now || 0) / (1000 / rate)) % cool;
+}
+
+/** Shatter burst, or the tail of a sheet kept for the break. */
+export function breakFrames(art) {
+  if (!art) return null;
+  if (art.shatter?.frames?.length) return art.shatter;
+  const from = art.breakFrom;
+  if (typeof from === 'number' && from >= 0 && art.frames?.length > from) {
+    return {
+      frames: art.frames.slice(from),
+      fps: Math.min(art.fps > 0 ? art.fps : 8, 10),
+      blend: art.blend,
+      pivotX: 0.5,
+      pivotY: 0.5,
+      loop: false,
+      objectType: 'area or burst',
+    };
+  }
   return null;
 }
 
@@ -1185,12 +1234,14 @@ function cropTrailHead(img, frac) {
 
 function attachedWant(scene, fighter) {
   const now = scene.simNow ?? 0;
-  if (fighter.state === 'defending' && fighter.defenseMove && !coatSpec(fighter.defenseMove)) {
+  if (fighter.state === 'defending' && fighter.defenseMove) {
+    const coated = coatSpec(fighter.defenseMove);
     const art = artFor(fighter.charDef?.id, fighter.defenseMove.name);
-    if (art?.anchor === 'ground-front' && art.frames?.length) {
+    const shell = art && (!coated || art.overCoat);
+    if (shell && art.anchor === 'ground-front' && art.frames?.length) {
       return { art, kind: 'wall', elapsed: now - (fighter.defenseStart ?? now) };
     }
-    if ((art?.anchor === 'body' || art?.anchor === 'front') && art.frames?.length) {
+    if (shell && (art.anchor === 'body' || art.anchor === 'front') && art.frames?.length) {
       return { art, kind: art.anchor, elapsed: now - (fighter.defenseStart ?? now) };
     }
   }
@@ -1232,12 +1283,12 @@ function syncAttached(scene, fighter) {
       fighter.rig?.setDepth?.(5);
       live.img.setDepth(4);
     } else {
-      live.img.setDepth(10);
+      live.img.setDepth(want.kind === 'front' ? 12 : 10);
     }
     liveAttached.set(fighter, live);
   }
   const art = want.art;
-  let index = fxFrameIndex(art, want.elapsed);
+  let index = art.holdAt >= 0 ? shellFrame(art, want.elapsed) : fxFrameIndex(art, want.elapsed);
   if (art.sign) {
     const warn = fighter.defenseMove?.vacancyAt ?? 540;
     index = vacancySignFrame(art.frames.length, want.elapsed, scene.simNow ?? 0, warn);
@@ -1342,10 +1393,40 @@ function syncFreeze(scene, fighter) {
   live.img.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.5);
 }
 
+const liveCling = new WeakMap();
+
+function dropCling(fighter) {
+  const live = liveCling.get(fighter);
+  live?.img?.destroy?.();
+  if (live) liveCling.delete(fighter);
+}
+
+/** Thermite cling follows the target for as long as that burn is lit. */
+function syncCling(scene, fighter) {
+  const now = scene.simNow ?? 0;
+  const burning = !fighter.burnSticky && fighter.burnUntil > now && fighter.burnMove;
+  const art = burning ? artFor(fighter.burnOwnerId, fighter.burnMove)?.cling : null;
+  if (!art?.frames?.length) {
+    dropCling(fighter);
+    return;
+  }
+  let live = liveCling.get(fighter);
+  if (!live?.img?.scene) {
+    dropCling(fighter);
+    live = { img: placeStill(scene, art, fighter.x, fighter.y, 0), born: now };
+    live.img.setDepth(15);
+    liveCling.set(fighter, live);
+  }
+  const frame = art.frames[fxFrameIndex(art, now - live.born)] || art.frames[0];
+  applyFrameLook(live.img, frame, art, 1);
+  live.img.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.42);
+}
+
 export function syncFxActors(scene) {
   if (!scene?.fighters) return;
   stepOneShots(scene);
   for (const fighter of scene.fighters) {
+    syncCling(scene, fighter);
     syncAttached(scene, fighter);
     syncHeld(scene, fighter);
     syncFreeze(scene, fighter);
@@ -1446,6 +1527,10 @@ function syncHeld(scene, fighter) {
     want = { art, kind: 'feet' };
   } else if (art?.charge?.frames?.length && fighter.state === 'charging') {
     want = { art: art.charge, kind: art.charge.anchor === 'feet' ? 'feet' : 'grow' };
+  } else if (art?.anchor === 'aura' && art.frames?.length && charge?.overclock) {
+    const charging = fighter.state === 'charging';
+    const buffed = (fighter.attackHasteUntil ?? 0) > now;
+    if (charging || buffed) want = { art, kind: 'aura', charging };
   }
   let live = liveHeld.get(fighter);
   if (!want) {
@@ -1455,7 +1540,7 @@ function syncHeld(scene, fighter) {
   if (!live?.img?.scene || live.kind !== want.kind) {
     dropHeld(fighter);
     live = { img: placeStill(scene, want.art, fighter.x, fighter.y, 0), kind: want.kind };
-    live.img.setDepth(want.kind === 'feet' ? 3 : want.kind === 'grow' ? 11 : want.kind === 'orbit' ? 8 : 12);
+    live.img.setDepth(want.kind === 'feet' ? 3 : want.kind === 'grow' ? 11 : want.kind === 'orbit' ? 8 : want.kind === 'aura' ? 9 : 12);
     liveHeld.set(fighter, live);
   }
   const face = fighter.facing || 1;
@@ -1466,6 +1551,20 @@ function syncHeld(scene, fighter) {
     applyFrameLook(live.img, frame, want.art, 1);
     live.img.setOrigin(0.5, 0.5);
     live.img.setPosition(fighter.x, fighter.y - bodyH * 0.45);
+    return;
+  }
+  if (want.kind === 'aura') {
+    const frames = want.art.frames;
+    const max = charge.maxChargeMs || 1;
+    const frac = want.charging
+      ? Math.min(1, Math.max(0, (now - (fighter.chargeStart ?? now)) / max))
+      : null;
+    const hot = (fighter._overheatUntil ?? 0) > now || (want.charging && (frac ?? 0) >= 0.82);
+    const index = auraFrame(frames.length, want.art.heatAt, hot, frac, now, want.art.fps);
+    const frame = frames[index] || frames[0];
+    applyFrameLook(live.img, frame, want.art, 1);
+    live.img.setOrigin(0.5, 0.5);
+    live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
     return;
   }
   if (want.kind === 'grow') {

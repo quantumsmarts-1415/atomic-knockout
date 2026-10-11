@@ -25,7 +25,7 @@ import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, spawnContactFx, spawnFlareShower, spawnFxSprite, spawnMoveExtra, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
+import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, placeFxImage, spawnContactFx, spawnFlareShower, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors } from '../engine/fxArt.js';
 
 const GRAVITY = 1500;
 
@@ -727,9 +727,17 @@ export default class BattleScene extends Phaser.Scene {
       ? [front]
       : [fighter.x - fighter.bodyW / 2 - move.wallRangeW, fighter.x + fighter.bodyW / 2];
     this.lingeringWalls = this.lingeringWalls ?? [];
+    const art = artFor(fighter.charDef?.id, move.name);
+    const face = fighter.facing || 1;
     for (const wx of sides) {
+      const cx = wx + (move.wallRangeW ?? 34) / 2;
+      const shell = placeFxImage(this, art, cx, fighter.y, face);
+      const goo = placeFxImage(this, art?.linger, cx, fighter.y, face);
+      shell?.setDepth?.(11);
+      goo?.setDepth?.(12);
       this.lingeringWalls.push({
         owner: fighter, move, wx, y, born: time, until: time + move.wallLingerMs, landed: new Set(),
+        shell, goo, art, face,
       });
     }
   }
@@ -1188,6 +1196,23 @@ export default class BattleScene extends Phaser.Scene {
       });
       return;
     }
+    if (spec.trap) {
+      const art = artFor(owner?.charDef?.id, spec.name || owner?.currentMove?.name);
+      if (art?.frames?.length) {
+        const face = owner?.facing || 1;
+        const gfx = placeFxImage(this, art, x, y, face);
+        gfx?.setDepth?.(5);
+        this.zones.push({
+          owner, spec, x, y, radius,
+          gfx: gfx || { destroy() {} },
+          art, face,
+          born: this.time.now,
+          until: this.time.now + (spec.ms ?? 1600),
+          next: this.time.now + (spec.delay ?? 0),
+        });
+        return;
+      }
+    }
     if (artFor(owner?.charDef?.id, owner?.currentMove?.name)?.frames?.length) {
       this.zones.push({
         owner, spec, x, y, radius,
@@ -1211,6 +1236,7 @@ export default class BattleScene extends Phaser.Scene {
 
   updateZones(time) {
     for (const z of this.zones) {
+      if (z.art && z.gfx?.scene) stepPlacedFx(z.gfx, z.art, time - (z.born || time), z.face || 1);
       if (time >= z.until) {
         z.gfx.destroy();
         z.dead = true;
@@ -1707,11 +1733,20 @@ export default class BattleScene extends Phaser.Scene {
       for (const wx of sides) this.touchWall(f, m, wx, y, f.wallLanded, f.defenseStart ?? time, time);
     }
     if (this.lingeringWalls?.length) {
+      const keep = [];
       for (const w of this.lingeringWalls) {
-        if (time >= w.until) continue;
+        if (time >= w.until) {
+          w.shell?.destroy?.();
+          w.goo?.destroy?.();
+          continue;
+        }
+        const elapsed = time - w.born;
+        if (w.shell && w.art) stepPlacedFx(w.shell, w.art, elapsed, w.face || 1);
+        if (w.goo && w.art?.linger) stepPlacedFx(w.goo, w.art.linger, elapsed, w.face || 1);
         this.touchWall(w.owner, w.move, w.wx, w.y, w.landed, w.born, time);
+        keep.push(w);
       }
-      this.lingeringWalls = this.lingeringWalls.filter((w) => time < w.until);
+      this.lingeringWalls = keep;
     }
 
     // melee hit detection

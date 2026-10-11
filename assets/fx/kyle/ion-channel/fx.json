@@ -1,0 +1,13 @@
+{
+  "hit": false,
+  "black": 16,
+  "shatter": {
+    "file": "burst.png",
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.25,
+    "crop": "frame",
+    "pivot": "center"
+  }
+}

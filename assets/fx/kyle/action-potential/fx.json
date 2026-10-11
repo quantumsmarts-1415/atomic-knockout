@@ -1,0 +1,27 @@
+{
+  "hit": false,
+  "black": 16,
+  "projectile": {
+    "file": "sheet.png",
+    "frames": 6,
+    "cols": 6,
+    "rows": 1,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.48,
+    "crop": "frame",
+    "pivot": "center"
+  },
+  "fizzle": {
+    "file": "fizzle.png",
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.4,
+    "crop": "frame",
+    "pivot": "center"
+  }
+}

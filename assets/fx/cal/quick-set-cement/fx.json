@@ -1,0 +1,30 @@
+{
+  "blend": "normal",
+  "black": 16,
+  "frames": 4,
+  "cols": 4,
+  "rows": 1,
+  "fps": 8,
+  "fit": "height",
+  "heightFrac": 1.2,
+  "crop": "frame",
+  "pivot": "bottom",
+  "anchor": "ground-front",
+  "hit": false,
+  "holdAt": 3,
+  "linger": {
+    "file": "stuck.png",
+    "frames": 4,
+    "cols": 4,
+    "rows": 1,
+    "fps": 8,
+    "loop": true,
+    "order": [0, 1, 2, 3, 2, 1],
+    "blend": "normal",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.85,
+    "crop": "frame",
+    "pivot": "bottom"
+  }
+}

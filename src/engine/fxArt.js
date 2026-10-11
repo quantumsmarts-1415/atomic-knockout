@@ -753,6 +753,8 @@ const SIDE_SPECS = [
   ['launch', 'launch-'], ['shower', 'shower-'], ['muzzle', 'muzzle-'],
   ['ember', 'ember-'], ['spark', 'spark-'], ['cinder', 'cinder-'], ['mote', 'mote-'], ['puff', 'puff-'],
   ['gas', 'gas-'],
+  ['fizzle', 'fizzle-'],
+  ['linger', 'linger-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -978,6 +980,26 @@ export function stepFxProjectile(p, time) {
     return;
   }
   p.gfx.rotation = Math.atan2(p.vy || 0, p.vx || 1);
+}
+
+/** A sprite that stays until the caller destroys it. Zones and lingering walls use this. */
+export function placeFxImage(scene, art, x, y, face = 1) {
+  if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
+  const img = placeStill(scene, art, x, y, 0);
+  applyFrameLook(img, art.frames[0], art, 1);
+  img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+  applyFacing(img, face);
+  return img;
+}
+
+/** Advance a placed sheet. holdAt keeps the last forming frame. order ping-pongs. */
+export function stepPlacedFx(img, art, elapsed, face = 1) {
+  if (!img?.setTexture || !art?.frames?.length) return;
+  const index = art.holdAt >= 0 ? shellFrame(art, elapsed) : fxFrameIndex(art, elapsed);
+  const frame = art.frames[index] || art.frames[0];
+  applyFrameLook(img, frame, art, 1);
+  img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+  applyFacing(img, face);
 }
 
 function placeStill(scene, art, x, y, rot) {
@@ -1448,7 +1470,7 @@ function attachedWant(scene, fighter) {
     const coated = coatSpec(fighter.defenseMove);
     const art = artFor(fighter.charDef?.id, fighter.defenseMove.name);
     const shell = art && !coated;
-    if (shell && art.anchor === 'ground-front' && art.frames?.length) {
+    if (shell && art.anchor === 'ground-front' && art.frames?.length && !art.linger?.frames?.length) {
       return { art, kind: 'wall', elapsed: now - (fighter.defenseStart ?? now) };
     }
     if (shell && (art.anchor === 'body' || art.anchor === 'front') && art.frames?.length) {
@@ -1887,10 +1909,15 @@ function syncHeld(scene, fighter) {
     want = { art, kind: 'feet' };
   } else if (art?.charge?.frames?.length && fighter.state === 'charging') {
     want = { art: art.charge, kind: art.charge.anchor === 'feet' ? 'feet' : 'grow' };
-  } else if (art?.anchor === 'aura' && art.frames?.length && charge?.overclock) {
+  } else if (art?.anchor === 'aura' && art.frames?.length) {
     const charging = fighter.state === 'charging';
-    const buffed = (fighter.attackHasteUntil ?? 0) > now;
-    if (charging || buffed) want = { art, kind: 'aura', charging };
+    if (charge?.overclock) {
+      const buffed = (fighter.attackHasteUntil ?? 0) > now;
+      if (charging || buffed) want = { art, kind: 'aura', charging, overclock: true };
+    } else {
+      const powered = (fighter.attackPowerUntil ?? 0) > now;
+      if (charging || powered) want = { art, kind: 'aura', charging, overclock: false };
+    }
   }
   let live = liveHeld.get(fighter);
   if (!want) {
@@ -1915,6 +1942,14 @@ function syncHeld(scene, fighter) {
   }
   if (want.kind === 'aura') {
     const frames = want.art.frames;
+    if (!want.overclock) {
+      const elapsed = want.charging ? now - (fighter.chargeStart ?? now) : now;
+      const frame = frames[fxFrameIndex(want.art, elapsed)] || frames[0];
+      applyFrameLook(live.img, frame, want.art, 1);
+      live.img.setOrigin(0.5, 0.5);
+      live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
+      return;
+    }
     const max = charge.maxChargeMs || 1;
     const frac = want.charging
       ? Math.min(1, Math.max(0, (now - (fighter.chargeStart ?? now)) / max))

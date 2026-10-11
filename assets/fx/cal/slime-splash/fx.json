@@ -1,0 +1,10 @@
+{
+  "blend": "screen",
+  "luma": true,
+  "black": 16,
+  "hit": false,
+  "fit": "width",
+  "heightFrac": 1.8,
+  "crop": "frame",
+  "pivot": "center"
+}

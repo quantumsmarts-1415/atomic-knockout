@@ -595,4 +595,76 @@ test('batch 2 wave 1 moves point at real full-resolution art', () => {
     mid += cloud.data[(y * cloud.width + Math.floor(cell / 2)) * 4 + 3];
   }
   assert.ok(mid > edge * 4, 'gas cloud edges are softened');
+
+  const more = [
+    ['assets/fx/aaron/lazy-haymaker/fx.json', null, 'add', 6],
+    ['assets/fx/aaron/inert-guard-strike/fx.json', null, 'screen', 1],
+    ['assets/fx/aaron/shield-gas/fx.json', null, 'screen', 4],
+    ['assets/fx/aaron/noble-discharge/fx.json', null, 'add', 1],
+    ['assets/fx/kyle/action-potential/fx.json', 'projectile', 'add', 6],
+    ['assets/fx/kyle/static-cross/fx.json', null, 'add', 1],
+    ['assets/fx/kyle/ion-channel/fx.json', 'shatter', 'add', 1],
+    ['assets/fx/kyle/banana-peel/fx.json', null, 'normal', 1],
+    ['assets/fx/cal/bone-crush/fx.json', null, 'normal', 1],
+    ['assets/fx/cal/quick-set-cement/fx.json', null, 'normal', 4],
+    ['assets/fx/cal/slime-splash/fx.json', null, 'screen', 1],
+  ];
+  for (const [path, side, blend, frames] of more) {
+    const meta = JSON.parse(fs.readFileSync(path, 'utf8'));
+    const spec = side ? meta[side] : meta;
+    assert.equal(spec.blend, blend, path);
+    if (blend !== 'add') assert.notEqual(spec.blend, 'add', path);
+    const file = spec.file || ((frames > 1) ? 'sheet.png' : 'object.png');
+    const pngPath = path.replace(/fx\.json$/, file);
+    assert.equal(fs.existsSync(pngPath), true, pngPath);
+    const png = PNG.sync.read(fs.readFileSync(pngPath));
+    assert.ok(png.width >= 100 && png.height >= 80, pngPath);
+    if (frames > 1) {
+      assert.equal(spec.frames, frames, path);
+      assert.equal(spec.cols, frames, path);
+    }
+  }
+  const aura = JSON.parse(fs.readFileSync('assets/fx/aaron/lazy-haymaker/fx.json', 'utf8'));
+  assert.equal(aura.anchor, 'aura');
+  assert.equal(aura.loop, true);
+  const auraPng = PNG.sync.read(fs.readFileSync('assets/fx/aaron/lazy-haymaker/sheet.png'));
+  const auraCell = Math.floor(auraPng.width / 6);
+  let auraCenter = 0;
+  let auraRing = 0;
+  const ax = Math.floor(auraCell / 2);
+  const midY = Math.floor(auraPng.height / 2);
+  for (let y = midY - 24; y < midY + 24; y++) auraCenter += auraPng.data[(y * auraPng.width + ax) * 4 + 3];
+  const ringY = Math.floor(auraPng.height * 0.14);
+  for (let y = ringY; y < ringY + 40; y++) auraRing += auraPng.data[(y * auraPng.width + ax) * 4 + 3];
+  assert.ok(auraCenter < 80, 'aura center is masked out');
+  assert.ok(auraRing > 2000, 'aura ring remains');
+  const gasShield = JSON.parse(fs.readFileSync('assets/fx/aaron/shield-gas/fx.json', 'utf8'));
+  assert.equal(gasShield.anchor, 'body');
+  assert.equal(gasShield.loop, true);
+  const noble = PNG.sync.read(fs.readFileSync('assets/fx/aaron/noble-discharge/object.png'));
+  let nobleEdge = 0;
+  let nobleIn = 0;
+  const samples = Math.min(80, noble.height);
+  for (let x = 0; x < noble.width; x += 8) {
+    nobleEdge += noble.data[(2 * noble.width + x) * 4 + 3];
+    nobleIn += noble.data[(samples * noble.width + x) * 4 + 3];
+  }
+  assert.ok(nobleIn > nobleEdge * 4, 'discharge edges fade');
+  const pulse = JSON.parse(fs.readFileSync('assets/fx/kyle/action-potential/fx.json', 'utf8'));
+  assert.equal(pulse.fizzle.blend, 'add');
+  assert.equal(fs.existsSync('assets/fx/kyle/action-potential/fizzle.png'), true);
+  const peel = JSON.parse(fs.readFileSync('assets/fx/kyle/banana-peel/fx.json', 'utf8'));
+  assert.equal(peel.anchor, 'ground');
+  assert.notEqual(peel.blend, 'add');
+  const cement = JSON.parse(fs.readFileSync('assets/fx/cal/quick-set-cement/fx.json', 'utf8'));
+  assert.equal(cement.holdAt, 3);
+  assert.equal(cement.anchor, 'ground-front');
+  assert.deepEqual(cement.linger.order, [0, 1, 2, 3, 2, 1]);
+  assert.equal(cement.linger.loop, true);
+  assert.equal(cement.linger.blend, 'normal');
+  assert.equal(fs.existsSync('assets/fx/cal/quick-set-cement/stuck.png'), true);
+  const lime = JSON.parse(fs.readFileSync('assets/fx/cal/slime-splash/fx.json', 'utf8'));
+  assert.equal(lime.luma, true);
+  assert.equal(lime.blend, 'screen');
+  assert.equal(fs.existsSync('assets/fx/cal/calcify/fx.json'), false);
 });

@@ -243,7 +243,9 @@ export function syncChargeGlow(scene) {
       continue;
     }
     const painted = artFor(fighter.charDef?.id, move.name);
-    if (painted?.frames?.length || painted?.charge?.frames?.length || painted?.anchor === 'feet' || painted?.charge?.anchor === 'feet') {
+    const shotOnly = painted?.objectType === 'projectile' && painted?.fizzle?.frames?.length
+      && !painted?.charge?.frames?.length && painted?.anchor !== 'aura';
+    if (!shotOnly && (painted?.frames?.length || painted?.charge?.frames?.length || painted?.anchor === 'feet' || painted?.charge?.anchor === 'feet')) {
       glow.clear();
       continue;
     }
@@ -329,6 +331,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     const art = artFor(fighter.charDef?.id, move?.name);
     if (phase === 'release' && art?.objectType === 'beam' && art.frames?.length && !extra?.fired) return;
     if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
+    if (move?.kind === 'zone' && move.zone?.trap && art?.frames?.length) return;
     if (art?.detonate && move?.kind === 'burst') {
       spawnFxDetonate(scene, fighter, move, extra.x ?? fighter.x, extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55));
       return;
@@ -371,11 +374,16 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (phase === 'charge') {
     const painted = artFor(fighter.charDef?.id, move?.name);
     const heldArt = painted?.charge?.frames?.length || painted?.orbit?.frames?.length
-      || painted?.anchor === 'lance' || painted?.anchor === 'feet' || painted?.spriteAura;
+      || painted?.anchor === 'lance' || painted?.anchor === 'feet' || painted?.anchor === 'aura' || painted?.spriteAura;
     if (!heldArt && style !== 'supernova' && !move?.overclock) gather(scene, x, y - 10, color);
     return;
   }
   if (phase === 'fizzle') {
+    const painted = artFor(fighter.charDef?.id, move?.name);
+    if (painted?.fizzle?.frames?.length) {
+      spawnFxSprite(scene, painted.fizzle, fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.45, 1);
+      return;
+    }
     burst(scene, x, y, 0x99aabb, 4, 20);
     return;
   }

@@ -342,20 +342,29 @@ export const MOVESETS = {
   allen: {
     basicCharge: m('Thermite Burn', {
       kind: 'beam', type: H, damage: 8, chargeDamageMult: 1.8, chargeLengthMult: 1.8,
-      maxChargeMs: 800, beamLen: 130, beamThick: 26, breaksBlock: true,
-      vfx: 'laser', vfxColor: 0xff6a1a, baseKnockback: 160,
-      duration: 240, cooldown: 760,
+      maxChargeMs: 560, beamLen: 130, beamThick: 26,
+      onHit: { burn: { dps: 3, every: 1000, ms: 3500 } },
+      vfx: 'thermite', vfxColor: 0xff6a1a, baseKnockback: 160,
+      // Startup 4. Endlag 10. Same-button lock ~38 frames (was ~60).
+      startupF: 4, endlagF: 10, duration: 220, cooldown: 420,
     }),
-    basicDirectional: melee('Turbine Strike', {
-      type: K, damage: 4, multiHit: 3, rangeW: 90, vfx: 'spark',
-      baseKnockback: 90, duration: 320, cooldown: 300,
+    basicDirectional: melee('Power-Line Whips', {
+      type: E, damage: 6, type2: K, damage2: 6, rangeW: 96, vfx: 'whip', vfxColor: 0xd6e8ff,
+      baseKnockback: 150,
+      // Startup 3. Endlag 8. Same-button lock ~23 frames (was ~37).
+      startupF: 3, endlagF: 8, duration: 180, cooldown: 200,
     }),
     specialDefense: m('Oxide Skin', {
-      kind: 'oxide', duration: 2000, cooldown: 1600, vfx: 'shield', vfxColor: 0xd8dde6,
+      kind: 'oxide', regrow: 'press',
+      // The skin stays while held. After it breaks or he lets go, the next
+      // defense press grows a new one. Cooldown is that gap, not a regrow timer.
+      duration: 800, cooldown: 200, vfx: 'shield', vfxColor: 0xd8dde6,
     }),
     specialDirectional: m('Turbine Vortex', {
-      kind: 'burst', type: E, damage: 8, radius: 100, pull: 320, vfx: 'spark',
-      baseKnockback: 80, duration: 300, cooldown: 860,
+      kind: 'burst', type: K, damage: 8, radius: 100, pull: 320, vfx: 'vortex', vfxColor: 0xd5dde6,
+      baseKnockback: 80,
+      // Startup 4. Endlag 10. Same-button lock ~40 frames (was ~70).
+      startupF: 4, endlagF: 10, duration: 240, cooldown: 420,
     }),
   },
 

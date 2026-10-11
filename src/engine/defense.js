@@ -315,3 +315,9 @@ export function interceptHit(defender, attacker, move, time) {
 
   return { result: 'pass' };
 }
+
+/** When a skin that only regrows on the next press may be started again. */
+export function rearmDefense(move, time) {
+  if (move?.regrow !== 'press') return null;
+  return time + Math.max(0, move.cooldown ?? 0);
+}

@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
-import { applyImmunities, interceptHit } from './defense.js';
+import { applyImmunities, interceptHit, rearmDefense } from './defense.js';
 import { applyOnCast, applyOnHit, bonusPackets, combatOpts, lightUnquenchable, prepareMove, tickKit, weakestType } from './kit.js';
 import { playVfx } from './MoveVfx.js';
 import { coatSpec } from './coat.js';
@@ -324,6 +324,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.scene?.dropPins?.(this);
         this.restoreShrink();
         playVfx(this.scene, this, coat, 'letgo');
+        const ready = rearmDefense(coat, time);
+        if (ready != null) this.specialCooldownUntil = ready;
       }
       this.state = 'idle';
       this.rig.setFlash(null);
@@ -496,6 +498,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.scene?.dropPins?.(this);
       this.restoreShrink();
       playVfx(this.scene, this, coat, 'letgo');
+      const ready = rearmDefense(coat, time);
+      if (ready != null) this.specialCooldownUntil = ready;
       this.state = 'idle';
       this.defenseMove = null;
       this.rig.setFlash(null);
@@ -987,7 +991,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.rig.moveKey = 'specialDefense';
     this.rig.moveSlot = 'special';
     this.stateUntil = time + move.duration;
-    this.specialCooldownUntil = time + move.duration + move.cooldown;
+    this.specialCooldownUntil = move.regrow === 'press'
+      ? time
+      : time + move.duration + move.cooldown;
     playVfx(this.scene, this, move, 'defense');
     applyOnCast(this, move, time, 1);
   }
@@ -1176,6 +1182,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
         return 0;
       }
       if (gate.result === 'pop') {
+        const ready = rearmDefense(this.defenseMove, time);
+        if (ready != null) this.specialCooldownUntil = ready;
         const shed = coatSpec(this.defenseMove);
         if (shed?.flake) {
           this._coatFlaked = true;

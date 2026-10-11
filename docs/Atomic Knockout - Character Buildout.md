@@ -648,10 +648,10 @@ Post Transition Metal:
 	Boiling Point: 2743 K
 	Electrical conductivity: 38 MS/m
 	Electronegativity: 1.61
-	Charge Move: "Thermite Burn" Allen packs a charge of aluminum thermite while charging, then ignites it into a spray of molten iron ahead of him that deals heat damage and burns through blocks. (draft)
-	Normal Move: "Turbine Strike" Allen drives a spinning aluminum turbine fan into the target, dealing rapid multi-hit kinetic damage. (draft) [currently in the game: physical close-range hit]
-	Defense Move: "Oxide Skin" Allen's surface instantly grows a tough aluminum oxide skin that blocks chemical damage and the first hit of any other type. It grows back a few seconds after it breaks. (draft)
-	Special Move: "Turbine Vortex" Allen spins his turbine into a whirling vortex around himself, dealing electrical damage and pulling nearby fighters in. (draft) [currently in the game: electrical area burst around them]
+	Charge Move: "Thermite Burn" Allen packs a charge of aluminum thermite, then ignites it into a spray of molten iron ahead of him that deals heat damage. It does not burn through blocks. The target keeps burning for 3.5 seconds at 3% per second, and that burn only raises percent.
+	Normal Move: "Power-Line Whips" Allen lashes with power-line cables, dealing electrical and kinetic damage.
+	Defense Move: "Oxide Skin" Allen's surface grows a tough aluminum oxide skin that blocks chemical damage and the first hit of any other type. It does not grow back on a timer. It grows back when he presses defense again.
+	Special Move: "Turbine Vortex" Allen spins his turbine into a whirling vortex around himself, dealing kinetic damage and pulling nearby fighters in.
 -Gallium
 	Name: Gail
 	Natural State: Solid

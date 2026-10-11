@@ -127,7 +127,7 @@ These are the lowest scores, and among the placeholders the largest on screen. T
 | Maggie | Ribbon Guard | shield | code-drawn shape: translucent circle | 67×67 | no rotation | fades over about 500 ms | 1 |
 | Maggie | Blinding Flare | area or burst | procedural particles: tinted star and streaks | 172×172 | streaks fly outward, no spin on the core | fades over about 160–320 ms | 1 |
 | Allen | Thermite Burn | beam | code-drawn shape: flat rectangle | 130×26 | aimed with facing, no spin | appears for about 220 ms and fades | 1 |
-| Allen | Turbine Strike | slash arc | code-drawn shape: thick slash stroke | 90×48 | the stroke sweeps from about -60° to +26° | the idle body during the swing; the stroke grows across the active frames | 2 |
+| Allen | Power-Line Whips | slash arc | code-drawn shape: cable lash | 96×48 | the cable runs out to the fist | the idle body during the swing; a spark at the tip | 2 |
 | Allen | Oxide Skin | shield | code-drawn shape: translucent circle | 72×72 | no rotation | fades over about 500 ms | 1 |
 | Allen | Turbine Vortex | area or burst | procedural particles: tinted star and streaks | 200×200 | streaks fly outward, no spin on the core | fades over about 160–320 ms | 1 |
 | Silas | Overclock | area or burst | procedural particles: tinted star and streaks | 96×96 | streaks fly outward, no spin on the core | fades over about 160–320 ms | 1 |
@@ -769,9 +769,9 @@ assets/fx/allen/thermite-burn/cap-start.png, tile.png, and cap-end.png. Transpar
 
 the drawn bar is 14 px tall; the hit is 26 px tall
 
-### Allen — Turbine Strike
+### Allen — Power-Line Whips
 
-assets/fx/allen/turbine-strike/object.png. Transparent PNG at full resolution, pointing right, fitted inside 90×48 px, pivot at the left center (0, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
+assets/fx/allen/power-line-whips/object.png. Transparent PNG at full resolution, pointing right, fitted inside 96×48 px, pivot at the left center (0, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
 
 ### Allen — Oxide Skin
 

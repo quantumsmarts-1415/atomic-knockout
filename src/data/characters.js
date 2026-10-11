@@ -1602,8 +1602,8 @@ export const CHARACTERS = {
     },
     moves: {
       basicDirectional: {
-        name: 'Turbine Strike',
-        type: 'physical',
+        name: 'Power-Line Whips',
+        type: 'electrical',
         damage: 8,
         baseKnockback: 150,
         knockbackGrowth: 5.0,
@@ -1615,7 +1615,7 @@ export const CHARACTERS = {
       specialDirectional: {
         name: 'Turbine Vortex',
         kind: 'burst',
-        type: 'electrical',
+        type: 'kinetic',
         damage: 12,
         baseKnockback: 225,
         knockbackGrowth: 6.0,

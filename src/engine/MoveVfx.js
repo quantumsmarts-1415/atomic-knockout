@@ -323,6 +323,48 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     case 'beam':
       beam(scene, fighter, color, (move.beamLen ?? 180) * (move._beamScale ?? 1), move);
       break;
+    case 'thermite': {
+      const dir = fighter.facing || 1;
+      const len = (move.beamLen ?? 130) * (move._beamScale ?? 1);
+      const y = fighter.y - (fighter.bodyH ?? 80) * 0.58;
+      const x0 = fighter.x + dir * (fighter.bodyW ?? 40) * 0.3;
+      for (let i = 0; i < 7; i++) {
+        const ang = (i - 3) * 0.14;
+        const dx = Math.cos(ang) * len * dir;
+        const dy = Math.sin(ang) * len * 0.28;
+        const streak = scene.add.rectangle?.(x0 + dx * 0.45, y + dy * 0.45, len * 0.72, i % 2 ? 4 : 2, i % 2 ? 0xfff4e0 : 0xff6a1a, 0.8);
+        if (streak) {
+          streak.rotation = Math.atan2(dy, dx);
+          streak.setBlendMode?.('ADD');
+          die(scene, streak, 200);
+        }
+      }
+      burst(scene, x0 + dir * len * 0.85, y, 0xfff6e8, 8, 34);
+      break;
+    }
+    case 'whip': {
+      const tip = meleeContactPoint(fighter, move);
+      const dir = fighter.facing || 1;
+      const x0 = fighter.x + dir * (fighter.bodyW ?? 40) * 0.25;
+      const y0 = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+      const span = Math.max(24, Math.hypot(tip.x - x0, tip.y - y0));
+      const cable = scene.add.rectangle?.((x0 + tip.x) / 2, (y0 + tip.y) / 2, span, 3, 0xd5dde8, 0.9);
+      if (cable) {
+        cable.rotation = Math.atan2(tip.y - y0, tip.x - x0);
+        cable.setBlendMode?.('ADD');
+        die(scene, cable, 160);
+      }
+      burst(scene, tip.x, tip.y, 0xd6e8ff, 8, 26);
+      burst(scene, tip.x, tip.y, 0xfff6e8, 4, 14);
+      break;
+    }
+    case 'vortex': {
+      const yBody = fighter.y - (fighter.bodyH ?? 80) * 0.45;
+      ring(scene, fighter.x, yBody, 0xd5dde6, move.radius ?? 90, 4);
+      ring(scene, fighter.x, yBody, 0xf4f7fb, (move.radius ?? 90) * 0.55, 2);
+      burst(scene, fighter.x, yBody, 0xe7edf4, 8, 36);
+      break;
+    }
     case 'magnesium': {
       const yBody = fighter.y - (fighter.bodyH ?? 80) * 0.5;
       burst(scene, fighter.x, yBody, 0xfff6e8, 14, 64);

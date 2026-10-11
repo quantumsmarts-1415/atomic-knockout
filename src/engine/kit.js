@@ -66,7 +66,8 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.burn) {
     victim.burnUntil = time + (fx.burn.ms ?? 1200);
     victim.burnDps = fx.burn.dps ?? 2;
-    victim.burnTick = time + 280;
+    victim.burnEvery = fx.burn.every ?? 280;
+    victim.burnTick = time + victim.burnEvery;
   }
   if (fx.corrode) {
     victim.kinDefMult = fx.corrode.mult ?? 0.72;
@@ -118,7 +119,7 @@ export function applyDot(fighter, amount, type = 'heat') {
 
 export function tickKit(fighter, time) {
   if (fighter.burnUntil && time < fighter.burnUntil && time >= (fighter.burnTick ?? 0)) {
-    fighter.burnTick = time + 280;
+    fighter.burnTick = time + (fighter.burnEvery ?? 280);
     applyDot(fighter, fighter.burnDps ?? 2, 'heat');
   }
   if (fighter.poisonUntil && time < fighter.poisonUntil && time >= (fighter.poisonTick ?? 0)) {

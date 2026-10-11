@@ -172,7 +172,7 @@ Her move names and numbers stay as they are in game. She still has no attack she
 | Move | Slot | Frames | Size | Pose |
 | --- | --- | --- | --- | --- |
 | Thermite Burn | Charge | 8 | 922×720 | Aims one arm like a nozzle. A thick white-orange thermite beam leaves the palm. |
-| Turbine Strike | Normal | 8 | 922×720 | Three fast spinning strikes, arms like turbine blades. The strip should read as a multi-hit, not one punch. |
+| Power-Line Whips | Normal | 8 | 922×720 | One cable lash to the side, arm extended, a crack of electricity at the tip. |
 | Oxide Skin | Defense | 8, loop | 922×720 | A dull oxide skin grows over the body. He holds still inside it. Chemical attacks fizzle on the skin. |
 | Turbine Vortex | Special | 8 | 922×720 | Spins in place, pulling the air (and nearby fighters) inward. Feet stay down. |
 

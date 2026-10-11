@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { interceptHit } from '../src/engine/defense.js';
-import { applyDot, bonusPackets, lightUnquenchable, stripBuffs, tickKit } from '../src/engine/kit.js';
+import { applyDot, applyOnHit, bonusPackets, lightUnquenchable, stripBuffs, tickKit } from '../src/engine/kit.js';
+import { rearmDefense } from '../src/engine/defense.js';
 
 const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
 const TYPES = new Set(['kinetic', 'heat', 'electrical', 'chemical', 'radiation', 'physical']);
@@ -181,6 +182,56 @@ test('maggie uses the approved magnesium kit', () => {
   assert.strictEqual(flare.name, 'Blinding Flare');
   assert.strictEqual(flare.onHit.dazzle.ms, 2000);
   assert.ok(frameData(flare.duration, flare.cooldown, flare).recovery <= 12);
+});
+
+test('allen uses the approved aluminum kit', () => {
+  const moves = CHARACTERS.allen.moves;
+  const burn = moves.basicCharge;
+  assert.strictEqual(burn.name, 'Thermite Burn');
+  assert.strictEqual(burn.breaksBlock, undefined);
+  assert.strictEqual(burn.type, 'heat');
+  assert.strictEqual(burn.onHit.burn.dps, 3);
+  assert.strictEqual(burn.onHit.burn.every, 1000);
+  assert.strictEqual(burn.onHit.burn.ms, 3500);
+  assert.ok(frameData(burn.duration, burn.cooldown, burn).total < 45);
+  const whip = moves.basicDirectional;
+  assert.strictEqual(whip.name, 'Power-Line Whips');
+  assert.strictEqual(whip.type, 'electrical');
+  assert.strictEqual(whip.type2, 'kinetic');
+  assert.strictEqual(whip.multiHit, undefined);
+  assert.ok(frameData(whip.duration, whip.cooldown, whip).total < 30);
+  const skin = moves.specialDefense;
+  assert.strictEqual(skin.name, 'Oxide Skin');
+  assert.strictEqual(skin.kind, 'oxide');
+  assert.strictEqual(skin.regrow, 'press');
+  assert.ok(skin.cooldown < 400);
+  assert.strictEqual(rearmDefense(skin, 5000), 5200);
+  assert.strictEqual(rearmDefense(burn, 5000), null);
+  const guard = { state: 'defending', defenseMove: skin, facing: 1, x: 100, y: 400, bodyH: 100 };
+  const foe = { x: 180, y: 400 };
+  assert.strictEqual(interceptHit(guard, foe, { type: 'chemical', damage: 6 }, 0).result, 'negate');
+  assert.strictEqual(interceptHit(guard, foe, { type: 'kinetic', damage: 6 }, 0).result, 'pop');
+  const blocked = { state: 'defending', defenseMove: { blocks: ['heat'] }, facing: 1, x: 100, y: 400, bodyH: 100 };
+  assert.strictEqual(interceptHit(blocked, foe, burn, 0).result, 'negate');
+  const vortex = moves.specialDirectional;
+  assert.strictEqual(vortex.name, 'Turbine Vortex');
+  assert.strictEqual(vortex.type, 'kinetic');
+  assert.ok(vortex.pull > 0);
+  const victim = { percent: 10, scene: { noteDot() {} } };
+  applyOnHit(null, victim, burn, 0);
+  assert.strictEqual(victim.percent, 10);
+  tickKit(victim, 1000);
+  assert.strictEqual(victim.percent, 13);
+  tickKit(victim, 1500);
+  assert.strictEqual(victim.percent, 13);
+  tickKit(victim, 2000);
+  assert.strictEqual(victim.percent, 16);
+  tickKit(victim, 3000);
+  assert.strictEqual(victim.percent, 19);
+  tickKit(victim, 4000);
+  assert.strictEqual(victim.percent, 19);
+  assert.strictEqual(victim.state, undefined);
+  assert.strictEqual(victim.hitlagFrames, undefined);
 });
 
 test('damage over time only raises percent', () => {

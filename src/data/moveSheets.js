@@ -7,6 +7,8 @@
 // set sheetFacing so the flip follows the sheet, not the idle. Chloe and
 // Cal do the same. Van's attack faces left, the same way the idle does.
 // Allen and Titan face left in the sheet, the same way their idles do.
+// Chroma and Scarlett attack sheets face right while their idles face left.
+// Those clips set sheetFacing.
 export const MOVE_SHEETS = {
   "nitra": {
     "attack": {
@@ -4491,6 +4493,219 @@ export const MOVE_SHEETS = {
           ]
         ]
       }
+    }
+  },
+  "chroma": {
+    "attack": {
+      "count": 12,
+      "fps": 18
+    }
+  },
+  "gail": {
+    "attack": {
+      "count": 12,
+      "fps": 18,
+      "release": 3,
+      "windup": [
+        0,
+        2
+      ],
+      "active": [
+        3,
+        8
+      ],
+      "recovery": [
+        9,
+        11
+      ],
+      "anchors": {
+        "fist": [
+          [
+            419,
+            319
+          ],
+          [
+            430,
+            509
+          ],
+          [
+            556,
+            480
+          ],
+          [
+            631,
+            392
+          ],
+          [
+            663,
+            311
+          ],
+          [
+            652,
+            236
+          ],
+          [
+            652,
+            241
+          ],
+          [
+            654,
+            237
+          ],
+          [
+            663,
+            261
+          ],
+          [
+            614,
+            396
+          ],
+          [
+            424,
+            321
+          ],
+          [
+            422,
+            320
+          ]
+        ],
+        "tip": [
+          [
+            419,
+            319
+          ],
+          [
+            434,
+            532
+          ],
+          [
+            556,
+            480
+          ],
+          [
+            631,
+            392
+          ],
+          [
+            663,
+            311
+          ],
+          [
+            652,
+            236
+          ],
+          [
+            652,
+            241
+          ],
+          [
+            654,
+            237
+          ],
+          [
+            663,
+            261
+          ],
+          [
+            614,
+            396
+          ],
+          [
+            424,
+            321
+          ],
+          [
+            422,
+            320
+          ]
+        ],
+        "feet": [
+          [
+            422,
+            939
+          ],
+          [
+            422,
+            939
+          ],
+          [
+            422,
+            939
+          ],
+          [
+            422,
+            939
+          ],
+          [
+            422,
+            939
+          ],
+          [
+            422,
+            939
+          ],
+          [
+            422,
+            939
+          ],
+          [
+            422,
+            939
+          ],
+          [
+            422,
+            939
+          ],
+          [
+            422,
+            939
+          ],
+          [
+            422,
+            939
+          ],
+          [
+            422,
+            939
+          ]
+        ]
+      }
+    }
+  },
+  "paula": {
+    "attack": {
+      "count": 12,
+      "fps": 18
+    }
+  },
+  "zora": {
+    "attack": {
+      "count": 12,
+      "fps": 18
+    }
+  },
+  "aaron": {
+    "attack": {
+      "count": 12,
+      "fps": 18
+    }
+  },
+  "erin": {
+    "attack": {
+      "count": 12,
+      "fps": 18
+    }
+  },
+  "scarlett": {
+    "attack": {
+      "count": 12,
+      "fps": 18
+    }
+  },
+  "tess": {
+    "attack": {
+      "count": 12,
+      "fps": 18
     }
   }
 };

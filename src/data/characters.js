@@ -1986,6 +1986,9 @@ export const CHARACTERS = {
         displayScale: 0.21362,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          // Blue-steel walk and Inert Guard Strike face right, the same way the idle does.
+          walk: { count: 12, fps: 10.29, loop: true, frameW: 549, frameH: 700, footY: 0.9729, visibleH: 657, bodyH: 657, displayScale: 138 / 657 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 595, frameH: 700, footY: 0.9729, visibleH: 657, bodyH: 657, displayScale: 138 / 657 },
         },
       },
     },
@@ -2196,6 +2199,8 @@ export const CHARACTERS = {
         displayScale: 0.19672,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          // Wing Slash faces right while the idle faces left.
+          attack: { count: 12, fps: 18, loop: false, frameW: 822, frameH: 1004, footY: 0.9861, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
         },
       },
     },
@@ -2334,6 +2339,8 @@ export const CHARACTERS = {
         displayScale: 0.1949,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          // Chrome Edge faces right while the idle faces left.
+          attack: { count: 12, fps: 18, loop: false, frameW: 1180, frameH: 1221, footY: 0.9885, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
         },
       },
     },

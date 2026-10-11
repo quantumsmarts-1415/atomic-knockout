@@ -384,3 +384,74 @@ test('the whip sheet hides the separate cable', () => {
     rig: { _authoredSheet: false, sheetClip: 'attack' },
   }), false);
 });
+
+test('call 4 sheets match their clip cells', () => {
+  const expect = {
+    chroma: ['attack'],
+    gail: ['attack'],
+    paula: ['attack'],
+    zora: ['attack'],
+    aaron: ['attack'],
+    erin: ['attack'],
+    scarlett: ['attack'],
+    tess: ['attack'],
+  };
+  for (const [id, names] of Object.entries(expect)) {
+    const art = CHARACTERS[id].art;
+    for (const name of names) {
+      const def = art.sheets.clips[name];
+      const file = `${art.sheets.dir}${def.file || `${id}_${name}.png`}`;
+      const png = pngSize(file);
+      assert.equal(png.w % def.frameW, 0, `${id} ${name} width`);
+      assert.equal(png.h % def.frameH, 0, `${id} ${name} height`);
+      const cells = (png.w / def.frameW) * (png.h / def.frameH);
+      assert.ok(cells >= def.count, `${id} ${name} cells ${cells}`);
+      assert.equal(def.displayScale, art.height / def.visibleH);
+    }
+    assert.equal(MOVE_SHEETS[id].charge, undefined);
+    assert.equal(MOVE_SHEETS[id].special, undefined);
+  }
+  const walk = CHARACTERS.aaron.art.sheets.clips.walk;
+  assert.equal(walk.count, 12);
+  assert.equal(walk.fps, 10.29);
+  assert.equal(walk.loop, true);
+  assert.equal(walk.displayScale, CHARACTERS.aaron.art.height / walk.visibleH);
+  assert.equal(CHARACTERS.aaron.art.facing, 1);
+  assert.equal(CHARACTERS.aaron.art.sheets.clips.attack.sheetFacing, undefined);
+  assert.equal(CHARACTERS.chroma.art.facing, -1);
+  assert.equal(CHARACTERS.scarlett.art.facing, -1);
+  assert.equal(CHARACTERS.chroma.art.sheets.clips.attack.sheetFacing, 1);
+  assert.equal(CHARACTERS.scarlett.art.sheets.clips.attack.sheetFacing, 1);
+});
+
+test('embrittle opens on the grab, and a right-facing attack stays in front', () => {
+  const gail = sheetMeta('gail', 'attack');
+  assert.equal(gail.release, 3);
+  const fd = { startup: 4, active: 4, recovery: 6, visible: 14 };
+  assert.equal(sheetFrameIndex(gail, { state: 'attack', fd, attackFrame: 4 }), 3);
+  assert.ok(sheetFrameIndex(gail, { state: 'attack', fd, attackFrame: 0 }) < 3);
+  const def = CHARACTERS.gail.art.sheets.clips.attack;
+  const fist = MOVE_SHEETS.gail.attack.anchors.fist[3];
+  assert.ok(fist[0] > def.frameW / 2);
+  const world = frameToWorld(
+    fist, def.frameW, def.frameH, def.footY, def.displayScale, 1, 1, 400, 500,
+  );
+  const fighter = {
+    x: 400,
+    y: 500,
+    facing: 1,
+    currentMoveKey: 'basicDirectional',
+    charDef: CHARACTERS.gail,
+    rig: { moveKey: 'basicDirectional', sheetClip: 'attack', sheetFrame: 3 },
+  };
+  assert.deepEqual(sheetReleasePoint(fighter, 'melee'), world);
+  assert.ok(world.x > 400);
+  for (const id of ['chroma', 'scarlett']) {
+    const art = CHARACTERS[id].art;
+    const clip = art.sheets.clips.attack;
+    const ahead = frameToWorld(
+      [clip.frameW * 0.8, 200], clip.frameW, clip.frameH, clip.footY, clip.displayScale, 1, 1, 400, 500,
+    );
+    assert.ok(ahead.x > 400, id);
+  }
+});

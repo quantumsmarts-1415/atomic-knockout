@@ -964,6 +964,7 @@ export const CHARACTERS = {
           walk: { count: 33, fps: 10, loop: true, frameW: 735, frameH: 667, footY: 0.9685, visibleH: 618, bodyH: 618, displayScale: 0.19417 },
           attack: { count: 12, fps: 18, loop: false, frameW: 754, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
           charge: { count: 12, fps: 18, loop: false, frameW: 614, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 446, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
           special: { count: 12, fps: 18, loop: false, frameW: 578, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
         },
       },
@@ -1073,10 +1074,12 @@ export const CHARACTERS = {
         displayScale: 0.19136,
         clips: {
           // idle + walk (Gemini). Vortex Kick is the normal. Oxidation Burst
-          // is the special. Bellows Breath and Ozone Layer stay on idle.
+          // is the special. Bellows Breath and Ozone Layer have their own sheets.
           idle: { count: 13, fps: 3.6, loop: true },
           walk: { count: 33, fps: 10, loop: true, frameW: 452, frameH: 701, footY: 0.98, visibleH: 653, bodyH: 653, displayScale: 0.18989 },
           attack: { count: 12, fps: 18, loop: false, frameW: 918, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 574, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 624, frameH: 1015, footY: 0.9852, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
           special: { count: 12, fps: 18, loop: false, frameW: 678, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
         },
       },
@@ -1169,6 +1172,7 @@ export const CHARACTERS = {
           walk: { count: 29, fps: 10, loop: true, frameW: 458, frameH: 674, footY: 0.9837, visibleH: 636, bodyH: 636, displayScale: 0.19497 },
           attack: { count: 12, fps: 18, loop: false, frameW: 710, frameH: 734, footY: 0.9782, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
           charge: { count: 12, fps: 18, loop: false, frameW: 712, frameH: 743, footY: 0.9664, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 780, frameH: 734, footY: 0.9782, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
           special: { count: 12, fps: 18, loop: false, frameW: 710, frameH: 734, footY: 0.9782, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
         },
       },
@@ -1390,6 +1394,7 @@ export const CHARACTERS = {
           walk: { count: 11, fps: 8, loop: true, frameW: 443, frameH: 710, footY: 0.969, visibleH: 666, bodyH: 666, displayScale: 0.19219 },
           attack: { count: 12, fps: 18, loop: false, frameW: 746, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
           charge: { count: 12, fps: 18, loop: false, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
           special: { count: 12, fps: 18, loop: false, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
         },
       },
@@ -1494,6 +1499,7 @@ export const CHARACTERS = {
           // Flare Jab. Blinding Flare is also the Unquenchable gather.
           attack: { count: 12, fps: 18, loop: false, frameW: 988, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
           charge: { count: 12, fps: 18, loop: false, frameW: 868, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 594, frameH: 1065, footY: 0.985, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
           special: { count: 12, fps: 18, loop: false, frameW: 868, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013, file: 'maggie_charge.png' },
         },
       },
@@ -1784,6 +1790,7 @@ export const CHARACTERS = {
           // Clean body sheets. The particle curtain is the flare.
           attack: { count: 12, fps: 18, loop: false, frameW: 546, frameH: 716, footY: 0.9749, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
           charge: { count: 12, fps: 18, loop: false, frameW: 554, frameH: 775, footY: 0.9755, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 534, frameH: 758, footY: 0.9683, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
           special: { count: 12, fps: 18, loop: false, frameW: 902, frameH: 722, footY: 0.9737, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
         },
       },
@@ -2076,6 +2083,9 @@ export const CHARACTERS = {
           idle: { count: 13, fps: 3.6, loop: true },
           walk: { count: 12, fps: 11.08, loop: true, frameW: 551, frameH: 710, footY: 0.9731, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
           attack: { count: 12, fps: 18, loop: false, frameW: 551, frameH: 710, footY: 0.9731, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 551, frameH: 710, footY: 0.9731, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 551, frameH: 710, footY: 0.9731, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
+          special: { count: 12, fps: 18, loop: false, frameW: 551, frameH: 718, footY: 0.961, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
         },
       },
     },

@@ -3160,6 +3160,28 @@ export const IMPORTED_ROSTER = {
             "visibleH": 926,
             "bodyH": 926,
             "displayScale": 132 / 926
+          },
+          "charge": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 740,
+            "frameH": 956,
+            "footY": 0.9833,
+            "visibleH": 926,
+            "bodyH": 926,
+            "displayScale": 132 / 926
+          },
+          "special": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 706,
+            "frameH": 947,
+            "footY": 0.9926,
+            "visibleH": 926,
+            "bodyH": 926,
+            "displayScale": 132 / 926
           }
         }
       }

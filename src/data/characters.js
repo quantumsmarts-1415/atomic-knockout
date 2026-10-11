@@ -1608,6 +1608,8 @@ export const CHARACTERS = {
         displayScale: 0.19706,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
+          // The walk faces left, the same way the idle does.
+          walk: { count: 12, fps: 9.6, loop: true, frameW: 922, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
           // Power-Line Whips, Thermite Burn, and Turbine Vortex face left, the same way the idle does. The whip sheet is the cable.
           attack: { count: 12, fps: 18, loop: false, frameW: 2272, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
           charge: { count: 12, fps: 18, loop: false, frameW: 922, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
@@ -1699,6 +1701,7 @@ export const CHARACTERS = {
         displayScale: 0.10709,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 12, fps: 7.58, loop: true, frameW: 784, frameH: 1280, footY: 0.9938, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270 },
           // Crystal Blade. Binary Surge is also the Overclock gather.
           attack: { count: 12, fps: 18, loop: false, frameW: 1162, frameH: 1297, footY: 0.9838, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270 },
           charge: { count: 12, fps: 18, loop: false, frameW: 1280, frameH: 1286, footY: 0.9969, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270, file: 'silas_special.png' },
@@ -1773,6 +1776,7 @@ export const CHARACTERS = {
         displayScale: 0.2015,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          walk: { count: 12, fps: 9, loop: true, frameW: 466, frameH: 716, footY: 0.9749, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
           // Clean body sheets. The particle curtain is the flare.
           attack: { count: 12, fps: 18, loop: false, frameW: 546, frameH: 716, footY: 0.9749, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
           charge: { count: 12, fps: 18, loop: false, frameW: 554, frameH: 775, footY: 0.9755, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
@@ -1845,6 +1849,7 @@ export const CHARACTERS = {
         displayScale: 0.22527,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          walk: { count: 12, fps: 8, loop: true, frameW: 603, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
           // Brimstone Slam. The overhead wind-up stays as drawn.
           attack: { count: 11, fps: 17, loop: false, frameW: 603, frameH: 724, footY: 0.9655, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
         },
@@ -2058,6 +2063,7 @@ export const CHARACTERS = {
         displayScale: 0.20891,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          walk: { count: 12, fps: 11.08, loop: true, frameW: 551, frameH: 710, footY: 0.9731, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
           attack: { count: 12, fps: 18, loop: false, frameW: 551, frameH: 710, footY: 0.9731, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
         },
       },
@@ -2129,7 +2135,8 @@ export const CHARACTERS = {
         displayScale: 0.225,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          // The attack sheet faces right. sheetFacing keeps it unflipped.
+          // The walk and the attack face right while the idle faces left.
+          walk: { count: 12, fps: 7.38, loop: true, frameW: 428, frameH: 698, footY: 0.9706, visibleH: 653, bodyH: 653, displayScale: 144 / 653, sheetFacing: 1 },
           attack: { count: 12, fps: 18, loop: false, frameW: 454, frameH: 698, footY: 0.9706, visibleH: 653, bodyH: 653, displayScale: 144 / 653, sheetFacing: 1 },
         },
       },
@@ -2269,7 +2276,8 @@ export const CHARACTERS = {
         displayScale: 0.22393,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          // Alloy Fist faces left, the same way the idle does.
+          // The walk and Alloy Fist face left, the same way the idle does.
+          walk: { count: 12, fps: 9, loop: true, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
           attack: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
         },
       },

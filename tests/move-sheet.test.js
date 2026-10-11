@@ -455,3 +455,33 @@ test('embrittle opens on the grab, and a right-facing attack stays in front', ()
     assert.ok(ahead.x > 400, id);
   }
 });
+
+test('call 6 walks match their clip cells', () => {
+  const expect = {
+    allen: { fps: 9.6, sheetFacing: undefined },
+    silas: { fps: 7.58, sheetFacing: undefined },
+    phillip: { fps: 9, sheetFacing: undefined },
+    sully: { fps: 8, sheetFacing: undefined },
+    kyle: { fps: 11.08, sheetFacing: undefined },
+    cal: { fps: 7.38, sheetFacing: 1 },
+    van: { fps: 9, sheetFacing: undefined },
+  };
+  for (const [id, spec] of Object.entries(expect)) {
+    const art = CHARACTERS[id].art;
+    const def = art.sheets.clips.walk;
+    const png = pngSize(`${art.sheets.dir}${id}_walk.png`);
+    assert.equal(png.w % def.frameW, 0, `${id} width`);
+    assert.equal(png.h % def.frameH, 0, `${id} height`);
+    const cells = (png.w / def.frameW) * (png.h / def.frameH);
+    assert.ok(cells >= def.count, `${id} cells ${cells}`);
+    assert.equal(def.count, 12);
+    assert.equal(def.fps, spec.fps);
+    assert.equal(def.loop, true);
+    assert.equal(def.displayScale, art.height / def.visibleH);
+    assert.equal(def.sheetFacing, spec.sheetFacing);
+    assert.equal(MOVE_SHEETS[id].walk, undefined);
+  }
+  assert.equal(CHARACTERS.cal.art.facing, -1);
+  assert.equal(CHARACTERS.allen.art.facing, -1);
+  assert.equal(CHARACTERS.van.art.facing, -1);
+});

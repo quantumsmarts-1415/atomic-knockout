@@ -167,15 +167,7 @@ test('allen and silas sheets key solid metal and keep the break frames', () => {
   assert.equal(sheetPlayOrder('allen/thermite-burn'), null);
   assert.equal(blackThreshold({ blend: 'normal', black: 16 }), 16);
   const read = (folder) => JSON.parse(fs.readFileSync(`assets/fx/${folder}/fx.json`, 'utf8'));
-  const oxide = read('allen/oxide-skin');
-  assert.equal(oxide.blend, 'normal');
-  assert.equal(oxide.black, 16);
-  assert.equal(oxide.overCoat, true);
-  assert.equal(oxide.holdAt, 1);
-  assert.equal(oxide.breakFrom, 2);
-  assert.equal(oxide.anchor, 'body');
-  assert.equal(oxide.hit, false);
-  assert.equal(fs.existsSync('assets/fx/allen/oxide-skin/sheet.png'), true);
+  assert.equal(fs.existsSync('assets/fx/allen/oxide-skin/fx.json'), false);
   const whip = read('allen/power-line-whips');
   assert.equal(whip.blend, 'normal');
   assert.equal(whip.anchor, 'contact');
@@ -233,16 +225,13 @@ test('allen and silas sheets key solid metal and keep the break frames', () => {
   assert.deepStrictEqual(shards.frames, ['burst']);
 });
 
-test('flora sheets keep the jet, the coat flash, and both cascade sides', () => {
+test('flora sheets keep the jet and both cascade sides', () => {
   const read = (folder) => JSON.parse(fs.readFileSync(`assets/fx/flora/${folder}/fx.json`, 'utf8'));
   const jet = read('pale-yellow-jet');
   assert.equal(jet.pivot, 'left');
   assert.equal(jet.blend, 'add');
   assert.equal(jet.hit, false);
-  const coat = read('teflon-coat');
-  assert.equal(coat.frames, 4);
-  assert.equal(coat.releaseFlash, true);
-  assert.equal(coat.loop, undefined);
+  assert.equal(fs.existsSync('assets/fx/flora/teflon-coat/fx.json'), false);
   const cascade = read('radical-cascade');
   assert.equal(cascade.frames, 6);
   assert.equal(cascade.bothSides, true);
@@ -332,7 +321,7 @@ function pngSize(file) {
   return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
 }
 
-test('phillip sheets keep the upright flare, the five-round tracer, and the held shell', () => {
+test('phillip sheets keep the upright flare and the five-round tracer', () => {
   const read = (folder) => JSON.parse(fs.readFileSync(`assets/fx/phillip/${folder}/fx.json`, 'utf8'));
   const flare = read('phosphor-flare');
   assert.equal(flare.blend, 'add');
@@ -360,16 +349,7 @@ test('phillip sheets keep the upright flare, the five-round tracer, and the held
   assert.equal(tracers.muzzle.file, 'muzzle.png');
   assert.equal(fs.existsSync('assets/fx/phillip/tracers/object.png'), true);
   assert.equal(fs.existsSync('assets/fx/phillip/tracers/muzzle.png'), true);
-  const shell = read('red-phosphorus-form');
-  assert.equal(shell.blend, 'normal');
-  assert.equal(shell.black, 16);
-  assert.equal(blackThreshold(shell), 16);
-  assert.equal(shell.overCoat, true);
-  assert.equal(shell.guardAt, 2);
-  assert.equal(shell.holdAt, undefined);
-  assert.equal(shell.anchor, 'body');
-  assert.equal(shell.hit, false);
-  assert.equal(shell.frames, 4);
+  assert.equal(fs.existsSync('assets/fx/phillip/red-phosphorus-form/fx.json'), false);
   const step = 1000 / 10;
   const formed = { frames: [0, 1, 2, 3], fps: 10, guardAt: 2, loop: true };
   assert.equal(fxFrameIndex(formed, 0), 0);

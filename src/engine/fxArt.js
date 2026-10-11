@@ -1271,7 +1271,7 @@ function attachedWant(scene, fighter) {
   if (fighter.state === 'defending' && fighter.defenseMove) {
     const coated = coatSpec(fighter.defenseMove);
     const art = artFor(fighter.charDef?.id, fighter.defenseMove.name);
-    const shell = art && (!coated || art.overCoat);
+    const shell = art && !coated;
     if (shell && art.anchor === 'ground-front' && art.frames?.length) {
       return { art, kind: 'wall', elapsed: now - (fighter.defenseStart ?? now) };
     }

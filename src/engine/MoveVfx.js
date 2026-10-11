@@ -399,6 +399,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     return;
   }
   if (phase === 'shatter') {
+    if (coatSpec(move)?.flake) return;
     const burst = breakFrames(artFor(fighter.charDef?.id, move?.name));
     if (burst) {
       spawnFxSprite(scene, burst, x, y, 1);

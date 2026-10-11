@@ -230,6 +230,29 @@ export function syncChargeGlow(scene) {
   }
 }
 
+function drawBinaryDigit(scene, fighter, x, y, digit) {
+  fighter._binaryDigit?.destroy?.();
+  const g = scene.add.graphics?.();
+  if (!g) return;
+  fighter._binaryDigit = g;
+  g.setPosition?.(x, y);
+  g.setDepth?.(30);
+  g.fillStyle(0x071820, 1);
+  g.fillRoundedRect?.(-22, -34, 44, 68, 8);
+  g.lineStyle(3, 0x6ecbff, 1);
+  g.strokeRoundedRect?.(-22, -34, 44, 68, 8);
+  g.fillStyle(0xf4fbff, 1);
+  if (digit === '0') {
+    g.lineStyle(5, 0xf4fbff, 1);
+    g.strokeEllipse(0, 0, 22, 40);
+  } else {
+    g.fillRect(-5, -22, 10, 40);
+    g.fillRect(-12, 16, 24, 6);
+    g.fillTriangle?.(-14, -22, -5, -22, -5, -10);
+  }
+  die(scene, g, 280);
+}
+
 function sprayShards(scene, x, y) {
   for (let i = 0; i < 7; i++) {
     const a = (i / 7) * Math.PI * 2 + 0.2;
@@ -473,16 +496,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
           });
         } else wave.destroy?.();
       }
-      const label = scene.add.text?.(fighter.x, yBody, digit, {
-        fontFamily: 'Courier New, monospace',
-        fontSize: '32px',
-        color: '#e8f7ff',
-      });
-      if (label) {
-        label.setOrigin?.(0.5, 0.5);
-        label.setDepth?.(22);
-        die(scene, label, 280);
-      }
+      drawBinaryDigit(scene, fighter, fighter.x, yBody, digit);
       break;
     }
     case 'flare': {

@@ -160,23 +160,35 @@ function drawUnquenchable(g, fighter, time) {
 }
 
 function drawOverclock(g, fighter, time) {
-  if (!(fighter.attackHasteUntil > time)) return;
   const move = fighter.charDef?.moves?.basicCharge;
+  const charging = fighter.state === 'charging' && move?.overclock;
+  const buffed = (fighter.attackHasteUntil ?? 0) > time;
+  if (!charging && !buffed) return;
   if (artFor(fighter.charDef?.id, move?.name)?.frames?.length) return;
-  const hot = (fighter._overheatUntil ?? 0) > time;
+  const max = move?.maxChargeMs || 1;
+  const frac = charging
+    ? Math.max(0, Math.min(1, (time - (fighter.chargeStart ?? time)) / max))
+    : 0;
+  const hot = (fighter._overheatUntil ?? 0) > time || (charging && frac >= 0.82);
   const bodyH = fighter.bodyH ?? 80;
   const bodyW = fighter.bodyW ?? 40;
   const y = fighter.y - bodyH * 0.48;
-  const pulse = 0.6 + 0.4 * Math.sin(time / (hot ? 36 : 80));
-  g.lineStyle(2, hot ? 0xff6a2a : 0x4ad6ff, 0.5 * pulse);
-  g.strokeEllipse(fighter.x, y, bodyW * 1.65, bodyH * 1.12);
+  const pulse = 0.65 + 0.35 * Math.sin(time / (hot ? 36 : 80));
+  const color = hot ? 0xff4a1a : 0x4ad6ff;
+  const core = hot ? 0xffd0a0 : 0xd6f6ff;
+  g.lineStyle(hot ? 4 : 2, color, (hot ? 0.95 : 0.55) * pulse);
+  g.strokeEllipse(fighter.x, y, bodyW * (1.5 + frac * 0.35), bodyH * (1.05 + frac * 0.12));
+  if (hot) {
+    g.fillStyle(0xff4a1a, 0.28 * pulse);
+    g.fillEllipse(fighter.x, y, bodyW * 1.35, bodyH * 0.95);
+  }
   const ticks = 6;
   for (let i = 0; i < ticks; i++) {
     const a = time / 160 + (i / ticks) * Math.PI * 2;
     const x = fighter.x + Math.cos(a) * bodyW * 0.95;
     const yy = y + Math.sin(a) * bodyH * 0.48;
-    g.fillStyle(hot ? 0xfff2e0 : 0xd6f6ff, 0.9);
-    g.fillRect(x - 3, yy - 1, 6, 2);
+    g.fillStyle(core, 0.95);
+    g.fillRect(x - 4, yy - 2, hot ? 10 : 7, hot ? 4 : 2);
   }
 }
 

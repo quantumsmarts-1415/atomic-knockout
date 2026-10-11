@@ -1,0 +1,16 @@
+{
+  "blend": "add",
+  "black": 16,
+  "frames": 6,
+  "fps": 11,
+  "loop": true,
+  "fit": "height",
+  "heightFrac": 0.48,
+  "pivot": "bottom",
+  "anchor": "aura",
+  "hit": false,
+  "spriteAura": true,
+  "texture": {
+    "file": "texture.png"
+  }
+}

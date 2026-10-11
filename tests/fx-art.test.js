@@ -230,6 +230,44 @@ test('neo tube rings run dim to bright and the sign flickers after the steady pa
   assert.equal(flash.hit, false);
 });
 
+test('maggie ribbon wraps then holds the guard, and the flare sits on contact', () => {
+  const read = (folder) => JSON.parse(fs.readFileSync(`assets/fx/maggie/${folder}/fx.json`, 'utf8'));
+  const aura = read('unquenchable');
+  assert.equal(aura.blend, 'add');
+  assert.equal(aura.hit, false);
+  assert.equal(aura.spriteAura, true);
+  assert.equal(aura.anchor, 'aura');
+  assert.equal(aura.frames, 6);
+  assert.equal(fs.existsSync('assets/fx/maggie/unquenchable/sheet.png'), true);
+  assert.equal(fs.existsSync('assets/fx/maggie/unquenchable/texture.png'), true);
+  const ribbon = read('ribbon-guard');
+  assert.equal(ribbon.blend, 'add');
+  assert.equal(ribbon.hit, false);
+  assert.equal(ribbon.frames, 4);
+  assert.equal(ribbon.guardAt, 2);
+  assert.equal(ribbon.anchor, 'body');
+  assert.equal(ribbon.ignite.file, 'ignite.png');
+  assert.equal(fs.existsSync('assets/fx/maggie/ribbon-guard/ignite.png'), true);
+  const frame = 1000 / 12;
+  const guard = { frames: [0, 1, 2, 3], fps: 12, guardAt: 2, loop: true };
+  assert.equal(fxFrameIndex(guard, 0), 0);
+  assert.equal(fxFrameIndex(guard, frame), 1);
+  assert.equal(fxFrameIndex(guard, frame * 2), 2);
+  assert.equal(fxFrameIndex(guard, frame * 3), 3);
+  assert.equal(fxFrameIndex(guard, frame * 4), 2);
+  assert.equal(fxFrameIndex(guard, frame * 5), 3);
+  const jab = read('flare-jab');
+  assert.equal(jab.blend, 'add');
+  assert.equal(jab.hit, false);
+  assert.equal(jab.anchor, 'contact');
+  const flare = read('blinding-flare');
+  assert.equal(flare.blend, 'add');
+  assert.equal(flare.hit, false);
+  assert.equal(flare.stars.frames, 4);
+  assert.ok(flare.stars.squash > 0 && flare.stars.squash < 0.5);
+  assert.equal(fs.existsSync('assets/fx/maggie/blinding-flare/stars.png'), true);
+});
+
 test('a horizontal sheet splits into even frames', () => {
   const data = new Uint8ClampedArray(8 * 2 * 4);
   for (let x = 0; x < 8; x++) {

@@ -1,7 +1,7 @@
 // Code-driven move effects. Body clips stay on idle/walk unless a real
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
-import { artFor, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, wantsContactSpark } from './fxArt.js';
+import { artFor, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, wantsContactSpark } from './fxArt.js';
 import { coatSpec } from './coat.js';
 
 export const TYPE_COLORS = {
@@ -161,6 +161,11 @@ export function syncChargeGlow(scene) {
       continue;
     }
     if (move.buff?.unquenchable) {
+      const painted = artFor(fighter.charDef?.id, move.name);
+      if (painted?.spriteAura) {
+        glow.clear();
+        continue;
+      }
       const bodyH = fighter.bodyH ?? 80;
       const y = fighter.y - bodyH * 0.5;
       const r = 16 + frac * 28;
@@ -278,6 +283,11 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (!scene?.add || !fighter || scene.simFast) return;
   if (phase === 'ignite') {
     const y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+    const art = artFor(fighter.charDef?.id, move?.name);
+    if (art?.ignite?.frames?.length) {
+      spawnFxSprite(scene, art.ignite, fighter.x, y, 1);
+      return;
+    }
     burst(scene, fighter.x, y, 0xfff6e8, 16, 78);
     ring(scene, fighter.x, y, 0xfff6e8, (fighter.bodyH ?? 80) * 0.75, 3);
     return;
@@ -293,7 +303,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (phase === 'release' || phase === 'defense') {
     const art = artFor(fighter.charDef?.id, move?.name);
     if (phase === 'release' && art?.objectType === 'beam' && art.frames?.length && !extra?.fired) return;
-    if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance') return;
+    if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
     if (art?.detonate && move?.kind === 'burst') {
       spawnFxDetonate(scene, fighter, move, extra.x ?? fighter.x, extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55));
       return;
@@ -330,7 +340,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (phase === 'charge') {
     const painted = artFor(fighter.charDef?.id, move?.name);
     const heldArt = painted?.charge?.frames?.length || painted?.orbit?.frames?.length
-      || painted?.anchor === 'lance' || painted?.anchor === 'feet';
+      || painted?.anchor === 'lance' || painted?.anchor === 'feet' || painted?.spriteAura;
     if (!heldArt && style !== 'supernova' && !move?.overclock) gather(scene, x, y - 10, color);
     return;
   }

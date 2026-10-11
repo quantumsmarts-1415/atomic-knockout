@@ -2,7 +2,7 @@
 // orbit, absorb, shell, ozone, and freeze visuals that have to stay on the
 // fighter instead of playing once.
 
-import { artFor, fxNamed, vacancySignPoint } from './fxArt.js';
+import { artFor, fxFrameIndex, fxNamed, vacancySignPoint } from './fxArt.js';
 import { coatSpec } from './coat.js';
 import { FONT_DISPLAY } from '../ui/theme.js';
 
@@ -67,6 +67,7 @@ export function syncMoveFx(scene) {
     drawLance(g, fighter, time);
     drawFreeze(g, fighter, time);
     drawDazzle(g, fighter, time);
+    syncDazzleStars(scene, fighter, time);
     drawVacancy(scene, g, fighter, time);
     drawUnquenchable(g, fighter, time);
     drawRibbon(g, fighter, time);
@@ -121,8 +122,69 @@ function drawVacancy(scene, g, fighter, time) {
   label.setColor(flicker ? '#ffb4a2' : '#fff6e8');
 }
 
+const starHalos = new WeakMap();
+let starSeq = 0;
+
+function starSource(scene, key) {
+  const image = scene.textures?.get?.(key)?.getSourceImage?.();
+  if (!image || image.complete === false || !(image.width > 0)) return null;
+  return image;
+}
+
+/** Vertical ovals are spun in a canvas, then squashed so the ring stays flat. */
+function syncDazzleStars(scene, fighter, time) {
+  const stars = artFor('maggie', 'Blinding Flare')?.stars;
+  const show = (fighter.dazzleUntil > time) && fighter.dazzleColor === 0xf7fbff && stars?.frames?.length;
+  let slot = starHalos.get(fighter);
+  if (!show) {
+    slot?.image?.destroy?.();
+    if (slot) starHalos.delete(fighter);
+    return;
+  }
+  if (!slot?.image?.scene) {
+    slot?.image?.destroy?.();
+    const key = `daze-ring-${++starSeq}`;
+    if (!scene.textures.exists(key)) scene.textures.createCanvas(key, 8, 8);
+    const image = scene.add.image(0, 0, key);
+    image.setBlendMode?.('ADD');
+    image.setDepth(21);
+    image.setOrigin(0.5, 0.5);
+    slot = { key, image };
+    starHalos.set(fighter, slot);
+  }
+  const frame = stars.frames[fxFrameIndex(stars, time)] || stars.frames[0];
+  const src = starSource(scene, frame.key);
+  if (!src) {
+    slot.image.setVisible(false);
+    return;
+  }
+  const tex = scene.textures.get(slot.key);
+  const fit = Math.min(1, 240 / Math.max(src.width, src.height));
+  const dw = Math.max(2, Math.round(src.width * fit));
+  const dh = Math.max(2, Math.round(src.height * fit));
+  const side = Math.ceil(Math.hypot(dw, dh));
+  if (tex.width !== side || tex.height !== side) tex.setSize(side, side);
+  const ctx = tex.getContext();
+  ctx.clearRect(0, 0, side, side);
+  ctx.save();
+  ctx.translate(side / 2, side / 2);
+  ctx.rotate(time / 220);
+  ctx.drawImage(src, -dw / 2, -dh / 2, dw, dh);
+  ctx.restore();
+  tex.refresh();
+  const ringW = Math.max(78, (fighter.bodyW ?? 40) * 3.1);
+  const squash = stars.squash > 0 ? stars.squash : 0.34;
+  const ringH = ringW * squash;
+  slot.image.setTexture(slot.key);
+  slot.image.setVisible(true);
+  slot.image.setDisplaySize(ringW, ringH);
+  slot.image.rotation = 0;
+  slot.image.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) - ringH * 0.2);
+}
+
 function drawDazzle(g, fighter, time) {
   if (!(fighter.dazzleUntil > time)) return;
+  if (fighter.dazzleColor === 0xf7fbff && artFor('maggie', 'Blinding Flare')?.stars?.frames?.length) return;
   const y = fighter.y - (fighter.bodyH ?? 80) * 0.88;
   const spin = time / 160;
   const hot = fighter.dazzleColor ?? 0xfff6e8;

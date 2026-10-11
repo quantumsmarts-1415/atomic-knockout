@@ -1,0 +1,19 @@
+{
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.55,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "stars": {
+    "file": "stars.png",
+    "frames": 4,
+    "fps": 10,
+    "loop": true,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "pivot": "center",
+    "squash": 0.34
+  }
+}

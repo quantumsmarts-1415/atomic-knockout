@@ -381,6 +381,9 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     paceCharge: !!extra.paceCharge,
     stretch: extra.stretch === 'length' ? 'length' : null,
     sign: !!extra.sign,
+    guardAt: extra.guardAt > 0 ? extra.guardAt | 0 : 0,
+    spriteAura: !!extra.spriteAura,
+    squash: extra.squash > 0 ? extra.squash : 0,
   };
 }
 
@@ -622,7 +625,10 @@ async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH
   return { frames, reach };
 }
 
-const SIDE_SPECS = [['orbit', 'orbit-'], ['burst', 'burst-'], ['splash', 'splash-'], ['impact', 'impact-'], ['charge', 'charge-']];
+const SIDE_SPECS = [
+  ['orbit', 'orbit-'], ['burst', 'burst-'], ['splash', 'splash-'], ['impact', 'impact-'], ['charge', 'charge-'],
+  ['ignite', 'ignite-'], ['stars', 'stars-'], ['texture', 'texture-'],
+];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
   const inherit = { blend: meta.blend, black: meta.black };
@@ -643,6 +649,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       fadeAfter: !!merged.fadeAfter,
       shrinkAfter: !!merged.shrinkAfter,
       fadeMs: merged.fadeMs,
+      squash: merged.squash,
     });
   }
   return record;
@@ -672,6 +679,9 @@ async function loadMoveArt(scene, char, slot, move, index) {
     flicker: !!meta.flicker,
     stretch: meta.stretch === 'length' ? 'length' : null,
     sign: !!meta.sign,
+    guardAt: meta.guardAt | 0,
+    spriteAura: !!meta.spriteAura,
+    squash: meta.squash,
     spin: meta.spin,
     pulse: meta.pulse,
     frontGap: meta.frontGap,
@@ -882,6 +892,12 @@ export function fxFrameIndex(art, elapsed) {
   if (n <= 1) return seq ? seq[0] : 0;
   const fps = art.fps > 0 ? art.fps : 8;
   const i = Math.floor(Math.max(0, elapsed) / (1000 / fps));
+  const guardAt = !seq ? (art.guardAt | 0) : 0;
+  if (guardAt > 0 && guardAt < n) {
+    if (i < guardAt) return i;
+    const rest = n - guardAt;
+    return guardAt + (((i - guardAt) % rest) + rest) % rest;
+  }
   const step = art.loop ? ((i % n) + n) % n : Math.min(n - 1, i);
   return seq ? seq[step] : step;
 }
@@ -1015,10 +1031,19 @@ function stepOneShots(scene) {
   }
 }
 
+/** One additive sprite from an already-loaded side, such as the ribbon ignite. */
+export function spawnFxSprite(scene, art, x, y, scale = 1) {
+  if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
+  const img = placeStill(scene, art, x, y, 0);
+  applyFrameLook(img, art.frames[0], art, scale);
+  trackOneShot(scene, img, art, scale, null, 1);
+  return img;
+}
+
 export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   const art = artFor(fighter?.charDef?.id, move?.name);
   if (!art?.frames?.length || !scene?.add?.image) return null;
-  if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'lance' || art.anchor === 'feet') return null;
+  if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'lance' || art.anchor === 'feet' || art.anchor === 'aura') return null;
   if (art.objectType === 'projectile' || art.objectType === 'thrown') return null;
   if (art.objectType === 'slash arc' || art.objectType === 'extend') return null;
   const face = art.bothSides ? 1 : (art.flip ? (fighter?.facing || 1) : 1);

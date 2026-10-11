@@ -1719,8 +1719,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const on = this.defenseMove?.igniteOn;
     if (!on) return;
     if (incoming.type !== on && incoming.type2 !== on) return;
-    lightUnquenchable(this, time);
     playVfx(this.scene, this, this.defenseMove, 'ignite');
+    lightUnquenchable(this, time);
   }
 
   retortFromImmune(attacker, move, time) {

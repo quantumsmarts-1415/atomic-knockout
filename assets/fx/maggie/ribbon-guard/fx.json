@@ -1,0 +1,19 @@
+{
+  "blend": "add",
+  "black": 16,
+  "frames": 4,
+  "fps": 12,
+  "loop": true,
+  "fit": "height",
+  "heightFrac": 1.22,
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false,
+  "guardAt": 2,
+  "ignite": {
+    "file": "ignite.png",
+    "fit": "height",
+    "heightFrac": 1.15,
+    "pivot": "center"
+  }
+}

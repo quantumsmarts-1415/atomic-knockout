@@ -1,5 +1,6 @@
 // On-hit and on-cast consequences that any move can opt into.
 // Fighter and BattleScene stay character-agnostic; they read these flags.
+import { chemicalMult } from '../data/balance.js';
 
 export function applyOnHit(attacker, victim, move, time) {
   if (!move || victim === attacker) return;
@@ -38,9 +39,10 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.interrupt) lock(victim, time, fx.interrupt, true);
   if (fx.poison) {
     const p = fx.poison;
+    const chem = chemicalMult(attacker?.charDef?.combat, victim.charDef?.combat);
     victim.poisonUntil = time + (p.ms ?? 1600);
-    victim.poisonDps = p.dps ?? 1.4;
-    victim.poisonRamp = p.ramp ?? 0;
+    victim.poisonDps = (p.dps ?? 1.4) * chem;
+    victim.poisonRamp = (p.ramp ?? 0) * chem;
     victim.poisonTick = time + (p.delay ?? 280);
     if (p.inherit) victim.poisonInherit = true;
   }
@@ -64,10 +66,15 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.weakenMult = fx.weaken.mult ?? 0.75;
   }
   if (fx.burn) {
-    victim.burnUntil = time + (fx.burn.ms ?? 1200);
-    victim.burnDps = fx.burn.dps ?? 2;
-    victim.burnEvery = fx.burn.every ?? 280;
-    victim.burnTick = time + victim.burnEvery;
+    const sticky = !!fx.burn.untilKo;
+    // A washable burn does not put out white phosphorus.
+    if (!(victim.burnSticky && !sticky)) {
+      victim.burnUntil = sticky ? Number.POSITIVE_INFINITY : time + (fx.burn.ms ?? 1200);
+      victim.burnDps = fx.burn.dps ?? 2;
+      victim.burnEvery = fx.burn.every ?? 280;
+      victim.burnTick = time + victim.burnEvery;
+      victim.burnSticky = sticky;
+    }
   }
   if (fx.corrode) {
     victim.kinDefMult = fx.corrode.mult ?? 0.72;
@@ -89,7 +96,7 @@ function lock(victim, time, ms, cancelAttack) {
 export function cleanse(fighter, kinds) {
   const list = kinds ?? [];
   if (list.includes('poison')) fighter.poisonUntil = 0;
-  if (list.includes('burn')) fighter.burnUntil = 0;
+  if (list.includes('burn') && !fighter.burnSticky) fighter.burnUntil = 0;
   if (list.includes('blind')) {
     fighter.blindUntil = 0;
     fighter.dazzleUntil = 0;
@@ -105,9 +112,10 @@ export function stripBuffs(fighter) {
   fighter.speedBuffUntil = 0;
   fighter.attackHasteUntil = 0;
   fighter.heatResistUntil = 0;
-  fighter.burnUntil = 0;
+  if (!fighter.burnSticky) fighter.burnUntil = 0;
   fighter.kinDefMultUntil = 0;
-  // Unquenchable stays lit. Water, cold, and heat do not clear it.
+  // Unquenchable stays lit. White phosphorus (burnSticky) stays lit.
+  // Water, cold, and heat do not clear either one.
 }
 
 /** Damage over time only raises percent. No hitstun, flinch, knockback, flash, or hitstop. */

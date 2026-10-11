@@ -160,6 +160,26 @@ export function syncChargeGlow(scene) {
       glow.clear();
       continue;
     }
+    if (move.rain) {
+      const painted = artFor(fighter.charDef?.id, move.name);
+      if (painted?.frames?.length) {
+        glow.clear();
+        continue;
+      }
+      const spread = (move.rainSpread ?? 220) * (1 + ((move.chargeSpreadMult ?? move.chargeRadiusMult ?? 1) - 1) * frac);
+      const ground = fighter.y - 6;
+      const dir = fighter.facing || 1;
+      glow.clear();
+      glow.lineStyle(2, 0xd6ffb0, 0.25 + frac * 0.55);
+      glow.strokeEllipse(fighter.x + dir * spread * 0.12, ground, 36 + spread * 0.85, 14 + frac * 8);
+      const y0 = fighter.y - 24;
+      const y1 = fighter.y - 70 - frac * 50;
+      glow.lineStyle(3, 0xfff6e8, 0.35 + frac * 0.45);
+      glow.lineBetween(fighter.x, y0, fighter.x, y1);
+      glow.fillStyle(0xe8ffc0, 0.4 + frac * 0.4);
+      glow.fillCircle(fighter.x, y1, 4 + frac * 3);
+      continue;
+    }
     if (move.buff?.unquenchable) {
       const painted = artFor(fighter.charDef?.id, move.name);
       if (painted?.spriteAura) {
@@ -507,6 +527,45 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         } else wave.destroy?.();
       }
       drawBinaryDigit(scene, fighter, fighter.x, yBody, digit);
+      break;
+    }
+    case 'phosphor': {
+      if (artFor(fighter.charDef?.id, move?.name)?.frames?.length) break;
+      const y0 = fighter.y - 28;
+      const y1 = fighter.y - (fighter.bodyH ?? 80) - 48;
+      const streak = scene.add.rectangle?.(fighter.x, (y0 + y1) / 2, 5, Math.abs(y0 - y1), 0xfff6e8, 0.85);
+      if (streak) {
+        streak.setBlendMode?.('ADD');
+        die(scene, streak, 280);
+      }
+      const head = scene.add.circle?.(fighter.x, y1, 8, 0xf4ffe8, 0.95);
+      if (head) {
+        head.setBlendMode?.('ADD');
+        die(scene, head, 320);
+      }
+      for (let i = 0; i < 5; i++) {
+        const spark = scene.add.circle?.(
+          fighter.x + (i % 2 ? 5 : -5), y0 + (y1 - y0) * (i / 5), 2.5, 0xd6ffb0, 0.8,
+        );
+        if (!spark) continue;
+        spark.setBlendMode?.('ADD');
+        die(scene, spark, 180 + i * 30);
+      }
+      break;
+    }
+    case 'tracer': {
+      if (artFor(fighter.charDef?.id, move?.name)?.frames?.length) break;
+      const dir = fighter.facing || 1;
+      const muzzle = scene.add.circle?.(fighter.x + dir * 28, y, 6, 0xfff6e8, 0.9);
+      if (muzzle) {
+        muzzle.setBlendMode?.('ADD');
+        die(scene, muzzle, 80);
+      }
+      break;
+    }
+    case 'wp': {
+      if (artFor(fighter.charDef?.id, move?.name)?.frames?.length) break;
+      burst(scene, x, y, 0xfff6e8, 8, 28);
       break;
     }
     case 'flare': {

@@ -6,7 +6,9 @@
 //   tensile       ultimate tensile strength, MPa (kinetic defense)
 //   boiling       kelvin. null = unpublished
 //   conductivity  MS/m. 0 = insulator. null = unpublished
-//   en            Pauling electronegativity. null = none / unpublished
+//   en            Pauling electronegativity. null = unpublished (not zero).
+//                 Nobles stay null and are immune. Any other null EN deals
+//                 base chemical damage (multiplier 1).
 // Adding one of the other 94 elements later is a new entry here plus a kit.
 // ---------------------------------------------------------------------------
 

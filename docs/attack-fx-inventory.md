@@ -64,7 +64,7 @@ These are the lowest scores, and among the placeholders the largest on screen. T
 | 23 | Silas | Binary Surge | area or burst | 160×160 | 1 |
 | 24 | Copernicus | Revolution | area or burst | 156×156 | 1 |
 | 25 | Goldie | MRI Contrast | area or burst | 156×156 | 1 |
-| 26 | Phillip | Spontaneous Ignition | area or burst | 156×156 | 1 |
+| 26 | Phillip | Spontaneous Ignition | projectile | 36×36 | 1 |
 | 27 | Tate | Self-Vaporize | area or burst | 156×156 | 1 |
 | 28 | Einstein | Mass-Energy | area or burst | 148×148 | 1 |
 | 29 | Indy | Invisible Film | area or burst | 148×148 | 1 |
@@ -134,10 +134,10 @@ These are the lowest scores, and among the placeholders the largest on screen. T
 | Silas | Crystal Blade | slash arc | code-drawn shape: glass blade | 74×48 | a glassy slash that bursts into shards on hit | shards stay on the arm until the next swing | 2 |
 | Silas | Silica Pane | shield | code-drawn shape: glass pane | 72×72 | a vertical pane in front of the torso | held while defending; shards when a strong kinetic hit breaks it | 1 |
 | Silas | Binary Surge | area or burst | code-drawn shape: two electrical waves | 160×160 | a ring marked 1, then a ring marked 0 if the first missed | the second wave follows about 120 ms later | 1 |
-| Phillip | Strike Anywhere | area or burst | procedural particles: tinted star and streaks | 104×104 | streaks fly outward, no spin on the core | fades over about 160–320 ms | 1 |
-| Phillip | Glow Strike | slash arc | code-drawn shape: thick slash stroke | 72×48 | the stroke sweeps from about -60° to +26° | the idle body during the swing; the stroke grows across the active frames | 2 |
-| Phillip | Red Phosphorus Form | shield | code-drawn shape: translucent circle | 72×72 | no rotation | fades over about 500 ms | 1 |
-| Phillip | Spontaneous Ignition | area or burst | procedural particles: tinted star and streaks | 156×156 | streaks fly outward, no spin on the core | fades over about 160–320 ms | 1 |
+| Phillip | Phosphor Flare | projectile | code-drawn shape: upward flare and ember shower | 120×160 | the flare goes straight up, then embers fall in a fan | a longer charge widens the fan; embers last about 650 ms | 1 |
+| Phillip | Tracers | projectile | code-drawn shape: tracer streak | 28×8 | five rounds fly right, each with a glowing trail | each trail lasts 0.5 s | 1 |
+| Phillip | Red Phosphorus Form | shield | code-drawn shape: dull red coat | 72×72 | the coat sits on the body and leaves the face clear | held while defending; he cannot move | 1 |
+| Phillip | Spontaneous Ignition | projectile | code-drawn shape: white phosphorus blob | 36×36 | lobbed in an arc | a white burst on hit, then a clinging burn until KO | 1 |
 | Sully | Black Powder | area or burst | procedural particles: tinted star and streaks | 108×108 | streaks fly outward, no spin on the core | fades over about 160–320 ms | 1 |
 | Sully | Brimstone Slam | slash arc | code-drawn shape: thick slash stroke | 72×48 | the stroke sweeps from about -60° to +26° | the idle body during the swing; the stroke grows across the active frames | 2 |
 | Sully | Vulcanized Rubber | shield | code-drawn shape: translucent circle | 95×95 | no rotation | fades over about 500 ms | 1 |
@@ -797,13 +797,13 @@ assets/fx/silas/silica-pane/object.png. Transparent PNG at full resolution, poin
 
 assets/fx/silas/binary-surge/object.png. Transparent PNG at full resolution, pointing right, fitted inside 160×160 px, pivot at the center (0.50, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
 
-### Phillip — Strike Anywhere
+### Phillip — Phosphor Flare
 
-assets/fx/phillip/strike-anywhere/object.png. Transparent PNG at full resolution, pointing right, fitted inside 104×104 px, pivot at the center (0.50, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
+assets/fx/phillip/phosphor-flare/object.png. Transparent PNG at full resolution, pointing right, fitted inside 120×160 px, pivot at the center (0.50, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
 
-### Phillip — Glow Strike
+### Phillip — Tracers
 
-assets/fx/phillip/glow-strike/object.png. Transparent PNG at full resolution, pointing right, fitted inside 72×48 px, pivot at the left center (0, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
+assets/fx/phillip/tracers/object.png. Transparent PNG at full resolution, pointing right, fitted inside 28×8 px, pivot at the left center (0, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
 
 ### Phillip — Red Phosphorus Form
 
@@ -811,7 +811,7 @@ assets/fx/phillip/red-phosphorus-form/object.png. Transparent PNG at full resolu
 
 ### Phillip — Spontaneous Ignition
 
-assets/fx/phillip/spontaneous-ignition/object.png. Transparent PNG at full resolution, pointing right, fitted inside 156×156 px, pivot at the center (0.50, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
+assets/fx/phillip/spontaneous-ignition/object.png. Transparent PNG at full resolution, pointing right, fitted inside 36×36 px, pivot at the center (0.50, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
 
 ### Sully — Black Powder
 

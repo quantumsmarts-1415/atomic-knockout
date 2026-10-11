@@ -189,10 +189,10 @@ Her move names and numbers stay as they are in game. She still has no attack she
 
 | Move | Slot | Frames | Size | Pose |
 | --- | --- | --- | --- | --- |
-| Strike Anywhere | Charge | 8 | 466×716 | Strikes a match-tip finger forward. The flame pops in front of him, not on his body. |
-| Glow Strike | Normal | 8 | 466×716 | A glowing punch. The struck spot should read as catching fire. |
-| Red Phosphorus Form | Defense | 8, loop | 466×716 | Skin shifts to dull red and he tucks in. He looks stable, not burning. |
-| Spontaneous Ignition | Special | 8 | 466×716 | Snaps alight and stamps a patch of fire onto the ground beside him. |
+| Phosphor Flare | Charge | 8 | 466×716 | Fires a signal flare straight up. A longer charge is a wider stance. The burning shower falls in front of him, not on his body. |
+| Tracers | Normal | 8 | 466×716 | Shoulder a rifle and fires a short burst. Each round is a quick tracer, not a punch. |
+| Red Phosphorus Form | Defense | 8, loop | 466×716 | Skin shifts to dull red and he plants his feet. He looks stable, not burning, and he does not step. |
+| Spontaneous Ignition | Special | 8 | 466×716 | Throws a lump of white phosphorus. The lump is in the air, then it clings and burns on the target. |
 
 ## Sully (Sulfur) — idle 603×720
 

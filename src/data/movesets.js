@@ -404,24 +404,40 @@ export const MOVESETS = {
   },
 
   phillip: {
-    basicCharge: m('Strike Anywhere', {
-      kind: 'burst', type: H, damage: 8, chargeDamageMult: 2.1, chargeRadiusMult: 1.5,
-      maxChargeMs: 750, radius: 52, offsetX: 46, vfx: 'fire', vfxColor: 0xfff2c0,
-      baseKnockback: 140, knockbackGrowth: 2.6, duration: 240, cooldown: 680,
+    basicCharge: m('Phosphor Flare', {
+      // The flare goes up. The shower is the hit: heat and chemical.
+      // Charge widens the fan. It does not add damage.
+      kind: 'projectile', type: H, damage: 3.4, type2: C, damage2: 2.6,
+      rain: 5, rainSpread: 150, chargeSpreadMult: 2.4, rainDelay: 180,
+      maxChargeMs: 700, visualShape: 'ember', vfx: 'phosphor', vfxColor: 0xe8ffc0,
+      projectileSpeed: 80, projectileRadius: 12, projectileLife: 650,
+      baseKnockback: 48, knockbackGrowth: 0.8,
+      // Startup 4. Endlag 8. Same-button lock ~27 frames (was ~55).
+      startupF: 4, endlagF: 8, duration: 240, cooldown: 220,
     }),
-    basicDirectional: melee('Glow Strike', {
-      type: K, damage: 7, onHit: { burn: { dps: 1.6, ms: 1300 } },
-      baseKnockback: 160, knockbackGrowth: 3.0,
-      vfx: 'fire', vfxColor: 0xe8ffb0, duration: 250, cooldown: 560,
+    basicDirectional: m('Tracers', {
+      kind: 'projectile', type: H, damage: 1.7, type2: K, damage2: 1.7,
+      salvo: 5, salvoGap: 70, trailMs: 500, visualShape: 'tracer',
+      vfx: 'tracer', vfxColor: 0xfff2c0,
+      projectileSpeed: 980, projectileRadius: 6, projectileLife: 380,
+      baseKnockback: 24, knockbackGrowth: 0.4,
+      // The volley is the move. Cooldown 34 → 5 frames.
+      // Same-button lock ~29 frames (was ~49).
+      startupF: 2, endlagF: 8, duration: 400, cooldown: 80,
     }),
     specialDefense: m('Red Phosphorus Form', {
-      blocks: [H], debuffImmune: true, duration: 900, cooldown: 700,
-      vfx: 'shield', vfxColor: 0xff4a4a,
+      blocks: [H, C], stripBlocked: true, rooted: true,
+      // The coat stays while held. Cooldown 42 → 17 frames.
+      duration: 720, cooldown: 280, vfx: 'shield', vfxColor: 0x7a2e2e,
     }),
     specialDirectional: m('Spontaneous Ignition', {
-      kind: 'burst', type: H, damage: 8, radius: 78, vfx: 'fire',
-      zone: { type: H, damage: 2.2, ms: 1600, radius: 66, tick: 400, color: 0xff6a1a },
-      baseKnockback: 150, knockbackGrowth: 2.8, duration: 280, cooldown: 860,
+      kind: 'projectile', type: K, damage: 8, lob: 480,
+      visualShape: 'wp', vfx: 'wp', vfxColor: 0xfff6e8,
+      projectileSpeed: 460, projectileRadius: 14, projectileLife: 900,
+      onHit: { burn: { dps: 1, every: 1000, untilKo: true } },
+      baseKnockback: 160, knockbackGrowth: 2.6,
+      // Startup 4. Endlag 10. Same-button lock ~33 frames (was ~69).
+      startupF: 4, endlagF: 10, duration: 220, cooldown: 340,
     }),
   },
 

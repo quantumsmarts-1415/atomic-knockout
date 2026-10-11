@@ -314,6 +314,8 @@ export function interceptHit(defender, attacker, move, time) {
   if (defense.blocks?.length) {
     const blocked = types.filter((t) => defense.blocks.includes(t));
     if (types.length && blocked.length === types.length) return { result: 'negate' };
+    // A mixed hit keeps the types this guard does not list.
+    if (defense.stripBlocked && blocked.length) return { result: 'pass', stripTypes: blocked };
   }
 
   if (defense.kind === 'wall' && !defense.blocks) return { result: 'negate' };

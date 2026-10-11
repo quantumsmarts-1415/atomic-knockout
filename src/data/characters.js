@@ -1757,8 +1757,8 @@ export const CHARACTERS = {
     },
     moves: {
       basicDirectional: {
-        name: 'Glow Strike',
-        type: 'physical',
+        name: 'Tracers',
+        type: 'heat',
         damage: 8,
         baseKnockback: 150,
         knockbackGrowth: 5.0,
@@ -1769,9 +1769,9 @@ export const CHARACTERS = {
       },
       specialDirectional: {
         name: 'Spontaneous Ignition',
-        kind: 'burst',
-        type: 'heat',
-        damage: 13,
+        kind: 'projectile',
+        type: 'kinetic',
+        damage: 8,
         baseKnockback: 235,
         knockbackGrowth: 6.2,
         radius: 85,

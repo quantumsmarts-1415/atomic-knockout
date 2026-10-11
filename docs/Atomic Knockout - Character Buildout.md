@@ -12,7 +12,11 @@ Gases and liquids have 0 kinetic stats. Missing data is 0.
 Density is radiation defense. It also sets your speed and how far you fly when jumping and taking damage (denser = slower and heavier).
 Boiling point is heat defense. Cold attacks count as heat damage.
 Electrical conductivity is electrical attack and defense. Very high and very low conductivity both take less electrical damage. Mid-range conductivity takes the most.
-Chemical damage is modified by the difference in electronegativity between the attacker and the defender. Noble gases are immune to chemical damage.
+Chemical damage = base damage × a multiplier from the Pauling electronegativity gap between the attacker's element and the target's element.
+	0 if the target is a noble gas (Helen, Neo, Aaron, and any later noble).
+	1 if either element has no published electronegativity. A missing value is not treated as 0.
+	clamp(1 + 0.16 × |EN_attacker − EN_target|, 0, 1.85) otherwise.
+	The same element is 1×. Fluorine (3.98) into potassium (0.82) is about 1.51×. The cap keeps a large gap from deleting a stock on one hit. The values live on each element record.
 Ghost characters (Rutherfordium through Oganesson) lose HP steadily while playing. They have very weak stats and super strong attacks. Every missing stat is 0.
 Damage over time (any per-second damage, including self-damage) only raises percent. It does not cause hitstun, flinch, knockback, hit-flash, or hitstop.
 Controls: Charge = hold normal. Normal = normal + a direction. Defense = hold special. Special = special + a direction.
@@ -899,10 +903,10 @@ Reactive Nonmetal:
 	Boiling Point: 553.7 K (white phosphorus)
 	Electrical conductivity: ≈0 MS/m (insulator)
 	Electronegativity: 2.19
-	Charge Move: "Strike Anywhere" Phillip drags himself along like a match on a striker while charging, then bursts into flame in front of him for heat damage that grows with the friction he built. (draft)
-	Normal Move: "Glow Strike" Phillip strikes with a fist of glowing white phosphorus (its name means "light-bearer"), dealing kinetic damage plus a lingering heat burn. (draft) [currently in the game: physical close-range hit]
-	Defense Move: "Red Phosphorus Form" Phillip shifts into stable red phosphorus while held. He stops glowing, can't be ignited and blocks heat damage, but he moves slower. (draft)
-	Special Move: "Spontaneous Ignition" Phillip's white phosphorus bursts into flame on contact with air, dealing heat damage in an area around him and leaving burning patches on the floor. (draft) [currently in the game: heat area burst around them]
+	Charge Move: "Phosphor Flare" Phillip fires a signal flare upward. It drops a burning shower that deals heat and chemical damage. A longer charge spreads the shower wider.
+	Normal Move: "Tracers" Phillip fires five tracer rounds in quick succession. Each round deals heat and kinetic damage and leaves a glowing trail for 0.5 seconds.
+	Defense Move: "Red Phosphorus Form" While held, Phillip shifts into stable red phosphorus. The form blocks heat and chemical damage, and he cannot move.
+	Special Move: "Spontaneous Ignition" Phillip throws white phosphorus. The hit deals kinetic damage and sets the target on fire for 1% per second. The fire cannot be put out and lasts until that fighter is KO'd. It is damage over time, so it only raises percent.
 -Sulfur
 	Name: Sully
 	Natural State: Solid

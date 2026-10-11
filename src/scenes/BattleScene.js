@@ -702,6 +702,20 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  leaveTracer(p, time) {
+    if (!(p?.move?.trailMs > 0) || this.simFast || p.dead) return;
+    if (artFor(p.owner?.charDef?.id, p.move.name)?.frames?.length) return;
+    if (time - (p._trailAt ?? 0) < 28) return;
+    p._trailAt = time;
+    const streak = this.add.rectangle(p.gfx.x, p.gfx.y, 18, 3, p.move.vfxColor ?? 0xfff2c0, 0.72);
+    streak.setBlendMode?.('ADD');
+    streak.rotation = Math.atan2(p.vy || 0, p.vx || 1);
+    this.tweens?.add?.({
+      targets: streak, alpha: 0, duration: p.move.trailMs,
+      onComplete: () => streak.destroy(),
+    });
+  }
+
   sweepMarked(owner, move, already) {
     if (!move?.hitMarked || !owner) return;
     const now = this.time.now;
@@ -715,17 +729,35 @@ export default class BattleScene extends Phaser.Scene {
 
   spawnProjectile(owner, move) {
     if (move.rain > 1 && !move._rainChild) {
-      const n = move.rain | 0;
+      const launch = () => {
+        if (!owner?.alive) return;
+        const n = move.rain | 0;
+        const spread = move.rainSpread ?? 220;
+        for (let i = 0; i < n; i++) {
+          const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
+          this.spawnProjectile(owner, {
+            ...move,
+            rain: 0,
+            rainDelay: 0,
+            _rainChild: true,
+            _vy: 260 + (i % 3) * 40,
+            projectileSpeed: 70 + Math.abs(t) * spread,
+            _flip: t < 0,
+          });
+        }
+      };
+      if (move.rainDelay > 0 && this.time?.delayedCall) this.time.delayedCall(move.rainDelay, launch);
+      else launch();
+      return;
+    }
+    if (move.salvo > 1 && !move._salvoChild) {
+      const n = move.salvo | 0;
+      const gap = move.salvoGap ?? 80;
       for (let i = 0; i < n; i++) {
-        const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
-        this.spawnProjectile(owner, {
-          ...move,
-          rain: 0,
-          _rainChild: true,
-          _vy: 260 + (i % 3) * 40,
-          projectileSpeed: 70 + Math.abs(t) * 220,
-          _flip: t < 0,
-        });
+        const child = { ...move, salvo: 0, _salvoChild: true };
+        const go = () => { if (owner?.alive) this.spawnProjectile(owner, child); };
+        if (i === 0 || !this.time?.delayedCall) go();
+        else this.time.delayedCall(i * gap, go);
       }
       return;
     }
@@ -797,8 +829,16 @@ export default class BattleScene extends Phaser.Scene {
     let y = move._from?.y ?? (move.roll ? owner.y : owner.y - owner.bodyH * 0.65);
     if (move.fromAbove) y -= 220;
     if (move._rainChild) y -= 160;
-    if (!move._orbitChild && !move._fanChild && !move._rainChild && !move._behindChild) {
+    if (!move._orbitChild && !move._fanChild && !move._rainChild && !move._behindChild && !move._salvoChild) {
       spawnMoveExtra(this, owner, move, 'splash', x, y, face);
+    }
+    if (move.visualShape === 'tracer' && !this.simFast && !artFor(owner.charDef?.id, move.name)?.frames?.length) {
+      const flash = this.add.circle(x, y, 7, 0xfff6e8, 0.9);
+      flash.setBlendMode?.('ADD');
+      this.tweens?.add?.({
+        targets: flash, alpha: 0, scale: 1.8, duration: 70,
+        onComplete: () => flash.destroy(),
+      });
     }
     const born = this.time.now;
     const shot = {
@@ -1687,6 +1727,7 @@ export default class BattleScene extends Phaser.Scene {
         p.gfx.x += (p.vx * delta) / 1000;
         p.gfx.y += (p.vy * delta) / 1000 + Math.sin(time / 90) * 0.25;
         stepFxProjectile(p, time);
+        this.leaveTracer(p, time);
       }
       if (p.move.ricochet && !p.pinned) {
         const cap = p.move.ricochet === true ? 2 : p.move.ricochet;

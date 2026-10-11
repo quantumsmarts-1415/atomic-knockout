@@ -464,6 +464,34 @@ export function paintShot(gfx, move, r) {
     gfx.fillEllipse(0, 0, r * 1.7, r * 0.55);
     return true;
   }
+  if (shape === 'ember') {
+    gfx.fillStyle(0xfff6e8, 0.95);
+    gfx.fillCircle(0, 0, r * 0.45);
+    gfx.fillStyle(0xd6ffb0, 0.8);
+    gfx.fillCircle(-r * 0.15, r * 0.1, r * 0.22);
+    gfx.lineStyle(1.5, 0xffffff, 0.45);
+    gfx.lineBetween(-r * 0.1, r * 0.35, -r * 0.35, r * 1.15);
+    return true;
+  }
+  if (shape === 'tracer') {
+    gfx.fillStyle(0xfff2c0, 0.95);
+    gfx.fillTriangle(r * 1.6, 0, -r * 0.2, -r * 0.35, -r * 0.2, r * 0.35);
+    gfx.fillStyle(0xfff6e8, 0.9);
+    gfx.fillCircle(r * 0.7, 0, r * 0.28);
+    gfx.lineStyle(2, 0xffb45a, 0.55);
+    gfx.lineBetween(-r * 1.8, 0, -r * 0.15, 0);
+    return true;
+  }
+  if (shape === 'wp') {
+    gfx.fillStyle(0xfff6e8, 0.95);
+    gfx.fillCircle(0, 0, r * 0.7);
+    gfx.fillStyle(0xffffff, 0.85);
+    gfx.fillCircle(-r * 0.15, -r * 0.12, r * 0.28);
+    gfx.fillStyle(0xe8e8e8, 0.35);
+    gfx.fillCircle(r * 0.45, r * 0.2, r * 0.45);
+    gfx.fillCircle(-r * 0.55, r * 0.35, r * 0.32);
+    return true;
+  }
   if (shape === 'breath') {
     gfx.fillStyle(0xc9ecff, 0.45);
     gfx.fillTriangle(-r * 0.2, -r * 0.35, -r * 0.2, r * 0.35, r * 1.8, 0);

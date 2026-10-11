@@ -196,6 +196,19 @@ function outgoingMult(type, combat) {
   return 1;
 }
 
+/**
+ * Pauling electronegativity multiplier on chemical damage.
+ * 0 for a noble-gas target. 1 when either EN is unpublished (not treated as 0).
+ * Otherwise clamp(1 + chemPerEn * |EN_attacker − EN_target|, chemClamp).
+ */
+export function chemicalMult(atk, def) {
+  if (!def) return 1;
+  if (def.noble) return 0;
+  if (atk?.en == null || def.en == null) return 1;
+  const mult = 1 + TUNING.chemPerEn * Math.abs(atk.en - def.en);
+  return clamp(mult, TUNING.chemClamp[0], TUNING.chemClamp[1]);
+}
+
 function incomingMult(type, atk, def) {
   if (!def) return 1;
   const T = TUNING;
@@ -205,12 +218,7 @@ function incomingMult(type, atk, def) {
   else if (type === 'heat') mult = 1 - (def.heatDef || 0);
   else if (type === 'electrical') mult = def.elecTaken ?? 1;
   else if (type === 'radiation') mult = 1 - (def.radDef || 0);
-  else if (type === 'chemical') {
-    if (def.noble) return 0;
-    if (atk?.en == null || def.en == null) return 1;
-    mult = 1 + T.chemPerEn * Math.abs(atk.en - def.en);
-    return clamp(mult, T.chemClamp[0], T.chemClamp[1]);
-  }
+  else if (type === 'chemical') return chemicalMult(atk, def);
   return clamp(mult, T.incomingClamp[0], T.incomingClamp[1]);
 }
 

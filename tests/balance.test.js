@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert';
 import { CHARACTERS } from '../src/data/characters.js';
 import {
-  TUNING, densityT, deriveProfile, electricalTakenMult, resolvePacket, resolveMoveDamage,
+  TUNING, chemicalMult, densityT, deriveProfile, electricalTakenMult, resolvePacket, resolveMoveDamage,
 } from '../src/data/balance.js';
 
 test('gases have no kinetic modifiers and nobles ignore chemical damage', () => {
@@ -49,10 +49,34 @@ test('electrical defense is a bell: mid-range takes more than either extreme', (
 test('chemical damage grows with electronegativity difference', () => {
   const flora = CHARACTERS.flora.combat;
   const natalie = CHARACTERS.natalie.combat;
+  const kyle = CHARACTERS.kyle.combat;
+  const oxana = CHARACTERS.oxana.combat;
   const same = resolvePacket(10, 'chemical', flora, flora);
   const vsSodium = resolvePacket(10, 'chemical', flora, natalie);
+  const vsPotassium = resolvePacket(10, 'chemical', flora, kyle);
+  const vsOxygen = resolvePacket(10, 'chemical', flora, oxana);
   assert.ok(Math.abs(same - 10) < 1e-9);
-  assert.ok(vsSodium > same);
+  assert.ok(vsPotassium > vsSodium);
+  assert.ok(vsSodium > vsOxygen);
+  assert.ok(vsOxygen > same);
+  const gap = Math.abs(flora.en - kyle.en);
+  const expected = 10 * Math.min(TUNING.chemClamp[1], 1 + TUNING.chemPerEn * gap);
+  assert.ok(Math.abs(vsPotassium - expected) < 1e-9);
+  assert.strictEqual(CHARACTERS.phillip.combat.en, 2.19);
+  assert.strictEqual(flora.en, 3.98);
+  assert.strictEqual(CHARACTERS.neo.combat.en, null);
+  assert.strictEqual(resolvePacket(10, 'chemical', flora, CHARACTERS.neo.combat), 0);
+  assert.strictEqual(resolvePacket(10, 'chemical', flora, CHARACTERS.helen.combat), 0);
+  const unpublished = deriveProfile({
+    density: 1, mohs: 1, tensile: 10, boiling: 1000, conductivity: 1, en: null, noble: false,
+  });
+  assert.strictEqual(chemicalMult(flora, unpublished), 1);
+  assert.strictEqual(resolvePacket(10, 'chemical', flora, unpublished), 10);
+  const move = { type: 'chemical', damage: 10 };
+  const onKyle = resolveMoveDamage(move, CHARACTERS.flora, CHARACTERS.kyle).total;
+  const onOxana = resolveMoveDamage(move, CHARACTERS.flora, CHARACTERS.oxana).total;
+  assert.ok(onKyle > onOxana);
+  assert.strictEqual(resolveMoveDamage(move, CHARACTERS.flora, CHARACTERS.aaron).total, 0);
 });
 
 test('density orders speed and weight, and every roster fighter stays in clamp', () => {

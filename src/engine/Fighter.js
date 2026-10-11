@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
-import { resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
+import { canonicalType, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, interceptHit, rearmDefense } from './defense.js';
 import { applyOnCast, applyOnHit, bonusPackets, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, tickKit, weakestType } from './kit.js';
 import { playVfx } from './MoveVfx.js';
@@ -441,6 +441,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.body.setVelocityY(Math.max(this.body.velocity.y, FEEL.fastFallSpeed));
         if (!this.scene?.simFast) this.scene.juice?.puff?.(this.x, this.y - 10, 0xd0e4ff, 0.35);
       }
+    }
+
+    if (this.state === 'defending' && this.defenseMove?.rooted && this.body) {
+      this.body.setVelocityX(0);
     }
 
     if (onGround && this._wasAir) {
@@ -941,6 +945,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (move.zone && move.chargeRadiusMult) {
       scaled.zone = { ...move.zone, radius: scale(move.zone.radius ?? 70, move.chargeRadiusMult) };
     }
+    if (move.rain) {
+      const spreadMult = move.chargeSpreadMult ?? move.chargeRadiusMult ?? 1;
+      scaled.rainSpread = scale(move.rainSpread ?? 220, spreadMult);
+    }
     if (move.chargeStack) {
       const every = move.chargeStack.every ?? 1000;
       const stepDmg = move.chargeStack.damage ?? 4;
@@ -987,6 +995,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
     if (move.leaveAfterimage) this.scene?.juice?.afterimage?.(this, 0.48);
     if (move.float) this.body?.setVelocityY(-70);
+    if (move.rooted) this.body?.setVelocityX(0);
     if (move.zone) {
       this.scene.spawnZone?.(this, move.zone, this.x, this.y - this.bodyH * (move.zone.low ? 0.2 : 0.45));
     }
@@ -1152,6 +1161,17 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
 
     const gate = interceptHit(this, attacker, incoming, time);
+    if (gate.stripTypes?.length && gate.result === 'pass') {
+      const drop = new Set(gate.stripTypes);
+      const dropType = (t) => t && drop.has(canonicalType(t));
+      incoming = {
+        ...incoming,
+        damage: dropType(incoming.type) ? 0 : incoming.damage,
+        type: dropType(incoming.type) ? undefined : incoming.type,
+        damage2: dropType(incoming.type2) ? 0 : incoming.damage2,
+        type2: dropType(incoming.type2) ? undefined : incoming.type2,
+      };
+    }
     if (gate.damageMult && gate.damageMult !== 1) {
       incoming = {
         ...incoming,
@@ -1790,6 +1810,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (this.state === 'dead' || this.state === 'ko') return;
     this.stocks -= 1;
     this.state = 'ko';
+    // White phosphorus goes out when that fighter is KO'd, not before.
+    this.burnUntil = 0;
+    this.burnSticky = false;
     this.body.setVelocity(0, 0);
     this.body.setEnable(false);
     this.launch = null;

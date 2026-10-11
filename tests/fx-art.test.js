@@ -143,8 +143,17 @@ test('a puddle grows through frames 1-4 then the last frame shrinks and fades', 
 test('natalie puddle sits at her feet and the salt line mirrors', () => {
   const read = (folder) => JSON.parse(fs.readFileSync(`assets/fx/natalie/${folder}/fx.json`, 'utf8'));
   const lake = read('lake-drop');
-  assert.equal(lake.blend, 'add');
+  assert.equal(lake.file, 'lake-drop-explosion-anim.png');
+  assert.equal(lake.frames, 24);
+  assert.equal(lake.cols, 4);
+  assert.equal(lake.rows, 6);
+  assert.equal(lake.blend, 'screen');
+  assert.equal(lake.luma, true);
+  assert.equal(lake.loop, false);
+  assert.equal(lake.scale, 1.25);
+  assert.equal(lake.scaleWith, 'radius');
   assert.equal(lake.hit, false);
+  assert.equal(lake.charge.blend, 'add');
   assert.equal(lake.charge.frames, 4);
   assert.equal(lake.charge.anchor, 'feet');
   assert.equal(lake.charge.pivot, 'bottom');
@@ -309,8 +318,13 @@ test('maggie ribbon wraps then holds the guard, and the flare sits on contact', 
   assert.equal(jab.hit, false);
   assert.equal(jab.anchor, 'contact');
   const flare = read('blinding-flare');
+  assert.equal(flare.file, 'blinding-flare-burst-anim.png');
+  assert.equal(flare.frames, 24);
   assert.equal(flare.blend, 'add');
+  assert.equal(flare.scale, 1.25);
+  assert.equal(flare.loop, false);
   assert.equal(flare.hit, false);
+  assert.equal(fs.existsSync('assets/fx/maggie/blinding-flare/blinding-flare-burst-anim.png'), true);
   assert.equal(flare.stars.frames, 4);
   assert.ok(flare.stars.squash > 0 && flare.stars.squash < 0.5);
   assert.equal(fs.existsSync('assets/fx/maggie/blinding-flare/stars.png'), true);
@@ -383,6 +397,23 @@ test('a horizontal sheet splits into even frames', () => {
   assert.equal(sliceHorizontal(data, 8, 1, 2, 0).data[0], 10);
 });
 
+test('flow sheets replace the still supernova and keep the charge scale', () => {
+  const nova = JSON.parse(fs.readFileSync('assets/fx/hydra/supernova/fx.json', 'utf8'));
+  assert.equal(nova.file, 'supernova-peak-anim.png');
+  assert.equal(nova.frames, 24);
+  assert.equal(nova.cols, 4);
+  assert.equal(nova.rows, 6);
+  assert.equal(nova.fps, 14.4);
+  assert.equal(nova.blend, 'screen');
+  assert.equal(nova.luma, true);
+  assert.equal(nova.loop, false);
+  assert.equal(nova.scale, 1.25);
+  assert.equal(nova.scaleWith, 'radius');
+  assert.equal(nova.peak, undefined);
+  assert.equal(fs.existsSync('assets/fx/hydra/supernova/supernova-peak-anim.png'), true);
+  assert.equal(fs.existsSync('assets/fx/natalie/lake-drop/lake-drop-explosion-anim.png'), true);
+});
+
 test('charged radius scales a supernova sprite from 1x to 2x', () => {
   const tap = { radius: 64, _baseRadius: 64, fxScale: 'radius' };
   const half = { radius: 96, _baseRadius: 64, fxScale: 'radius' };
@@ -390,6 +421,7 @@ test('charged radius scales a supernova sprite from 1x to 2x', () => {
   assert.equal(fxGameplayScale(tap, null), 1);
   assert.equal(fxGameplayScale(half, { scaleWith: 'radius' }), 1.5);
   assert.equal(fxGameplayScale(full, { scaleWith: 'radius', scale: 1 }), 2);
+  assert.equal(fxGameplayScale(full, { scaleWith: 'radius', scale: 1.25 }), 2.5);
   assert.equal(fxGameplayScale({ radius: 192, _baseRadius: 64, fxScale: 'radius' }, { scaleWith: 'radius' }), 3);
   assert.equal(fxGameplayScale({ radius: 80 }, null), 1);
 });

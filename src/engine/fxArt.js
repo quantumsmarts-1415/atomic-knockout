@@ -352,7 +352,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     frames,
     hitIndex,
     beam: extra.beam || null,
-    blend: extra.blend === 'add' ? 'add' : 'normal',
+    blend: storedBlend(extra.blend),
     fps: extra.fps > 0 ? extra.fps : 8,
     timed: extra.fps > 0,
     scale: extra.scale > 0 ? extra.scale : 1,
@@ -517,6 +517,17 @@ function composeBeam(start, tile, end, length, thick, threshold = 0) {
   return { canvas, mask };
 }
 
+function storedBlend(blend) {
+  if (blend === 'add' || blend === 'screen') return blend;
+  return 'normal';
+}
+
+function phaserBlend(blend) {
+  if (blend === 'add') return 'ADD';
+  if (blend === 'screen') return 'SCREEN';
+  return 'NORMAL';
+}
+
 function finishFrame(scene, key, data, width, height, displayW, displayH, pivotX, pivotY, blend) {
   const mask = rasterAlpha({
     data, width, height, displayW, displayH, pivotX, pivotY,
@@ -526,7 +537,7 @@ function finishFrame(scene, key, data, width, height, displayW, displayH, pivotX
     mask,
     displayW,
     displayH,
-    blend: blend === 'add' ? 'add' : 'normal',
+    blend: storedBlend(blend),
   };
 }
 
@@ -572,16 +583,19 @@ async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH
     if (n === 1) slice = { data: pix.data, width: pix.width, height: pix.height };
     else if (cols > 1 || rows > 1) slice = sliceGrid(pix.data, pix.width, pix.height, cols || n, rows || 1, i);
     else slice = sliceHorizontal(pix.data, pix.width, pix.height, n, i);
-    const smoke = spec?.smokeFrom != null && i >= (spec.smokeFrom | 0);
+    const smoke = !!spec?.luma || (spec?.smokeFrom != null && i >= (spec.smokeFrom | 0));
     const thresh = blackThreshold({ blend: spec?.blend, black: spec?.black });
     const keyed = smoke
       ? lumaToAlpha(slice.data, slice.width, slice.height, thresh || BLACK_LUMA)
       : (thresh > 0 ? keyNearBlack(slice.data, slice.width, slice.height, thresh) : slice.data);
+    const blend = smoke
+      ? (spec?.blend === 'screen' ? 'screen' : 'normal')
+      : storedBlend(spec?.blend);
     slices.push({
       keyed,
       width: slice.width,
       height: slice.height,
-      blend: smoke ? 'normal' : (spec?.blend === 'add' ? 'add' : 'normal'),
+      blend,
     });
   }
   const bounds = slices.map((slice) => contentBounds(slice.keyed, slice.width, slice.height));
@@ -728,10 +742,13 @@ async function loadMoveArt(scene, char, slot, move, index) {
     return record;
   }
 
-  const useSheet = (meta.frames | 0) > 1 && listed(index, `${folder}/sheet.png`);
-  const useObject = !useSheet && (meta.anchor || meta.heightFrac || meta.fit) && listed(index, `${folder}/object.png`);
-  if (useSheet || useObject) {
-    const spec = { ...inherit, ...meta, file: useSheet ? 'sheet.png' : 'object.png' };
+  const named = typeof meta.file === 'string' && listed(index, `${folder}/${meta.file}`) ? meta.file : null;
+  const useSheet = named
+    ? (meta.frames | 0) > 1
+    : (meta.frames | 0) > 1 && listed(index, `${folder}/sheet.png`);
+  const useObject = !useSheet && !named && (meta.anchor || meta.heightFrac || meta.fit) && listed(index, `${folder}/object.png`);
+  if (useSheet || useObject || named) {
+    const spec = { ...inherit, ...meta, file: named || (useSheet ? 'sheet.png' : 'object.png') };
     const usedPivot = pivotFrom(spec, pivot);
     const loaded = await loadSpecFrames(scene, id, slug, folder, spec, index, usedPivot, charH, sized, '');
     if (loaded?.frames?.length) {
@@ -808,7 +825,7 @@ export function fxProjectileView(scene, owner, move, x, y) {
   const scale = fxGameplayScale(move, art);
   img.setDisplaySize(frame.displayW * scale, frame.displayH * scale);
   img.setDepth(16);
-  if ((frame.blend || art.blend) === 'add') img.setBlendMode?.('ADD');
+  img.setBlendMode?.(phaserBlend(frame.blend || art.blend));
   if (!art.spin) {
     const face = owner?.facing || 1;
     img.rotation = face === -1 ? Math.PI : 0;
@@ -878,8 +895,7 @@ function applyFrameLook(img, frame, art, scale, box) {
     const across = art?.stretch === 'length' ? 1 : along;
     img.setDisplaySize(frame.displayW * along, frame.displayH * across);
   }
-  const blend = frame.blend || art?.blend;
-  img.setBlendMode?.(blend === 'add' ? 'ADD' : 'NORMAL');
+  img.setBlendMode?.(phaserBlend(frame.blend || art?.blend));
 }
 
 /** Width and height of the phosphor shower so it covers the charged rain fan. */

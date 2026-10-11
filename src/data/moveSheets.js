@@ -4,7 +4,8 @@
 // gather range repeats while charging or defending. Nitra's sheets face left,
 // the same way her idle does, so the rig flip is the facing correction.
 // Natalie's move sheets face right while her idle faces left. Those clips
-// set sheetFacing so the flip follows the sheet, not the idle.
+// set sheetFacing so the flip follows the sheet, not the idle. Chloe and
+// Cal do the same. Van's attack faces left, the same way the idle does.
 export const MOVE_SHEETS = {
   "nitra": {
     "attack": {
@@ -3119,6 +3120,336 @@ export const MOVE_SHEETS = {
           ]
         ]
       }
+    }
+  },
+  "chloe": {
+    "attack": {
+      "count": 12,
+      "fps": 18
+    }
+  },
+  "rhoda": {
+    "attack": {
+      "count": 8,
+      "fps": 20,
+      "release": 3,
+      "windup": [
+        0,
+        2
+      ],
+      "active": [
+        3,
+        5
+      ],
+      "recovery": [
+        6,
+        7
+      ],
+      "anchors": {
+        "fist": [
+          [
+            923,
+            535
+          ],
+          [
+            1342,
+            549
+          ],
+          [
+            1553,
+            438
+          ],
+          [
+            1626,
+            309
+          ],
+          [
+            1605,
+            306
+          ],
+          [
+            1588,
+            332
+          ],
+          [
+            1207,
+            576
+          ],
+          [
+            932,
+            519
+          ]
+        ],
+        "tip": [
+          [
+            1117,
+            706
+          ],
+          [
+            1342,
+            549
+          ],
+          [
+            1553,
+            438
+          ],
+          [
+            1626,
+            309
+          ],
+          [
+            1605,
+            306
+          ],
+          [
+            1588,
+            332
+          ],
+          [
+            1266,
+            597
+          ],
+          [
+            1041,
+            797
+          ]
+        ],
+        "feet": [
+          [
+            765,
+            1026
+          ],
+          [
+            754,
+            1026
+          ],
+          [
+            651,
+            1026
+          ],
+          [
+            475,
+            1026
+          ],
+          [
+            426,
+            1026
+          ],
+          [
+            417,
+            1026
+          ],
+          [
+            743,
+            1026
+          ],
+          [
+            765,
+            1026
+          ]
+        ]
+      }
+    }
+  },
+  "sandy": {
+    "attack": {
+      "count": 12,
+      "fps": 18
+    }
+  },
+  "sully": {
+    "attack": {
+      "count": 11,
+      "fps": 17
+    }
+  },
+  "van": {
+    "attack": {
+      "count": 12,
+      "fps": 18
+    }
+  },
+  "yara": {
+    "attack": {
+      "count": 12,
+      "fps": 18,
+      "release": 7,
+      "windup": [
+        0,
+        6
+      ],
+      "active": [
+        7,
+        7
+      ],
+      "recovery": [
+        8,
+        11
+      ],
+      "anchors": {
+        "fist": [
+          [
+            713,
+            585
+          ],
+          [
+            884,
+            265
+          ],
+          [
+            724,
+            581
+          ],
+          [
+            726,
+            583
+          ],
+          [
+            729,
+            589
+          ],
+          [
+            860,
+            187
+          ],
+          [
+            954,
+            131
+          ],
+          [
+            1052,
+            342
+          ],
+          [
+            746,
+            575
+          ],
+          [
+            763,
+            555
+          ],
+          [
+            734,
+            564
+          ],
+          [
+            716,
+            584
+          ]
+        ],
+        "tip": [
+          [
+            713,
+            585
+          ],
+          [
+            884,
+            265
+          ],
+          [
+            724,
+            584
+          ],
+          [
+            726,
+            585
+          ],
+          [
+            729,
+            594
+          ],
+          [
+            860,
+            187
+          ],
+          [
+            954,
+            131
+          ],
+          [
+            1052,
+            342
+          ],
+          [
+            784,
+            723
+          ],
+          [
+            781,
+            722
+          ],
+          [
+            745,
+            716
+          ],
+          [
+            716,
+            584
+          ]
+        ],
+        "feet": [
+          [
+            600,
+            1001
+          ],
+          [
+            600,
+            1001
+          ],
+          [
+            600,
+            1001
+          ],
+          [
+            600,
+            1001
+          ],
+          [
+            600,
+            1001
+          ],
+          [
+            593,
+            1001
+          ],
+          [
+            585,
+            1001
+          ],
+          [
+            585,
+            1001
+          ],
+          [
+            585,
+            1001
+          ],
+          [
+            586,
+            1001
+          ],
+          [
+            590,
+            1001
+          ],
+          [
+            600,
+            1001
+          ]
+        ]
+      }
+    }
+  },
+  "cal": {
+    "attack": {
+      "count": 12,
+      "fps": 18
+    }
+  },
+  "kyle": {
+    "attack": {
+      "count": 12,
+      "fps": 18
     }
   }
 };

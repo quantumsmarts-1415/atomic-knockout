@@ -1834,6 +1834,8 @@ export const CHARACTERS = {
         displayScale: 0.22527,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          // Brimstone Slam. The overhead wind-up stays as drawn.
+          attack: { count: 11, fps: 17, loop: false, frameW: 603, frameH: 724, footY: 0.9655, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
         },
       },
     },
@@ -1903,6 +1905,8 @@ export const CHARACTERS = {
         displayScale: 0.19512,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          // The attack sheet faces right. sheetFacing keeps it unflipped.
+          attack: { count: 12, fps: 18, loop: false, frameW: 718, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
         },
       },
     },
@@ -2040,6 +2044,7 @@ export const CHARACTERS = {
         displayScale: 0.20891,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          attack: { count: 12, fps: 18, loop: false, frameW: 551, frameH: 710, footY: 0.9731, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
         },
       },
     },
@@ -2110,6 +2115,8 @@ export const CHARACTERS = {
         displayScale: 0.225,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          // The attack sheet faces right. sheetFacing keeps it unflipped.
+          attack: { count: 12, fps: 18, loop: false, frameW: 454, frameH: 698, footY: 0.9706, visibleH: 653, bodyH: 653, displayScale: 144 / 653, sheetFacing: 1 },
         },
       },
     },
@@ -2246,6 +2253,8 @@ export const CHARACTERS = {
         displayScale: 0.22393,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          // Alloy Fist faces left, the same way the idle does.
+          attack: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
         },
       },
     },

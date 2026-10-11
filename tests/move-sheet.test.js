@@ -219,3 +219,63 @@ test('phosphor flare leaves the hand along a 60 degree overhand line', () => {
   assert.ok(world.x > 400);
   assert.ok(world.y < 500);
 });
+
+test('call 5 attack sheets match their clip cells', () => {
+  const names = ['chloe', 'rhoda', 'sandy', 'sully', 'van', 'yara', 'cal', 'kyle'];
+  for (const id of names) {
+    const art = CHARACTERS[id].art;
+    const def = art.sheets.clips.attack;
+    const file = `${art.sheets.dir}${def.file || `${id}_attack.png`}`;
+    const png = pngSize(file);
+    assert.equal(png.w % def.frameW, 0, `${id} width`);
+    assert.equal(png.h % def.frameH, 0, `${id} height`);
+    const cells = (png.w / def.frameW) * (png.h / def.frameH);
+    assert.ok(cells >= def.count, `${id} cells ${cells}`);
+    assert.equal(def.displayScale, art.height / def.visibleH);
+    assert.equal(MOVE_SHEETS[id].charge, undefined);
+    assert.equal(MOVE_SHEETS[id].special, undefined);
+  }
+  assert.equal(CHARACTERS.sully.art.sheets.clips.attack.count, 11);
+  assert.equal(CHARACTERS.rhoda.art.sheets.clips.attack.count, 8);
+  assert.equal(CHARACTERS.rhoda.art.sheets.clips.attack.fps, 20);
+  assert.equal(CHARACTERS.chloe.art.sheets.clips.attack.sheetFacing, 1);
+  assert.equal(CHARACTERS.cal.art.sheets.clips.attack.sheetFacing, 1);
+  assert.equal(CHARACTERS.van.art.facing, -1);
+  assert.equal(CHARACTERS.van.art.sheets.clips.attack.sheetFacing, undefined);
+});
+
+test('rose thorn and garnet cut open on their release frames', () => {
+  const fd = { startup: 4, active: 3, recovery: 6, visible: 13 };
+  assert.equal(sheetFrameIndex(sheetMeta('rhoda', 'attack'), { state: 'attack', fd, attackFrame: 4 }), 3);
+  assert.equal(sheetFrameIndex(sheetMeta('yara', 'attack'), { state: 'attack', fd, attackFrame: 4 }), 7);
+  const slam = sheetMeta('sully', 'attack');
+  const swing = { startup: 3, active: 4, recovery: 4, visible: 11 };
+  assert.equal(sheetFrameIndex(slam, { state: 'attack', fd: swing, attackFrame: 0 }), 0);
+  assert.equal(sheetFrameIndex(slam, { state: 'attack', fd: swing, attackFrame: 10 }), 10);
+});
+
+test('a right-facing attack on a left-facing idle stays in front', () => {
+  const art = CHARACTERS.chloe.art;
+  assert.equal(art.facing, -1);
+  const def = art.sheets.clips.attack;
+  const forward = frameToWorld([700, 200], def.frameW, def.frameH, def.footY, def.displayScale, 1, 1, 400, 500);
+  const mirrored = frameToWorld([700, 200], def.frameW, def.frameH, def.footY, def.displayScale, -1, 1, 400, 500);
+  assert.ok(forward.x > 400);
+  assert.ok(mirrored.x < 400);
+  const rhoda = CHARACTERS.rhoda.art.sheets.clips.attack;
+  const fist = MOVE_SHEETS.rhoda.attack.anchors.fist[3];
+  assert.ok(fist[0] > rhoda.frameW / 2);
+  const fighter = {
+    x: 400,
+    y: 500,
+    facing: 1,
+    currentMoveKey: 'basicDirectional',
+    charDef: CHARACTERS.rhoda,
+    rig: { moveKey: 'basicDirectional', sheetClip: 'attack', sheetFrame: 3 },
+  };
+  const world = frameToWorld(
+    fist, rhoda.frameW, rhoda.frameH, rhoda.footY, rhoda.displayScale, 1, 1, 400, 500,
+  );
+  assert.deepEqual(sheetReleasePoint(fighter, 'shot'), world);
+  assert.ok(world.x > 400);
+});

@@ -522,9 +522,14 @@ export const MOVESETS = {
       kind: 'counter', counterOnTypes: [E, K], counterDamage: 8, counterType: E,
       counterKnockback: 170, duration: 520, cooldown: 740, vfx: 'spark',
     }),
-    specialDirectional: m('Nerve Shock', {
-      kind: 'burst', type: E, damage: 8, radius: 86, vfx: 'spark',
-      onHit: { interrupt: 280 }, baseKnockback: 110, knockbackGrowth: 2.2, duration: 240, cooldown: 780,
+    specialDirectional: m('Banana Peel', {
+      kind: 'zone', type: R, damage: 1.2, vfx: 'slip', vfxColor: 0xe2b13c,
+      zone: {
+        name: 'Banana Peel', type: R, damage: 1.2, solo: true, trap: true, trip: true, feet: true,
+        ms: 7000, radius: 22, delay: 220, offsetX: 56, angleDeg: 0, tripMs: 780,
+        knockback: 240, growth: 2.2, color: 0xe2b13c,
+      },
+      baseKnockback: 40, knockbackGrowth: 0.4, duration: 220, cooldown: 520,
     }),
   },
 
@@ -1373,9 +1378,9 @@ export const MOVESETS = {
       rangeW: 62, vfx: 'strike', vfxColor: 0xc8d4de,
       baseKnockback: 80, knockbackGrowth: 1.6, duration: 210, cooldown: 460,
     }),
-    specialDefense: m('Body-Heat Melt', {
-      noKnockback: true, buff: { heatTaken: 1.4, ms: 700 },
-      duration: 700, cooldown: 840, vfx: 'shield', vfxColor: 0xd5e6f2,
+    specialDefense: m('Melt Down', {
+      intangible: true, puddle: true,
+      duration: 1800, cooldown: 840, vfx: 'shield', vfxColor: 0xd7dee6,
     }),
     specialDirectional: m('Blue LED', {
       kind: 'beam', type: E, damage: 4, type2: H, damage2: 4, beamLen: 148, beamThick: 12,
@@ -1444,10 +1449,12 @@ export const MOVESETS = {
       letgoBurst: { type: C, damage: 5, radius: 56, baseKnockback: 75, knockbackGrowth: 1.3 },
       duration: 480, cooldown: 900, vfx: 'shield', vfxColor: 0xb6e38a,
     }),
-    specialDirectional: m('Green Wallpaper', {
-      kind: 'zone', type: C, damage: 1, vfx: 'cloud', vfxColor: 0x8fbf62,
-      zone: { type: C, damage: 1.1, ms: 1800, radius: 66, tick: 400, low: true, color: 0x8fbf62, onHit: { slow: 600 } },
-      baseKnockback: 30, knockbackGrowth: 0.4, duration: 240, cooldown: 900,
+    specialDirectional: m('Gray Arsenic Shards', {
+      kind: 'projectile', type: K, damage: 4, type2: C, damage2: 3,
+      fan: 3, fanSpread: 110, explodeOnly: true, explodeRadius: 34,
+      vfx: 'strike', vfxColor: 0x9aa3ad,
+      projectileSpeed: 480, projectileRadius: 7, projectileLife: 560,
+      baseKnockback: 130, knockbackGrowth: 2.4, duration: 240, cooldown: 720,
     }),
   },
 
@@ -2449,9 +2456,9 @@ export const MOVESETS = {
       vfx: 'spark', vfxColor: 0xc8dcff,
       baseKnockback: 54.4, knockbackGrowth: 1.02, duration: 160, cooldown: 320,
     }),
-    specialDefense: m('Thermal Lens', {
-      immune: [H], blocks: [C, K], crackAfterHits: 1,
-      duration: 700, cooldown: 860, vfx: 'shield', vfxColor: 0xffe0c0,
+    specialDefense: m('Transistor Gate', {
+      storeType: E, storeCap: 24,
+      duration: 1000, cooldown: 860, vfx: 'spark', vfxColor: 0xb0d4ff,
     }),
     specialDirectional: m('Crystal Radio Wave', {
       kind: 'projectile', type: E, damage: 5.4, type2: R, damage2: 4, angleable: true, arc: 160, vfx: 'spark', vfxColor: 0xb0d4ff,

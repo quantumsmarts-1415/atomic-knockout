@@ -60,12 +60,14 @@ test('coating defenses share one tint list and leave panes alone', () => {
   assert.equal(coatSpec({ name: 'Mirror Chrome' }).sparkle, true);
   assert.equal(coatSpec({ name: 'Four-State Guard' }).cycle.length, 4);
   assert.equal(coatSpec({ name: 'Blue Glaze' }).gloss > 0.4, true);
+  assert.equal(coatSpec({ name: 'Melt Down' }).full, true);
+  assert.ok(coatSpec({ name: 'Melt Down' }).gloss > 0.6);
   assert.equal(coatSpec({ name: 'Silica Pane' }), null);
   assert.equal(coatSpec({ name: 'Ribbon Guard' }), null);
   assert.equal(coatSpec({ name: 'No Vacancy' }), null);
   assert.equal(coatSpec({ name: 'Beryllium Mirror' }), null);
   assert.equal(coatSpec({ name: 'Boron Carbide Wall' }), null);
-  assert.equal(Object.keys(COATS).length, 22);
+  assert.equal(Object.keys(COATS).length, 23);
 });
 
 test('a skin-colored face is left open and the torso is coated', () => {

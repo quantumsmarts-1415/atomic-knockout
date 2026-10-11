@@ -1163,6 +1163,14 @@ export default class BattleScene extends Phaser.Scene {
 
   spawnZone(owner, spec, x, y) {
     const radius = spec.radius ?? 70;
+    if (spec.solo && owner) {
+      for (const z of this.zones) {
+        if (z.dead || z.owner !== owner || z.spec?.name !== spec.name) continue;
+        z.dead = true;
+        z.gfx?.destroy?.();
+        z.gfx = { destroy() {} };
+      }
+    }
     if (this.simFast) {
       this.zones.push({
         owner, spec, x, y, radius,
@@ -1182,8 +1190,10 @@ export default class BattleScene extends Phaser.Scene {
       return;
     }
     const color = spec.color ?? 0xff8844;
-    const gfx = this.add.circle(x, y, radius, color, 0.28);
-    gfx.setStrokeStyle?.(2, color, 0.8);
+    const gfx = spec.trap
+      ? this.add.ellipse(x, y, radius * 2.4, Math.max(8, radius * 0.55), color, 0.92)
+      : this.add.circle(x, y, radius, color, 0.28);
+    gfx.setStrokeStyle?.(2, spec.trap ? 0x6a4a10 : color, spec.trap ? 0.95 : 0.8);
     this.zones.push({
       owner, spec, x, y, radius, gfx,
       until: this.time.now + (spec.ms ?? 1600),
@@ -1196,6 +1206,34 @@ export default class BattleScene extends Phaser.Scene {
       if (time >= z.until) {
         z.gfx.destroy();
         z.dead = true;
+        continue;
+      }
+      if (z.spec.trap) {
+        if (time < z.next) continue;
+        let ownerOn = false;
+        for (const target of this.fighters) {
+          if (!target.alive || target.state === 'ko') continue;
+          if (!hurtHitsCircle(target, z.x, z.y, z.radius)) continue;
+          if (target === z.owner && !z.live) {
+            ownerOn = true;
+            continue;
+          }
+          this.landHit(z.owner, target, {
+            name: z.spec.name ?? 'trap',
+            type: z.spec.type,
+            damage: z.spec.damage ?? 1,
+            baseKnockback: z.spec.knockback ?? 220,
+            knockbackGrowth: z.spec.growth ?? 2,
+            angleDeg: z.spec.angleDeg ?? 0,
+            kind: 'melee',
+            trip: !!z.spec.trip,
+            tripMs: z.spec.tripMs,
+          });
+          z.gfx?.destroy?.();
+          z.dead = true;
+          break;
+        }
+        if (!ownerOn) z.live = true;
         continue;
       }
       if (time < z.next) continue;
@@ -1900,6 +1938,7 @@ export default class BattleScene extends Phaser.Scene {
       if (p.pinned || (p.armAt && time < p.armAt)) continue;
       for (const victim of this.fighters) {
         if (victim === p.owner || !victim.alive || victim.state === 'ko' || !victim.visible || p.landed.has(victim)) continue;
+        if (victim.state === 'defending' && victim.defenseMove?.intangible) continue;
         if (p.next && time < (p.next.get(victim) ?? 0)) continue;
         if (!projectileHits(p, victim)) continue;
         const def = victim.defenseMove;

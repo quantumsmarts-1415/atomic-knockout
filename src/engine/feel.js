@@ -342,6 +342,7 @@ export function poseTarget(state, ctx) {
     return { rot: 0.05 * facing, sx: 0.98, sy: 1.03, x: 0, y: 0 };
   }
   if (state === 'hurt') {
+    if (ctx.tripped) return { rot: 1.2 * -(ctx.hurtSign || 1), sx: 1.12, sy: 0.86, x: 8 * -(ctx.hurtSign || 1), y: 6 };
     if ((ctx.units || 0) > FEEL.tumbleAt) return { rot: ctx.spin || 0, sx: 1, sy: 1, x: 0, y: 0 };
     return { rot: 0.25 * (ctx.hurtSign || 1), sx: 1.06, sy: 0.94, x: 0, y: 0 };
   }

@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { canonicalType, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
-import { applyImmunities, interceptHit, rearmDefense } from './defense.js';
+import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defense.js';
 import { applyOnCast, applyOnHit, bonusPackets, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, tickKit, weakestType } from './kit.js';
 import { playVfx } from './MoveVfx.js';
 import { coatSpec } from './coat.js';
@@ -608,6 +608,19 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
     const speedFactor = Math.abs(this.body.velocity.x) / Math.max(1, stats.speed);
     this.applyLaunch();
+    const melt = this.state === 'defending' && !!this.defenseMove?.puddle;
+    if (this.rig) {
+      this.rig.puddle = melt;
+      this.rig.tripped = (this.trippedUntil || 0) > time;
+    }
+    if (melt) {
+      this.phasingUntil = time + 90;
+      this._puddlePhase = true;
+      this.body?.setVelocityX(0);
+    } else if (this._puddlePhase) {
+      this._puddlePhase = false;
+      this.phasingUntil = 0;
+    }
     this.rig.facing = this.facing;
     this.rig.frameData = this.frameData;
     this.rig.attackFrame = this.attackFrame || 0;
@@ -800,7 +813,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const commitBurst = !!(move.releaseOnHit || move.detonateAtFull || move.includeSelf || move.commit);
 
     if (move.kind === 'buff' || move.kind === 'zone') {
-      if (move.zone) this.scene.spawnZone?.(this, move.zone, this.x, this.y - this.bodyH * (move.zone.low ? 0.15 : 0.5));
+      if (move.zone) {
+        const zx = this.x + (this.facing || 1) * (move.zone.offsetX ?? 0);
+        const zy = move.zone.feet
+          ? this.y
+          : this.y - this.bodyH * (move.zone.low ? 0.15 : 0.5);
+        this.scene.spawnZone?.(this, move.zone, zx, zy);
+      }
     } else if (move.kind === 'projectile') {
       // The shot is committed when the move starts. Startup only delays the
       // spawn, so a trade during the wind-up does not delete it.
@@ -1112,6 +1131,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
    */
   takeHit(attacker, move, time, launchDir) {
     if (this.state === 'ko' || this.state === 'dead') return 0;
+    if (this.state === 'defending' && this.defenseMove?.intangible && !move.isSelf && !move.isCounterAttack) return 0;
     if (this.phasingUntil > time && !move.isSelf && !move.isCounterAttack) return 0;
     if (this.state === 'defending' && this.defenseMove && !move.isSelf && !move.isCounterAttack) {
       this.answerStrike(attacker, time);
@@ -1141,6 +1161,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
 
     let incoming = move;
+    if (this.state === 'defending' && this.defenseMove?.storeType && !move.isSelf && !move.isCounterAttack) {
+      const gated = gateStored(incoming, this.defenseMove.storeType);
+      if (gated.stored > 0) {
+        const cap = this.defenseMove.storeCap ?? 24;
+        this._nextBonus = Math.min(cap, (this._nextBonus ?? 0) + gated.stored);
+      }
+      if (gated.emptied) return 0;
+      incoming = gated.move;
+    }
     if (!move.isSelf && this.lingerImmuneUntil > time && this.lingerImmune?.length) {
       const ward = applyImmunities(incoming, { immune: this.lingerImmune });
       if (ward.emptied) {
@@ -1218,10 +1247,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (move.bonusVsBlock && this.state === 'defending') {
       const bump = 1 + move.bonusVsBlock;
       incoming = {
-        ...move,
-        damage: (move.damage ?? 0) * bump,
-        damage2: move.damage2 != null ? move.damage2 * bump : move.damage2,
-        damage3: move.damage3 != null ? move.damage3 * bump : move.damage3,
+        ...incoming,
+        damage: (incoming.damage ?? 0) * bump,
+        damage2: incoming.damage2 != null ? incoming.damage2 * bump : incoming.damage2,
+        damage3: incoming.damage3 != null ? incoming.damage3 * bump : incoming.damage3,
       };
     }
 
@@ -1500,9 +1529,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const dir = (!radial && launchDir) ? launchDir : away;
     const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
     const grabbed = incoming.pull && attacker && kb > 0 && !(this.defenseMove?.grabImmune && this.state === 'defending');
-    const units = smashUnits(Math.max(0, kb) * slip);
+    let units = smashUnits(Math.max(0, kb) * slip);
     const grounded = !!(this.body?.blocked?.down || this.body?.touching?.down);
     let angle = launchAngle(incoming, grounded, units);
+    if (incoming.trip) {
+      units = Math.min(units, 24);
+      angle = 0;
+    }
     if (grabbed) {
       angle = 0;
     }
@@ -1536,11 +1569,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
       attacker.hitlagDmg = dmg;
       attacker.body?.setVelocity?.(0, 0);
     }
-    if (flinch && dmg > 0) {
-      const stun = Math.max(FEEL.hitstunMin, hitstunFrames(units));
+    if (flinch && (dmg > 0 || incoming.trip)) {
+      const stepMs = this.scene?.stepMs || FEEL.stepMs;
+      const stun = incoming.trip
+        ? Math.max(FEEL.hitstunMin, Math.round((incoming.tripMs ?? 780) / stepMs))
+        : Math.max(FEEL.hitstunMin, hitstunFrames(units));
       this.state = 'hurt';
-      this.stateUntil = time + stun * (this.scene?.stepMs || FEEL.stepMs);
+      this.stateUntil = time + stun * stepMs;
       this.activeHit = null;
+      if (incoming.trip) this.trippedUntil = this.stateUntil;
     }
     if (ko && flinch) this.scene?.beginFinish?.(this, { final: this.stocks <= 1, charged: (incoming._chargeFrac ?? 0) >= 0.95 });
     if (!this.scene?.simFast && dmg > 0) {

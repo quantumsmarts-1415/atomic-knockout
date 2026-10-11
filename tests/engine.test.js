@@ -303,6 +303,60 @@ test('Block and Counter mechanics', () => {
   assert.strictEqual(attackerHit, true);
 });
 
+test('Melt Down ignores hits, Transistor Gate banks electrical, and a peel knocks down', () => {
+  const mockScene = createMockScene();
+  const rig = () => ({ animate() {}, setFlash() {}, play() {}, updateSheetFacing() {} });
+  const body = () => ({
+    setVelocity() {}, setVelocityX() {}, velocity: { x: 0, y: 0 }, blocked: { down: true }, touching: {},
+  });
+
+  const gail = new Fighter(mockScene, 0, 0, CHARACTERS.gail, 0, 0);
+  gail.rig = rig();
+  gail.body = body();
+  gail.startDefense(1000);
+  assert.strictEqual(gail.defenseMove.name, 'Melt Down');
+  const ignored = gail.takeHit({ x: -40, y: 0, facing: 1 }, {
+    name: 'hit', type: 'kinetic', damage: 12, baseKnockback: 220, knockbackGrowth: 4,
+  }, 1100, 1);
+  assert.strictEqual(ignored, 0);
+  assert.strictEqual(gail.percent, 0);
+  assert.strictEqual(gail.state, 'defending');
+
+  const gert = new Fighter(mockScene, 0, 0, CHARACTERS.gertrude, 0, 0);
+  gert.rig = rig();
+  gert.body = body();
+  gert.startDefense(1000);
+  const mixed = gert.takeHit({ x: -40, y: 0, facing: 1, charDef: CHARACTERS.neo }, {
+    name: 'arc', type: 'electrical', damage: 6, type2: 'kinetic', damage2: 4,
+    baseKnockback: 40, knockbackGrowth: 1,
+  }, 1100, 1);
+  assert.ok(mixed > 0 && mixed < 6, `kinetic remainder ${mixed}`);
+  assert.strictEqual(gert._nextBonus, 6);
+  gert.startDefense(1150);
+  const pure = gert.takeHit({ x: -40, y: 0, facing: 1, charDef: CHARACTERS.neo }, {
+    name: 'zap', type: 'electrical', damage: 5, baseKnockback: 80, knockbackGrowth: 2,
+  }, 1200, 1);
+  assert.strictEqual(pure, 0);
+  assert.strictEqual(gert._nextBonus, 11);
+  gert.state = 'idle';
+  const before = CHARACTERS.gertrude.moves.basicDirectional.damage;
+  gert.startMove(2000, CHARACTERS.gertrude.moves.basicDirectional, 'basic', 'basicDirectional');
+  assert.ok(gert.currentMove.damage > before);
+  assert.strictEqual(gert._nextBonus, 0);
+
+  const dummy = new Fighter(mockScene, 80, 0, CHARACTERS.oxana, 0, 0);
+  dummy.rig = rig();
+  dummy.body = body();
+  dummy.takeHit({ x: 0, y: 0, facing: 1, charDef: CHARACTERS.kyle }, {
+    name: 'Banana Peel', type: 'radiation', damage: 1.2,
+    baseKnockback: 240, knockbackGrowth: 2.2, angleDeg: 0, kind: 'melee', trip: true, tripMs: 780,
+  }, 2000, 1);
+  assert.strictEqual(dummy.state, 'hurt');
+  assert.ok(dummy.trippedUntil >= 2000 + 700);
+  assert.ok(dummy.percent < 3);
+  assert.ok(dummy.hurtUnits <= 24);
+});
+
 test('a dive stops at the ledge and hops back if it is already past it', () => {
   const isle = [{ x: 640, w: 990 }];
   assert.strictEqual(diveVelocityX(640, 220, isle), 220);

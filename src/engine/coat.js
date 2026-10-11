@@ -32,6 +32,7 @@ export const COATS = {
     color: 0x7a3dff, mode: 'multiply', amount: 0.55, gloss: 0.12, sweepMs: 180,
     cycle: [0x7a3dff, 0x2fbf62, 0x3a78ff, 0xf0c43a], cycleMs: 360,
   },
+  'Melt Down': { color: 0xd7dee6, mode: 'lighten', amount: 0.62, gloss: 0.74, sweepMs: 180, full: true },
 };
 
 const FADE_MS = 220;
@@ -167,13 +168,14 @@ function sweepEdge(region, sweep) {
  * 0 on the face and above the rising edge, 1 on the coated body.
  * The rim of the face ellipse and the leading edge are both feathered.
  */
-export function coatCoverage(x, y, region, sweep) {
+export function coatCoverage(x, y, region, sweep, full = false) {
   if (!region) return 0;
   const { edge, feather } = sweepEdge(region, sweep);
   let rise;
   if (y >= edge + feather) rise = 1;
   else if (y <= edge - feather) rise = 0;
   else rise = smooth((y - (edge - feather)) / (feather * 2));
+  if (full) return rise;
   const nx = (x - region.cx) / Math.max(1, region.rx);
   const ny = (y - region.cy) / Math.max(1, region.ry);
   const d = Math.hypot(nx, ny);
@@ -183,9 +185,9 @@ export function coatCoverage(x, y, region, sweep) {
   return rise * face;
 }
 
-export function coatSheen(x, y, region, sweep, gloss) {
+export function coatSheen(x, y, region, sweep, gloss, full = false) {
   if (!gloss || !region) return 0;
-  const cover = coatCoverage(x, y, region, sweep);
+  const cover = coatCoverage(x, y, region, sweep, full);
   if (cover <= 0) return 0;
   const { edge, span } = sweepEdge(region, sweep);
   const band = Math.max(0, 1 - Math.abs(y - edge) / Math.max(6, span * 0.055));

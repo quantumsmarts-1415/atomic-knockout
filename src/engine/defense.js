@@ -369,6 +369,27 @@ export function interceptHit(defender, attacker, move, time) {
   return { result: 'pass' };
 }
 
+/**
+ * Pull one damage type off a hit and remember how much was switched off.
+ * A hit that was only that type comes back emptied.
+ */
+export function gateStored(move, type) {
+  const want = canonicalType(type);
+  const next = { ...(move ?? {}) };
+  let stored = 0;
+  const take = (typeKey, damageKey) => {
+    if (!next[typeKey] || canonicalType(next[typeKey]) !== want) return;
+    stored += next[damageKey] ?? 0;
+    next[damageKey] = 0;
+    next[typeKey] = undefined;
+  };
+  take('type', 'damage');
+  take('type2', 'damage2');
+  take('type3', 'damage3');
+  const left = [next.type, next.type2, next.type3].filter(Boolean);
+  return { move: next, stored, emptied: left.length === 0 };
+}
+
 /** When a skin that only regrows on the next press may be started again. */
 export function rearmDefense(move, time) {
   if (move?.regrow !== 'press') return null;

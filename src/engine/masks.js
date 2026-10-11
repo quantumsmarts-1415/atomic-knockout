@@ -97,6 +97,7 @@ function poseOf(fighter) {
     vy: fighter.body?.velocity?.y || 0,
     units: fighter.hurtUnits || 0,
     hurtSign: fighter.hurtSign || 1,
+    tripped: !!fighter.rig?.tripped,
   });
 }
 

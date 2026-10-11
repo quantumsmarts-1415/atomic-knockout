@@ -56,9 +56,9 @@ function paintCoat(tex, base, face, spec, sweep, bucket) {
       const i = row + x * 4;
       const a = base[i + 3];
       if (a < 8) continue;
-      const cover = coatCoverage(x + 0.5, y + 0.5, face, sweep);
+      const cover = coatCoverage(x + 0.5, y + 0.5, face, sweep, !!spec.full);
       if (cover < 0.012) continue;
-      let sheen = coatSheen(x + 0.5, y + 0.5, face, sweep, spec.gloss || 0);
+      let sheen = coatSheen(x + 0.5, y + 0.5, face, sweep, spec.gloss || 0, !!spec.full);
       if (spec.sparkle && cover > 0.82 && sparkleAt(x, y, bucket)) sheen = Math.max(sheen, 0.92);
       const [r, g, b] = tintChannels(base[i], base[i + 1], base[i + 2], spec, sheen);
       out[i] = r;

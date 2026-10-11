@@ -389,6 +389,7 @@ export class Rig extends Phaser.GameObjects.Container {
       step: (this.animT || 0) * 10,
       units: this.hurtUnits || 0,
       hurtSign: this.hurtSign || 1,
+      tripped: !!this.tripped,
       landing: this.landing > 0,
       vy: this.vy || 0,
     });
@@ -427,7 +428,17 @@ export class Rig extends Phaser.GameObjects.Container {
     }
     // Facing lives on the container. Pose scale stays on the sprite so the
     // next frame's layout scale cannot multiply the lunge back in.
-    this.setScale((this.facing || 1) * (this.baseScale || 1), this.baseScale || 1);
+    this.commitScale();
+  }
+
+  commitScale(squashX = 1, squashY = 1) {
+    const base = this.baseScale || 1;
+    if (this.puddle) {
+      const wob = 1 + Math.sin((this.animT || 0) * 7) * 0.06;
+      this.setScale((this.facing || 1) * base * 1.5 * wob, base * 0.24);
+      return;
+    }
+    this.setScale((this.facing || 1) * base * squashX, base * squashY);
   }
 
   animate(dt, state, speedFactor = 1) {
@@ -589,7 +600,7 @@ export class Rig extends Phaser.GameObjects.Container {
       }
     }
     this.rotation = 0;
-    this.setScale(this.facing * this.baseScale * squashX, this.baseScale * squashY);
+    this.commitScale(squashX, squashY);
     // keep the chest symbol readable when the rig is mirrored
     this.symbolText.scaleX = this.facing < 0 ? -1 : 1;
     if (this.antenna) {

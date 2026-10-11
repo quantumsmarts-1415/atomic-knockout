@@ -377,6 +377,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     order: Array.isArray(extra.order) ? extra.order.map((n) => n | 0) : null,
     fadeAfter: !!extra.fadeAfter,
     fadeMs: extra.fadeMs > 0 ? extra.fadeMs : 280,
+    shrinkAfter: !!extra.shrinkAfter,
     paceCharge: !!extra.paceCharge,
     stretch: extra.stretch === 'length' ? 'length' : null,
     sign: !!extra.sign,
@@ -523,6 +524,7 @@ function finishFrame(scene, key, data, width, height, displayW, displayH, pivotX
 
 function pivotFrom(spec, fallback) {
   if (spec?.pivot === 'bottom') return { x: 0.5, y: 1 };
+  if (spec?.pivot === 'bottom-left') return { x: 0, y: 1 };
   if (spec?.pivot === 'right') return { x: 1, y: 0.5 };
   if (spec?.pivot === 'left') return { x: 0, y: 0.5 };
   if (spec?.pivot === 'center') return { x: 0.5, y: 0.5 };
@@ -638,6 +640,9 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       loop: !!merged.loop,
       hit: false,
       flip: !!merged.flip,
+      fadeAfter: !!merged.fadeAfter,
+      shrinkAfter: !!merged.shrinkAfter,
+      fadeMs: merged.fadeMs,
     });
   }
   return record;
@@ -881,12 +886,25 @@ export function fxFrameIndex(art, elapsed) {
   return seq ? seq[step] : step;
 }
 
+function sheetDoneAt(art) {
+  const n = art?.order?.length || art?.frames?.length || 1;
+  const fps = art?.fps > 0 ? art.fps : 8;
+  return n * (1000 / fps);
+}
+
 /** 1 until an ordered sheet finishes, then a linear fade to 0. */
 export function fxFadeAlpha(art, elapsed) {
   if (!art?.fadeAfter || art.loop) return 1;
-  const n = art.order?.length || art.frames?.length || 1;
-  const fps = art.fps > 0 ? art.fps : 8;
-  const done = n * (1000 / fps);
+  const done = sheetDoneAt(art);
+  if (!(elapsed > done)) return 1;
+  const fade = art.fadeMs > 0 ? art.fadeMs : 280;
+  return Math.max(0, 1 - (elapsed - done) / fade);
+}
+
+/** 1 until the sheet finishes, then a linear shrink to 0 over the fade. */
+export function fxShrink(art, elapsed) {
+  if (!art?.shrinkAfter || art.loop) return 1;
+  const done = sheetDoneAt(art);
   if (!(elapsed > done)) return 1;
   const fade = art.fadeMs > 0 ? art.fadeMs : 280;
   return Math.max(0, 1 - (elapsed - done) / fade);
@@ -1402,7 +1420,7 @@ function syncHeld(scene, fighter) {
   } else if (art?.anchor === 'feet' && art.frames?.length && fighter.state === 'charging') {
     want = { art, kind: 'feet' };
   } else if (art?.charge?.frames?.length && fighter.state === 'charging') {
-    want = { art: art.charge, kind: 'grow' };
+    want = { art: art.charge, kind: art.charge.anchor === 'feet' ? 'feet' : 'grow' };
   }
   let live = liveHeld.get(fighter);
   if (!want) {
@@ -1445,7 +1463,7 @@ function syncHeld(scene, fighter) {
   if (want.kind === 'feet') {
     const elapsed = now - (fighter.chargeStart ?? now);
     const frame = want.art.frames[fxFrameIndex(want.art, elapsed)] || want.art.frames[0];
-    applyFrameLook(live.img, frame, want.art, 1);
+    applyFrameLook(live.img, frame, want.art, fxShrink(want.art, elapsed));
     live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 1);
     live.img.setPosition(fighter.x, fighter.y);
     live.img.setAlpha(fxFadeAlpha(want.art, elapsed));

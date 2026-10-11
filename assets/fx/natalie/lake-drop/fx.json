@@ -1,0 +1,22 @@
+{
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.2,
+  "scaleWith": "radius",
+  "pivot": "center",
+  "crop": "frame",
+  "hit": false,
+  "charge": {
+    "file": "sheet.png",
+    "frames": 4,
+    "fps": 8,
+    "fit": "width",
+    "heightFrac": 0.78,
+    "pivot": "bottom",
+    "anchor": "feet",
+    "fadeAfter": true,
+    "shrinkAfter": true,
+    "fadeMs": 420
+  }
+}

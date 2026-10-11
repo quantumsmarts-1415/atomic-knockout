@@ -1,0 +1,12 @@
+{
+  "blend": "add",
+  "black": 16,
+  "frames": 6,
+  "fps": 12,
+  "fit": "height",
+  "heightFrac": 1.1,
+  "pivot": "bottom-left",
+  "anchor": "ground",
+  "hit": false,
+  "bothSides": true
+}

@@ -191,6 +191,10 @@ export function syncChargeGlow(scene) {
       continue;
     }
     const painted = artFor(fighter.charDef?.id, move.name);
+    if (painted?.anchor === 'feet' || painted?.charge?.anchor === 'feet') {
+      glow.clear();
+      continue;
+    }
     const minR = painted?.reach > 0 ? painted.reach : (move.radius ?? 48);
     const reach = minR * (1 + ((move.chargeRadiusMult ?? 1) - 1) * frac);
     const y = fighter.y - (fighter.bodyH ?? 80) * 0.55;

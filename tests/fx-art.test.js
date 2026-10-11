@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { blackThreshold, contentSpan, fxFadeAlpha, fxFrameIndex, fxGameplayScale, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, sliceGrid, sliceHorizontal, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { blackThreshold, contentSpan, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, sliceGrid, sliceHorizontal, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 
 test('every move has a folder, a type, and a score', () => {
@@ -118,24 +118,49 @@ test('visible pixels, not the canvas, set the on-screen size', () => {
   assert.ok(Math.abs(pixelsPerSource(height, 1.3, 1513) * 1513 - height * 1.3) < 0.001);
 });
 
-test('a puddle sheet plays 1, 2, 3, 4, 6, 5 and then fades', () => {
+test('a puddle grows through frames 1-4 then the last frame shrinks and fades', () => {
   const art = {
-    frames: [0, 1, 2, 3, 4, 5],
-    order: [0, 1, 2, 3, 5, 4],
+    frames: [0, 1, 2, 3],
     fps: 10,
     fadeAfter: true,
+    shrinkAfter: true,
     fadeMs: 200,
   };
+  assert.equal(art.frames.length, 4);
   assert.equal(fxFrameIndex(art, 0), 0);
   assert.equal(fxFrameIndex(art, 100), 1);
   assert.equal(fxFrameIndex(art, 200), 2);
   assert.equal(fxFrameIndex(art, 300), 3);
-  assert.equal(fxFrameIndex(art, 400), 5);
-  assert.equal(fxFrameIndex(art, 500), 4);
-  assert.equal(fxFrameIndex(art, 900), 4);
-  assert.equal(fxFadeAlpha(art, 600), 1);
-  assert.equal(fxFadeAlpha(art, 700), 0.5);
-  assert.equal(fxFadeAlpha(art, 800), 0);
+  assert.equal(fxFrameIndex(art, 500), 3);
+  assert.equal(fxFadeAlpha(art, 400), 1);
+  assert.equal(fxShrink(art, 400), 1);
+  assert.equal(fxFadeAlpha(art, 500), 0.5);
+  assert.equal(fxShrink(art, 500), 0.5);
+  assert.equal(fxFadeAlpha(art, 600), 0);
+  assert.equal(fxShrink(art, 600), 0);
+});
+
+test('natalie puddle sits at her feet and the salt line mirrors', () => {
+  const read = (folder) => JSON.parse(fs.readFileSync(`assets/fx/natalie/${folder}/fx.json`, 'utf8'));
+  const lake = read('lake-drop');
+  assert.equal(lake.blend, 'add');
+  assert.equal(lake.hit, false);
+  assert.equal(lake.charge.frames, 4);
+  assert.equal(lake.charge.anchor, 'feet');
+  assert.equal(lake.charge.pivot, 'bottom');
+  assert.equal(lake.charge.shrinkAfter, true);
+  assert.equal(lake.charge.fadeAfter, true);
+  const fist = read('flame-fist');
+  assert.equal(fist.anchor, 'fist');
+  assert.equal(fist.pivot, 'right');
+  assert.equal(fist.hit, false);
+  assert.equal(fist.blend, 'add');
+  const spikes = read('brine-burst');
+  assert.equal(spikes.frames, 6);
+  assert.equal(spikes.bothSides, true);
+  assert.equal(spikes.pivot, 'bottom-left');
+  assert.equal(spikes.anchor, 'ground');
+  assert.equal(spikes.hit, false);
 });
 
 test('a thermite sheet plays 1, 4, 2, 3', () => {

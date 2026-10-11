@@ -1,0 +1,21 @@
+{
+  "blend": "add",
+  "black": 16,
+  "hit": false,
+  "launch": {
+    "file": "launch.png",
+    "fit": "height",
+    "heightFrac": 2,
+    "crop": "frame",
+    "pivot": "bottom",
+    "lifeMs": 640
+  },
+  "shower": {
+    "file": "sheet.png",
+    "frames": 5,
+    "fps": 12,
+    "loop": true,
+    "pivot": "bottom",
+    "lifeMs": 780
+  }
+}

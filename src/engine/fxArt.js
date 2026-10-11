@@ -388,6 +388,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     breakFrom: typeof extra.breakFrom === 'number' ? extra.breakFrom | 0 : -1,
     overCoat: !!extra.overCoat,
     heatAt: typeof extra.heatAt === 'number' ? extra.heatAt | 0 : -1,
+    lifeMs: extra.lifeMs > 0 ? extra.lifeMs | 0 : 0,
   };
 }
 
@@ -633,6 +634,7 @@ const SIDE_SPECS = [
   ['orbit', 'orbit-'], ['burst', 'burst-'], ['splash', 'splash-'], ['impact', 'impact-'], ['charge', 'charge-'],
   ['ignite', 'ignite-'], ['stars', 'stars-'], ['texture', 'texture-'],
   ['cling', 'cling-'], ['shatter', 'shatter-'],
+  ['launch', 'launch-'], ['shower', 'shower-'], ['muzzle', 'muzzle-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -655,6 +657,8 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       shrinkAfter: !!merged.shrinkAfter,
       fadeMs: merged.fadeMs,
       squash: merged.squash,
+      lifeMs: merged.lifeMs,
+      order: merged.order,
     });
   }
   return record;
@@ -784,7 +788,14 @@ async function loadMoveArt(scene, char, slot, move, index) {
     const one = await loadFrame(scene, `${folder}/object.png`, `fx-${id}-${moveSlug(move.name)}`, sized, pivot.x, pivot.y, meta);
     if (one) frames.push(one);
   }
-  if (!frames.length) return null;
+  if (!frames.length) {
+    const record = artRecord(objectType, sized, pivot, [], { ...look, beam: null });
+    await attachSides(scene, id, slug, folder, meta, index, charH, sized, record);
+    for (const [name] of SIDE_SPECS) {
+      if (record[name]?.frames?.length) return record;
+    }
+    return null;
+  }
   return artRecord(objectType, sized, pivot, frames, { ...look, beam: null });
 }
 
@@ -857,14 +868,34 @@ function placeStill(scene, art, x, y, rot) {
   return img;
 }
 
-function applyFrameLook(img, frame, art, scale) {
+function applyFrameLook(img, frame, art, scale, box) {
   if (!img || !frame) return;
   img.setTexture?.(frame.key);
-  const along = scale > 0 ? scale : 1;
-  const across = art?.stretch === 'length' ? 1 : along;
-  img.setDisplaySize(frame.displayW * along, frame.displayH * across);
+  if (box?.w > 0 && box?.h > 0) {
+    img.setDisplaySize(box.w, box.h);
+  } else {
+    const along = scale > 0 ? scale : 1;
+    const across = art?.stretch === 'length' ? 1 : along;
+    img.setDisplaySize(frame.displayW * along, frame.displayH * across);
+  }
   const blend = frame.blend || art?.blend;
   img.setBlendMode?.(blend === 'add' ? 'ADD' : 'NORMAL');
+}
+
+/** Width and height of the phosphor shower so it covers the charged rain fan. */
+export function flareCover(move, bodyH = 118) {
+  const spread = move?.rainSpread > 0 ? move.rainSpread : 150;
+  const life = (move?.projectileLife > 0 ? move.projectileLife : 650) / 1000;
+  const width = Math.max(160, (70 + spread * 0.5) * life * 2.35);
+  const height = Math.max(200, (bodyH > 0 ? bodyH : 118) * 2.05);
+  return { width: Math.round(width), height: Math.round(height) };
+}
+
+/** A move's cling sheet, or the shared on-fire status once that art exists. */
+export function burnVisual(cling, status) {
+  if (cling?.frames?.length) return cling;
+  if (status?.frames?.length) return status;
+  return null;
 }
 
 /** Source-frame order for a sheet whose cells are not played left to right. */
@@ -1037,12 +1068,14 @@ export function fxAnchor(fighter, move) {
 
 const oneShots = [];
 
-function trackOneShot(scene, img, art, scale, peak, face = 1) {
+function trackOneShot(scene, img, art, scale, peak, face = 1, box = null) {
   const fps = art.fps > 0 ? art.fps : 8;
   const frames = art.frames?.length || 1;
-  const life = frames > 1 ? (frames / fps) * 1000 + 70 : (art.objectType === 'shield' ? 500 : art.objectType === 'beam' ? 220 : 320);
+  const life = art.lifeMs > 0
+    ? art.lifeMs
+    : frames > 1 ? (frames / fps) * 1000 + 70 : (art.objectType === 'shield' ? 500 : art.objectType === 'beam' ? 220 : 320);
   oneShots.push({
-    img, art, scale, peak, face, born: scene.simNow ?? 0, life,
+    img, art, scale, peak, face, box, born: scene.simNow ?? 0, life,
   });
 }
 
@@ -1062,7 +1095,7 @@ function stepOneShots(scene) {
     }
     const elapsed = now - shot.born;
     const frame = shot.art.frames[fxFrameIndex(shot.art, elapsed)] || shot.art.frames[0];
-    applyFrameLook(shot.img, frame, shot.art, shot.scale);
+    applyFrameLook(shot.img, frame, shot.art, shot.scale, shot.box);
     applyFacing(shot.img, shot.face);
     shot.img.setAlpha?.(fxFadeAlpha(shot.art, elapsed));
     if (shot.peak?.scene) {
@@ -1081,11 +1114,12 @@ function stepOneShots(scene) {
 }
 
 /** One additive sprite from an already-loaded side, such as the ribbon ignite. */
-export function spawnFxSprite(scene, art, x, y, scale = 1) {
+export function spawnFxSprite(scene, art, x, y, scale = 1, face = 1, box = null) {
   if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
   const img = placeStill(scene, art, x, y, 0);
-  applyFrameLook(img, art.frames[0], art, scale);
-  trackOneShot(scene, img, art, scale, null, 1);
+  applyFrameLook(img, art.frames[0], art, scale, box);
+  applyFacing(img, face);
+  trackOneShot(scene, img, art, scale, null, face, box);
   return img;
 }
 
@@ -1401,11 +1435,15 @@ function dropCling(fighter) {
   if (live) liveCling.delete(fighter);
 }
 
-/** Thermite cling follows the target for as long as that burn is lit. */
+/** Cling follows the target for as long as that burn is lit.
+ *  White phosphorus is sticky, so it uses the same slot. A move cling wins;
+ *  the shared on-fire status is the fallback when a burn has no sheet of its own. */
 function syncCling(scene, fighter) {
   const now = scene.simNow ?? 0;
-  const burning = !fighter.burnSticky && fighter.burnUntil > now && fighter.burnMove;
-  const art = burning ? artFor(fighter.burnOwnerId, fighter.burnMove)?.cling : null;
+  const burning = fighter.burnUntil > now && fighter.burnMove;
+  const art = burning
+    ? burnVisual(artFor(fighter.burnOwnerId, fighter.burnMove)?.cling, fxNamed('status/on-fire'))
+    : null;
   if (!art?.frames?.length) {
     dropCling(fighter);
     return;

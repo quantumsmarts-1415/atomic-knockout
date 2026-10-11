@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, blackThreshold, breakFrames, contentSpan, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, sliceGrid, sliceHorizontal, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, flareCover, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, sliceGrid, sliceHorizontal, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 
 test('every move has a folder, a type, and a score', () => {
@@ -325,6 +325,70 @@ test('maggie ribbon wraps then holds the guard, and the flare sits on contact', 
   assert.equal(flare.stars.frames, 4);
   assert.ok(flare.stars.squash > 0 && flare.stars.squash < 0.5);
   assert.equal(fs.existsSync('assets/fx/maggie/blinding-flare/stars.png'), true);
+});
+
+function pngSize(file) {
+  const buf = fs.readFileSync(file);
+  return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+}
+
+test('phillip sheets keep the upright flare, the five-round tracer, and the held shell', () => {
+  const read = (folder) => JSON.parse(fs.readFileSync(`assets/fx/phillip/${folder}/fx.json`, 'utf8'));
+  const flare = read('phosphor-flare');
+  assert.equal(flare.blend, 'add');
+  assert.equal(flare.hit, false);
+  assert.equal(flare.launch.file, 'launch.png');
+  assert.equal(flare.launch.pivot, 'bottom');
+  assert.equal(flare.shower.frames, 5);
+  assert.equal(flare.shower.loop, true);
+  const launch = pngSize('assets/fx/phillip/phosphor-flare/launch.png');
+  assert.ok(launch.height > launch.width * 1.5, `${launch.width}x${launch.height}`);
+  const shower = pngSize('assets/fx/phillip/phosphor-flare/sheet.png');
+  assert.equal(shower.width % 5, 0);
+  const tap = flareCover({ rainSpread: 150, projectileLife: 650 }, 118);
+  const full = flareCover({ rainSpread: 360, projectileLife: 650 }, 118);
+  assert.equal(tap.width, 221);
+  assert.equal(tap.height, 242);
+  assert.equal(full.width, 382);
+  assert.ok(full.width > tap.width);
+  assert.equal(full.height, tap.height);
+  const tracers = read('tracers');
+  assert.equal(tracers.blend, 'add');
+  assert.equal(tracers.hit, false);
+  assert.equal(tracers.pivot, 'right');
+  assert.equal(tracers.muzzle.pivot, 'left');
+  assert.equal(tracers.muzzle.file, 'muzzle.png');
+  assert.equal(fs.existsSync('assets/fx/phillip/tracers/object.png'), true);
+  assert.equal(fs.existsSync('assets/fx/phillip/tracers/muzzle.png'), true);
+  const shell = read('red-phosphorus-form');
+  assert.equal(shell.blend, 'normal');
+  assert.equal(shell.black, 16);
+  assert.equal(blackThreshold(shell), 16);
+  assert.equal(shell.overCoat, true);
+  assert.equal(shell.guardAt, 2);
+  assert.equal(shell.holdAt, undefined);
+  assert.equal(shell.anchor, 'body');
+  assert.equal(shell.hit, false);
+  assert.equal(shell.frames, 4);
+  const step = 1000 / 10;
+  const formed = { frames: [0, 1, 2, 3], fps: 10, guardAt: 2, loop: true };
+  assert.equal(fxFrameIndex(formed, 0), 0);
+  assert.equal(fxFrameIndex(formed, step), 1);
+  assert.equal(fxFrameIndex(formed, step * 2), 2);
+  assert.equal(fxFrameIndex(formed, step * 3), 3);
+  assert.equal(fxFrameIndex(formed, step * 4), 2);
+  const wp = read('spontaneous-ignition');
+  assert.equal(wp.hit, false);
+  assert.equal(wp.impact.file, 'burst.png');
+  assert.equal(wp.cling.frames, 4);
+  assert.equal(wp.cling.loop, true);
+  assert.equal(fs.existsSync('assets/fx/phillip/spontaneous-ignition/burst.png'), true);
+  assert.equal(fs.existsSync('assets/fx/phillip/spontaneous-ignition/sheet.png'), true);
+  const cling = { frames: ['wp'] };
+  const shared = { frames: ['fire'] };
+  assert.equal(burnVisual(cling, shared), cling);
+  assert.equal(burnVisual(null, shared), shared);
+  assert.equal(burnVisual(null, null), null);
 });
 
 test('a horizontal sheet splits into even frames', () => {

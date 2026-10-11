@@ -24,7 +24,7 @@ import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, spawnContactFx, spawnMoveExtra, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
+import { artFor, collectFxArt, flareCover, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, spawnContactFx, spawnFxSprite, spawnMoveExtra, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
 
 const GRAVITY = 1500;
 
@@ -704,9 +704,23 @@ export default class BattleScene extends Phaser.Scene {
 
   leaveTracer(p, time) {
     if (!(p?.move?.trailMs > 0) || this.simFast || p.dead) return;
-    if (artFor(p.owner?.charDef?.id, p.move.name)?.frames?.length) return;
     if (time - (p._trailAt ?? 0) < 28) return;
     p._trailAt = time;
+    const stamp = p.gfx?.texture?.key;
+    if (stamp && this.add?.image) {
+      const ghost = this.add.image(p.gfx.x, p.gfx.y, stamp);
+      ghost.setOrigin?.(p.gfx.originX ?? 0.5, p.gfx.originY ?? 0.5);
+      if (p.gfx.displayWidth) ghost.setDisplaySize(p.gfx.displayWidth, p.gfx.displayHeight);
+      ghost.rotation = p.gfx.rotation || 0;
+      ghost.setBlendMode?.('ADD');
+      ghost.setAlpha?.(0.5);
+      ghost.setDepth?.(14);
+      this.tweens?.add?.({
+        targets: ghost, alpha: 0, duration: p.move.trailMs,
+        onComplete: () => ghost.destroy(),
+      });
+      return;
+    }
     const streak = this.add.rectangle(p.gfx.x, p.gfx.y, 18, 3, p.move.vfxColor ?? 0xfff2c0, 0.72);
     streak.setBlendMode?.('ADD');
     streak.rotation = Math.atan2(p.vy || 0, p.vx || 1);
@@ -729,8 +743,26 @@ export default class BattleScene extends Phaser.Scene {
 
   spawnProjectile(owner, move) {
     if (move.rain > 1 && !move._rainChild) {
+      const art = artFor(owner?.charDef?.id, move.name);
+      const face0 = owner.facing || 1;
+      if (art?.launch?.frames?.length) {
+        spawnFxSprite(
+          this, art.launch,
+          owner.x + face0 * (owner.bodyW ?? 40) * 0.15,
+          owner.y - (owner.bodyH ?? 80) * 0.62,
+        );
+      }
       const launch = () => {
         if (!owner?.alive) return;
+        if (art?.shower?.frames?.length) {
+          const cover = flareCover(move, owner.bodyH);
+          spawnFxSprite(
+            this, art.shower,
+            owner.x + face0 * (move.rainSpread ?? 150) * 0.08,
+            owner.y,
+            1, 1, { w: cover.width, h: cover.height },
+          );
+        }
         const n = move.rain | 0;
         const spread = move.rainSpread ?? 220;
         for (let i = 0; i < n; i++) {
@@ -832,7 +864,10 @@ export default class BattleScene extends Phaser.Scene {
     if (!move._orbitChild && !move._fanChild && !move._rainChild && !move._behindChild && !move._salvoChild) {
       spawnMoveExtra(this, owner, move, 'splash', x, y, face);
     }
-    if (move.visualShape === 'tracer' && !this.simFast && !artFor(owner.charDef?.id, move.name)?.frames?.length) {
+    const shotArt = artFor(owner.charDef?.id, move.name);
+    if (!this.simFast && shotArt?.muzzle?.frames?.length) {
+      spawnMoveExtra(this, owner, move, 'muzzle', x, y, face);
+    } else if (move.visualShape === 'tracer' && !this.simFast && !shotArt?.frames?.length) {
       const flash = this.add.circle(x, y, 7, 0xfff6e8, 0.9);
       flash.setBlendMode?.('ADD');
       this.tweens?.add?.({
@@ -860,6 +895,10 @@ export default class BattleScene extends Phaser.Scene {
         gfx: { x, y, destroy() {} },
         fxMask: frame?.mask,
       });
+      return;
+    }
+    if (move._rainChild && artFor(owner.charDef?.id, move.name)?.shower?.frames?.length) {
+      this.projectiles.push({ ...shot, gfx: { x, y, destroy() {} } });
       return;
     }
     const painted = fxProjectileView(this, owner, move, x, y);

@@ -550,7 +550,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       break;
     }
     case 'phosphor': {
-      if (artFor(fighter.charDef?.id, move?.name)?.frames?.length) break;
+      const painted = artFor(fighter.charDef?.id, move?.name);
+      if (painted?.frames?.length || painted?.launch?.frames?.length) break;
       const y0 = fighter.y - 28;
       const y1 = fighter.y - (fighter.bodyH ?? 80) - 48;
       const streak = scene.add.rectangle?.(fighter.x, (y0 + y1) / 2, 5, Math.abs(y0 - y1), 0xfff6e8, 0.85);
@@ -584,7 +585,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       break;
     }
     case 'wp': {
-      if (artFor(fighter.charDef?.id, move?.name)?.frames?.length) break;
+      const painted = artFor(fighter.charDef?.id, move?.name);
+      if (painted?.frames?.length || painted?.impact?.frames?.length) break;
       burst(scene, x, y, 0xfff6e8, 8, 28);
       break;
     }

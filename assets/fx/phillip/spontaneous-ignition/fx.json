@@ -1,0 +1,23 @@
+{
+  "blend": "add",
+  "black": 16,
+  "hit": false,
+  "impact": {
+    "file": "burst.png",
+    "fit": "height",
+    "heightFrac": 1.45,
+    "crop": "frame",
+    "pivot": "center",
+    "lifeMs": 360
+  },
+  "cling": {
+    "file": "sheet.png",
+    "frames": 4,
+    "fps": 10,
+    "loop": true,
+    "fit": "height",
+    "heightFrac": 0.62,
+    "crop": "frame",
+    "pivot": "center"
+  }
+}

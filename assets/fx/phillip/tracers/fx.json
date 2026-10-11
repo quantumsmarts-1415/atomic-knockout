@@ -1,0 +1,17 @@
+{
+  "blend": "add",
+  "black": 16,
+  "hit": false,
+  "fit": "height",
+  "heightFrac": 0.26,
+  "crop": "frame",
+  "pivot": "right",
+  "muzzle": {
+    "file": "muzzle.png",
+    "fit": "height",
+    "heightFrac": 0.58,
+    "crop": "frame",
+    "pivot": "left",
+    "lifeMs": 110
+  }
+}

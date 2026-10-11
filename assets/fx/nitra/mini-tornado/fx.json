@@ -1,0 +1,24 @@
+{
+  "blend": "add",
+  "black": 16,
+  "projectile": {
+    "file": "sheet.png",
+    "frames": 6,
+    "fps": 14,
+    "loop": true,
+    "crop": "frame",
+    "fit": "height",
+    "heightFrac": 1.2,
+    "pivot": "center",
+    "hit": false,
+    "scaleWith": "shot"
+  },
+  "charge": {
+    "file": "grow.png",
+    "frames": 6,
+    "crop": "frame",
+    "fit": "height",
+    "heightFrac": 1.2,
+    "pivot": "bottom"
+  }
+}

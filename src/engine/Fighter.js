@@ -860,6 +860,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       pulses: Array.isArray(move.pulses)
         ? move.pulses.map((p) => ({ ...p, damage: scale(p.damage ?? move.damage ?? 0, move.chargeDamageMult) }))
         : move.pulses,
+      _baseProjectileRadius: move.projectileRadius,
       projectileRadius: move.projectileRadius != null ? scale(move.projectileRadius, move.chargeRadiusMult) : move.projectileRadius,
       projectileSpeed: move.projectileSpeed != null && move.chargeSpeedMult != null
         ? scale(move.projectileSpeed, move.chargeSpeedMult)

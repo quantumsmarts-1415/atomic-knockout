@@ -1,0 +1,11 @@
+{
+  "blend": "add",
+  "black": 16,
+  "frames": 6,
+  "fps": 12,
+  "crop": "frame",
+  "fit": "width",
+  "heightFrac": 1.9,
+  "pivot": "center",
+  "hit": false
+}

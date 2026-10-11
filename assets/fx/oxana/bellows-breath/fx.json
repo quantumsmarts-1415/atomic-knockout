@@ -1,0 +1,16 @@
+{
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.9,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "impact": {
+    "file": "flare.png",
+    "fit": "height",
+    "heightFrac": 0.85,
+    "pivot": "center",
+    "crop": "frame"
+  }
+}

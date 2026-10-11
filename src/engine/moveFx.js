@@ -2,7 +2,7 @@
 // orbit, absorb, shell, ozone, and freeze visuals that have to stay on the
 // fighter instead of playing once.
 
-import { artFor } from './fxArt.js';
+import { artFor, fxNamed } from './fxArt.js';
 
 function orbitSpec(fighter) {
   const move = fighter.charDef?.moves?.basicCharge;
@@ -118,6 +118,7 @@ function drawAbsorb(g, fighter, time) {
 function drawShell(g, fighter, time) {
   const move = fighter.state === 'defending' ? fighter.defenseMove : null;
   if (!move?.chargeMs) return;
+  if (artFor(fighter.charDef?.id, move.name)?.frames?.length) return;
   const t = Math.min(1, Math.max(0, (time - (fighter.defenseStart ?? time)) / move.chargeMs));
   const plates = 6;
   const y = fighter.y - fighter.bodyH * 0.5;
@@ -137,6 +138,8 @@ function drawShell(g, fighter, time) {
 function drawOzone(g, fighter, time) {
   if (!(fighter.lingerImmuneUntil > time)) return;
   if (!fighter.lingerImmune?.includes('radiation')) return;
+  const ward = fighter.charDef?.moves?.specialDefense;
+  if (ward && artFor(fighter.charDef?.id, ward.name)?.frames?.length) return;
   const y = fighter.y - fighter.bodyH * 0.5;
   const pulse = 1 + Math.sin(time / 260) * 0.04;
   g.lineStyle(3, 0x8eb6ff, 0.75);
@@ -163,6 +166,7 @@ function drawLance(g, fighter, time) {
 
 function drawFreeze(g, fighter, time) {
   if (!(fighter.frozenUntil > time)) return;
+  if (fxNamed('nitra/_freeze')?.frames?.length) return;
   const y = fighter.y - fighter.bodyH * 0.55;
   g.fillStyle(0xd8fbff, 0.16);
   g.fillEllipse(fighter.x, y, fighter.bodyW * 1.1, fighter.bodyH * 0.9);

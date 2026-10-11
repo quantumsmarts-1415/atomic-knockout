@@ -318,9 +318,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.lockedUntil = Math.max(this.lockedUntil || 0, time + openMs);
       }
       if (this.state === 'defending') {
+        const coat = this.defenseMove;
         this.lingerHardening(time);
         this.scene?.dropPins?.(this);
         this.restoreShrink();
+        playVfx(this.scene, this, coat, 'letgo');
       }
       this.state = 'idle';
       this.rig.setFlash(null);
@@ -488,9 +490,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.fireCharge(time);
       }
     } else if (this.state === 'defending' && this.defenseMove?.hold !== false && !inp.special) {
+      const coat = this.defenseMove;
       this.lingerHardening(time);
       this.scene?.dropPins?.(this);
       this.restoreShrink();
+      playVfx(this.scene, this, coat, 'letgo');
       this.state = 'idle';
       this.defenseMove = null;
       this.rig.setFlash(null);

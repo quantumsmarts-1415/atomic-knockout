@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
 import { blackThreshold, contentSpan, fxFadeAlpha, fxFrameIndex, fxGameplayScale, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, sliceGrid, sliceHorizontal } from '../src/engine/fxArt.js';
@@ -146,6 +147,25 @@ test('a thermite sheet plays 1, 4, 2, 3', () => {
   assert.equal(fxFrameIndex(art, 250), 1);
   assert.equal(fxFrameIndex(art, 375), 2);
   assert.equal(fxFrameIndex(art, 500), 2);
+});
+
+test('flora sheets keep the jet, the coat flash, and both cascade sides', () => {
+  const read = (folder) => JSON.parse(fs.readFileSync(`assets/fx/flora/${folder}/fx.json`, 'utf8'));
+  const jet = read('pale-yellow-jet');
+  assert.equal(jet.pivot, 'left');
+  assert.equal(jet.blend, 'add');
+  assert.equal(jet.hit, false);
+  const coat = read('teflon-coat');
+  assert.equal(coat.frames, 4);
+  assert.equal(coat.releaseFlash, true);
+  assert.equal(coat.loop, undefined);
+  const cascade = read('radical-cascade');
+  assert.equal(cascade.frames, 6);
+  assert.equal(cascade.bothSides, true);
+  assert.equal(cascade.pivot, 'left');
+  assert.equal(cascade.crop, undefined);
+  const jab = read('etching-jab');
+  assert.equal(jab.anchor, 'contact');
 });
 
 test('a horizontal sheet splits into even frames', () => {

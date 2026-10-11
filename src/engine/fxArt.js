@@ -369,6 +369,8 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     frontGap: extra.frontGap > 0 ? extra.frontGap : 16,
     holdLast: !!extra.holdLast,
     flip: !!extra.flip,
+    bothSides: !!extra.bothSides,
+    releaseFlash: !!extra.releaseFlash,
     comboFrames: !!extra.comboFrames,
     crackFrames: !!extra.crackFrames,
     order: Array.isArray(extra.order) ? extra.order.map((n) => n | 0) : null,
@@ -704,7 +706,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
       }
       const record = artRecord(objectType, sized, usedPivot, loaded.frames, {
         ...look, reach: loaded.reach, peak, peakFrame: meta.peakFrame ?? -1, beam: null,
-        holdLast: !!meta.holdLast, flip: !!meta.flip, comboFrames: !!meta.comboFrames, crackFrames: !!meta.crackFrames,
+        holdLast: !!meta.holdLast, flip: !!meta.flip, bothSides: !!meta.bothSides, releaseFlash: !!meta.releaseFlash, comboFrames: !!meta.comboFrames, crackFrames: !!meta.crackFrames,
         order: meta.order, fadeAfter: !!meta.fadeAfter, fadeMs: meta.fadeMs, paceCharge: !!meta.paceCharge,
       });
       await attachSides(scene, id, slug, folder, meta, index, charH, sized, record);
@@ -963,11 +965,17 @@ export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'lance' || art.anchor === 'feet') return null;
   if (art.objectType === 'projectile' || art.objectType === 'thrown') return null;
   if (art.objectType === 'slash arc' || art.objectType === 'extend') return null;
-  const face = art.flip ? (fighter?.facing || 1) : 1;
+  const face = art.bothSides ? 1 : (art.flip ? (fighter?.facing || 1) : 1);
   const rot = art.objectType === 'beam' && (fighter?.facing || 1) === -1 ? Math.PI : 0;
   const img = placeStill(scene, art, x, y, rot);
   applyFrameLook(img, art.frames[0], art, scale);
   applyFacing(img, face);
+  if (art.bothSides) {
+    const mirror = placeStill(scene, art, x, y, 0);
+    applyFrameLook(mirror, art.frames[0], art, scale);
+    applyFacing(mirror, -1);
+    trackOneShot(scene, mirror, art, scale, null, -1);
+  }
   let peak = null;
   if (art.peak?.key) {
     peak = scene.add.image(x, y, art.peak.key);

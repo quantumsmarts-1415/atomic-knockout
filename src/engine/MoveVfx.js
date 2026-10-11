@@ -195,6 +195,13 @@ function shieldBubble(scene, fighter, color) {
 
 export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (!scene?.add || !fighter || scene.simFast) return;
+  if (phase === 'letgo') {
+    const art = artFor(fighter.charDef?.id, move?.name);
+    if (!art?.releaseFlash || !art.frames?.length) return;
+    const y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+    drawFxOneShot(scene, fighter, move, fighter.x, y, 1);
+    return;
+  }
   if (phase === 'release' || phase === 'defense') {
     const art = artFor(fighter.charDef?.id, move?.name);
     if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance') return;
@@ -208,7 +215,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       && art.objectType !== 'thrown'
       && art.objectType !== 'slash arc'
       && art.objectType !== 'extend';
-    if (replaced) {
+    if (replaced && !(phase === 'defense' && art.releaseFlash)) {
       // A burst is drawn once, at the blast, when resolveBurst supplies a point.
       if (move.kind === 'burst' && extra?.x == null) return;
       const anchor = fxAnchor(fighter, move);
@@ -240,6 +247,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     return;
   }
   if (phase === 'defense') {
+    if (artFor(fighter.charDef?.id, move?.name)?.releaseFlash) return;
     if (style === 'wall' || style === 'cement') {
       const dir = fighter.facing || 1;
       column(scene, fighter.x + dir * ((fighter.bodyW ?? 40) / 2 + 16), fighter.y, color, 120);

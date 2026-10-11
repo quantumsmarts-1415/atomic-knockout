@@ -1,0 +1,9 @@
+{
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.05,
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false
+}

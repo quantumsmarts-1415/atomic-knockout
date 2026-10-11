@@ -366,6 +366,9 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     flip: !!extra.flip,
     comboFrames: !!extra.comboFrames,
     crackFrames: !!extra.crackFrames,
+    order: Array.isArray(extra.order) ? extra.order.map((n) => n | 0) : null,
+    fadeAfter: !!extra.fadeAfter,
+    fadeMs: extra.fadeMs > 0 ? extra.fadeMs : 280,
   };
 }
 
@@ -659,6 +662,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
       const record = artRecord(objectType, sized, usedPivot, loaded.frames, {
         ...look, reach: loaded.reach, peak, peakFrame: meta.peakFrame ?? -1, beam: null,
         holdLast: !!meta.holdLast, flip: !!meta.flip, comboFrames: !!meta.comboFrames, crackFrames: !!meta.crackFrames,
+        order: meta.order, fadeAfter: !!meta.fadeAfter, fadeMs: meta.fadeMs,
       });
       await attachSides(scene, id, slug, folder, meta, index, charH, sized, record);
       return record;
@@ -779,11 +783,24 @@ function applyFrameLook(img, frame, art, scale) {
 }
 
 export function fxFrameIndex(art, elapsed) {
-  const n = art?.frames?.length || 1;
-  if (n <= 1) return 0;
+  const seq = art?.order?.length ? art.order : null;
+  const n = seq ? seq.length : (art?.frames?.length || 1);
+  if (n <= 1) return seq ? seq[0] : 0;
   const fps = art.fps > 0 ? art.fps : 8;
   const i = Math.floor(Math.max(0, elapsed) / (1000 / fps));
-  return art.loop ? ((i % n) + n) % n : Math.min(n - 1, i);
+  const step = art.loop ? ((i % n) + n) % n : Math.min(n - 1, i);
+  return seq ? seq[step] : step;
+}
+
+/** 1 until an ordered sheet finishes, then a linear fade to 0. */
+export function fxFadeAlpha(art, elapsed) {
+  if (!art?.fadeAfter || art.loop) return 1;
+  const n = art.order?.length || art.frames?.length || 1;
+  const fps = art.fps > 0 ? art.fps : 8;
+  const done = n * (1000 / fps);
+  if (!(elapsed > done)) return 1;
+  const fade = art.fadeMs > 0 ? art.fadeMs : 280;
+  return Math.max(0, 1 - (elapsed - done) / fade);
 }
 
 /** Nearest floor at or below a blast, so a cloud can sit on the ground. */
@@ -875,6 +892,7 @@ function stepOneShots(scene) {
     const frame = shot.art.frames[fxFrameIndex(shot.art, elapsed)] || shot.art.frames[0];
     applyFrameLook(shot.img, frame, shot.art, shot.scale);
     applyFacing(shot.img, shot.face);
+    shot.img.setAlpha?.(fxFadeAlpha(shot.art, elapsed));
     if (shot.peak?.scene) {
       const on = shot.art.peakFrame === fxFrameIndex(shot.art, elapsed);
       shot.peak.setVisible(on);
@@ -893,7 +911,7 @@ function stepOneShots(scene) {
 export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   const art = artFor(fighter?.charDef?.id, move?.name);
   if (!art?.frames?.length || !scene?.add?.image) return null;
-  if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'lance') return null;
+  if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'lance' || art.anchor === 'feet') return null;
   if (art.objectType === 'projectile' || art.objectType === 'thrown') return null;
   if (art.objectType === 'slash arc' || art.objectType === 'extend') return null;
   const face = art.flip ? (fighter?.facing || 1) : 1;
@@ -1225,6 +1243,8 @@ function syncHeld(scene, fighter) {
   else if (art?.anchor === 'lance' && art.frames?.length) {
     const phase = lancePhase(fighter, now);
     if (phase) want = { art, kind: 'lance', phase };
+  } else if (art?.anchor === 'feet' && art.frames?.length && fighter.state === 'charging') {
+    want = { art, kind: 'feet' };
   }
   let live = liveHeld.get(fighter);
   if (!want) {
@@ -1234,7 +1254,7 @@ function syncHeld(scene, fighter) {
   if (!live?.img?.scene || live.kind !== want.kind) {
     dropHeld(fighter);
     live = { img: placeStill(scene, want.art, fighter.x, fighter.y, 0), kind: want.kind };
-    live.img.setDepth(want.kind === 'orbit' ? 8 : 12);
+    live.img.setDepth(want.kind === 'feet' ? 3 : want.kind === 'orbit' ? 8 : 12);
     liveHeld.set(fighter, live);
   }
   const face = fighter.facing || 1;
@@ -1245,6 +1265,15 @@ function syncHeld(scene, fighter) {
     applyFrameLook(live.img, frame, want.art, 1);
     live.img.setOrigin(0.5, 0.5);
     live.img.setPosition(fighter.x, fighter.y - bodyH * 0.45);
+    return;
+  }
+  if (want.kind === 'feet') {
+    const elapsed = now - (fighter.chargeStart ?? now);
+    const frame = want.art.frames[fxFrameIndex(want.art, elapsed)] || want.art.frames[0];
+    applyFrameLook(live.img, frame, want.art, 1);
+    live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 1);
+    live.img.setPosition(fighter.x, fighter.y);
+    live.img.setAlpha(fxFadeAlpha(want.art, elapsed));
     return;
   }
   const frames = want.art.frames;

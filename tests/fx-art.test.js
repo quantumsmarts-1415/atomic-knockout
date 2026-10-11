@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { blackThreshold, contentSpan, fxGameplayScale, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sliceGrid, sliceHorizontal } from '../src/engine/fxArt.js';
+import { blackThreshold, contentSpan, fxFadeAlpha, fxFrameIndex, fxGameplayScale, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sliceGrid, sliceHorizontal } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 
 test('every move has a folder, a type, and a score', () => {
@@ -115,6 +115,26 @@ test('visible pixels, not the canvas, set the on-screen size', () => {
   assert.equal(span, 653);
   assert.ok(Math.abs(653 * px - height * 1.5) < 0.001);
   assert.ok(Math.abs(pixelsPerSource(height, 1.3, 1513) * 1513 - height * 1.3) < 0.001);
+});
+
+test('a puddle sheet plays 1, 2, 3, 4, 6, 5 and then fades', () => {
+  const art = {
+    frames: [0, 1, 2, 3, 4, 5],
+    order: [0, 1, 2, 3, 5, 4],
+    fps: 10,
+    fadeAfter: true,
+    fadeMs: 200,
+  };
+  assert.equal(fxFrameIndex(art, 0), 0);
+  assert.equal(fxFrameIndex(art, 100), 1);
+  assert.equal(fxFrameIndex(art, 200), 2);
+  assert.equal(fxFrameIndex(art, 300), 3);
+  assert.equal(fxFrameIndex(art, 400), 5);
+  assert.equal(fxFrameIndex(art, 500), 4);
+  assert.equal(fxFrameIndex(art, 900), 4);
+  assert.equal(fxFadeAlpha(art, 600), 1);
+  assert.equal(fxFadeAlpha(art, 700), 0.5);
+  assert.equal(fxFadeAlpha(art, 800), 0);
 });
 
 test('a horizontal sheet splits into even frames', () => {

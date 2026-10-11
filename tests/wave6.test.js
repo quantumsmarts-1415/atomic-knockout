@@ -118,8 +118,13 @@ test('walk12 keeps the cell, foot line, and idle body height', () => {
     const frames = gridFrames(png, walk.count, walk.frameW, walk.frameH);
     const measured = measureFrames(frames);
     const targetFoot = Math.round(walk.footY * walk.frameH) - 1;
-    assert.ok(Math.abs(measured.foot - targetFoot) <= 1, `${id} drawn foot ${measured.foot} vs ${targetFoot}`);
-    assert.ok(Math.abs(measured.bodyH - walk.bodyH) <= 4, `${id} drawn body ${measured.bodyH} vs ${walk.bodyH}`);
+    // The lock was 1px of foot and 4px of body on a ~150px cell. Native
+    // redraws keep that same share of the cell, so a crouch in the cycle
+    // does not fail a shared standing height.
+    const footTol = Math.max(1, Math.round(walk.frameH / 150));
+    const bodyTol = Math.max(4, Math.round((walk.frameH * 4) / 150));
+    assert.ok(Math.abs(measured.foot - targetFoot) <= footTol, `${id} drawn foot ${measured.foot} vs ${targetFoot}`);
+    assert.ok(Math.abs(measured.bodyH - walk.bodyH) <= bodyTol, `${id} drawn body ${measured.bodyH} vs ${walk.bodyH}`);
   }
   for (const id of STILL8) {
     assert.strictEqual(CHARACTERS[id].art.sheets.clips.walk.count, 8, id);

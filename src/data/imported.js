@@ -8866,6 +8866,28 @@ export const IMPORTED_ROSTER = {
             "visibleH": 1012,
             "bodyH": 1012,
             "displayScale": 132 / 1012
+          },
+          "charge": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 1026,
+            "frameH": 1042,
+            "footY": 0.9818,
+            "visibleH": 1012,
+            "bodyH": 1012,
+            "displayScale": 132 / 1012
+          },
+          "special": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 892,
+            "frameH": 1042,
+            "footY": 0.9818,
+            "visibleH": 1012,
+            "bodyH": 1012,
+            "displayScale": 132 / 1012
           }
         }
       }
@@ -9845,6 +9867,39 @@ export const IMPORTED_ROSTER = {
             "visibleH": 1000,
             "bodyH": 1000,
             "displayScale": 0.132
+          },
+          "charge": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 788,
+            "frameH": 1032,
+            "footY": 0.9874,
+            "visibleH": 1000,
+            "bodyH": 1000,
+            "displayScale": 132 / 1000
+          },
+          "defense": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 616,
+            "frameH": 1032,
+            "footY": 0.9874,
+            "visibleH": 1000,
+            "bodyH": 1000,
+            "displayScale": 132 / 1000
+          },
+          "special": {
+            "count": 11,
+            "fps": 17,
+            "loop": false,
+            "frameW": 754,
+            "frameH": 1032,
+            "footY": 0.9874,
+            "visibleH": 1000,
+            "bodyH": 1000,
+            "displayScale": 132 / 1000
           }
         }
       }
@@ -10047,6 +10102,17 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "attack": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 792,
+            "frameH": 1113,
+            "footY": 0.9883,
+            "visibleH": 1064,
+            "bodyH": 1064,
+            "displayScale": 132 / 1064
+          },
+          "defense": {
             "count": 12,
             "fps": 18,
             "loop": false,

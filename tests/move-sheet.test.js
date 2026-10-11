@@ -447,7 +447,7 @@ test('call 4 sheets match their clip cells', () => {
       assert.ok(cells >= def.count, `${id} ${name} cells ${cells}`);
       assert.equal(def.displayScale, art.height / def.visibleH);
     }
-    if (id !== 'aaron' && id !== 'chroma' && id !== 'gail' && id !== 'scarlett' && id !== 'paula') {
+    if (id !== 'aaron' && id !== 'chroma' && id !== 'gail' && id !== 'scarlett' && id !== 'paula' && id !== 'tess') {
       assert.equal(MOVE_SHEETS[id].charge, undefined);
       assert.equal(MOVE_SHEETS[id].special, undefined);
     }
@@ -774,6 +774,82 @@ test('push 3 call 1 body sheets match their clip cells', () => {
       currentMoveKey: 'basicCharge',
       charDef: CHARACTERS[id],
       rig: { moveKey: 'basicCharge', sheetClip: clip, sheetFrame: frame },
+    };
+    assert.deepEqual(sheetReleasePoint(fighter, 'shot'), world, `${id} ${clip}`);
+    assert.ok(world.x > 400, `${id} ${clip} world`);
+  }
+});
+
+test('push 3 call 3 body sheets match their clip cells', () => {
+  const expect = {
+    tess: ['charge', 'special'],
+    yvette: ['charge', 'defense', 'special'],
+    zora: ['defense'],
+  };
+  for (const [id, names] of Object.entries(expect)) {
+    const art = CHARACTERS[id].art;
+    assert.equal(art.facing, 1, id);
+    for (const name of names) {
+      const def = art.sheets.clips[name];
+      const png = pngSize(`${art.sheets.dir}${id}_${name}.png`);
+      assert.equal(png.w % def.frameW, 0, `${id} ${name} width`);
+      assert.equal(png.h % def.frameH, 0, `${id} ${name} height`);
+      const cells = (png.w / def.frameW) * (png.h / def.frameH);
+      assert.ok(cells >= def.count, `${id} ${name} cells ${cells}`);
+      assert.equal(def.displayScale, art.height / def.visibleH);
+      assert.equal(def.sheetFacing, undefined, `${id} ${name}`);
+    }
+  }
+  assert.equal(CHARACTERS.tess.art.sheets.clips.attack.frameW, 788);
+  assert.equal(CHARACTERS.tess.art.sheets.clips.idle.displayScale, 0.13043);
+  assert.equal(CHARACTERS.tess.art.sheets.clips.walk.fps, 11.52);
+  assert.equal(CHARACTERS.zora.art.sheets.clips.attack.frameW, 792);
+  assert.equal(sheetMeta('yvette', 'attack').release, 8);
+  assert.equal(MOVE_SHEETS.zora.charge, undefined);
+  assert.equal(MOVE_SHEETS.zora.special, undefined);
+  const hunger = sheetMeta('tess', 'charge');
+  assert.equal(hunger.release, 3);
+  assert.equal(sheetFrameIndex(hunger, { state: 'charging', animT: 2 / 18 }), 2);
+  assert.equal(sheetFrameIndex(hunger, { state: 'charging', animT: 3 / 18 }), 0);
+  assert.equal(sheetMeta('tess', 'special').release, 5);
+  const clock = sheetMeta('yvette', 'charge');
+  assert.equal(clock.release, 6);
+  assert.equal(clock.anchors.feet.filter((p) => p == null).length, 6);
+  assert.equal(sheetFrameIndex(clock, { state: 'charging', animT: 5 / 18 }), 5);
+  assert.equal(sheetFrameIndex(clock, { state: 'charging', animT: 6 / 18 }), 0);
+  const laser = sheetMeta('yvette', 'special');
+  assert.equal(laser.count, 11);
+  assert.equal(laser.fps, 17);
+  assert.equal(laser.release, 5);
+  assert.equal(CHARACTERS.yvette.art.sheets.clips.special.count, 11);
+  assert.equal(CHARACTERS.yvette.art.sheets.clips.special.fps, 17);
+  for (const id of ['yvette', 'zora']) {
+    const brace = sheetMeta(id, 'defense');
+    assert.equal(brace.gather, true, id);
+    assert.deepEqual(brace.loop, [3, 8], id);
+    assert.equal(sheetFrameIndex(brace, { state: 'defending', animT: 0 }), 3, id);
+    assert.equal(sheetFrameIndex(brace, { state: 'defending', animT: 5 / 18 }), 8, id);
+    assert.equal(sheetFrameIndex(brace, { state: 'defending', animT: 6 / 18 }), 3, id);
+  }
+  const shots = [
+    ['tess', 'charge', 3],
+    ['yvette', 'special', 5],
+    ['zora', 'defense', 3],
+  ];
+  for (const [id, clip, frame] of shots) {
+    const def = CHARACTERS[id].art.sheets.clips[clip];
+    const tip = MOVE_SHEETS[id][clip].anchors.tip[frame];
+    assert.ok(tip[0] > def.frameW / 2, `${id} ${clip}`);
+    const world = frameToWorld(
+      tip, def.frameW, def.frameH, def.footY, def.displayScale, 1, 1, 400, 500,
+    );
+    const fighter = {
+      x: 400,
+      y: 500,
+      facing: 1,
+      currentMoveKey: clip === 'defense' ? 'specialDefense' : clip === 'special' ? 'specialDirectional' : 'basicCharge',
+      charDef: CHARACTERS[id],
+      rig: { sheetClip: clip, sheetFrame: frame },
     };
     assert.deepEqual(sheetReleasePoint(fighter, 'shot'), world, `${id} ${clip}`);
     assert.ok(world.x > 400, `${id} ${clip} world`);

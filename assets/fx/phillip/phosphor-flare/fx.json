@@ -10,12 +10,64 @@
     "pivot": "bottom",
     "lifeMs": 640
   },
-  "shower": {
-    "file": "sheet.png",
-    "frames": 5,
-    "fps": 12,
+  "ember": {
+    "file": "flare-ember-large-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 24,
     "loop": true,
-    "pivot": "bottom",
-    "lifeMs": 780
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.5,
+    "pivot": "center"
+  },
+  "spark": {
+    "file": "flare-ember-small-anim.png",
+    "frames": 18,
+    "cols": 18,
+    "rows": 1,
+    "fps": 24,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.3,
+    "pivot": "center"
+  },
+  "cinder": {
+    "file": "flare-ember-large.png",
+    "frames": 1,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.46,
+    "pivot": "center"
+  },
+  "mote": {
+    "file": "flare-ember-small.png",
+    "frames": 1,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.28,
+    "pivot": "center"
+  },
+  "puff": {
+    "file": "flare-smoke-puff-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 10.511,
+    "loop": false,
+    "blend": "screen",
+    "luma": true,
+    "black": 16,
+    "scale": 1.055,
+    "fit": "height",
+    "heightFrac": 0.62,
+    "pivot": "center",
+    "lifeMs": 1400
   }
 }

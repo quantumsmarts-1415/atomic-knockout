@@ -24,7 +24,7 @@ import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, flareCover, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, spawnContactFx, spawnFxSprite, spawnMoveExtra, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
+import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, spawnContactFx, spawnFlareShower, spawnFxSprite, spawnMoveExtra, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
 
 const GRAVITY = 1500;
 
@@ -754,6 +754,30 @@ export default class BattleScene extends Phaser.Scene {
       }
       const launch = () => {
         if (!owner?.alive) return;
+        if (art?.ember?.frames?.length) {
+          const layout = flareEmbers(move, owner.bodyH || 118, Math.floor((this.time?.now || 0) + owner.x));
+          spawnFlareShower(this, owner, move, layout);
+          const n = move.rain | 0;
+          const face = owner.facing || 1;
+          const originX = owner.x + face * (owner.bodyW ?? 40) * 0.2;
+          const top = owner.y - layout.height;
+          for (let i = 0; i < n; i++) {
+            const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
+            const drift = (i % 2 ? 1 : -1) * (8 + (i % 3) * 3);
+            this.spawnProjectile(owner, {
+              ...move,
+              rain: 0,
+              rainDelay: 0,
+              _rainChild: true,
+              projectileRadius: layout.radius,
+              _from: { x: originX + t * layout.width, y: top },
+              _vy: 270 + (i % 3) * 30,
+              projectileSpeed: Math.abs(drift),
+              _flip: Math.sign(drift) !== Math.sign(face),
+            });
+          }
+          return;
+        }
         if (art?.shower?.frames?.length) {
           const cover = flareCover(move, owner.bodyH);
           spawnFxSprite(
@@ -860,7 +884,7 @@ export default class BattleScene extends Phaser.Scene {
     const x = move._from?.x ?? (owner.x + face * (owner.bodyW / 2 + r + 4));
     let y = move._from?.y ?? (move.roll ? owner.y : owner.y - owner.bodyH * 0.65);
     if (move.fromAbove) y -= 220;
-    if (move._rainChild) y -= 160;
+    if (move._rainChild && move._from == null) y -= 160;
     if (!move._orbitChild && !move._fanChild && !move._rainChild && !move._behindChild && !move._salvoChild) {
       spawnMoveExtra(this, owner, move, 'splash', x, y, face);
     }
@@ -897,7 +921,8 @@ export default class BattleScene extends Phaser.Scene {
       });
       return;
     }
-    if (move._rainChild && artFor(owner.charDef?.id, move.name)?.shower?.frames?.length) {
+    const rainArt = artFor(owner.charDef?.id, move.name);
+    if (move._rainChild && (rainArt?.shower?.frames?.length || rainArt?.ember?.frames?.length)) {
       this.projectiles.push({ ...shot, gfx: { x, y, destroy() {} } });
       return;
     }

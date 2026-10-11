@@ -720,6 +720,7 @@ const SIDE_SPECS = [
   ['ignite', 'ignite-'], ['stars', 'stars-'], ['texture', 'texture-'],
   ['cling', 'cling-'], ['shatter', 'shatter-'],
   ['launch', 'launch-'], ['shower', 'shower-'], ['muzzle', 'muzzle-'],
+  ['ember', 'ember-'], ['spark', 'spark-'], ['cinder', 'cinder-'], ['mote', 'mote-'], ['puff', 'puff-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -983,6 +984,55 @@ export function flareCover(move, bodyH = 118) {
   return { width: Math.round(width), height: Math.round(height) };
 }
 
+function showerRng(seed) {
+  let s = (seed >>> 0) || 1;
+  return () => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+/** Falling curtain for Phosphor Flare. Width follows the charged spread.
+ *  Count grows with charge. Radius tiles that width with the rain droplets. */
+export function flareShower(move, bodyH = 118) {
+  const spread = move?.rainSpread > 0 ? move.rainSpread : 150;
+  const life = move?.projectileLife > 0 ? move.projectileLife : 650;
+  const frac = Math.max(0, Math.min(1, Number(move?._chargeFrac) || 0));
+  const rain = Math.max(1, move?.rain | 0 || 5);
+  const reach = (70 + spread * 0.5) * (life / 1000);
+  const width = Math.max(96, Math.round(reach * 2));
+  const height = Math.max(160, Math.round((bodyH > 0 ? bodyH : 118) * 1.85));
+  const count = Math.round(10 + frac * 14);
+  const lane = width / rain;
+  const radius = (lane / 2 + 12) / 1.45;
+  return { width, height, count, spread, life, frac, radius, rain };
+}
+
+/** One seeded layout of the shower. Pieces stay inside the hit width. */
+export function flareEmbers(move, bodyH = 118, seed = 1) {
+  const shower = flareShower(move, bodyH);
+  const rng = showerRng(seed);
+  const span = shower.width * 0.86;
+  const pieces = [];
+  for (let i = 0; i < shower.count; i++) {
+    const t = (i + 0.5) / shower.count - 0.5;
+    const jitter = (rng() - 0.5) * (span / shower.count) * 0.5;
+    pieces.push({
+      x: t * span + jitter,
+      y: rng() * 28,
+      scale: 0.72 + rng() * 0.58,
+      rot: (rng() - 0.5) * 1.4,
+      spin: (rng() - 0.5) * 1.6,
+      vy: 240 + rng() * 150,
+      vx: (rng() - 0.5) * 28,
+      frame0: Math.floor(rng() * 24),
+      kind: i % 4,
+      smoke: i % 2 === 0,
+    });
+  }
+  return { ...shower, pieces };
+}
+
 /** A move's cling sheet, or the shared on-fire status once that art exists. */
 export function burnVisual(cling, status) {
   if (cling?.frames?.length) return cling;
@@ -1159,6 +1209,7 @@ export function fxAnchor(fighter, move) {
 }
 
 const oneShots = [];
+const embers = [];
 
 function trackOneShot(scene, img, art, scale, peak, face = 1, box = null) {
   const fps = art.fps > 0 ? art.fps : 8;
@@ -1552,9 +1603,81 @@ function syncCling(scene, fighter) {
   live.img.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.42);
 }
 
+const EMBER_KINDS = ['ember', 'spark', 'cinder', 'mote'];
+
+/** Burning shower built from ember pieces. The layout's width is the hit width. */
+export function spawnFlareShower(scene, owner, move, layout) {
+  if (!scene?.add?.image || scene.simFast || !owner) return 0;
+  const art = artFor(owner.charDef?.id, move?.name);
+  const kinds = EMBER_KINDS.map((name) => art?.[name]).filter((piece) => piece?.frames?.length);
+  if (!kinds.length) return 0;
+  const spec = layout || flareEmbers(move, owner.bodyH || 118, 1);
+  const face = owner.facing || 1;
+  const originX = owner.x + face * (owner.bodyW ?? 40) * 0.2;
+  const top = owner.y - spec.height;
+  const puff = art?.puff?.frames?.length ? art.puff : null;
+  const born = scene.simNow ?? 0;
+  for (const piece of spec.pieces) {
+    const kind = kinds[piece.kind % kinds.length];
+    const drawn = (kind.scale > 0 ? kind.scale : 1) * piece.scale;
+    const img = placeStill(scene, kind, originX + piece.x, top + piece.y, piece.rot);
+    applyFrameLook(img, kind.frames[piece.frame0 % kind.frames.length] || kind.frames[0], kind, drawn);
+    img.setDepth(16);
+    img.rotation = piece.rot;
+    embers.push({
+      img, art: kind, scale: drawn,
+      rot: piece.rot, spin: piece.spin,
+      x: originX + piece.x, y: top + piece.y,
+      vx: piece.vx, vy: piece.vy,
+      born, life: spec.life,
+      frame0: piece.frame0 | 0,
+      puff, puffScale: piece.scale * 0.85,
+      nextPuff: born + 80, puffLeft: piece.smoke && puff ? 2 : 0,
+    });
+  }
+  return spec.pieces.length;
+}
+
+function stepEmbers(scene) {
+  const now = scene.simNow ?? 0;
+  const dt = Math.min(0.1, Math.max(0, now - (stepEmbers.at ?? now)) / 1000);
+  stepEmbers.at = now;
+  for (let i = embers.length - 1; i >= 0; i--) {
+    const ember = embers[i];
+    if (!ember.img?.scene) {
+      embers.splice(i, 1);
+      continue;
+    }
+    const elapsed = now - ember.born;
+    if (elapsed >= ember.life) {
+      ember.img.destroy?.();
+      embers.splice(i, 1);
+      continue;
+    }
+    ember.x += ember.vx * dt;
+    ember.y += ember.vy * dt;
+    const frame = ember.art.frames[(ember.frame0 + fxFrameIndex(ember.art, elapsed)) % ember.art.frames.length];
+    applyFrameLook(ember.img, frame, ember.art, ember.scale);
+    ember.img.setPosition(ember.x, ember.y);
+    ember.img.rotation = ember.rot + ember.spin * (elapsed / 1000);
+    const fadeAt = ember.life * 0.72;
+    ember.img.setAlpha(elapsed > fadeAt ? Math.max(0, 1 - (elapsed - fadeAt) / (ember.life - fadeAt)) : 1);
+    if (ember.puffLeft > 0 && now >= ember.nextPuff) {
+      ember.puffLeft -= 1;
+      ember.nextPuff = now + 160;
+      const smoke = placeStill(scene, ember.puff, ember.x, ember.y - 8, 0);
+      const scale = (ember.puff.scale > 0 ? ember.puff.scale : 1) * ember.puffScale;
+      applyFrameLook(smoke, ember.puff.frames[0], ember.puff, scale);
+      smoke.setDepth(14);
+      trackOneShot(scene, smoke, ember.puff, scale, null, 1);
+    }
+  }
+}
+
 export function syncFxActors(scene) {
   if (!scene?.fighters) return;
   stepOneShots(scene);
+  stepEmbers(scene);
   for (const fighter of scene.fighters) {
     syncCling(scene, fighter);
     syncAttached(scene, fighter);
@@ -1779,4 +1902,6 @@ export function clearFxIndexCache() {
   indexSet = undefined;
   byKey.clear();
   oneShots.length = 0;
+  embers.length = 0;
+  stepEmbers.at = undefined;
 }

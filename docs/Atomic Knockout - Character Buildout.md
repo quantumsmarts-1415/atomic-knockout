@@ -780,10 +780,10 @@ Metalloid:
 	Boiling Point: 3538 K
 	Electrical conductivity: 0.001 MS/m (semiconductor; pure silicon is far lower, ~4×10⁻¹⁰ MS/m)
 	Electronegativity: 1.90
-	Charge Move: "Overclock" Silas overclocks himself while charging, raising his speed and attack speed. If he holds it too long, he overheats and takes heat damage himself. (draft)
-	Normal Move: "Crystal Blade" Silas slices with a blade of pure silicon crystal, sharp but brittle, dealing kinetic damage. (draft) [currently in the game: physical close-range hit]
-	Defense Move: "Silica Pane" Silas raises a pane of silica glass that blocks heat and chemical damage. A strong kinetic hit shatters it, spraying glass shards back at the attacker. (draft)
-	Special Move: "Binary Surge" Silas pulses binary out of a chip in two quick waves, a 1 then a 0, dealing electrical damage around him. The second wave only fires if the first missed. (draft) [currently in the game: electrical area burst around them]
+	Charge Move: "Overclock" Silas overclocks himself while charging, raising his speed and attack speed. If he holds the charge until it is full, he overheats and takes heat damage himself.
+	Normal Move: "Crystal Blade" Silas slices with a blade of pure silicon crystal, dealing kinetic damage. The blade shatters on hit for a little extra shard damage, then reforms before his next swing.
+	Defense Move: "Silica Pane" Silas raises a pane of silica glass that blocks heat and chemical damage. A strong kinetic hit shatters it, and the glass shards damage both Silas and the attacker.
+	Special Move: "Binary Surge" Silas pulses binary out of a chip in two quick electrical waves, a 1 then a 0. The second wave fires only if the first missed.
 -Germanium
 	Name: Gertrude
 	Natural State: Solid

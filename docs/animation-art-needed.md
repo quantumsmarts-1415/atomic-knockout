@@ -180,10 +180,10 @@ Her move names and numbers stay as they are in game. She still has no attack she
 
 | Move | Slot | Frames | Size | Pose |
 | --- | --- | --- | --- | --- |
-| Overclock | Charge | 8 | 720×1280 | Circuits along the arms light up in sequence. At the end he flinches from his own heat. The pose is a power-up, not an attack. |
-| Crystal Blade | Normal | 8 | 720×1280 | A clean downward cut with a glassy blade grown from the forearm. |
-| Silica Pane | Defense | 8, loop | 720×1280 | Holds a transparent pane in front of the torso like a window. Kinetic hits bounce off it. |
-| Binary Surge | Special | 8 | 720×1280 | Two-beat cast: a first electrical pulse from the hand, then a second pulse if the first missed. |
+| Overclock | Charge | 8 | 720×1280 | Circuits along the arms light up in sequence and he moves faster. A full charge ends with him flinching from his own heat. The pose is a power-up, not an attack. |
+| Crystal Blade | Normal | 8 | 720×1280 | A clean downward cut with a glassy blade grown from the forearm. On a hit the blade bursts into shards, then it is whole again on the next swing. |
+| Silica Pane | Defense | 8, loop | 720×1280 | Holds a transparent pane in front of the torso like a window. Heat and chemical stop at the glass. A strong kinetic hit shatters it into shards that cut both fighters. |
+| Binary Surge | Special | 8 | 720×1280 | Two-beat cast: a first electrical wave marked 1, then a second wave marked 0 only if the first missed. |
 
 ## Phillip (Phosphorus) — idle 466×716
 

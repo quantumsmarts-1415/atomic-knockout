@@ -14,7 +14,7 @@ import { startStageIntro } from '../engine/stageIntros.js';
 import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
 import { syncCoats } from '../engine/coatView.js';
-import { cleanse } from '../engine/kit.js';
+import { cleanse, withShatter } from '../engine/kit.js';
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 import { Juice } from '../engine/juice.js';
@@ -923,7 +923,7 @@ export default class BattleScene extends Phaser.Scene {
     }
     this.sweepMarked(owner, move, struck);
     if (move.missRetry && hits === 0 && !move._retried) {
-      this.time.delayedCall(180, () => {
+      this.time.delayedCall(move.retryMs ?? 180, () => {
         if (owner.alive) this.resolveBurst(owner, { ...move, _retried: true, missRetry: false });
       });
     }
@@ -1555,6 +1555,16 @@ export default class BattleScene extends Phaser.Scene {
             if (hb && Math.abs(victim.x - tip) < hb.width * 0.38) {
               swing = { ...swing, damage: (swing.damage ?? 0) + swing.sweetSpot };
             }
+          }
+          if (swing.shatter) {
+            const hb = attacker.getHitboxRect();
+            const tip = hb ? (hit.dir === 1 ? hb.right : hb.left) : victim.x;
+            swing = withShatter(swing);
+            attacker._bladeDown = true;
+            playVfx(this, attacker, swing, 'shatter', {
+              x: tip,
+              y: victim.y - (victim.bodyH ?? 80) * 0.45,
+            });
           }
           this.landHit(attacker, victim, swing, hit.dir);
         }

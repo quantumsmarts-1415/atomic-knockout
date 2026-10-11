@@ -1690,7 +1690,7 @@ export const CHARACTERS = {
     moves: {
       basicDirectional: {
         name: 'Crystal Blade',
-        type: 'physical',
+        type: 'kinetic',
         damage: 8,
         baseKnockback: 150,
         knockbackGrowth: 5.0,

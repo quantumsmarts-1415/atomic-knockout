@@ -9,6 +9,14 @@ function typesOf(move) {
   return out;
 }
 
+function typedDamage(move, type) {
+  let n = 0;
+  if (!type) return (move?.damage ?? 0) + (move?.damage2 ?? 0);
+  if (move?.type && canonicalType(move.type) === type) n += move.damage ?? 0;
+  if (move?.type2 && canonicalType(move.type2) === type) n += move.damage2 ?? 0;
+  return n;
+}
+
 function breaksBlock(move, defense) {
   const how = move?.breaksBlock;
   if (!how) return false;
@@ -212,18 +220,29 @@ export function interceptHit(defender, attacker, move, time) {
 
   if (!move?.isCounterAttack && defense.retort) {
     const when = defense.retort.when;
-    if (!when || types.includes(when)) {
+    const min = defense.retort.minDamage ?? 0;
+    if ((!when || types.includes(when)) && typedDamage(move, when) >= min) {
+      const ret = defense.retort;
       return {
         result: 'counter',
-        negate: defense.retort.negate !== false,
+        negate: ret.negate !== false,
+        endDefense: !!ret.shatter,
+        selfHit: ret.selfDamage ? {
+          name: defense.name,
+          damage: ret.selfDamage,
+          type: ret.type ?? 'kinetic',
+          baseKnockback: ret.selfKnockback ?? 110,
+          knockbackGrowth: ret.selfGrowth ?? 2,
+          isCounterAttack: true,
+        } : undefined,
         counter: {
           name: defense.name,
-          damage: defense.retort.damage ?? 7,
-          type: defense.retort.type ?? 'kinetic',
-          baseKnockback: defense.retort.knockback ?? 210,
-          knockbackGrowth: defense.retort.growth ?? 4,
+          damage: ret.damage ?? 7,
+          type: ret.type ?? 'kinetic',
+          baseKnockback: ret.knockback ?? 210,
+          knockbackGrowth: ret.growth ?? 4,
           isCounterAttack: true,
-          onHit: counterHitFx(defense, defense.retort),
+          onHit: counterHitFx(defense, ret),
         },
       };
     }

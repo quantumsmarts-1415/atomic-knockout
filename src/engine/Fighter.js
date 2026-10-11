@@ -3,7 +3,7 @@ import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, interceptHit, rearmDefense } from './defense.js';
-import { applyOnCast, applyOnHit, bonusPackets, combatOpts, lightUnquenchable, prepareMove, tickKit, weakestType } from './kit.js';
+import { applyOnCast, applyOnHit, bonusPackets, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, tickKit, weakestType } from './kit.js';
 import { playVfx } from './MoveVfx.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
@@ -714,6 +714,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
         vfx: 'fire',
       };
     }
+    if (this.attackHasteUntil > time && (this.attackHaste ?? 1) > 1) {
+      move = scaledByHaste(move, this.attackHaste);
+    }
+    if (move.shatter) this._bladeDown = false;
     this.state = 'attack';
     this.currentMove = move;
     this.currentMoveKey = moveKey;
@@ -1232,6 +1236,20 @@ export default class Fighter extends Phaser.GameObjects.Container {
           attacker.rootedUntil = time + gate.counter.rootMs;
         }
       }
+      if (gate.endDefense && this.defenseMove) {
+        const broken = this.defenseMove;
+        this.state = 'idle';
+        this.defenseMove = null;
+        playVfx(this.scene, this, broken, 'shatter', {
+          x: this.x,
+          y: this.y - (this.bodyH ?? 80) * 0.5,
+          both: true,
+        });
+      }
+      if (gate.selfHit && attacker && attacker !== this) {
+        const sdmg = this.takeHit(attacker, gate.selfHit, time, Math.sign((attacker.x ?? this.x) - this.x) || this.facing || 1);
+        if (sdmg > 0) this.scene?.noteHit?.(attacker, this, gate.selfHit);
+      }
       this.rig.setFlash(0x66ffee);
       this.scene.time.delayedCall(120, () => {
         if (this.state !== 'ko' && this.state !== 'dead') this.rig.setFlash(null);
@@ -1423,7 +1441,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
   shiftTimers(ms) {
     const keys = [
       'stateUntil', 'attackCooldownUntil', 'specialCooldownUntil', 'vulnerableUntil', 'lockedUntil',
-      'dashUntil', 'diveUntil', 'diveArm', 'slowUntil', 'rootedUntil', 'speedBuffUntil', 'driftUntil',
+      'dashUntil', 'diveUntil', 'diveArm', 'slowUntil', 'rootedUntil', 'speedBuffUntil', 'attackHasteUntil', 'driftUntil',
       'phasingUntil', 'weightBuffUntil', 'poisonUntil', 'stunUntil', 'freezeUntil', 'burnUntil',
       'unquenchableUntil', 'heatOnHitUntil',
       'slipperyUntil', 'kineticResistUntil', 'heatedUntil',

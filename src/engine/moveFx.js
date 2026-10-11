@@ -70,6 +70,9 @@ export function syncMoveFx(scene) {
     drawVacancy(scene, g, fighter, time);
     drawUnquenchable(g, fighter, time);
     drawRibbon(g, fighter, time);
+    drawOverclock(g, fighter, time);
+    drawPane(g, fighter, time);
+    drawBladeShards(g, fighter, time);
   }
 }
 
@@ -153,6 +156,63 @@ function drawUnquenchable(g, fighter, time) {
     const hot = i % 2 === 0;
     g.fillStyle(hot ? 0xfff6e8 : 0xc5d0dc, 0.9);
     g.fillCircle(x, fighter.y - 6 - rise, hot ? 4.4 : 2.5);
+  }
+}
+
+function drawOverclock(g, fighter, time) {
+  if (!(fighter.attackHasteUntil > time)) return;
+  const move = fighter.charDef?.moves?.basicCharge;
+  if (artFor(fighter.charDef?.id, move?.name)?.frames?.length) return;
+  const hot = (fighter._overheatUntil ?? 0) > time;
+  const bodyH = fighter.bodyH ?? 80;
+  const bodyW = fighter.bodyW ?? 40;
+  const y = fighter.y - bodyH * 0.48;
+  const pulse = 0.6 + 0.4 * Math.sin(time / (hot ? 36 : 80));
+  g.lineStyle(2, hot ? 0xff6a2a : 0x4ad6ff, 0.5 * pulse);
+  g.strokeEllipse(fighter.x, y, bodyW * 1.65, bodyH * 1.12);
+  const ticks = 6;
+  for (let i = 0; i < ticks; i++) {
+    const a = time / 160 + (i / ticks) * Math.PI * 2;
+    const x = fighter.x + Math.cos(a) * bodyW * 0.95;
+    const yy = y + Math.sin(a) * bodyH * 0.48;
+    g.fillStyle(hot ? 0xfff2e0 : 0xd6f6ff, 0.9);
+    g.fillRect(x - 3, yy - 1, 6, 2);
+  }
+}
+
+function drawPane(g, fighter, time) {
+  const move = fighter.state === 'defending' ? fighter.defenseMove : null;
+  if (move?.vfx !== 'pane') return;
+  if (artFor(fighter.charDef?.id, move.name)?.frames?.length) return;
+  const dir = fighter.facing || 1;
+  const bodyH = fighter.bodyH ?? 80;
+  const bodyW = fighter.bodyW ?? 40;
+  const x = fighter.x + dir * (bodyW * 0.9);
+  const y = fighter.y - bodyH * 0.52;
+  const w = 18;
+  const h = bodyH * 0.92;
+  const shimmer = 0.28 + 0.12 * Math.sin(time / 90);
+  g.fillStyle(0xd6f6ff, shimmer);
+  g.fillRect(x - w / 2, y - h / 2, w, h);
+  g.lineStyle(2, 0xf7fbff, 0.9);
+  g.strokeRect(x - w / 2, y - h / 2, w, h);
+  g.lineStyle(1, 0x4ad6ff, 0.75);
+  g.lineBetween(x - w / 2 + 3, y - h * 0.28, x + w / 2 - 3, y - h * 0.28);
+  g.lineBetween(x - w / 2 + 3, y, x + w / 2 - 3, y);
+  g.lineBetween(x - w / 2 + 3, y + h * 0.28, x + w / 2 - 3, y + h * 0.28);
+}
+
+function drawBladeShards(g, fighter, time) {
+  if (!fighter._bladeDown) return;
+  const move = fighter.charDef?.moves?.basicDirectional;
+  if (artFor(fighter.charDef?.id, move?.name)?.frames?.length) return;
+  const dir = fighter.facing || 1;
+  const x = fighter.x + dir * ((fighter.bodyW ?? 40) * 0.55);
+  const y = fighter.y - (fighter.bodyH ?? 80) * 0.58;
+  for (let i = 0; i < 4; i++) {
+    const a = time / 180 + i * 1.35;
+    g.fillStyle(i % 2 ? 0xffffff : 0xd6f6ff, 0.92);
+    g.fillRect(x + Math.cos(a) * 9 - 2, y + Math.sin(a) * 7 - 1, 5, 2);
   }
 }
 

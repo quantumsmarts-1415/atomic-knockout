@@ -370,20 +370,36 @@ export const MOVESETS = {
 
   silas: {
     basicCharge: m('Overclock', {
-      kind: 'buff', duration: 240, cooldown: 1200, maxChargeMs: 900,
-      overclock: { speed: 1.4, ms: 2800, selfHeat: 7 }, vfx: 'spark', vfxColor: 0x4ad6ff,
+      kind: 'buff', maxChargeMs: 560,
+      overclock: { speed: 1.4, attack: 1.4, ms: 2800, selfHeat: 7 },
+      vfx: 'overclock', vfxColor: 0x4ad6ff,
+      // Startup 3. Endlag 8. Same-button lock ~41 frames (was ~86).
+      startupF: 3, endlagF: 8, duration: 200, cooldown: 480,
     }),
     basicDirectional: melee('Crystal Blade', {
-      type: K, damage: 13.44, rangeW: 74, vfx: 'strike', duration: 260, cooldown: 520,
+      type: K, damage: 13.44, rangeW: 74,
+      shatter: { type: K, damage: 2.24 },
+      vfx: 'crystal', vfxColor: 0xd6f6ff,
+      // Startup 3. Endlag 8. Same-button lock ~24 frames (was ~47).
+      startupF: 3, endlagF: 8, duration: 180, cooldown: 220,
     }),
     specialDefense: m('Silica Pane', {
       blocks: [H, C],
-      retort: { when: K, type: K, damage: 7.84, knockback: 224 },
-      duration: 700, cooldown: 760, vfx: 'shield', vfxColor: 0xd6f6ff,
+      // Kinetic under 8 passes. A stronger kinetic hit breaks the glass.
+      retort: {
+        when: K, minDamage: 8, shatter: true,
+        type: K, damage: 7.84, knockback: 224,
+        selfDamage: 7.84, selfKnockback: 120,
+      },
+      // The pane stays long enough to catch a hit. Cooldown 46 → 17 frames.
+      duration: 700, cooldown: 280, vfx: 'pane', vfxColor: 0xd6f6ff,
     }),
     specialDirectional: m('Binary Surge', {
-      kind: 'burst', type: E, damage: 12.32, radius: 80, missRetry: true, vfx: 'spark',
-      baseKnockback: 190.4, duration: 240, cooldown: 780,
+      kind: 'burst', type: E, damage: 12.32, radius: 80,
+      missRetry: true, retryMs: 120, vfx: 'binary', vfxColor: 0x6ecbff,
+      baseKnockback: 190.4,
+      // Startup 4. Endlag 10. Same-button lock ~34 frames (was ~61).
+      startupF: 4, endlagF: 10, duration: 200, cooldown: 360,
     }),
   },
 

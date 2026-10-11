@@ -103,6 +103,7 @@ export function stripBuffs(fighter) {
   fighter.bonusHits = 0;
   fighter.bonusPacket = null;
   fighter.speedBuffUntil = 0;
+  fighter.attackHasteUntil = 0;
   fighter.heatResistUntil = 0;
   fighter.burnUntil = 0;
   fighter.kinDefMultUntil = 0;
@@ -215,9 +216,13 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     fighter.bonusPacket = { type: 'electrical', damage: 3 + 5 * fighter.redox, hitsName: move.name };
   }
   if (move.overclock) {
+    const ms = move.overclock.ms ?? 2800;
     fighter.speedBuff = move.overclock.speed ?? 1.35;
-    fighter.speedBuffUntil = time + (move.overclock.ms ?? 2800);
+    fighter.speedBuffUntil = time + ms;
+    fighter.attackHaste = move.overclock.attack ?? move.overclock.speed ?? 1.35;
+    fighter.attackHasteUntil = time + ms;
     if (frac >= 0.98 && move.overclock.selfHeat) {
+      fighter._overheatUntil = time + 480;
       fighter.takeHit(fighter, {
         type: 'heat', damage: move.overclock.selfHeat,
         baseKnockback: 20, knockbackGrowth: 0, isSelf: true, launch: 'radial',
@@ -279,6 +284,33 @@ function grantBuff(fighter, buff, time) {
       dashSpeed: buff.armDash.dashSpeed ?? 560,
     };
   }
+}
+
+/** Shorten a swing's commitment while an attack-speed buff is up. */
+export function scaledByHaste(move, haste = 1) {
+  if (!(haste > 1) || !move) return move;
+  const scale = 1 / haste;
+  const ms = (n, floor) => Math.max(floor, Math.round((n ?? 0) * scale));
+  const frames = (n, floor) => (n == null ? n : Math.max(floor, Math.round(n * scale)));
+  return {
+    ...move,
+    duration: ms(move.duration ?? 0, 1),
+    cooldown: ms(move.cooldown ?? 0, 0),
+    startupF: frames(move.startupF, 1),
+    endlagF: frames(move.endlagF, 0),
+    activeF: frames(move.activeF, 1),
+  };
+}
+
+/** Extra shard packet added only once the blade has connected. */
+export function withShatter(move) {
+  if (!move?.shatter) return move;
+  const extra = typeof move.shatter === 'number' ? move.shatter : (move.shatter.damage ?? 0);
+  const type = (typeof move.shatter === 'object' && move.shatter.type) || 'kinetic';
+  if (!(extra > 0)) return move;
+  if (!move.type2) return { ...move, type2: type, damage2: extra };
+  if (move.type2 === type) return { ...move, damage2: (move.damage2 ?? 0) + extra };
+  return { ...move, damage: (move.damage ?? 0) + extra };
 }
 
 /** Per-target damage tweaks that stay on the move instead of a character branch. */

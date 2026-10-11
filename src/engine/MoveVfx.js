@@ -173,6 +173,28 @@ export function syncChargeGlow(scene) {
       glow.fillCircle(fighter.x, y - 4, 6 + frac * 8);
       continue;
     }
+    if (move.overclock) {
+      const bodyH = fighter.bodyH ?? 80;
+      const bodyW = fighter.bodyW ?? 40;
+      const y = fighter.y - bodyH * 0.5;
+      const hot = frac >= 0.82;
+      const cool = hot ? 0xff6a2a : 0x4ad6ff;
+      const core = hot ? 0xfff2e0 : 0xd6f6ff;
+      glow.clear();
+      glow.lineStyle(2, cool, 0.35 + frac * 0.55);
+      glow.strokeEllipse(fighter.x, y, bodyW * (1.1 + frac * 0.7), bodyH * (0.7 + frac * 0.35));
+      glow.fillStyle(core, 0.08 + frac * 0.22);
+      glow.fillCircle(fighter.x, y, 10 + frac * 16);
+      const ticks = 8;
+      for (let i = 0; i < ticks; i++) {
+        const a = frac * 4 + (i / ticks) * Math.PI * 2;
+        const rx = bodyW * (0.7 + frac * 0.5);
+        const ry = bodyH * (0.28 + frac * 0.16);
+        glow.fillStyle(hot ? 0xfff2e0 : 0xd6f6ff, 0.45 + frac * 0.5);
+        glow.fillRect(fighter.x + Math.cos(a) * rx - 3, y + Math.sin(a) * ry - 1, 6, 2);
+      }
+      continue;
+    }
     if (move.tubeCharge) {
       const len = (move.beamLen ?? 150) * (1 + ((move.chargeLengthMult ?? 1) - 1) * frac);
       const dir = fighter.facing || 1;
@@ -205,6 +227,19 @@ export function syncChargeGlow(scene) {
     glow.fillCircle(fighter.x, y, Math.max(12, reach * 0.26));
     glow.lineStyle(3, 0xfff6d8, 0.28 + frac * 0.5);
     glow.strokeCircle(fighter.x, y, reach);
+  }
+}
+
+function sprayShards(scene, x, y) {
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2 + 0.2;
+    const shard = scene.add.rectangle?.(
+      x + Math.cos(a) * 12, y + Math.sin(a) * 8, i % 2 ? 9 : 6, 3, i % 2 ? 0xffffff : 0xd6f6ff, 0.92,
+    );
+    if (!shard) continue;
+    shard.rotation = a;
+    shard.setBlendMode?.('ADD');
+    die(scene, shard, 240);
   }
 }
 
@@ -273,7 +308,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     const painted = artFor(fighter.charDef?.id, move?.name);
     const heldArt = painted?.charge?.frames?.length || painted?.orbit?.frames?.length
       || painted?.anchor === 'lance' || painted?.anchor === 'feet';
-    if (!heldArt && style !== 'supernova') gather(scene, x, y - 10, color);
+    if (!heldArt && style !== 'supernova' && !move?.overclock) gather(scene, x, y - 10, color);
     return;
   }
   if (phase === 'fizzle') {
@@ -287,7 +322,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       column(scene, fighter.x + dir * ((fighter.bodyW ?? 40) / 2 + 16), fighter.y, color, 120);
       return;
     }
-    if (style === 'sign' || style === 'ribbon') return;
+    if (style === 'sign' || style === 'ribbon' || style === 'pane') return;
     if (style === 'bubble' || style === 'shield') {
       if (move?.powersCharge || move?.chargeMs || move?.lingerImmune) return;
       shieldBubble(scene, fighter, color);
@@ -298,6 +333,15 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   }
   if (phase === 'hit') {
     burst(scene, x, y, color, 8, 70);
+    return;
+  }
+  if (phase === 'shatter') {
+    sprayShards(scene, x, y);
+    if (extra.both) {
+      const dir = fighter.facing || 1;
+      sprayShards(scene, x + dir * 42, y);
+      sprayShards(scene, fighter.x - dir * 18, y);
+    }
     return;
   }
 
@@ -369,6 +413,76 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       const yBody = fighter.y - (fighter.bodyH ?? 80) * 0.5;
       burst(scene, fighter.x, yBody, 0xfff6e8, 14, 64);
       ring(scene, fighter.x, yBody, 0xd5dee8, (fighter.bodyH ?? 80) * 0.7, 3);
+      break;
+    }
+    case 'overclock': {
+      const hot = (move._chargeFrac ?? 0) >= 0.98;
+      const yBody = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+      const color = hot ? 0xff6a2a : 0x4ad6ff;
+      const core = hot ? 0xfff2e0 : 0xd6f6ff;
+      const ringG = scene.add.graphics?.();
+      if (ringG) {
+        ringG.lineStyle(3, color, 0.9);
+        ringG.strokeEllipse(0, 0, 28, 18);
+        ringG.setPosition(fighter.x, yBody);
+        ringG.setBlendMode?.('ADD');
+        die(scene, ringG, hot ? 280 : 200);
+      }
+      burst(scene, fighter.x, yBody, core, 10, hot ? 70 : 40);
+      break;
+    }
+    case 'crystal': {
+      const tip = meleeContactPoint(fighter, move);
+      const dir = fighter.facing || 1;
+      const x0 = fighter.x + dir * (fighter.bodyW ?? 40) * 0.22;
+      const y0 = fighter.y - (fighter.bodyH ?? 80) * 0.62;
+      const span = Math.max(28, Math.hypot(tip.x - x0, tip.y - y0));
+      const midX = (x0 + tip.x) / 2;
+      const midY = (y0 + tip.y) / 2;
+      const ang = Math.atan2(tip.y - y0, tip.x - x0);
+      const blade = scene.add.rectangle?.(midX, midY, span, 8, 0xd6f6ff, 0.88);
+      if (blade) {
+        blade.rotation = ang;
+        blade.setBlendMode?.('ADD');
+        die(scene, blade, 150);
+      }
+      const edge = scene.add.rectangle?.(midX, midY, span * 0.92, 2, 0xffffff, 0.95);
+      if (edge) {
+        edge.rotation = ang;
+        edge.setBlendMode?.('ADD');
+        die(scene, edge, 120);
+      }
+      break;
+    }
+    case 'binary': {
+      const r = move.radius ?? 80;
+      const yBody = fighter.y - (fighter.bodyH ?? 80) * 0.45;
+      const digit = move._retried ? '0' : '1';
+      const wave = scene.add.graphics?.();
+      if (wave) {
+        wave.lineStyle(4, 0x6ecbff, 0.95);
+        wave.strokeCircle(0, 0, 16);
+        wave.lineStyle(2, 0xe8f7ff, 0.8);
+        wave.strokeCircle(0, 0, 10);
+        wave.setPosition(fighter.x, yBody);
+        wave.setBlendMode?.('ADD');
+        if (scene.tweens) {
+          scene.tweens.add({
+            targets: wave, scale: Math.max(1.4, r / 16), alpha: 0, duration: 300,
+            onComplete: () => wave.destroy(),
+          });
+        } else wave.destroy?.();
+      }
+      const label = scene.add.text?.(fighter.x, yBody, digit, {
+        fontFamily: 'Courier New, monospace',
+        fontSize: '32px',
+        color: '#e8f7ff',
+      });
+      if (label) {
+        label.setOrigin?.(0.5, 0.5);
+        label.setDepth?.(22);
+        die(scene, label, 280);
+      }
       break;
     }
     case 'flare': {

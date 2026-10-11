@@ -118,6 +118,7 @@ function nudge(f, dx) {
 export function resolvePush(fighters) {
   const standing = [];
   for (const f of fighters) {
+    if (f._gliding || f.currentMove?.passThrough || (f.state === 'defending' && f.defenseMove?.passThrough)) continue;
     const box = pushbox(f);
     if (box) standing.push({ f, box });
   }

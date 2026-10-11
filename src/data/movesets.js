@@ -3,11 +3,18 @@
 // Defense = specialDefense (hold special). Special = specialDirectional.
 // Review batch 1 (Lillie, Ben, Bord, Carter, Nitra, Oxana) lives here too.
 
+import { ERIN, LIV, PAULA, RHODA, SANDY, TESS, YARA, YVETTE, ZORA, fxSheetsFor } from './batch3.js';
+
 const K = 'kinetic';
 const H = 'heat';
 const E = 'electrical';
 const C = 'chemical';
 const R = 'radiation';
+
+function fx(name) {
+  const sheets = fxSheetsFor(name);
+  return sheets ? { fxSheets: sheets } : {};
+}
 
 function m(name, fields) {
   return {
@@ -79,7 +86,7 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Crimson Tide', {
       kind: 'projectile', type: K, damage: 4, type2: C, damage2: 4, type3: H, damage3: 5,
-      roll: true, pierce: true, carry: true, multiHit: 2, hitGap: 140,
+      roll: true, slam: true, pierce: true, carry: true, multiHit: 2, hitGap: 140,
       baseKnockback: 40, knockbackGrowth: 0.4,
       projectileSpeed: 260, projectileRadius: 22, projectileLife: 1400,
       startupF: 5, endlagF: 14, duration: 260, cooldown: 400, vfx: 'tide',
@@ -211,7 +218,7 @@ export const MOVESETS = {
 
   oxana: {
     basicCharge: m('Bellows Breath', {
-      kind: 'projectile', type: K, damage: 6, flareHeat: 9, visualShape: 'breath',
+      kind: 'projectile', type: K, damage: 6, gas: true, flareHeat: 9, visualShape: 'breath',
       chargeDamageMult: 1.6, maxChargeMs: 700, vfx: 'gust',
       baseKnockback: 260, knockbackGrowth: 6,
       projectileSpeed: 380, projectileRadius: 32, projectileLife: 1100,
@@ -446,7 +453,7 @@ export const MOVESETS = {
       baseKnockback: 230, duration: 260, cooldown: 740,
     }),
     basicDirectional: melee('Brimstone Slam', {
-      type: K, damage: 7, type2: H, damage2: 5, vfx: 'fire', vfxColor: 0x6ecbff,
+      type: K, damage: 7, type2: H, damage2: 5, slam: true, vfx: 'fire', vfxColor: 0x6ecbff,
       baseKnockback: 210, duration: 240, cooldown: 360,
     }),
     specialDefense: m('Vulcanized Rubber', {
@@ -455,7 +462,7 @@ export const MOVESETS = {
       duration: 700, cooldown: 720, vfx: 'shield', vfxColor: 0x3a322c,
     }),
     specialDirectional: m('Volcanic Eruption', {
-      kind: 'burst', type: H, damage: 9, type2: C, damage2: 7,
+      kind: 'burst', type: H, damage: 9, type2: C, damage2: 7, gas: true,
       radius: 96, vfx: 'cloud', vfxColor: 0xffb020,
       baseKnockback: 200, duration: 320, cooldown: 900,
     }),
@@ -463,13 +470,13 @@ export const MOVESETS = {
 
   chloe: {
     basicCharge: m('Bleach Out', {
-      kind: 'projectile', type: C, damage: 9, stripBuffs: true,
+      kind: 'projectile', type: C, damage: 9, gas: true, stripBuffs: true,
       chargeDamageMult: 1.7, maxChargeMs: 750, vfx: 'acid', vfxColor: 0xe6f27a,
       projectileSpeed: 480, projectileRadius: 16, projectileLife: 600,
       baseKnockback: 150, duration: 240, cooldown: 740,
     }),
     basicDirectional: melee('Toxic Jab', {
-      type: C, damage: 6, vfx: 'cloud', vfxColor: 0xd4e857,
+      type: C, damage: 6, gas: true, vfx: 'cloud', vfxColor: 0xd4e857,
       baseKnockback: 140, knockbackGrowth: 2.8,
       duration: 240, cooldown: 560,
     }),
@@ -480,8 +487,8 @@ export const MOVESETS = {
       duration: 520, cooldown: 780, vfx: 'shield', vfxColor: 0xf4f4f4,
     }),
     specialDirectional: m('Gas Cloud', {
-      kind: 'zone', type: C, damage: 3, vfx: 'cloud', vfxColor: 0xd4e857,
-      zone: { type: C, damage: 2.2, ms: 2000, radius: 64, tick: 400, low: true, knockback: 0, growth: 0, color: 0xd4e857 },
+      kind: 'zone', type: C, damage: 3, gas: true, vfx: 'cloud', vfxColor: 0xd4e857,
+      zone: { type: C, damage: 2.2, gas: true, ms: 2000, radius: 64, tick: 400, low: true, knockback: 0, growth: 0, color: 0xd4e857 },
       baseKnockback: 0, knockbackGrowth: 0, duration: 260, cooldown: 980,
     }),
   },
@@ -508,7 +515,7 @@ export const MOVESETS = {
 
   kyle: {
     basicCharge: m('Action Potential', {
-      kind: 'projectile', type: E, damage: 8, fizzleBelow: 1, roll: true,
+      kind: 'projectile', type: E, damage: 8, slam: true, fizzleBelow: 1, roll: true,
       maxChargeMs: 1500, onHit: { stun: 450 }, vfx: 'spark', vfxColor: 0xd2b6ff,
       projectileSpeed: 620, projectileRadius: 14, projectileLife: 480,
       baseKnockback: 80, duration: 200, cooldown: 760,
@@ -539,7 +546,7 @@ export const MOVESETS = {
       buff: { ms: 4000, kineticTaken: 0.62, scaleWithCharge: true, coat: 'Calcify', bonus: { type: K, damage: 6, hits: 1, name: 'Calcify' } },
     }),
     basicDirectional: melee('Bone Crush', {
-      type: K, damage: 10, bonusVsBlock: 0.5, baseKnockback: 220,
+      type: K, damage: 10, slam: true, bonusVsBlock: 0.5, baseKnockback: 220,
       vfx: 'strike', duration: 250, cooldown: 380,
     }),
     specialDefense: m('Quick-Set Cement', {
@@ -1019,7 +1026,7 @@ export const MOVESETS = {
 
   brock: {
     basicCharge: m('Bromos Stench', {
-      kind: 'burst', type: C, damage: 7, radius: 72, bonusVsMark: 'stain', markMult: 1.35, onHit: { drift: 650 },
+      kind: 'burst', type: C, damage: 7, gas: true, radius: 72, bonusVsMark: 'stain', markMult: 1.35, onHit: { drift: 650 },
       chargeDamageMult: 1.45, chargeRadiusMult: 1.5, maxChargeMs: 900, vfx: 'cloud', vfxColor: 0x8a3a22,
       baseKnockback: 70, knockbackGrowth: 2.4, duration: 240, cooldown: 780,
     }),
@@ -1029,8 +1036,8 @@ export const MOVESETS = {
       baseKnockback: 145, knockbackGrowth: 3.4, duration: 200, cooldown: 520,
     }),
     specialDefense: m('Red Fume Screen', {
-      softenProjectiles: 0.35,
-      zone: { type: C, damage: 1.4, ms: 800, radius: 68, tick: 1000, knockback: 0, growth: 0, onHit: { blind: 480 }, color: 0x8a3a22 },
+      gas: true, softenProjectiles: 0.35,
+      zone: { type: C, damage: 1.4, gas: true, ms: 800, radius: 68, tick: 1000, knockback: 0, growth: 0, onHit: { blind: 480 }, color: 0x8a3a22 },
       duration: 800, cooldown: 900, vfx: 'cloud', vfxColor: 0x8a3a22,
     }),
     specialDirectional: m('Tyrian Purple', {
@@ -1104,21 +1111,23 @@ export const MOVESETS = {
 
   erin: {
     basicCharge: m('Undersea Cable', {
-      kind: 'beam', type: E, damage: 8, chargeDamageMult: 1.5, chargeLengthMult: 2.05,
-      maxChargeMs: 900, beamLen: 156, beamThick: 14, vfx: 'spark', vfxColor: 0xff7ab0,
+      kind: 'beam', type: E, damage: ERIN.cableDamage, ground: true, slam: true,
+      chargeDamageMult: ERIN.cableDamageMult, chargeLengthMult: ERIN.cableLengthMult,
+      maxChargeMs: ERIN.maxChargeMs, beamLen: ERIN.cableLen, beamThick: 14,
+      vfx: 'spark', vfxColor: 0xff7ab0, ...fx('Undersea Cable'),
       baseKnockback: 70, knockbackGrowth: 1.1, duration: 200, cooldown: 700,
     }),
     basicDirectional: melee('Pink Glass Swipe', {
-      type: K, damage: 6, rangeW: 76, vfx: 'strike', vfxColor: 0xff8ac4,
+      type: K, damage: 6, rangeW: 76, vfx: 'strike', vfxColor: 0xff8ac4, ...fx('Pink Glass Swipe'),
       baseKnockback: 90, knockbackGrowth: 1.4, duration: 210, cooldown: 400,
     }),
     specialDefense: m('Signal Repeater', {
-      retort: { when: E, type: E, damage: 10, knockback: 110, growth: 1.6 },
-      duration: 600, cooldown: 900, vfx: 'shield', vfxColor: 0xff7ab0,
+      reflectTypes: [E, R], reflectPower: ERIN.reflectPower,
+      duration: 600, cooldown: 900, vfx: 'shield', vfxColor: 0xff7ab0, ...fx('Signal Repeater'),
     }),
     specialDirectional: m('Resurface Laser', {
-      kind: 'beam', type: H, damage: 8, popShield: true, breaksBlock: true,
-      beamLen: 136, beamThick: 12, vfx: 'laser', vfxColor: 0xff4a6a,
+      kind: 'beam', type: H, damage: 8, stripProtection: true,
+      beamLen: 136, beamThick: 12, vfx: 'laser', vfxColor: 0xff4a6a, ...fx('Resurface Laser'),
       baseKnockback: 70, knockbackGrowth: 1.2, duration: 200, cooldown: 720,
     }),
   },
@@ -1212,7 +1221,7 @@ export const MOVESETS = {
 
   fey: {
     basicCharge: m('Forge Hammer', {
-      kind: 'burst', type: K, damage: 6, type2: H, damage2: 5, chargeDamageMult: 1.6, chargeRadiusMult: 1.3,
+      kind: 'burst', type: K, damage: 6, type2: H, damage2: 5, slam: true, chargeDamageMult: 1.6, chargeRadiusMult: 1.3,
       maxChargeMs: 900, radius: 54, vfx: 'fire', vfxColor: 0xff6a2a,
       baseKnockback: 100, knockbackGrowth: 1.8, duration: 280, cooldown: 880,
     }),
@@ -1251,7 +1260,7 @@ export const MOVESETS = {
       duration: 680, cooldown: 800, vfx: 'shield', vfxColor: 0xb7e3c2,
     }),
     specialDirectional: m('Meteorite Drop', {
-      kind: 'projectile', type: K, damage: 9, type2: H, damage2: 7, fromAbove: true, delayMs: 1000, fallSpeed: 560,
+      kind: 'projectile', type: K, damage: 9, type2: H, damage2: 7, slam: true, fromAbove: true, delayMs: 1000, fallSpeed: 560,
       vfx: 'strike', vfxColor: 0x8a93a0,
       projectileSpeed: 40, projectileRadius: 16, projectileLife: 1600,
       baseKnockback: 220, knockbackGrowth: 4.2, duration: 220, cooldown: 700,
@@ -1282,21 +1291,29 @@ export const MOVESETS = {
 
   paula: {
     basicCharge: m('Cold Fusion', {
-      kind: 'burst', type: H, damage: 14, fizzleCoin: true, chargeDamageMult: 1.15,
-      maxChargeMs: 1000, radius: 68, selfDamage: { type: H, damage: 3, noFlinch: true },
-      vfx: 'fire', vfxColor: 0xfff6d8,
+      kind: 'burst', type: H, damage: PAULA.blastDamage, chargeDamageMult: 1,
+      gamble: {
+        fullOdds: PAULA.fullOdds,
+        partialOdds: PAULA.partialOdds,
+        partialAfterMs: PAULA.partialAfterMs,
+        partialScale: PAULA.partialScale,
+      },
+      maxChargeMs: PAULA.fullChargeMs, radius: PAULA.blastRadius,
+      vfx: 'fire', vfxColor: 0xfff6d8, fizzleTint: 0xf4f7ff, ...fx('Cold Fusion'),
       baseKnockback: 140, knockbackGrowth: 2.6, duration: 260, cooldown: 920,
     }),
     basicDirectional: melee('White Gold Jab', {
-      type: K, damage: 7, rangeW: 66, vfx: 'strike', vfxColor: 0xf4f0e6,
+      type: K, damage: 7, rangeW: 66, vfx: 'strike', vfxColor: 0xf4f0e6, ...fx('White Gold Jab'),
       baseKnockback: 110, knockbackGrowth: 2.2, duration: 190, cooldown: 400,
     }),
     specialDefense: m('Hydrogen Sponge', {
-      absorbState: 'gas', fuelHeal: 4, fuelType: E, fuelDamage: 6,
-      duration: 700, cooldown: 860, vfx: 'shield', vfxColor: 0xd7ecff,
+      absorbGas: true, absorbHeal: PAULA.spongeHeal, cloudHeal: PAULA.cloudHealPerSec,
+      duration: 700, cooldown: 860, vfx: 'shield', vfxColor: 0xd7ecff, ...fx('Hydrogen Sponge'),
     }),
     specialDirectional: m('Fuel Cell Bolt', {
-      kind: 'projectile', type: E, damage: 6, vfx: 'spark', vfxColor: 0x8fd0ff,
+      kind: 'projectile', type: E, damage: PAULA.boltDamage, gasBolt: PAULA.boltDouble,
+      boltScale: PAULA.boltScale, boltColor: 0xf7fbff,
+      vfx: 'spark', vfxColor: 0x8fd0ff, ...fx('Fuel Cell Bolt'),
       projectileSpeed: 500, projectileRadius: 10, projectileLife: 480,
       baseKnockback: 100, knockbackGrowth: 2, duration: 200, cooldown: 540,
     }),
@@ -1432,7 +1449,7 @@ export const MOVESETS = {
 
   arsenio: {
     basicCharge: m('Inheritance Powder', {
-      kind: 'projectile', type: C, damage: 5, chargeDamageMult: 1.4, maxChargeMs: 800,
+      kind: 'projectile', type: C, damage: 5, gas: true, chargeDamageMult: 1.4, maxChargeMs: 800,
       onHit: { poison: { dps: 1.6, ms: 1400, inherit: true } },
       vfx: 'cloud', vfxColor: 0x7fbf4a,
       projectileSpeed: 400, projectileRadius: 12, projectileLife: 520,
@@ -1608,22 +1625,30 @@ export const MOVESETS = {
 
   rhoda: {
     basicCharge: m('Catalytic Converter', {
-      kind: 'burst', type: H, damage: 9, chargeDamageMult: 1.3, chargeRadiusMult: 1.2,
-      maxChargeMs: 850, radius: 52, eatZones: { radius: 150, type: 'chemical', bonus: 2, bonusType: 'heat' },
-      vfx: 'fire', vfxColor: 0xf0b4c8,
-      baseKnockback: 60, knockbackGrowth: 1.2, duration: 240, cooldown: 860,
+      kind: 'buff', damage: 0, consumeCatalyst: false,
+      maxChargeMs: 850,
+      eatZones: {
+        radius: RHODA.vacuumRadius, gas: true,
+        stackPercent: RHODA.stackBonus, stackMax: RHODA.stackMax,
+      },
+      vfx: 'cloud', vfxColor: 0xf0b4c8, ...fx('Catalytic Converter'),
+      baseKnockback: 0, knockbackGrowth: 0, duration: 240, cooldown: 860,
     }),
     basicDirectional: melee('Rose Thorn', {
-      type: K, damage: 9, rangeW: 68, vfx: 'strike', vfxColor: 0xe07090,
+      type: K, damage: 9, rangeW: 68, vfx: 'strike', vfxColor: 0xe07090, ...fx('Rose Thorn'),
       baseKnockback: 100, knockbackGrowth: 1.8, duration: 160, cooldown: 340,
     }),
     specialDefense: m('Tarnish Guard', {
-      immune: [C], cleanse: ['debuff', 'poison'],
-      duration: 640, cooldown: 860, vfx: 'shield', vfxColor: 0xf2c4d4,
+      immune: [C],
+      reduceTypes: { heat: RHODA.heatTaken, kinetic: RHODA.kineticTaken },
+      cleanse: ['debuff', 'poison', 'burn', 'slow', 'blind', 'mark'],
+      duration: 640, cooldown: 860, vfx: 'shield', vfxColor: 0xf7f4f8,
     }),
     specialDirectional: m('High Beam', {
-      kind: 'beam', type: H, damage: 9, beamLen: 180, beamThick: 36, onHit: { blind: 320 },
-      vfx: 'laser', vfxColor: 0xfff2c4,
+      kind: 'burst', type: H, damage: RHODA.beamDamage, radius: RHODA.coneRadius,
+      coneDeg: RHODA.coneDeg, offsetX: 70,
+      onHit: { dazzle: { ms: RHODA.dazzleMs, color: 0xfff6e8 } },
+      vfx: 'laser', vfxColor: 0xfff2c4, ...fx('High Beam'),
       baseKnockback: 70, knockbackGrowth: 1.4, duration: 200, cooldown: 520,
     }),
   },
@@ -1654,7 +1679,7 @@ export const MOVESETS = {
 
   ruben: {
     basicCharge: m('Condensate Collapse', {
-      kind: 'projectile', type: H, damage: 10, chargeDamageMult: 1.25, roll: true,
+      kind: 'projectile', type: H, damage: 10, slam: true, chargeDamageMult: 1.25, roll: true,
       maxChargeMs: 800, onHit: { freeze: 240 }, vfx: 'tide', vfxColor: 0x9ad7ff,
       projectileSpeed: 360, projectileRadius: 28, projectileLife: 700,
       baseKnockback: 80, knockbackGrowth: 1.5, duration: 260, cooldown: 760,
@@ -1747,22 +1772,27 @@ export const MOVESETS = {
 
   sandy: {
     basicCharge: m('Tin Cry', {
-      kind: 'burst', type: K, damage: 8, chargeDamageMult: 1.35, chargeRadiusMult: 1.2,
-      maxChargeMs: 800, radius: 70, onHit: { corrode: { mult: 0.75, ms: 1800 } },
-      vfx: 'gust', vfxColor: 0xe8eef2,
+      kind: 'burst', type: K, damage: SANDY.cryDamage, chargeDamageMult: 1.35, chargeRadiusMult: 1.2,
+      maxChargeMs: 800, radius: SANDY.cryRadius, coneDeg: SANDY.cryConeDeg, offsetX: 48,
+      onHit: { kineticTaken: { mult: SANDY.kinTaken, ms: SANDY.kinTakenMs, coat: 'Tin Cry' } },
+      vfx: 'gust', vfxColor: 0xe8eef2, ...fx('Tin Cry'),
       baseKnockback: 80, knockbackGrowth: 1.5, duration: 240, cooldown: 800,
     }),
-    basicDirectional: melee('Organ Pipe Swing', {
-      type: K, damage: 8, rangeW: 86, vfx: 'strike', vfxColor: 0xd8dee6,
-      baseKnockback: 160, knockbackGrowth: 2.8, duration: 220, cooldown: 460,
+    basicDirectional: melee('Sledgehammer Swing', {
+      type: K, damage: 8, rangeW: 86, vfx: 'strike', vfxColor: 0xd8dee6, ...fx('Sledgehammer Swing'),
+      baseKnockback: SANDY.sledgeKnockback, knockbackGrowth: SANDY.sledgeGrowth,
+      duration: 220, cooldown: 460,
     }),
     specialDefense: m('Tin Pest', {
-      immune: [K], buff: { heatTaken: 1.5, ms: 700 },
-      duration: 560, cooldown: 900, vfx: 'shield', vfxColor: 0xc8ced4,
+      immune: [K], passThrough: true, rooted: true,
+      takenWhile: { heat: SANDY.pestHeat, chemical: SANDY.pestChem },
+      duration: 560, cooldown: 900, vfx: 'shield', vfxColor: 0xc8ced4, ...fx('Tin Pest'),
     }),
     specialDirectional: m('Tin Can Kick', {
-      kind: 'projectile', type: K, damage: 6, ground: true, ricochet: 2, vfx: 'strike', vfxColor: 0xd0d6dc,
-      projectileSpeed: 420, projectileRadius: 10, projectileLife: 900,
+      kind: 'projectile', type: K, damage: 6, ground: true,
+      can: { floor: SANDY.canFloorBounces, walls: SANDY.canWallRicochets, bounce: SANDY.canBounce },
+      vfx: 'strike', vfxColor: 0xd0d6dc, ...fx('Tin Can Kick'),
+      projectileSpeed: 420, projectileRadius: 10, projectileLife: 1600,
       baseKnockback: 90, knockbackGrowth: 1.7, duration: 200, cooldown: 560,
     }),
   },
@@ -1920,44 +1950,51 @@ export const MOVESETS = {
 
   yara: {
     basicCharge: m('Maglev Launch', {
-      kind: 'dash', type: K, damage: 8, chargeDamageMult: 1.25, chargeDashMult: 1.2,
-      maxChargeMs: 800, dashSpeed: 620, rangeW: 96, rangeH: 70, vfx: 'dash', vfxColor: 0xe8eef8,
-      baseKnockback: 90, knockbackGrowth: 1.7, duration: 280, cooldown: 780,
+      kind: 'dash', type: K, damage: YARA.glideDamage,
+      chargeDamageMult: YARA.glideDamageMult, chargeDashMult: YARA.glideDistanceMult,
+      maxChargeMs: YARA.maxChargeMs, dashSpeed: YARA.glideSpeed,
+      floatRise: YARA.risePx, aimOnRelease: true, passThrough: true, hyperArmor: true,
+      rangeW: 96, rangeH: 70, vfx: 'dash', vfxColor: 0xe8eef8, ...fx('Maglev Launch'),
+      baseKnockback: 90, knockbackGrowth: 1.7, duration: YARA.glideDuration, cooldown: 780,
     }),
     basicDirectional: melee('Garnet Cut', {
-      type: K, damage: 6, type2: H, damage2: 5, rangeW: 74, vfx: 'strike', vfxColor: 0xe07070,
+      type: K, damage: 6, rangeW: 74, vfx: 'strike', vfxColor: 0xe07070, ...fx('Garnet Cut'),
       baseKnockback: 100, knockbackGrowth: 1.9, duration: 200, cooldown: 440,
     }),
     specialDefense: m('Flux Pin', {
-      pinProjectiles: 160, duration: 640, cooldown: 900, vfx: 'shield', vfxColor: 0xd8e4ff,
+      pinProjectiles: { front: YARA.pinFront, tall: YARA.pinTall }, pinFreeze: true,
+      duration: 640, cooldown: 900, vfx: 'shield', vfxColor: 0xd8e4ff, ...fx('Flux Pin'),
     }),
     specialDirectional: m('Ytterby Mine', {
-      kind: 'projectile', type: K, damage: 8, ground: true, explodeOnly: true, explodeRadius: 48,
-      vfx: 'strike', vfxColor: 0xf0e6c8,
-      projectileSpeed: 340, projectileRadius: 10, projectileLife: 640,
+      kind: 'mine', type: K, damage: YARA.mineShardDamage,
+      mineArmMs: YARA.mineArmMs, mineMax: YARA.mineMax, mineRange: YARA.mineRange,
+      shardSpeed: YARA.mineShardSpeed, projectileLife: YARA.mineShardLife, projectileRadius: 6,
+      vfx: 'strike', vfxColor: 0xf0e6c8, ...fx('Ytterby Mine'),
       baseKnockback: 80, knockbackGrowth: 1.6, duration: 200, cooldown: 620,
     }),
   },
 
   yvette: {
     basicCharge: m('Lattice Clock', {
-      kind: 'burst', type: K, damage: 12, chargeDamageMult: 1.2,
-      clockWindow: { period: 410, slack: 85, mult: 1.9 },
-      maxChargeMs: 900, radius: 50, vfx: 'spark', vfxColor: 0xe8e0ff,
+      kind: 'burst', type: K, damage: 12, chargeDamageMult: 1,
+      clockWindow: { period: YVETTE.clockPeriod, slack: YVETTE.clockSlack, mult: YVETTE.clockMult, fromStart: true },
+      maxChargeMs: YVETTE.clockMaxChargeMs, radius: 50, vfx: 'spark', vfxColor: 0xe8e0ff, ...fx('Lattice Clock'),
       baseKnockback: 70, knockbackGrowth: 1.4, duration: 220, cooldown: 900,
     }),
     basicDirectional: melee('Stress Gauge', {
-      type: K, damage: 12, bonusVsPercent: 0.65, rangeW: 74, vfx: 'strike', vfxColor: 0xd0c4e8,
+      type: K, damage: 12, percentScale: { cap: YVETTE.stressCap }, rangeW: 74,
+      vfx: 'strike', vfxColor: 0xd0c4e8, ...fx('Stress Gauge'),
       baseKnockback: 100, knockbackGrowth: 1.8, duration: 200, cooldown: 420,
     }),
     specialDefense: m('Seismic Read', {
-      blockGround: true, counterType: K, counterDamage: 6,
+      blockGround: true, seismicOnly: true, counterRange: YVETTE.counterRange,
+      counterType: K, counterDamage: YVETTE.counterDamage,
       counterKnockback: 110, counterKnockbackGrowth: 1.5,
-      duration: 460, cooldown: 1000, vfx: 'shield', vfxColor: 0xc8c0d8,
+      duration: 460, cooldown: 1000, vfx: 'shield', vfxColor: 0xc8c0d8, ...fx('Seismic Read'),
     }),
     specialDirectional: m('Fiber Laser', {
-      kind: 'beam', type: H, damage: 12, bonusVsMetal: 1.3, beamLen: 210, beamThick: 14,
-      vfx: 'laser', vfxColor: 0xffd0a0,
+      kind: 'beam', type: H, damage: 12, bonusVsMetal: YVETTE.metalBonus, beamLen: 210, beamThick: 14,
+      vfx: 'laser', vfxColor: 0xffd0a0, ...fx('Fiber Laser'),
       baseKnockback: 60, knockbackGrowth: 1.2, duration: 180, cooldown: 520,
     }),
   },
@@ -1979,7 +2016,7 @@ export const MOVESETS = {
       duration: 700, cooldown: 400, vfx: 'shield', vfxColor: 0xd5d3ce,
     }),
     specialDirectional: m('Fume Fever', {
-      kind: 'burst', type: C, damage: 6, radius: 64, onHit: { slow: 480 }, vfx: 'cloud', vfxColor: 0xd8dde4,
+      kind: 'burst', type: C, damage: 6, gas: true, radius: 64, onHit: { slow: 480 }, vfx: 'cloud', vfxColor: 0xd8dde4,
       baseKnockback: 50, knockbackGrowth: 1.0, duration: 200, cooldown: 560,
     }),
   },
@@ -2404,20 +2441,24 @@ export const MOVESETS = {
 
   zora: {
     basicCharge: melee('Ceramic Blade', {
-      type: K, damage: 8, breaksBlock: true, chargeDamageMult: 1.5, chargeRangeMult: 1.85,
-      maxChargeMs: 850, rangeW: 64, rangeH: 46, vfx: 'strike', vfxColor: 0xe8eef4,
+      type: K, damage: ZORA.bladeDamage, ignoreReductions: true,
+      chargeDamageMult: ZORA.bladeDamageMult, chargeRangeMult: ZORA.bladeReach,
+      maxChargeMs: ZORA.maxChargeMs, rangeW: 64, rangeH: 46,
+      vfx: 'strike', vfxColor: 0xe8eef4, ...fx('Ceramic Blade'),
       baseKnockback: 110, knockbackGrowth: 2.0, duration: 240, cooldown: 780,
     }),
     basicDirectional: melee('Cubic Cut', {
-      type: K, damage: 8, rangeW: 70, vfx: 'spark', vfxColor: 0xf4fbff,
+      type: K, damage: 8, rangeW: 70, vfx: 'spark', vfxColor: 0xf4fbff, ...fx('Cubic Cut'),
       baseKnockback: 120, knockbackGrowth: 2.1, duration: 190, cooldown: 400,
     }),
     specialDefense: m('Zircaloy Cladding', {
-      immune: [R], kind: 'block', onlyReduce: [H], blockReduction: 0.78,
-      duration: 720, cooldown: 880, vfx: 'shield', vfxColor: 0xd8e4ee,
+      immune: [R, H],
+      duration: 720, cooldown: 880, vfx: 'shield', vfxColor: 0x8a9098,
     }),
     specialDirectional: m('Counterfeit Gem', {
-      kind: 'projectile', type: K, damage: 7, explodeOnly: true, explodeRadius: 54, vfx: 'spark', vfxColor: 0xf7fbff,
+      kind: 'projectile', type: K, damage: 7, explodeOnly: true, explodeRadius: 54,
+      fxReuse: { projectile: 'carter/diamond-shard', burst: 'carter/diamond-burst' },
+      vfx: 'spark', vfxColor: 0xfff4ea, ...fx('Counterfeit Gem'),
       projectileSpeed: 420, projectileRadius: 8, projectileLife: 520,
       baseKnockback: 100, knockbackGrowth: 1.8, duration: 200, cooldown: 640,
     }),
@@ -2680,45 +2721,59 @@ export const MOVESETS = {
 
   liv: {
     basicCharge: m('192 Beams', {
-      kind: 'burst', type: H, damage: 15.12, type2: R, damage2: 13.44, fizzleBelow: 0.95,
-      chargeDamageMult: 1.15, chargeRadiusMult: 1.2, maxChargeMs: 1100, radius: 92,
-      vfx: 'supernova', vfxColor: 0xffe8a0,
+      kind: 'burst', type: H, damage: LIV.blastHeat, type2: R, damage2: LIV.blastRad,
+      chargeDamageMult: 1, chargeRadiusMult: 1, maxChargeMs: LIV.fullChargeMs,
+      radius: LIV.blastRadius, offsetX: LIV.aimDistance,
+      earlyBlast: { below: 1, type: H, damage: LIV.earlyHeat, radius: LIV.earlyRadius },
+      vfx: 'supernova', vfxColor: 0xffe8a0, ...fx('192 Beams'),
       baseKnockback: 176.4, knockbackGrowth: 3.86, duration: 280, cooldown: 1100,
     }),
     basicDirectional: melee('Chalcogen Hook', {
-      type: K, damage: 11.76, type2: C, damage2: 9.24, rangeW: 78, vfx: 'strike', vfxColor: 0xffd24a,
+      type: K, damage: 11.76, type2: C, damage2: 9.24, rangeW: 78,
+      vfx: 'strike', vfxColor: 0xffd24a, ...fx('Chalcogen Hook'),
       baseKnockback: 159.6, knockbackGrowth: 3.36, duration: 220, cooldown: 460,
     }),
     specialDefense: m('Hohlraum', {
-      reflectTypes: [H, R], reflectAs: R, reflectPower: 1.3,
-      counterKnockback: 142.8, counterKnockbackGrowth: 3.02,
-      duration: 700, cooldown: 960, vfx: 'shield', vfxColor: 0xffe08a,
+      detonateOn: [H, K],
+      detonate: {
+        type: H, damage: LIV.detonateHeat, type2: R, damage2: LIV.detonateRad,
+        radius: LIV.detonateRadius, baseKnockback: 150, knockbackGrowth: 3,
+      },
+      duration: 700, cooldown: 960, vfx: 'shield', vfxColor: 0xffe08a, ...fx('Hohlraum'),
     }),
     specialDirectional: m('Last Instant', {
-      kind: 'projectile', type: R, damage: 18.48, vfx: 'spark', vfxColor: 0xfff6c0,
-      projectileSpeed: 640, projectileRadius: 6, projectileLife: 110,
+      kind: 'projectile', type: R, damage: LIV.sparkDamage, vfx: 'spark', vfxColor: 0xfff6c0,
+      ...fx('Last Instant'),
+      projectileSpeed: LIV.sparkSpeed, projectileRadius: 6, projectileLife: LIV.sparkLife,
       baseKnockback: 134.4, knockbackGrowth: 2.69, duration: 120, cooldown: 720,
     }),
   },
 
   tess: {
     basicCharge: m('Electron Hunger', {
-      kind: 'burst', type: C, damage: 5.95, chargeDamageMult: 1.35, chargeRadiusMult: 1.2,
-      maxChargeMs: 800, radius: 64, pull: { radius: 220, speed: 200 }, vfx: 'gust', vfxColor: 0x9ad0ff,
+      kind: 'buff', type: C, damage: TESS.hungerDamage, chargeDamageMult: TESS.hungerDamageMult,
+      yank: true, yankMin: TESS.pullMin, yankMax: TESS.pullMax,
+      maxChargeMs: TESS.maxChargeMs, vfx: 'gust', vfxColor: 0x9ad0ff, ...fx('Electron Hunger'),
       baseKnockback: 50.34, knockbackGrowth: 1.08, duration: 240, cooldown: 860,
     }),
     basicDirectional: melee('Last Halogen', {
-      type: C, damage: 6.45, type2: R, damage2: 5.46, rangeW: 72, vfx: 'strike', vfxColor: 0xc8b4ff,
+      type: C, damage: 6.45, type2: R, damage2: 5.46, rangeW: 72,
+      vfx: 'strike', vfxColor: 0xc8b4ff, ...fx('Last Halogen'),
       baseKnockback: 64.73, knockbackGrowth: 1.44, duration: 200, cooldown: 440,
     }),
     specialDefense: m('Smoky Haze', {
-      phase: true,
-      zone: { type: C, damage: 2.48, ms: 700, radius: 78, tick: 180, color: 0x8eb4ff },
-      duration: 700, cooldown: 980, vfx: 'shield', vfxColor: 0x9ec0ff,
+      phase: true, untargetable: true, fadeAlpha: 0.15, gas: true,
+      zone: {
+        name: 'Smoky Haze', type: C, damage: TESS.hazeDps, percentOnly: true, gas: true,
+        endsDefense: true, follow: true, ms: 8000, radius: TESS.hazeRadius, tick: 1000,
+        knockback: 0, growth: 0, color: 0x8eb4ff,
+      },
+      duration: 800, cooldown: 980, vfx: 'cloud', vfxColor: 0x9ec0ff, ...fx('Smoky Haze'),
     }),
     specialDirectional: m('Six-Atom Spread', {
-      kind: 'projectile', type: R, damage: 3.97, fan: 6, fanSpread: 210, vfx: 'spark', vfxColor: 0xd0e4ff,
-      projectileSpeed: 520, projectileRadius: 5, projectileLife: 420,
+      kind: 'projectile', type: R, damage: 3.97, fan: TESS.fanCount, fanDeg: TESS.fanDeg,
+      vfx: 'spark', vfxColor: 0xd0e4ff, ...fx('Six-Atom Spread'),
+      projectileSpeed: TESS.fanSpeed, projectileRadius: 5, projectileLife: 420,
       baseKnockback: 43.15, knockbackGrowth: 0.86, duration: 180, cooldown: 760,
     }),
   },

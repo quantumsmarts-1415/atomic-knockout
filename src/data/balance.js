@@ -232,6 +232,13 @@ export function resolvePacket(amount, type, atkCombat, defCombat, opts = {}) {
   let dmg = amount * outgoingMult(type, atkCombat);
   if (opts.ignoreDefense) return dmg < 0 ? 0 : dmg;
   let mult = incomingMult(type, atkCombat, defCombat);
+  // Ceramic and similar hits skip armor and buff reductions. Element
+  // defense still applies, and a full block is decided before this.
+  if (opts.ignoreReductions) {
+    if (canonicalType(type) === 'chemical' && opts.chemDealtMult != null) dmg *= opts.chemDealtMult;
+    dmg *= mult;
+    return dmg < 0 ? 0 : dmg;
+  }
   if (canonicalType(type) === 'kinetic' && opts.kinDefMult != null) mult *= opts.kinDefMult;
   if (canonicalType(type) === 'kinetic' && opts.kineticTakenMult != null) mult *= opts.kineticTakenMult;
   if (canonicalType(type) === 'heat' && opts.heatTakenMult != null) mult *= opts.heatTakenMult;

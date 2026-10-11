@@ -385,7 +385,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     return;
   }
   if (phase === 'fizzle') {
-    burst(scene, x, y, 0x99aabb, 4, 20);
+    burst(scene, x, y, move?.fizzleTint ?? 0x99aabb, 4, 20);
     return;
   }
   if (phase === 'defense') {

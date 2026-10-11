@@ -46,7 +46,8 @@ function counterHitFx(defense, retort, extra) {
   return Object.keys(on).length ? on : undefined;
 }
 
-function groundSlam(move, attacker) {
+function groundSlam(move, attacker, defense) {
+  if (defense?.seismicOnly) return !!(move?.ground || move?.slam);
   if (move?.ground || move?.slam) return true;
   const b = attacker?.body;
   const grounded = !!(b && (b.blocked?.down || b.touching?.down));
@@ -98,7 +99,15 @@ export function interceptHit(defender, attacker, move, time) {
   if (defense.absorbTypes?.length && !move?.isCounterAttack && types.some((t) => defense.absorbTypes.includes(t))) {
     return { result: 'negate', endDefense: true };
   }
-  if (defense.blockGround && !move?.isCounterAttack && groundSlam(move, attacker)) {
+  if (defense.detonateOn?.length && !move?.isCounterAttack && types.some((t) => defense.detonateOn.includes(t))) {
+    return { result: 'negate', endDefense: true, detonate: defense.detonate };
+  }
+  if (defense.blockGround && !move?.isCounterAttack && groundSlam(move, attacker, defense)) {
+    const range = defense.counterRange ?? 0;
+    const dist = attacker
+      ? Math.hypot((attacker.x ?? defender.x) - defender.x, (attacker.y ?? defender.y) - defender.y)
+      : 0;
+    if (range > 0 && dist > range) return { result: 'negate' };
     return {
       result: 'counter',
       counter: {

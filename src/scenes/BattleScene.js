@@ -15,7 +15,9 @@ import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
 import { syncCoats } from '../engine/coatView.js';
 import { syncAuras } from '../engine/auraView.js';
-import { cleanse, withShatter } from '../engine/kit.js';
+import { applyDot, cleanse, withShatter } from '../engine/kit.js';
+import { resolvePacket } from '../data/balance.js';
+import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront } from '../engine/batch3.js';
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 import { Juice } from '../engine/juice.js';
@@ -679,14 +681,27 @@ export default class BattleScene extends Phaser.Scene {
     for (const z of this.zones) {
       if (z.dead || z.owner === fighter) continue;
       const toxic = z.spec?.type === 'chemical' || z.spec?.onHit?.poison;
-      if (want && z.spec?.type !== want && !(want === 'chemical' && toxic)) continue;
+      const gas = !!(z.spec?.gas || z.spec?.cloud);
+      if (spec.gas) {
+        if (!gas) continue;
+      } else if (want && z.spec?.type !== want && !(want === 'chemical' && toxic)) continue;
       const d = Math.hypot(z.x - fighter.x, z.y - (fighter.y - fighter.bodyH * 0.4));
       if (d > radius + (z.radius ?? 0) * 0.4) continue;
       z.dead = true;
       z.gfx?.destroy?.();
+      if (z.spec?.endsDefense && z.owner?.state === 'defending') {
+        z.owner.state = 'idle';
+        z.owner.defenseMove = null;
+        z.owner.alpha = 1;
+        z.owner._hazeFade = false;
+      }
       n += 1;
     }
-    if (n) {
+    if (n && spec.stackPercent) {
+      const max = spec.stackMax ?? 3;
+      fighter.catalystStacks = Math.min(max, (fighter.catalystStacks ?? 0) + n);
+      fighter.catalystPer = spec.stackPercent;
+    } else if (n) {
       fighter.bonusHits = (fighter.bonusHits ?? 0) + n;
       fighter.bonusPacket = {
         type: spec.bonusType ?? 'heat',
@@ -714,8 +729,143 @@ export default class BattleScene extends Phaser.Scene {
         continue;
       }
       p.move = { ...p.move, explodeOnly: false, dropZone: null, igniteAt: 0 };
-      p.gfx?.destroy?.();
       p.dead = true;
+      p.pinOwner = null;
+      if (this.tweens?.add && p.gfx?.y != null && !this.simFast) {
+        this.tweens.add({
+          targets: p.gfx, y: p.gfx.y + 40, alpha: 0, duration: 200,
+          onComplete: () => p.gfx?.destroy?.(),
+        });
+      } else {
+        p.gfx?.destroy?.();
+      }
+    }
+  }
+
+  stepCan(p) {
+    const spec = p.move?.can;
+    if (!spec || !p.gfx) return false;
+    const solids = (this.stage?.solids ?? []).filter((s) => s.h == null);
+    const deck = solids.find((s) => p.gfx.x >= s.x - s.w / 2 && p.gfx.x <= s.x + s.w / 2);
+    const floorY = deck ? (deck.y ?? this.stage?.groundY) : null;
+    if (!deck || floorY == null) return false;
+    const onFloor = p.gfx.y >= floorY - 4 && (p.vy ?? 0) >= 0;
+    if (onFloor && !p._onFloor) {
+      p._onFloor = true;
+      p.floorHits = (p.floorHits ?? 0) + 1;
+      if (p.floorHits > (spec.floor ?? 1)) {
+        p.gfx?.destroy?.();
+        p.dead = true;
+        return true;
+      }
+      p.gfx.y = floorY - 6;
+      p.vy = -Math.abs(p.vy || p.move.projectileSpeed || 280) * (spec.bounce ?? 0.72);
+      playVfx(this, p.owner, p.move, 'hit', { x: p.gfx.x, y: floorY });
+    } else if (!onFloor) p._onFloor = false;
+    const left = deck.x - deck.w / 2 + 16;
+    const right = deck.x + deck.w / 2 - 16;
+    const outside = p.gfx.x < left || p.gfx.x > right;
+    if (outside && !p._onWall) {
+      p._onWall = true;
+      p.wallHits = (p.wallHits ?? 0) + 1;
+      if (p.wallHits > (spec.walls ?? 2)) {
+        p.gfx?.destroy?.();
+        p.dead = true;
+        return true;
+      }
+      p.vx *= -1;
+      p.gfx.x = Phaser.Math.Clamp(p.gfx.x, left, right);
+      p.landed = new Set();
+      playVfx(this, p.owner, p.move, 'hit', { x: p.gfx.x, y: p.gfx.y });
+    } else if (!outside) p._onWall = false;
+    return false;
+  }
+
+  spawnMine(owner, move) {
+    this.mines = this.mines ?? [];
+    const max = move.mineMax ?? 1;
+    const owned = this.mines.filter((m) => !m.dead && m.owner === owner && m.move?.name === move.name);
+    while (owned.length >= max) {
+      const old = owned.shift();
+      old.dead = true;
+      old.gfx?.destroy?.();
+    }
+    const face = owner.facing || 1;
+    const x = owner.x + face * (move.mineRange ?? 140);
+    const y = owner.y;
+    const arm = (this.time?.now ?? 0) + (move.mineArmMs ?? 500);
+    const gfx = this.simFast || !this.add?.circle
+      ? { x, y, destroy() {} }
+      : this.add.circle(x, y - 10, 8, move.vfxColor ?? 0xf0e6c8, 0.95);
+    gfx.setDepth?.(12);
+    this.mines.push({ owner, move, x, y, arm, gfx, dead: false });
+  }
+
+  updateMines(time) {
+    if (!this.mines?.length) return;
+    for (const m of this.mines) {
+      if (m.dead) continue;
+      if (!m.owner?.alive) {
+        m.dead = true;
+        m.gfx?.destroy?.();
+        continue;
+      }
+      if (time < m.arm) continue;
+      for (const f of this.fighters) {
+        if (f === m.owner || !f.alive || f.state === 'ko' || f.state === 'dead') continue;
+        if (Math.hypot(f.x - m.x, f.y - m.y) > 36) continue;
+        this.burstMine(m);
+        break;
+      }
+    }
+    this.mines = this.mines.filter((m) => !m.dead);
+  }
+
+  burstMine(m) {
+    m.dead = true;
+    m.gfx?.destroy?.();
+    const speed = m.move.shardSpeed ?? 380;
+    playVfx(this, m.owner, m.move, 'release', { x: m.x, y: m.y - 12 });
+    for (const dir of MINE_SHARDS) {
+      this.spawnProjectile(m.owner, {
+        ...m.move,
+        kind: 'projectile',
+        damage: m.move.damage,
+        projectileSpeed: speed,
+        projectileLife: m.move.projectileLife ?? 420,
+        projectileRadius: m.move.projectileRadius ?? 6,
+        _vx: dir.x * speed,
+        _vy: dir.y * speed,
+        _from: { x: m.x, y: m.y - 16 },
+        fan: null,
+      });
+    }
+  }
+
+  yankFront(owner, move) {
+    const range = move.yankRange ?? move.yankMax ?? 200;
+    const target = nearestInFront(owner, this.fighters, range);
+    if (!target) return;
+    const face = owner.facing || 1;
+    const destX = owner.x + face * 46;
+    target.body?.reset?.(destX, owner.y);
+    target.body?.setVelocity?.(0, 0);
+    this.landHit(owner, target, {
+      name: move.name,
+      type: move.type ?? 'chemical',
+      damage: move.damage ?? 0,
+      baseKnockback: move.baseKnockback ?? 40,
+      knockbackGrowth: move.knockbackGrowth ?? 1,
+      kind: 'melee',
+    });
+  }
+
+  clearOwnedZones(owner, name) {
+    for (const z of this.zones ?? []) {
+      if (z.dead || z.owner !== owner) continue;
+      if (name && z.spec?.name !== name) continue;
+      z.dead = true;
+      z.gfx?.destroy?.();
     }
   }
 
@@ -924,9 +1074,22 @@ export default class BattleScene extends Phaser.Scene {
     if (move.fan > 1 && !move._fanChild) {
       const n = move.fan | 0;
       const spread = move.fanSpread ?? 220;
+      const speed = move.projectileSpeed ?? 400;
       for (let i = 0; i < n; i++) {
-        const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
-        this.spawnProjectile(owner, { ...move, fan: null, _fanChild: true, _vy: t * spread });
+        if (move.fanDeg > 0) {
+          const vel = fanVelocity(speed, i, n, move.fanDeg);
+          const face = owner.facing || 1;
+          this.spawnProjectile(owner, {
+            ...move,
+            fan: null,
+            _fanChild: true,
+            _vx: face * vel.vx,
+            _vy: vel.vy,
+          });
+        } else {
+          const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
+          this.spawnProjectile(owner, { ...move, fan: null, _fanChild: true, _vy: t * spread });
+        }
       }
       return;
     }
@@ -963,9 +1126,10 @@ export default class BattleScene extends Phaser.Scene {
       });
     }
     const born = this.time.now;
+    const shotVx = move._vx != null ? move._vx : face * move.projectileSpeed;
     const shot = {
       owner, move,
-      vx: face * move.projectileSpeed,
+      vx: shotVx,
       vy: move.fromAbove ? (move.fallSpeed ?? 420) : vy,
       dieAt: born + move.projectileLife,
       born,
@@ -1055,7 +1219,7 @@ export default class BattleScene extends Phaser.Scene {
 
     this.projectiles.push({
       gfx: orb, owner, move,
-      vx: face * move.projectileSpeed,
+      vx: shotVx,
       vy: move.fromAbove ? (move.fallSpeed ?? 420) : vy,
       dieAt: this.time.now + move.projectileLife,
       born: this.time.now,
@@ -1077,6 +1241,15 @@ export default class BattleScene extends Phaser.Scene {
     for (const target of this.fighters) {
       if (!move.includeSelf && target === owner) continue;
       if (!target.alive || target.state === 'ko') continue;
+      if (target.state === 'defending' && target.defenseMove?.untargetable) continue;
+      if (move.coneDeg > 0 && target !== owner) {
+        const facing = owner.facing || 1;
+        const dx = (target.x - cx) * facing;
+        const dy = target.y - cy;
+        if (dx < 0) continue;
+        const ang = Math.abs(Math.atan2(dy, Math.max(1, dx))) * (180 / Math.PI);
+        if (ang > move.coneDeg / 2) continue;
+      }
       if (move.unseen && target !== owner) {
         const ahead = (target.x - owner.x) * (owner.facing || 1);
         const dy = Math.abs((target.y - (target.bodyH ?? 0) * 0.4) - (owner.y - (owner.bodyH ?? 0) * 0.5));
@@ -1148,7 +1321,7 @@ export default class BattleScene extends Phaser.Scene {
     const len = (move.beamLen ?? 160) * (move._beamScale ?? 1);
     const thick = move.beamThick ?? 20;
     const x = owner.facing === 1 ? owner.x + owner.bodyW * 0.2 : owner.x - owner.bodyW * 0.2 - len;
-    const y = owner.y - owner.bodyH * 0.62;
+    const y = move.ground ? owner.y - thick * 0.5 : owner.y - owner.bodyH * 0.62;
     const rect = new Phaser.Geom.Rectangle(x, y - thick / 2, len, thick);
     const art = artFor(owner.charDef?.id, move.name);
     const anchor = fxAnchor(owner, move);
@@ -1157,6 +1330,7 @@ export default class BattleScene extends Phaser.Scene {
       const struck = new Set();
       for (const target of this.fighters) {
         if (target === owner || !target.alive || target.state === 'ko') continue;
+        if (target.state === 'defending' && target.defenseMove?.untargetable) continue;
         if (fxHits(owner, move, anchor.x, anchor.y, target, anchor.scale)) {
           this.landHit(owner, target, move, owner.facing);
           struck.add(target);
@@ -1168,6 +1342,7 @@ export default class BattleScene extends Phaser.Scene {
     const struck = new Set();
     for (const target of this.fighters) {
       if (target === owner || !target.alive || target.state === 'ko') continue;
+      if (target.state === 'defending' && target.defenseMove?.untargetable) continue;
       if (hurtHitsRect(target, rect)) {
         this.landHit(owner, target, move, owner.facing);
         struck.add(target);
@@ -1218,6 +1393,11 @@ export default class BattleScene extends Phaser.Scene {
 
   updateZones(time) {
     for (const z of this.zones) {
+      if (z.spec?.follow && z.owner?.alive) {
+        z.x = z.owner.x;
+        z.y = z.owner.y - (z.owner.bodyH ?? 80) * 0.35;
+        z.gfx?.setPosition?.(z.x, z.y);
+      }
       if (time >= z.until) {
         z.gfx.destroy();
         z.dead = true;
@@ -1269,6 +1449,22 @@ export default class BattleScene extends Phaser.Scene {
       for (const target of this.fighters) {
         if (target === z.owner || !target.alive || target.state === 'ko') continue;
         if (!hurtHitsCircle(target, z.x, z.y, z.radius)) continue;
+        if (z.spec.gas && target.state === 'defending' && target.defenseMove?.absorbGas) {
+          if (time >= (target._spongeAt ?? 0)) {
+            target._spongeAt = time + 1000;
+            const heal = target.defenseMove.cloudHeal ?? 1;
+            target.percent = Math.max(0, (target.percent ?? 0) - heal);
+            target.absorbedGas = true;
+          }
+          continue;
+        }
+        if (z.spec.percentOnly) {
+          const dealt = resolvePacket(
+            tickDamage, z.spec.type, z.owner?.charDef?.combat, target.charDef?.combat,
+          );
+          applyDot(target, dealt, z.spec.type || 'chemical');
+          continue;
+        }
         this.landHit(z.owner, target, {
           name: z.spec.name ?? 'zone',
           type: z.spec.type,
@@ -1699,6 +1895,7 @@ export default class BattleScene extends Phaser.Scene {
     const collisionStart = globalThis.performance.now();
     resolvePush(this.fighters);
     this.updateZones(time);
+    this.updateMines(time);
 
     // `wall`-kind defensive moves (e.g. Hydra's Dual Flame Wall) are also an
     // active hazard: two zones flanking the fighter that damage anyone who
@@ -1795,6 +1992,7 @@ export default class BattleScene extends Phaser.Scene {
         let bestD = Infinity;
         for (const f of this.fighters) {
           if (f === p.owner || !f.alive || f.state === 'ko' || f.state === 'dead') continue;
+          if (f.state === 'defending' && f.defenseMove?.untargetable) continue;
           const d = Math.hypot(f.x - p.gfx.x, (f.y - f.bodyH * 0.5) - p.gfx.y);
           if (d < bestD) { bestD = d; best = f; }
         }
@@ -1810,10 +2008,11 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (!p.pinned) {
         for (const f of this.fighters) {
-          const reach = f.state === 'defending' ? f.defenseMove?.pinProjectiles : 0;
-          if (!reach || f === p.owner || !f.alive) continue;
-          if (Math.hypot(f.x - p.gfx.x, (f.y - f.bodyH * 0.5) - p.gfx.y) > reach) continue;
+          const pin = f.state === 'defending' ? f.defenseMove?.pinProjectiles : 0;
+          if (!pin || f === p.owner || !f.alive) continue;
+          if (!inPinZone(f, p.gfx.x, p.gfx.y, pin)) continue;
           p.pinned = true;
+          p.pinFreeze = !!f.defenseMove?.pinFreeze;
           p.pinOwner = f;
           p.vx = 0;
           p.vy = 0;
@@ -1873,7 +2072,9 @@ export default class BattleScene extends Phaser.Scene {
         }
       }
       const holdSky = p.armAt && time < p.armAt && p.move.fromAbove;
-      if (p.pinned) p.gfx.y += (90 * delta) / 1000;
+      if (p.pinned) {
+        if (!p.pinFreeze) p.gfx.y += (90 * delta) / 1000;
+      }
       else if (holdSky) {
         // A delayed call-down stays overhead until its timer, then falls.
       } else if (p.move.roll) {
@@ -1886,7 +2087,8 @@ export default class BattleScene extends Phaser.Scene {
         stepFxProjectile(p, time);
         this.leaveTracer(p, time);
       }
-      if (p.move.ricochet && !p.pinned) {
+      if (p.move.can && !p.pinned && this.stepCan(p)) continue;
+      else if (p.move.ricochet && !p.pinned) {
         const cap = p.move.ricochet === true ? 2 : p.move.ricochet;
         if ((p.bounces ?? 0) < cap) {
           const solids = (this.stage?.solids ?? []).filter((s) => s.h == null);
@@ -1953,6 +2155,7 @@ export default class BattleScene extends Phaser.Scene {
       if (p.pinned || (p.armAt && time < p.armAt)) continue;
       for (const victim of this.fighters) {
         if (victim === p.owner || !victim.alive || victim.state === 'ko' || !victim.visible || p.landed.has(victim)) continue;
+        if (victim.state === 'defending' && victim.defenseMove?.untargetable) continue;
         if (victim.state === 'defending' && victim.defenseMove?.intangible) continue;
         if (p.next && time < (p.next.get(victim) ?? 0)) continue;
         if (!projectileHits(p, victim)) continue;

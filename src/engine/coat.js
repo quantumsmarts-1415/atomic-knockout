@@ -33,6 +33,9 @@ export const COATS = {
     cycle: [0x7a3dff, 0x2fbf62, 0x3a78ff, 0xf0c43a], cycleMs: 360,
   },
   'Melt Down': { color: 0xd7dee6, mode: 'lighten', amount: 0.62, gloss: 0.74, sweepMs: 180, full: true },
+  'Zircaloy Cladding': { color: 0x6e747c, mode: 'multiply', amount: 0.58, gloss: 0.14, sweepMs: 260, matte: true },
+  'Tarnish Guard': { color: 0xf4f7fb, mode: 'lighten', amount: 0.48, gloss: 0.62, sweepMs: 240, sparkle: true },
+  'Tin Cry': { color: 0x8d9398, mode: 'multiply', amount: 0.32, gloss: 0, sweepMs: 200, matte: true },
 };
 
 const FADE_MS = 220;

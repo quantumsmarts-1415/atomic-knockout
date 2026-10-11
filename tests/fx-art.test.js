@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { blackThreshold, contentSpan, fxFadeAlpha, fxFrameIndex, fxGameplayScale, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sliceGrid, sliceHorizontal } from '../src/engine/fxArt.js';
+import { blackThreshold, contentSpan, fxFadeAlpha, fxFrameIndex, fxGameplayScale, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, sliceGrid, sliceHorizontal } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 
 test('every move has a folder, a type, and a score', () => {
@@ -135,6 +135,17 @@ test('a puddle sheet plays 1, 2, 3, 4, 6, 5 and then fades', () => {
   assert.equal(fxFadeAlpha(art, 600), 1);
   assert.equal(fxFadeAlpha(art, 700), 0.5);
   assert.equal(fxFadeAlpha(art, 800), 0);
+});
+
+test('a thermite sheet plays 1, 4, 2, 3', () => {
+  const order = sheetPlayOrder('allen/thermite-burn');
+  assert.deepStrictEqual(order, [0, 3, 1, 2]);
+  const art = { frames: [0, 1, 2, 3], order, fps: 8 };
+  assert.equal(fxFrameIndex(art, 0), 0);
+  assert.equal(fxFrameIndex(art, 125), 3);
+  assert.equal(fxFrameIndex(art, 250), 1);
+  assert.equal(fxFrameIndex(art, 375), 2);
+  assert.equal(fxFrameIndex(art, 500), 2);
 });
 
 test('a horizontal sheet splits into even frames', () => {

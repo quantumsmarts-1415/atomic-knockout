@@ -635,6 +635,8 @@ async function loadMoveArt(scene, char, slot, move, index) {
     ? { x: 0, y: 0.5 }
     : { x: 0.5, y: 0.5 };
   const meta = await loadFxMeta(folder, index);
+  const pinned = sheetPlayOrder(folder);
+  if (pinned) meta.order = pinned;
   const charH = fighterHeight(char);
   const slug = moveSlug(move.name);
   const look = {
@@ -821,6 +823,12 @@ function applyFrameLook(img, frame, art, scale) {
   img.setDisplaySize(frame.displayW * scale, frame.displayH * scale);
   const blend = frame.blend || art?.blend;
   img.setBlendMode?.(blend === 'add' ? 'ADD' : 'NORMAL');
+}
+
+/** Source-frame order for a sheet whose cells are not played left to right. */
+export function sheetPlayOrder(folder) {
+  if (folder === 'allen/thermite-burn') return [0, 3, 1, 2];
+  return null;
 }
 
 export function fxFrameIndex(art, elapsed) {

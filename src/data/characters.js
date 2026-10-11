@@ -1712,9 +1712,10 @@ export const CHARACTERS = {
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
           walk: { count: 12, fps: 7.58, loop: true, frameW: 784, frameH: 1280, footY: 0.9938, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270 },
-          // Crystal Blade. Binary Surge is also the Overclock gather.
+          // Crystal Blade. Binary Surge is also the Overclock gather. Silica Pane faces right with the idle.
           attack: { count: 12, fps: 18, loop: false, frameW: 1162, frameH: 1297, footY: 0.9838, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270 },
           charge: { count: 12, fps: 18, loop: false, frameW: 1280, frameH: 1286, footY: 0.9969, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270, file: 'silas_special.png' },
+          defense: { count: 12, fps: 18, loop: false, frameW: 1182, frameH: 1322, footY: 0.997, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270 },
           special: { count: 12, fps: 18, loop: false, frameW: 1280, frameH: 1286, footY: 0.9969, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270 },
         },
       },
@@ -1861,10 +1862,11 @@ export const CHARACTERS = {
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
           walk: { count: 12, fps: 8, loop: true, frameW: 603, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
-          // Brimstone Slam. The overhead wind-up stays as drawn. The brace and the eruption face right, the same way the idle does.
+          // Brimstone Slam. The overhead wind-up stays as drawn. Black Powder, the brace, and the eruption face right, the same way the idle does.
           attack: { count: 11, fps: 17, loop: false, frameW: 603, frameH: 724, footY: 0.9655, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 1041, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
           defense: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
-          special: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 753, footY: 0.9416, visibleH: 654, bodyH: 654, displayScale: 148 / 654 },
+          special: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 753, footY: 0.9416, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
         },
       },
     },
@@ -2229,8 +2231,11 @@ export const CHARACTERS = {
         displayScale: 0.19672,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          // Wing Slash faces right while the idle faces left.
+          // Afterburner, Wing Slash, Folded Wings, and Micro Rocket face right while the idle faces left.
           attack: { count: 12, fps: 18, loop: false, frameW: 822, frameH: 1004, footY: 0.9861, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 862, frameH: 1014, footY: 0.9862, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 1516, frameH: 1027, footY: 0.9864, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
+          special: { count: 12, fps: 18, loop: false, frameW: 1122, frameH: 1004, footY: 0.9861, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
         },
       },
     },

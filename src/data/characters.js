@@ -363,9 +363,10 @@ export const CHARACTERS = {
         displayScale: 0.18686,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
-          // Grey armour, no helmet, one double spear. The walk and Lance Jab face left, the same way the idle does.
+          // Grey armour, no helmet, one double spear. The walk, Lance Jab, and Titanium Ram face left, the same way the idle does.
           walk: { count: 12, fps: 12, loop: true, frameW: 894, frameH: 720, footY: 0.992, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
           attack: { count: 12, fps: 18, loop: false, frameW: 1358, frameH: 735, footY: 0.9918, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 1132, frameH: 720, footY: 0.9903, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
         },
       },
     },
@@ -2276,9 +2277,10 @@ export const CHARACTERS = {
         displayScale: 0.22393,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          // The walk and Alloy Fist face left, the same way the idle does.
+          // The walk, Alloy Fist, and Prism Surge face left, the same way the idle does.
           walk: { count: 12, fps: 9, loop: true, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
           attack: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
+          special: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 722, footY: 0.9903, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
         },
       },
     },

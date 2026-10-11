@@ -5,7 +5,7 @@
 // the same way her idle does, so the rig flip is the facing correction.
 // Natalie's move sheets face right while her idle faces left. Those clips
 // set sheetFacing so the flip follows the sheet, not the idle. Chloe and
-// Cal do the same. Van's attack faces left, the same way the idle does.
+// Cal do the same. Van's attack and Prism Surge face left, the same way the idle does.
 // Allen and Titan face left in the sheet, the same way their idles do.
 // Chroma and Scarlett attack sheets face right while their idles face left.
 // Those clips set sheetFacing.
@@ -3270,6 +3270,175 @@ export const MOVE_SHEETS = {
     "attack": {
       "count": 12,
       "fps": 18
+    },
+    "special": {
+      "count": 12,
+      "fps": 18,
+      "release": 6,
+      "windup": [
+        0,
+        5
+      ],
+      "active": [
+        6,
+        8
+      ],
+      "recovery": [
+        9,
+        11
+      ],
+      "anchors": {
+        "fist": [
+          [
+            398,
+            401
+          ],
+          [
+            458,
+            116
+          ],
+          [
+            460,
+            132
+          ],
+          [
+            398,
+            280
+          ],
+          [
+            365,
+            254
+          ],
+          [
+            355,
+            224
+          ],
+          [
+            224,
+            193
+          ],
+          [
+            229,
+            235
+          ],
+          [
+            256,
+            299
+          ],
+          [
+            357,
+            380
+          ],
+          [
+            410,
+            394
+          ],
+          [
+            488,
+            373
+          ]
+        ],
+        "tip": [
+          [
+            392,
+            425
+          ],
+          [
+            442,
+            506
+          ],
+          [
+            440,
+            506
+          ],
+          [
+            398,
+            280
+          ],
+          [
+            365,
+            254
+          ],
+          [
+            355,
+            224
+          ],
+          [
+            224,
+            193
+          ],
+          [
+            229,
+            235
+          ],
+          [
+            256,
+            299
+          ],
+          [
+            357,
+            380
+          ],
+          [
+            410,
+            404
+          ],
+          [
+            467,
+            641
+          ]
+        ],
+        "feet": [
+          [
+            688,
+            714
+          ],
+          [
+            688,
+            714
+          ],
+          [
+            688,
+            714
+          ],
+          [
+            708,
+            714
+          ],
+          [
+            729,
+            714
+          ],
+          [
+            743,
+            714
+          ],
+          [
+            747,
+            714
+          ],
+          [
+            748,
+            714
+          ],
+          [
+            746,
+            714
+          ],
+          [
+            704,
+            714
+          ],
+          [
+            676,
+            714
+          ],
+          [
+            658,
+            714
+          ]
+        ]
+      }
     }
   },
   "yara": {
@@ -4137,6 +4306,10 @@ export const MOVE_SHEETS = {
           ]
         ]
       }
+    },
+    "charge": {
+      "count": 12,
+      "fps": 18
     }
   },
   "liv": {

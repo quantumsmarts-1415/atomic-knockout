@@ -13,6 +13,34 @@ function pngSize(path) {
   return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
 }
 
+test('push 2 call 1 body sheets match their clip cells', () => {
+  const expect = {
+    titan: ['charge'],
+    van: ['special'],
+  };
+  for (const [id, names] of Object.entries(expect)) {
+    const art = CHARACTERS[id].art;
+    for (const name of names) {
+      const def = art.sheets.clips[name];
+      const file = `${art.sheets.dir}${def.file || `${id}_${name}.png`}`;
+      const png = pngSize(file);
+      assert.equal(png.w % def.frameW, 0, `${id} ${name} width`);
+      assert.equal(png.h % def.frameH, 0, `${id} ${name} height`);
+      const cells = (png.w / def.frameW) * (png.h / def.frameH);
+      assert.ok(cells >= def.count, `${id} ${name} cells ${cells}`);
+      assert.equal(def.displayScale, art.height / def.visibleH);
+      assert.equal(def.sheetFacing, undefined);
+    }
+  }
+  const surge = sheetMeta('van', 'special');
+  assert.equal(surge.release, 6);
+  assert.deepEqual(surge.active, [6, 8]);
+  assert.equal(surge.anchors.feet[0][0], 688);
+  assert.equal(sheetMeta('titan', 'charge').count, 12);
+  const fd = { startup: 4, active: 6, recovery: 6, visible: 16 };
+  assert.equal(sheetFrameIndex(surge, { state: 'attack', fd, attackFrame: 4 }), 6);
+});
+
 test('call 1 sheets match their clip cells', () => {
   const expect = {
     nitra: ['attack', 'charge', 'special'],
@@ -233,7 +261,7 @@ test('call 5 attack sheets match their clip cells', () => {
     assert.ok(cells >= def.count, `${id} cells ${cells}`);
     assert.equal(def.displayScale, art.height / def.visibleH);
     assert.equal(MOVE_SHEETS[id].charge, undefined);
-    assert.equal(MOVE_SHEETS[id].special, undefined);
+    if (id !== 'van') assert.equal(MOVE_SHEETS[id].special, undefined);
   }
   assert.equal(CHARACTERS.sully.art.sheets.clips.attack.count, 11);
   assert.equal(CHARACTERS.rhoda.art.sheets.clips.attack.count, 8);
@@ -311,7 +339,7 @@ test('call 3 sheets match their clip cells', () => {
   assert.equal(CHARACTERS.allen.art.sheets.clips.attack.sheetFacing, undefined);
   assert.equal(CHARACTERS.titan.art.sheets.clips.attack.sheetFacing, undefined);
   assert.equal(CHARACTERS.titan.art.sheets.clips.walk.sheetFacing, undefined);
-  assert.equal(MOVE_SHEETS.titan.charge, undefined);
+  assert.equal(MOVE_SHEETS.titan.charge.count, 12);
   assert.equal(MOVE_SHEETS.titan.special, undefined);
   assert.equal(MOVE_SHEETS.liv.charge, undefined);
   assert.equal(MOVE_SHEETS.selena.special, undefined);

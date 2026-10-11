@@ -2,6 +2,8 @@
 
 The move pass below is the current roster. The curve pass under it is the baseline those edits started from. Every 1v1 rate in the final table is inside 40–60%.
 
+Those tables used a retired 16-second clock. Bot rounds and tournaments now play a full 3-stock round until one fighter is eliminated. A clock does not name the winner.
+
 ## Move pass
 
 Same seeded tournament as the curve pass: Elemental Isle, 16 seconds, 3 stocks, every pair three times (828 duels) plus 16 three-player free-for-alls. `TUNING` was left alone. Move damage was changed only where a kit could not land a hit at all. The usual change was recovery, cooldown, or reach.

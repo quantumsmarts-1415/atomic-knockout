@@ -2,6 +2,9 @@
 // /?playtest=id,id,id so only those cutouts download, and writes one JSON
 // report per match plus a mid-fight screenshot.
 //
+// Each match is a full round: 3 stocks, normal percent, until the stock
+// rules leave one fighter. A clock does not name the winner.
+//
 //   node tools/bot-playtest.mjs
 //
 // Chrome: PLAYWRIGHT_CHROME or /usr/bin/google-chrome.
@@ -11,11 +14,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
 import { CHARACTERS } from '../src/data/characters.js';
+import { MATCH_STOCKS, isFullRound } from '../src/engine/matchRules.js';
 
 const PORT = Number(process.env.PORT || 5173);
 const OUT = process.env.PLAYTEST_OUT || '/tmp/ak-playtest';
-const MS = Number(process.env.PLAYTEST_MS || 18000);
-const STOCKS = Number(process.env.PLAYTEST_STOCKS || 3);
+const STOCKS = MATCH_STOCKS;
+const HANG_MS = 20 * 60 * 1000;
 const CHROME = process.env.PLAYWRIGHT_CHROME
   || (fs.existsSync('/usr/bin/google-chrome') ? '/usr/bin/google-chrome' : '/usr/local/bin/google-chrome');
 
@@ -84,6 +88,7 @@ function summarize(report) {
       }
     }
   }
+  if (!isFullRound(report, STOCKS)) problems.push('round ended without a knockout');
   return problems;
 }
 
@@ -94,13 +99,13 @@ async function runMatch(browser, ids) {
   page.on('console', (msg) => {
     if (msg.type() === 'error') errors.push(msg.text());
   });
-  const url = `http://127.0.0.1:${PORT}/?playtest=${ids.join(',')}&stage=elemental-isle&stocks=${STOCKS}&ms=${MS}`;
+  const url = `http://127.0.0.1:${PORT}/?playtest=${ids.join(',')}&stage=elemental-isle&stocks=${STOCKS}`;
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   const shotName = `${ids.join('-')}.png`;
   const shotPromise = page.waitForTimeout(4500).then(() => page.screenshot({ path: path.join(OUT, shotName) })).catch((err) => {
     errors.push(`screenshot: ${err.message}`);
   });
-  const handle = await page.waitForFunction(() => window.__akReport, null, { timeout: MS + 20000 });
+  const handle = await page.waitForFunction(() => window.__akReport, null, { timeout: HANG_MS });
   const report = await handle.jsonValue();
   await shotPromise;
   await page.close();

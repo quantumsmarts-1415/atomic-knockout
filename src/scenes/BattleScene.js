@@ -20,6 +20,7 @@ import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 import { Juice } from '../engine/juice.js';
 import { FEEL, frameZoom, percentColor } from '../engine/feel.js';
+import { clockEndsRound } from '../engine/matchRules.js';
 import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
@@ -119,16 +120,17 @@ export default class BattleScene extends Phaser.Scene {
     this.time.now = 0;
     this.matchStart = 0;
     this.simNow = 0;
-    if (this.setup.playtestMs) {
-      this.playtestUntil = this.setup.playtestMs;
-      window.__akReport = null;
-    }
+    // Headless rounds publish a report when the stock rules end them.
+    // playtestMs marks that match. It is not a clock, and it must not
+    // name a winner when time runs out.
+    if (this.setup.playtestMs) window.__akReport = null;
 
     // optional per-stage match intro (engine/stageIntros.js): fighters are
     // frozen while it plays (+200ms so a skip press can't become an attack);
     // confirm (F/K/Enter/Space, phone attack) or a click skips it.
     this.introLockUntil = 0;
-    // Timed CPU matches skip the stage intro so the clock is all fighting.
+    // Headless CPU matches skip the stage intro. The round still runs
+    // until a stock elimination.
     this.intro = this.setup.playtestMs ? null : startStageIntro(this, this.stage, {
       // Stamp the sim clock. Phaser writes the loop timestamp into time.now
       // on every frame while our clock scale is 0, and the doors' "GO" tween
@@ -1602,7 +1604,7 @@ export default class BattleScene extends Phaser.Scene {
       this.updateAmbient(time, delta);
       this.updateParallax(delta);
     }
-    if (this.playtestUntil && !this.reportPublished && time >= this.playtestUntil) {
+    if (clockEndsRound() && this.setup.playtestMs && !this.reportPublished && time >= this.setup.playtestMs) {
       this.matchOver = true;
       this.publishPlaytestReport();
     }

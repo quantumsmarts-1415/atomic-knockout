@@ -1,6 +1,7 @@
 // One seeded match, two clocks.
 // Real-time uses the normal Phaser loop (?playtest=). Fast sim pumps 60 Hz
-// steps (?sim=1). Same fighters, stage, stocks, duration, and seed.
+// steps (?sim=1). Same fighters, stage, stocks, and seed. Both play a full
+// 3-stock round until one fighter remains.
 //
 //   node tools/sim-compare.mjs
 
@@ -9,8 +10,8 @@ import fs from 'node:fs';
 import { chromium } from 'playwright-core';
 
 const PORT = Number(process.env.PORT || 5173);
-const MS = Number(process.env.SIM_MS || 5000);
 const STOCKS = 3;
+const HANG_MS = 20 * 60 * 1000;
 const SEED = Number(process.env.SIM_SEED || 42);
 const IDS = (process.env.SIM_IDS || 'chroma,helen').split(',');
 const STAGE = 'elemental-isle';
@@ -66,17 +67,17 @@ async function main() {
   });
   try {
     const live = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-    const liveUrl = `http://127.0.0.1:${PORT}/?playtest=${IDS.join(',')}&stage=${STAGE}&stocks=${STOCKS}&ms=${MS}&seed=${SEED}`;
+    const liveUrl = `http://127.0.0.1:${PORT}/?playtest=${IDS.join(',')}&stage=${STAGE}&stocks=${STOCKS}&seed=${SEED}`;
     await live.goto(liveUrl, { waitUntil: 'domcontentloaded' });
-    await live.waitForFunction(() => window.__akReport, null, { timeout: MS + 20000 });
+    await live.waitForFunction(() => window.__akReport, null, { timeout: HANG_MS });
     const liveReport = brief(await live.evaluate(() => window.__akReport));
 
     const sim = await browser.newPage({ viewport: { width: 480, height: 270 } });
-    await sim.goto(`http://127.0.0.1:${PORT}/?sim=1&stage=${STAGE}&stocks=${STOCKS}&ms=${MS}&seed=${SEED}`, { waitUntil: 'domcontentloaded' });
+    await sim.goto(`http://127.0.0.1:${PORT}/?sim=1&stage=${STAGE}&stocks=${STOCKS}&seed=${SEED}`, { waitUntil: 'domcontentloaded' });
     await sim.waitForFunction(() => window.__akReady === true);
-    const simReport = brief(await sim.evaluate(async ({ ids, ms, stocks, seed, stage }) => {
-      return await window.__akRun({ ids, ms, stocks, seed, stageId: stage, speed: 30 });
-    }, { ids: IDS, ms: MS, stocks: STOCKS, seed: SEED, stage: STAGE }));
+    const simReport = brief(await sim.evaluate(async ({ ids, stocks, seed, stage }) => {
+      return await window.__akRun({ ids, stocks, seed, stageId: stage, speed: 30 });
+    }, { ids: IDS, stocks: STOCKS, seed: SEED, stage: STAGE }));
 
     console.log('REAL', JSON.stringify(liveReport, null, 2));
     console.log('FAST', JSON.stringify(simReport, null, 2));

@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { showScene } from '../ui/flow.js';
 import { loadStageArt } from '../data/stages.js';
 import { CHARACTERS, ROSTER } from '../data/characters.js';
+import { MATCH_STOCKS } from '../engine/matchRules.js';
 import { collectMoveStrips } from '../engine/moveClip.js';
 
 /** `?playtest=hydra,helen,kyle` boots straight into a CPU match and only
@@ -17,7 +18,7 @@ export function playtestSpec() {
       sim: true,
       ids: [],
       stageId: params.get('stage') || 'elemental-isle',
-      stocks: Number(params.get('stocks')) || 3,
+      stocks: Number(params.get('stocks')) || MATCH_STOCKS,
       ms: Number(params.get('ms')) || 600000,
       speed,
       seed,
@@ -33,7 +34,7 @@ export function playtestSpec() {
   return {
     ids,
     stageId: params.get('stage') || 'elemental-isle',
-    stocks: Number(params.get('stocks')) || 2,
+    stocks: Number(params.get('stocks')) || MATCH_STOCKS,
     ms: Number(params.get('ms')) || 600000,
     speed: 1,
     sim: false,
@@ -242,14 +243,11 @@ export default class BootScene extends Phaser.Scene {
       // and pumps fixed steps on the sim clock (no real-time wait).
       const game = this.game;
       window.__akRun = (opts) => new Promise((resolve, reject) => {
-        const ms = opts.ms ?? spec.ms;
         const speed = Math.max(1, opts.speed ?? spec.speed);
-        const timer = setTimeout(() => reject(new Error('match timeout')), 60000);
         let settled = false;
         const finish = (err, report) => {
           if (settled) return;
           settled = true;
-          clearTimeout(timer);
           window.__akResolve = null;
           if (err) reject(err);
           else resolve(report);
@@ -259,24 +257,29 @@ export default class BootScene extends Phaser.Scene {
           // The tournament pumps steps on this same call, so Battle has to
           // exist before the function returns. The menu helper queues its
           // start for the next frame, which is too late.
+          // A full round ends when the stock rules leave one fighter. The
+          // step ceiling is a hang guard, not a winner.
           if (game.scene.isActive('Boot')) game.scene.stop('Boot');
           game.scene.start('Battle', {
             stageId: opts.stageId || spec.stageId,
             stocks: opts.stocks ?? spec.stocks,
-            playtestMs: ms,
+            playtestMs: opts.ms ?? spec.ms ?? 1,
             simSpeed: speed,
             seed: opts.seed == null ? spec.seed : opts.seed,
             players: opts.ids.map((charId, i) => ({ charId, palette: i % 4, slot: 100 + i })),
           });
           const battle = game.scene.getScene('Battle');
-          const steps = Math.ceil(ms / (1000 / 60)) + 3;
+          const step = 1000 / 60;
+          const ceiling = Math.ceil((opts.ceilingMs ?? 20 * 60 * 1000) / step);
           const chunk = Math.max(1, speed);
-          for (let i = 0; i < steps && !battle.reportPublished; i += chunk) {
-            battle.runSimSteps(Math.min(chunk, steps - i));
+          let taken = 0;
+          while (!battle.reportPublished && taken < ceiling) {
+            const n = Math.min(chunk, ceiling - taken);
+            battle.runSimSteps(n);
+            taken += n;
           }
           if (!battle.reportPublished) {
-            battle.matchOver = true;
-            battle.publishPlaytestReport();
+            finish(new Error('full round had no knockout before the hang guard'));
           }
         } catch (err) {
           finish(err);

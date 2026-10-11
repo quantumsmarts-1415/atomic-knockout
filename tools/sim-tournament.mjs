@@ -1,6 +1,10 @@
 // Headless CPU tournament. One browser page loads every cutout via ?sim=1,
 // then restarts Battle for each match and pumps fixed 60 Hz steps.
 //
+// Every match is a full round: 3 stocks, normal percent, and it runs until
+// the stock rules leave one fighter. That takes at least one knockout.
+// There is no match clock and no time-out win.
+//
 //   npm run sim
 //   SIM_LIMIT=2 SIM_TAG=smoke npm run sim
 //   SIM_PAIR=1 SIM_ONLY=helen,tara npm run sim   # just those matchups, with a pair log
@@ -14,12 +18,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
 import { ROSTER } from '../src/data/characters.js';
+import { MATCH_STOCKS, isFullRound } from '../src/engine/matchRules.js';
 
 const PORT = Number(process.env.PORT || 5173);
 const OUT = process.env.SIM_OUT || '/tmp/ak-sim';
 const TAG = process.env.SIM_TAG || 'run';
-const MS = Number(process.env.SIM_MS || 600000);
-const STOCKS = Number(process.env.SIM_STOCKS || 3);
+const STOCKS = MATCH_STOCKS;
 const REPS = Number(process.env.SIM_REPS || 3);
 const PAGES = Math.max(1, Number(process.env.SIM_PAGES || 4));
 const LIMIT = Number(process.env.SIM_LIMIT || 0);
@@ -150,6 +154,10 @@ const koHist = {};
 const clock = { finished: 0, timedOut: 0, koTimeSum: 0, koTimeN: 0, elapsedSum: 0, elapsedMax: 0, collisionUsSum: 0, collisionN: 0 };
 
 function addMatch(table, report) {
+  if (!isFullRound(report, STOCKS)) {
+    clock.timedOut += 1;
+    throw new Error('round ended without a knockout');
+  }
   const start = report.matchStart ?? 0;
   for (const f of report.fighters) {
     const row = table[f.id] ?? (table[f.id] = blank());
@@ -181,9 +189,7 @@ function addMatch(table, report) {
       koHist[bucket] = (koHist[bucket] || 0) + 1;
     }
   }
-  const stillUp = (report.fighters ?? []).filter((f) => (f.stocks ?? 0) > 0).length;
-  if (stillUp > 1) clock.timedOut += 1;
-  else clock.finished += 1;
+  clock.finished += 1;
   const elapsed = report.elapsedMs ?? 0;
   clock.elapsedSum += elapsed;
   if (Number.isFinite(report.collisionUs)) {
@@ -258,10 +264,10 @@ async function ensureServer() {
 
 async function openPage(browser) {
   const page = await browser.newPage({ viewport: { width: 480, height: 270 } });
-  page.setDefaultTimeout(Math.max(180000, MS * 4));
+  page.setDefaultTimeout(300000);
   const errors = [];
   page.on('pageerror', (err) => errors.push(String(err)));
-  await page.goto(`http://127.0.0.1:${PORT}/?sim=1&stage=${STAGE}&stocks=${STOCKS}&ms=${MS}&speed=8`, {
+  await page.goto(`http://127.0.0.1:${PORT}/?sim=1&stage=${STAGE}&stocks=${STOCKS}&speed=8`, {
     waitUntil: 'domcontentloaded',
   });
   await page.waitForFunction(() => window.__akReady === true);
@@ -269,9 +275,9 @@ async function openPage(browser) {
 }
 
 async function runOne(slot, job) {
-  const report = await slot.page.evaluate(async ({ ids, ms, stocks, stage, seed }) => {
-    return await window.__akRun({ ids, ms, stocks, stageId: stage, speed: 30, seed });
-  }, { ids: job.ids, ms: MS, stocks: STOCKS, stage: STAGE, seed: job.seed });
+  const report = await slot.page.evaluate(async ({ ids, stocks, stage, seed }) => {
+    return await window.__akRun({ ids, stocks, stageId: stage, speed: 30, seed });
+  }, { ids: job.ids, stocks: STOCKS, stage: STAGE, seed: job.seed });
   report.consoleErrors = slot.errors.splice(0).filter((e) => !/favicon|Failed to load resource/i.test(e));
   return report;
 }
@@ -345,7 +351,7 @@ async function main() {
   const payload = {
     tag: TAG,
     stage: STAGE,
-    ms: MS,
+    rule: 'full round until one fighter remains',
     stocks: STOCKS,
     reps: REPS,
     matches: queue.length,

@@ -2422,6 +2422,39 @@ export const IMPORTED_ROSTER = {
             "visibleH": 985,
             "bodyH": 985,
             "displayScale": 132 / 985
+          },
+          "charge": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 1424,
+            "frameH": 1028,
+            "footY": 0.9864,
+            "visibleH": 985,
+            "bodyH": 985,
+            "displayScale": 132 / 985
+          },
+          "defense": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 960,
+            "frameH": 1028,
+            "footY": 0.9864,
+            "visibleH": 985,
+            "bodyH": 985,
+            "displayScale": 132 / 985
+          },
+          "special": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 812,
+            "frameH": 1028,
+            "footY": 0.9864,
+            "visibleH": 985,
+            "bodyH": 985,
+            "displayScale": 132 / 985
           }
         }
       }
@@ -7255,6 +7288,39 @@ export const IMPORTED_ROSTER = {
             "visibleH": 997,
             "bodyH": 997,
             "displayScale": 132 / 997
+          },
+          "charge": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 1158,
+            "frameH": 1041,
+            "footY": 0.9866,
+            "visibleH": 997,
+            "bodyH": 997,
+            "displayScale": 132 / 997
+          },
+          "defense": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 854,
+            "frameH": 1079,
+            "footY": 0.987,
+            "visibleH": 997,
+            "bodyH": 997,
+            "displayScale": 132 / 997
+          },
+          "special": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 854,
+            "frameH": 1041,
+            "footY": 0.9866,
+            "visibleH": 997,
+            "bodyH": 997,
+            "displayScale": 132 / 997
           }
         }
       }
@@ -7997,6 +8063,17 @@ export const IMPORTED_ROSTER = {
             "fps": 18,
             "loop": false,
             "frameW": 630,
+            "frameH": 877,
+            "footY": 0.9852,
+            "visibleH": 846,
+            "bodyH": 846,
+            "displayScale": 132 / 846
+          },
+          "special": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 896,
             "frameH": 877,
             "footY": 0.9852,
             "visibleH": 846,
@@ -10117,6 +10194,28 @@ export const IMPORTED_ROSTER = {
             "fps": 18,
             "loop": false,
             "frameW": 792,
+            "frameH": 1113,
+            "footY": 0.9883,
+            "visibleH": 1064,
+            "bodyH": 1064,
+            "displayScale": 132 / 1064
+          },
+          "charge": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 1264,
+            "frameH": 1113,
+            "footY": 0.9883,
+            "visibleH": 1064,
+            "bodyH": 1064,
+            "displayScale": 132 / 1064
+          },
+          "special": {
+            "count": 12,
+            "fps": 18,
+            "loop": false,
+            "frameW": 1002,
             "frameH": 1113,
             "footY": 0.9883,
             "visibleH": 1064,

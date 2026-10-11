@@ -5,6 +5,7 @@ import { resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, interceptHit } from './defense.js';
 import { applyOnCast, applyOnHit, bonusPackets, combatOpts, prepareMove, tickKit, weakestType } from './kit.js';
 import { playVfx } from './MoveVfx.js';
+import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
 import { play as sfx, playHit } from './sfx.js';
 import {
@@ -964,6 +965,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.hardenStacks = 0;
     this._shellDone = false;
     this._shellBroken = false;
+    this._coatFlaked = false;
+    this._coatShed = null;
+    this._coatShedPlayed = false;
+    this._coatFadeAt = 0;
     this.defenseStart = time;
     this._drainAt = time + (move.drain?.every ?? 1000);
     this._regenAt = time + (move.regenEvery ?? 800);
@@ -1171,6 +1176,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
         return 0;
       }
       if (gate.result === 'pop') {
+        const shed = coatSpec(this.defenseMove);
+        if (shed?.flake) {
+          this._coatFlaked = true;
+          this._coatShed = { color: shed.color, until: time + 520 };
+          this._coatShedPlayed = false;
+        }
         this.state = 'idle';
         this.defenseMove = null;
       } else if (this.defenseMove?.crackAfterHits) {

@@ -13,6 +13,7 @@ import { buildNavGraph } from '../engine/BotNav.js';
 import { startStageIntro } from '../engine/stageIntros.js';
 import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
+import { syncCoats } from '../engine/coatView.js';
 import { cleanse } from '../engine/kit.js';
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
@@ -1296,6 +1297,7 @@ export default class BattleScene extends Phaser.Scene {
     syncFxActors(this);
     syncChargeGlow(this);
     syncMoveFx(this);
+    syncCoats(this);
     this.drawDebug();
     if (!this.simFast) this.updateCamera(dt);
   }

@@ -3,6 +3,7 @@
 // fighter instead of playing once.
 
 import { artFor, fxNamed } from './fxArt.js';
+import { coatSpec } from './coat.js';
 import { FONT_DISPLAY } from '../ui/theme.js';
 
 function orbitSpec(fighter) {
@@ -177,6 +178,7 @@ function drawAbsorb(g, fighter, time) {
 function drawShell(g, fighter, time) {
   const move = fighter.state === 'defending' ? fighter.defenseMove : null;
   if (!move?.chargeMs) return;
+  if (coatSpec(move)) return;
   if (artFor(fighter.charDef?.id, move.name)?.frames?.length) return;
   const t = Math.min(1, Math.max(0, (time - (fighter.defenseStart ?? time)) / move.chargeMs));
   const plates = 6;
@@ -198,6 +200,7 @@ function drawOzone(g, fighter, time) {
   if (!(fighter.lingerImmuneUntil > time)) return;
   if (!fighter.lingerImmune?.includes('radiation')) return;
   const ward = fighter.charDef?.moves?.specialDefense;
+  if (coatSpec(ward)) return;
   if (ward && artFor(fighter.charDef?.id, ward.name)?.frames?.length) return;
   const y = fighter.y - fighter.bodyH * 0.5;
   const pulse = 1 + Math.sin(time / 260) * 0.04;

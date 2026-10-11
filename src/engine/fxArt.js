@@ -5,6 +5,7 @@
 
 import { effectBox, fxFolder, moveSlug, objectTypeOf } from '../data/attackFx.js';
 import { fxPlacementHits } from './boxes.js';
+import { coatSpec } from './coat.js';
 
 const CELL = 5;
 const ALPHA = 127;
@@ -1104,7 +1105,7 @@ function cropTrailHead(img, frac) {
 
 function attachedWant(scene, fighter) {
   const now = scene.simNow ?? 0;
-  if (fighter.state === 'defending' && fighter.defenseMove) {
+  if (fighter.state === 'defending' && fighter.defenseMove && !coatSpec(fighter.defenseMove)) {
     const art = artFor(fighter.charDef?.id, fighter.defenseMove.name);
     if (art?.anchor === 'ground-front' && art.frames?.length) {
       return { art, kind: 'wall', elapsed: now - (fighter.defenseStart ?? now) };
@@ -1115,14 +1116,14 @@ function attachedWant(scene, fighter) {
   }
   if (fighter.mitigateUntil > now) {
     const shell = fighter.charDef?.moves?.specialDefense;
-    const art = shell && artFor(fighter.charDef.id, shell.name);
+    const art = shell && !coatSpec(shell) && artFor(fighter.charDef.id, shell.name);
     if (art?.paceCharge && art.frames?.length) {
       return { art, kind: 'body', elapsed: 0, holdLast: true };
     }
   }
   if (fighter.lingerImmuneUntil > now && fighter.lingerImmune?.includes('radiation')) {
     const ward = fighter.charDef?.moves?.specialDefense;
-    const art = ward && artFor(fighter.charDef.id, ward.name);
+    const art = ward && !coatSpec(ward) && artFor(fighter.charDef.id, ward.name);
     if (art?.anchor === 'body' && art.frames?.length) {
       return { art, kind: 'body', elapsed: now };
     }

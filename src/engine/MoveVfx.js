@@ -2,6 +2,7 @@
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
 import { artFor, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, wantsContactSpark } from './fxArt.js';
+import { coatSpec } from './coat.js';
 
 export const TYPE_COLORS = {
   kinetic: 0xffe7b0,
@@ -195,6 +196,7 @@ function shieldBubble(scene, fighter, color) {
 
 export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (!scene?.add || !fighter || scene.simFast) return;
+  if (coatSpec(move) && (phase === 'defense' || phase === 'letgo')) return;
   if (phase === 'letgo') {
     const art = artFor(fighter.charDef?.id, move?.name);
     if (!art?.releaseFlash || !art.frames?.length) return;

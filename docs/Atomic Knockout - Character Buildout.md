@@ -14,6 +14,7 @@ Boiling point is heat defense. Cold attacks count as heat damage.
 Electrical conductivity is electrical attack and defense. Very high and very low conductivity both take less electrical damage. Mid-range conductivity takes the most.
 Chemical damage is modified by the difference in electronegativity between the attacker and the defender. Noble gases are immune to chemical damage.
 Ghost characters (Rutherfordium through Oganesson) lose HP steadily while playing. They have very weak stats and super strong attacks. Every missing stat is 0.
+Damage over time (any per-second damage, including self-damage) only raises percent. It does not cause hitstun, flinch, knockback, hit-flash, or hitstop.
 Controls: Charge = hold normal. Normal = normal + a direction. Defense = hold special. Special = special + a direction.
 Move tags: (draft) = suggested move or description, not decided yet. [currently in the game: ...] = what the game does now.
 
@@ -136,10 +137,10 @@ Alkaline Earth Metal:
 	Boiling Point: 1363 K
 	Electrical conductivity: 23 MS/m
 	Electronegativity: 1.31
-	Charge Move: "Unquenchable" Maggie ignites herself while charging. Once she's lit, water, cold and heat attacks can't put her out, and all her attacks deal bonus heat damage for a few seconds. (draft)
-	Normal Move: "Flare Jab" Maggie jabs with a fist burning white-hot, dealing kinetic and heat damage. (draft) [currently in the game: heat close-range hit]
-	Defense Move: "Ribbon Guard" Maggie wraps herself in coiled magnesium ribbon that blocks kinetic damage. If heat damage touches the ribbon, it ignites and flashes heat back at the attacker. (draft)
-	Special Move: "Blinding Flare" Maggie bursts into blinding white light, dealing heat damage around her and blinding nearby fighters so they briefly lose sight of her. (draft) [currently in the game: heat area burst around them]
+	Charge Move: "Unquenchable" Maggie ignites in white and silver flames. Once she's lit, water, cold and heat can't put her out, and her attacks deal bonus heat damage for 7 seconds. She takes 1% damage per second while lit.
+	Normal Move: "Flare Jab" Maggie jabs with a fist burning white-hot, dealing kinetic and heat damage.
+	Defense Move: "Ribbon Guard" Maggie wraps herself in coiled magnesium ribbon that blocks chemical and kinetic damage. If heat damage touches the ribbon, she goes straight into Unquenchable.
+	Special Move: "Blinding Flare" Maggie bursts into blinding white light, dealing heat damage around her and dazing nearby fighters for 2 seconds.
 -Calcium
 	Name: Cal
 	Natural State: Solid

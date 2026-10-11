@@ -22,8 +22,10 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.root) victim.rootedUntil = Math.max(victim.rootedUntil ?? 0, time + fx.root);
   if (fx.blind) victim.blindUntil = time + fx.blind;
   if (fx.dazzle) {
-    const ms = typeof fx.dazzle === 'number' ? fx.dazzle : (fx.blind ?? 800);
+    const spec = typeof fx.dazzle === 'object' ? fx.dazzle : null;
+    const ms = spec ? (spec.ms ?? 800) : (typeof fx.dazzle === 'number' ? fx.dazzle : (fx.blind ?? 800));
     victim.dazzleUntil = time + ms;
+    victim.dazzleColor = spec?.color ?? 0xfff6e8;
     victim.blindUntil = Math.max(victim.blindUntil ?? 0, victim.dazzleUntil);
   }
   if (fx.miss) victim.missNext = (victim.missNext ?? 0) + (fx.miss === true ? 1 : fx.miss);
@@ -103,21 +105,31 @@ export function stripBuffs(fighter) {
   fighter.heatResistUntil = 0;
   fighter.burnUntil = 0;
   fighter.kinDefMultUntil = 0;
+  // Unquenchable stays lit. Water, cold, and heat do not clear it.
+}
+
+/** Damage over time only raises percent. No hitstun, flinch, knockback, flash, or hitstop. */
+export function applyDot(fighter, amount, type = 'heat') {
+  if (!(amount > 0) || fighter?.percent == null) return 0;
+  fighter.percent = Math.min(999, fighter.percent + amount);
+  fighter.scene?.noteDot?.(fighter, type, amount);
+  return amount;
 }
 
 export function tickKit(fighter, time) {
   if (fighter.burnUntil && time < fighter.burnUntil && time >= (fighter.burnTick ?? 0)) {
     fighter.burnTick = time + 280;
-    const dmg = fighter.burnDps ?? 2;
-    fighter.percent = Math.min(999, fighter.percent + dmg);
-    fighter.scene?.noteDot?.(fighter, 'heat', dmg);
+    applyDot(fighter, fighter.burnDps ?? 2, 'heat');
   }
   if (fighter.poisonUntil && time < fighter.poisonUntil && time >= (fighter.poisonTick ?? 0)) {
     fighter.poisonTick = time + 280;
     const dmg = fighter.poisonDps ?? 1.4;
-    fighter.percent = Math.min(999, fighter.percent + dmg);
+    applyDot(fighter, dmg, 'chemical');
     fighter.poisonDps = dmg + (fighter.poisonRamp ?? 0);
-    fighter.scene?.noteDot?.(fighter, 'chemical', dmg);
+  }
+  if (fighter.unquenchableUntil > time && time >= (fighter._unquenchTick ?? 0)) {
+    fighter._unquenchTick = time + (fighter.selfDotEvery ?? 1000);
+    applyDot(fighter, fighter.selfDotDps ?? 1, fighter.selfDotType ?? 'heat');
   }
   tickGhostDrain(fighter, time);
 }
@@ -129,13 +141,11 @@ export function tickGhostDrain(fighter, time) {
   if (time < (fighter.drainPauseUntil ?? 0)) return;
   if (time < (fighter._ghostDrainAt ?? 0)) return;
   fighter._ghostDrainAt = time + 500;
-  const cost = 1;
-  fighter.percent = Math.min(999, (fighter.percent ?? 0) + cost);
+  const cost = applyDot(fighter, 1, 'radiation');
   fighter.damageTaken = (fighter.damageTaken ?? 0) + cost;
   if (fighter.takenByType) {
     fighter.takenByType.radiation = (fighter.takenByType.radiation ?? 0) + cost;
   }
-  fighter.scene?.noteDot?.(fighter, 'radiation', cost);
 }
 
 /** Highest incoming multiplier. That is the type a scan should punish. */
@@ -150,6 +160,13 @@ export function weakestType(combat) {
   ];
   scores.sort((a, b) => b[1] - a[1]);
   return scores[0][0];
+}
+
+/** Ribbon Guard's heat hit, or casting Unquenchable, lights the same flame. */
+export function lightUnquenchable(fighter, time) {
+  const buff = fighter?.charDef?.moves?.basicCharge?.buff;
+  if (!buff?.unquenchable) return;
+  grantBuff(fighter, buff, time);
 }
 
 /** Flags a just-fired move asked to leave on its owner. */
@@ -234,8 +251,16 @@ function grantBuff(fighter, buff, time) {
   }
   if (buff.heatOnHit) {
     fighter.heatOnHit = buff.heatOnHit;
-    fighter.heatOnHitUntil = time + ms;
-    fighter.heatOnHitLeft = buff.hits ?? 8;
+    fighter.heatOnHitUntil = Math.max(fighter.heatOnHitUntil ?? 0, time + ms);
+    const left = buff.hits > 0 ? buff.hits : Number.POSITIVE_INFINITY;
+    fighter.heatOnHitLeft = Math.max(fighter.heatOnHitLeft ?? 0, left);
+  }
+  if (buff.unquenchable) {
+    fighter.unquenchableUntil = Math.max(fighter.unquenchableUntil ?? 0, time + ms);
+    fighter.selfDotDps = buff.selfDot?.dps ?? 1;
+    fighter.selfDotEvery = buff.selfDot?.every ?? 1000;
+    fighter.selfDotType = buff.selfDot?.type ?? 'heat';
+    if (!(fighter._unquenchTick > time)) fighter._unquenchTick = time + fighter.selfDotEvery;
   }
   if (buff.slippery) {
     fighter.slipperyUntil = time + ms;
@@ -397,7 +422,7 @@ export function bonusPackets(attacker, time) {
   }
   if (attacker.heatOnHit && attacker.heatOnHitUntil > time && attacker.heatOnHitLeft > 0) {
     out.push({ type: 'heat', damage: attacker.heatOnHit });
-    attacker.heatOnHitLeft -= 1;
+    if (Number.isFinite(attacker.heatOnHitLeft)) attacker.heatOnHitLeft -= 1;
   }
   return out;
 }

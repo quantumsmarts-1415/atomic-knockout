@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { interceptHit } from '../src/engine/defense.js';
+import { applyDot, bonusPackets, lightUnquenchable, stripBuffs, tickKit } from '../src/engine/kit.js';
 
 const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
 const TYPES = new Set(['kinetic', 'heat', 'electrical', 'chemical', 'radiation', 'physical']);
@@ -148,6 +149,79 @@ test('neo uses the approved neon kit', () => {
   for (const c of Object.values(CHARACTERS)) {
     for (const slot of SLOTS) assert.notStrictEqual(c.moves[slot].name, 'Neon Flare');
   }
+});
+
+test('maggie uses the approved magnesium kit', () => {
+  const moves = CHARACTERS.maggie.moves;
+  const lit = moves.basicCharge;
+  assert.strictEqual(lit.name, 'Unquenchable');
+  assert.strictEqual(lit.buff.ms, 7000);
+  assert.strictEqual(lit.buff.unquenchable, true);
+  assert.strictEqual(lit.buff.heatOnHit, 3);
+  assert.strictEqual(lit.buff.hits, 0);
+  assert.strictEqual(lit.buff.selfDot.dps, 1);
+  assert.ok(frameData(lit.duration, lit.cooldown, lit).total < 40);
+  const jab = moves.basicDirectional;
+  assert.strictEqual(jab.name, 'Flare Jab');
+  assert.strictEqual(jab.type, 'kinetic');
+  assert.strictEqual(jab.type2, 'heat');
+  assert.strictEqual(jab.vfx, 'flare');
+  assert.ok(frameData(jab.duration, jab.cooldown, jab).total < 30);
+  const ribbon = moves.specialDefense;
+  assert.strictEqual(ribbon.name, 'Ribbon Guard');
+  assert.deepStrictEqual(ribbon.blocks, ['chemical', 'kinetic']);
+  assert.strictEqual(ribbon.igniteOn, 'heat');
+  assert.ok(ribbon.cooldown < 400);
+  const guard = { state: 'defending', defenseMove: ribbon, facing: 1, x: 100, y: 400, bodyH: 100 };
+  const foe = { x: 180, y: 400 };
+  assert.strictEqual(interceptHit(guard, foe, { type: 'chemical', damage: 6 }, 0).result, 'negate');
+  assert.strictEqual(interceptHit(guard, foe, { type: 'kinetic', damage: 6 }, 0).result, 'negate');
+  assert.strictEqual(interceptHit(guard, foe, { type: 'heat', damage: 6 }, 0).result, 'pass');
+  const flare = moves.specialDirectional;
+  assert.strictEqual(flare.name, 'Blinding Flare');
+  assert.strictEqual(flare.onHit.dazzle.ms, 2000);
+  assert.ok(frameData(flare.duration, flare.cooldown, flare).recovery <= 12);
+});
+
+test('damage over time only raises percent', () => {
+  const fighter = { percent: 12, scene: { noteDot() {} } };
+  assert.strictEqual(applyDot(fighter, 1, 'heat'), 1);
+  assert.strictEqual(fighter.percent, 13);
+  assert.strictEqual(fighter.state, undefined);
+  assert.strictEqual(fighter.hitlagFrames, undefined);
+  const lit = {
+    percent: 4,
+    unquenchableUntil: 9000,
+    _unquenchTick: 1000,
+    selfDotDps: 1,
+    selfDotEvery: 1000,
+    selfDotType: 'heat',
+    scene: { noteDot() {} },
+  };
+  tickKit(lit, 1000);
+  assert.strictEqual(lit.percent, 5);
+  tickKit(lit, 1400);
+  assert.strictEqual(lit.percent, 5);
+  tickKit(lit, 2000);
+  assert.strictEqual(lit.percent, 6);
+  assert.strictEqual(lit.state, undefined);
+  const attacker = { heatOnHit: 3, heatOnHitUntil: 8000, heatOnHitLeft: Number.POSITIVE_INFINITY };
+  assert.strictEqual(bonusPackets(attacker, 1000)[0].damage, 3);
+  assert.strictEqual(bonusPackets(attacker, 1200)[0].damage, 3);
+  const kept = { unquenchableUntil: 4000, heatOnHitUntil: 4000, burnUntil: 10 };
+  stripBuffs(kept);
+  assert.strictEqual(kept.unquenchableUntil, 4000);
+  assert.strictEqual(kept.heatOnHitUntil, 4000);
+  assert.strictEqual(kept.burnUntil, 0);
+  const maggie = {
+    charDef: CHARACTERS.maggie,
+    percent: 0,
+    scene: { noteDot() {} },
+  };
+  lightUnquenchable(maggie, 1000);
+  assert.ok(maggie.unquenchableUntil >= 8000);
+  assert.strictEqual(maggie.heatOnHit, 3);
+  assert.ok(!Number.isFinite(maggie.heatOnHitLeft));
 });
 
 test('pilot fighters use the element doc kits', () => {

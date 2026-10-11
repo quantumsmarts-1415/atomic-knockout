@@ -99,6 +99,40 @@ test('Knockback formula and damage reduction via takeHit', () => {
   assert.ok(Math.abs(velocityX) > 0 || Math.abs(velocityY) > 0, `launch vx ${velocityX} vy ${velocityY}`);
 });
 
+test('a damage-over-time hit does not flinch, launch, or freeze', () => {
+  const mockScene = createMockScene();
+  const charDef = { ...baseCharDef, moves: { basicDirectional: { duration: 100, cooldown: 100, type: 'physical' } } };
+  const f = new Fighter(mockScene, 0, 0, charDef, 0, 0);
+  f.rig = { animate: () => {}, setFlash: () => {}, play: () => {}, updateSheetFacing: () => {} };
+  f.state = 'idle';
+  const vx = velocityX;
+  const dmg = f.takeHit({ x: -40, y: 0, facing: 1 }, {
+    type: 'chemical', damage: 4, baseKnockback: 220, knockbackGrowth: 8, dot: true, kind: 'burst',
+  }, 1000, 1);
+  assert.strictEqual(dmg, 4);
+  assert.strictEqual(f.percent, 4);
+  assert.strictEqual(f.state, 'idle');
+  assert.strictEqual(f.hitlagFrames || 0, 0);
+  assert.ok(!f.pendingLaunch);
+  assert.strictEqual(f._flashShow || 0, 0);
+  assert.strictEqual(velocityX, vx);
+});
+
+test('heat on Ribbon Guard lights Unquenchable', () => {
+  const mockScene = createMockScene();
+  const maggie = CHARACTERS.maggie;
+  const f = new Fighter(mockScene, 0, 0, maggie, 0, 0);
+  f.rig = { animate: () => {}, setFlash: () => {}, play: () => {}, updateSheetFacing: () => {} };
+  f.state = 'defending';
+  f.defenseMove = maggie.moves.specialDefense;
+  const dmg = f.takeHit({ x: 120, y: 0, facing: -1, charDef: CHARACTERS.hydra }, {
+    type: 'heat', damage: 8, baseKnockback: 80, knockbackGrowth: 2,
+  }, 4000, -1);
+  assert.ok(dmg > 0);
+  assert.ok(f.unquenchableUntil >= 4000 + 7000);
+  assert.strictEqual(f.heatOnHit, 3);
+});
+
 test('Cooldowns and move-slot selection', () => {
   const mockScene = createMockScene();
   const charDef = { ...baseCharDef, moves: {

@@ -68,6 +68,8 @@ export function syncMoveFx(scene) {
     drawFreeze(g, fighter, time);
     drawDazzle(g, fighter, time);
     drawVacancy(scene, g, fighter, time);
+    drawUnquenchable(g, fighter, time);
+    drawRibbon(g, fighter, time);
   }
 }
 
@@ -120,15 +122,62 @@ function drawDazzle(g, fighter, time) {
   if (!(fighter.dazzleUntil > time)) return;
   const y = fighter.y - (fighter.bodyH ?? 80) * 0.88;
   const spin = time / 160;
+  const hot = fighter.dazzleColor ?? 0xfff6e8;
+  const core = hot === 0xfff6e8 ? 0xff5a2a : 0xd5dee8;
   for (let i = 0; i < 5; i++) {
     const a = spin + (i / 5) * Math.PI * 2;
     const x = fighter.x + Math.cos(a) * 26;
     const yy = y + Math.sin(a) * 9;
-    g.fillStyle(0xfff6e8, 0.95);
+    g.fillStyle(hot, 0.95);
     g.fillCircle(x, yy, 3.2);
-    g.fillStyle(0xff5a2a, 0.9);
+    g.fillStyle(core, 0.9);
     g.fillCircle(x, yy, 1.4);
   }
+}
+
+function drawUnquenchable(g, fighter, time) {
+  if (!(fighter.unquenchableUntil > time)) return;
+  const move = fighter.charDef?.moves?.basicCharge;
+  if (move && artFor(fighter.charDef?.id, move.name)?.frames?.length) return;
+  const bodyH = fighter.bodyH ?? 80;
+  const bodyW = fighter.bodyW ?? 40;
+  const y = fighter.y - bodyH * 0.48;
+  const flicker = 0.72 + 0.28 * Math.sin(time / 38);
+  g.fillStyle(0xfff6e8, 0.14 * flicker);
+  g.fillEllipse(fighter.x, y, bodyW * 1.4, bodyH * 1.12);
+  g.lineStyle(2, 0xd5dee8, 0.45 * flicker);
+  g.strokeEllipse(fighter.x, y, bodyW * 1.5, bodyH * 1.2);
+  for (let i = 0; i < 7; i++) {
+    const rise = (time / 26 + i * 18) % (bodyH * 0.95);
+    const x = fighter.x + Math.sin(time / 80 + i * 1.3) * bodyW * 0.58;
+    const hot = i % 2 === 0;
+    g.fillStyle(hot ? 0xfff6e8 : 0xc5d0dc, 0.9);
+    g.fillCircle(x, fighter.y - 6 - rise, hot ? 4.4 : 2.5);
+  }
+}
+
+function drawRibbon(g, fighter, time) {
+  const move = fighter.state === 'defending' ? fighter.defenseMove : null;
+  if (move?.vfx !== 'ribbon') return;
+  if (artFor(fighter.charDef?.id, move.name)?.frames?.length) return;
+  const bodyH = fighter.bodyH ?? 80;
+  const bodyW = fighter.bodyW ?? 40;
+  const y = fighter.y - bodyH * 0.48;
+  const spin = time / 420;
+  g.lineStyle(3, 0xe7edf4, 0.92);
+  g.beginPath();
+  for (let i = 0; i <= 32; i++) {
+    const t = i / 32;
+    const a = spin + t * Math.PI * 6;
+    const rx = bodyW * (0.5 + t * 0.4);
+    const x = fighter.x + Math.cos(a) * rx;
+    const yy = y + (t - 0.5) * bodyH * 0.92 + Math.sin(a) * 3;
+    if (i === 0) g.moveTo(x, yy);
+    else g.lineTo(x, yy);
+  }
+  g.strokePath();
+  g.fillStyle(0xffffff, 0.95);
+  g.fillCircle(fighter.x + Math.cos(spin) * bodyW * 0.7, y - bodyH * 0.15, 2.4);
 }
 
 function drawMirror(g, fighter) {

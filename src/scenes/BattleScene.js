@@ -1074,6 +1074,8 @@ export default class BattleScene extends Phaser.Scene {
           kind: 'burst',
           hitlagMult: 0,
           _projectile: true,
+          // Standing in a cloud is damage over time: percent only.
+          dot: true,
         });
         if (z.spec.slide) {
           target.slipperyUntil = time + 280;
@@ -1161,9 +1163,9 @@ export default class BattleScene extends Phaser.Scene {
   landHit(attacker, victim, move, launchDir) {
     const dmg = victim.takeHit(attacker, move, this.time.now, launchDir);
     if (dmg > 0) {
-      spawnContactFx(this, attacker, victim, move);
+      if (!move.dot) spawnContactFx(this, attacker, victim, move);
       this.noteHit(attacker, victim, move);
-      if (!this.simFast) {
+      if (!move.dot && !this.simFast) {
         rumbleSlot(victim.controlSlot, {
           duration: 150,
           strong: Math.min(1, 0.4 + dmg / 28),

@@ -312,22 +312,30 @@ export const MOVESETS = {
 
   maggie: {
     basicCharge: m('Unquenchable', {
-      kind: 'buff', duration: 280, cooldown: 1100, maxChargeMs: 600,
-      vfx: 'fire', vfxColor: 0xfff2c9,
-      buff: { ms: 4000, heatTaken: 0.4, heatOnHit: 3, hits: 8 },
+      kind: 'buff', maxChargeMs: 560,
+      vfx: 'magnesium', vfxColor: 0xfff6e8,
+      // Startup 3. Endlag 8. Same-button lock ~24 frames (was ~83).
+      startupF: 3, endlagF: 8, duration: 220, cooldown: 400,
+      buff: {
+        ms: 7000, heatOnHit: 3, hits: 0, unquenchable: true,
+        selfDot: { dps: 1, every: 1000, type: H },
+      },
     }),
     basicDirectional: melee('Flare Jab', {
-      type: K, damage: 6.7, type2: H, damage2: 6.7, vfx: 'fire',
-      duration: 250, cooldown: 520,
+      type: K, damage: 6.7, type2: H, damage2: 6.7, vfx: 'flare', vfxColor: 0xfff6e8,
+      // Startup 3. Endlag 8. Same-button lock ~23 frames (was ~46).
+      startupF: 3, endlagF: 8, duration: 180, cooldown: 200,
     }),
     specialDefense: m('Ribbon Guard', {
-      blocks: [K],
-      retort: { when: H, type: H, damage: 9, knockback: 198 },
-      duration: 650, cooldown: 680, vfx: 'shield', vfxColor: 0xfff2c9,
+      blocks: [C, K], igniteOn: H,
+      // Guard stays long enough to catch a hit. Cooldown 41 → 17 frames.
+      duration: 700, cooldown: 280, vfx: 'ribbon', vfxColor: 0xe7edf4,
     }),
     specialDirectional: m('Blinding Flare', {
-      kind: 'burst', type: H, damage: 13.4, radius: 86, vfx: 'fire', vfxColor: 0xfff6e0,
-      onHit: { blind: 900 }, baseKnockback: 176, duration: 260, cooldown: 1040,
+      kind: 'burst', type: H, damage: 13.4, radius: 86, vfx: 'whiteout', vfxColor: 0xfff6e8,
+      onHit: { dazzle: { ms: 2000, color: 0xf7fbff } }, baseKnockback: 176,
+      // Startup 5. Endlag 12. Same-button lock ~39 frames (was ~78).
+      startupF: 5, endlagF: 12, duration: 240, cooldown: 420,
     }),
   },
 

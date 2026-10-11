@@ -3,7 +3,7 @@ import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, interceptHit } from './defense.js';
-import { applyOnCast, applyOnHit, bonusPackets, combatOpts, prepareMove, tickKit, weakestType } from './kit.js';
+import { applyOnCast, applyOnHit, bonusPackets, combatOpts, lightUnquenchable, prepareMove, tickKit, weakestType } from './kit.js';
 import { playVfx } from './MoveVfx.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
@@ -1257,7 +1257,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.lastPackets = dealt.packets.map((p) => ({ ...p, dealt: p.dealt * (1 - gate.reduction) * (ownBlast ? TUNING.selfDamageMult : 1) }));
       this.percent = Math.min(999, this.percent + dmg);
       this.creditDamage(attacker, dmg, incoming.type);
-      if (!gate.noKnockback && !move.isSelf) {
+      this.igniteFromGuard(incoming, time, dmg);
+      if (!gate.noKnockback && !move.isSelf && !move.dot) {
         const kb = knockbackRaw(
           incoming.baseKnockback,
           incoming.knockbackGrowth,
@@ -1309,6 +1310,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
       ? dealt.packets.map((p) => ({ ...p, dealt: p.dealt * TUNING.selfDamageMult }))
       : dealt.packets;
     this.creditDamage(attacker, dmg, incoming.type);
+    this.igniteFromGuard(incoming, time, dmg);
+
+    if (move.dot) {
+      applyOnHit(attacker, this, incoming, time);
+      this.noteHeatAndRecoil(attacker, incoming, time, dealt);
+      this.spreadPoison(attacker, time, contagious);
+      return dmg;
+    }
 
     if (move.isSelf) {
       if (!move.noFlinch) {
@@ -1347,6 +1356,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
    * their stance (partial block) while still sliding.
    */
   applyKnockback(attacker, incoming, time, launchDir, kb, dmg, flinch) {
+    if (incoming.dot) return;
     const radial = incoming.launch ? incoming.launch === 'radial' : incoming.kind === 'burst';
     const away = Math.sign(this.x - (attacker?.x ?? this.x)) || attacker?.facing || 1;
     const dir = (!radial && launchDir) ? launchDir : away;
@@ -1407,6 +1417,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       'stateUntil', 'attackCooldownUntil', 'specialCooldownUntil', 'vulnerableUntil', 'lockedUntil',
       'dashUntil', 'diveUntil', 'diveArm', 'slowUntil', 'rootedUntil', 'speedBuffUntil', 'driftUntil',
       'phasingUntil', 'weightBuffUntil', 'poisonUntil', 'stunUntil', 'freezeUntil', 'burnUntil',
+      'unquenchableUntil', 'heatOnHitUntil',
       'slipperyUntil', 'kineticResistUntil', 'heatedUntil',
       'mitigateUntil', 'lingerImmuneUntil', 'frozenUntil',
     ];
@@ -1674,6 +1685,16 @@ export default class Fighter extends Phaser.GameObjects.Container {
     attacker.poisonRamp = this.poisonRamp ?? 0;
     attacker.poisonTick = time + 280;
     attacker.poisonInherit = true;
+  }
+
+  /** Heat on the ribbon lights Unquenchable. The flame is not a hit of its own. */
+  igniteFromGuard(incoming, time, dmg) {
+    if (!(dmg > 0) || this.state !== 'defending' || incoming?.isSelf || incoming?.dot) return;
+    const on = this.defenseMove?.igniteOn;
+    if (!on) return;
+    if (incoming.type !== on && incoming.type2 !== on) return;
+    lightUnquenchable(this, time);
+    playVfx(this.scene, this, this.defenseMove, 'ignite');
   }
 
   retortFromImmune(attacker, move, time) {

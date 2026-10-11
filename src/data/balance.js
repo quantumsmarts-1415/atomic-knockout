@@ -217,7 +217,7 @@ function incomingMult(type, atk, def) {
 /**
  * One damage packet after attacker and defender modifiers.
  * `opts.kinDefMult` is a runtime corrosion debuff (1 = none).
- * `opts.heatTakenMult` stacks on top (Unquenchable and similar).
+ * `opts.heatTakenMult` stacks on top of a runtime heat resist.
  */
 export function resolvePacket(amount, type, atkCombat, defCombat, opts = {}) {
   if (!(amount > 0)) return 0;

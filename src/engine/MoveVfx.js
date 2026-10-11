@@ -160,6 +160,19 @@ export function syncChargeGlow(scene) {
       glow.clear();
       continue;
     }
+    if (move.buff?.unquenchable) {
+      const bodyH = fighter.bodyH ?? 80;
+      const y = fighter.y - bodyH * 0.5;
+      const r = 16 + frac * 28;
+      glow.clear();
+      glow.fillStyle(0xfff6e8, 0.12 + frac * 0.28);
+      glow.fillCircle(fighter.x, y, r);
+      glow.lineStyle(2, 0xd5dee8, 0.35 + frac * 0.5);
+      glow.strokeCircle(fighter.x, y, r * 1.15);
+      glow.fillStyle(0xffffff, 0.25 + frac * 0.45);
+      glow.fillCircle(fighter.x, y - 4, 6 + frac * 8);
+      continue;
+    }
     if (move.tubeCharge) {
       const len = (move.beamLen ?? 150) * (1 + ((move.chargeLengthMult ?? 1) - 1) * frac);
       const dir = fighter.facing || 1;
@@ -201,6 +214,12 @@ function shieldBubble(scene, fighter, color) {
 
 export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (!scene?.add || !fighter || scene.simFast) return;
+  if (phase === 'ignite') {
+    const y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+    burst(scene, fighter.x, y, 0xfff6e8, 16, 78);
+    ring(scene, fighter.x, y, 0xfff6e8, (fighter.bodyH ?? 80) * 0.75, 3);
+    return;
+  }
   if (coatSpec(move) && (phase === 'defense' || phase === 'letgo')) return;
   if (phase === 'letgo') {
     const art = artFor(fighter.charDef?.id, move?.name);
@@ -264,7 +283,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       column(scene, fighter.x + dir * ((fighter.bodyW ?? 40) / 2 + 16), fighter.y, color, 120);
       return;
     }
-    if (style === 'sign') return;
+    if (style === 'sign' || style === 'ribbon') return;
     if (style === 'bubble' || style === 'shield') {
       if (move?.powersCharge || move?.chargeMs || move?.lingerImmune) return;
       shieldBubble(scene, fighter, color);
@@ -300,6 +319,43 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     case 'beam':
       beam(scene, fighter, color, (move.beamLen ?? 180) * (move._beamScale ?? 1), move);
       break;
+    case 'magnesium': {
+      const yBody = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+      burst(scene, fighter.x, yBody, 0xfff6e8, 14, 64);
+      ring(scene, fighter.x, yBody, 0xd5dee8, (fighter.bodyH ?? 80) * 0.7, 3);
+      break;
+    }
+    case 'flare': {
+      const tip = meleeContactPoint(fighter, move);
+      burst(scene, tip.x, tip.y, 0xfff6e8, 11, 40);
+      burst(scene, tip.x, tip.y, 0xd5dee8, 6, 22);
+      ring(scene, tip.x, tip.y, 0xfff6e8, 26, 2);
+      break;
+    }
+    case 'whiteout': {
+      const r = Math.max(48, move.radius ?? 90);
+      const disc = scene.add.circle?.(x, y, r, 0xfff6e8, 0.55);
+      if (disc) {
+        disc.setBlendMode?.('ADD');
+        die(scene, disc, 220);
+      }
+      const core = scene.add.circle?.(x, y, r * 0.32, 0xffffff, 0.92);
+      if (core) {
+        core.setBlendMode?.('ADD');
+        die(scene, core, 140);
+      }
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        const ray = scene.add.rectangle?.(
+          x + Math.cos(a) * r * 0.5, y + Math.sin(a) * r * 0.5, r * 0.72, 3, 0xf4f7ff, 0.85,
+        );
+        if (!ray) continue;
+        ray.rotation = a;
+        ray.setBlendMode?.('ADD');
+        die(scene, ray, 180);
+      }
+      break;
+    }
     case 'staff': {
       const tip = meleeContactPoint(fighter, move);
       const dir = fighter.facing || 1;

@@ -7,6 +7,13 @@
   "fps": 12,
   "crop": "frame",
   "fit": "height",
-  "heightFrac": 0.85,
-  "pivot": "bottom"
+  "heightFrac": 0.72,
+  "pivot": "bottom",
+  "splash": {
+    "file": "splash.png",
+    "fit": "height",
+    "heightFrac": 0.95,
+    "pivot": "bottom",
+    "crop": "frame"
+  }
 }

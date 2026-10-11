@@ -1,0 +1,18 @@
+{
+  "blend": "add",
+  "black": 16,
+  "anchor": "trail",
+  "crop": "frame",
+  "fit": "height",
+  "heightFrac": 1.05,
+  "pivot": "right",
+  "hit": false,
+  "flicker": true,
+  "impact": {
+    "file": "break.png",
+    "fit": "height",
+    "heightFrac": 0.85,
+    "pivot": "center",
+    "crop": "frame"
+  }
+}

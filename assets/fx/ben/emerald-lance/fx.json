@@ -1,0 +1,20 @@
+{
+  "blend": "add",
+  "black": 16,
+  "frames": 6,
+  "fps": 12,
+  "crop": "frame",
+  "fit": "height",
+  "heightFrac": 1.05,
+  "pivot": "left",
+  "anchor": "lance",
+  "holdLast": true,
+  "hit": false,
+  "impact": {
+    "file": "impact.png",
+    "fit": "height",
+    "heightFrac": 0.7,
+    "pivot": "center",
+    "crop": "frame"
+  }
+}

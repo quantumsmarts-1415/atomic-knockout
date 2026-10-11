@@ -1,0 +1,28 @@
+{
+  "blend": "add",
+  "black": 16,
+  "projectile": {
+    "file": "shard.png",
+    "fit": "height",
+    "heightFrac": 0.34,
+    "pivot": "center",
+    "crop": "frame",
+    "hit": false
+  },
+  "orbit": {
+    "file": "orbit.png",
+    "frames": 6,
+    "fps": 14,
+    "loop": true,
+    "fit": "height",
+    "heightFrac": 1.7,
+    "pivot": "center"
+  },
+  "burst": {
+    "file": "burst.png",
+    "fit": "width",
+    "heightFrac": 2.1,
+    "pivot": "center",
+    "crop": "frame"
+  }
+}

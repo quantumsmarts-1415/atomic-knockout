@@ -5,9 +5,11 @@
   "cols": 4,
   "rows": 2,
   "fps": 14,
+  "crop": "frame",
   "fit": "width",
   "heightFrac": 2.0,
   "scaleWith": "radius",
   "peak": "peak.png",
-  "peakFrame": 4
+  "peakFrame": 4,
+  "pivot": "center"
 }

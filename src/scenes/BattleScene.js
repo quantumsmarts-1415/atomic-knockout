@@ -22,7 +22,7 @@ import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
+import { artFor, collectFxArt, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, spawnContactFx, spawnMoveExtra, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
 
 const GRAVITY = 1500;
 
@@ -745,6 +745,7 @@ export default class BattleScene extends Phaser.Scene {
       return;
     }
     if (move.orbitRelease && !move._orbitChild) {
+      spawnMoveExtra(this, owner, move, 'burst', owner.x, owner.y - owner.bodyH * 0.45, 1);
       const spec = move.orbitWhileCharging || {};
       const n = spec.count || 8;
       const rad = spec.radius ?? 76;
@@ -794,6 +795,9 @@ export default class BattleScene extends Phaser.Scene {
     let y = move._from?.y ?? (move.roll ? owner.y : owner.y - owner.bodyH * 0.65);
     if (move.fromAbove) y -= 220;
     if (move._rainChild) y -= 160;
+    if (!move._orbitChild && !move._fanChild && !move._rainChild && !move._behindChild) {
+      spawnMoveExtra(this, owner, move, 'splash', x, y, face);
+    }
     const born = this.time.now;
     const shot = {
       owner, move,
@@ -1155,6 +1159,7 @@ export default class BattleScene extends Phaser.Scene {
   landHit(attacker, victim, move, launchDir) {
     const dmg = victim.takeHit(attacker, move, this.time.now, launchDir);
     if (dmg > 0) {
+      spawnContactFx(this, attacker, victim, move);
       this.noteHit(attacker, victim, move);
       if (!this.simFast) {
         rumbleSlot(victim.controlSlot, {
@@ -1741,7 +1746,7 @@ export default class BattleScene extends Phaser.Scene {
         const metalShot = !!(p.owner?.charDef?.combat?.metal);
         const reflect = def?.reflectProjectiles === true || perfect || (def?.reflectMetals && metalShot);
         if (victim.state === 'defending' && reflect) {
-          this.landHit(victim, p.owner, p.move, -Math.sign(p.vx) || victim.facing);
+          this.landHit(victim, p.owner, { ...p.move, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, -Math.sign(p.vx) || victim.facing);
           p.gfx.destroy();
           p.dead = true;
           break;
@@ -1778,7 +1783,7 @@ export default class BattleScene extends Phaser.Scene {
           break;
         }
         // a projectile shoves you the way it was travelling
-        this.landHit(p.owner, victim, { ...shot, _projectile: true }, Math.sign(p.vx) || p.owner.facing);
+        this.landHit(p.owner, victim, { ...shot, _projectile: true, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, Math.sign(p.vx) || p.owner.facing);
         if (p.move.carry && victim.body && n < want) {
           victim.body.setVelocity(p.vx * 0.9, Math.min(victim.body.velocity.y, -60));
           p.carried ??= new Set();

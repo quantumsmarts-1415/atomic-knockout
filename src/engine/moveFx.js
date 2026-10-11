@@ -2,6 +2,8 @@
 // orbit, absorb, shell, ozone, and freeze visuals that have to stay on the
 // fighter instead of playing once.
 
+import { artFor } from './fxArt.js';
+
 function orbitSpec(fighter) {
   const move = fighter.charDef?.moves?.basicCharge;
   const spec = move?.orbitWhileCharging;
@@ -68,6 +70,7 @@ export function syncMoveFx(scene) {
 function drawMirror(g, fighter) {
   const move = fighter.state === 'defending' ? fighter.defenseMove : null;
   if (!move?.reflectTypes?.length) return;
+  if (artFor(fighter.charDef?.id, move.name)?.frames?.length) return;
   const dir = fighter.facing || 1;
   const x = fighter.x + dir * (fighter.bodyW * 0.72);
   const y = fighter.y - fighter.bodyH * 0.55;
@@ -83,6 +86,8 @@ function drawMirror(g, fighter) {
 function drawOrbit(g, fighter, time) {
   const spec = orbitSpec(fighter);
   if (!spec) return;
+  const painted = artFor(fighter.charDef?.id, fighter.charDef?.moves?.basicCharge?.name);
+  if (painted?.orbit?.frames?.length) return;
   const n = spec.count ?? 8;
   const rad = spec.radius ?? 76;
   const spin = (time / (spec.period ?? 900)) * Math.PI * 2;
@@ -98,6 +103,7 @@ function drawOrbit(g, fighter, time) {
 function drawAbsorb(g, fighter, time) {
   const move = fighter.state === 'defending' ? fighter.defenseMove : null;
   if (!move?.powersCharge) return;
+  if (artFor(fighter.charDef?.id, move.name)?.frames?.length) return;
   const pulse = 1 + Math.sin(time / 140) * 0.08;
   const r = fighter.bodyH * 0.62 * pulse;
   const y = fighter.y - fighter.bodyH * 0.48;
@@ -142,6 +148,7 @@ function drawOzone(g, fighter, time) {
 function drawLance(g, fighter, time) {
   const move = fighter.state === 'charging' ? fighter.charDef?.moves?.basicCharge : null;
   if (move?.vfx !== 'lance') return;
+  if (artFor(fighter.charDef?.id, move.name)?.frames?.length) return;
   const max = move.maxChargeMs || 1;
   const frac = Math.min(1, Math.max(0, (time - (fighter.chargeStart ?? time)) / max));
   const len = 28 + frac * (fighter.bodyH * 1.6);

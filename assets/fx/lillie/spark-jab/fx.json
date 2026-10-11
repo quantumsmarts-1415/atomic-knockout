@@ -4,11 +4,12 @@
   "frames": 3,
   "cols": 3,
   "rows": 1,
-  "fps": 12,
+  "fps": 14,
   "crop": "frame",
   "fit": "height",
-  "heightFrac": 0.4,
+  "heightFrac": 0.42,
   "pivot": "center",
   "anchor": "contact",
-  "hit": false
+  "hit": false,
+  "comboFrames": true
 }

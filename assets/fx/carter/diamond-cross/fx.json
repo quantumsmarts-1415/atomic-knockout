@@ -1,0 +1,10 @@
+{
+  "blend": "add",
+  "black": 16,
+  "anchor": "contact",
+  "fit": "height",
+  "heightFrac": 0.7,
+  "pivot": "center",
+  "crop": "frame",
+  "hit": false
+}

@@ -243,7 +243,7 @@ export function syncChargeGlow(scene) {
       continue;
     }
     const painted = artFor(fighter.charDef?.id, move.name);
-    if (painted?.anchor === 'feet' || painted?.charge?.anchor === 'feet') {
+    if (painted?.frames?.length || painted?.charge?.frames?.length || painted?.anchor === 'feet' || painted?.charge?.anchor === 'feet') {
       glow.clear();
       continue;
     }
@@ -347,6 +347,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       const y = anchor?.y ?? extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
       const scale = anchor?.scale ?? fxGameplayScale(move, art);
       if (drawFxOneShot(scene, fighter, move, x, y, scale)) {
+        if (art.gas?.frames?.length) spawnFxSprite(scene, art.gas, x, y, scale);
         if (move.vfx === 'binary') {
           drawBinaryDigit(scene, fighter, x, y, move._retried ? '0' : '1');
         }
@@ -388,6 +389,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (style === 'sign' || style === 'ribbon' || style === 'pane') return;
     if (style === 'bubble' || style === 'shield') {
       if (move?.powersCharge || move?.chargeMs || move?.lingerImmune) return;
+      if (artFor(fighter.charDef?.id, move?.name)?.shatter?.frames?.length) return;
       shieldBubble(scene, fighter, color);
       return;
     }
@@ -396,6 +398,15 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   }
   if (phase === 'hit') {
     burst(scene, x, y, color, 8, 70);
+    return;
+  }
+  if (phase === 'break') {
+    const burst = breakFrames(artFor(fighter.charDef?.id, move?.name));
+    if (!burst?.frames?.length) return;
+    const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
+    const x = extra.x ?? fighter.x;
+    spawnFxSprite(scene, burst, x, y, 1);
+    if (extra.both) spawnFxSprite(scene, burst, extra.otherX ?? x, extra.otherY ?? y, 1);
     return;
   }
   if (phase === 'shatter') {

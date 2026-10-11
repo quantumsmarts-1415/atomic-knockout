@@ -1,0 +1,11 @@
+{
+  "blend": "screen",
+  "black": 16,
+  "hit": false,
+  "fit": "height",
+  "heightFrac": 0.72,
+  "crop": "frame",
+  "pivot": "left",
+  "anchor": "contact",
+  "flip": true
+}

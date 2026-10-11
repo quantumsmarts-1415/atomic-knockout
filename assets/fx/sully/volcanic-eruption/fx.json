@@ -1,0 +1,24 @@
+{
+  "blend": "add",
+  "black": 16,
+  "hit": false,
+  "fit": "width",
+  "heightFrac": 1.7,
+  "crop": "frame",
+  "pivot": "center",
+  "gas": {
+    "file": "sulfur.png",
+    "frames": 4,
+    "cols": 4,
+    "rows": 1,
+    "fps": 8,
+    "loop": false,
+    "blend": "screen",
+    "luma": true,
+    "black": 16,
+    "fit": "width",
+    "heightFrac": 1.55,
+    "crop": "frame",
+    "pivot": "center"
+  }
+}

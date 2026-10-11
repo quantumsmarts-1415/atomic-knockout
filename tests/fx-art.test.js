@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { PNG } from 'pngjs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
 import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, sliceGrid, sliceHorizontal, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
@@ -532,4 +533,66 @@ test('a dropped-in mask hits the body it covers and misses when it is moved away
   shot.gfx.x = hog.x;
   shot.gfx.y = hog.y - 30;
   assert.equal(projectileHits(shot, hog), true);
+});
+
+test('batch 2 wave 1 moves point at real full-resolution art', () => {
+  const rows = [
+    ['assets/fx/helen/air-wave/fx.json', 'charge', 'add', 6],
+    ['assets/fx/helen/noble-gust/fx.json', null, 'add', 1],
+    ['assets/fx/helen/bubble-shield/fx.json', null, 'screen', 4],
+    ['assets/fx/helen/balloon-bop/fx.json', 'projectile', 'normal', 1],
+    ['assets/fx/sully/black-powder/fx.json', null, 'screen', 1],
+    ['assets/fx/sully/brimstone-slam/fx.json', null, 'add', 1],
+    ['assets/fx/sully/volcanic-eruption/fx.json', null, 'add', 1],
+    ['assets/fx/chloe/bleach-out/fx.json', 'projectile', 'add', 1],
+    ['assets/fx/chloe/toxic-jab/fx.json', null, 'screen', 1],
+    ['assets/fx/chloe/salt-bond/fx.json', 'shatter', 'add', 1],
+    ['assets/fx/chloe/gas-cloud/fx.json', null, 'screen', 6],
+    ['assets/fx/status/on-fire-small/fx.json', null, 'add', 6],
+    ['assets/fx/status/smoke-wisp/fx.json', null, 'screen', 6],
+  ];
+  for (const [path, side, blend, frames] of rows) {
+    const meta = JSON.parse(fs.readFileSync(path, 'utf8'));
+    const spec = side ? meta[side] : meta;
+    assert.equal(spec.blend, blend, path);
+    if (blend !== 'add') assert.notEqual(spec.blend, 'add', path);
+    const file = spec.file || ((frames > 1) ? 'sheet.png' : 'object.png');
+    const pngPath = path.replace(/fx\.json$/, file);
+    assert.equal(fs.existsSync(pngPath), true, pngPath);
+    const png = PNG.sync.read(fs.readFileSync(pngPath));
+    assert.ok(png.width >= 100 && png.height >= 100, pngPath);
+    if (frames > 1) {
+      assert.equal(spec.frames, frames, path);
+      assert.equal(spec.cols, frames, path);
+    }
+  }
+  const powder = JSON.parse(fs.readFileSync('assets/fx/sully/black-powder/fx.json', 'utf8'));
+  assert.equal(powder.luma, true);
+  assert.equal(powder.charge.blend, 'add');
+  assert.equal(powder.charge.loop, true);
+  assert.equal(powder.charge.frames, 4);
+  const sulfur = JSON.parse(fs.readFileSync('assets/fx/sully/volcanic-eruption/fx.json', 'utf8')).gas;
+  assert.equal(sulfur.blend, 'screen');
+  assert.equal(sulfur.luma, true);
+  assert.notEqual(sulfur.blend, 'add');
+  const gas = JSON.parse(fs.readFileSync('assets/fx/chloe/gas-cloud/fx.json', 'utf8'));
+  assert.equal(gas.luma, true);
+  assert.equal(gas.lifeMs, 2000);
+  const bubble = JSON.parse(fs.readFileSync('assets/fx/helen/bubble-shield/fx.json', 'utf8'));
+  assert.equal(bubble.holdAt, 1);
+  assert.equal(bubble.breakFrom, 2);
+  const pop = JSON.parse(fs.readFileSync('assets/fx/helen/balloon-bop/fx.json', 'utf8'));
+  assert.equal(pop.detonate.blend, 'add');
+  assert.equal(fs.existsSync('assets/fx/helen/balloon-bop/pop.png'), true);
+  const smoke = PNG.sync.read(fs.readFileSync('assets/fx/status/smoke-wisp/sheet.png'));
+  assert.equal(smoke.width / 6 >= 150, true);
+  const cloud = PNG.sync.read(fs.readFileSync('assets/fx/chloe/gas-cloud/sheet.png'));
+  const cell = Math.floor(cloud.width / 6);
+  let edge = 0;
+  let mid = 0;
+  for (let y = 0; y < cloud.height; y += 8) {
+    edge += cloud.data[(y * cloud.width) * 4 + 3];
+    mid += cloud.data[(y * cloud.width + Math.floor(cell / 2)) * 4 + 3];
+  }
+  assert.ok(mid > edge * 4, 'gas cloud edges are softened');
 });

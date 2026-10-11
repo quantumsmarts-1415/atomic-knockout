@@ -1,0 +1,17 @@
+{
+  "blend": "screen",
+  "luma": true,
+  "black": 16,
+  "frames": 6,
+  "cols": 6,
+  "rows": 1,
+  "fps": 8,
+  "loop": true,
+  "hit": false,
+  "fit": "width",
+  "heightFrac": 1.2,
+  "crop": "frame",
+  "pivot": "bottom",
+  "anchor": "ground",
+  "lifeMs": 2000
+}

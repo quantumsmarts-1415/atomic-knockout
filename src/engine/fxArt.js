@@ -508,11 +508,42 @@ export async function collectFxArt(scene) {
       );
     }
   }
+  for (const name of ['on-fire', 'on-fire-small', 'smoke-wisp']) {
+    const key = `status/${name}`;
+    if (byKey.has(key)) continue;
+    byKey.set(key, null);
+    jobs.push(
+      loadStatusSheet(scene, name, index)
+        .then((art) => byKey.set(key, art))
+        .catch(() => byKey.set(key, null)),
+    );
+  }
   await Promise.all(jobs);
 }
 
 export function fxNamed(key) {
   return byKey.get(key) || null;
+}
+
+async function loadStatusSheet(scene, name, index) {
+  const folder = `status/${name}`;
+  if (index && !listed(index, `${folder}/sheet.png`)) return null;
+  const meta = await loadFxMeta(folder, index);
+  const spec = { ...meta, file: 'sheet.png' };
+  const pivot = pivotFrom(spec, { x: 0.5, y: 0.5 });
+  const loaded = await loadSpecFrames(
+    scene, 'status', name, folder, spec, index,
+    pivot, 132, { w: 64, h: 64 }, '',
+  );
+  if (!loaded?.frames?.length) return null;
+  return artRecord('area or burst', { w: 64, h: 64 }, pivot, loaded.frames, {
+    blend: meta.blend,
+    fps: meta.fps,
+    loop: !!meta.loop,
+    hit: false,
+    anchor: 'body',
+    scale: meta.scale,
+  });
 }
 
 async function loadNamedSheet(scene, char, folderName, index) {
@@ -721,6 +752,7 @@ const SIDE_SPECS = [
   ['cling', 'cling-'], ['shatter', 'shatter-'],
   ['launch', 'launch-'], ['shower', 'shower-'], ['muzzle', 'muzzle-'],
   ['ember', 'ember-'], ['spark', 'spark-'], ['cinder', 'cinder-'], ['mote', 'mote-'], ['puff', 'puff-'],
+  ['gas', 'gas-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -840,6 +872,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
         holdLast: !!meta.holdLast, flip: !!meta.flip, bothSides: !!meta.bothSides, releaseFlash: !!meta.releaseFlash, comboFrames: !!meta.comboFrames, crackFrames: !!meta.crackFrames,
         order: meta.order, fadeAfter: !!meta.fadeAfter, fadeMs: meta.fadeMs, paceCharge: !!meta.paceCharge,
         holdAt: meta.holdAt, breakFrom: meta.breakFrom, overCoat: meta.overCoat, heatAt: meta.heatAt,
+        lifeMs: meta.lifeMs,
       });
       await attachSides(scene, id, slug, folder, meta, index, charH, sized, record);
       return record;
@@ -1571,6 +1604,24 @@ function syncFreeze(scene, fighter) {
 }
 
 const liveCling = new WeakMap();
+const liveTongues = new WeakMap();
+const liveSmoke = new WeakMap();
+
+// Limb scatter for the small on-fire tongues: x in body widths, y up the body.
+const TONGUE_AT = [
+  [0.02, 0.86, -0.35, 0.75],
+  [-0.48, 0.66, 0.45, 0.95],
+  [0.52, 0.62, -0.2, 0.8],
+  [-0.18, 0.34, 0.7, 0.68],
+  [0.26, 0.3, -0.55, 0.88],
+  [0.0, 0.52, 0.25, 1],
+];
+
+const WISP_AT = [
+  [-0.22, 0.74, 0.15, 0.72],
+  [0.2, 0.82, -0.2, 0.9],
+  [0.02, 0.48, 0.05, 0.64],
+];
 
 function dropCling(fighter) {
   const live = liveCling.get(fighter);
@@ -1578,29 +1629,85 @@ function dropCling(fighter) {
   if (live) liveCling.delete(fighter);
 }
 
+function dropSprites(map, fighter) {
+  const live = map.get(fighter);
+  live?.imgs?.forEach((img) => img.destroy?.());
+  if (live) map.delete(fighter);
+}
+
+/** Color of the move that lit this burn, shared by the on-fire sheet and the small tongues. */
+function burnSourceColor(scene, fighter) {
+  const moves = (scene.fighters || []).find((f) => f.charDef?.id === fighter.burnOwnerId)?.charDef?.moves;
+  if (!moves || !fighter.burnMove) return 0xffffff;
+  for (const move of Object.values(moves)) {
+    if (move?.name === fighter.burnMove && move.vfxColor) return move.vfxColor;
+  }
+  return 0xffffff;
+}
+
+function syncScattered(scene, fighter, map, art, spots, tint, show) {
+  if (!show || !art?.frames?.length) {
+    dropSprites(map, fighter);
+    return;
+  }
+  const now = scene.simNow ?? 0;
+  let live = map.get(fighter);
+  if (!live?.imgs?.length || live.imgs.some((img) => !img?.scene)) {
+    dropSprites(map, fighter);
+    const imgs = spots.map(() => {
+      const img = placeStill(scene, art, fighter.x, fighter.y, 0);
+      img.setDepth(15);
+      return img;
+    });
+    live = { imgs, born: now };
+    map.set(fighter, live);
+  }
+  const bodyH = fighter.bodyH ?? 80;
+  const bodyW = fighter.bodyW ?? 40;
+  const bob = Math.sin(now / 180) * bodyH * 0.03;
+  live.imgs.forEach((img, i) => {
+    const spot = spots[i % spots.length];
+    const frame = art.frames[(fxFrameIndex(art, now - live.born) + i) % art.frames.length];
+    applyFrameLook(img, frame, art, spot[spot.length - 1] || 1);
+    if (tint) img.setTint?.(tint);
+    else img.clearTint?.();
+    img.setPosition(fighter.x + spot[0] * bodyW, fighter.y - spot[1] * bodyH + bob);
+    img.rotation = spot[2] || 0;
+  });
+}
+
 /** Cling follows the target for as long as that burn is lit.
  *  White phosphorus is sticky, so it uses the same slot. A move cling wins;
- *  the shared on-fire status is the fallback when a burn has no sheet of its own. */
+ *  the shared on-fire status is the fallback when a burn has no sheet of its own.
+ *  Small tongues scatter on that shared fire and take the same source tint.
+ *  Smoke wisps cover white-phosphorus burns and a smolder that has no own sheet. */
 function syncCling(scene, fighter) {
   const now = scene.simNow ?? 0;
   const burning = fighter.burnUntil > now && fighter.burnMove;
-  const art = burning
-    ? burnVisual(artFor(fighter.burnOwnerId, fighter.burnMove)?.cling, fxNamed('status/on-fire'))
-    : null;
+  const cling = burning ? artFor(fighter.burnOwnerId, fighter.burnMove)?.cling : null;
+  const status = fxNamed('status/on-fire');
+  const art = burning ? burnVisual(cling, status) : null;
+  const sharedFire = burning && !cling?.frames?.length;
   if (!art?.frames?.length) {
     dropCling(fighter);
-    return;
+  } else {
+    let live = liveCling.get(fighter);
+    if (!live?.img?.scene) {
+      dropCling(fighter);
+      live = { img: placeStill(scene, art, fighter.x, fighter.y, 0), born: now };
+      live.img.setDepth(15);
+      liveCling.set(fighter, live);
+    }
+    const frame = art.frames[fxFrameIndex(art, now - live.born)] || art.frames[0];
+    applyFrameLook(live.img, frame, art, 1);
+    if (art === status) live.img.setTint?.(burnSourceColor(scene, fighter));
+    else live.img.clearTint?.();
+    live.img.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.42);
   }
-  let live = liveCling.get(fighter);
-  if (!live?.img?.scene) {
-    dropCling(fighter);
-    live = { img: placeStill(scene, art, fighter.x, fighter.y, 0), born: now };
-    live.img.setDepth(15);
-    liveCling.set(fighter, live);
-  }
-  const frame = art.frames[fxFrameIndex(art, now - live.born)] || art.frames[0];
-  applyFrameLook(live.img, frame, art, 1);
-  live.img.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.42);
+  const tint = burning ? burnSourceColor(scene, fighter) : 0;
+  syncScattered(scene, fighter, liveTongues, fxNamed('status/on-fire-small'), TONGUE_AT, tint, sharedFire);
+  const smolder = burning && (fighter.burnSticky || sharedFire);
+  syncScattered(scene, fighter, liveSmoke, fxNamed('status/smoke-wisp'), WISP_AT, 0, smolder);
 }
 
 const EMBER_KINDS = ['ember', 'spark', 'cinder', 'mote'];
@@ -1824,7 +1931,10 @@ function syncHeld(scene, fighter) {
     const frames = want.art.frames;
     const max = charge.maxChargeMs || 1;
     const frac = Math.min(1, Math.max(0, (now - (fighter.chargeStart ?? now)) / max));
-    const frame = frames[Math.min(frames.length - 1, Math.round(frac * (frames.length - 1)))];
+    const elapsed = now - (fighter.chargeStart ?? now);
+    const frame = want.art.loop
+      ? (frames[fxFrameIndex(want.art, elapsed)] || frames[0])
+      : frames[Math.min(frames.length - 1, Math.round(frac * (frames.length - 1)))];
     applyFrameLook(live.img, frame, want.art, 1);
     if (want.art.anchor === 'body') {
       live.img.setOrigin(0.5, 0.5);

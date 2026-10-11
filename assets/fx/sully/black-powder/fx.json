@@ -1,0 +1,26 @@
+{
+  "blend": "screen",
+  "luma": true,
+  "black": 16,
+  "hit": false,
+  "fit": "width",
+  "heightFrac": 1.15,
+  "scaleWith": "radius",
+  "crop": "frame",
+  "pivot": "center",
+  "charge": {
+    "file": "fuse.png",
+    "frames": 4,
+    "cols": 4,
+    "rows": 1,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.38,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "body"
+  }
+}

@@ -791,6 +791,12 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  burstProjectile(p) {
+    if (this.simFast || !p?.gfx) return;
+    const det = artFor(p.owner?.charDef?.id, p.move?.name)?.detonate;
+    if (det?.frames?.length) spawnFxSprite(this, det, p.gfx.x, p.gfx.y, 1);
+  }
+
   spawnProjectile(owner, move) {
     if (move.rain > 1 && !move._rainChild) {
       const art = artFor(owner?.charDef?.id, move.name);
@@ -1959,6 +1965,7 @@ export default class BattleScene extends Phaser.Scene {
         const reflect = def?.reflectProjectiles === true || perfect || (def?.reflectMetals && metalShot);
         if (victim.state === 'defending' && reflect) {
           this.landHit(victim, p.owner, { ...p.move, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, -Math.sign(p.vx) || victim.facing);
+          this.burstProjectile(p);
           p.gfx.destroy();
           p.dead = true;
           break;
@@ -2017,6 +2024,7 @@ export default class BattleScene extends Phaser.Scene {
           p._splitChild = true;
         }
         if (!p.move.pierce && n >= want) {
+          this.burstProjectile(p);
           p.gfx.destroy();
           p.dead = true;
           break;

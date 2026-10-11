@@ -1321,6 +1321,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         return 0;
       }
       if (gate.result === 'pop') {
+        const popped = this.defenseMove;
         const ready = rearmDefense(this.defenseMove, time);
         if (ready != null) this.specialCooldownUntil = ready;
         const shed = coatSpec(this.defenseMove);
@@ -1329,6 +1330,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
           this._coatShed = { color: shed.color, until: time + 520 };
           this._coatShedPlayed = false;
           playVfx(this.scene, this, this.defenseMove, 'shatter', {
+            x: this.x,
+            y: this.y - (this.bodyH ?? 80) * 0.5,
+          });
+        } else {
+          playVfx(this.scene, this, popped, 'break', {
             x: this.x,
             y: this.y - (this.bodyH ?? 80) * 0.5,
           });
@@ -1369,6 +1375,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (attacker && attacker !== this && attacker.takeHit && gate.counter) {
         const cdmg = attacker.takeHit(this, gate.counter, time, this.facing);
         if (cdmg > 0) this.scene.noteHit?.(this, attacker, gate.counter);
+        if (!gate.endDefense && this.defenseMove) {
+          playVfx(this.scene, this, this.defenseMove, 'break', {
+            x: this.x,
+            y: this.y - (this.bodyH ?? 80) * 0.5,
+            both: true,
+            otherX: attacker.x,
+            otherY: attacker.y - (attacker.bodyH ?? 80) * 0.5,
+          });
+        }
         if (gate.counter.rootMs && attacker.rootedUntil != null) {
           attacker.rootedUntil = Math.max(attacker.rootedUntil, time + gate.counter.rootMs);
         } else if (gate.counter.rootMs) {

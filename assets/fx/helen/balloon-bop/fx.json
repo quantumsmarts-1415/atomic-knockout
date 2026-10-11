@@ -1,0 +1,22 @@
+{
+  "hit": false,
+  "black": 16,
+  "projectile": {
+    "file": "object.png",
+    "blend": "normal",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.62,
+    "crop": "frame",
+    "pivot": "center"
+  },
+  "detonate": {
+    "file": "pop.png",
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.05,
+    "crop": "frame",
+    "pivot": "center"
+  }
+}

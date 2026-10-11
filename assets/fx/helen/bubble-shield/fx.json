@@ -1,0 +1,16 @@
+{
+  "blend": "screen",
+  "black": 16,
+  "frames": 4,
+  "cols": 4,
+  "rows": 1,
+  "fps": 8,
+  "crop": "frame",
+  "fit": "height",
+  "heightFrac": 1.45,
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false,
+  "holdAt": 1,
+  "breakFrom": 2
+}

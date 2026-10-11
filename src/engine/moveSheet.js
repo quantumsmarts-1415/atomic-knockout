@@ -145,6 +145,13 @@ export function sheetFxPoint(fighter, kind = 'melee') {
   return worldAt(fighter, clip, meta, fighter.rig?.sheetFrame || 0, kind);
 }
 
+/** Allen's whip sheet already draws the cable, so the separate whip art stays off. */
+export function sheetDrawsWeapon(fighter) {
+  return fighter?.charDef?.id === 'allen'
+    && !!fighter?.rig?._authoredSheet
+    && fighter?.rig?.sheetClip === 'attack';
+}
+
 /** Tip or foot of the sheet's release frame, for a shot that leaves the hand. */
 export function sheetReleasePoint(fighter, kind = 'shot') {
   const id = fighter?.charDef?.id;

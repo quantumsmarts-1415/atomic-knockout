@@ -4,7 +4,7 @@
 // loaded image, packed on the same 5 px grid as body masks.
 
 import { effectBox, fxFolder, moveSlug, objectTypeOf } from '../data/attackFx.js';
-import { sheetFxPoint } from './moveSheet.js';
+import { sheetDrawsWeapon, sheetFxPoint } from './moveSheet.js';
 import { fxPlacementHits } from './boxes.js';
 import { coatSpec } from './coat.js';
 
@@ -1702,7 +1702,8 @@ export function syncFxActors(scene) {
     const art = artFor(fighter?.charDef?.id, move?.name);
     const swinging = art && art.anchor !== 'lance'
       && (art.objectType === 'slash arc' || art.objectType === 'extend')
-      && fighter.state === 'attack' && frameInActive(fighter);
+      && fighter.state === 'attack' && frameInActive(fighter)
+      && !sheetDrawsWeapon(fighter);
     let img = liveSlash.get(fighter);
     if (!swinging) {
       if (img) {

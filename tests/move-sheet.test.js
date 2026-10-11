@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { CHARACTERS } from '../src/data/characters.js';
 import { MOVE_SHEETS } from '../src/data/moveSheets.js';
 import {
-  frameToWorld, sheetFrameIndex, sheetFxPoint, sheetMeta, sheetReleasePoint,
+  frameToWorld, sheetDrawsWeapon, sheetFrameIndex, sheetFxPoint, sheetMeta, sheetReleasePoint,
 } from '../src/engine/moveSheet.js';
 import { overhandToss } from '../src/engine/fxArt.js';
 
@@ -278,4 +278,109 @@ test('a right-facing attack on a left-facing idle stays in front', () => {
   );
   assert.deepEqual(sheetReleasePoint(fighter, 'shot'), world);
   assert.ok(world.x > 400);
+});
+
+test('call 3 sheets match their clip cells', () => {
+  const expect = {
+    allen: ['attack', 'charge', 'special'],
+    titan: ['attack'],
+    liv: ['attack'],
+    selena: ['attack'],
+    silas: ['attack', 'charge', 'special'],
+  };
+  for (const [id, names] of Object.entries(expect)) {
+    const art = CHARACTERS[id].art;
+    for (const name of names) {
+      const def = art.sheets.clips[name];
+      const file = `${art.sheets.dir}${def.file || `${id}_${name}.png`}`;
+      const png = pngSize(file);
+      assert.equal(png.w % def.frameW, 0, `${id} ${name} width`);
+      assert.equal(png.h % def.frameH, 0, `${id} ${name} height`);
+      const cells = (png.w / def.frameW) * (png.h / def.frameH);
+      assert.ok(cells >= def.count, `${id} ${name} cells ${cells}`);
+      assert.equal(def.displayScale, art.height / def.visibleH);
+    }
+  }
+  const titanWalk = CHARACTERS.titan.art.sheets.clips.walk;
+  assert.equal(titanWalk.count, 12);
+  assert.equal(titanWalk.fps, 12);
+  assert.equal(titanWalk.loop, true);
+  assert.equal(CHARACTERS.silas.art.sheets.clips.charge.file, 'silas_special.png');
+  assert.equal(CHARACTERS.allen.art.facing, -1);
+  assert.equal(CHARACTERS.titan.art.facing, -1);
+  assert.equal(CHARACTERS.allen.art.sheets.clips.attack.sheetFacing, undefined);
+  assert.equal(CHARACTERS.titan.art.sheets.clips.attack.sheetFacing, undefined);
+  assert.equal(CHARACTERS.titan.art.sheets.clips.walk.sheetFacing, undefined);
+  assert.equal(MOVE_SHEETS.titan.charge, undefined);
+  assert.equal(MOVE_SHEETS.titan.special, undefined);
+  assert.equal(MOVE_SHEETS.liv.charge, undefined);
+  assert.equal(MOVE_SHEETS.selena.special, undefined);
+});
+
+test('thermite loops the spray and the whip opens on the cable', () => {
+  const charge = sheetMeta('allen', 'charge');
+  assert.deepEqual(charge.loop, [6, 9]);
+  assert.equal(sheetFrameIndex(charge, { state: 'charging', animT: 0 }), 6);
+  assert.equal(sheetFrameIndex(charge, { state: 'charging', animT: 3 / 18 }), 9);
+  assert.equal(sheetFrameIndex(charge, { state: 'charging', animT: 4 / 18 }), 6);
+  const fd = { startup: 4, active: 3, recovery: 6, visible: 13 };
+  assert.equal(sheetFrameIndex(charge, { state: 'attack', fd, attackFrame: 4 }), 5);
+  assert.equal(sheetFrameIndex(sheetMeta('allen', 'attack'), { state: 'attack', fd, attackFrame: 4 }), 4);
+  assert.equal(sheetFrameIndex(sheetMeta('allen', 'special'), { state: 'attack', fd, attackFrame: 4 }), 6);
+});
+
+test('overclock loops the gather and binary surge opens on the burst', () => {
+  const charge = sheetMeta('silas', 'charge');
+  const special = sheetMeta('silas', 'special');
+  assert.equal(charge.loop, undefined);
+  assert.deepEqual(charge.windup, [0, 5]);
+  assert.deepEqual(charge.anchors, special.anchors);
+  assert.equal(sheetFrameIndex(charge, { state: 'charging', animT: 0 }), 0);
+  assert.equal(sheetFrameIndex(charge, { state: 'charging', animT: 6 / 18 }), 0);
+  const fd = { startup: 4, active: 3, recovery: 6, visible: 13 };
+  assert.equal(sheetFrameIndex(special, { state: 'attack', fd, attackFrame: 4 }), 6);
+});
+
+test('a left-facing whip release stays in front', () => {
+  const art = CHARACTERS.allen.art;
+  const def = art.sheets.clips.attack;
+  const fist = MOVE_SHEETS.allen.attack.anchors.fist[4];
+  assert.ok(fist[0] < def.frameW / 2);
+  const world = frameToWorld(
+    fist, def.frameW, def.frameH, def.footY, def.displayScale, -1, 1, 400, 500,
+  );
+  const fighter = {
+    x: 400,
+    y: 500,
+    facing: 1,
+    currentMoveKey: 'basicDirectional',
+    charDef: CHARACTERS.allen,
+    rig: { _authoredSheet: true, moveKey: 'basicDirectional', sheetClip: 'attack', sheetFrame: 4 },
+  };
+  assert.deepEqual(sheetFxPoint(fighter, 'melee'), world);
+  assert.deepEqual(sheetReleasePoint(fighter, 'melee'), world);
+  assert.ok(world.x > 400);
+  const lance = CHARACTERS.titan.art.sheets.clips.attack;
+  const tip = MOVE_SHEETS.titan.attack.anchors.fist[6];
+  assert.ok(tip[0] < lance.frameW / 2);
+});
+
+test('the whip sheet hides the separate cable', () => {
+  const allen = {
+    charDef: { id: 'allen' },
+    rig: { _authoredSheet: true, sheetClip: 'attack' },
+  };
+  assert.equal(sheetDrawsWeapon(allen), true);
+  assert.equal(sheetDrawsWeapon({
+    charDef: { id: 'allen' },
+    rig: { _authoredSheet: true, sheetClip: 'charge' },
+  }), false);
+  assert.equal(sheetDrawsWeapon({
+    charDef: { id: 'titan' },
+    rig: { _authoredSheet: true, sheetClip: 'attack' },
+  }), false);
+  assert.equal(sheetDrawsWeapon({
+    charDef: { id: 'allen' },
+    rig: { _authoredSheet: false, sheetClip: 'attack' },
+  }), false);
 });

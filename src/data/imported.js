@@ -4520,15 +4520,15 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.13497
           },
           "attack": {
-            "count": 5,
-            "fps": 12,
+            "count": 12,
+            "fps": 18,
             "loop": false,
-            "frameW": 154,
-            "frameH": 184,
-            "footY": 0.9185,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 702,
+            "frameH": 1011,
+            "footY": 0.9792,
+            "visibleH": 978,
+            "bodyH": 978,
+            "displayScale": 132 / 978
           }
         }
       }
@@ -8104,15 +8104,15 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.13939
           },
           "attack": {
-            "count": 5,
-            "fps": 12,
+            "count": 12,
+            "fps": 18,
             "loop": false,
-            "frameW": 177,
-            "frameH": 166,
-            "footY": 0.9096,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 854,
+            "frameH": 980,
+            "footY": 0.9867,
+            "visibleH": 947,
+            "bodyH": 947,
+            "displayScale": 132 / 947
           }
         }
       }

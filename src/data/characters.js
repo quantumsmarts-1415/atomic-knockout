@@ -363,6 +363,9 @@ export const CHARACTERS = {
         displayScale: 0.18686,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
+          // Grey armour, no helmet, one double spear. The walk and Lance Jab face left, the same way the idle does.
+          walk: { count: 12, fps: 12, loop: true, frameW: 894, frameH: 720, footY: 0.992, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 1358, frameH: 735, footY: 0.9918, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
         },
       },
     },
@@ -1605,6 +1608,10 @@ export const CHARACTERS = {
         displayScale: 0.19706,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
+          // Power-Line Whips, Thermite Burn, and Turbine Vortex face left, the same way the idle does. The whip sheet is the cable.
+          attack: { count: 12, fps: 18, loop: false, frameW: 2272, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 922, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
+          special: { count: 12, fps: 18, loop: false, frameW: 956, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
         },
       },
     },
@@ -1692,6 +1699,10 @@ export const CHARACTERS = {
         displayScale: 0.10709,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
+          // Crystal Blade. Binary Surge is also the Overclock gather.
+          attack: { count: 12, fps: 18, loop: false, frameW: 1162, frameH: 1297, footY: 0.9838, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 1280, frameH: 1286, footY: 0.9969, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270, file: 'silas_special.png' },
+          special: { count: 12, fps: 18, loop: false, frameW: 1280, frameH: 1286, footY: 0.9969, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270 },
         },
       },
     },

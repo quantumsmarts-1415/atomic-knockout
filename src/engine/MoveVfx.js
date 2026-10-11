@@ -2,7 +2,7 @@
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
 import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, wantsContactSpark } from './fxArt.js';
-import { sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
+import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 
 export const TYPE_COLORS = {
@@ -471,6 +471,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       break;
     }
     case 'whip': {
+      if (sheetDrawsWeapon(fighter)) break;
       const tip = meleeContactPoint(fighter, move);
       const dir = fighter.facing || 1;
       const x0 = fighter.x + dir * (fighter.bodyW ?? 40) * 0.25;

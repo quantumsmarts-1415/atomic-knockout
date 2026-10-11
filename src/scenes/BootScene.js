@@ -78,6 +78,19 @@ export function clipFrameSize(sheets, clipDef = {}) {
 // visibleH and bodyH are the head-to-feet body inside the cell, not the raw
 // alpha box. displayScale, when stored, is the sprite scale that fits that
 // body to art.height.
+// A strip taller or wider than the GPU limit uploads as an incomplete texture
+// and draws solid black. Pack the same cells into a grid that fits.
+export function fitSheetGrid(frameW, frameH, count, maxSize) {
+  if (!positiveFinite(frameW) || !positiveFinite(frameH) || !(count > 0) || !(maxSize > 0)) return null;
+  if (frameW > maxSize || frameH > maxSize) return null;
+  const cols = Math.max(1, Math.floor(maxSize / frameW));
+  const rows = Math.ceil(count / cols);
+  const width = cols * frameW;
+  const height = rows * frameH;
+  if (width > maxSize || height > maxSize) return null;
+  return { cols, rows, width, height };
+}
+
 export function clipDisplayLayout(sheets, clipDef = {}) {
   const footY = clipDef.footY ?? sheets.footY;
   const visibleH = clipDef.bodyH ?? clipDef.visibleH ?? sheets.bodyH ?? sheets.visibleH;
@@ -93,6 +106,55 @@ export function clipDisplayLayout(sheets, clipDef = {}) {
     throw new RangeError(`Clip displayScale must be finite and > 0, got ${displayScale}`);
   }
   return { footY, visibleH, bodyH: visibleH, displayScale: displayScale ?? null };
+}
+
+// Rebuild any loaded sheet whose source image exceeds the GPU limit.
+// Frame order stays row-major, so clip indexes and anchors do not move.
+export function repackOversizedSheets(scene, roster, maxSize = scene.game?.renderer?.getMaxTextureSize?.() || 8192) {
+  if (!scene?.textures?.get || typeof document === 'undefined') return [];
+  const packed = [];
+  for (const c of roster) {
+    if (!use3dSheets(c)) continue;
+    const s = c.art.sheets;
+    for (const [clip, def] of Object.entries(s.clips)) {
+      const key = sheetKey(c.art, clip);
+      if (!scene.textures.exists(key)) continue;
+      const tex = scene.textures.get(key);
+      const src = tex.getSourceImage?.() || tex.source?.[0]?.image;
+      const sw = src?.naturalWidth || src?.width || 0;
+      const sh = src?.naturalHeight || src?.height || 0;
+      if (!(sw > maxSize || sh > maxSize)) continue;
+      let frameW;
+      let frameH;
+      try {
+        ({ frameW, frameH } = clipFrameSize(s, def));
+      } catch (err) {
+        console.error(`Skipping repack ${key}: ${err.message}`);
+        continue;
+      }
+      const grid = fitSheetGrid(frameW, frameH, def.count, maxSize);
+      if (!grid || !src) {
+        console.error(`Sheet ${key} is ${sw}x${sh} and does not pack under ${maxSize}`);
+        continue;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = grid.width;
+      canvas.height = grid.height;
+      const ctx = canvas.getContext('2d');
+      const srcCols = Math.max(1, Math.round(sw / frameW));
+      for (let i = 0; i < def.count; i++) {
+        ctx.drawImage(
+          src,
+          (i % srcCols) * frameW, Math.floor(i / srcCols) * frameH, frameW, frameH,
+          (i % grid.cols) * frameW, Math.floor(i / grid.cols) * frameH, frameW, frameH,
+        );
+      }
+      scene.textures.remove(key);
+      scene.textures.addSpriteSheet(key, canvas, { frameWidth: frameW, frameHeight: frameH });
+      packed.push(key);
+    }
+  }
+  return packed;
 }
 
 export function loadRosterArt(loader, roster) {
@@ -224,6 +286,7 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create() {
+    repackOversizedSheets(this, ROSTER);
     for (const c of ROSTER) {
       if (!use3dSheets(c)) continue;
       const s = c.art.sheets;

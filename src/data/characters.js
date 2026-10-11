@@ -363,10 +363,12 @@ export const CHARACTERS = {
         displayScale: 0.18686,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
-          // Grey armour, no helmet, one double spear. The walk, Lance Jab, and Titanium Ram face left, the same way the idle does.
+          // Grey armour, no helmet, one double spear. The walk and the move sheets face left, the same way the idle does.
           walk: { count: 12, fps: 12, loop: true, frameW: 894, frameH: 720, footY: 0.992, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
           attack: { count: 12, fps: 18, loop: false, frameW: 1358, frameH: 735, footY: 0.9918, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
-          charge: { count: 12, fps: 18, loop: false, frameW: 1132, frameH: 720, footY: 0.9903, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 1132, frameH: 720, footY: 0.992, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 864, frameH: 921, footY: 0.9826, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
+          special: { count: 12, fps: 18, loop: false, frameW: 1350, frameH: 720, footY: 0.992, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
         },
       },
     },
@@ -1851,8 +1853,10 @@ export const CHARACTERS = {
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
           walk: { count: 12, fps: 8, loop: true, frameW: 603, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
-          // Brimstone Slam. The overhead wind-up stays as drawn.
+          // Brimstone Slam. The overhead wind-up stays as drawn. The brace and the eruption face right, the same way the idle does.
           attack: { count: 11, fps: 17, loop: false, frameW: 603, frameH: 724, footY: 0.9655, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
+          special: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 753, footY: 0.9416, visibleH: 654, bodyH: 654, displayScale: 148 / 654 },
         },
       },
     },

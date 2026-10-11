@@ -1,0 +1,15 @@
+{
+  "file": "noble-discharge-anim.png",
+  "blend": "add",
+  "black": 16,
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 11.429,
+  "loop": false,
+  "scale": 1.25,
+  "fit": "width",
+  "heightFrac": 2.2,
+  "pivot": "center",
+  "hit": false
+}

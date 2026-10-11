@@ -684,6 +684,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     }
     case 'dash':
     case 'fire':
+      if (artFor(fighter.charDef?.id, move?.name)?.frames?.length) break;
       burst(scene, x, y, color, 12, 110);
       ring(scene, x, y, color, 40, 3);
       break;

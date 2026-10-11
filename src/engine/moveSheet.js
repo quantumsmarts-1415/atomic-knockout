@@ -130,9 +130,10 @@ function worldAt(fighter, clipName, meta, frame, kind) {
   if (!anchor || !art?.sheets) return null;
   const lay = layoutOf(art, clipName);
   if (!(lay.frameW > 0) || !(lay.frameH > 0) || !(lay.scale > 0)) return null;
+  const sheetFacing = art.sheets.clips?.[clipName]?.sheetFacing ?? art.facing ?? 1;
   return frameToWorld(
     anchor, lay.frameW, lay.frameH, lay.footY, lay.scale,
-    art.facing ?? 1, fighter.facing || 1, fighter.x || 0, fighter.y || 0,
+    sheetFacing, fighter.facing || 1, fighter.x || 0, fighter.y || 0,
   );
 }
 

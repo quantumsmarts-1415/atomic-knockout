@@ -1608,16 +1608,28 @@ function syncCling(scene, fighter) {
 
 const EMBER_KINDS = ['ember', 'spark', 'cinder', 'mote'];
 
+/** 60° above horizontal, forward. The launch art points up, so it tilts 30°. */
+export function overhandToss(x, y, face, length) {
+  const f = (face || 1) < 0 ? -1 : 1;
+  const len = length > 0 ? length : 0;
+  const tilt = Math.PI / 6;
+  return {
+    x: x + f * len * Math.sin(tilt),
+    y: y - len * Math.cos(tilt),
+    rotation: f * tilt,
+  };
+}
+
 /** Burning shower built from ember pieces. The layout's width is the hit width. */
-export function spawnFlareShower(scene, owner, move, layout) {
+export function spawnFlareShower(scene, owner, move, layout, origin = null) {
   if (!scene?.add?.image || scene.simFast || !owner) return 0;
   const art = artFor(owner.charDef?.id, move?.name);
   const kinds = EMBER_KINDS.map((name) => art?.[name]).filter((piece) => piece?.frames?.length);
   if (!kinds.length) return 0;
   const spec = layout || flareEmbers(move, owner.bodyH || 118, 1);
   const face = owner.facing || 1;
-  const originX = owner.x + face * (owner.bodyW ?? 40) * 0.2;
-  const top = owner.y - spec.height;
+  const originX = origin?.x ?? (owner.x + face * (owner.bodyW ?? 40) * 0.2);
+  const top = origin?.y ?? (owner.y - spec.height);
   const puff = art?.puff?.frames?.length ? art.puff : null;
   const born = scene.simNow ?? 0;
   for (const piece of spec.pieces) {

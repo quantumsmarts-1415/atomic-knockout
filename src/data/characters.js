@@ -1066,9 +1066,12 @@ export const CHARACTERS = {
         bodyH: 648,
         displayScale: 0.19136,
         clips: {
-          // idle + walk (Gemini). Other clips still fall back to idle.
+          // idle + walk (Gemini). Vortex Kick is the normal. Oxidation Burst
+          // is the special. Bellows Breath and Ozone Layer stay on idle.
           idle: { count: 13, fps: 3.6, loop: true },
           walk: { count: 33, fps: 10, loop: true, frameW: 452, frameH: 701, footY: 0.98, visibleH: 653, bodyH: 653, displayScale: 0.18989 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 918, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
+          special: { count: 12, fps: 18, loop: false, frameW: 678, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
         },
       },
     },
@@ -1374,11 +1377,14 @@ export const CHARACTERS = {
           // threshold 120 so her darker-blue floor shadow keys out too.
           // Then every frame mirrored in place (PIL ImageOps.mirror per
           // 443x710 cell): the video walks facing RIGHT but art.facing is -1
-          // (her idle faces left natively) and the Rig flips all clips by
-          // art.facing, so unmirrored she walked backwards. All clips in a
-          // sheet must share the idle's native orientation.
+          // (her idle faces left natively) and the Rig flips idle and walk by
+          // art.facing, so unmirrored she walked backwards. The move sheets
+          // face right and set sheetFacing, so those clips stay unflipped.
           idle: { count: 14, fps: 3.6, loop: true },
           walk: { count: 11, fps: 8, loop: true, frameW: 443, frameH: 710, footY: 0.969, visibleH: 666, bodyH: 666, displayScale: 0.19219 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 746, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
+          special: { count: 12, fps: 18, loop: false, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
         },
       },
     },
@@ -1479,6 +1485,10 @@ export const CHARACTERS = {
         displayScale: 0.18367,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
+          // Flare Jab. Blinding Flare is also the Unquenchable gather.
+          attack: { count: 12, fps: 18, loop: false, frameW: 988, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 868, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
+          special: { count: 12, fps: 18, loop: false, frameW: 868, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013, file: 'maggie_charge.png' },
         },
       },
     },
@@ -1752,6 +1762,10 @@ export const CHARACTERS = {
         displayScale: 0.2015,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          // Clean body sheets. The particle curtain is the flare.
+          attack: { count: 12, fps: 18, loop: false, frameW: 546, frameH: 716, footY: 0.9749, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 554, frameH: 775, footY: 0.9755, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
+          special: { count: 12, fps: 18, loop: false, frameW: 902, frameH: 722, footY: 0.9737, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
         },
       },
     },

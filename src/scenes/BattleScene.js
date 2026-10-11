@@ -25,7 +25,7 @@ import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, spawnContactFx, spawnFlareShower, spawnFxSprite, spawnMoveExtra, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
+import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, overhandToss, spawnContactFx, spawnFlareShower, spawnFxSprite, spawnMoveExtra, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
 
 const GRAVITY = 1500;
@@ -796,22 +796,33 @@ export default class BattleScene extends Phaser.Scene {
     if (move.rain > 1 && !move._rainChild) {
       const art = artFor(owner?.charDef?.id, move.name);
       const face0 = owner.facing || 1;
+      // Phosphor Flare is an overhand toss at 60°. The launch art leaves the
+      // release-frame hand, and the same ember curtain falls from its tip.
+      const tossed = move.vfx === 'phosphor';
+      let fromX = owner.x + face0 * (owner.bodyW ?? 40) * 0.15;
+      let fromY = owner.y - (owner.bodyH ?? 80) * 0.62;
+      let toss = null;
+      if (tossed) {
+        const hand = sheetReleasePoint(owner, 'shot');
+        if (hand) { fromX = hand.x; fromY = hand.y; }
+        const launchH = art?.launch?.frames?.[0]?.displayH;
+        const len = launchH > 0 ? launchH : (owner.bodyH || 118) * 2;
+        toss = overhandToss(fromX, fromY, face0, len);
+      }
       if (art?.launch?.frames?.length) {
-        spawnFxSprite(
-          this, art.launch,
-          owner.x + face0 * (owner.bodyW ?? 40) * 0.15,
-          owner.y - (owner.bodyH ?? 80) * 0.62,
-        );
+        const img = spawnFxSprite(this, art.launch, fromX, fromY, 1, face0);
+        if (img && toss) img.rotation = toss.rotation;
       }
       const launch = () => {
         if (!owner?.alive) return;
         if (art?.ember?.frames?.length) {
           const layout = flareEmbers(move, owner.bodyH || 118, Math.floor((this.time?.now || 0) + owner.x));
-          spawnFlareShower(this, owner, move, layout);
+          const origin = toss ? { x: toss.x, y: toss.y } : null;
+          spawnFlareShower(this, owner, move, layout, origin);
           const n = move.rain | 0;
           const face = owner.facing || 1;
-          const originX = owner.x + face * (owner.bodyW ?? 40) * 0.2;
-          const top = owner.y - layout.height;
+          const originX = toss ? toss.x : owner.x + face * (owner.bodyW ?? 40) * 0.2;
+          const top = toss ? toss.y : owner.y - layout.height;
           for (let i = 0; i < n; i++) {
             const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
             const drift = (i % 2 ? 1 : -1) * (8 + (i % 3) * 3);

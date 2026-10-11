@@ -6,6 +6,7 @@ import { MOVE_SHEETS } from '../src/data/moveSheets.js';
 import {
   frameToWorld, sheetFrameIndex, sheetFxPoint, sheetMeta, sheetReleasePoint,
 } from '../src/engine/moveSheet.js';
+import { overhandToss } from '../src/engine/fxArt.js';
 
 function pngSize(path) {
   const buf = readFileSync(path);
@@ -113,4 +114,108 @@ test('release and live anchors use the clip scale and the rig flip', () => {
   assert.deepEqual(released, world(tip));
   assert.ok(live.x > 400);
   assert.ok(released.x > 400);
+});
+
+test('call 2 sheets match their clip cells', () => {
+  const expect = {
+    maggie: ['attack', 'charge', 'special'],
+    natalie: ['attack', 'charge', 'special'],
+    oxana: ['attack', 'special'],
+    phillip: ['attack', 'charge', 'special'],
+  };
+  for (const [id, names] of Object.entries(expect)) {
+    const art = CHARACTERS[id].art;
+    for (const name of names) {
+      const def = art.sheets.clips[name];
+      const file = `${art.sheets.dir}${def.file || `${id}_${name}.png`}`;
+      const png = pngSize(file);
+      assert.equal(png.w % def.frameW, 0, `${id} ${name} width`);
+      assert.equal(png.h % def.frameH, 0, `${id} ${name} height`);
+      const cells = (png.w / def.frameW) * (png.h / def.frameH);
+      assert.ok(cells >= def.count, `${id} ${name} cells ${cells}`);
+      assert.equal(def.displayScale, art.height / def.visibleH);
+    }
+  }
+  assert.equal(CHARACTERS.maggie.art.sheets.clips.special.file, 'maggie_charge.png');
+  assert.equal(CHARACTERS.oxana.art.sheets.clips.attack.frameW, 918);
+  assert.equal(CHARACTERS.phillip.art.sheets.clips.charge.frameW, 554);
+  assert.equal(MOVE_SHEETS.maggie.attack.windup, undefined);
+  assert.equal(MOVE_SHEETS.oxana.charge, undefined);
+});
+
+test('maggie gathers through the flare windup, and the release frame is the flash', () => {
+  const flare = sheetMeta('maggie', 'charge');
+  assert.equal(sheetFrameIndex(flare, { state: 'charging', animT: 0 }), 0);
+  assert.equal(sheetFrameIndex(flare, { state: 'charging', animT: 5 / 18 }), 5);
+  assert.equal(sheetFrameIndex(flare, { state: 'charging', animT: 6 / 18 }), 0);
+  const fd = { startup: 4, active: 3, recovery: 6, visible: 13 };
+  assert.equal(sheetFrameIndex(flare, { state: 'attack', fd, attackFrame: 4 }), 6);
+  assert.equal(sheetFrameIndex(sheetMeta('maggie', 'special'), { state: 'attack', fd, attackFrame: 4 }), 6);
+});
+
+test('lake drop loops the gather, and brine burst opens on its release frame', () => {
+  const lake = sheetMeta('natalie', 'charge');
+  assert.deepEqual(lake.loop, [1, 3]);
+  assert.equal(sheetFrameIndex(lake, { state: 'charging', animT: 0 }), 1);
+  assert.equal(sheetFrameIndex(lake, { state: 'charging', animT: 2 / 18 }), 3);
+  assert.equal(sheetFrameIndex(lake, { state: 'charging', animT: 3 / 18 }), 1);
+  const fd = { startup: 6, active: 4, recovery: 8, visible: 18 };
+  assert.equal(sheetFrameIndex(sheetMeta('natalie', 'special'), { state: 'attack', fd, attackFrame: 6 }), 8);
+});
+
+test('natalie move sheets face right while her idle faces left', () => {
+  const art = CHARACTERS.natalie.art;
+  assert.equal(art.facing, -1);
+  for (const name of ['attack', 'charge', 'special']) {
+    assert.equal(art.sheets.clips[name].sheetFacing, 1);
+  }
+  const def = art.sheets.clips.special;
+  const fist = MOVE_SHEETS.natalie.special.anchors.fist[8];
+  assert.ok(fist[0] > def.frameW / 2);
+  const forward = frameToWorld(
+    fist, def.frameW, def.frameH, def.footY, def.displayScale, 1, 1, 400, 500,
+  );
+  const mirrored = frameToWorld(
+    fist, def.frameW, def.frameH, def.footY, def.displayScale, -1, 1, 400, 500,
+  );
+  const fighter = {
+    x: 400,
+    y: 500,
+    facing: 1,
+    currentMoveKey: 'specialDirectional',
+    charDef: CHARACTERS.natalie,
+    rig: { moveKey: 'specialDirectional', sheetClip: 'special', sheetFrame: 8 },
+  };
+  assert.deepEqual(sheetFxPoint(fighter, 'melee'), forward);
+  assert.ok(forward.x > 400);
+  assert.ok(mirrored.x < 400);
+});
+
+test('phosphor flare leaves the hand along a 60 degree overhand line', () => {
+  const tip = overhandToss(100, 200, 1, 200);
+  assert.ok(Math.abs(tip.x - 200) < 1e-9);
+  assert.ok(Math.abs(tip.y - (200 - 200 * Math.cos(Math.PI / 6))) < 1e-9);
+  assert.ok(Math.abs(tip.rotation - Math.PI / 6) < 1e-9);
+  const left = overhandToss(100, 200, -1, 200);
+  assert.ok(Math.abs(left.x - 0) < 1e-9);
+  assert.ok(left.y < 200);
+  assert.ok(left.rotation < 0);
+  const art = CHARACTERS.phillip.art;
+  const def = art.sheets.clips.charge;
+  const hand = MOVE_SHEETS.phillip.charge.anchors.tip[6];
+  assert.equal(MOVE_SHEETS.phillip.charge.release, 6);
+  const world = frameToWorld(
+    hand, def.frameW, def.frameH, def.footY, def.displayScale, 1, 1, 400, 500,
+  );
+  const fighter = {
+    x: 400,
+    y: 500,
+    facing: 1,
+    currentMoveKey: 'basicCharge',
+    charDef: CHARACTERS.phillip,
+    rig: { moveKey: 'basicCharge', sheetClip: 'charge', sheetFrame: 6 },
+  };
+  assert.deepEqual(sheetReleasePoint(fighter, 'shot'), world);
+  assert.ok(world.x > 400);
+  assert.ok(world.y < 500);
 });

@@ -52,8 +52,9 @@ async function main() {
       if (!existsSync(file) || art.use3d === false) continue;
       const png = loadPng(file);
       const lay = clipScale(art, sheets, def);
+      const clipFacing = def.sheetFacing ?? facing;
       const built = framesOf(
-        png, def.count, lay.frameW, lay.frameH, lay.footY, lay.scale, facing, lay.bodyH,
+        png, def.count, lay.frameW, lay.frameH, lay.footY, lay.scale, clipFacing, lay.bodyH,
       );
       const usable = built.specs.filter(Boolean);
       if (!usable.length) continue;

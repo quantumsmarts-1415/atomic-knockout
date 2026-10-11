@@ -410,22 +410,23 @@ export class Rig extends Phaser.GameObjects.Container {
       };
     }
     const base = layout || this._layoutScale || 1;
-    const paint = (spr) => {
+    const paint = (spr, def) => {
       if (!spr?.setScale) return;
       spr.x = this._pose.x;
       spr.y = this._pose.y;
       spr.rotation = this._pose.rot;
       spr.setScale(base * this._pose.sx, base * this._pose.sy);
-      // art.facing is the source render's native direction. Re-apply it
-      // every pose so a frame change cannot leave her looking backward.
-      spr.setFlipX((this.art?.facing ?? this.charDef?.art?.facing ?? 1) === -1);
+      // The clip's own sheet facing wins. Idle and walk keep art.facing.
+      // Re-apply it every pose so a frame change cannot leave her backward.
+      const native = def?.sheetFacing ?? this.art?.facing ?? this.charDef?.art?.facing ?? 1;
+      spr.setFlipX(native === -1);
     };
     if (this._posingClips) {
-      paint(this.clipA);
-      paint(this.clipB);
+      paint(this.clipA, null);
+      paint(this.clipB, null);
     } else {
-      paint(this.sprite);
-      if (this.fadeSprite?.visible) paint(this.fadeSprite);
+      paint(this.sprite, this.sheets?.clips?.[this.currentClip]);
+      if (this.fadeSprite?.visible) paint(this.fadeSprite, this.sheets?.clips?.idle);
     }
     if (state === 'hurt' && (this.hurtUnits || 0) > FEEL.tumbleAt) {
       this._spin = (this._spin || 0) + (dt || 0.016) * 9 * (this.hurtSign || 1);

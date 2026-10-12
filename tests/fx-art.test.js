@@ -588,8 +588,11 @@ test('gemini fx sheets replace the placeholder stills', () => {
   const rocket = read('assets/fx/scarlett/micro-rocket/fx.json');
   assert.equal(rocket.projectile.file, 'micro-rocket.jpg');
   assert.equal(rocket.projectile.blend, 'normal');
-  assert.equal(rocket.detonate.file, 'rocket-explosion.jpg');
+  assert.equal(rocket.detonate.file, 'rocket-explosion-anim.png');
+  assert.equal(rocket.detonate.frames, 24);
+  assert.equal(rocket.detonate.loop, false);
   assert.equal(rocket.detonate.blend, 'add');
+  assert.equal(rocket.detonate.smokeFrom, 18);
   assert.equal(rocket.detonate.anchor, 'point');
   assert.equal(rocket.hit, false);
   const ram = read('assets/fx/titan/titanium-ram/fx.json');
@@ -598,7 +601,9 @@ test('gemini fx sheets replace the placeholder stills', () => {
   assert.equal(ram.anchor, 'trail');
   assert.equal(ram.pivot, 'right');
   assert.equal(ram.releaseImpact, true);
-  assert.equal(ram.impact.file, 'ram-impact.jpg');
+  assert.equal(ram.impact.file, 'ram-impact-anim.png');
+  assert.equal(ram.impact.frames, 24);
+  assert.equal(ram.impact.loop, false);
   assert.equal(ram.hit, false);
   const jab = read('assets/fx/titan/lance-jab/fx.json');
   assert.equal(jab.blend, 'normal');
@@ -616,9 +621,15 @@ test('gemini fx sheets replace the placeholder stills', () => {
   assert.equal(redox.blend, 'add');
   const surge = read('assets/fx/van/prism-surge/fx.json');
   assert.equal(surge.frames, 4);
-  assert.equal(surge.peak, 'prism-surge-burst.jpg');
+  assert.equal(surge.peak.file, 'prism-surge-burst-anim.png');
+  assert.equal(surge.peak.frames, 24);
+  assert.equal(surge.peak.loop, false);
+  assert.equal(surge.peak.blend, 'add');
   assert.equal(surge.peakFrame, 1);
   const beam = read('assets/fx/chroma/ruby-laser/fx.json');
+  assert.equal(beam.file, 'ruby-laser-beam-anim.png');
+  assert.equal(beam.frames, 24);
+  assert.equal(beam.loop, false);
   assert.equal(beam.stretch, 'length');
   assert.equal(beam.pivot, 'left');
   assert.equal(beam.charge.file, 'ruby-charge-glow.jpg');
@@ -639,7 +650,7 @@ test('gemini fx sheets replace the placeholder stills', () => {
   const files = [
     kyle.file, aaron.file, rocket.projectile.file, rocket.detonate.file,
     ram.file, ram.impact.file, jab.file, lance.projectile.file, lance.trail.file,
-    redox.file, 'alloy-fist-impact.jpg', surge.file, surge.peak,
+    redox.file, 'alloy-fist-impact.jpg', surge.file, surge.peak.file,
     beam.file, beam.charge.file, 'chrome-edge-slash.jpg', 'prismatic-shatter.jpg',
     glob.projectile.file, glob.detonate.file, glob.stain.file,
     pop.projectile.file, pop.detonate.file,
@@ -648,16 +659,16 @@ test('gemini fx sheets replace the placeholder stills', () => {
     'action-potential-pulse-sheet.jpg': 'assets/fx/kyle/action-potential/',
     'lazy-glow-aura-sheet.jpg': 'assets/fx/aaron/lazy-haymaker/',
     'micro-rocket.jpg': 'assets/fx/scarlett/micro-rocket/',
-    'rocket-explosion.jpg': 'assets/fx/scarlett/micro-rocket/',
+    'rocket-explosion-anim.png': 'assets/fx/scarlett/micro-rocket/',
     'titanium-sparks-sheet.jpg': 'assets/fx/titan/titanium-ram/',
-    'ram-impact.jpg': 'assets/fx/titan/titanium-ram/',
+    'ram-impact-anim.png': 'assets/fx/titan/titanium-ram/',
     'titanium-lance.jpg': 'assets/fx/titan/lance-jab/',
     'lance-trail.jpg': 'assets/fx/titan/aero-lance/',
     'redox-flow-aura-sheet.jpg': 'assets/fx/van/redox-flow/',
     'alloy-fist-impact.jpg': 'assets/fx/van/alloy-fist/',
     'prism-surge-sheet.jpg': 'assets/fx/van/prism-surge/',
-    'prism-surge-burst.jpg': 'assets/fx/van/prism-surge/',
-    'ruby-laser-beam.jpg': 'assets/fx/chroma/ruby-laser/',
+    'prism-surge-burst-anim.png': 'assets/fx/van/prism-surge/',
+    'ruby-laser-beam-anim.png': 'assets/fx/chroma/ruby-laser/',
     'ruby-charge-glow.jpg': 'assets/fx/chroma/ruby-laser/',
     'chrome-edge-slash.jpg': 'assets/fx/chroma/chrome-edge/',
     'prismatic-shatter.jpg': 'assets/fx/chroma/prismatic-shatter/',

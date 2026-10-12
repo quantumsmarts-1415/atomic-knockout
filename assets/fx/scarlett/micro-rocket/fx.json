@@ -12,9 +12,15 @@
     "pivot": "center"
   },
   "detonate": {
-    "file": "rocket-explosion.jpg",
+    "file": "rocket-explosion-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 10.667,
+    "loop": false,
     "blend": "add",
     "black": 16,
+    "smokeFrom": 18,
     "fit": "width",
     "heightFrac": 1.2,
     "crop": "frame",

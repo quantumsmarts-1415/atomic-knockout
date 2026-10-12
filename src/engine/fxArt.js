@@ -431,6 +431,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     pulse: extra.pulse > 0 ? extra.pulse : 0,
     reach: extra.reach > 0 ? extra.reach : 0,
     peak: extra.peak || null,
+    peakAnim: extra.peakAnim || null,
     peakFrame: extra.peakFrame ?? -1,
     detonate: extra.detonate || null,
     frontGap: extra.frontGap > 0 ? extra.frontGap : 16,
@@ -887,7 +888,12 @@ async function loadMoveArt(scene, char, slot, move, index) {
       : objectType;
     const detonate = det?.frames?.length
       ? artRecord(objectType, sized, pivotFrom(detSpec, { x: 0.5, y: 1 }), det.frames, {
-        ...look, blend: detSpec.blend, fps: detSpec.fps, anchor: detSpec.anchor || 'ground', beam: null,
+        ...look,
+        blend: detSpec.blend,
+        fps: detSpec.fps,
+        loop: detSpec.loop != null ? !!detSpec.loop : look.loop,
+        anchor: detSpec.anchor || 'ground',
+        beam: null,
       })
       : null;
     const record = artRecord(shotType, sized, shotPivot, shot.frames, {
@@ -919,23 +925,38 @@ async function loadMoveArt(scene, char, slot, move, index) {
     const loaded = await loadSpecFrames(scene, id, slug, folder, spec, index, usedPivot, charH, sized, '');
     if (loaded?.frames?.length) {
       let peak = null;
-      if (meta.peak && listed(index, `${folder}/${meta.peak}`)) {
+      let peakAnim = null;
+      const peakFile = typeof meta.peak === 'string' ? meta.peak : meta.peak?.file;
+      if (peakFile && listed(index, `${folder}/${peakFile}`)) {
+        const peakExtra = meta.peak && typeof meta.peak === 'object' ? meta.peak : {};
         const peakSpec = {
           ...inherit,
-          file: meta.peak,
           blend: 'add',
           fit: spec.fit || 'width',
           heightFrac: spec.heightFrac,
           black: spec.black,
           crop: spec.crop,
+          ...peakExtra,
+          file: peakFile,
         };
+        const peakPivot = pivotFrom(peakSpec, { x: 0.5, y: 0.5 });
         const peakLoaded = await loadSpecFrames(
-          scene, id, slug, folder, peakSpec, index, { x: 0.5, y: 0.5 }, charH, sized, 'peak-',
+          scene, id, slug, folder, peakSpec, index, peakPivot, charH, sized, 'peak-',
         );
-        peak = peakLoaded?.frames?.[0] || null;
+        if ((peakSpec.frames | 0) > 1 && peakLoaded?.frames?.length > 1) {
+          peakAnim = artRecord('area or burst', sized, peakPivot, peakLoaded.frames, {
+            blend: peakSpec.blend,
+            fps: peakSpec.fps,
+            loop: !!peakSpec.loop,
+            hit: false,
+            anchor: peakSpec.anchor || null,
+          });
+        } else {
+          peak = peakLoaded?.frames?.[0] || null;
+        }
       }
       const record = artRecord(objectType, sized, usedPivot, loaded.frames, {
-        ...look, reach: loaded.reach, peak, peakFrame: meta.peakFrame ?? -1, beam: null,
+        ...look, reach: loaded.reach, peak, peakAnim, peakFrame: meta.peakFrame ?? -1, beam: null,
         holdLast: !!meta.holdLast, flip: !!meta.flip, bothSides: !!meta.bothSides, releaseFlash: !!meta.releaseFlash, comboFrames: !!meta.comboFrames, crackFrames: !!meta.crackFrames,
         order: meta.order, fadeAfter: !!meta.fadeAfter, fadeMs: meta.fadeMs, paceCharge: !!meta.paceCharge,
         holdAt: meta.holdAt, breakFrom: meta.breakFrom, overCoat: meta.overCoat, heatAt: meta.heatAt,
@@ -1424,6 +1445,15 @@ function stepOneShots(scene) {
       shot.peak.setPosition(shot.img.x, shot.img.y);
       shot.peak.setDisplaySize(shot.peak._fxW * shot.scale, shot.peak._fxH * shot.scale);
       shot.peak.setAlpha(on ? 0.72 : 0);
+    }
+    if (shot.art?.peakAnim?.frames?.length && !shot.peakSpawned) {
+      const idx = fxFrameIndex(shot.art, elapsed);
+      const at = shot.art.peakFrame ?? 0;
+      if (at < 0 || idx >= at) {
+        playPacked(scene, shot.art.peakAnim, shot.img.x, shot.img.y, 1);
+        oneShots[oneShots.length - 1]?.img?.setDepth?.(17);
+        shot.peakSpawned = true;
+      }
     }
     if (elapsed >= shot.life) {
       shot.img.destroy?.();

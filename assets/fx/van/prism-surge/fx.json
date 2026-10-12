@@ -10,6 +10,14 @@
   "crop": "frame",
   "pivot": "center",
   "hit": false,
-  "peak": "prism-surge-burst.jpg",
+  "peak": {
+    "file": "prism-surge-burst-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 10.353,
+    "loop": false,
+    "blend": "add"
+  },
   "peakFrame": 1
 }

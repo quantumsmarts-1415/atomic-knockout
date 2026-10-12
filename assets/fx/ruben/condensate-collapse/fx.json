@@ -1,0 +1,16 @@
+{
+  "file": "condensate-wave-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.869,
+  "loop": false,
+  "once": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.05,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false
+}

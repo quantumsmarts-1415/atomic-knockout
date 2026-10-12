@@ -297,6 +297,47 @@ test('call 6 wires Smoky Haze, Brock fumes, and the Tess peak stills', () => {
   assert.equal(stench.peakFrame, 18);
   assert.equal(fs.existsSync('assets/fx/brock/bromos-stench/stench-fume-burst.jpg'), true);
 
-  assert.equal(fs.existsSync('assets/fx/krypto/excimer-laser/fx.json'), false);
   assert.equal(fs.existsSync('assets/fx/brock/caustic-splash/fx.json'), false);
+});
+
+test('call 7 wires Krypto and Ruben Condensate Collapse', () => {
+  const expect = {
+    'assets/fx/krypto/excimer-laser/fx.json': {
+      file: 'excimer-beam-anim.png', frames: 24, loop: false, blend: 'add',
+      fit: 'length', stretch: 'length', pivot: 'left',
+    },
+    'assets/fx/krypto/super-pounce/fx.json': {
+      file: 'pounce-streak-anim.png', frames: 24, loop: false, blend: 'add', anchor: 'trail', pivot: 'right',
+    },
+    'assets/fx/krypto/meter-line/fx.json': {
+      file: 'meter-line-beam-anim.png', frames: 24, loop: false, blend: 'add', once: true, pivot: 'left',
+    },
+    'assets/fx/ruben/condensate-collapse/fx.json': {
+      file: 'condensate-wave-anim.png', frames: 24, loop: false, blend: 'add', once: true,
+    },
+  };
+  for (const [path, want] of Object.entries(expect)) {
+    const meta = read(path);
+    assert.equal(meta.file, want.file, path);
+    assert.equal(meta.frames, want.frames, path);
+    assert.equal(meta.loop, want.loop, path);
+    assert.equal(meta.blend, want.blend, path);
+    assert.equal(meta.black, 16, path);
+    assert.equal(meta.hit, false, path);
+    assert.equal(meta.peak, undefined, path);
+    if (want.anchor) assert.equal(meta.anchor, want.anchor, path);
+    if (want.once) assert.equal(meta.once, true, path);
+    if (want.fit) assert.equal(meta.fit, want.fit, path);
+    if (want.stretch) assert.equal(meta.stretch, want.stretch, path);
+    if (want.pivot) assert.equal(meta.pivot, want.pivot, path);
+    assert.equal(fs.existsSync(path.replace(/fx\.json$/, meta.file)), true, meta.file);
+  }
+  const flash = read('assets/fx/krypto/flash-tube-counter/fx.json');
+  assert.equal(flash.file, undefined);
+  assert.equal(flash.shatter.file, 'flash-tube-burst-anim.png');
+  assert.equal(flash.shatter.frames, 24);
+  assert.equal(flash.shatter.blend, 'add');
+  assert.equal(flash.shatter.black, 16);
+  assert.equal(fs.existsSync('assets/fx/krypto/flash-tube-counter/flash-tube-burst-anim.png'), true);
+  assert.equal(fs.existsSync('assets/fx/ruben/laser-cooling/fx.json'), false);
 });

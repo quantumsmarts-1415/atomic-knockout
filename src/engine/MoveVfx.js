@@ -363,6 +363,12 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     }
     if (art?.anchor === 'pin') return;
     if (phase === 'release' && move?.kind === 'mine' && extra?.x == null) return;
+    // A held shell (the hohlraum) stays on her body. The detonation is the burst side.
+    if (phase === 'release' && art?.anchor === 'body' && art.burst?.frames?.length && extra?.x != null) {
+      const s = art.burst.scale > 0 ? art.burst.scale : 1;
+      spawnFxSprite(scene, art.burst, extra.x, extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5), s);
+      return;
+    }
     if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
     if (move?.kind === 'zone' && move.zone?.trap && art?.frames?.length) return;
     // A looping floor sheet is held on the fighter. A one-shot ground burst still draws.

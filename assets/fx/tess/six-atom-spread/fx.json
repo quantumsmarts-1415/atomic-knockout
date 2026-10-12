@@ -1,0 +1,15 @@
+{
+  "file": "six-atom-shot-anim.png",
+  "frames": 24,
+  "cols": 3,
+  "rows": 8,
+  "fps": 21.333,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.32,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false
+}

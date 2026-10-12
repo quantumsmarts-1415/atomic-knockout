@@ -1,0 +1,16 @@
+{
+  "file": "electron-hunger-tether-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.891,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.8,
+  "crop": "frame",
+  "pivot": "left",
+  "flip": true,
+  "hit": false
+}

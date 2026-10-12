@@ -1,0 +1,18 @@
+{
+  "file": "chalcogen-hook-impact-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.903,
+  "loop": false,
+  "blend": "screen",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.85,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "fist",
+  "hit": false,
+  "peak": "chalcogen-hook-impact.jpg",
+  "peakFrame": 10
+}

@@ -1,0 +1,18 @@
+{
+  "file": "fusion-ignition-blast-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.865,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.9,
+  "scaleWith": "radius",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "peak": "fusion-ignition-blast.jpg",
+  "peakFrame": 8
+}

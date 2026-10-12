@@ -198,5 +198,64 @@ test('call 4 wires Erin Signal Repeater and Yvette Flow sheets', () => {
   assert.equal(seismic.shatter.blend, 'add');
   assert.equal(seismic.shatter.heightFrac, 0.7);
   assert.equal(fs.existsSync('assets/fx/yvette/seismic-read/tick-perfect-burst-anim.png'), true);
-  assert.equal(fs.existsSync('assets/fx/liv/chalcogen-hook/fx.json'), false);
+});
+
+test('call 5 wires Liv and the Tess sheets that arrived complete', () => {
+  const withPeak = {
+    'assets/fx/liv/192-beams/fx.json': {
+      file: 'fusion-ignition-blast-anim.png', frames: 24, loop: false, blend: 'add', peakFrame: 8,
+    },
+    'assets/fx/liv/chalcogen-hook/fx.json': {
+      file: 'chalcogen-hook-impact-anim.png', frames: 24, loop: false, blend: 'screen', anchor: 'fist', peakFrame: 10,
+    },
+    'assets/fx/liv/hohlraum/fx.json': {
+      file: 'hohlraum-can-anim.png', frames: 21, cols: 3, rows: 7, loop: false, blend: 'add',
+      anchor: 'body', holdAt: 0, breakFrom: 8, peakFrame: 0,
+    },
+    'assets/fx/liv/last-instant/fx.json': {
+      file: 'last-instant-spark-anim.png', frames: 24, loop: false, blend: 'add', once: true, peakFrame: 11,
+    },
+  };
+  const sheets = {
+    'assets/fx/tess/electron-hunger/fx.json': {
+      file: 'electron-hunger-tether-anim.png', frames: 24, loop: false, blend: 'add', pivot: 'left',
+    },
+    'assets/fx/tess/last-halogen/fx.json': {
+      file: 'halogen-swipe-arc-anim.png', frames: 24, loop: false, blend: 'add', anchor: 'fist',
+    },
+    'assets/fx/tess/six-atom-spread/fx.json': {
+      file: 'six-atom-shot-anim.png', frames: 24, cols: 3, rows: 8, loop: true, blend: 'add',
+    },
+  };
+  for (const [path, want] of Object.entries({ ...withPeak, ...sheets })) {
+    const meta = read(path);
+    assert.equal(meta.file, want.file, path);
+    assert.equal(meta.frames, want.frames, path);
+    assert.equal(meta.loop, want.loop, path);
+    assert.equal(meta.blend, want.blend, path);
+    assert.equal(meta.black, 16, path);
+    assert.equal(meta.hit, false, path);
+    if (want.anchor) assert.equal(meta.anchor, want.anchor, path);
+    if (want.once) assert.equal(meta.once, true, path);
+    if (want.pivot) assert.equal(meta.pivot, want.pivot, path);
+    if (want.cols) assert.equal(meta.cols, want.cols, path);
+    if (want.rows) assert.equal(meta.rows, want.rows, path);
+    if (want.holdAt != null) assert.equal(meta.holdAt, want.holdAt, path);
+    if (want.breakFrom != null) assert.equal(meta.breakFrom, want.breakFrom, path);
+    assert.equal(fs.existsSync(path.replace(/fx\.json$/, meta.file)), true, meta.file);
+    if (want.peakFrame != null) {
+      assert.equal(meta.peakFrame, want.peakFrame, path);
+      assert.equal(fs.existsSync(path.replace(/fx\.json$/, meta.peak)), true, meta.peak);
+    } else {
+      assert.equal(meta.peak, undefined, path);
+    }
+  }
+  const can = read('assets/fx/liv/hohlraum/fx.json');
+  assert.equal(can.burst.file, 'fusion-ignition-blast-anim.png');
+  assert.equal(can.burst.scale, 0.6);
+  assert.equal(can.burst.blend, 'add');
+  assert.equal(fs.existsSync('assets/fx/liv/hohlraum/fusion-ignition-blast-anim.png'), true);
+  assert.equal(read('assets/fx/liv/192-beams/fx.json').scaleWith, 'radius');
+  assert.equal(fs.existsSync('assets/fx/tess/smoky-haze/fx.json'), false);
+  assert.equal(fs.existsSync('assets/fx/liv/192-beams/ignition-beams-sheet.png'), false);
 });

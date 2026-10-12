@@ -32,6 +32,16 @@ test('every fighter has four named moves with legal damage types', () => {
   }
 });
 
+test('Nick meteorite dives diagonally instead of dropping straight down', () => {
+  const m = CHARACTERS.nick.moves.specialDirectional;
+  assert.equal(m.name, 'Meteorite Drop');
+  assert.equal(m.fromAbove, true);
+  assert.ok(m.projectileSpeed >= 300, `horizontal dive speed ${m.projectileSpeed}`);
+  assert.ok(m.fallSpeed >= 600, `fall speed ${m.fallSpeed}`);
+  assert.ok(m.skyLead >= 120, `sky lead ${m.skyLead}`);
+  assert.ok(m.delayMs <= 400, `telegraph ${m.delayMs}`);
+});
+
 test('owner-locked kits stay as specified', () => {
   const l = CHARACTERS.lillie.moves;
   assert.deepStrictEqual(

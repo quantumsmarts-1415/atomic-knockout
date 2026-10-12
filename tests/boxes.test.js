@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ROSTER } from '../src/data/characters.js';
 import {
-  poseName, arcReach, strikeHits, resolvePush, projectileSpriteSize, projectileHits, rectsOverlap,
+  poseName, arcReach, strikeHits, resolvePush, pushSolids, projectileSpriteSize, projectileHits, rectsOverlap,
   fittedSize, maskBook, debugHitCells, debugDashCells, slashRibbon, hitAabb, maskShown, debugCells,
 } from '../src/engine/boxes.js';
 
@@ -118,6 +118,31 @@ test('grounded fighters push apart and airborne fighters do not', () => {
   const dodgeX = dodge.x;
   resolvePush([a, dodge]);
   assert.equal(dodge.x, dodgeX);
+});
+
+test('push against a blocked wall does not shove that fighter through it', () => {
+  const wall = fighter('sully', { x: 200 });
+  wall.body.blocked.left = true;
+  const pusher = fighter('hydra', { x: 228 });
+  const wallX = wall.x;
+  resolvePush([wall, pusher]);
+  assert.equal(wall.x, wallX, 'walled fighter stays put');
+  assert.ok(pusher.x > 228, 'free fighter takes the whole separation');
+});
+
+test('pushSolids only lists tall obstacles, and resolvePush clamps out of them', () => {
+  const solids = pushSolids({
+    solids: [
+      { x: 640, w: 990 },
+      { x: 640, y: 490, w: 80, h: 70 },
+    ],
+  }, 560);
+  assert.equal(solids.length, 1);
+  assert.equal(solids[0].left, 600);
+  assert.equal(solids[0].right, 680);
+  const a = fighter('hydra', { x: 640, y: 560 });
+  resolvePush([a], solids);
+  assert.ok(a.x <= 600 + 1 || a.x >= 680 - 1, `should leave pillar, got ${a.x}`);
 });
 
 test('projectile shapes match the drawn sprite and hit a body', () => {

@@ -829,6 +829,7 @@ test('gemini fx call 1 wires fey, collin, and nick', () => {
   assert.equal(meteor.projectile.once, true);
   assert.equal(meteor.projectile.blend, 'normal');
   assert.equal(meteor.projectile.aim, false);
+  assert.equal(meteor.projectile.heightFrac, 0.85);
   assert.equal(meteor.detonate.file, 'meteor-impact-anim.png');
   assert.equal(meteor.detonate.frames, 24);
   assert.equal(meteor.detonate.loop, false);
@@ -836,6 +837,7 @@ test('gemini fx call 1 wires fey, collin, and nick', () => {
   assert.equal(meteor.detonate.smokeFrom, 19);
   assert.equal(meteor.detonate.anchor, 'ground');
   assert.equal(meteor.detonate.pivot, 'bottom');
+  assert.equal(meteor.detonate.heightFrac, 2.1);
   assert.equal(meteor.hit, false);
   const files = [
     [hammer.file, 'assets/fx/fey/forge-hammer/'],

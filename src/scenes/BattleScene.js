@@ -65,6 +65,9 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   preload() {
+    // The tournament starts Battle and steps it before the loader can finish.
+    // Fast sims only need the portraits Boot already fetched.
+    if ((this.setup?.simSpeed || 1) > 1) return;
     const roster = (this.setup?.players || [])
       .map((p) => CHARACTERS[p.charId])
       .filter(Boolean);

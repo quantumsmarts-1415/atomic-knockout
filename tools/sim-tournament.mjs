@@ -8,6 +8,7 @@
 //   npm run sim
 //   SIM_LIMIT=2 SIM_TAG=smoke npm run sim
 //   SIM_PAIR=1 SIM_ONLY=helen,tara npm run sim   # just those matchups, with a pair log
+//   SIM_EACH=3 npm run sim                      # each fighter vs 3 random others, one full KO each
 //
 // Writes an aggregate JSON (win rate, damage, KO time, damage by type)
 // to SIM_OUT (default /tmp/ak-sim/<tag>.json). Duels and 3-player FFAs
@@ -111,7 +112,29 @@ function sampleJobs() {
   return list;
 }
 
+function eachJobs() {
+  const n = Number(process.env.SIM_EACH || 0);
+  if (!(n > 0)) return null;
+  const list = [];
+  for (const id of IDS) {
+    const picks = [];
+    let cursor = 2166136261;
+    for (let i = 0; i < id.length; i++) cursor = Math.imul(cursor ^ id.charCodeAt(i), 16777619) >>> 0;
+    while (picks.length < Math.min(n, IDS.length - 1)) {
+      cursor = (Math.imul(cursor, 1664525) + 1013904223) >>> 0;
+      const opp = IDS[cursor % IDS.length];
+      if (opp !== id && !picks.includes(opp)) picks.push(opp);
+    }
+    for (const opp of picks) {
+      list.push({ kind: 'duel', ids: [id, opp], seed: matchSeed('each', [id, opp], 0) });
+    }
+  }
+  return list;
+}
+
 function jobs() {
+  const each = eachJobs();
+  if (each) return LIMIT > 0 ? each.slice(0, LIMIT) : each;
   const sampled = sampleJobs();
   if (sampled) return LIMIT > 0 ? sampled.slice(0, LIMIT) : sampled;
   const list = [];
@@ -327,7 +350,9 @@ async function main() {
             failures.push({ ids: job.ids, errors: report.consoleErrors.slice(0, 3) });
           }
         } catch (err) {
-          failures.push({ ids: job.ids, errors: [String(err.message || err)] });
+          const msg = String(err.message || err);
+          if (failures.length < 8) console.log('fail', job.ids.join(','), msg);
+          failures.push({ ids: job.ids, errors: [msg] });
           try { await slot.page.close(); } catch { /* page already gone */ }
           Object.assign(slot, await openPage(browser));
         }

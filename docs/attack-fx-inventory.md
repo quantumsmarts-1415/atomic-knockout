@@ -128,7 +128,7 @@ These are the lowest scores, and among the placeholders the largest on screen. T
 | Maggie | Blinding Flare | area or burst | procedural particles: tinted star and streaks | 172×172 | streaks fly outward, no spin on the core | fades over about 160–320 ms | 1 |
 | Allen | Thermite Burn | beam | code-drawn shape: flat rectangle | 130×26 | aimed with facing, no spin | appears for about 220 ms and fades | 1 |
 | Allen | Power-Line Whips | slash arc | code-drawn shape: cable lash | 96×48 | the cable runs out to the fist | the idle body during the swing; a spark at the tip | 2 |
-| Allen | Oxide Skin | shield | code-drawn shape: translucent circle | 72×72 | no rotation | fades over about 500 ms | 1 |
+| Allen | Oxide Skin | shield | shared white coat tint, face left open | body | the coat sweeps on when defense is pressed | flakes off on the first real hit; the next defense press sweeps it on again | 1 |
 | Allen | Turbine Vortex | area or burst | procedural particles: tinted star and streaks | 200×200 | streaks fly outward, no spin on the core | fades over about 160–320 ms | 1 |
 | Silas | Overclock | area or burst | code-drawn shape: circuit aura | 96×96 | cyan ticks while the buff is up; orange when the charge is full | the aura stays on him until the buff ends | 1 |
 | Silas | Crystal Blade | slash arc | code-drawn shape: glass blade | 74×48 | a glassy slash that bursts into shards on hit | shards stay on the arm until the next swing | 2 |
@@ -775,7 +775,7 @@ assets/fx/allen/power-line-whips/object.png. Transparent PNG at full resolution,
 
 ### Allen — Oxide Skin
 
-assets/fx/allen/oxide-skin/object.png. Transparent PNG at full resolution, pointing right, fitted inside 72×72 px, pivot at the center (0.50, 0.50). Optional frame-0.png through frame-7.png replace object.png and play at 8 fps. No tiling.
+No separate sheet. The defense uses the shared white coating tint (face open). It flakes off on the first hit and sweeps back on the next defense press. The old gray circle is not drawn.
 
 ### Allen — Turbine Vortex
 

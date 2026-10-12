@@ -173,7 +173,7 @@ Her move names and numbers stay as they are in game. She still has no attack she
 | --- | --- | --- | --- | --- |
 | Thermite Burn | Charge | 8 | 922×720 | Aims one arm like a nozzle. A thick white-orange thermite beam leaves the palm. |
 | Power-Line Whips | Normal | 8 | 922×720 | One cable lash to the side, arm extended, a crack of electricity at the tip. |
-| Oxide Skin | Defense | 8, loop | 922×720 | A dull oxide skin grows over the body. He holds still inside it. Chemical attacks fizzle on the skin. |
+| Oxide Skin | Defense | 12 | brace | He braces. The white coat is drawn on top of this pose, face open. There is no gray shell in the sheet. |
 | Turbine Vortex | Special | 8 | 922×720 | Spins in place, pulling the air (and nearby fighters) inward. Feet stay down. |
 
 ## Silas (Silicon) — idle 720×1280

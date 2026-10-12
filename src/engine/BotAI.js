@@ -383,6 +383,19 @@ function specialRangeOf(special) {
 // those windows (t = 1000 stays a walk, which the stage CPU test relies on).
 const SLOT_CYCLE = 6400;
 
+// The scripted release sits at 1480 ms. A move that fizzles below a full
+// charge (Action Potential is 1500 ms and fizzleBelow 1) would never fire.
+// Keep attack down until that threshold, then let the release window go.
+function chargeMustFinish(bot, time) {
+  if (bot.state !== 'charging' || bot.chargeStart == null) return false;
+  const move = bot.charDef?.moves?.basicCharge;
+  const max = move?.maxChargeMs ?? 0;
+  if (!(max > 0) || move.fizzleBelow == null) return false;
+  const held = time - bot.chargeStart;
+  if (held >= max) return false;
+  return held / max < move.fizzleBelow;
+}
+
 function applyScriptedSlots(time, bot, input) {
   const t = time % SLOT_CYCLE;
   const neutral = () => {
@@ -391,6 +404,12 @@ function applyScriptedSlots(time, bot, input) {
     input.jump = false;
     input.down = false;
   };
+  if (chargeMustFinish(bot, time)) {
+    neutral();
+    input.special = false;
+    input.attack = true;
+    return input;
+  }
   // A held button is not a new press. If the fighter is busy when the
   // window opens, let go until they are free so the slot still fires.
   const busy = bot.state === 'attack' || bot.state === 'hurt' || bot.state === 'defending' || bot.state === 'ko';

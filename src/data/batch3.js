@@ -21,9 +21,9 @@ export const YARA = {
 };
 
 export const ZORA = {
-  bladeDamage: 8,
+  bladeDamage: 6,
   bladeDamageMult: 1.5,
-  bladeReach: 2.5,
+  bladeReach: 2.15,
   maxChargeMs: 850,
 };
 

@@ -127,6 +127,19 @@ test('bots cycle a neutral charge and a neutral defense without walking', () => 
   assert.strictEqual(!!(defense.left || defense.right), false);
 });
 
+test('a charge that fizzles below full is held through the scripted release', () => {
+  const bot = fake('kyle', 400, 500);
+  bot.state = 'charging';
+  bot.chargeStart = 2620;
+  const foe = fake('hydra', 900, 500);
+  const bounds = { minX: 0, maxX: 2000 };
+  const early = computeBotInput(4100, bot, [bot, foe], bounds);
+  assert.strictEqual(early.attack, true);
+  assert.strictEqual(early.special, false);
+  const ready = computeBotInput(4120, bot, [bot, foe], bounds);
+  assert.strictEqual(ready.attack, false);
+});
+
 test('neo uses the approved neon kit', () => {
   const moves = CHARACTERS.neo.moves;
   assert.strictEqual(moves.basicCharge.name, 'High-Voltage Tube');

@@ -243,7 +243,7 @@ test('attachBootLoadUi shows Loading art status, updates percent, destroys on co
   assert.ok(graphics.every((g) => g.destroyed), 'graphics destroyed on complete');
 });
 
-test('BootScene.preload attaches load UI then still queues roster images and sheets', () => {
+test('BootScene.preload queues portraits up front and sheets only for a playtest match', () => {
   const loads = [];
   const listeners = {};
   const texts = [];
@@ -278,10 +278,22 @@ test('BootScene.preload attaches load UI then still queues roster images and she
   assert.ok(listeners.complete, 'should bind this.load.on("complete")');
   const images = loads.filter((l) => l.type === 'image');
   const sheets = loads.filter((l) => l.type === 'spritesheet');
-  assert.ok(images.length >= 1, 'roster still images should still queue');
-  assert.ok(sheets.length >= 1, 'roster sprite sheets should still queue');
-  assert.ok(sheets.some((l) => l.key === 'char-hydra-idle'), 'hydra idle sheet must still load');
-  assert.ok(sheets.some((l) => l.key === 'char-hydra-walk'), 'hydra walk sheet must still load');
+  assert.ok(images.length >= 1, 'portraits should still queue');
+  assert.equal(sheets.length, 0, 'fighter sheets wait until select or the match');
+
+  loads.length = 0;
+  const prev = globalThis.window;
+  globalThis.window = { location: { search: '?playtest=hydra' } };
+  try {
+    scene.preload();
+  } finally {
+    if (prev === undefined) delete globalThis.window;
+    else globalThis.window = prev;
+  }
+  const matchSheets = loads.filter((l) => l.type === 'spritesheet');
+  assert.ok(matchSheets.some((l) => l.key === 'char-hydra-idle'), 'hydra idle sheet loads for that match');
+  assert.ok(matchSheets.some((l) => l.key === 'char-hydra-walk'), 'hydra walk sheet loads for that match');
+  assert.ok(matchSheets.every((l) => l.key.startsWith('char-hydra-')), 'a hydra playtest does not queue the rest of the roster');
 });
 
 test('loadRosterArt skips a clip with invalid frame size and still loads the rest', () => {

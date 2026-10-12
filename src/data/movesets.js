@@ -515,14 +515,14 @@ export const MOVESETS = {
 
   kyle: {
     basicCharge: m('Action Potential', {
-      kind: 'projectile', type: E, damage: 8, slam: true, fizzleBelow: 1, roll: true,
+      kind: 'projectile', type: E, damage: 12, slam: true, fizzleBelow: 1, roll: true,
       maxChargeMs: 1500, onHit: { stun: 450 }, vfx: 'spark', vfxColor: 0xd2b6ff,
       projectileSpeed: 620, projectileRadius: 14, projectileLife: 480,
-      baseKnockback: 80, duration: 200, cooldown: 760,
+      baseKnockback: 120, duration: 200, cooldown: 760,
     }),
     basicDirectional: melee('Static Cross', {
-      type: K, damage: 6, type2: E, damage2: 4, vfx: 'spark',
-      baseKnockback: 140, knockbackGrowth: 2.6,
+      type: K, damage: 8, type2: E, damage2: 5, vfx: 'spark',
+      baseKnockback: 160, knockbackGrowth: 3.2,
       duration: 200, cooldown: 420,
     }),
     specialDefense: m('Ion Channel', {
@@ -586,23 +586,23 @@ export const MOVESETS = {
 
   titan: {
     basicCharge: melee('Titanium Ram', {
-      kind: 'dash', type: K, damage: 6, type2: H, damage2: 1,
+      kind: 'dash', type: K, damage: 8, type2: H, damage2: 2,
       chargeDamageMult: 2, chargeDashMult: 1.35, maxChargeMs: 750,
       dashSpeed: 580, rangeW: 96, rangeH: 80, vfx: 'spark',
-      baseKnockback: 230, duration: 280, cooldown: 700,
+      baseKnockback: 230, duration: 240, cooldown: 640,
     }),
     basicDirectional: melee('Lance Jab', {
-      type: K, damage: 5, rangeW: 84, rangeH: 36, vfx: 'strike',
-      baseKnockback: 170, knockbackGrowth: 3.8, duration: 280, cooldown: 700,
+      type: K, damage: 8, rangeW: 84, rangeH: 36, vfx: 'strike',
+      baseKnockback: 170, knockbackGrowth: 3.8, duration: 200, cooldown: 420,
     }),
     specialDefense: m('Aerospace Plating', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.62, blocks: [C], noKnockback: true,
       duration: 4000, cooldown: 700, vfx: 'shield', vfxColor: 0xb9c6d6,
     }),
     specialDirectional: m('Aero Lance', {
-      kind: 'projectile', type: K, damage: 7, pierce: true, angleable: true, visualShape: 'spearhead', vfx: 'strike',
+      kind: 'projectile', type: K, damage: 9, pierce: true, angleable: true, visualShape: 'spearhead', vfx: 'strike',
       projectileSpeed: 480, projectileRadius: 10, projectileLife: 700,
-      baseKnockback: 220, duration: 240, cooldown: 1100,
+      baseKnockback: 220, duration: 220, cooldown: 780,
     }),
   },
 
@@ -1976,13 +1976,13 @@ export const MOVESETS = {
 
   yvette: {
     basicCharge: m('Lattice Clock', {
-      kind: 'burst', type: K, damage: 12, chargeDamageMult: 1,
+      kind: 'burst', type: K, damage: 9, chargeDamageMult: 1,
       clockWindow: { period: YVETTE.clockPeriod, slack: YVETTE.clockSlack, mult: YVETTE.clockMult, fromStart: true },
       maxChargeMs: YVETTE.clockMaxChargeMs, radius: 50, vfx: 'spark', vfxColor: 0xe8e0ff, ...fx('Lattice Clock'),
       baseKnockback: 70, knockbackGrowth: 1.4, duration: 220, cooldown: 900,
     }),
     basicDirectional: melee('Stress Gauge', {
-      type: K, damage: 12, percentScale: { cap: YVETTE.stressCap }, rangeW: 74,
+      type: K, damage: 9, percentScale: { cap: YVETTE.stressCap }, rangeW: 74,
       vfx: 'strike', vfxColor: 0xd0c4e8, ...fx('Stress Gauge'),
       baseKnockback: 100, knockbackGrowth: 1.8, duration: 200, cooldown: 420,
     }),
@@ -1993,7 +1993,7 @@ export const MOVESETS = {
       duration: 460, cooldown: 1000, vfx: 'shield', vfxColor: 0xc8c0d8, ...fx('Seismic Read'),
     }),
     specialDirectional: m('Fiber Laser', {
-      kind: 'beam', type: H, damage: 12, bonusVsMetal: YVETTE.metalBonus, beamLen: 210, beamThick: 14,
+      kind: 'beam', type: H, damage: 9, bonusVsMetal: YVETTE.metalBonus, beamLen: 210, beamThick: 14,
       vfx: 'laser', vfxColor: 0xffd0a0, ...fx('Fiber Laser'),
       baseKnockback: 60, knockbackGrowth: 1.2, duration: 180, cooldown: 520,
     }),

@@ -1,0 +1,36 @@
+{
+  "blend": "normal",
+  "black": 16,
+  "hit": false,
+  "projectile": {
+    "file": "permanganate-glob.jpg",
+    "blend": "normal",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.32,
+    "crop": "frame",
+    "pivot": "center"
+  },
+  "detonate": {
+    "file": "permanganate-splash.jpg",
+    "blend": "add",
+    "black": 16,
+    "fit": "width",
+    "heightFrac": 1.1,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "point"
+  },
+  "stain": {
+    "file": "purple-stain-sheet.jpg",
+    "frames": 4,
+    "fps": 8,
+    "loop": true,
+    "blend": "normal",
+    "black": 16,
+    "fit": "width",
+    "heightFrac": 0.7,
+    "crop": "frame",
+    "pivot": "bottom"
+  }
+}

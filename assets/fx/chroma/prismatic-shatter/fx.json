@@ -1,0 +1,10 @@
+{
+  "file": "prismatic-shatter.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.3,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false
+}

@@ -27,7 +27,7 @@ import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxHits, fxProjectileView, fxWallTest, overhandToss, spawnContactFx, spawnFlareShower, spawnFxSprite, spawnMoveExtra, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
+import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxProjectileView, fxWallTest, groundTop, overhandToss, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, syncFxActors } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
 
 const GRAVITY = 1500;
@@ -670,7 +670,16 @@ export default class BattleScene extends Phaser.Scene {
   dropProjectileZone(p) {
     if (!p?.move?.dropZone || p.dropped) return;
     p.dropped = true;
-    this.spawnZone(p.owner, p.move.dropZone, p.gfx.x, p.gfx.y);
+    this.spawnZone(p.owner, p.move.dropZone, p.gfx.x, p.gfx.y, p.move);
+  }
+
+  /** Painted blast for a shot that is not already an explode-only burst. */
+  detonateProjectile(p) {
+    if (!p || p._detonated || p.pinned || p.move?.explodeOnly) return;
+    const art = artFor(p.owner?.charDef?.id, p.move?.name);
+    if (!art?.detonate?.frames?.length) return;
+    p._detonated = true;
+    spawnFxDetonate(this, p.owner, p.move, p.gfx.x, p.gfx.y);
   }
 
   consumeZones(fighter, spec) {
@@ -1351,7 +1360,7 @@ export default class BattleScene extends Phaser.Scene {
     this.sweepMarked(owner, move, struck);
   }
 
-  spawnZone(owner, spec, x, y) {
+  spawnZone(owner, spec, x, y, move) {
     const radius = spec.radius ?? 70;
     if (spec.solo && owner) {
       for (const z of this.zones) {
@@ -1370,7 +1379,27 @@ export default class BattleScene extends Phaser.Scene {
       });
       return;
     }
-    if (artFor(owner?.charDef?.id, owner?.currentMove?.name)?.frames?.length) {
+    const painted = artFor(owner?.charDef?.id, move?.name || owner?.currentMove?.name);
+    const stain = painted?.stain;
+    if (stain?.frames?.length) {
+      const gy = groundTop(this, x, y);
+      const frame = stain.frames[0];
+      const gfx = this.add.image(x, gy, frame.key);
+      gfx.setOrigin(stain.pivotX ?? 0.5, stain.pivotY ?? 1);
+      gfx.setDisplaySize(frame.displayW, frame.displayH);
+      gfx.setDepth(4);
+      const blend = frame.blend || stain.blend;
+      if (blend === 'add') gfx.setBlendMode?.('ADD');
+      else if (blend === 'screen') gfx.setBlendMode?.('SCREEN');
+      this.zones.push({
+        owner, spec, x, y: gy, radius, gfx,
+        stain, stainBorn: this.time.now,
+        until: this.time.now + (spec.ms ?? 1600),
+        next: this.time.now + (spec.delay ?? 0),
+      });
+      return;
+    }
+    if (painted?.frames?.length) {
       this.zones.push({
         owner, spec, x, y, radius,
         gfx: { destroy() {} },
@@ -1393,6 +1422,11 @@ export default class BattleScene extends Phaser.Scene {
 
   updateZones(time) {
     for (const z of this.zones) {
+      if (z.stain?.frames?.length && z.gfx?.setTexture) {
+        const frame = z.stain.frames[fxFrameIndex(z.stain, time - (z.stainBorn || time))] || z.stain.frames[0];
+        z.gfx.setTexture(frame.key);
+        z.gfx.setDisplaySize(frame.displayW, frame.displayH);
+      }
       if (z.spec?.follow && z.owner?.alive) {
         z.x = z.owner.x;
         z.y = z.owner.y - (z.owner.bodyH ?? 80) * 0.35;
@@ -2130,6 +2164,7 @@ export default class BattleScene extends Phaser.Scene {
           }
         }
         if (p.move.explodeOnly && !p.pinned) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
+        else if (!off) this.detonateProjectile(p);
         if (!p.pinned) this.dropProjectileZone(p);
         p.gfx.destroy();
         p.dead = true;
@@ -2233,6 +2268,7 @@ export default class BattleScene extends Phaser.Scene {
           p._splitChild = true;
         }
         if (!p.move.pierce && n >= want) {
+          this.detonateProjectile(p);
           p.gfx.destroy();
           p.dead = true;
           break;

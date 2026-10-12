@@ -1,0 +1,23 @@
+{
+  "blend": "normal",
+  "black": 16,
+  "hit": false,
+  "projectile": {
+    "file": "titanium-lance.jpg",
+    "blend": "normal",
+    "black": 16,
+    "fit": "width",
+    "heightFrac": 0.9,
+    "crop": "frame",
+    "pivot": "center"
+  },
+  "trail": {
+    "file": "lance-trail.jpg",
+    "blend": "add",
+    "black": 16,
+    "fit": "width",
+    "heightFrac": 0.85,
+    "crop": "frame",
+    "pivot": "right"
+  }
+}

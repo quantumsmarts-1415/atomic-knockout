@@ -1,0 +1,24 @@
+{
+  "file": "titanium-sparks-sheet.jpg",
+  "frames": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.9,
+  "crop": "frame",
+  "pivot": "right",
+  "anchor": "trail",
+  "hit": false,
+  "releaseImpact": true,
+  "impact": {
+    "file": "ram-impact.jpg",
+    "blend": "add",
+    "black": 16,
+    "fit": "width",
+    "heightFrac": 1.15,
+    "crop": "frame",
+    "pivot": "center"
+  }
+}

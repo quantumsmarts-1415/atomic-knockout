@@ -339,5 +339,47 @@ test('call 7 wires Krypto and Ruben Condensate Collapse', () => {
   assert.equal(flash.shatter.blend, 'add');
   assert.equal(flash.shatter.black, 16);
   assert.equal(fs.existsSync('assets/fx/krypto/flash-tube-counter/flash-tube-burst-anim.png'), true);
-  assert.equal(fs.existsSync('assets/fx/ruben/laser-cooling/fx.json'), false);
+});
+
+test('call 8 wires Ruben Laser Cooling, Molten Palm, and Violet Ember', () => {
+  const cool = read('assets/fx/ruben/laser-cooling/fx.json');
+  assert.equal(cool.file, 'laser-cooling-grid-anim.png');
+  assert.equal(cool.frames, 24);
+  assert.equal(cool.loop, true);
+  assert.equal(cool.blend, 'add');
+  assert.equal(cool.black, 16);
+  assert.equal(cool.anchor, 'body');
+  assert.equal(cool.hit, false);
+  assert.equal(cool.peak, undefined);
+  assert.equal(fs.existsSync('assets/fx/ruben/laser-cooling/laser-cooling-grid-anim.png'), true);
+
+  const palm = read('assets/fx/ruben/molten-palm/fx.json');
+  assert.equal(palm.file, 'molten-ball-puddle-anim.png');
+  assert.equal(palm.frames, 24);
+  assert.equal(palm.loop, false);
+  assert.equal(palm.once, true);
+  assert.equal(palm.blend, 'add');
+  assert.equal(palm.black, 16);
+  assert.equal(palm.hit, false);
+  assert.equal(palm.peak, undefined);
+  assert.deepEqual(palm.stain.order, [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]);
+  assert.equal(palm.stain.loop, true);
+  assert.equal(palm.stain.pivot, 'bottom');
+  assert.equal(palm.stain.file, palm.file);
+  assert.equal(fs.existsSync('assets/fx/ruben/molten-palm/molten-ball-puddle-anim.png'), true);
+
+  const ember = read('assets/fx/ruben/violet-ember/fx.json');
+  assert.equal(ember.file, 'violet-ember-anim.png');
+  assert.equal(ember.frames, 21);
+  assert.equal(ember.loop, false);
+  assert.equal(ember.once, true);
+  assert.equal(ember.blend, 'add');
+  assert.equal(ember.black, 16);
+  assert.equal(ember.hit, false);
+  assert.equal(ember.peak, undefined);
+  assert.equal(ember.burst.file, ember.file);
+  assert.equal(ember.burst.loop, false);
+  assert.equal(ember.burst.order[0], 1);
+  assert.equal(ember.burst.order.at(-1), 19);
+  assert.equal(fs.existsSync('assets/fx/ruben/violet-ember/violet-ember-anim.png'), true);
 });

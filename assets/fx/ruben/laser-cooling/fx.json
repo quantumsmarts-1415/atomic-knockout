@@ -1,0 +1,16 @@
+{
+  "file": "laser-cooling-grid-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 19.862,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.58,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false
+}

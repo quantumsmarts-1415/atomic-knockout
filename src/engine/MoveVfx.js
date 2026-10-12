@@ -380,7 +380,23 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       return;
     }
     if (art?.detonate && move?.kind === 'projectile') return;
-    if ((art?.objectType === 'projectile' || art?.objectType === 'thrown') && art.frames?.length) return;
+    // A painted shot stays on the projectile. An ignite (Violet Ember) draws the
+    // burst side at the blast, or the shot sheet itself when there is no side.
+    if ((art?.objectType === 'projectile' || art?.objectType === 'thrown') && art.frames?.length) {
+      if (phase === 'release' && move?.kind === 'burst' && extra?.x != null && move.igniteDamage != null) {
+        const painted = art.burst?.frames?.length ? art.burst : art;
+        const s = painted.scale > 0 ? painted.scale : 1;
+        spawnFxSprite(
+          scene,
+          painted,
+          extra.x,
+          extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.45),
+          s,
+          fighter.facing || 1,
+        );
+      }
+      return;
+    }
     const replaced = art?.frames?.length
       && art.objectType !== 'projectile'
       && art.objectType !== 'thrown'

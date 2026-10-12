@@ -8,7 +8,7 @@ import { estimateBody } from './bodyLayout.js';
 
 export const COATS = {
   'Ozone Layer': { color: 0x3a78ff, mode: 'multiply', amount: 0.62, gloss: 0.22, sweepMs: 260, linger: true },
-  'Oxide Skin': { color: 0xf3f5f7, mode: 'lighten', amount: 0.58, gloss: 0, sweepMs: 280, matte: true, flake: true },
+  'Oxide Skin': { color: 0xf3f5f7, mode: 'lighten', amount: 0.74, gloss: 0, sweepMs: 280, matte: true, flake: true },
   'Teflon Coat': { color: 0xf6f7f4, mode: 'lighten', amount: 0.46, gloss: 0.52, sweepMs: 250 },
   'Oil Bath': { color: 0xd4923a, mode: 'multiply', amount: 0.64, gloss: 0.5, sweepMs: 260 },
   'Diamond Plating': { color: 0xf4f8ff, mode: 'lighten', amount: 0.26, gloss: 0.34, sweepMs: 240, sparkle: true },

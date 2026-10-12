@@ -29,6 +29,7 @@ import {
 } from '../engine/boxes.js';
 import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
+import { loadRosterArt, registerSheetAnims } from './BootScene.js';
 
 const GRAVITY = 1500;
 
@@ -63,6 +64,13 @@ export default class BattleScene extends Phaser.Scene {
       ?? Phaser.Utils.Array.GetRandom(STAGES);
   }
 
+  preload() {
+    const roster = (this.setup?.players || [])
+      .map((p) => CHARACTERS[p.charId])
+      .filter(Boolean);
+    loadRosterArt(this.load, roster, (key) => this.textures.exists(key));
+  }
+
   create() {
     this.physics.world.gravity.y = GRAVITY;
     this.matchOver = false;
@@ -86,6 +94,10 @@ export default class BattleScene extends Phaser.Scene {
 
     this.drawBackground();
     this.buildStage();
+    const roster = (this.setup?.players || [])
+      .map((p) => CHARACTERS[p.charId])
+      .filter(Boolean);
+    registerSheetAnims(this, roster);
     this.spawnFighters();
     this.asUi(() => this.buildHud());
     if (this.camRig) this.offscreenG = this.asUi(() => this.add.graphics().setDepth(900));

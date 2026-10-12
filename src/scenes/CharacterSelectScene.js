@@ -6,6 +6,7 @@ import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { isGamepadSlot, menuInputForSlot, padBySlot, pollGamepads } from '../engine/gamepad.js';
+import { loadRosterArt, registerSheetAnims } from './BootScene.js';
 import {
   drawMenuBackground, FONT_BODY, FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME,
 } from '../ui/theme.js';
@@ -290,6 +291,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
       return;
     }
     const def = CHARACTERS[slot.charId];
+    this.queuePreviewSheets(def);
     p.previewRig = new Rig(this, def, p.palette % def.palettes.length);
     p.previewRig.setPosition(p.previewX, PREVIEW_ANCHOR_Y);
     const desiredScale = this.players.length > 3 ? 0.85 : 1.05;
@@ -303,6 +305,39 @@ export default class CharacterSelectScene extends Phaser.Scene {
       fontFamily: FONT_BODY, fontSize: this.players.length > 3 ? '14px' : '16px',
       color: THEME.mistCss, align: 'center',
     }).setOrigin(0.5, 0);
+  }
+
+  queuePreviewSheets(def) {
+    if (!def?.id || !def.art?.sheets) return;
+    this.sheetTried ??= new Set();
+    if (this.sheetTried.has(def.id)) return;
+    this.sheetWant ??= new Set();
+    this.sheetWant.add(def.id);
+    this.pumpPreviewSheets();
+  }
+
+  pumpPreviewSheets() {
+    if (this.sheetBusy || !this.sheetWant?.size) return;
+    const roster = [...this.sheetWant].map((id) => CHARACTERS[id]).filter(Boolean);
+    this.sheetWant.clear();
+    const missing = roster.filter((c) => {
+      const idle = `${c.art.key}-idle`;
+      return !this.textures.exists(idle);
+    });
+    if (!missing.length) return;
+    for (const c of missing) this.sheetTried.add(c.id);
+    this.sheetBusy = true;
+    loadRosterArt(this.load, missing, (key) => this.textures.exists(key));
+    this.load.once('complete', () => {
+      this.sheetBusy = false;
+      registerSheetAnims(this, missing);
+      for (const p of this.players) {
+        const id = this.slots[p.cursor]?.charId;
+        if (missing.some((c) => c.id === id)) this.buildPreview(p);
+      }
+      this.pumpPreviewSheets();
+    });
+    this.load.start();
   }
 
   refreshAll() {

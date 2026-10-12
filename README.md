@@ -12,6 +12,17 @@ npm run dev
 
 Then open the printed localhost URL (usually http://localhost:5173).
 
+## Deploy
+
+Netlify builds with `npm run build` and publishes `dist/` (`netlify.toml`).
+That folder is the game the browser fetches: pages, source modules, fonts,
+Phaser, and the art the roster actually points at. Review clips, source
+renders, and backups stay out of the upload.
+
+`npm run dev` is still the local server. It is also the phone-controller
+relay, which a static Netlify site does not include. Keyboard and gamepad
+play from the published site.
+
 ## Controls (keyboard, 2 players)
 
 | | Player 1 | Player 2 |

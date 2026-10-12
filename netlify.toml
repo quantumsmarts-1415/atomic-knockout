@@ -1,0 +1,14 @@
+# One-click publish once this repo is connected to Netlify.
+# The site is static. Keyboard and gamepad play from the browser.
+# Phone controllers still need the Node relay: `npm run dev`.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[redirects]]
+  from = "/fx-index"
+  to = "/fx-index.json"
+  status = 200

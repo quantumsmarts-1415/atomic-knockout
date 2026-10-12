@@ -168,15 +168,15 @@ function hideSprites(rig) {
 
 function spawnFlakes(scene, fighter, color) {
   const now = scene.simNow ?? 0;
-  const n = 16;
+  const n = 22;
   for (let i = 0; i < n; i++) {
     const rect = scene.add.rectangle?.(
       fighter.x + (Math.random() - 0.5) * (fighter.bodyW || 36),
       fighter.y - Math.random() * (fighter.bodyH || 90),
-      5 + Math.random() * 4,
-      3.5,
+      8 + Math.random() * 6,
+      5,
       color,
-      0.92,
+      0.96,
     );
     if (!rect) return;
     rect.setDepth?.(22);

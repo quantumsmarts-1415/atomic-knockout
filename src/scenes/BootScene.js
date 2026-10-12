@@ -157,12 +157,14 @@ export function repackOversizedSheets(scene, roster, maxSize = scene.game?.rende
   return packed;
 }
 
-export function loadRosterArt(loader, roster) {
+export function loadRosterArt(loader, roster, exists = () => false) {
   for (const c of roster) {
-    if (c.art) loader.image(c.art.key, c.art.file);
+    if (c.art && !exists(c.art.key)) loader.image(c.art.key, c.art.file);
     if (!use3dSheets(c)) continue;
     const s = c.art.sheets;
     for (const [clip, def] of Object.entries(s.clips)) {
+      const key = sheetKey(c.art, clip);
+      if (exists(key)) continue;
       let frameW;
       let frameH;
       try {
@@ -172,11 +174,30 @@ export function loadRosterArt(loader, roster) {
         continue;
       }
       const file = def.file || `${c.id}_${clip}.png`;
-      loader.spritesheet(sheetKey(c.art, clip), `${s.dir}${file}`, {
+      loader.spritesheet(key, `${s.dir}${file}`, {
         frameWidth: frameW,
         frameHeight: frameH,
         // sheets are padded out to a full grid; stop at the real frame count
         endFrame: def.count - 1,
+      });
+    }
+  }
+}
+
+/** Idle, walk, and attack clips for the fighters actually on screen. */
+export function registerSheetAnims(scene, roster) {
+  if (!scene?.anims || !scene?.textures) return;
+  for (const c of roster) {
+    if (!use3dSheets(c)) continue;
+    const s = c.art.sheets;
+    for (const [clip, def] of Object.entries(s.clips)) {
+      const key = sheetKey(c.art, clip);
+      if (scene.anims.exists(key) || !scene.textures.exists(key)) continue;
+      scene.anims.create({
+        key,
+        frames: scene.anims.generateFrameNumbers(key, { start: 0, end: def.count - 1 }),
+        frameRate: def.fps,
+        repeat: def.loop ? -1 : 0,
       });
     }
   }
@@ -277,31 +298,23 @@ export default class BootScene extends Phaser.Scene {
       // can be checked without pulling the rest of the roster.
       loadRosterArt(this.load, spec.ids.map((id) => CHARACTERS[id]).filter(Boolean));
     } else {
-      // character renders (Benjamin-supplied art) — characters without an art
-      // entry fall back to the code-drawn vector rig automatically
-      loadRosterArt(this.load, ROSTER);
-      // painted stage layers + every stage's select-screen thumbnail/preview
+      // Portraits and stage art only. Each fighter's sheets load when that
+      // fighter is highlighted on the select screen, and again for the two
+      // (or more) fighters who actually enter the match.
+      for (const c of ROSTER) {
+        if (c.art) this.load.image(c.art.key, c.art.file);
+      }
       loadStageArt(this.load);
     }
   }
 
   create() {
-    repackOversizedSheets(this, ROSTER);
-    for (const c of ROSTER) {
-      if (!use3dSheets(c)) continue;
-      const s = c.art.sheets;
-      for (const [clip, def] of Object.entries(s.clips)) {
-        const key = sheetKey(c.art, clip);
-        if (this.anims.exists(key) || !this.textures.exists(key)) continue;
-        this.anims.create({
-          key,
-          frames: this.anims.generateFrameNumbers(key, { start: 0, end: def.count - 1 }),
-          frameRate: def.fps,
-          repeat: def.loop ? -1 : 0,
-        });
-      }
-    }
     const spec = playtestSpec();
+    const booted = spec?.ids?.length
+      ? spec.ids.map((id) => CHARACTERS[id]).filter(Boolean)
+      : [];
+    repackOversizedSheets(this, booted.length ? booted : ROSTER);
+    registerSheetAnims(this, booted.length ? booted : ROSTER);
     if (spec?.sim) {
       // One page loads every cutout, then the tournament driver restarts Battle
       // and pumps fixed steps on the sim clock (no real-time wait).
@@ -352,9 +365,9 @@ export default class BootScene extends Phaser.Scene {
       window.__akReady = true;
       return;
     }
-    const roster = spec
+    const roster = spec?.ids?.length
       ? spec.ids.map((id) => CHARACTERS[id]).filter(Boolean)
-      : ROSTER;
+      : [];
     const proceed = () => {
       if (spec?.select) {
         showScene(this, 'CharacterSelect', { playerSeeds: [{ slot: 0 }, { slot: 1 }] });

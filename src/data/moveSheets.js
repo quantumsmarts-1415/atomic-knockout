@@ -3,13 +3,13 @@
 // windup / active / recovery onto the move's existing frame data. A loop or
 // gather range repeats while charging or defending. Nitra's sheets face left,
 // the same way her idle does, so the rig flip is the facing correction.
-// Natalie's move sheets face right while her idle faces left. Those clips
-// set sheetFacing so the flip follows the sheet, not the idle. Chloe and
-// Cal do the same on every move sheet. Van's attack and Prism Surge face
-// left, the same way the idle does. Sully's eruption uses the clean sheet.
-// Allen and Titan face left in the sheet, the same way their idles do.
-// Oxide Skin is that same left-facing brace. Chroma and Scarlett attack
-// sheets face right while their idles face left. Those clips set sheetFacing.
+// Natalie's move sheets face right. Her approved idle faces right too and
+// sets sheetFacing. art.facing stays -1 so the mirrored walk still flips.
+// Chloe, Chroma, and Scarlett do the same on the idle and every move sheet.
+// Cal's move sheets still set sheetFacing while that idle faces left.
+// Van's attack and Prism Surge face left, the same way the idle does.
+// Sully's eruption uses the clean sheet. Allen and Titan face left in the
+// sheet, the same way their idles do. Oxide Skin is that same left-facing brace.
 // Yara, Paula, Liv, and Sandy's batch-3 sheets face right with their idles.
 // Tess, Yvette, and Zora's batch-3 sheets do the same. Fiber Laser is 11 frames.
 // Rhoda, Erin, Sandy's Tin Can Kick, and Zora's blade and gem face right with their idles.

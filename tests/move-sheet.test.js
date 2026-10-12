@@ -202,9 +202,11 @@ test('lake drop loops the gather, and brine burst opens on its release frame', (
   assert.equal(sheetFrameIndex(sheetMeta('natalie', 'special'), { state: 'attack', fd, attackFrame: 6 }), 8);
 });
 
-test('natalie move sheets face right while her idle faces left', () => {
+test('natalie idle and move sheets face right while the walk stays mirrored', () => {
   const art = CHARACTERS.natalie.art;
   assert.equal(art.facing, -1);
+  assert.equal(art.sheets.clips.idle.sheetFacing, 1);
+  assert.equal(art.sheets.clips.walk.sheetFacing, undefined);
   for (const name of ['attack', 'charge', 'defense', 'special']) {
     assert.equal(art.sheets.clips[name].sheetFacing, 1);
   }

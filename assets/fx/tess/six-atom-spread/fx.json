@@ -11,5 +11,7 @@
   "heightFrac": 0.32,
   "crop": "frame",
   "pivot": "center",
-  "hit": false
+  "hit": false,
+  "peak": "six-atom-shot.jpg",
+  "peakFrame": 16
 }

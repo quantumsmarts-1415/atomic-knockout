@@ -1,0 +1,16 @@
+{
+  "file": "fume-screen-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 9.763,
+  "loop": true,
+  "blend": "screen",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.7,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "front",
+  "hit": false
+}

@@ -1,0 +1,18 @@
+{
+  "file": "smoky-haze-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 21.333,
+  "loop": true,
+  "blend": "screen",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 2.2,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false,
+  "peak": "smoky-haze.jpg",
+  "peakFrame": 13
+}

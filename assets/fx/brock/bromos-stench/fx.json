@@ -11,5 +11,7 @@
   "heightFrac": 1.45,
   "crop": "frame",
   "pivot": "center",
-  "hit": false
+  "hit": false,
+  "peak": "stench-fume-burst.jpg",
+  "peakFrame": 18
 }

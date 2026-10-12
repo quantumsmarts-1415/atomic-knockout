@@ -12,5 +12,7 @@
   "crop": "frame",
   "pivot": "left",
   "flip": true,
-  "hit": false
+  "hit": false,
+  "peak": "electron-hunger-tether.jpg",
+  "peakFrame": 15
 }

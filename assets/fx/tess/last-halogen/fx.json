@@ -12,5 +12,7 @@
   "crop": "frame",
   "pivot": "center",
   "anchor": "fist",
-  "hit": false
+  "hit": false,
+  "peak": "halogen-swipe-arc.jpg",
+  "peakFrame": 17
 }

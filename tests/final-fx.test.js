@@ -218,13 +218,13 @@ test('call 5 wires Liv and the Tess sheets that arrived complete', () => {
   };
   const sheets = {
     'assets/fx/tess/electron-hunger/fx.json': {
-      file: 'electron-hunger-tether-anim.png', frames: 24, loop: false, blend: 'add', pivot: 'left',
+      file: 'electron-hunger-tether-anim.png', frames: 24, loop: false, blend: 'add', pivot: 'left', peakFrame: 15,
     },
     'assets/fx/tess/last-halogen/fx.json': {
-      file: 'halogen-swipe-arc-anim.png', frames: 24, loop: false, blend: 'add', anchor: 'fist',
+      file: 'halogen-swipe-arc-anim.png', frames: 24, loop: false, blend: 'add', anchor: 'fist', peakFrame: 17,
     },
     'assets/fx/tess/six-atom-spread/fx.json': {
-      file: 'six-atom-shot-anim.png', frames: 24, cols: 3, rows: 8, loop: true, blend: 'add',
+      file: 'six-atom-shot-anim.png', frames: 24, cols: 3, rows: 8, loop: true, blend: 'add', peakFrame: 16,
     },
   };
   for (const [path, want] of Object.entries({ ...withPeak, ...sheets })) {
@@ -256,6 +256,47 @@ test('call 5 wires Liv and the Tess sheets that arrived complete', () => {
   assert.equal(can.burst.blend, 'add');
   assert.equal(fs.existsSync('assets/fx/liv/hohlraum/fusion-ignition-blast-anim.png'), true);
   assert.equal(read('assets/fx/liv/192-beams/fx.json').scaleWith, 'radius');
-  assert.equal(fs.existsSync('assets/fx/tess/smoky-haze/fx.json'), false);
   assert.equal(fs.existsSync('assets/fx/liv/192-beams/ignition-beams-sheet.png'), false);
+});
+
+test('call 6 wires Smoky Haze, Brock fumes, and the Tess peak stills', () => {
+  const haze = read('assets/fx/tess/smoky-haze/fx.json');
+  assert.equal(haze.file, 'smoky-haze-anim.png');
+  assert.equal(haze.frames, 24);
+  assert.equal(haze.loop, true);
+  assert.equal(haze.blend, 'screen');
+  assert.equal(haze.black, 16);
+  assert.equal(haze.anchor, 'body');
+  assert.equal(haze.peakFrame, 13);
+  assert.equal(fs.existsSync('assets/fx/tess/smoky-haze/smoky-haze-anim.png'), true);
+  assert.equal(fs.existsSync('assets/fx/tess/smoky-haze/smoky-haze.jpg'), true);
+
+  const screen = read('assets/fx/brock/red-fume-screen/fx.json');
+  assert.equal(screen.file, 'fume-screen-anim.png');
+  assert.equal(screen.frames, 24);
+  assert.equal(screen.cols, 6);
+  assert.equal(screen.rows, 4);
+  assert.equal(screen.loop, true);
+  assert.equal(screen.blend, 'screen');
+  assert.equal(screen.anchor, 'front');
+  assert.equal(screen.peak, undefined);
+  assert.equal(fs.existsSync('assets/fx/brock/red-fume-screen/fume-screen-anim.png'), true);
+
+  const dye = read('assets/fx/brock/tyrian-purple/fx.json');
+  assert.equal(dye.file, 'tyrian-splash-anim.png');
+  assert.equal(dye.frames, 24);
+  assert.equal(dye.loop, false);
+  assert.equal(dye.once, true);
+  assert.equal(dye.blend, 'screen');
+  assert.equal(dye.pivot, 'left');
+  assert.equal(dye.peak, undefined);
+  assert.equal(fs.existsSync('assets/fx/brock/tyrian-purple/tyrian-splash-anim.png'), true);
+
+  const stench = read('assets/fx/brock/bromos-stench/fx.json');
+  assert.equal(stench.peak, 'stench-fume-burst.jpg');
+  assert.equal(stench.peakFrame, 18);
+  assert.equal(fs.existsSync('assets/fx/brock/bromos-stench/stench-fume-burst.jpg'), true);
+
+  assert.equal(fs.existsSync('assets/fx/krypto/excimer-laser/fx.json'), false);
+  assert.equal(fs.existsSync('assets/fx/brock/caustic-splash/fx.json'), false);
 });

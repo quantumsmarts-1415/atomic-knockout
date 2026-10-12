@@ -194,13 +194,32 @@ export default class BattleScene extends Phaser.Scene {
     // A stage maxZoom is a ceiling (Carbon Skyhook must still show its
     // whole world). It does not raise the close-fight cap.
     const cap = stageCam.maxZoom != null ? Math.min(feelCap, stageCam.maxZoom) : feelCap;
-    const minZoom = Math.min(1, Math.max(W / WW, H / WH, stageCam.minZoom ?? 0));
+    const whole = Math.max(W / WW, H / WH);
+    // Big painted stages stop at the whole world so the art still covers
+    // the view. A normal stage can open a little past its edges, into the
+    // blast zone, when a fighter is up there.
+    const blast = this.blast || { left: 0, top: 0, right: WW, bottom: WH };
+    const bounds = this.stage.camera
+      ? { left: 0, top: 0, right: WW, bottom: WH }
+      : {
+        left: Math.min(0, blast.left),
+        top: Math.min(0, blast.top),
+        right: Math.max(WW, blast.right),
+        bottom: Math.max(WH, blast.bottom),
+      };
+    const blastFit = Math.min(W / (bounds.right - bounds.left), H / (bounds.bottom - bounds.top));
+    const minZoom = this.stage.camera
+      ? Math.min(1, Math.max(whole, stageCam.minZoom ?? 0))
+      : Math.min(whole, Math.max(blastFit, 0.5));
     this.camRig = {
-      cfg, minZoom, maxZoom: Math.max(minZoom, cap),
+      cfg, minZoom, maxZoom: Math.max(minZoom, cap), bounds,
       zoom: minZoom, cx: WW / 2, cy: WH / 2, first: true, uiMode: false,
     };
     const main = this.cameras.main;
-    main.setBounds(0, 0, WW, WH).setZoom(minZoom).centerOn(WW / 2, WH / 2);
+    const sky = this.stage.theme?.skyTop;
+    if (sky != null) main.setBackgroundColor(sky);
+    main.setBounds(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top)
+      .setZoom(minZoom).centerOn(WW / 2, WH / 2);
     this.uiCam = this.cameras.add(0, 0, W, H).setName('ui');
     const route = (go) => {
       if (this.camRig.uiMode) main.ignore(go);
@@ -280,8 +299,9 @@ export default class BattleScene extends Phaser.Scene {
     }
     const hw = W / (2 * rig.zoom);
     const hh = H / (2 * rig.zoom);
-    rig.cx = Phaser.Math.Clamp(rig.cx, hw, Math.max(hw, WW - hw));
-    rig.cy = Phaser.Math.Clamp(rig.cy, hh, Math.max(hh, WH - hh));
+    const b = rig.bounds;
+    rig.cx = Phaser.Math.Clamp(rig.cx, b.left + hw, Math.max(b.left + hw, b.right - hw));
+    rig.cy = Phaser.Math.Clamp(rig.cy, b.top + hh, Math.max(b.top + hh, b.bottom - hh));
     const shake = this.juice?.shakeOffset(this.visualT || 0, rig.zoom) || { x: 0, y: 0, rot: 0 };
     this.cameras.main.setZoom(rig.zoom).centerOn(rig.cx + shake.x, rig.cy + shake.y).setRotation(shake.rot || 0);
     this.drawOffscreenMarkers(live);
@@ -347,10 +367,17 @@ export default class BattleScene extends Phaser.Scene {
     const g = this.add.graphics();
     const top = Phaser.Display.Color.ValueToColor(skyTop);
     const bottom = Phaser.Display.Color.ValueToColor(skyBottom);
+    // Cover the blast zone too, so a zoom-out that follows a high launch
+    // still has sky instead of a hard edge at the top of the stage.
+    const blast = this.blast || { left: 0, top: 0, right: W, bottom: H };
+    const x0 = Math.min(0, blast.left);
+    const y0 = Math.min(0, blast.top);
+    const bw = Math.max(W, blast.right) - x0;
+    const bh = Math.max(H, blast.bottom) - y0;
     for (let i = 0; i < 24; i++) {
       const c = Phaser.Display.Color.Interpolate.ColorWithColor(top, bottom, 24, i);
       g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1);
-      g.fillRect(0, (H / 24) * i, W, H / 24 + 1);
+      g.fillRect(x0, y0 + (bh / 24) * i, bw, bh / 24 + 1);
     }
     // faint element-bubble motif in the sky
     const rnd = new Phaser.Math.RandomDataGenerator(['ptg']);

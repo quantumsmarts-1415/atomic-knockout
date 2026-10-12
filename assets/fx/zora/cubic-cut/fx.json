@@ -1,0 +1,18 @@
+{
+  "file": "cubic-cut-sparkle-anim.png",
+  "frames": 23,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.448,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.42,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "fist",
+  "hit": false,
+  "peak": "cubic-cut-sparkle.jpg",
+  "peakFrame": 6
+}

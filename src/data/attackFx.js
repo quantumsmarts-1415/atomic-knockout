@@ -44,7 +44,7 @@ export function objectTypeOf(move, slot) {
   if (kind === 'beam') return 'beam';
   if (kind === 'shield' || kind === 'wall' || kind === 'block' || kind === 'oxide' || kind === 'counter') return 'shield';
   if (slot === 'specialDefense') return 'shield';
-  if (kind === 'burst' || kind === 'dive' || kind === 'zone' || kind === 'dash' || kind === 'buff') return 'area or burst';
+  if (kind === 'burst' || kind === 'dive' || kind === 'zone' || kind === 'dash' || kind === 'buff' || kind === 'mine') return 'area or burst';
   if (EXTEND_NAME.test(name) || (move?.rangeW ?? 0) >= 110) return 'extend';
   return 'slash arc';
 }

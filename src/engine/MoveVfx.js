@@ -361,6 +361,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       };
       spawnFxSprite(scene, art.impact, at.x, at.y, 1, face);
     }
+    if (art?.anchor === 'pin') return;
+    if (phase === 'release' && move?.kind === 'mine' && extra?.x == null) return;
     if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
     if (move?.kind === 'zone' && move.zone?.trap && art?.frames?.length) return;
     // A looping floor sheet is held on the fighter. A one-shot ground burst still draws.

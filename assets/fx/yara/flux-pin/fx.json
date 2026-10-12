@@ -1,0 +1,18 @@
+{
+  "file": "flux-pin-lock-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 11.755,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.38,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "pin",
+  "hit": false,
+  "peak": "flux-pin-lock.jpg",
+  "peakFrame": 21
+}

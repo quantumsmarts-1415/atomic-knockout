@@ -736,12 +736,37 @@ export default class BattleScene extends Phaser.Scene {
     return n;
   }
 
+  attachPinLock(p, fighter) {
+    if (p?.pinLock || this.simFast || !p?.gfx) return;
+    const art = artFor(fighter?.charDef?.id, fighter?.defenseMove?.name);
+    if (!art?.frames?.length || art.anchor !== 'pin') return;
+    const img = placeFxImage(this, art, p.gfx.x, p.gfx.y, 1);
+    if (!img) return;
+    img.setDepth?.(18);
+    p.pinLock = img;
+    p.pinLockArt = art;
+    p.pinLockBorn = this.time?.now ?? 0;
+  }
+
+  stepPinLock(p, time) {
+    if (!p?.pinLock) this.attachPinLock(p, p.pinOwner);
+    if (!p?.pinLock?.setPosition || !p.gfx) return;
+    stepPlacedFx(p.pinLock, p.pinLockArt, (time ?? 0) - (p.pinLockBorn ?? 0), 1);
+    p.pinLock.setPosition(p.gfx.x, p.gfx.y);
+  }
+
+  clearPinLock(p) {
+    p?.pinLock?.destroy?.();
+    if (p) p.pinLock = null;
+  }
+
   dropPins(fighter) {
     const fling = !!fighter.defenseMove?.catchMetals;
     for (const p of this.projectiles ?? []) {
       if (p.pinOwner !== fighter || p.dead) continue;
       if (fling && p.caught && p.gfx) {
         const dir = Math.sign((p.gfx.x ?? fighter.x) - fighter.x) || (fighter.facing || 1);
+        this.clearPinLock(p);
         p.pinned = false;
         p.pinOwner = null;
         p.caught = false;
@@ -755,6 +780,7 @@ export default class BattleScene extends Phaser.Scene {
       p.move = { ...p.move, explodeOnly: false, dropZone: null, igniteAt: 0 };
       p.dead = true;
       p.pinOwner = null;
+      this.clearPinLock(p);
       if (this.tweens?.add && p.gfx?.y != null && !this.simFast) {
         this.tweens.add({
           targets: p.gfx, y: p.gfx.y + 40, alpha: 0, duration: 200,
@@ -2095,6 +2121,7 @@ export default class BattleScene extends Phaser.Scene {
           p.pinned = true;
           p.pinFreeze = !!f.defenseMove?.pinFreeze;
           p.pinOwner = f;
+          this.attachPinLock(p, f);
           p.vx = 0;
           p.vy = 0;
           p.move = { ...p.move, damage: 0, damage2: 0, explodeOnly: false, dropZone: null, igniteAt: 0, homing: 0 };
@@ -2115,7 +2142,10 @@ export default class BattleScene extends Phaser.Scene {
           break;
         }
       }
-      if (p.dead) continue;
+      if (p.dead) {
+        this.clearPinLock(p);
+        continue;
+      }
       if (!p.slowed) {
         for (const f of this.fighters) {
           if (f.state !== 'defending' || !f.defenseMove?.slowProjectiles) continue;
@@ -2155,6 +2185,7 @@ export default class BattleScene extends Phaser.Scene {
       const holdSky = p.armAt && time < p.armAt && p.move.fromAbove;
       if (p.pinned) {
         if (!p.pinFreeze) p.gfx.y += (90 * delta) / 1000;
+        this.stepPinLock(p, time);
       }
       else if (holdSky) {
         // A delayed call-down stays overhead until its timer, then falls.
@@ -2248,6 +2279,7 @@ export default class BattleScene extends Phaser.Scene {
         if (victim.state === 'defending' && def?.catchMetals && metalShot && !p.pinned) {
           p.pinned = true;
           p.pinOwner = victim;
+          this.attachPinLock(p, victim);
           p.caught = true;
           p._caughtSpeed = Math.hypot(p.vx, p.vy) || p.move.projectileSpeed || 420;
           p.vx = 0;

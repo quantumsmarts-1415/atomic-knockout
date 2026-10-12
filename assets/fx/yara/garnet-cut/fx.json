@@ -1,0 +1,18 @@
+{
+  "file": "garnet-cut-slash-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.926,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.05,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "fist",
+  "hit": false,
+  "peak": "garnet-cut-slash.jpg",
+  "peakFrame": 8
+}

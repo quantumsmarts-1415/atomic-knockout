@@ -1477,7 +1477,7 @@ export function spawnFxSprite(scene, art, x, y, scale = 1, face = 1, box = null)
 export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   const art = artFor(fighter?.charDef?.id, move?.name);
   if (!art?.frames?.length || !scene?.add?.image) return null;
-  if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'lance' || art.anchor === 'feet' || art.anchor === 'aura') return null;
+  if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'lance' || art.anchor === 'feet' || art.anchor === 'aura' || art.anchor === 'pin') return null;
   if (art.objectType === 'projectile' || art.objectType === 'thrown') return null;
   if (art.objectType === 'slash arc' || art.objectType === 'extend') return null;
   const face = art.bothSides ? 1 : (art.flip ? (fighter?.facing || 1) : 1);

@@ -367,6 +367,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (move?.kind === 'zone' && move.zone?.trap && art?.frames?.length) return;
     // A looping floor sheet is held on the fighter. A one-shot ground burst still draws.
     if (phase === 'defense' && art?.anchor === 'ground' && art.loop && art.frames?.length) return;
+    // A crumble or melt is held on the feet, then the rise plays on letgo.
+    if (phase === 'defense' && art?.puddle && art.frames?.length) return;
     if (art?.detonate && move?.kind === 'burst') {
       spawnFxDetonate(scene, fighter, move, extra.x ?? fighter.x, extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55));
       return;
@@ -450,6 +452,11 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     return;
   }
   if (phase === 'hit') {
+    const painted = artFor(fighter.charDef?.id, move?.name);
+    if (painted?.impact?.frames?.length) {
+      spawnFxSprite(scene, painted.impact, x, y, 1);
+      return;
+    }
     burst(scene, x, y, color, 8, 70);
     return;
   }

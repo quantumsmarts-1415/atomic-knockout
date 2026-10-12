@@ -1,0 +1,18 @@
+{
+  "file": "hammer-boom-impact-anim.png",
+  "frames": 23,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.464,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.15,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "fist",
+  "hit": false,
+  "peak": "hammer-boom-impact.jpg",
+  "peakFrame": 2
+}

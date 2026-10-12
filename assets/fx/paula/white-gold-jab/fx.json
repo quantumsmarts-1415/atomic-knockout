@@ -1,0 +1,18 @@
+{
+  "file": "white-gold-jab-impact-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.956,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.7,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "fist",
+  "hit": false,
+  "peak": "white-gold-jab-impact.jpg",
+  "peakFrame": 17
+}

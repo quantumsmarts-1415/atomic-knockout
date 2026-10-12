@@ -11,5 +11,7 @@
   "heightFrac": 1.65,
   "crop": "frame",
   "pivot": "center",
-  "hit": false
+  "hit": false,
+  "peak": "cold-fusion-blast.jpg",
+  "peakFrame": 13
 }

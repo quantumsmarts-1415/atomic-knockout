@@ -12,5 +12,7 @@
   "crop": "frame",
   "pivot": "center",
   "anchor": "body",
-  "hit": false
+  "hit": false,
+  "peak": "hydrogen-sponge.jpg",
+  "peakFrame": 15
 }

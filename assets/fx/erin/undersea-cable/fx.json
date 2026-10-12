@@ -1,0 +1,17 @@
+{
+  "file": "cable-signal-pulse-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 13.714,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "length",
+  "stretch": "length",
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false,
+  "peak": "cable-signal-pulse.jpg",
+  "peakFrame": 18
+}

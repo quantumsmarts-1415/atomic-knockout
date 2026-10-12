@@ -12,5 +12,7 @@
   "heightFrac": 0.6,
   "crop": "frame",
   "pivot": "center",
-  "hit": false
+  "hit": false,
+  "peak": "fuel-cell-bolt.jpg",
+  "peakFrame": 5
 }

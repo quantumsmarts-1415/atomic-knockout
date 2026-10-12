@@ -1,0 +1,18 @@
+{
+  "file": "tin-cry-sonic-blast-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.914,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 2.0,
+  "crop": "frame",
+  "pivot": "left",
+  "flip": true,
+  "hit": false,
+  "peak": "tin-cry-sonic-blast.jpg",
+  "peakFrame": 17
+}

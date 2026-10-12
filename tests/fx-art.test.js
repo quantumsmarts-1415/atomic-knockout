@@ -5,6 +5,7 @@ import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
 import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, sliceGrid, sliceHorizontal, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
+import { interceptHit } from '../src/engine/defense.js';
 
 test('every move has a folder, a type, and a score', () => {
   const rows = classifyRoster(ROSTER);
@@ -819,4 +820,88 @@ test('gemini fx call 1 wires fey, collin, and nick', () => {
     [meteor.detonate.file, 'assets/fx/nick/meteorite-drop/'],
   ];
   for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
+});
+
+test('gemini fx wires cooper and zane', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  const tesla = read('assets/fx/cooper/tesla-coil/fx.json');
+  assert.equal(tesla.file, 'tesla-coil-arcs-sheet.jpg');
+  assert.equal(tesla.frames, 4);
+  assert.equal(tesla.blend, 'add');
+  assert.equal(tesla.hit, false);
+  assert.equal(tesla.charge.file, 'tesla-coil-arcs-sheet.jpg');
+  assert.equal(tesla.charge.frames, 4);
+  assert.equal(tesla.charge.loop, true);
+  assert.equal(tesla.charge.anchor, 'body');
+  assert.equal(tesla.charge.blend, 'add');
+  const wire = read('assets/fx/cooper/live-wire/fx.json');
+  assert.equal(wire.file, 'live-wire-whip-sheet.jpg');
+  assert.equal(wire.frames, 4);
+  assert.equal(wire.blend, 'normal');
+  assert.equal(wire.pivot, 'left');
+  assert.equal(wire.anchor, 'fist');
+  assert.equal(wire.hit, false);
+  const rod = read('assets/fx/cooper/grounding-rod/fx.json');
+  assert.equal(rod.file, 'grounding-sparks-sheet.jpg');
+  assert.equal(rod.frames, 4);
+  assert.equal(rod.loop, true);
+  assert.equal(rod.blend, 'add');
+  assert.equal(rod.anchor, 'ground');
+  assert.equal(rod.pivot, 'bottom');
+  assert.equal(rod.hit, false);
+  const sword = read('assets/fx/cooper/bronze-sword/fx.json');
+  assert.equal(sword.file, 'bronze-sword-slash.jpg');
+  assert.equal(sword.blend, 'add');
+  assert.equal(sword.anchor, 'fist');
+  assert.equal(sword.hit, false);
+  const dip = read('assets/fx/zane/hot-dip-galvanize/fx.json');
+  assert.equal(dip.file, 'molten-zinc-splash.jpg');
+  assert.equal(dip.blend, 'add');
+  assert.equal(dip.hit, false);
+  assert.equal(dip.bothSides, undefined);
+  assert.equal(dip.charge.file, 'zinc-kettle-sheet.jpg');
+  assert.equal(dip.charge.frames, 4);
+  assert.equal(dip.charge.loop, true);
+  assert.equal(dip.charge.anchor, 'feet');
+  assert.equal(dip.charge.pivot, 'bottom');
+  assert.equal(dip.charge.blend, 'add');
+  const brass = read('assets/fx/zane/brass-knuckles/fx.json');
+  assert.equal(brass.blend, 'add');
+  assert.equal(brass.anchor, 'fist');
+  assert.equal(brass.hit, false);
+  const anode = read('assets/fx/zane/sacrificial-anode/fx.json');
+  assert.equal(anode.file, 'anode-absorb-burst.jpg');
+  assert.equal(anode.blend, 'normal');
+  assert.equal(anode.hit, false);
+  assert.equal(anode.spriteAura, undefined);
+  const fume = read('assets/fx/zane/fume-fever/fx.json');
+  assert.equal(fume.file, 'fume-fever-cloud.jpg');
+  assert.equal(fume.blend, 'screen');
+  assert.equal(fume.luma, true);
+  assert.equal(fume.anchor, 'ground');
+  assert.equal(fume.hit, false);
+  const files = [
+    [tesla.file, 'assets/fx/cooper/tesla-coil/'],
+    [wire.file, 'assets/fx/cooper/live-wire/'],
+    [rod.file, 'assets/fx/cooper/grounding-rod/'],
+    [sword.file, 'assets/fx/cooper/bronze-sword/'],
+    [dip.file, 'assets/fx/zane/hot-dip-galvanize/'],
+    [dip.charge.file, 'assets/fx/zane/hot-dip-galvanize/'],
+    [brass.file, 'assets/fx/zane/brass-knuckles/'],
+    [anode.file, 'assets/fx/zane/sacrificial-anode/'],
+    [fume.file, 'assets/fx/zane/fume-fever/'],
+  ];
+  for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
+  const guard = {
+    state: 'defending',
+    defenseMove: { name: 'Sacrificial Anode', absorbTypes: ['chemical', 'electrical'] },
+    x: 0,
+    y: 0,
+  };
+  const absorbed = interceptHit(guard, { x: 40 }, { type: 'electrical', damage: 6 }, 0);
+  assert.equal(absorbed.result, 'negate');
+  assert.equal(absorbed.endDefense, true);
+  assert.equal(absorbed.absorb, true);
+  const kinetic = interceptHit(guard, { x: 40 }, { type: 'kinetic', damage: 6 }, 0);
+  assert.equal(kinetic.absorb, undefined);
 });

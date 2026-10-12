@@ -97,7 +97,7 @@ export function interceptHit(defender, attacker, move, time) {
 
   const types = typesOf(move);
   if (defense.absorbTypes?.length && !move?.isCounterAttack && types.some((t) => defense.absorbTypes.includes(t))) {
-    return { result: 'negate', endDefense: true };
+    return { result: 'negate', endDefense: true, absorb: true };
   }
   if (defense.detonateOn?.length && !move?.isCounterAttack && types.some((t) => defense.detonateOn.includes(t))) {
     return { result: 'negate', endDefense: true, detonate: defense.detonate };

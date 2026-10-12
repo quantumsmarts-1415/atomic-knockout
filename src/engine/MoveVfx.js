@@ -326,6 +326,13 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     drawFxOneShot(scene, fighter, move, fighter.x, y, 1);
     return;
   }
+  if (phase === 'absorb') {
+    const art = artFor(fighter.charDef?.id, move?.name);
+    const x = extra.x ?? fighter.x;
+    const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
+    if (art?.frames?.length) drawFxOneShot(scene, fighter, move, x, y, 1);
+    return;
+  }
   if (phase === 'release' || phase === 'defense') {
     const art = artFor(fighter.charDef?.id, move?.name);
     if (phase === 'release' && art?.objectType === 'beam' && art.frames?.length && !extra?.fired) return;
@@ -339,6 +346,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       spawnFxSprite(scene, art.impact, at.x, at.y, 1, face);
     }
     if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
+    // A looping floor sheet is held on the fighter. A one-shot ground burst still draws.
+    if (phase === 'defense' && art?.anchor === 'ground' && art.loop && art.frames?.length) return;
     if (art?.detonate && move?.kind === 'burst') {
       spawnFxDetonate(scene, fighter, move, extra.x ?? fighter.x, extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55));
       return;

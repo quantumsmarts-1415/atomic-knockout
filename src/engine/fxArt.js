@@ -1500,6 +1500,9 @@ function attachedWant(scene, fighter) {
     if (shell && (art.anchor === 'body' || art.anchor === 'front') && art.frames?.length) {
       return { art, kind: art.anchor, elapsed: now - (fighter.defenseStart ?? now) };
     }
+    if (shell && art.anchor === 'ground' && art.loop && art.frames?.length) {
+      return { art, kind: 'ground', elapsed: now - (fighter.defenseStart ?? now) };
+    }
   }
   if (fighter.mitigateUntil > now) {
     const shell = fighter.charDef?.moves?.specialDefense;
@@ -1539,7 +1542,7 @@ function syncAttached(scene, fighter) {
       fighter.rig?.setDepth?.(5);
       live.img.setDepth(4);
     } else {
-      live.img.setDepth(want.kind === 'front' ? 12 : 10);
+      live.img.setDepth(want.kind === 'front' ? 12 : want.kind === 'ground' ? 4 : 10);
     }
     liveAttached.set(fighter, live);
   }
@@ -1580,6 +1583,10 @@ function syncAttached(scene, fighter) {
       live.img.setPosition(anchor?.x ?? fighter.x, anchor?.y ?? fighter.y);
       live.img.setScale(face * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
     }
+    return;
+  }
+  if (want.kind === 'ground') {
+    live.img.setPosition(fighter.x, fighter.y);
     return;
   }
   const bodyW = fighter.bodyW ?? 40;
@@ -1810,7 +1817,7 @@ export function syncFxActors(scene) {
       let frame;
       if (art.comboFrames && fighter._comboStep) {
         frame = frames[Math.min(frames.length - 1, Math.max(0, (fighter._comboStep | 0) - 1))];
-      } else if (art.anchor === 'contact') {
+      } else if (art.anchor === 'contact' || (art.anchor === 'fist' && !art.timed)) {
         const start = fighter.frameData?.startup ?? 0;
         const active = Math.max(1, fighter.frameData?.active ?? 1);
         const along = Math.max(0, (fighter.attackFrame ?? 0) - start) / active;

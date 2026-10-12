@@ -634,6 +634,14 @@ test('gemini fx sheets replace the placeholder stills', () => {
   assert.equal(beam.pivot, 'left');
   assert.equal(beam.charge.file, 'ruby-charge-glow.jpg');
   assert.equal(beam.charge.anchor, 'body');
+  const shatter = read('assets/fx/chroma/prismatic-shatter/fx.json');
+  assert.equal(shatter.file, 'prismatic-shatter-anim.png');
+  assert.equal(shatter.frames, 22);
+  assert.equal(shatter.fps, 24.444);
+  assert.equal(shatter.loop, false);
+  assert.equal(shatter.blend, 'add');
+  assert.equal(shatter.fit, 'width');
+  assert.equal(shatter.heightFrac, 1.3);
   const pop = read('assets/fx/manny/dry-cell-lob/fx.json');
   assert.equal(pop.projectile.blend, 'normal');
   assert.equal(pop.detonate.luma, true);
@@ -641,7 +649,10 @@ test('gemini fx sheets replace the placeholder stills', () => {
   assert.equal(pop.detonate.anchor, 'point');
   const glob = read('assets/fx/manny/permanganate-splash/fx.json');
   assert.equal(glob.projectile.blend, 'normal');
-  assert.equal(glob.detonate.blend, 'add');
+  assert.equal(glob.detonate.file, 'permanganate-splash-anim.png');
+  assert.equal(glob.detonate.frames, 24);
+  assert.equal(glob.detonate.loop, false);
+  assert.equal(glob.detonate.blend, 'screen');
   assert.equal(glob.stain.file, 'purple-stain-sheet.jpg');
   assert.equal(glob.stain.frames, 4);
   assert.equal(glob.stain.blend, 'normal');
@@ -651,7 +662,7 @@ test('gemini fx sheets replace the placeholder stills', () => {
     kyle.file, aaron.file, rocket.projectile.file, rocket.detonate.file,
     ram.file, ram.impact.file, jab.file, lance.projectile.file, lance.trail.file,
     redox.file, 'alloy-fist-impact.jpg', surge.file, surge.peak.file,
-    beam.file, beam.charge.file, 'chrome-edge-slash.jpg', 'prismatic-shatter.jpg',
+    beam.file, beam.charge.file, 'chrome-edge-slash.jpg', shatter.file,
     glob.projectile.file, glob.detonate.file, glob.stain.file,
     pop.projectile.file, pop.detonate.file,
   ];
@@ -671,9 +682,9 @@ test('gemini fx sheets replace the placeholder stills', () => {
     'ruby-laser-beam-anim.png': 'assets/fx/chroma/ruby-laser/',
     'ruby-charge-glow.jpg': 'assets/fx/chroma/ruby-laser/',
     'chrome-edge-slash.jpg': 'assets/fx/chroma/chrome-edge/',
-    'prismatic-shatter.jpg': 'assets/fx/chroma/prismatic-shatter/',
+    'prismatic-shatter-anim.png': 'assets/fx/chroma/prismatic-shatter/',
     'permanganate-glob.jpg': 'assets/fx/manny/permanganate-splash/',
-    'permanganate-splash.jpg': 'assets/fx/manny/permanganate-splash/',
+    'permanganate-splash-anim.png': 'assets/fx/manny/permanganate-splash/',
     'purple-stain-sheet.jpg': 'assets/fx/manny/permanganate-splash/',
     'dry-cell-battery.jpg': 'assets/fx/manny/dry-cell-lob/',
     'dry-cell-pop.jpg': 'assets/fx/manny/dry-cell-lob/',
@@ -738,7 +749,9 @@ test('gemini fx call 1 wires fey, collin, and nick', () => {
   const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
   const same = (a, b) => fs.readFileSync(a).equals(fs.readFileSync(b));
   const hammer = read('assets/fx/fey/forge-hammer/fx.json');
-  assert.equal(hammer.file, 'forge-hammer-impact.jpg');
+  assert.equal(hammer.file, 'forge-hammer-impact-anim.png');
+  assert.equal(hammer.frames, 24);
+  assert.equal(hammer.loop, false);
   assert.equal(hammer.blend, 'add');
   assert.equal(hammer.anchor, 'ground');
   assert.equal(hammer.pivot, 'bottom');
@@ -774,7 +787,9 @@ test('gemini fx call 1 wires fey, collin, and nick', () => {
   assert.equal(same('assets/fx/fey/thermite/sheet.png', 'assets/fx/allen/thermite-burn/sheet.png'), true);
   assert.equal(same('assets/fx/fey/thermite/object.png', 'assets/fx/allen/thermite-burn/object.png'), true);
   const gamma = read('assets/fx/collin/gamma-knife/fx.json');
-  assert.equal(gamma.file, 'gamma-knife-arc.jpg');
+  assert.equal(gamma.file, 'gamma-knife-arc-anim.png');
+  assert.equal(gamma.frames, 24);
+  assert.equal(gamma.loop, false);
   assert.equal(gamma.blend, 'add');
   assert.equal(gamma.stretch, 'length');
   assert.equal(gamma.pivot, 'left');
@@ -807,7 +822,10 @@ test('gemini fx call 1 wires fey, collin, and nick', () => {
   assert.equal(coin.hit, false);
   assert.equal(fs.existsSync('assets/fx/nick/electroplate/fx.json'), false);
   const meteor = read('assets/fx/nick/meteorite-drop/fx.json');
-  assert.equal(meteor.projectile.file, 'meteorite.jpg');
+  assert.equal(meteor.projectile.file, 'meteorite-anim.png');
+  assert.equal(meteor.projectile.frames, 23);
+  assert.equal(meteor.projectile.loop, false);
+  assert.equal(meteor.projectile.once, true);
   assert.equal(meteor.projectile.blend, 'normal');
   assert.equal(meteor.projectile.aim, false);
   assert.equal(meteor.detonate.file, 'meteor-impact.jpg');

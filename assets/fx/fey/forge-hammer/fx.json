@@ -1,5 +1,10 @@
 {
-  "file": "forge-hammer-impact.jpg",
+  "file": "forge-hammer-impact-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.714,
+  "loop": false,
   "blend": "add",
   "black": 16,
   "fit": "width",

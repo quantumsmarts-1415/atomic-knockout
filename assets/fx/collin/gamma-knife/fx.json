@@ -1,5 +1,10 @@
 {
-  "file": "gamma-knife-arc.jpg",
+  "file": "gamma-knife-arc-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.776,
+  "loop": false,
   "blend": "add",
   "black": 16,
   "fit": "length",

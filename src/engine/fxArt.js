@@ -904,6 +904,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
       reach: shot.reach,
       fps: shotSpec.fps || look.fps,
       loop: shotSpec.loop != null ? !!shotSpec.loop : look.loop,
+      once: shotSpec.once != null ? !!shotSpec.once : look.once,
       scaleWith: shotSpec.scaleWith || look.scaleWith,
       hit: shotSpec.hit === false ? false : look.hit,
       aim: shotSpec.aim !== false,

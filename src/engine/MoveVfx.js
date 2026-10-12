@@ -244,7 +244,7 @@ export function syncChargeGlow(scene) {
       continue;
     }
     const painted = artFor(fighter.charDef?.id, move.name);
-    if (painted?.anchor === 'feet' || painted?.charge?.anchor === 'feet') {
+    if (painted?.anchor === 'feet' || painted?.charge?.anchor === 'feet' || painted?.anchor === 'aura' || painted?.charge?.frames?.length) {
       glow.clear();
       continue;
     }
@@ -329,12 +329,22 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (phase === 'release' || phase === 'defense') {
     const art = artFor(fighter.charDef?.id, move?.name);
     if (phase === 'release' && art?.objectType === 'beam' && art.frames?.length && !extra?.fired) return;
+    if (phase === 'release' && art?.releaseImpact && art.impact?.frames?.length) {
+      const posed = sheetReleasePoint(fighter, 'melee') || sheetFxPoint(fighter, 'melee');
+      const face = fighter.facing || 1;
+      const at = posed || {
+        x: fighter.x + face * (fighter.bodyW ?? 40) * 0.85,
+        y: fighter.y - (fighter.bodyH ?? 80) * 0.52,
+      };
+      spawnFxSprite(scene, art.impact, at.x, at.y, 1, face);
+    }
     if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
     if (art?.detonate && move?.kind === 'burst') {
       spawnFxDetonate(scene, fighter, move, extra.x ?? fighter.x, extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55));
       return;
     }
     if (art?.detonate && move?.kind === 'projectile') return;
+    if ((art?.objectType === 'projectile' || art?.objectType === 'thrown') && art.frames?.length) return;
     const replaced = art?.frames?.length
       && art.objectType !== 'projectile'
       && art.objectType !== 'thrown'
@@ -380,7 +390,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (phase === 'charge') {
     const painted = artFor(fighter.charDef?.id, move?.name);
     const heldArt = painted?.charge?.frames?.length || painted?.orbit?.frames?.length
-      || painted?.anchor === 'lance' || painted?.anchor === 'feet' || painted?.spriteAura;
+      || painted?.anchor === 'lance' || painted?.anchor === 'feet' || painted?.anchor === 'aura' || painted?.spriteAura;
     if (!heldArt && style !== 'supernova' && !move?.overclock) gather(scene, x, y - 10, color);
     return;
   }

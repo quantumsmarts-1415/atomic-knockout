@@ -62,7 +62,7 @@ const server = http.createServer(async (req, res) => {
         for (const entry of entries) {
           const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
           if (entry.isDirectory()) await walk(join(dir, entry.name), rel);
-          else if (entry.name.endsWith('.png') || entry.name.endsWith('.json')) rows.push(rel);
+          else if (/\.(png|jpe?g|json)$/i.test(entry.name)) rows.push(rel);
         }
       };
       await walk(join(root, 'assets/fx'), '');

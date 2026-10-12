@@ -1,0 +1,15 @@
+{
+  "file": "prism-surge-sheet.jpg",
+  "frames": 4,
+  "fps": 12,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.25,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "peak": "prism-surge-burst.jpg",
+  "peakFrame": 1
+}

@@ -1,0 +1,20 @@
+{
+  "file": "ruby-laser-beam.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "length",
+  "crop": "frame",
+  "pivot": "left",
+  "stretch": "length",
+  "hit": false,
+  "charge": {
+    "file": "ruby-charge-glow.jpg",
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.42,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "body"
+  }
+}

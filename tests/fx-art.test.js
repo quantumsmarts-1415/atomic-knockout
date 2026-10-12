@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, sliceGrid, sliceHorizontal, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, sliceGrid, sliceHorizontal, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 
 test('every move has a folder, a type, and a score', () => {
@@ -566,4 +566,134 @@ test('a dropped-in mask hits the body it covers and misses when it is moved away
   shot.gfx.x = hog.x;
   shot.gfx.y = hog.y - 30;
   assert.equal(projectileHits(shot, hog), true);
+});
+
+test('gemini fx sheets replace the placeholder stills', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  const kyle = read('assets/fx/kyle/action-potential/fx.json');
+  assert.equal(kyle.file, 'action-potential-pulse-sheet.jpg');
+  assert.equal(kyle.frames, 6);
+  assert.equal(kyle.blend, 'add');
+  assert.equal(kyle.once, true);
+  assert.equal(kyle.hit, false);
+  assert.equal(kyle.spriteAura, undefined);
+  const aaron = read('assets/fx/aaron/lazy-haymaker/fx.json');
+  assert.equal(aaron.file, 'lazy-glow-aura-sheet.jpg');
+  assert.equal(aaron.frames, 6);
+  assert.equal(aaron.anchor, 'aura');
+  assert.equal(aaron.blend, 'add');
+  assert.equal(aaron.spriteAura, undefined);
+  assert.equal(aaron.hit, false);
+  const rocket = read('assets/fx/scarlett/micro-rocket/fx.json');
+  assert.equal(rocket.projectile.file, 'micro-rocket.jpg');
+  assert.equal(rocket.projectile.blend, 'normal');
+  assert.equal(rocket.detonate.file, 'rocket-explosion.jpg');
+  assert.equal(rocket.detonate.blend, 'add');
+  assert.equal(rocket.detonate.anchor, 'point');
+  assert.equal(rocket.hit, false);
+  const ram = read('assets/fx/titan/titanium-ram/fx.json');
+  assert.equal(ram.file, 'titanium-sparks-sheet.jpg');
+  assert.equal(ram.frames, 4);
+  assert.equal(ram.anchor, 'trail');
+  assert.equal(ram.pivot, 'right');
+  assert.equal(ram.releaseImpact, true);
+  assert.equal(ram.impact.file, 'ram-impact.jpg');
+  assert.equal(ram.hit, false);
+  const jab = read('assets/fx/titan/lance-jab/fx.json');
+  assert.equal(jab.blend, 'normal');
+  assert.equal(jab.anchor, 'fist');
+  assert.equal(jab.pivot, 'left');
+  const lance = read('assets/fx/titan/aero-lance/fx.json');
+  assert.equal(lance.projectile.blend, 'normal');
+  assert.equal(lance.trail.file, 'lance-trail.jpg');
+  assert.equal(lance.trail.blend, 'add');
+  assert.equal(lance.trail.pivot, 'right');
+  const redox = read('assets/fx/van/redox-flow/fx.json');
+  assert.equal(redox.anchor, 'aura');
+  assert.equal(redox.spriteAura, undefined);
+  assert.equal(redox.frames, 4);
+  assert.equal(redox.blend, 'add');
+  const surge = read('assets/fx/van/prism-surge/fx.json');
+  assert.equal(surge.frames, 4);
+  assert.equal(surge.peak, 'prism-surge-burst.jpg');
+  assert.equal(surge.peakFrame, 1);
+  const beam = read('assets/fx/chroma/ruby-laser/fx.json');
+  assert.equal(beam.stretch, 'length');
+  assert.equal(beam.pivot, 'left');
+  assert.equal(beam.charge.file, 'ruby-charge-glow.jpg');
+  assert.equal(beam.charge.anchor, 'body');
+  const pop = read('assets/fx/manny/dry-cell-lob/fx.json');
+  assert.equal(pop.projectile.blend, 'normal');
+  assert.equal(pop.detonate.luma, true);
+  assert.equal(pop.detonate.blend, 'normal');
+  assert.equal(pop.detonate.anchor, 'point');
+  const glob = read('assets/fx/manny/permanganate-splash/fx.json');
+  assert.equal(glob.projectile.blend, 'normal');
+  assert.equal(glob.detonate.blend, 'add');
+  assert.equal(glob.stain.file, 'purple-stain-sheet.jpg');
+  assert.equal(glob.stain.frames, 4);
+  assert.equal(glob.stain.blend, 'normal');
+  assert.equal(glob.stain.loop, true);
+  assert.equal(glob.hit, false);
+  const files = [
+    kyle.file, aaron.file, rocket.projectile.file, rocket.detonate.file,
+    ram.file, ram.impact.file, jab.file, lance.projectile.file, lance.trail.file,
+    redox.file, 'alloy-fist-impact.jpg', surge.file, surge.peak,
+    beam.file, beam.charge.file, 'chrome-edge-slash.jpg', 'prismatic-shatter.jpg',
+    glob.projectile.file, glob.detonate.file, glob.stain.file,
+    pop.projectile.file, pop.detonate.file,
+  ];
+  const dirs = {
+    'action-potential-pulse-sheet.jpg': 'assets/fx/kyle/action-potential/',
+    'lazy-glow-aura-sheet.jpg': 'assets/fx/aaron/lazy-haymaker/',
+    'micro-rocket.jpg': 'assets/fx/scarlett/micro-rocket/',
+    'rocket-explosion.jpg': 'assets/fx/scarlett/micro-rocket/',
+    'titanium-sparks-sheet.jpg': 'assets/fx/titan/titanium-ram/',
+    'ram-impact.jpg': 'assets/fx/titan/titanium-ram/',
+    'titanium-lance.jpg': 'assets/fx/titan/lance-jab/',
+    'lance-trail.jpg': 'assets/fx/titan/aero-lance/',
+    'redox-flow-aura-sheet.jpg': 'assets/fx/van/redox-flow/',
+    'alloy-fist-impact.jpg': 'assets/fx/van/alloy-fist/',
+    'prism-surge-sheet.jpg': 'assets/fx/van/prism-surge/',
+    'prism-surge-burst.jpg': 'assets/fx/van/prism-surge/',
+    'ruby-laser-beam.jpg': 'assets/fx/chroma/ruby-laser/',
+    'ruby-charge-glow.jpg': 'assets/fx/chroma/ruby-laser/',
+    'chrome-edge-slash.jpg': 'assets/fx/chroma/chrome-edge/',
+    'prismatic-shatter.jpg': 'assets/fx/chroma/prismatic-shatter/',
+    'permanganate-glob.jpg': 'assets/fx/manny/permanganate-splash/',
+    'permanganate-splash.jpg': 'assets/fx/manny/permanganate-splash/',
+    'purple-stain-sheet.jpg': 'assets/fx/manny/permanganate-splash/',
+    'dry-cell-battery.jpg': 'assets/fx/manny/dry-cell-lob/',
+    'dry-cell-pop.jpg': 'assets/fx/manny/dry-cell-lob/',
+  };
+  for (const name of files) assert.equal(fs.existsSync(dirs[name] + name), true, name);
+  assert.equal(fs.existsSync('assets/fx/titan/aero-lance/titanium-lance.jpg'), true);
+});
+
+test('a one-shot pulse keeps the size of the frame it is showing', () => {
+  const seen = [];
+  const p = {
+    born: 0,
+    fxFrames: ['a', 'b', 'c'],
+    fxFps: 10,
+    fxOnce: true,
+    fxDisplayWs: [10, 20, 40],
+    fxDisplayHs: [8, 16, 32],
+    move: { roll: true, vx: 1 },
+    vx: 1,
+    gfx: {
+      setTexture(key) { this.key = key; },
+      setDisplaySize(w, h) { seen.push([this.key, w, h]); },
+      rotation: 1,
+      scaleX: 1,
+      scaleY: 1,
+      setScale(x, y) { this.scaleX = x; this.scaleY = y; },
+    },
+  };
+  stepFxProjectile(p, 0);
+  stepFxProjectile(p, 100);
+  stepFxProjectile(p, 400);
+  assert.deepEqual(seen, [['a', 10, 8], ['b', 20, 16], ['c', 40, 32]]);
+  assert.equal(p.gfx.key, 'c');
+  assert.equal(p.gfx.rotation, 0);
 });

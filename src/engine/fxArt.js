@@ -4,7 +4,7 @@
 // loaded image, packed on the same 5 px grid as body masks.
 
 import { effectBox, fxFolder, moveSlug, objectTypeOf } from '../data/attackFx.js';
-import { sheetDrawsWeapon, sheetFxPoint } from './moveSheet.js';
+import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { fxPlacementHits } from './boxes.js';
 import { coatSpec } from './coat.js';
 
@@ -455,6 +455,8 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     overCoat: !!extra.overCoat,
     heatAt: typeof extra.heatAt === 'number' ? extra.heatAt | 0 : -1,
     lifeMs: extra.lifeMs > 0 ? extra.lifeMs | 0 : 0,
+    releaseImpact: !!extra.releaseImpact,
+    once: !!extra.once,
   };
 }
 
@@ -722,6 +724,7 @@ const SIDE_SPECS = [
   ['cling', 'cling-'], ['shatter', 'shatter-'],
   ['launch', 'launch-'], ['shower', 'shower-'], ['muzzle', 'muzzle-'],
   ['ember', 'ember-'], ['spark', 'spark-'], ['cinder', 'cinder-'], ['mote', 'mote-'], ['puff', 'puff-'],
+  ['trail', 'trail-'], ['stain', 'stain-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -782,6 +785,8 @@ async function loadMoveArt(scene, char, slot, move, index) {
     spin: meta.spin,
     pulse: meta.pulse,
     frontGap: meta.frontGap,
+    releaseImpact: !!meta.releaseImpact,
+    once: !!meta.once,
   };
   const inherit = { blend: meta.blend, black: meta.black };
 
@@ -829,7 +834,13 @@ async function loadMoveArt(scene, char, slot, move, index) {
       let peak = null;
       if (meta.peak && listed(index, `${folder}/${meta.peak}`)) {
         const peakSpec = {
-          ...inherit, file: meta.peak, blend: 'add', fit: spec.fit || 'width', heightFrac: spec.heightFrac, black: spec.black,
+          ...inherit,
+          file: meta.peak,
+          blend: 'add',
+          fit: spec.fit || 'width',
+          heightFrac: spec.heightFrac,
+          black: spec.black,
+          crop: spec.crop,
         };
         const peakLoaded = await loadSpecFrames(
           scene, id, slug, folder, peakSpec, index, { x: 0.5, y: 0.5 }, charH, sized, 'peak-',
@@ -905,6 +916,20 @@ export function fxProjectileView(scene, owner, move, x, y) {
     img.rotation = face === -1 ? Math.PI : 0;
   }
   const useMask = art.hit !== false;
+  let trail = null;
+  if (art.trail?.frames?.length && scene.add?.image) {
+    const tFrame = art.trail.frames[0];
+    trail = scene.add.image(x, y, tFrame.key);
+    trail.setOrigin(art.trail.pivotX ?? 1, art.trail.pivotY ?? 0.5);
+    trail.setDisplaySize(tFrame.displayW, tFrame.displayH);
+    trail.setDepth(15);
+    trail.setBlendMode?.(phaserBlend(tFrame.blend || art.trail.blend));
+    const destroy = img.destroy?.bind(img);
+    img.destroy = (...args) => {
+      if (trail?.scene) trail.destroy();
+      return destroy?.(...args);
+    };
+  }
   return {
     gfx: img,
     fxMask: useMask ? (art.frames[art.hitIndex ?? 0]?.mask || frame.mask) : null,
@@ -912,23 +937,52 @@ export function fxProjectileView(scene, owner, move, x, y) {
     fxMasks: useMask ? art.frames.map((f) => f.mask) : null,
     fxScale: scale,
     fxFps: art.fps || 8,
+    fxOnce: !!art.once,
+    fxDisplayWs: art.frames.map((f) => f.displayW * scale),
+    fxDisplayHs: art.frames.map((f) => f.displayH * scale),
     fxDisplayW: frame.displayW * scale,
     fxDisplayH: frame.displayH * scale,
     fxSpin: art.spin || 0,
     fxPulse: art.pulse || 0,
+    fxTrail: trail,
+    fxTrailArt: art.trail || null,
   };
+}
+
+function stepProjectileTrail(p) {
+  const trail = p.fxTrail;
+  const art = p.fxTrailArt;
+  if (!trail?.setPosition || !art?.frames?.length || !p.gfx) return;
+  const frame = art.frames[Math.min(art.frames.length - 1, p._fxFrame || 0)] || art.frames[0];
+  if (trail.texture?.key !== frame.key) {
+    trail.setTexture?.(frame.key);
+    trail.setDisplaySize?.(frame.displayW, frame.displayH);
+  }
+  trail.setOrigin?.(art.pivotX ?? 1, art.pivotY ?? 0.5);
+  trail.setPosition(p.gfx.x, p.gfx.y);
+  trail.rotation = Math.atan2(p.vy || 0, p.vx || 1);
 }
 
 export function stepFxProjectile(p, time) {
   if (!p?.fxFrames || !p.gfx?.setTexture) return;
   const fps = p.fxFps > 0 ? p.fxFps : 8;
-  const i = Math.floor(Math.max(0, time - (p.born || 0)) / (1000 / fps)) % p.fxFrames.length;
+  const raw = Math.floor(Math.max(0, time - (p.born || 0)) / (1000 / fps));
+  const i = p.fxOnce
+    ? Math.min(p.fxFrames.length - 1, raw)
+    : ((raw % p.fxFrames.length) + p.fxFrames.length) % p.fxFrames.length;
   if (i !== p._fxFrame) {
     p._fxFrame = i;
     p.gfx.setTexture(p.fxFrames[i]);
     p.fxMask = p.fxMasks?.[i] || p.fxMask;
-    if (p.fxDisplayW) p.gfx.setDisplaySize(p.fxDisplayW, p.fxDisplayH);
+    const w = p.fxDisplayWs?.[i] ?? p.fxDisplayW;
+    const h = p.fxDisplayHs?.[i] ?? p.fxDisplayH;
+    if (w) {
+      p.gfx.setDisplaySize(w, h);
+      p.fxDisplayW = w;
+      p.fxDisplayH = h;
+    }
   }
+  stepProjectileTrail(p);
   if (p.move?.roll) {
     const face = (p.vx || 1) < 0 ? -1 : 1;
     p.gfx.rotation = 0;
@@ -1176,9 +1230,10 @@ export function fxAnchor(fighter, move) {
   const bodyH = fighter.bodyH ?? 80;
   const bodyW = fighter.bodyW ?? 40;
   if (art.objectType === 'beam') {
+    const posed = sheetReleasePoint(fighter, 'shot') || sheetFxPoint(fighter, 'shot');
     return {
-      x: fighter.x + face * bodyW * 0.2,
-      y: fighter.y - bodyH * 0.62,
+      x: posed?.x ?? fighter.x + face * bodyW * 0.2,
+      y: posed?.y ?? fighter.y - bodyH * 0.62,
       scale: move._beamScale > 0 ? move._beamScale : 1,
     };
   }
@@ -1306,7 +1361,8 @@ export function fxDetonatePlacement(scene, fighter, move, x, y) {
   if (!det?.frames?.length) return null;
   const frame = det.frames[det.hitIndex ?? 0] || det.frames[0];
   if (!frame?.mask) return null;
-  return { mask: frame.mask, x, y: groundTop(scene, x, y), rot: 0, scale: 1 };
+  const grounded = det.anchor === 'ground' ? groundTop(scene, x, y) : y;
+  return { mask: frame.mask, x, y: grounded, rot: 0, scale: 1 };
 }
 
 export function spawnFxDetonate(scene, fighter, move, x, y) {
@@ -1336,7 +1392,7 @@ export function fxHits(fighter, move, x, y, target, scale = 1, frameIndex = null
 
 export function fxBurstHits(scene, fighter, move, x, y, target) {
   const art = artFor(fighter?.charDef?.id, move?.name);
-  if (art?.detonate && (move?.kind === 'burst' || move?.explodeOnly)) {
+  if (art?.detonate && art.detonate.hit !== false && (move?.kind === 'burst' || move?.explodeOnly)) {
     const placed = fxDetonatePlacement(scene, fighter, move, x, y);
     if (!placed) return null;
     return fxPlacementHits(placed, target);
@@ -1800,6 +1856,10 @@ function syncHeld(scene, fighter) {
     const charging = fighter.state === 'charging';
     const buffed = (fighter.attackHasteUntil ?? 0) > now;
     if (charging || buffed) want = { art, kind: 'aura', charging };
+  } else if (art?.anchor === 'aura' && art.frames?.length && !art.spriteAura) {
+    const charging = fighter.state === 'charging';
+    const buffed = !!charge?.buff?.attackPower && (fighter.attackPowerUntil ?? 0) > now;
+    if (charging || buffed) want = { art, kind: 'aura', charging, sheet: true };
   }
   let live = liveHeld.get(fighter);
   if (!want) {
@@ -1829,7 +1889,10 @@ function syncHeld(scene, fighter) {
       ? Math.min(1, Math.max(0, (now - (fighter.chargeStart ?? now)) / max))
       : null;
     const hot = (fighter._overheatUntil ?? 0) > now || (want.charging && (frac ?? 0) >= 0.82);
-    const index = auraFrame(frames.length, want.art.heatAt, hot, frac, now, want.art.fps);
+    const elapsed = want.charging ? now - (fighter.chargeStart ?? now) : now;
+    const index = want.sheet
+      ? fxFrameIndex(want.art, elapsed)
+      : auraFrame(frames.length, want.art.heatAt, hot, frac, now, want.art.fps);
     const frame = frames[index] || frames[0];
     applyFrameLook(live.img, frame, want.art, 1);
     live.img.setOrigin(0.5, 0.5);
@@ -1903,7 +1966,8 @@ export function spawnContactFx(scene, attacker, victim, move) {
   if (!scene || scene.simFast || !attacker) return;
   const at = move?._hitAt || contactAt(attacker, victim, move);
   playPacked(scene, byKey.get(`${attacker.charDef?.id}/_hit`), at.x, at.y, 1);
-  playPacked(scene, artFor(attacker.charDef?.id, move?.name)?.impact, at.x, at.y, 1);
+  const painted = artFor(attacker.charDef?.id, move?.name);
+  if (!painted?.releaseImpact) playPacked(scene, painted?.impact, at.x, at.y, 1);
 }
 
 function frameInActive(fighter) {

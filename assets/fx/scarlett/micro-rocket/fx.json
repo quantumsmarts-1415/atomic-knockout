@@ -1,0 +1,24 @@
+{
+  "blend": "normal",
+  "black": 16,
+  "hit": false,
+  "projectile": {
+    "file": "micro-rocket.jpg",
+    "blend": "normal",
+    "black": 16,
+    "fit": "width",
+    "heightFrac": 0.62,
+    "crop": "frame",
+    "pivot": "center"
+  },
+  "detonate": {
+    "file": "rocket-explosion.jpg",
+    "blend": "add",
+    "black": 16,
+    "fit": "width",
+    "heightFrac": 1.2,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "point"
+  }
+}

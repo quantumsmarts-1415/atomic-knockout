@@ -1,0 +1,14 @@
+{
+  "file": "lazy-glow-aura-sheet.jpg",
+  "frames": 6,
+  "fps": 10,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.75,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "aura",
+  "hit": false
+}

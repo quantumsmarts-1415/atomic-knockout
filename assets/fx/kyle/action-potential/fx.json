@@ -1,0 +1,14 @@
+{
+  "file": "action-potential-pulse-sheet.jpg",
+  "frames": 6,
+  "fps": 10,
+  "loop": false,
+  "once": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.85,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false
+}

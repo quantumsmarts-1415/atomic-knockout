@@ -1,0 +1,11 @@
+{
+  "file": "chrome-edge-slash.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 0.7,
+  "crop": "frame",
+  "pivot": "left",
+  "anchor": "fist",
+  "hit": false
+}

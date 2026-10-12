@@ -1,0 +1,14 @@
+Webfonts in this folder are bundled for the UI exploration prototype.
+Each family is licensed under the SIL Open Font License, Version 1.1.
+The license text is OFL.txt. Reserved font names stay with their authors.
+
+  Anton              Vernon Adams
+  Chakra Petch       Cadson Demak
+  Fraunces           The Undercase
+  IBM Plex Mono      IBM
+  IBM Plex Sans      IBM
+  Orbitron           Matt McInerney
+  Share Tech Mono    Carrois Apostrophe
+  Sora               Jonathan Barnbrook / The Entente
+
+Downloaded as latin-subset woff2 files from the Google Fonts collection.

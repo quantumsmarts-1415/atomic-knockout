@@ -1,0 +1,18 @@
+{
+  "file": "high-beam-cone-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.895,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.8,
+  "crop": "frame",
+  "pivot": "left",
+  "flip": true,
+  "hit": false,
+  "peak": "high-beam-cone.jpg",
+  "peakFrame": 5
+}

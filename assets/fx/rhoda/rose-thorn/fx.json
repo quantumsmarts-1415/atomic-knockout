@@ -1,0 +1,18 @@
+{
+  "file": "rose-thorn-impact-anim.png",
+  "frames": 20,
+  "cols": 4,
+  "rows": 5,
+  "fps": 9.104,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.5,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "fist",
+  "hit": false,
+  "peak": "rose-thorn-impact.jpg",
+  "peakFrame": 6
+}

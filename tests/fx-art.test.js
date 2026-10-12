@@ -905,3 +905,87 @@ test('gemini fx wires cooper and zane', () => {
   const kinetic = interceptHit(guard, { x: 40 }, { type: 'kinetic', damage: 6 }, 0);
   assert.equal(kinetic.absorb, undefined);
 });
+
+test('gemini fx wires gail and gertrude', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  assert.equal(moveSlug("Mendeleev's Prediction"), 'mendeleev-s-prediction');
+  const arc = read('assets/fx/gail/superconductor-arc/fx.json');
+  assert.equal(arc.file, 'superconductor-arcs-sheet.jpg');
+  assert.equal(arc.frames, 4);
+  assert.equal(arc.loop, true);
+  assert.equal(arc.lifeMs, 1500);
+  assert.equal(arc.blend, 'add');
+  assert.equal(arc.hit, false);
+  assert.equal(arc.charge.anchor, 'body');
+  assert.equal(arc.charge.loop, true);
+  assert.equal(arc.charge.blend, 'add');
+  const seep = read('assets/fx/gail/embrittle/fx.json');
+  assert.equal(seep.file, 'gallium-seep-sheet.jpg');
+  assert.equal(seep.blend, 'normal');
+  assert.equal(seep.pivot, 'top');
+  assert.equal(seep.anchor, 'fist');
+  assert.equal(seep.hit, false);
+  assert.equal(seep.cling.file, 'gallium-seep-sheet.jpg');
+  assert.equal(seep.cling.blend, 'normal');
+  assert.equal(seep.cling.loop, true);
+  const melt = read('assets/fx/gail/melt-down/fx.json');
+  assert.equal(melt.file, 'melt-puddle-sheet.jpg');
+  assert.equal(melt.frames, 6);
+  assert.equal(melt.blend, 'normal');
+  assert.equal(melt.anchor, 'ground');
+  assert.equal(melt.pivot, 'bottom');
+  assert.equal(melt.puddle, true);
+  assert.equal(melt.holdAt, 3);
+  assert.equal(melt.breakFrom, 4);
+  assert.equal(melt.hit, false);
+  const led = read('assets/fx/gail/blue-led/fx.json');
+  assert.equal(led.file, 'blue-led-beam.jpg');
+  assert.equal(led.blend, 'add');
+  assert.equal(led.fit, 'length');
+  assert.equal(led.stretch, 'length');
+  assert.equal(led.pivot, 'left');
+  assert.equal(led.hit, false);
+  const predict = read('assets/fx/gertrude/mendeleev-s-prediction/fx.json');
+  assert.equal(predict.file, 'prediction-strike.jpg');
+  assert.equal(predict.blend, 'add');
+  assert.equal(predict.pivot, 'bottom');
+  assert.equal(predict.hit, false);
+  assert.equal(predict.charge.file, 'prediction-marker-sheet.jpg');
+  assert.equal(predict.charge.frames, 4);
+  assert.equal(predict.charge.loop, true);
+  assert.equal(predict.charge.anchor, 'predict');
+  const jab = read('assets/fx/gertrude/point-contact/fx.json');
+  assert.equal(jab.blend, 'add');
+  assert.equal(jab.anchor, 'fist');
+  assert.equal(jab.hit, false);
+  const gate = read('assets/fx/gertrude/transistor-gate/fx.json');
+  assert.equal(gate.file, 'transistor-gate-sheet.jpg');
+  assert.equal(gate.frames, 4);
+  assert.equal(gate.loop, false);
+  assert.equal(gate.blend, 'add');
+  assert.equal(gate.anchor, 'body');
+  assert.equal(gate.hit, false);
+  assert.equal(gate.spriteAura, undefined);
+  const wave = read('assets/fx/gertrude/crystal-radio-wave/fx.json');
+  assert.equal(wave.projectile.file, 'radio-wave-sheet.jpg');
+  assert.equal(wave.projectile.frames, 4);
+  assert.equal(wave.projectile.loop, true);
+  assert.equal(wave.projectile.blend, 'add');
+  assert.equal(wave.hit, false);
+  assert.equal(fs.existsSync('assets/fx/gertrude/thermal-lens/fx.json'), false);
+  const files = [
+    [arc.file, 'assets/fx/gail/superconductor-arc/'],
+    [seep.file, 'assets/fx/gail/embrittle/'],
+    [seep.cling.file, 'assets/fx/gail/embrittle/'],
+    [melt.file, 'assets/fx/gail/melt-down/'],
+    [led.file, 'assets/fx/gail/blue-led/'],
+    [predict.file, 'assets/fx/gertrude/mendeleev-s-prediction/'],
+    [predict.charge.file, 'assets/fx/gertrude/mendeleev-s-prediction/'],
+    [jab.file, 'assets/fx/gertrude/point-contact/'],
+    [gate.file, 'assets/fx/gertrude/transistor-gate/'],
+    [wave.projectile.file, 'assets/fx/gertrude/crystal-radio-wave/'],
+  ];
+  for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
+  const risen = breakFrames({ frames: ['a', 'b', 'c', 'd', 'e', 'f'], breakFrom: 4, fps: 8, blend: 'normal' });
+  assert.deepEqual(risen.frames, ['e', 'f']);
+});

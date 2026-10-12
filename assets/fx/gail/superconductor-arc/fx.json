@@ -1,0 +1,27 @@
+{
+  "file": "superconductor-arcs-sheet.jpg",
+  "frames": 4,
+  "fps": 10,
+  "loop": true,
+  "lifeMs": 1500,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.65,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "charge": {
+    "file": "superconductor-arcs-sheet.jpg",
+    "frames": 4,
+    "fps": 10,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.45,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "body"
+  }
+}

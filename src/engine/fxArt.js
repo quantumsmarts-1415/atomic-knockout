@@ -455,6 +455,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     overCoat: !!extra.overCoat,
     heatAt: typeof extra.heatAt === 'number' ? extra.heatAt | 0 : -1,
     lifeMs: extra.lifeMs > 0 ? extra.lifeMs | 0 : 0,
+    puddle: !!extra.puddle,
     releaseImpact: !!extra.releaseImpact,
     once: !!extra.once,
     aim: extra.aim !== false,
@@ -611,6 +612,7 @@ function finishFrame(scene, key, data, width, height, displayW, displayH, pivotX
 }
 
 function pivotFrom(spec, fallback) {
+  if (spec?.pivot === 'top') return { x: 0.5, y: 0 };
   if (spec?.pivot === 'bottom') return { x: 0.5, y: 1 };
   if (spec?.pivot === 'bottom-left') return { x: 0, y: 1 };
   if (spec?.pivot === 'right') return { x: 1, y: 0.5 };
@@ -859,6 +861,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
         holdLast: !!meta.holdLast, flip: !!meta.flip, bothSides: !!meta.bothSides, releaseFlash: !!meta.releaseFlash, comboFrames: !!meta.comboFrames, crackFrames: !!meta.crackFrames,
         order: meta.order, fadeAfter: !!meta.fadeAfter, fadeMs: meta.fadeMs, paceCharge: !!meta.paceCharge,
         holdAt: meta.holdAt, breakFrom: meta.breakFrom, overCoat: meta.overCoat, heatAt: meta.heatAt,
+        lifeMs: meta.lifeMs, puddle: !!meta.puddle,
       });
       await attachSides(scene, id, slug, folder, meta, index, charH, sized, record);
       return record;
@@ -1461,6 +1464,10 @@ const liveAttached = new WeakMap();
 
 function dropAttached(fighter, live) {
   if (live?.kind === 'trail') fighter.rig?.setDepth?.(0);
+  if (live?.hideRig && !((fighter._puddleRiseUntil ?? 0) > (fighter.scene?.simNow ?? 0))) {
+    fighter.rig?.setVisible?.(true);
+    fighter._puddleHid = false;
+  }
   live?.img?.destroy?.();
   live?.front?.destroy?.();
   live?.lead?.destroy?.();
@@ -1491,8 +1498,11 @@ function cropTrailHead(img, frac) {
 function attachedWant(scene, fighter) {
   const now = scene.simNow ?? 0;
   if (fighter.state === 'defending' && fighter.defenseMove) {
-    const coated = coatSpec(fighter.defenseMove);
     const art = artFor(fighter.charDef?.id, fighter.defenseMove.name);
+    if (art?.puddle && art.frames?.length) {
+      return { art, kind: 'ground', elapsed: now - (fighter.defenseStart ?? now) };
+    }
+    const coated = coatSpec(fighter.defenseMove);
     const shell = art && !coated;
     if (shell && art.anchor === 'ground-front' && art.frames?.length) {
       return { art, kind: 'wall', elapsed: now - (fighter.defenseStart ?? now) };
@@ -1587,6 +1597,11 @@ function syncAttached(scene, fighter) {
   }
   if (want.kind === 'ground') {
     live.img.setPosition(fighter.x, fighter.y);
+    if (art.puddle) {
+      fighter.rig?.setVisible?.(false);
+      fighter._puddleHid = true;
+      live.hideRig = true;
+    }
     return;
   }
   const bodyW = fighter.bodyW ?? 40;
@@ -1670,9 +1685,12 @@ function dropCling(fighter) {
 function syncCling(scene, fighter) {
   const now = scene.simNow ?? 0;
   const burning = fighter.burnUntil > now && fighter.burnMove;
-  const art = burning
+  let art = burning
     ? burnVisual(artFor(fighter.burnOwnerId, fighter.burnMove)?.cling, fxNamed('status/on-fire'))
     : null;
+  if (!art?.frames?.length && fighter.clingFrom && fighter.clingFrom.until > now) {
+    art = artFor(fighter.clingFrom.id, fighter.clingFrom.move)?.cling || null;
+  }
   if (!art?.frames?.length) {
     dropCling(fighter);
     return;
@@ -1779,6 +1797,13 @@ export function syncFxActors(scene) {
   for (const fighter of scene.fighters) {
     syncCling(scene, fighter);
     syncAttached(scene, fighter);
+    if ((fighter._puddleRiseUntil ?? 0) > (scene.simNow ?? 0)) {
+      fighter.rig?.setVisible?.(false);
+      fighter._puddleHid = true;
+    } else if (fighter._puddleHid && fighter.state !== 'defending') {
+      fighter.rig?.setVisible?.(true);
+      fighter._puddleHid = false;
+    }
     syncHeld(scene, fighter);
     syncFreeze(scene, fighter);
     const move = fighter.currentMove;
@@ -1866,6 +1891,30 @@ function lancePhase(fighter, now) {
   return null;
 }
 
+function predictSpot(scene, fighter, lead) {
+  let best = null;
+  let bestD = Infinity;
+  for (const other of scene?.fighters || []) {
+    if (other === fighter || !other.alive || other.state === 'ko' || other.state === 'dead') continue;
+    const d = Math.hypot((other.x ?? 0) - (fighter.x ?? 0), (other.y ?? 0) - (fighter.y ?? 0));
+    if (d < bestD) { bestD = d; best = other; }
+  }
+  const t = lead > 0 ? lead : 1;
+  if (!best) {
+    const face = fighter.facing || 1;
+    return {
+      x: (fighter.x ?? 0) + face * 120,
+      y: (fighter.y ?? 0) - (fighter.bodyH ?? 80) * 0.45,
+    };
+  }
+  const vx = best.body?.velocity?.x ?? 0;
+  const vy = best.body?.velocity?.y ?? 0;
+  return {
+    x: best.x + vx * t,
+    y: best.y - (best.bodyH ?? 80) * 0.45 + vy * t,
+  };
+}
+
 function syncHeld(scene, fighter) {
   const now = scene.simNow ?? 0;
   const charge = fighter.charDef?.moves?.basicCharge;
@@ -1878,7 +1927,9 @@ function syncHeld(scene, fighter) {
   } else if (art?.anchor === 'feet' && art.frames?.length && fighter.state === 'charging') {
     want = { art, kind: 'feet' };
   } else if (art?.charge?.frames?.length && fighter.state === 'charging') {
-    want = { art: art.charge, kind: art.charge.anchor === 'feet' ? 'feet' : 'grow' };
+    const anchor = art.charge.anchor;
+    const kind = anchor === 'feet' ? 'feet' : anchor === 'predict' ? 'predict' : 'grow';
+    want = { art: art.charge, kind };
   } else if (art?.anchor === 'aura' && art.frames?.length && charge?.overclock) {
     const charging = fighter.state === 'charging';
     const buffed = (fighter.attackHasteUntil ?? 0) > now;
@@ -1952,6 +2003,16 @@ function syncHeld(scene, fighter) {
     live.img.setScale(mirror * Math.abs(live.img.scaleX || 1) * shot, Math.abs(live.img.scaleY || 1) * shot);
     return;
   }
+  if (want.kind === 'predict') {
+    const elapsed = now - (fighter.chargeStart ?? now);
+    const frame = want.art.frames[fxFrameIndex(want.art, elapsed)] || want.art.frames[0];
+    applyFrameLook(live.img, frame, want.art, 1);
+    live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 0.5);
+    const lead = charge?.predict?.lead ?? 1;
+    const at = predictSpot(scene, fighter, lead);
+    live.img.setPosition(at.x, at.y);
+    return;
+  }
   if (want.kind === 'feet') {
     const elapsed = now - (fighter.chargeStart ?? now);
     const frame = want.art.frames[fxFrameIndex(want.art, elapsed)] || want.art.frames[0];
@@ -2003,6 +2064,13 @@ export function spawnContactFx(scene, attacker, victim, move) {
   playPacked(scene, byKey.get(`${attacker.charDef?.id}/_hit`), at.x, at.y, 1);
   const painted = artFor(attacker.charDef?.id, move?.name);
   if (!painted?.releaseImpact) playPacked(scene, painted?.impact, at.x, at.y, 1);
+  if (painted?.cling?.frames?.length && victim && move?.onHit?.coat) {
+    victim.clingFrom = {
+      id: attacker.charDef?.id,
+      move: move.name,
+      until: (scene.simNow ?? 0) + (move.onHit.coatMs ?? 2000),
+    };
+  }
 }
 
 function frameInActive(fighter) {

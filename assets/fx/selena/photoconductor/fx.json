@@ -1,0 +1,24 @@
+{
+  "file": "photoconductor-lightning.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "length",
+  "stretch": "length",
+  "pivot": "left",
+  "crop": "frame",
+  "hit": false,
+  "charge": {
+    "file": "light-soak-sheet.jpg",
+    "frames": 2,
+    "spans": [[0, 336], [368, 300]],
+    "fps": 8,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.1,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "body"
+  }
+}

@@ -3,8 +3,10 @@ import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { canonicalType, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defense.js';
-import { applyOnCast, applyOnHit, bonusPackets, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, tickKit, weakestType } from './kit.js';
+import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, weakestType } from './kit.js';
+import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
+import { clipNameForMove, sheetMeta } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
 import { play as sfx, playHit } from './sfx.js';
@@ -168,6 +170,7 @@ function dealtDamage(attacker, move, defender) {
   const opts = combatOpts(defender);
   if (move?.chemDealtMult) opts.chemDealtMult = move.chemDealtMult;
   if (move?.ignoreDefense) opts.ignoreDefense = true;
+  if (move?.ignoreReductions) opts.ignoreReductions = true;
     if (defender.charDef?.combat) {
     const resolved = resolveMoveDamage(move, attacker?.charDef, defender.charDef, opts);
     for (const bonus of bonusPackets(attacker, now)) {
@@ -399,6 +402,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
           this.dashVX = -this.dashVX;
         }
         vx = this.dashVX; // kind:'dash' overrides normal movement
+        if (this._gliding && this.body) {
+          this.body.allowGravity = false;
+          this.body.setVelocityY(this.dashVY || 0);
+        }
+      } else if (this._gliding) {
+        this._gliding = false;
+        if (this.body) this.body.allowGravity = true;
       }
       if (this.diveUntil && time < this.diveUntil) vx = this.diveVX ?? vx;
       // Only stomp horizontal velocity when grounded (instant arcade
@@ -453,6 +463,16 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (this.state === 'defending' && this.defenseMove?.rooted && this.body) {
       this.body.setVelocityX(0);
     }
+    if (this.state === 'defending' && this.defenseMove?.cleanse) {
+      cleanse(this, this.defenseMove.cleanse);
+    }
+    if (this.state === 'defending' && this.defenseMove?.fadeAlpha != null) {
+      this.alpha = this.defenseMove.fadeAlpha;
+      this._hazeFade = true;
+    } else if (this._hazeFade) {
+      this.alpha = 1;
+      this._hazeFade = false;
+    }
 
     if (onGround && this._wasAir) {
       const hard = (this.fallPeak || 0) > FEEL.landingHardVy;
@@ -487,6 +507,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
         playVfx(this.scene, this, chargeMove, 'charge');
       }
       if (chargeMove?.slide && this.body) this.body.setVelocityX(this.facing * chargeMove.slide);
+      if (chargeMove?.floatRise && this.body && this.chargeStart != null) {
+        const max = chargeMove.maxChargeMs || 1;
+        const frac = Math.min(1, Math.max(0, time - this.chargeStart) / max);
+        if (this._floatFloor == null) this._floatFloor = this.y;
+        const target = this._floatFloor - chargeMove.floatRise * frac;
+        this.body.allowGravity = false;
+        this.body.setVelocityY((target - this.y) * 6);
+      }
       if (chargeMove?.seep) this.phasingUntil = time + 80;
       if (chargeMove?.eatZones) this.scene?.consumeZones?.(this, chargeMove.eatZones);
       if (chargeMove?.pull) this.pullNearby(chargeMove.pull);
@@ -495,11 +523,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.fireCharge(time);
       } else if (chargeMove?.detonateAtFull && this.chargeStart != null && time - this.chargeStart >= chargeMove.maxChargeMs) {
         this.fireCharge(time);
-      } else if (dirHeld) {
+      } else if (dirHeld && !chargeMove?.aimOnRelease) {
         // pressing a direction cancels the charge -- this slot is only for
-        // the neutral (no-direction) case.
+        // the neutral (no-direction) case. An aimed release (maglev) keeps
+        // the stick as the launch direction instead.
         this.state = 'idle';
         this.chargeStart = null;
+        this._floatFloor = null;
+        if (this.body) this.body.allowGravity = true;
       } else if (releasedAttack) {
         this.fireCharge(time);
       }
@@ -542,7 +573,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.pushBuffer(time, { attack: pressedAttack, special: pressedSpecial, jump: pressedJump && this.state !== 'jump' });
     }
 
-    if (this.diveUntil || (this.dashUntil && time < this.dashUntil)) this.holdDiveOnDeck();
+    if (this.diveUntil || (this.dashUntil && time < this.dashUntil && !this._gliding)) this.holdDiveOnDeck();
     if (this.diveUntil && time >= (this.diveArm ?? 0) && (onGround || time >= this.diveUntil)) {
       this.scene.resolveBurst?.(this, this.diveMove);
       this.diveUntil = 0;
@@ -624,6 +655,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.rig.facing = this.facing;
     this.rig.frameData = this.frameData;
     this.rig.attackFrame = this.attackFrame || 0;
+    this.rig.comboStep = this._comboStep || 0;
     this.rig.hurtUnits = this.hurtUnits || 0;
     this.rig.hurtSign = this.hurtSign || 1;
     this.rig.landing = this.landing || 0;
@@ -637,6 +669,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
     }
     this.rig.animate(dt / 1000, animState, speedFactor);
+    if (this._sheetFxFrame && this.state === 'attack' && this.attackFrame === this._sheetFxFrame && this.currentMove) {
+      this._sheetFxFrame = 0;
+      playVfx(this.scene, this, this.currentMove, 'release', { fromSheet: true });
+    }
     if (this._px != null) this.travel = (this.travel ?? 0) + Math.abs(this.x - this._px);
     this._px = this.x;
   }
@@ -660,6 +696,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (!coat) return;
     this.lingerHardening(time);
     this.scene?.dropPins?.(this);
+    this.scene?.clearOwnedZones?.(this, coat.zone?.name || coat.name);
+    if (coat.fadeAlpha != null) this.alpha = 1;
+    this._floatFloor = null;
     this.restoreShrink();
     playVfx(this.scene, this, coat, 'letgo');
     if (coat.letgoBurst) {
@@ -682,6 +721,26 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.attackCooldownUntil = Math.max(this.attackCooldownUntil ?? 0, time + 180);
       playVfx(this.scene, this, move, 'fizzle');
       return;
+    }
+    if (this.catalystStacks > 0 && move?.consumeCatalyst !== false && ((move.damage ?? 0) > 0 || (move.damage2 ?? 0) > 0)) {
+      const mul = 1 + (this.catalystPer ?? 0.25) * this.catalystStacks;
+      this.catalystStacks = 0;
+      move = {
+        ...move,
+        damage: (move.damage ?? 0) * mul,
+        damage2: move.damage2 != null ? move.damage2 * mul : move.damage2,
+      };
+    }
+    if (move?.gasBolt && this.absorbedGas) {
+      const mul = move.gasBolt;
+      this.absorbedGas = false;
+      move = {
+        ...move,
+        damage: (move.damage ?? 0) * mul,
+        damage2: move.damage2 != null ? move.damage2 * mul : move.damage2,
+        projectileRadius: (move.projectileRadius ?? 10) * (move.boltScale ?? 1),
+        vfxColor: move.boltColor ?? move.vfxColor,
+      };
     }
     if (move.luckyEvery) {
       this._lucky = (this._lucky ?? 0) + 1;
@@ -808,11 +867,17 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.captured = null;
       }
     }
-    playVfx(this.scene, this, move, 'release');
+    const sheet = sheetMeta(this.charDef.id, clipNameForMove(this.charDef.id, moveKey));
+    if (sheet?.release != null) this._sheetFxFrame = fd.startup;
+    else {
+      this._sheetFxFrame = 0;
+      playVfx(this.scene, this, move, 'release');
+    }
     applyOnCast(this, move, time, move._chargeFrac ?? 1);
     const commitBurst = !!(move.releaseOnHit || move.detonateAtFull || move.includeSelf || move.commit);
 
     if (move.kind === 'buff' || move.kind === 'zone') {
+      if (move.yank) this.scene?.yankFront?.(this, move);
       if (move.zone) {
         const zx = this.x + (this.facing || 1) * (move.zone.offsetX ?? 0);
         const zy = move.zone.feet
@@ -820,6 +885,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
           : this.y - this.bodyH * (move.zone.low ? 0.15 : 0.5);
         this.scene.spawnZone?.(this, move.zone, zx, zy);
       }
+    } else if (move.kind === 'mine') {
+      this.scene?.spawnMine?.(this, move);
     } else if (move.kind === 'projectile') {
       // The shot is committed when the move starts. Startup only delays the
       // spawn, so a trade during the wind-up does not delete it.
@@ -884,7 +951,18 @@ export default class Fighter extends Phaser.GameObjects.Container {
       };
       if (isDash) {
         this.dashUntil = time + fd.visible * step;
-        this.dashVX = this.facing * (move.dashSpeed ?? 500);
+        if (move.aimOnRelease || move._glide) {
+          const aim = move._glide || { x: this.facing || 1, y: 0 };
+          const speed = move.dashSpeed ?? 500;
+          this.dashVX = aim.x * speed;
+          this.dashVY = aim.y * speed;
+          this._gliding = true;
+          if (this.body) this.body.allowGravity = false;
+        } else {
+          this.dashVX = this.facing * (move.dashSpeed ?? 500);
+          this.dashVY = 0;
+          this._gliding = false;
+        }
       }
     }
     if (move.zone && move.kind !== 'zone') {
@@ -922,24 +1000,54 @@ export default class Fighter extends Phaser.GameObjects.Container {
     let frac = move.maxChargeMs > 0 ? heldMs / move.maxChargeMs : 1;
     if (move.redox) frac = Math.max(frac, this.redox ?? 0);
     this.chargeStart = null;
+    this._floatFloor = null;
     const coinFlip = move.fizzleCoin && (Math.floor(time / 6400) % 2 === 1);
+    let gambleScale = 1;
+    if (move.gamble) {
+      const roll = this.scene?.rng ? this.scene.rng() : Math.random();
+      const outcome = gambleFizzle(heldMs, move.maxChargeMs ?? 0, move.gamble, roll);
+      if (outcome.fizzle) {
+        this.state = 'idle';
+        this.attackCooldownUntil = time + 420;
+        if (this.body) this.body.allowGravity = true;
+        this.scene.noteMove?.(this, move);
+        playVfx(this.scene, this, move, 'fizzle');
+        return;
+      }
+      gambleScale = outcome.scale;
+    }
     if ((move.fizzleBelow != null && frac < move.fizzleBelow) || coinFlip) {
       this.state = 'idle';
       this.attackCooldownUntil = time + 420;
+      if (this.body) this.body.allowGravity = true;
       this.scene.noteMove?.(this, move);
       playVfx(this.scene, this, move, 'fizzle');
       return;
     }
+    let src = move;
+    if (move.earlyBlast && frac < (move.earlyBlast.below ?? 1)) {
+      const early = move.earlyBlast;
+      src = {
+        ...move,
+        type: early.type ?? 'heat',
+        damage: early.damage ?? 0,
+        type2: undefined,
+        damage2: undefined,
+        radius: early.radius ?? move.radius,
+        chargeDamageMult: 1,
+        chargeRadiusMult: 1,
+      };
+    }
     const scale = (base, mult) => (base ?? 0) * (1 + ((mult ?? 1) - 1) * frac);
     const scaled = {
-      ...move,
+      ...src,
       _chargeFrac: frac,
       _baseRadius: move.radius,
-      damage: move.damage != null ? scale(move.damage, move.chargeDamageMult) : move.damage,
-      damage2: move.damage2 != null ? scale(move.damage2, move.chargeDamageMult) : move.damage2,
-      damage3: move.damage3 != null ? scale(move.damage3, move.chargeDamageMult) : move.damage3,
+      damage: src.damage != null ? scale(src.damage, src.chargeDamageMult) : src.damage,
+      damage2: src.damage2 != null ? scale(src.damage2, src.chargeDamageMult) : src.damage2,
+      damage3: src.damage3 != null ? scale(src.damage3, src.chargeDamageMult) : src.damage3,
       baseKnockback: scale(move.baseKnockback ?? 0, move.chargeKnockbackMult),
-      radius: move.radius != null ? scale(move.radius, move.chargeRadiusMult) : move.radius,
+      radius: src.radius != null ? scale(src.radius, src.chargeRadiusMult) : src.radius,
       rangeW: move.rangeW != null && move.chargeRangeMult ? scale(move.rangeW, move.chargeRangeMult) : move.rangeW,
       hits: Array.isArray(move.hits)
         ? move.hits.map((h) => ({ ...h, damage: scale(h.damage ?? 0, move.chargeDamageMult) }))
@@ -984,15 +1092,32 @@ export default class Fighter extends Phaser.GameObjects.Container {
       scaled.damage2 = (scaled.damage2 ?? 0) + this._storedHeat;
       this._storedHeat = 0;
     }
+    if (gambleScale !== 1) {
+      if (scaled.damage != null) scaled.damage *= gambleScale;
+      if (scaled.damage2 != null) scaled.damage2 *= gambleScale;
+      if (scaled.radius != null) scaled.radius *= gambleScale;
+    }
+    if (move.aimOnRelease) scaled._glide = glideAim(this.input, this.facing || 1);
+    if (move.yank) {
+      const min = move.yankMin ?? 120;
+      const max = move.yankMax ?? min;
+      scaled.yankRange = min + (max - min) * frac;
+    }
     if (move.clockWindow) {
       const period = move.clockWindow.period ?? 410;
       const slack = move.clockWindow.slack ?? 85;
-      const phase = ((time % period) + period) % period;
-      const dist = Math.min(phase, period - phase);
-      if (dist <= slack) {
+      let onTick = false;
+      if (move.clockWindow.fromStart) onTick = clockPerfect(heldMs, move.clockWindow);
+      else {
+        const phase = ((time % period) + period) % period;
+        const dist = Math.min(phase, period - phase);
+        onTick = dist <= slack;
+      }
+      if (onTick) {
         const mult = move.clockWindow.mult ?? 3;
         if (scaled.damage != null) scaled.damage *= mult;
         if (scaled.damage2 != null) scaled.damage2 *= mult;
+        scaled._clockTick = true;
       }
     }
     if (move.riseUnder && this.body && this.scene?.fighters) {
@@ -1131,6 +1256,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
    */
   takeHit(attacker, move, time, launchDir) {
     if (this.state === 'ko' || this.state === 'dead') return 0;
+    if (move.stripProtection && !move.isSelf && !move.isCounterAttack && stripProtection(this)) {
+      playVfx(this.scene, this, move, 'shatter', {
+        x: this.x,
+        y: this.y - (this.bodyH ?? 80) * 0.45,
+      });
+    }
     if (this.state === 'defending' && this.defenseMove?.intangible && !move.isSelf && !move.isCounterAttack) return 0;
     if (this.phasingUntil > time && !move.isSelf && !move.isCounterAttack) return 0;
     if (this.state === 'defending' && this.defenseMove && !move.isSelf && !move.isCounterAttack) {
@@ -1232,6 +1363,27 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
       incoming = stripped.move;
     }
+    if (!move.isSelf && this.state === 'defending' && this.defenseMove?.takenWhile) {
+      const table = this.defenseMove.takenWhile;
+      const scaled = (type, amount) => {
+        if (!type || amount == null) return amount;
+        const mul = table[canonicalType(type)];
+        return mul == null ? amount : amount * mul;
+      };
+      incoming = {
+        ...incoming,
+        damage: scaled(incoming.type, incoming.damage),
+        damage2: scaled(incoming.type2, incoming.damage2),
+        damage3: scaled(incoming.type3, incoming.damage3),
+      };
+    }
+    if (!move.isSelf && this.state === 'defending' && this.defenseMove?.absorbGas && move.gas) {
+      const heal = this.defenseMove.absorbHeal ?? 0;
+      if (heal) this.percent = Math.max(0, this.percent - heal);
+      this.absorbedGas = true;
+      this.rig?.setFlash?.(0xd7ecff);
+      return 0;
+    }
     if (!move.isSelf && this.state === 'defending' && this.defenseMove?.absorbState
       && attacker?.charDef?.combat?.state === this.defenseMove.absorbState) {
       if (this.defenseMove.fuelHeal) this.percent = Math.max(0, this.percent - this.defenseMove.fuelHeal);
@@ -1290,6 +1442,16 @@ export default class Fighter extends Phaser.GameObjects.Container {
       };
     }
     if (gate.result === 'pop' || gate.result === 'negate') {
+      if (gate.detonate && this.scene?.resolveBurst) {
+        this.scene.resolveBurst(this, {
+          name: this.defenseMove?.name ?? 'detonate',
+          kind: 'burst',
+          isCounterAttack: true,
+          baseKnockback: 140,
+          knockbackGrowth: 2.6,
+          ...gate.detonate,
+        }, { x: this.x, y: this.y - (this.bodyH ?? 80) * 0.45 });
+      }
       if (gate.rewind && this._rewindSnap && this.body) {
         this.percent = this._rewindSnap.percent;
         this.body.reset(this._rewindSnap.x, this._rewindSnap.y);
@@ -1308,6 +1470,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
       if (gate.endDefense) {
         const def = this.defenseMove;
+        if (gate.absorb && def) {
+          playVfx(this.scene, this, def, 'absorb', {
+            x: this.x,
+            y: this.y - (this.bodyH ?? 80) * 0.5,
+          });
+        }
         if (def?.lockAttackMs && attacker && attacker !== this && move?.name) {
           attacker.moveLock = attacker.moveLock ?? {};
           attacker.moveLock[move.name] = time + def.lockAttackMs;
@@ -1427,7 +1595,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         return 0;
       }
     }
-    if (gate.result === 'partial') {
+    if (gate.result === 'partial' && !incoming.ignoreReductions && !move.ignoreReductions) {
       const dealt = dealtDamage(attacker, incoming, this);
       let dmg = dealt.total * (1 - gate.reduction);
       if (this.currentMove?.guardStrike && this.state === 'attack') dmg *= (1 - this.currentMove.guardStrike);

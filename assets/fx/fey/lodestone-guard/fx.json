@@ -1,0 +1,14 @@
+{
+  "file": "lodestone-field-sheet.jpg",
+  "frames": 4,
+  "fps": 8,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.65,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false
+}

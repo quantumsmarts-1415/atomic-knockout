@@ -1,0 +1,24 @@
+{
+  "blend": "normal",
+  "black": 16,
+  "hit": false,
+  "projectile": {
+    "file": "arsenic-shard.jpg",
+    "blend": "normal",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.34,
+    "crop": "frame",
+    "pivot": "center"
+  },
+  "detonate": {
+    "file": "arsenic-shatter.jpg",
+    "blend": "normal",
+    "black": 16,
+    "fit": "width",
+    "heightFrac": 1.15,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "point"
+  }
+}

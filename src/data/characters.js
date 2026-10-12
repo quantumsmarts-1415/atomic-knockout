@@ -363,6 +363,12 @@ export const CHARACTERS = {
         displayScale: 0.18686,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
+          // Grey armour, no helmet, one double spear. The walk and the move sheets face left, the same way the idle does.
+          walk: { count: 12, fps: 12, loop: true, frameW: 894, frameH: 720, footY: 0.992, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 1358, frameH: 735, footY: 0.9918, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 1132, frameH: 720, footY: 0.992, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 864, frameH: 921, footY: 0.9826, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
+          special: { count: 12, fps: 18, loop: false, frameW: 1350, frameH: 720, footY: 0.992, visibleH: 693, bodyH: 693, displayScale: 128 / 693 },
         },
       },
     },
@@ -474,16 +480,20 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 620,
-        frameH: 720,
-        footY: 0.9708,
-        visibleH: 664,
-        bodyH: 664,
-        displayScale: 0.17771,
+        frameW: 482,
+        frameH: 715,
+        footY: 0.9818,
+        visibleH: 678,
+        bodyH: 678,
+        displayScale: 118 / 678,
         clips: {
-          // idle + walk (Gemini). Other clips still fall back to idle.
-          idle: { count: 14, fps: 3.6, loop: true },
+          // Approved idle. Absorb reuses the Mega Discharge gather.
+          idle: { count: 6, fps: 6, loop: true, frameW: 482, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678 },
           walk: { count: 33, fps: 10, loop: true, frameW: 692, frameH: 706, footY: 0.9929, visibleH: 634, bodyH: 634, displayScale: 0.18612 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 746, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 640, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678 },
+          defense: { count: 12, fps: 18, loop: true, frameW: 640, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678, file: 'lillie_charge.png' },
+          special: { count: 12, fps: 18, loop: false, frameW: 492, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678 },
         },
       },
     },
@@ -936,20 +946,22 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 915,
-        frameH: 703,
-        footY: 0.9659,
-        visibleH: 638,
-        bodyH: 638,
-        displayScale: 0.18809,
+        frameW: 416,
+        frameH: 684,
+        footY: 0.9795,
+        visibleH: 645,
+        bodyH: 645,
+        displayScale: 120 / 645,
         clips: {
-          // idle + walk (Gemini). Other clips still fall back to idle.
-          // walk frames mirrored in place (PIL ImageOps.mirror per 735x667
-          // cell): the Gemini walk faces RIGHT but art.facing is -1 (her idle
-          // faces left natively) and the Rig flips every clip by art.facing,
-          // so unmirrored she walked backwards. Same fix as Natalie's walk.
-          idle: { count: 14, fps: 3.6, loop: true },
+          // Approved idle faces left, same as the move sheets, so art.facing
+          // -1 is the flip. The walk was mirrored in place (the source walked
+          // right) so that same flip does not send her backwards.
+          idle: { count: 6, fps: 6, loop: true, frameW: 416, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
           walk: { count: 33, fps: 10, loop: true, frameW: 735, frameH: 667, footY: 0.9685, visibleH: 618, bodyH: 618, displayScale: 0.19417 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 754, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 614, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 446, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
+          special: { count: 12, fps: 18, loop: false, frameW: 578, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
         },
       },
     },
@@ -1050,16 +1062,21 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 664,
-        frameH: 719,
-        footY: 0.975,
-        visibleH: 648,
-        bodyH: 648,
-        displayScale: 0.19136,
+        frameW: 548,
+        frameH: 1012,
+        footY: 0.9881,
+        visibleH: 976,
+        bodyH: 976,
+        displayScale: 124 / 976,
         clips: {
-          // idle + walk (Gemini). Other clips still fall back to idle.
-          idle: { count: 13, fps: 3.6, loop: true },
+          // Approved idle. Vortex Kick is the normal. Oxidation Burst is the
+          // special. Bellows Breath and Ozone Layer have their own sheets.
+          idle: { count: 6, fps: 6, loop: true, frameW: 548, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
           walk: { count: 33, fps: 10, loop: true, frameW: 452, frameH: 701, footY: 0.98, visibleH: 653, bodyH: 653, displayScale: 0.18989 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 918, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 574, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 624, frameH: 1015, footY: 0.9852, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
+          special: { count: 12, fps: 18, loop: false, frameW: 678, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
         },
       },
     },
@@ -1139,16 +1156,20 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 852,
-        frameH: 696,
-        footY: 0.9684,
-        visibleH: 638,
-        bodyH: 638,
-        displayScale: 0.19436,
+        frameW: 710,
+        frameH: 734,
+        footY: 0.9782,
+        visibleH: 634,
+        bodyH: 634,
+        displayScale: 124 / 634,
         clips: {
-          // idle + walk (Gemini). Other clips still fall back to idle.
-          idle: { count: 13, fps: 3.6, loop: true },
+          // Approved idle. Move sheets play the body for each slot.
+          idle: { count: 6, fps: 6, loop: true, frameW: 710, frameH: 734, footY: 0.9782, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
           walk: { count: 29, fps: 10, loop: true, frameW: 458, frameH: 674, footY: 0.9837, visibleH: 636, bodyH: 636, displayScale: 0.19497 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 710, frameH: 734, footY: 0.9782, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 712, frameH: 743, footY: 0.9664, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 780, frameH: 734, footY: 0.9782, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
+          special: { count: 12, fps: 18, loop: false, frameW: 710, frameH: 734, footY: 0.9782, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
         },
       },
     },
@@ -1348,25 +1369,23 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 496,
-        frameH: 699,
-        footY: 0.9685,
-        visibleH: 640,
-        bodyH: 640,
-        displayScale: 0.2,
+        frameW: 632,
+        frameH: 1028,
+        footY: 0.9864,
+        visibleH: 981,
+        bodyH: 981,
+        displayScale: 128 / 981,
         clips: {
-          // walk: Gemini blue-key video (videos/natalie_walk_v1.mp4, walks in place):
-          // node tools/walk-sheet-from-video.mjs ... --fps 24 --start 128 --end 158
-          //   --step 3 --key blue --connected --pocket-min 4 --threshold 120
-          // = one full stride cycle (33 src frames, frame 161 ~ 128, IoU 0.97),
-          // threshold 120 so her darker-blue floor shadow keys out too.
-          // Then every frame mirrored in place (PIL ImageOps.mirror per
-          // 443x710 cell): the video walks facing RIGHT but art.facing is -1
-          // (her idle faces left natively) and the Rig flips all clips by
-          // art.facing, so unmirrored she walked backwards. All clips in a
-          // sheet must share the idle's native orientation.
-          idle: { count: 14, fps: 3.6, loop: true },
+          // Approved idle faces right. sheetFacing keeps it unflipped while
+          // art.facing stays -1. The walk sheet is still the mirrored
+          // left-facing cycle, so that flip points the walk forward. Move
+          // sheets face right and set sheetFacing too.
+          idle: { count: 6, fps: 6, loop: true, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
           walk: { count: 11, fps: 8, loop: true, frameW: 443, frameH: 710, footY: 0.969, visibleH: 666, bodyH: 666, displayScale: 0.19219 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 746, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
+          special: { count: 12, fps: 18, loop: false, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
         },
       },
     },
@@ -1459,14 +1478,19 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 728,
-        frameH: 720,
-        footY: 0.9806,
-        visibleH: 686,
-        bodyH: 686,
-        displayScale: 0.18367,
+        frameW: 594,
+        frameH: 1058,
+        footY: 0.9849,
+        visibleH: 1013,
+        bodyH: 1013,
+        displayScale: 126 / 1013,
         clips: {
-          idle: { count: 14, fps: 3.6, loop: true },
+          idle: { count: 6, fps: 6, loop: true, frameW: 594, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
+          // Flare Jab. Blinding Flare is also the Unquenchable gather.
+          attack: { count: 12, fps: 18, loop: false, frameW: 988, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 868, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 594, frameH: 1065, footY: 0.985, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
+          special: { count: 12, fps: 18, loop: false, frameW: 868, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013, file: 'maggie_charge.png' },
         },
       },
     },
@@ -1583,6 +1607,13 @@ export const CHARACTERS = {
         displayScale: 0.19706,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
+          // The walk faces left, the same way the idle does.
+          walk: { count: 12, fps: 9.6, loop: true, frameW: 922, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
+          // Power-Line Whips, Thermite Burn, Turbine Vortex, and Oxide Skin face left, the same way the idle does. The whip sheet is the cable.
+          attack: { count: 12, fps: 18, loop: false, frameW: 2272, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 922, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 922, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
+          special: { count: 12, fps: 18, loop: false, frameW: 956, frameH: 720, footY: 0.9896, visibleH: 696, bodyH: 696, displayScale: 134 / 696 },
         },
       },
     },
@@ -1670,6 +1701,12 @@ export const CHARACTERS = {
         displayScale: 0.10709,
         clips: {
           idle: { count: 14, fps: 3.6, loop: true },
+          walk: { count: 12, fps: 7.58, loop: true, frameW: 784, frameH: 1280, footY: 0.9938, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270 },
+          // Crystal Blade. Binary Surge is also the Overclock gather. Silica Pane faces right with the idle.
+          attack: { count: 12, fps: 18, loop: false, frameW: 1162, frameH: 1297, footY: 0.9838, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 1280, frameH: 1286, footY: 0.9969, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270, file: 'silas_special.png' },
+          defense: { count: 12, fps: 18, loop: false, frameW: 1182, frameH: 1322, footY: 0.997, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270 },
+          special: { count: 12, fps: 18, loop: false, frameW: 1280, frameH: 1286, footY: 0.9969, visibleH: 1270, bodyH: 1270, displayScale: 136 / 1270 },
         },
       },
     },
@@ -1740,6 +1777,12 @@ export const CHARACTERS = {
         displayScale: 0.2015,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          walk: { count: 12, fps: 9, loop: true, frameW: 466, frameH: 716, footY: 0.9749, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
+          // Clean body sheets. The particle curtain is the flare.
+          attack: { count: 12, fps: 18, loop: false, frameW: 546, frameH: 716, footY: 0.9749, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 554, frameH: 775, footY: 0.9755, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 534, frameH: 758, footY: 0.9683, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
+          special: { count: 12, fps: 18, loop: false, frameW: 902, frameH: 722, footY: 0.9737, visibleH: 674, bodyH: 674, displayScale: 134 / 674 },
         },
       },
     },
@@ -1808,6 +1851,12 @@ export const CHARACTERS = {
         displayScale: 0.22527,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          walk: { count: 12, fps: 8, loop: true, frameW: 603, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
+          // Brimstone Slam. The overhead wind-up stays as drawn. Black Powder, the brace, and the eruption face right, the same way the idle does.
+          attack: { count: 11, fps: 17, loop: false, frameW: 603, frameH: 724, footY: 0.9655, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 1041, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
+          special: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 753, footY: 0.9416, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
         },
       },
     },
@@ -1869,14 +1918,21 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 401,
-        frameH: 703,
-        footY: 0.9772,
-        visibleH: 656,
-        bodyH: 656,
-        displayScale: 0.19512,
+        frameW: 666,
+        frameH: 1072,
+        footY: 0.9879,
+        visibleH: 1032,
+        bodyH: 1032,
+        displayScale: 128 / 1032,
         clips: {
-          idle: { count: 13, fps: 3.6, loop: true },
+          // Approved idle faces right. sheetFacing keeps it unflipped.
+          // art.facing stays -1. There is no walk sheet.
+          idle: { count: 6, fps: 6, loop: true, frameW: 666, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
+          // Bleach Out, Salt Bond, Gas Cloud, and the jab face right. sheetFacing keeps them unflipped.
+          attack: { count: 12, fps: 18, loop: false, frameW: 718, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 1188, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 696, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
+          special: { count: 12, fps: 18, loop: false, frameW: 824, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
         },
       },
     },
@@ -1945,6 +2001,11 @@ export const CHARACTERS = {
         displayScale: 0.21362,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          // The walk, Lazy Haymaker, Inert Guard Strike, and Noble Discharge face right, the same way the idle does.
+          walk: { count: 12, fps: 10.29, loop: true, frameW: 549, frameH: 700, footY: 0.9729, visibleH: 657, bodyH: 657, displayScale: 138 / 657 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 621, frameH: 700, footY: 0.9729, visibleH: 657, bodyH: 657, displayScale: 138 / 657 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 549, frameH: 700, footY: 0.9729, visibleH: 657, bodyH: 657, displayScale: 138 / 657 },
+          special: { count: 12, fps: 18, loop: false, frameW: 549, frameH: 700, footY: 0.9729, visibleH: 657, bodyH: 657, displayScale: 138 / 657 },
         },
       },
     },
@@ -2014,6 +2075,11 @@ export const CHARACTERS = {
         displayScale: 0.20891,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          walk: { count: 12, fps: 11.08, loop: true, frameW: 551, frameH: 710, footY: 0.9731, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 551, frameH: 710, footY: 0.9731, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 551, frameH: 710, footY: 0.9731, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 551, frameH: 710, footY: 0.9731, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
+          special: { count: 12, fps: 18, loop: false, frameW: 551, frameH: 718, footY: 0.961, visibleH: 666, bodyH: 666, displayScale: 136 / 666 },
         },
       },
     },
@@ -2084,6 +2150,11 @@ export const CHARACTERS = {
         displayScale: 0.225,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          // The walk, the attack, Quick-Set Cement, and Slime Splash face right while the idle faces left.
+          walk: { count: 12, fps: 7.38, loop: true, frameW: 428, frameH: 698, footY: 0.9706, visibleH: 653, bodyH: 653, displayScale: 144 / 653, sheetFacing: 1 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 454, frameH: 698, footY: 0.9706, visibleH: 653, bodyH: 653, displayScale: 144 / 653, sheetFacing: 1 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 428, frameH: 698, footY: 0.9706, visibleH: 653, bodyH: 653, displayScale: 144 / 653, sheetFacing: 1 },
+          special: { count: 12, fps: 18, loop: false, frameW: 602, frameH: 698, footY: 0.9706, visibleH: 653, bodyH: 653, displayScale: 144 / 653, sheetFacing: 1 },
         },
       },
     },
@@ -2144,14 +2215,21 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 726,
-        frameH: 720,
-        footY: 0.9986,
-        visibleH: 671,
-        bodyH: 671,
-        displayScale: 0.19672,
+        frameW: 562,
+        frameH: 1004,
+        footY: 0.9861,
+        visibleH: 961,
+        bodyH: 961,
+        displayScale: 132 / 961,
         clips: {
-          idle: { count: 13, fps: 3.6, loop: true },
+          // Approved idle faces right. sheetFacing keeps it unflipped.
+          // art.facing stays -1. There is no walk sheet.
+          idle: { count: 6, fps: 6, loop: true, frameW: 562, frameH: 1004, footY: 0.9861, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
+          // Afterburner, Wing Slash, Folded Wings, and Micro Rocket face right and set sheetFacing.
+          attack: { count: 12, fps: 18, loop: false, frameW: 822, frameH: 1004, footY: 0.9861, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 862, frameH: 1014, footY: 0.9862, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 1516, frameH: 1027, footY: 0.9864, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
+          special: { count: 12, fps: 18, loop: false, frameW: 1122, frameH: 1004, footY: 0.9861, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
         },
       },
     },
@@ -2220,6 +2298,10 @@ export const CHARACTERS = {
         displayScale: 0.22393,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
+          // The walk, Alloy Fist, and Prism Surge face left, the same way the idle does.
+          walk: { count: 12, fps: 9, loop: true, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
+          special: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 722, footY: 0.9903, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
         },
       },
     },
@@ -2280,14 +2362,21 @@ export const CHARACTERS = {
       use3d: true,
       sheets: {
         dir: 'art-src/gemini-test/sheets/',
-        frameW: 883,
-        frameH: 707,
-        footY: 0.9802,
-        visibleH: 667,
-        bodyH: 667,
-        displayScale: 0.1949,
+        frameW: 666,
+        frameH: 1036,
+        footY: 0.9865,
+        visibleH: 993,
+        bodyH: 993,
+        displayScale: 130 / 993,
         clips: {
-          idle: { count: 13, fps: 3.6, loop: true },
+          // Approved idle faces right. sheetFacing keeps it unflipped.
+          // art.facing stays -1. There is no walk sheet.
+          idle: { count: 6, fps: 6, loop: true, frameW: 666, frameH: 1036, footY: 0.9865, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
+          // Ruby Laser, Mirror Chrome, Prismatic Shatter, and Chrome Edge face right and set sheetFacing.
+          attack: { count: 12, fps: 18, loop: false, frameW: 1180, frameH: 1221, footY: 0.9885, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
+          charge: { count: 12, fps: 18, loop: false, frameW: 784, frameH: 1036, footY: 0.9865, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
+          defense: { count: 12, fps: 18, loop: false, frameW: 752, frameH: 1067, footY: 0.9831, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
+          special: { count: 12, fps: 18, loop: false, frameW: 834, frameH: 1036, footY: 0.9865, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
         },
       },
     },

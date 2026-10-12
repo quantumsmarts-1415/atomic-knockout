@@ -1,17 +1,17 @@
 {
+  "file": "gas-cloud-anim.png",
   "blend": "screen",
   "luma": true,
   "black": 16,
-  "frames": 6,
-  "cols": 6,
-  "rows": 1,
-  "fps": 8,
-  "loop": true,
-  "hit": false,
+  "frames": 23,
+  "cols": 4,
+  "rows": 6,
+  "fps": 11.129,
+  "loop": false,
+  "scale": 1.25,
   "fit": "width",
   "heightFrac": 1.2,
-  "crop": "frame",
   "pivot": "bottom",
   "anchor": "ground",
-  "lifeMs": 2000
+  "hit": false
 }

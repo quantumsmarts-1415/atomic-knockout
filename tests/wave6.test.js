@@ -86,22 +86,26 @@ test('wave 6 ghosts are playable with the doc moves and pronouns', () => {
   assert.strictEqual(CHARACTERS.mae.moves.specialDirectional.splitOnHit, true);
   assert.strictEqual(CHARACTERS.mac.moves.basicCharge.pulses.length, 5);
   assert.strictEqual(CHARACTERS.mac.moves.specialDefense.crackAfterHits, 3);
-  assert.strictEqual(CHARACTERS.liv.moves.basicCharge.fizzleBelow, 0.95);
-  assert.strictEqual(CHARACTERS.liv.moves.specialDefense.reflectAs, 'radiation');
+  assert.strictEqual(CHARACTERS.liv.moves.basicCharge.earlyBlast.below, 1);
+  assert.deepStrictEqual(CHARACTERS.liv.moves.specialDefense.detonateOn, ['heat', 'kinetic']);
   assert.strictEqual(CHARACTERS.tess.moves.specialDirectional.fan, 6);
   assert.strictEqual(CHARACTERS.tess.moves.specialDefense.phase, true);
 });
 
-test('hohlraum sends heat and lasers back as radiation', () => {
+test('hohlraum detonates on heat or kinetic and ignores other types', () => {
   const defender = {
     state: 'defending',
     defenseMove: CHARACTERS.liv.moves.specialDefense,
   };
   const heat = interceptHit(defender, { x: 0 }, { type: 'heat', damage: 10 }, 0);
-  assert.strictEqual(heat.result, 'counter');
-  assert.strictEqual(heat.counter.type, 'radiation');
+  assert.strictEqual(heat.result, 'negate');
+  assert.strictEqual(heat.endDefense, true);
+  assert.strictEqual(heat.detonate.type, 'heat');
+  assert.strictEqual(heat.detonate.type2, 'radiation');
   const kinetic = interceptHit(defender, { x: 0 }, { type: 'kinetic', damage: 10 }, 0);
-  assert.strictEqual(kinetic.result, 'pass');
+  assert.strictEqual(kinetic.result, 'negate');
+  const chemical = interceptHit(defender, { x: 0 }, { type: 'chemical', damage: 10 }, 0);
+  assert.strictEqual(chemical.result, 'pass');
 });
 
 test('walk12 keeps the cell, foot line, and idle body height', () => {
@@ -111,8 +115,20 @@ test('walk12 keeps the cell, foot line, and idle body height', () => {
     const idle = sheets.clips.idle;
     assert.strictEqual(walk.count, 12, id);
     assert.ok(walk.fps > 0, id);
-    assert.ok(Math.abs(walk.bodyH - idle.bodyH) <= 2, `${id} body`);
-    assert.ok(Math.abs(walk.footY - idle.footY) <= 0.015, `${id} footY`);
+    // World height matches even when the idle cell was redrawn at a new
+    // resolution. The foot fraction is shared only while the cells match;
+    // a taller idle keeps its own sole row.
+    const worldH = (def) => {
+      const body = def.bodyH ?? def.visibleH ?? sheets.bodyH ?? sheets.visibleH;
+      const scale = def.displayScale ?? sheets.displayScale ?? (CHARACTERS[id].art.height / body);
+      return scale * body;
+    };
+    assert.ok(Math.abs(worldH(walk) - worldH(idle)) < 0.5, `${id} body`);
+    const walkH = walk.frameH ?? sheets.frameH;
+    const idleH = idle.frameH ?? sheets.frameH;
+    if (walkH === idleH) {
+      assert.ok(Math.abs(walk.footY - idle.footY) <= 0.015, `${id} footY`);
+    }
     assert.strictEqual(walk.visibleH, walk.bodyH, id);
     const png = PNG.sync.read(readFileSync(`art-src/imported/sheets/${id}_walk.png`));
     const frames = gridFrames(png, walk.count, walk.frameW, walk.frameH);

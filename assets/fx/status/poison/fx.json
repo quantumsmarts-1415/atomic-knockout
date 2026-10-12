@@ -1,0 +1,15 @@
+{
+  "file": "poison-status-sheet.jpg",
+  "frames": 4,
+  "fps": 8,
+  "loop": true,
+  "blend": "screen",
+  "luma": true,
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.75,
+  "crop": "frame",
+  "pivot": "bottom",
+  "anchor": "feet",
+  "hit": false
+}

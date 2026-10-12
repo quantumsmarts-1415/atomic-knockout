@@ -1,10 +1,16 @@
 {
+  "file": "quicklime-splash-anim.png",
   "blend": "screen",
   "luma": true,
   "black": 16,
-  "hit": false,
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 15,
+  "loop": false,
+  "scale": 1.25,
   "fit": "width",
   "heightFrac": 1.8,
-  "crop": "frame",
-  "pivot": "center"
+  "pivot": "center",
+  "hit": false
 }

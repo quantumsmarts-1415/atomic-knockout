@@ -1,0 +1,12 @@
+{
+  "file": "fume-fever-cloud.jpg",
+  "blend": "screen",
+  "luma": true,
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.35,
+  "crop": "frame",
+  "pivot": "bottom",
+  "anchor": "ground",
+  "hit": false
+}

@@ -1,0 +1,25 @@
+{
+  "blend": "normal",
+  "black": 16,
+  "hit": false,
+  "projectile": {
+    "file": "dry-cell-battery.jpg",
+    "blend": "normal",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.28,
+    "crop": "frame",
+    "pivot": "center"
+  },
+  "detonate": {
+    "file": "dry-cell-pop.jpg",
+    "blend": "normal",
+    "black": 16,
+    "luma": true,
+    "fit": "width",
+    "heightFrac": 0.85,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "point"
+  }
+}

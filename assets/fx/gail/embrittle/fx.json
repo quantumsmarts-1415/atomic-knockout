@@ -1,0 +1,25 @@
+{
+  "file": "gallium-seep-sheet.jpg",
+  "frames": 4,
+  "fps": 8,
+  "blend": "normal",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.75,
+  "crop": "frame",
+  "pivot": "top",
+  "anchor": "fist",
+  "hit": false,
+  "cling": {
+    "file": "gallium-seep-sheet.jpg",
+    "frames": 4,
+    "fps": 8,
+    "loop": true,
+    "blend": "normal",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "crop": "frame",
+    "pivot": "top"
+  }
+}

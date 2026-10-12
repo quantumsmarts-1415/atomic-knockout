@@ -1,0 +1,10 @@
+{
+  "file": "anode-absorb-burst.jpg",
+  "blend": "normal",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.25,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false
+}

@@ -48,12 +48,13 @@ async function main() {
     names.sort((a, b) => (a === 'idle' ? -1 : b === 'idle' ? 1 : a.localeCompare(b)));
     for (const name of names) {
       const def = sheets.clips[name];
-      const file = join(root, `${sheets.dir}${c.id}_${name}.png`);
+      const file = join(root, `${sheets.dir}${def.file || `${c.id}_${name}.png`}`);
       if (!existsSync(file) || art.use3d === false) continue;
       const png = loadPng(file);
       const lay = clipScale(art, sheets, def);
+      const clipFacing = def.sheetFacing ?? facing;
       const built = framesOf(
-        png, def.count, lay.frameW, lay.frameH, lay.footY, lay.scale, facing, lay.bodyH,
+        png, def.count, lay.frameW, lay.frameH, lay.footY, lay.scale, clipFacing, lay.bodyH,
       );
       const usable = built.specs.filter(Boolean);
       if (!usable.length) continue;

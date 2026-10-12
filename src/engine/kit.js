@@ -87,6 +87,15 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.kinDefMult = fx.corrode.mult ?? 0.72;
     victim.kinDefMultUntil = time + (fx.corrode.ms ?? 2200);
   }
+  if (fx.kineticTaken) {
+    const spec = fx.kineticTaken;
+    victim.kineticResistMult = spec.mult ?? 1.25;
+    victim.kineticResistUntil = time + (spec.ms ?? 5000);
+    if (spec.coat) {
+      victim.debuffCoat = spec.coat;
+      victim.debuffCoatUntil = victim.kineticResistUntil;
+    }
+  }
   if (fx.strip) stripBuffs(victim);
 }
 
@@ -110,7 +119,77 @@ export function cleanse(fighter, kinds) {
   }
   if (list.includes('slow')) fighter.slowUntil = 0;
   if (list.includes('mark')) fighter.markUntil = 0;
-  if (list.includes('debuff')) stripBuffs(fighter);
+  if (list.includes('debuff')) {
+    stripBuffs(fighter);
+    fighter.debuffCoatUntil = 0;
+    fighter.slowUntil = 0;
+    fighter.weakenUntil = 0;
+    fighter.rootedUntil = 0;
+    fighter.vulnerableUntil = 0;
+  }
+}
+
+/** End a hold and drop armor buffs. Debuffs (burns, poison, slows, corrosion) stay. */
+export function stripProtection(fighter) {
+  if (!fighter) return false;
+  let removed = false;
+  if (fighter.state === 'defending' && fighter.defenseMove) {
+    const zoneName = fighter.defenseMove.zone?.name;
+    fighter.scene?.dropPins?.(fighter);
+    if (zoneName) fighter.scene?.clearOwnedZones?.(fighter, zoneName);
+    fighter.state = 'idle';
+    fighter.defenseMove = null;
+    fighter.alpha = 1;
+    removed = true;
+  }
+  const now = fighter.scene?.time?.now ?? 0;
+  if (fighter.heatResistUntil > now && (fighter.heatResistMult ?? 1) < 1) {
+    fighter.heatResistUntil = 0;
+    removed = true;
+  }
+  if (fighter.kineticResistUntil > now && (fighter.kineticResistMult ?? 1) < 1) {
+    fighter.kineticResistUntil = 0;
+    removed = true;
+  }
+  if (fighter.chemResistUntil > now && (fighter.chemResistMult ?? 1) < 1) {
+    fighter.chemResistUntil = 0;
+    removed = true;
+  }
+  if (fighter.buffCoatUntil > now) {
+    fighter.buffCoatUntil = 0;
+    removed = true;
+  }
+  if (fighter.attackPowerUntil > now) {
+    fighter.attackPowerUntil = 0;
+    removed = true;
+  }
+  if (fighter.bonusHits > 0) {
+    fighter.bonusHits = 0;
+    fighter.bonusPacket = null;
+    removed = true;
+  }
+  if (fighter.unquenchableUntil > now) {
+    fighter.unquenchableUntil = 0;
+    removed = true;
+  }
+  if (fighter.heatOnHitUntil > now) {
+    fighter.heatOnHitUntil = 0;
+    fighter.heatOnHitLeft = 0;
+    removed = true;
+  }
+  if (fighter.hardenStacks) {
+    fighter.hardenStacks = 0;
+    removed = true;
+  }
+  if (fighter.lingerImmuneUntil > now) {
+    fighter.lingerImmuneUntil = 0;
+    removed = true;
+  }
+  if (fighter.mitigateUntil > now) {
+    fighter.mitigateUntil = 0;
+    removed = true;
+  }
+  return removed;
 }
 
 export function stripBuffs(fighter) {
@@ -413,7 +492,15 @@ export function prepareMove(move, attacker, defender, now = 0) {
       damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
     };
   }
-  if (move.bonusVsPercent && defender) {
+  if (move.percentScale && defender) {
+    const cap = move.percentScale.cap ?? 2.5;
+    const mult = Math.min(cap, 1 + Math.max(0, defender.percent ?? 0) / 100);
+    next = {
+      ...next,
+      damage: (next.damage ?? 0) * mult,
+      damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
+    };
+  } else if (move.bonusVsPercent && defender) {
     const mult = 1 + Math.min(1.1, ((defender.percent ?? 0) / 100) * move.bonusVsPercent);
     next = {
       ...next,

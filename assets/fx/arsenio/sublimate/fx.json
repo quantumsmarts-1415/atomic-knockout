@@ -1,0 +1,27 @@
+{
+  "file": "sublimate-vapor-sheet.jpg",
+  "frames": 4,
+  "fps": 8,
+  "loop": false,
+  "blend": "screen",
+  "luma": true,
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.5,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "body",
+  "holdAt": 2,
+  "breakFrom": 3,
+  "ghost": 0.18,
+  "hit": false,
+  "burst": {
+    "file": "sublimate-counter-burst.jpg",
+    "blend": "normal",
+    "black": 16,
+    "fit": "width",
+    "heightFrac": 1.2,
+    "crop": "frame",
+    "pivot": "center"
+  }
+}

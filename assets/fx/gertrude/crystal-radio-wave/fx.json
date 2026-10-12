@@ -1,0 +1,17 @@
+{
+  "blend": "add",
+  "black": 16,
+  "hit": false,
+  "projectile": {
+    "file": "radio-wave-sheet.jpg",
+    "frames": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "crop": "frame",
+    "pivot": "center"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "file": "titanium-lance.jpg",
+  "blend": "normal",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 0.85,
+  "crop": "frame",
+  "pivot": "left",
+  "anchor": "fist",
+  "hit": false
+}

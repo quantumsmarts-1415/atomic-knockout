@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert';
 import { mock } from 'node:test';
 import { createRequire } from 'node:module';
+import fs from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const phaserPath = require.resolve('phaser');
@@ -23,6 +24,7 @@ mock.module(phaserPath, {
 const {
   clipFrameSize,
   clipDisplayLayout,
+  fitSheetGrid,
   loadRosterArt,
   positiveFinite,
   formatLoadPercent,
@@ -82,6 +84,28 @@ test('clipFrameSize mixes per-clip and shared when only one dimension is set', (
     clipFrameSize(sheets, { count: 8, frameW: 800 }),
     { frameW: 800, frameH: 720 },
   );
+});
+
+test('fitSheetGrid packs a 12-frame strip that is taller than the GPU limit', () => {
+  const grid = fitSheetGrid(2272, 720, 12, 8192);
+  assert.deepStrictEqual(grid, { cols: 3, rows: 4, width: 6816, height: 2880 });
+});
+
+test('fitSheetGrid returns null when a single cell exceeds the GPU limit', () => {
+  assert.equal(fitSheetGrid(9000, 100, 2, 8192), null);
+  assert.equal(fitSheetGrid(0, 720, 12, 8192), null);
+});
+
+test('allen attack sheet is taller than 8192 and still packs under that limit', () => {
+  const buf = fs.readFileSync('art-src/gemini-test/sheets/allen_attack.png');
+  assert.equal(buf.toString('ascii', 12, 16), 'IHDR');
+  const width = buf.readUInt32BE(16);
+  const height = buf.readUInt32BE(20);
+  assert.equal(width, 2272);
+  assert.ok(height > 8192);
+  const grid = fitSheetGrid(width, 720, 12, 8192);
+  assert.equal(grid.cols * grid.rows, 12);
+  assert.ok(grid.width <= 8192 && grid.height <= 8192);
 });
 
 test('clipFrameSize throws on non-positive or non-finite resolved size', () => {

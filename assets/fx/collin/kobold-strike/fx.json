@@ -1,0 +1,11 @@
+{
+  "file": "kobold-strike-impact.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 0.85,
+  "crop": "frame",
+  "pivot": "bottom",
+  "anchor": "ground",
+  "hit": false
+}

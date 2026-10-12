@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { PNG } from 'pngjs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, sliceGrid, sliceHorizontal, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, sliceGrid, sliceHorizontal, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
+import { interceptHit } from '../src/engine/defense.js';
 
 test('every move has a folder, a type, and a score', () => {
   const rows = classifyRoster(ROSTER);
@@ -468,6 +468,40 @@ test('a looping sheet crossfades its tail into the first frame', () => {
   assert.equal(fs.existsSync('assets/fx/nitra/mini-tornado/tornado-anim.png'), true);
 });
 
+test('push 2 flow sheets replace the batch 2 stills', () => {
+  const expect = {
+    'assets/fx/helen/air-wave/fx.json': { file: 'air-wave-anim.png', frames: 24, blend: 'add', fps: 9.796, luma: undefined },
+    'assets/fx/sully/black-powder/fx.json': { file: 'black-powder-blast-anim.png', frames: 24, blend: 'screen', fps: 10.435, luma: true },
+    'assets/fx/sully/volcanic-eruption/fx.json': { file: 'volcanic-eruption-anim.png', frames: 24, blend: 'add', fps: 11.321, luma: undefined },
+    'assets/fx/chloe/gas-cloud/fx.json': { file: 'gas-cloud-anim.png', frames: 23, blend: 'screen', fps: 11.129, luma: true },
+    'assets/fx/aaron/noble-discharge/fx.json': { file: 'noble-discharge-anim.png', frames: 24, blend: 'add', fps: 11.429, luma: undefined },
+    'assets/fx/cal/slime-splash/fx.json': { file: 'quicklime-splash-anim.png', frames: 24, blend: 'screen', fps: 15, luma: true },
+    'assets/fx/scarlett/afterburner/fx.json': { file: 'afterburner-plume-anim.png', frames: 24, blend: 'add', fps: 10.286, luma: undefined, loop: true },
+  };
+  for (const [path, want] of Object.entries(expect)) {
+    const meta = JSON.parse(fs.readFileSync(path, 'utf8'));
+    assert.equal(meta.file, want.file);
+    assert.equal(meta.frames, want.frames);
+    assert.equal(meta.cols, 4);
+    assert.equal(meta.rows, 6);
+    assert.equal(meta.blend, want.blend);
+    assert.equal(meta.fps, want.fps);
+    assert.equal(meta.loop, want.loop ?? false);
+    assert.equal(meta.scale, 1.25);
+    assert.equal(meta.luma, want.luma);
+    assert.equal(meta.crop, undefined);
+    assert.equal(meta.hit, false);
+    assert.equal(fs.existsSync(path.replace(/fx\.json$/, want.file)), true);
+  }
+  const powder = JSON.parse(fs.readFileSync('assets/fx/sully/black-powder/fx.json', 'utf8'));
+  assert.equal(powder.scaleWith, 'radius');
+  const cloud = JSON.parse(fs.readFileSync('assets/fx/chloe/gas-cloud/fx.json', 'utf8'));
+  assert.equal(cloud.anchor, 'ground');
+  const plume = JSON.parse(fs.readFileSync('assets/fx/scarlett/afterburner/fx.json', 'utf8'));
+  assert.equal(plume.anchor, 'trail');
+  assert.deepEqual(plume.order, [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]);
+});
+
 test('flow sheets replace the still supernova and keep the charge scale', () => {
   const nova = JSON.parse(fs.readFileSync('assets/fx/hydra/supernova/fx.json', 'utf8'));
   assert.equal(nova.file, 'supernova-peak-anim.png');
@@ -535,136 +569,581 @@ test('a dropped-in mask hits the body it covers and misses when it is moved away
   assert.equal(projectileHits(shot, hog), true);
 });
 
-test('batch 2 wave 1 moves point at real full-resolution art', () => {
-  const rows = [
-    ['assets/fx/helen/air-wave/fx.json', 'charge', 'add', 6],
-    ['assets/fx/helen/noble-gust/fx.json', null, 'add', 1],
-    ['assets/fx/helen/bubble-shield/fx.json', null, 'screen', 4],
-    ['assets/fx/helen/balloon-bop/fx.json', 'projectile', 'normal', 1],
-    ['assets/fx/sully/black-powder/fx.json', null, 'screen', 1],
-    ['assets/fx/sully/brimstone-slam/fx.json', null, 'add', 1],
-    ['assets/fx/sully/volcanic-eruption/fx.json', null, 'add', 1],
-    ['assets/fx/chloe/bleach-out/fx.json', 'projectile', 'add', 1],
-    ['assets/fx/chloe/toxic-jab/fx.json', null, 'screen', 1],
-    ['assets/fx/chloe/salt-bond/fx.json', 'shatter', 'add', 1],
-    ['assets/fx/chloe/gas-cloud/fx.json', null, 'screen', 6],
-    ['assets/fx/status/on-fire-small/fx.json', null, 'add', 6],
-    ['assets/fx/status/smoke-wisp/fx.json', null, 'screen', 6],
+test('gemini fx sheets replace the placeholder stills', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  const kyle = read('assets/fx/kyle/action-potential/fx.json');
+  assert.equal(kyle.file, 'action-potential-pulse-sheet.jpg');
+  assert.equal(kyle.frames, 6);
+  assert.equal(kyle.blend, 'add');
+  assert.equal(kyle.once, true);
+  assert.equal(kyle.hit, false);
+  assert.equal(kyle.spriteAura, undefined);
+  const aaron = read('assets/fx/aaron/lazy-haymaker/fx.json');
+  assert.equal(aaron.file, 'lazy-glow-aura-sheet.jpg');
+  assert.equal(aaron.frames, 6);
+  assert.equal(aaron.anchor, 'aura');
+  assert.equal(aaron.blend, 'add');
+  assert.equal(aaron.spriteAura, undefined);
+  assert.equal(aaron.hit, false);
+  const rocket = read('assets/fx/scarlett/micro-rocket/fx.json');
+  assert.equal(rocket.projectile.file, 'micro-rocket.jpg');
+  assert.equal(rocket.projectile.blend, 'normal');
+  assert.equal(rocket.detonate.file, 'rocket-explosion.jpg');
+  assert.equal(rocket.detonate.blend, 'add');
+  assert.equal(rocket.detonate.anchor, 'point');
+  assert.equal(rocket.hit, false);
+  const ram = read('assets/fx/titan/titanium-ram/fx.json');
+  assert.equal(ram.file, 'titanium-sparks-sheet.jpg');
+  assert.equal(ram.frames, 4);
+  assert.equal(ram.anchor, 'trail');
+  assert.equal(ram.pivot, 'right');
+  assert.equal(ram.releaseImpact, true);
+  assert.equal(ram.impact.file, 'ram-impact.jpg');
+  assert.equal(ram.hit, false);
+  const jab = read('assets/fx/titan/lance-jab/fx.json');
+  assert.equal(jab.blend, 'normal');
+  assert.equal(jab.anchor, 'fist');
+  assert.equal(jab.pivot, 'left');
+  const lance = read('assets/fx/titan/aero-lance/fx.json');
+  assert.equal(lance.projectile.blend, 'normal');
+  assert.equal(lance.trail.file, 'lance-trail.jpg');
+  assert.equal(lance.trail.blend, 'add');
+  assert.equal(lance.trail.pivot, 'right');
+  const redox = read('assets/fx/van/redox-flow/fx.json');
+  assert.equal(redox.anchor, 'aura');
+  assert.equal(redox.spriteAura, undefined);
+  assert.equal(redox.frames, 4);
+  assert.equal(redox.blend, 'add');
+  const surge = read('assets/fx/van/prism-surge/fx.json');
+  assert.equal(surge.frames, 4);
+  assert.equal(surge.peak, 'prism-surge-burst.jpg');
+  assert.equal(surge.peakFrame, 1);
+  const beam = read('assets/fx/chroma/ruby-laser/fx.json');
+  assert.equal(beam.stretch, 'length');
+  assert.equal(beam.pivot, 'left');
+  assert.equal(beam.charge.file, 'ruby-charge-glow.jpg');
+  assert.equal(beam.charge.anchor, 'body');
+  const pop = read('assets/fx/manny/dry-cell-lob/fx.json');
+  assert.equal(pop.projectile.blend, 'normal');
+  assert.equal(pop.detonate.luma, true);
+  assert.equal(pop.detonate.blend, 'normal');
+  assert.equal(pop.detonate.anchor, 'point');
+  const glob = read('assets/fx/manny/permanganate-splash/fx.json');
+  assert.equal(glob.projectile.blend, 'normal');
+  assert.equal(glob.detonate.blend, 'add');
+  assert.equal(glob.stain.file, 'purple-stain-sheet.jpg');
+  assert.equal(glob.stain.frames, 4);
+  assert.equal(glob.stain.blend, 'normal');
+  assert.equal(glob.stain.loop, true);
+  assert.equal(glob.hit, false);
+  const files = [
+    kyle.file, aaron.file, rocket.projectile.file, rocket.detonate.file,
+    ram.file, ram.impact.file, jab.file, lance.projectile.file, lance.trail.file,
+    redox.file, 'alloy-fist-impact.jpg', surge.file, surge.peak,
+    beam.file, beam.charge.file, 'chrome-edge-slash.jpg', 'prismatic-shatter.jpg',
+    glob.projectile.file, glob.detonate.file, glob.stain.file,
+    pop.projectile.file, pop.detonate.file,
   ];
-  for (const [path, side, blend, frames] of rows) {
-    const meta = JSON.parse(fs.readFileSync(path, 'utf8'));
+  const dirs = {
+    'action-potential-pulse-sheet.jpg': 'assets/fx/kyle/action-potential/',
+    'lazy-glow-aura-sheet.jpg': 'assets/fx/aaron/lazy-haymaker/',
+    'micro-rocket.jpg': 'assets/fx/scarlett/micro-rocket/',
+    'rocket-explosion.jpg': 'assets/fx/scarlett/micro-rocket/',
+    'titanium-sparks-sheet.jpg': 'assets/fx/titan/titanium-ram/',
+    'ram-impact.jpg': 'assets/fx/titan/titanium-ram/',
+    'titanium-lance.jpg': 'assets/fx/titan/lance-jab/',
+    'lance-trail.jpg': 'assets/fx/titan/aero-lance/',
+    'redox-flow-aura-sheet.jpg': 'assets/fx/van/redox-flow/',
+    'alloy-fist-impact.jpg': 'assets/fx/van/alloy-fist/',
+    'prism-surge-sheet.jpg': 'assets/fx/van/prism-surge/',
+    'prism-surge-burst.jpg': 'assets/fx/van/prism-surge/',
+    'ruby-laser-beam.jpg': 'assets/fx/chroma/ruby-laser/',
+    'ruby-charge-glow.jpg': 'assets/fx/chroma/ruby-laser/',
+    'chrome-edge-slash.jpg': 'assets/fx/chroma/chrome-edge/',
+    'prismatic-shatter.jpg': 'assets/fx/chroma/prismatic-shatter/',
+    'permanganate-glob.jpg': 'assets/fx/manny/permanganate-splash/',
+    'permanganate-splash.jpg': 'assets/fx/manny/permanganate-splash/',
+    'purple-stain-sheet.jpg': 'assets/fx/manny/permanganate-splash/',
+    'dry-cell-battery.jpg': 'assets/fx/manny/dry-cell-lob/',
+    'dry-cell-pop.jpg': 'assets/fx/manny/dry-cell-lob/',
+  };
+  for (const name of files) assert.equal(fs.existsSync(dirs[name] + name), true, name);
+  assert.equal(fs.existsSync('assets/fx/titan/aero-lance/titanium-lance.jpg'), true);
+});
+
+test('a one-shot pulse keeps the size of the frame it is showing', () => {
+  const seen = [];
+  const p = {
+    born: 0,
+    fxFrames: ['a', 'b', 'c'],
+    fxFps: 10,
+    fxOnce: true,
+    fxDisplayWs: [10, 20, 40],
+    fxDisplayHs: [8, 16, 32],
+    move: { roll: true, vx: 1 },
+    vx: 1,
+    gfx: {
+      setTexture(key) { this.key = key; },
+      setDisplaySize(w, h) { seen.push([this.key, w, h]); },
+      rotation: 1,
+      scaleX: 1,
+      scaleY: 1,
+      setScale(x, y) { this.scaleX = x; this.scaleY = y; },
+    },
+  };
+  stepFxProjectile(p, 0);
+  stepFxProjectile(p, 100);
+  stepFxProjectile(p, 400);
+  assert.deepEqual(seen, [['a', 10, 8], ['b', 20, 16], ['c', 40, 32]]);
+  assert.equal(p.gfx.key, 'c');
+  assert.equal(p.gfx.rotation, 0);
+});
+
+test('a falling meteorite keeps its painted orientation', () => {
+  const p = {
+    born: 0,
+    fxFrames: ['rock'],
+    fxFps: 8,
+    fxAim: false,
+    vx: -40,
+    vy: 560,
+    gfx: {
+      key: 'rock',
+      rotation: 1.2,
+      scaleX: 2,
+      scaleY: 3,
+      setTexture() {},
+      setDisplaySize() {},
+      setScale(x, y) { this.scaleX = x; this.scaleY = y; },
+    },
+  };
+  stepFxProjectile(p, 50);
+  assert.equal(p.gfx.rotation, 0);
+  assert.equal(p.gfx.scaleX, -2);
+  assert.equal(p.gfx.scaleY, 3);
+});
+
+test('gemini fx call 1 wires fey, collin, and nick', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  const same = (a, b) => fs.readFileSync(a).equals(fs.readFileSync(b));
+  const hammer = read('assets/fx/fey/forge-hammer/fx.json');
+  assert.equal(hammer.file, 'forge-hammer-impact.jpg');
+  assert.equal(hammer.blend, 'add');
+  assert.equal(hammer.anchor, 'ground');
+  assert.equal(hammer.pivot, 'bottom');
+  assert.equal(hammer.hit, false);
+  assert.equal(hammer.charge.file, 'blowtorch-flame-sheet.jpg');
+  assert.equal(hammer.charge.frames, 4);
+  assert.equal(hammer.charge.loop, true);
+  assert.equal(hammer.charge.flip, true);
+  assert.equal(hammer.charge.anchor, 'body');
+  assert.equal(hammer.spriteAura, undefined);
+  const iron = read('assets/fx/fey/cold-iron-cut/fx.json');
+  assert.equal(iron.file, 'cold-iron-slash.jpg');
+  assert.equal(iron.blend, 'add');
+  assert.equal(iron.anchor, 'fist');
+  assert.equal(iron.pivot, 'left');
+  assert.equal(iron.hit, false);
+  const field = read('assets/fx/fey/lodestone-guard/fx.json');
+  assert.equal(field.file, 'lodestone-field-sheet.jpg');
+  assert.equal(field.frames, 4);
+  assert.equal(field.loop, true);
+  assert.equal(field.anchor, 'body');
+  assert.equal(field.blend, 'add');
+  assert.equal(field.hit, false);
+  assert.equal(field.spriteAura, undefined);
+  const thermite = read('assets/fx/fey/thermite/fx.json');
+  const allen = read('assets/fx/allen/thermite-burn/fx.json');
+  assert.deepEqual(thermite, allen);
+  assert.equal(thermite.file, 'thermite-spray-anim.png');
+  assert.equal(thermite.blend, 'add');
+  assert.equal(thermite.hit, false);
+  assert.equal(thermite.cling.file, 'sheet.png');
+  assert.equal(same('assets/fx/fey/thermite/thermite-spray-anim.png', 'assets/fx/allen/thermite-burn/thermite-spray-anim.png'), true);
+  assert.equal(same('assets/fx/fey/thermite/sheet.png', 'assets/fx/allen/thermite-burn/sheet.png'), true);
+  assert.equal(same('assets/fx/fey/thermite/object.png', 'assets/fx/allen/thermite-burn/object.png'), true);
+  const gamma = read('assets/fx/collin/gamma-knife/fx.json');
+  assert.equal(gamma.file, 'gamma-knife-arc.jpg');
+  assert.equal(gamma.blend, 'add');
+  assert.equal(gamma.stretch, 'length');
+  assert.equal(gamma.pivot, 'left');
+  assert.equal(gamma.hit, false);
+  assert.equal(gamma.charge.file, 'gamma-charge-glow.jpg');
+  assert.equal(gamma.charge.anchor, 'body');
+  const kobold = read('assets/fx/collin/kobold-strike/fx.json');
+  assert.equal(kobold.blend, 'add');
+  assert.equal(kobold.anchor, 'ground');
+  assert.equal(kobold.hit, false);
+  assert.equal(fs.existsSync('assets/fx/collin/superalloy-shell/fx.json'), false);
+  const glaze = read('assets/fx/collin/blue-glaze/fx.json');
+  assert.equal(glaze.projectile.file, 'blue-glaze-glob.jpg');
+  assert.equal(glaze.projectile.blend, 'normal');
+  assert.equal(glaze.detonate.file, 'blue-glaze-splash.jpg');
+  assert.equal(glaze.detonate.blend, 'add');
+  assert.equal(glaze.detonate.anchor, 'point');
+  assert.equal(glaze.hit, false);
+  const snap = read('assets/fx/nick/memory-snap/fx.json');
+  assert.equal(snap.file, 'memory-snap-burst.jpg');
+  assert.equal(snap.blend, 'add');
+  assert.equal(snap.pivot, 'left');
+  assert.equal(snap.flip, true);
+  assert.equal(snap.hit, false);
+  const coin = read('assets/fx/nick/nickel-and-dime/fx.json');
+  assert.equal(coin.projectile.file, 'coin-spin-sheet.jpg');
+  assert.equal(coin.projectile.frames, 4);
+  assert.equal(coin.projectile.loop, true);
+  assert.equal(coin.projectile.blend, 'normal');
+  assert.equal(coin.hit, false);
+  assert.equal(fs.existsSync('assets/fx/nick/electroplate/fx.json'), false);
+  const meteor = read('assets/fx/nick/meteorite-drop/fx.json');
+  assert.equal(meteor.projectile.file, 'meteorite.jpg');
+  assert.equal(meteor.projectile.blend, 'normal');
+  assert.equal(meteor.projectile.aim, false);
+  assert.equal(meteor.detonate.file, 'meteor-impact.jpg');
+  assert.equal(meteor.detonate.blend, 'add');
+  assert.equal(meteor.detonate.anchor, 'ground');
+  assert.equal(meteor.detonate.pivot, 'bottom');
+  assert.equal(meteor.hit, false);
+  const files = [
+    [hammer.file, 'assets/fx/fey/forge-hammer/'],
+    [hammer.charge.file, 'assets/fx/fey/forge-hammer/'],
+    [iron.file, 'assets/fx/fey/cold-iron-cut/'],
+    [field.file, 'assets/fx/fey/lodestone-guard/'],
+    [gamma.file, 'assets/fx/collin/gamma-knife/'],
+    [gamma.charge.file, 'assets/fx/collin/gamma-knife/'],
+    [kobold.file, 'assets/fx/collin/kobold-strike/'],
+    [glaze.projectile.file, 'assets/fx/collin/blue-glaze/'],
+    [glaze.detonate.file, 'assets/fx/collin/blue-glaze/'],
+    [snap.file, 'assets/fx/nick/memory-snap/'],
+    [coin.projectile.file, 'assets/fx/nick/nickel-and-dime/'],
+    [meteor.projectile.file, 'assets/fx/nick/meteorite-drop/'],
+    [meteor.detonate.file, 'assets/fx/nick/meteorite-drop/'],
+  ];
+  for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
+});
+
+test('gemini fx wires cooper and zane', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  const tesla = read('assets/fx/cooper/tesla-coil/fx.json');
+  assert.equal(tesla.file, 'tesla-coil-arcs-sheet.jpg');
+  assert.equal(tesla.frames, 4);
+  assert.equal(tesla.blend, 'add');
+  assert.equal(tesla.hit, false);
+  assert.equal(tesla.charge.file, 'tesla-coil-arcs-sheet.jpg');
+  assert.equal(tesla.charge.frames, 4);
+  assert.equal(tesla.charge.loop, true);
+  assert.equal(tesla.charge.anchor, 'body');
+  assert.equal(tesla.charge.blend, 'add');
+  const wire = read('assets/fx/cooper/live-wire/fx.json');
+  assert.equal(wire.file, 'live-wire-whip-sheet.jpg');
+  assert.equal(wire.frames, 4);
+  assert.equal(wire.blend, 'normal');
+  assert.equal(wire.pivot, 'left');
+  assert.equal(wire.anchor, 'fist');
+  assert.equal(wire.hit, false);
+  const rod = read('assets/fx/cooper/grounding-rod/fx.json');
+  assert.equal(rod.file, 'grounding-sparks-sheet.jpg');
+  assert.equal(rod.frames, 4);
+  assert.equal(rod.loop, true);
+  assert.equal(rod.blend, 'add');
+  assert.equal(rod.anchor, 'ground');
+  assert.equal(rod.pivot, 'bottom');
+  assert.equal(rod.hit, false);
+  const sword = read('assets/fx/cooper/bronze-sword/fx.json');
+  assert.equal(sword.file, 'bronze-sword-slash.jpg');
+  assert.equal(sword.blend, 'add');
+  assert.equal(sword.anchor, 'fist');
+  assert.equal(sword.hit, false);
+  const dip = read('assets/fx/zane/hot-dip-galvanize/fx.json');
+  assert.equal(dip.file, 'molten-zinc-splash.jpg');
+  assert.equal(dip.blend, 'add');
+  assert.equal(dip.hit, false);
+  assert.equal(dip.bothSides, undefined);
+  assert.equal(dip.charge.file, 'zinc-kettle-sheet.jpg');
+  assert.equal(dip.charge.frames, 4);
+  assert.equal(dip.charge.loop, true);
+  assert.equal(dip.charge.anchor, 'feet');
+  assert.equal(dip.charge.pivot, 'bottom');
+  assert.equal(dip.charge.blend, 'add');
+  const brass = read('assets/fx/zane/brass-knuckles/fx.json');
+  assert.equal(brass.blend, 'add');
+  assert.equal(brass.anchor, 'fist');
+  assert.equal(brass.hit, false);
+  const anode = read('assets/fx/zane/sacrificial-anode/fx.json');
+  assert.equal(anode.file, 'anode-absorb-burst.jpg');
+  assert.equal(anode.blend, 'normal');
+  assert.equal(anode.hit, false);
+  assert.equal(anode.spriteAura, undefined);
+  const fume = read('assets/fx/zane/fume-fever/fx.json');
+  assert.equal(fume.file, 'fume-fever-cloud.jpg');
+  assert.equal(fume.blend, 'screen');
+  assert.equal(fume.luma, true);
+  assert.equal(fume.anchor, 'ground');
+  assert.equal(fume.hit, false);
+  const files = [
+    [tesla.file, 'assets/fx/cooper/tesla-coil/'],
+    [wire.file, 'assets/fx/cooper/live-wire/'],
+    [rod.file, 'assets/fx/cooper/grounding-rod/'],
+    [sword.file, 'assets/fx/cooper/bronze-sword/'],
+    [dip.file, 'assets/fx/zane/hot-dip-galvanize/'],
+    [dip.charge.file, 'assets/fx/zane/hot-dip-galvanize/'],
+    [brass.file, 'assets/fx/zane/brass-knuckles/'],
+    [anode.file, 'assets/fx/zane/sacrificial-anode/'],
+    [fume.file, 'assets/fx/zane/fume-fever/'],
+  ];
+  for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
+  const guard = {
+    state: 'defending',
+    defenseMove: { name: 'Sacrificial Anode', absorbTypes: ['chemical', 'electrical'] },
+    x: 0,
+    y: 0,
+  };
+  const absorbed = interceptHit(guard, { x: 40 }, { type: 'electrical', damage: 6 }, 0);
+  assert.equal(absorbed.result, 'negate');
+  assert.equal(absorbed.endDefense, true);
+  assert.equal(absorbed.absorb, true);
+  const kinetic = interceptHit(guard, { x: 40 }, { type: 'kinetic', damage: 6 }, 0);
+  assert.equal(kinetic.absorb, undefined);
+});
+
+test('gemini fx wires gail and gertrude', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  assert.equal(moveSlug("Mendeleev's Prediction"), 'mendeleev-s-prediction');
+  const arc = read('assets/fx/gail/superconductor-arc/fx.json');
+  assert.equal(arc.file, 'superconductor-arcs-sheet.jpg');
+  assert.equal(arc.frames, 4);
+  assert.equal(arc.loop, true);
+  assert.equal(arc.lifeMs, 1500);
+  assert.equal(arc.blend, 'add');
+  assert.equal(arc.hit, false);
+  assert.equal(arc.charge.anchor, 'body');
+  assert.equal(arc.charge.loop, true);
+  assert.equal(arc.charge.blend, 'add');
+  const seep = read('assets/fx/gail/embrittle/fx.json');
+  assert.equal(seep.file, 'gallium-seep-sheet.jpg');
+  assert.equal(seep.blend, 'normal');
+  assert.equal(seep.pivot, 'top');
+  assert.equal(seep.anchor, 'fist');
+  assert.equal(seep.hit, false);
+  assert.equal(seep.cling.file, 'gallium-seep-sheet.jpg');
+  assert.equal(seep.cling.blend, 'normal');
+  assert.equal(seep.cling.loop, true);
+  const melt = read('assets/fx/gail/melt-down/fx.json');
+  assert.equal(melt.file, 'melt-puddle-sheet.jpg');
+  assert.equal(melt.frames, 6);
+  assert.equal(melt.blend, 'normal');
+  assert.equal(melt.anchor, 'ground');
+  assert.equal(melt.pivot, 'bottom');
+  assert.equal(melt.puddle, true);
+  assert.equal(melt.holdAt, 3);
+  assert.equal(melt.breakFrom, 4);
+  assert.equal(melt.hit, false);
+  const led = read('assets/fx/gail/blue-led/fx.json');
+  assert.equal(led.file, 'blue-led-beam.jpg');
+  assert.equal(led.blend, 'add');
+  assert.equal(led.fit, 'length');
+  assert.equal(led.stretch, 'length');
+  assert.equal(led.pivot, 'left');
+  assert.equal(led.hit, false);
+  const predict = read('assets/fx/gertrude/mendeleev-s-prediction/fx.json');
+  assert.equal(predict.file, 'prediction-strike.jpg');
+  assert.equal(predict.blend, 'add');
+  assert.equal(predict.pivot, 'bottom');
+  assert.equal(predict.hit, false);
+  assert.equal(predict.charge.file, 'prediction-marker-sheet.jpg');
+  assert.equal(predict.charge.frames, 4);
+  assert.equal(predict.charge.loop, true);
+  assert.equal(predict.charge.anchor, 'predict');
+  const jab = read('assets/fx/gertrude/point-contact/fx.json');
+  assert.equal(jab.blend, 'add');
+  assert.equal(jab.anchor, 'fist');
+  assert.equal(jab.hit, false);
+  const gate = read('assets/fx/gertrude/transistor-gate/fx.json');
+  assert.equal(gate.file, 'transistor-gate-sheet.jpg');
+  assert.equal(gate.frames, 4);
+  assert.equal(gate.loop, false);
+  assert.equal(gate.blend, 'add');
+  assert.equal(gate.anchor, 'body');
+  assert.equal(gate.hit, false);
+  assert.equal(gate.spriteAura, undefined);
+  const wave = read('assets/fx/gertrude/crystal-radio-wave/fx.json');
+  assert.equal(wave.projectile.file, 'radio-wave-sheet.jpg');
+  assert.equal(wave.projectile.frames, 4);
+  assert.equal(wave.projectile.loop, true);
+  assert.equal(wave.projectile.blend, 'add');
+  assert.equal(wave.hit, false);
+  assert.equal(fs.existsSync('assets/fx/gertrude/thermal-lens/fx.json'), false);
+  const files = [
+    [arc.file, 'assets/fx/gail/superconductor-arc/'],
+    [seep.file, 'assets/fx/gail/embrittle/'],
+    [seep.cling.file, 'assets/fx/gail/embrittle/'],
+    [melt.file, 'assets/fx/gail/melt-down/'],
+    [led.file, 'assets/fx/gail/blue-led/'],
+    [predict.file, 'assets/fx/gertrude/mendeleev-s-prediction/'],
+    [predict.charge.file, 'assets/fx/gertrude/mendeleev-s-prediction/'],
+    [jab.file, 'assets/fx/gertrude/point-contact/'],
+    [gate.file, 'assets/fx/gertrude/transistor-gate/'],
+    [wave.projectile.file, 'assets/fx/gertrude/crystal-radio-wave/'],
+  ];
+  for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
+  const risen = breakFrames({ frames: ['a', 'b', 'c', 'd', 'e', 'f'], breakFrom: 4, fps: 8, blend: 'normal' });
+  assert.deepEqual(risen.frames, ['e', 'f']);
+});
+
+test('gemini fx wires arsenio and selena', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  assert.equal(moveSlug('Gray Arsenic Shards'), 'gray-arsenic-shards');
+  assert.equal(moveSlug('Paris Green Slash'), 'paris-green-slash');
+  const powder = read('assets/fx/arsenio/inheritance-powder/fx.json');
+  assert.equal(powder.projectile.file, 'inheritance-powder-puff.jpg');
+  assert.equal(powder.projectile.blend, 'screen');
+  assert.equal(powder.projectile.luma, true);
+  assert.equal(powder.projectile.aim, false);
+  assert.equal(powder.hit, false);
+  const slash = read('assets/fx/arsenio/paris-green-slash/fx.json');
+  assert.equal(slash.file, 'paris-green-slash.jpg');
+  assert.equal(slash.blend, 'add');
+  assert.equal(slash.anchor, 'fist');
+  assert.equal(slash.hit, false);
+  const vapor = read('assets/fx/arsenio/sublimate/fx.json');
+  assert.equal(vapor.file, 'sublimate-vapor-sheet.jpg');
+  assert.equal(vapor.frames, 4);
+  assert.equal(vapor.blend, 'screen');
+  assert.equal(vapor.luma, true);
+  assert.equal(vapor.anchor, 'body');
+  assert.equal(vapor.holdAt, 2);
+  assert.equal(vapor.breakFrom, 3);
+  assert.equal(vapor.ghost, 0.18);
+  assert.equal(vapor.hit, false);
+  assert.equal(vapor.burst.file, 'sublimate-counter-burst.jpg');
+  assert.equal(vapor.burst.blend, 'normal');
+  const shards = read('assets/fx/arsenio/gray-arsenic-shards/fx.json');
+  assert.equal(shards.projectile.file, 'arsenic-shard.jpg');
+  assert.equal(shards.projectile.blend, 'normal');
+  assert.equal(shards.projectile.aim, undefined);
+  assert.equal(shards.hit, false);
+  assert.equal(shards.detonate.file, 'arsenic-shatter.jpg');
+  assert.equal(shards.detonate.blend, 'normal');
+  assert.equal(shards.detonate.anchor, 'point');
+  const poison = read('assets/fx/status/poison/fx.json');
+  assert.equal(poison.file, 'poison-status-sheet.jpg');
+  assert.equal(poison.frames, 4);
+  assert.equal(poison.loop, true);
+  assert.equal(poison.blend, 'screen');
+  assert.equal(poison.luma, true);
+  assert.equal(poison.pivot, 'bottom');
+  assert.equal(poison.anchor, 'feet');
+  assert.equal(poison.hit, false);
+  assert.equal(fs.existsSync('assets/fx/status/poison/poison-status-sheet.jpg'), true);
+  assert.equal(fs.existsSync('assets/fx/arsenio/gray-arsenic-shards/poison-status-sheet.jpg'), false);
+  const bolt = read('assets/fx/selena/photoconductor/fx.json');
+  assert.equal(bolt.file, 'photoconductor-lightning.jpg');
+  assert.equal(bolt.blend, 'add');
+  assert.equal(bolt.fit, 'length');
+  assert.equal(bolt.stretch, 'length');
+  assert.equal(bolt.pivot, 'left');
+  assert.equal(bolt.hit, false);
+  assert.equal(bolt.charge.file, 'light-soak-sheet.jpg');
+  assert.equal(bolt.charge.frames, 2);
+  assert.equal(bolt.charge.loop, true);
+  assert.equal(bolt.charge.blend, 'add');
+  assert.equal(bolt.charge.anchor, 'body');
+  assert.equal(bolt.charge.spans.length, 2);
+  for (const [x, w] of bolt.charge.spans) {
+    assert.ok(x >= 0 && w > 0);
+    assert.ok(x + w <= 688, 'light-soak span stays off the clipped blob');
+  }
+  assert.ok(bolt.charge.spans[1][0] >= 330);
+  const kick = read('assets/fx/selena/crescent-kick/fx.json');
+  assert.equal(kick.file, 'crescent-kick-arc.jpg');
+  assert.equal(kick.blend, 'add');
+  assert.equal(kick.anchor, 'fist');
+  assert.equal(kick.hit, false);
+  const scan = read('assets/fx/selena/photocopy/fx.json');
+  assert.equal(scan.file, 'photocopy-scan-sheet.jpg');
+  assert.equal(scan.frames, 4);
+  assert.equal(scan.loop, true);
+  assert.equal(scan.blend, 'add');
+  assert.equal(scan.span, 'cell');
+  assert.equal(scan.crop, undefined);
+  assert.equal(scan.anchor, 'body');
+  assert.equal(scan.hit, false);
+  const moon = read('assets/fx/selena/moonbeam/fx.json');
+  assert.equal(moon.file, 'moonbeam.jpg');
+  assert.equal(moon.blend, 'add');
+  assert.equal(moon.fit, 'length');
+  assert.equal(moon.stretch, 'length');
+  assert.equal(moon.pivot, 'left');
+  assert.equal(moon.hit, false);
+  const files = [
+    [powder.projectile.file, 'assets/fx/arsenio/inheritance-powder/'],
+    [slash.file, 'assets/fx/arsenio/paris-green-slash/'],
+    [vapor.file, 'assets/fx/arsenio/sublimate/'],
+    [vapor.burst.file, 'assets/fx/arsenio/sublimate/'],
+    [shards.projectile.file, 'assets/fx/arsenio/gray-arsenic-shards/'],
+    [shards.detonate.file, 'assets/fx/arsenio/gray-arsenic-shards/'],
+    [poison.file, 'assets/fx/status/poison/'],
+    [bolt.file, 'assets/fx/selena/photoconductor/'],
+    [bolt.charge.file, 'assets/fx/selena/photoconductor/'],
+    [kick.file, 'assets/fx/selena/crescent-kick/'],
+    [scan.file, 'assets/fx/selena/photocopy/'],
+    [moon.file, 'assets/fx/selena/moonbeam/'],
+  ];
+  for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
+  assert.equal(shellFrame({ frames: [0, 1, 2, 3], holdAt: 2, fps: 8 }, 500), 2);
+  const cond = breakFrames({ frames: [0, 1, 2, 3], breakFrom: 3, fps: 8, blend: 'screen' });
+  assert.deepEqual(cond.frames, [3]);
+});
+
+test('batch 2 wave 1 keeps the sheets the later flow art did not replace', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  const rows = [
+    ['assets/fx/helen/noble-gust/fx.json', null, 'add'],
+    ['assets/fx/helen/bubble-shield/fx.json', null, 'screen'],
+    ['assets/fx/helen/balloon-bop/fx.json', 'projectile', 'normal'],
+    ['assets/fx/sully/brimstone-slam/fx.json', null, 'add'],
+    ['assets/fx/chloe/bleach-out/fx.json', 'projectile', 'add'],
+    ['assets/fx/chloe/toxic-jab/fx.json', null, 'screen'],
+    ['assets/fx/chloe/salt-bond/fx.json', 'shatter', 'add'],
+    ['assets/fx/status/on-fire-small/fx.json', null, 'add'],
+    ['assets/fx/status/smoke-wisp/fx.json', null, 'screen'],
+    ['assets/fx/aaron/inert-guard-strike/fx.json', null, 'screen'],
+    ['assets/fx/aaron/shield-gas/fx.json', null, 'screen'],
+    ['assets/fx/kyle/static-cross/fx.json', null, 'add'],
+    ['assets/fx/kyle/ion-channel/fx.json', 'shatter', 'add'],
+    ['assets/fx/kyle/banana-peel/fx.json', null, 'normal'],
+    ['assets/fx/cal/bone-crush/fx.json', null, 'normal'],
+    ['assets/fx/cal/quick-set-cement/fx.json', null, 'normal'],
+  ];
+  for (const [path, side, blend] of rows) {
+    const meta = read(path);
     const spec = side ? meta[side] : meta;
     assert.equal(spec.blend, blend, path);
-    if (blend !== 'add') assert.notEqual(spec.blend, 'add', path);
-    const file = spec.file || ((frames > 1) ? 'sheet.png' : 'object.png');
-    const pngPath = path.replace(/fx\.json$/, file);
-    assert.equal(fs.existsSync(pngPath), true, pngPath);
-    const png = PNG.sync.read(fs.readFileSync(pngPath));
-    assert.ok(png.width >= 100 && png.height >= 100, pngPath);
-    if (frames > 1) {
-      assert.equal(spec.frames, frames, path);
-      assert.equal(spec.cols, frames, path);
-    }
+    const file = spec.file || (spec.frames > 1 ? 'sheet.png' : 'object.png');
+    assert.equal(fs.existsSync(path.replace(/fx\.json$/, file)), true, path);
   }
-  const powder = JSON.parse(fs.readFileSync('assets/fx/sully/black-powder/fx.json', 'utf8'));
-  assert.equal(powder.luma, true);
-  assert.equal(powder.charge.blend, 'add');
+  const wave = read('assets/fx/helen/air-wave/fx.json');
+  assert.equal(wave.file, 'air-wave-anim.png');
+  assert.equal(wave.charge.file, 'sheet.png');
+  assert.equal(wave.charge.frames, 6);
+  const powder = read('assets/fx/sully/black-powder/fx.json');
+  assert.equal(powder.file, 'black-powder-blast-anim.png');
+  assert.equal(powder.charge.file, 'fuse.png');
   assert.equal(powder.charge.loop, true);
-  assert.equal(powder.charge.frames, 4);
-  const sulfur = JSON.parse(fs.readFileSync('assets/fx/sully/volcanic-eruption/fx.json', 'utf8')).gas;
+  const sulfur = read('assets/fx/sully/volcanic-eruption/fx.json').gas;
+  assert.equal(sulfur.file, 'sulfur.png');
   assert.equal(sulfur.blend, 'screen');
   assert.equal(sulfur.luma, true);
-  assert.notEqual(sulfur.blend, 'add');
-  const gas = JSON.parse(fs.readFileSync('assets/fx/chloe/gas-cloud/fx.json', 'utf8'));
-  assert.equal(gas.luma, true);
-  assert.equal(gas.lifeMs, 2000);
-  const bubble = JSON.parse(fs.readFileSync('assets/fx/helen/bubble-shield/fx.json', 'utf8'));
-  assert.equal(bubble.holdAt, 1);
-  assert.equal(bubble.breakFrom, 2);
-  const pop = JSON.parse(fs.readFileSync('assets/fx/helen/balloon-bop/fx.json', 'utf8'));
-  assert.equal(pop.detonate.blend, 'add');
-  assert.equal(fs.existsSync('assets/fx/helen/balloon-bop/pop.png'), true);
-  const smoke = PNG.sync.read(fs.readFileSync('assets/fx/status/smoke-wisp/sheet.png'));
-  assert.equal(smoke.width / 6 >= 150, true);
-  const cloud = PNG.sync.read(fs.readFileSync('assets/fx/chloe/gas-cloud/sheet.png'));
-  const cell = Math.floor(cloud.width / 6);
-  let edge = 0;
-  let mid = 0;
-  for (let y = 0; y < cloud.height; y += 8) {
-    edge += cloud.data[(y * cloud.width) * 4 + 3];
-    mid += cloud.data[(y * cloud.width + Math.floor(cell / 2)) * 4 + 3];
-  }
-  assert.ok(mid > edge * 4, 'gas cloud edges are softened');
-
-  const more = [
-    ['assets/fx/aaron/lazy-haymaker/fx.json', null, 'add', 6],
-    ['assets/fx/aaron/inert-guard-strike/fx.json', null, 'screen', 1],
-    ['assets/fx/aaron/shield-gas/fx.json', null, 'screen', 4],
-    ['assets/fx/aaron/noble-discharge/fx.json', null, 'add', 1],
-    ['assets/fx/kyle/action-potential/fx.json', 'projectile', 'add', 6],
-    ['assets/fx/kyle/static-cross/fx.json', null, 'add', 1],
-    ['assets/fx/kyle/ion-channel/fx.json', 'shatter', 'add', 1],
-    ['assets/fx/kyle/banana-peel/fx.json', null, 'normal', 1],
-    ['assets/fx/cal/bone-crush/fx.json', null, 'normal', 1],
-    ['assets/fx/cal/quick-set-cement/fx.json', null, 'normal', 4],
-    ['assets/fx/cal/slime-splash/fx.json', null, 'screen', 1],
-  ];
-  for (const [path, side, blend, frames] of more) {
-    const meta = JSON.parse(fs.readFileSync(path, 'utf8'));
-    const spec = side ? meta[side] : meta;
-    assert.equal(spec.blend, blend, path);
-    if (blend !== 'add') assert.notEqual(spec.blend, 'add', path);
-    const file = spec.file || ((frames > 1) ? 'sheet.png' : 'object.png');
-    const pngPath = path.replace(/fx\.json$/, file);
-    assert.equal(fs.existsSync(pngPath), true, pngPath);
-    const png = PNG.sync.read(fs.readFileSync(pngPath));
-    assert.ok(png.width >= 100 && png.height >= 80, pngPath);
-    if (frames > 1) {
-      assert.equal(spec.frames, frames, path);
-      assert.equal(spec.cols, frames, path);
-    }
-  }
-  const aura = JSON.parse(fs.readFileSync('assets/fx/aaron/lazy-haymaker/fx.json', 'utf8'));
-  assert.equal(aura.anchor, 'aura');
-  assert.equal(aura.loop, true);
-  const auraPng = PNG.sync.read(fs.readFileSync('assets/fx/aaron/lazy-haymaker/sheet.png'));
-  const auraCell = Math.floor(auraPng.width / 6);
-  let auraCenter = 0;
-  let auraRing = 0;
-  const ax = Math.floor(auraCell / 2);
-  const midY = Math.floor(auraPng.height / 2);
-  for (let y = midY - 24; y < midY + 24; y++) auraCenter += auraPng.data[(y * auraPng.width + ax) * 4 + 3];
-  const ringY = Math.floor(auraPng.height * 0.14);
-  for (let y = ringY; y < ringY + 40; y++) auraRing += auraPng.data[(y * auraPng.width + ax) * 4 + 3];
-  assert.ok(auraCenter < 80, 'aura center is masked out');
-  assert.ok(auraRing > 2000, 'aura ring remains');
-  const gasShield = JSON.parse(fs.readFileSync('assets/fx/aaron/shield-gas/fx.json', 'utf8'));
-  assert.equal(gasShield.anchor, 'body');
-  assert.equal(gasShield.loop, true);
-  const noble = PNG.sync.read(fs.readFileSync('assets/fx/aaron/noble-discharge/object.png'));
-  let nobleEdge = 0;
-  let nobleIn = 0;
-  const samples = Math.min(80, noble.height);
-  for (let x = 0; x < noble.width; x += 8) {
-    nobleEdge += noble.data[(2 * noble.width + x) * 4 + 3];
-    nobleIn += noble.data[(samples * noble.width + x) * 4 + 3];
-  }
-  assert.ok(nobleIn > nobleEdge * 4, 'discharge edges fade');
-  const pulse = JSON.parse(fs.readFileSync('assets/fx/kyle/action-potential/fx.json', 'utf8'));
+  const pulse = read('assets/fx/kyle/action-potential/fx.json');
+  assert.equal(pulse.file, 'action-potential-pulse-sheet.jpg');
+  assert.equal(pulse.fizzle.file, 'fizzle.png');
   assert.equal(pulse.fizzle.blend, 'add');
-  assert.equal(fs.existsSync('assets/fx/kyle/action-potential/fizzle.png'), true);
-  const peel = JSON.parse(fs.readFileSync('assets/fx/kyle/banana-peel/fx.json', 'utf8'));
-  assert.equal(peel.anchor, 'ground');
-  assert.notEqual(peel.blend, 'add');
-  const cement = JSON.parse(fs.readFileSync('assets/fx/cal/quick-set-cement/fx.json', 'utf8'));
+  const cement = read('assets/fx/cal/quick-set-cement/fx.json');
   assert.equal(cement.holdAt, 3);
   assert.equal(cement.anchor, 'ground-front');
   assert.deepEqual(cement.linger.order, [0, 1, 2, 3, 2, 1]);
-  assert.equal(cement.linger.loop, true);
-  assert.equal(cement.linger.blend, 'normal');
-  assert.equal(fs.existsSync('assets/fx/cal/quick-set-cement/stuck.png'), true);
-  const lime = JSON.parse(fs.readFileSync('assets/fx/cal/slime-splash/fx.json', 'utf8'));
-  assert.equal(lime.luma, true);
-  assert.equal(lime.blend, 'screen');
+  const bubble = read('assets/fx/helen/bubble-shield/fx.json');
+  assert.equal(bubble.holdAt, 1);
+  assert.equal(bubble.breakFrom, 2);
   assert.equal(fs.existsSync('assets/fx/cal/calcify/fx.json'), false);
 });

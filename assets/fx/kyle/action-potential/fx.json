@@ -1,7 +1,9 @@
 {
-  "file": "action-potential-pulse-sheet.jpg",
-  "frames": 6,
-  "fps": 10,
+  "file": "action-potential-pulse-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 11.077,
   "loop": false,
   "once": true,
   "blend": "add",

@@ -572,8 +572,9 @@ test('a dropped-in mask hits the body it covers and misses when it is moved away
 test('gemini fx sheets replace the placeholder stills', () => {
   const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
   const kyle = read('assets/fx/kyle/action-potential/fx.json');
-  assert.equal(kyle.file, 'action-potential-pulse-sheet.jpg');
-  assert.equal(kyle.frames, 6);
+  assert.equal(kyle.file, 'action-potential-pulse-anim.png');
+  assert.equal(kyle.frames, 24);
+  assert.equal(kyle.loop, false);
   assert.equal(kyle.blend, 'add');
   assert.equal(kyle.once, true);
   assert.equal(kyle.hit, false);
@@ -667,7 +668,7 @@ test('gemini fx sheets replace the placeholder stills', () => {
     pop.projectile.file, pop.detonate.file,
   ];
   const dirs = {
-    'action-potential-pulse-sheet.jpg': 'assets/fx/kyle/action-potential/',
+    'action-potential-pulse-anim.png': 'assets/fx/kyle/action-potential/',
     'lazy-glow-aura-sheet.jpg': 'assets/fx/aaron/lazy-haymaker/',
     'micro-rocket.jpg': 'assets/fx/scarlett/micro-rocket/',
     'rocket-explosion-anim.png': 'assets/fx/scarlett/micro-rocket/',
@@ -1086,17 +1087,14 @@ test('gemini fx wires arsenio and selena', () => {
   assert.equal(bolt.stretch, 'length');
   assert.equal(bolt.pivot, 'left');
   assert.equal(bolt.hit, false);
-  assert.equal(bolt.charge.file, 'light-soak-sheet.jpg');
-  assert.equal(bolt.charge.frames, 2);
+  assert.equal(bolt.charge.file, 'light-soak-anim.png');
+  assert.equal(bolt.charge.frames, 24);
+  assert.equal(bolt.charge.cols, 3);
+  assert.equal(bolt.charge.rows, 8);
   assert.equal(bolt.charge.loop, true);
   assert.equal(bolt.charge.blend, 'add');
   assert.equal(bolt.charge.anchor, 'body');
-  assert.equal(bolt.charge.spans.length, 2);
-  for (const [x, w] of bolt.charge.spans) {
-    assert.ok(x >= 0 && w > 0);
-    assert.ok(x + w <= 688, 'light-soak span stays off the clipped blob');
-  }
-  assert.ok(bolt.charge.spans[1][0] >= 330);
+  assert.equal(bolt.charge.spans, undefined);
   const kick = read('assets/fx/selena/crescent-kick/fx.json');
   assert.equal(kick.file, 'crescent-kick-arc.jpg');
   assert.equal(kick.blend, 'add');
@@ -1190,7 +1188,9 @@ test('batch 2 wave 1 keeps the sheets the later flow art did not replace', () =>
   assert.equal(sulfur.blend, 'screen');
   assert.equal(sulfur.luma, true);
   const pulse = read('assets/fx/kyle/action-potential/fx.json');
-  assert.equal(pulse.file, 'action-potential-pulse-sheet.jpg');
+  assert.equal(pulse.file, 'action-potential-pulse-anim.png');
+  assert.equal(pulse.frames, 24);
+  assert.equal(pulse.loop, false);
   assert.equal(pulse.fizzle.file, 'fizzle.png');
   assert.equal(pulse.fizzle.blend, 'add');
   const cement = read('assets/fx/cal/quick-set-cement/fx.json');

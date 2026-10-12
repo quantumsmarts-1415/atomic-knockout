@@ -1,0 +1,18 @@
+{
+  "file": "signal-repeater-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.913,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.2,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false,
+  "peak": "signal-repeater.jpg",
+  "peakFrame": 18
+}

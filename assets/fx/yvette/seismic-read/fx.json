@@ -1,0 +1,32 @@
+{
+  "file": "seismic-ripple-anim.png",
+  "frames": 24,
+  "cols": 3,
+  "rows": 8,
+  "fps": 23.04,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.6,
+  "crop": "frame",
+  "pivot": "bottom",
+  "anchor": "ground",
+  "hit": false,
+  "peak": "seismic-ripple.jpg",
+  "peakFrame": 15,
+  "shatter": {
+    "file": "tick-perfect-burst-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 10.894,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "crop": "frame",
+    "pivot": "center"
+  }
+}

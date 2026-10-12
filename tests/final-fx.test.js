@@ -84,3 +84,53 @@ test('call 2 wires Rhoda and Paula Flow sheets onto their moves', () => {
   assert.equal(fs.existsSync('assets/fx/paula/white-gold-jab/fx.json'), false);
   assert.equal(fs.existsSync('assets/fx/rhoda/tarnish-guard/fx.json'), false);
 });
+
+test('call 4 wires Erin Signal Repeater and Yvette Flow sheets', () => {
+  const expect = {
+    'assets/fx/erin/signal-repeater/fx.json': {
+      file: 'signal-repeater-anim.png', frames: 24, loop: false, blend: 'add', anchor: 'body', peakFrame: 18,
+    },
+    'assets/fx/yvette/fiber-laser/fx.json': {
+      file: 'fiber-laser-beam-anim.png', frames: 24, loop: false, blend: 'add',
+      fit: 'length', stretch: 'length', pivot: 'left', peakFrame: 2,
+    },
+    'assets/fx/yvette/seismic-read/fx.json': {
+      file: 'seismic-ripple-anim.png', frames: 24, cols: 3, rows: 8, loop: true, blend: 'add',
+      anchor: 'ground', peakFrame: 15,
+    },
+    'assets/fx/yvette/lattice-clock/fx.json': {
+      file: 'tick-perfect-burst-anim.png', frames: 24, loop: false, blend: 'add', peakFrame: 7,
+    },
+    'assets/fx/yvette/stress-gauge/fx.json': {
+      file: 'stress-gauge-burst-anim.png', frames: 24, loop: false, blend: 'add', anchor: 'fist', peakFrame: 17,
+    },
+  };
+  for (const [path, want] of Object.entries(expect)) {
+    const meta = read(path);
+    assert.equal(meta.file, want.file, path);
+    assert.equal(meta.frames, want.frames, path);
+    assert.equal(meta.loop, want.loop, path);
+    assert.equal(meta.blend, want.blend, path);
+    assert.equal(meta.black, 16, path);
+    assert.equal(meta.hit, false, path);
+    assert.equal(meta.peakFrame, want.peakFrame, path);
+    if (want.anchor) assert.equal(meta.anchor, want.anchor, path);
+    if (want.fit) assert.equal(meta.fit, want.fit, path);
+    if (want.stretch) assert.equal(meta.stretch, want.stretch, path);
+    if (want.pivot) assert.equal(meta.pivot, want.pivot, path);
+    if (want.cols) assert.equal(meta.cols, want.cols, path);
+    if (want.rows) assert.equal(meta.rows, want.rows, path);
+    assert.equal(fs.existsSync(path.replace(/fx\.json$/, meta.file)), true, meta.file);
+    assert.equal(fs.existsSync(path.replace(/fx\.json$/, meta.peak)), true, meta.peak);
+  }
+  const seismic = read('assets/fx/yvette/seismic-read/fx.json');
+  assert.equal(seismic.shatter.file, 'tick-perfect-burst-anim.png');
+  assert.equal(seismic.shatter.frames, 24);
+  assert.equal(seismic.shatter.blend, 'add');
+  assert.equal(seismic.shatter.heightFrac, 0.7);
+  assert.equal(fs.existsSync('assets/fx/yvette/seismic-read/tick-perfect-burst-anim.png'), true);
+  assert.equal(fs.existsSync('assets/fx/erin/undersea-cable/fx.json'), false);
+  assert.equal(fs.existsSync('assets/fx/erin/pink-glass-swipe/fx.json'), false);
+  assert.equal(fs.existsSync('assets/fx/erin/resurface-laser/fx.json'), false);
+  assert.equal(fs.existsSync('assets/fx/liv/chalcogen-hook/fx.json'), false);
+});

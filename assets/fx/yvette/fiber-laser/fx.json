@@ -1,0 +1,17 @@
+{
+  "file": "fiber-laser-beam-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.913,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "length",
+  "stretch": "length",
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false,
+  "peak": "fiber-laser-beam.jpg",
+  "peakFrame": 2
+}

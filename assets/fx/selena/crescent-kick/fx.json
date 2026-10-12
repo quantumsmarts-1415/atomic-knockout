@@ -1,0 +1,11 @@
+{
+  "file": "crescent-kick-arc.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.05,
+  "crop": "frame",
+  "pivot": "left",
+  "anchor": "fist",
+  "hit": false
+}

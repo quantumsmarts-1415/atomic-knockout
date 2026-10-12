@@ -1,0 +1,17 @@
+{
+  "blend": "screen",
+  "luma": true,
+  "black": 16,
+  "hit": false,
+  "projectile": {
+    "file": "inheritance-powder-puff.jpg",
+    "blend": "screen",
+    "luma": true,
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.45,
+    "crop": "frame",
+    "pivot": "center",
+    "aim": false
+  }
+}

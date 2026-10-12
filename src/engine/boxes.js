@@ -196,7 +196,14 @@ export function resolvePush(fighters, solids = null) {
     }
   }
   if (solids?.length) {
-    for (const { f } of standing) clampOutOfSolids(f, solids);
+    // Clamp every grounded body, not only those that entered the push pair
+    // list — a missing push mask must not leave someone buried in a pillar.
+    for (const f of fighters) {
+      if (!f?.alive || f.state === 'ko' || f.state === 'dead') continue;
+      const grounded = f.grounded ?? !!(f.body?.blocked?.down || f.body?.touching?.down);
+      if (!grounded) continue;
+      clampOutOfSolids(f, solids);
+    }
   }
 }
 

@@ -143,6 +143,11 @@ test('pushSolids only lists tall obstacles, and resolvePush clamps out of them',
   const a = fighter('hydra', { x: 640, y: 560 });
   resolvePush([a], solids);
   assert.ok(a.x <= 600 + 1 || a.x >= 680 - 1, `should leave pillar, got ${a.x}`);
+  // Even without a push mask, a grounded body is pulled out of the pillar.
+  const bare = fighter('hydra', { x: 640, y: 560, rig: null });
+  bare.charDef = { id: 'no-mask', stats: { weight: 1 } };
+  resolvePush([bare], solids);
+  assert.ok(bare.x <= 600 + 1 || bare.x >= 680 - 1, `maskless body should leave pillar, got ${bare.x}`);
 });
 
 test('projectile shapes match the drawn sprite and hit a body', () => {

@@ -314,6 +314,7 @@ test('call 7 wires Krypto and Ruben Condensate Collapse', () => {
     },
     'assets/fx/ruben/condensate-collapse/fx.json': {
       file: 'condensate-wave-anim.png', frames: 24, loop: false, blend: 'add', once: true,
+      pivot: 'bottom', fps: 28,
     },
   };
   for (const [path, want] of Object.entries(expect)) {
@@ -330,6 +331,7 @@ test('call 7 wires Krypto and Ruben Condensate Collapse', () => {
     if (want.fit) assert.equal(meta.fit, want.fit, path);
     if (want.stretch) assert.equal(meta.stretch, want.stretch, path);
     if (want.pivot) assert.equal(meta.pivot, want.pivot, path);
+    if (want.fps) assert.equal(meta.fps, want.fps, path);
     assert.equal(fs.existsSync(path.replace(/fx\.json$/, meta.file)), true, meta.file);
   }
   const flash = read('assets/fx/krypto/flash-tube-counter/fx.json');

@@ -3,14 +3,14 @@
   "frames": 24,
   "cols": 4,
   "rows": 6,
-  "fps": 10.869,
+  "fps": 28,
   "loop": false,
   "once": true,
   "blend": "add",
   "black": 16,
   "fit": "height",
-  "heightFrac": 1.05,
+  "heightFrac": 1.2,
   "crop": "frame",
-  "pivot": "center",
+  "pivot": "bottom",
   "hit": false
 }

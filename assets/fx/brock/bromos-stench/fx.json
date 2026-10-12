@@ -1,0 +1,15 @@
+{
+  "file": "stench-fume-burst-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 11.478,
+  "loop": false,
+  "blend": "screen",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.45,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false
+}

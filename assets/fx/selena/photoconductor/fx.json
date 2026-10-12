@@ -1,5 +1,10 @@
 {
-  "file": "photoconductor-lightning.jpg",
+  "file": "photoconductor-lightning-anim.png",
+  "frames": 23,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.147,
+  "loop": false,
   "blend": "add",
   "black": 16,
   "fit": "length",

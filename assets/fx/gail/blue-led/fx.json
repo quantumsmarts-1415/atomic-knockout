@@ -1,5 +1,10 @@
 {
-  "file": "blue-led-beam.jpg",
+  "file": "blue-led-beam-anim.png",
+  "frames": 23,
+  "cols": 4,
+  "rows": 6,
+  "fps": 9.787,
+  "loop": false,
   "blend": "add",
   "black": 16,
   "fit": "length",

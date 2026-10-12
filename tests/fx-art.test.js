@@ -976,14 +976,18 @@ test('gemini fx wires gail and gertrude', () => {
   assert.equal(melt.breakFrom, 4);
   assert.equal(melt.hit, false);
   const led = read('assets/fx/gail/blue-led/fx.json');
-  assert.equal(led.file, 'blue-led-beam.jpg');
+  assert.equal(led.file, 'blue-led-beam-anim.png');
+  assert.equal(led.frames, 23);
+  assert.equal(led.loop, false);
   assert.equal(led.blend, 'add');
   assert.equal(led.fit, 'length');
   assert.equal(led.stretch, 'length');
   assert.equal(led.pivot, 'left');
   assert.equal(led.hit, false);
   const predict = read('assets/fx/gertrude/mendeleev-s-prediction/fx.json');
-  assert.equal(predict.file, 'prediction-strike.jpg');
+  assert.equal(predict.file, 'prediction-strike-anim.png');
+  assert.equal(predict.frames, 24);
+  assert.equal(predict.loop, false);
   assert.equal(predict.blend, 'add');
   assert.equal(predict.pivot, 'bottom');
   assert.equal(predict.hit, false);
@@ -1074,7 +1078,9 @@ test('gemini fx wires arsenio and selena', () => {
   assert.equal(fs.existsSync('assets/fx/status/poison/poison-status-sheet.jpg'), true);
   assert.equal(fs.existsSync('assets/fx/arsenio/gray-arsenic-shards/poison-status-sheet.jpg'), false);
   const bolt = read('assets/fx/selena/photoconductor/fx.json');
-  assert.equal(bolt.file, 'photoconductor-lightning.jpg');
+  assert.equal(bolt.file, 'photoconductor-lightning-anim.png');
+  assert.equal(bolt.frames, 23);
+  assert.equal(bolt.loop, false);
   assert.equal(bolt.blend, 'add');
   assert.equal(bolt.fit, 'length');
   assert.equal(bolt.stretch, 'length');
@@ -1106,12 +1112,23 @@ test('gemini fx wires arsenio and selena', () => {
   assert.equal(scan.anchor, 'body');
   assert.equal(scan.hit, false);
   const moon = read('assets/fx/selena/moonbeam/fx.json');
-  assert.equal(moon.file, 'moonbeam.jpg');
+  assert.equal(moon.file, 'moonbeam-anim.png');
+  assert.equal(moon.frames, 24);
+  assert.equal(moon.loop, false);
   assert.equal(moon.blend, 'add');
   assert.equal(moon.fit, 'length');
   assert.equal(moon.stretch, 'length');
   assert.equal(moon.pivot, 'left');
   assert.equal(moon.hit, false);
+  const stench = read('assets/fx/brock/bromos-stench/fx.json');
+  assert.equal(stench.file, 'stench-fume-burst-anim.png');
+  assert.equal(stench.frames, 24);
+  assert.equal(stench.loop, false);
+  assert.equal(stench.blend, 'screen');
+  assert.equal(stench.fit, 'width');
+  assert.equal(stench.heightFrac, 1.45);
+  assert.equal(stench.pivot, 'center');
+  assert.equal(stench.hit, false);
   const files = [
     [powder.projectile.file, 'assets/fx/arsenio/inheritance-powder/'],
     [slash.file, 'assets/fx/arsenio/paris-green-slash/'],
@@ -1125,6 +1142,7 @@ test('gemini fx wires arsenio and selena', () => {
     [kick.file, 'assets/fx/selena/crescent-kick/'],
     [scan.file, 'assets/fx/selena/photocopy/'],
     [moon.file, 'assets/fx/selena/moonbeam/'],
+    [stench.file, 'assets/fx/brock/bromos-stench/'],
   ];
   for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
   assert.equal(shellFrame({ frames: [0, 1, 2, 3], holdAt: 2, fps: 8 }, 500), 2);

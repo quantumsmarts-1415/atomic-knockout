@@ -1,5 +1,10 @@
 {
-  "file": "prediction-strike.jpg",
+  "file": "prediction-strike-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 11.345,
+  "loop": false,
   "blend": "add",
   "black": 16,
   "fit": "height",

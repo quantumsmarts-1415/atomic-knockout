@@ -1,5 +1,10 @@
 {
-  "file": "moonbeam.jpg",
+  "file": "moonbeam-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 10.909,
+  "loop": false,
   "blend": "add",
   "black": 16,
   "fit": "length",

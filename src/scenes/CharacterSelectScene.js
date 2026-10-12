@@ -171,7 +171,6 @@ export default class CharacterSelectScene extends Phaser.Scene {
     human.cursor = index;
     this.scrollTo(index);
     if (human.phase === 'picking') this.handleConfirm(human);
-    else if (human.phase === 'palette' && this.slots[index].charId) this.handleConfirm(human);
     else this.refreshAll();
   }
 
@@ -194,7 +193,6 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     const previewX = this.previewXFor(index, this.playerSlots?.length ?? 2);
     const randomSlotIdx = this.playable[Math.floor(Math.random() * this.playable.length)];
-    const randomPalette = Math.floor(Math.random() * CHARACTERS[this.slots[randomSlotIdx].charId].palettes.length);
     const start = isBot ? randomSlotIdx : Math.min(index, this.slots.length - 1);
     return {
       slot, index, isKeyboard, isBot, isGamepad, keys,
@@ -202,7 +200,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
       label: `P${index + 1}${isBot ? ' (CPU)' : ''}`,
       cursor: start,
       phase: isBot ? 'locked' : 'picking',
-      palette: isBot ? randomPalette : index,
+      // Standard colors only — palette tints washed raster art toward white.
+      palette: 0,
       prevBtn: { left: false, right: false, up: false, down: false, confirm: false, back: false },
       box: this.add.graphics(),
       previewX,
@@ -260,33 +259,27 @@ export default class CharacterSelectScene extends Phaser.Scene {
       p.cursor = stepSlot(this.slots, p.cursor, dx, dy);
       this.scrollTo(p.cursor);
       this.buildPreview(p);
-    } else if (p.phase === 'palette' && dx !== 0) {
-      const def = CHARACTERS[this.slots[p.cursor].charId];
-      p.palette = (p.palette + dx + def.palettes.length) % def.palettes.length;
-      this.buildPreview(p);
     }
     this.refreshAll();
   }
 
   handleConfirm(p) {
     const slot = this.slots[p.cursor];
-    if (p.phase !== 'locked' && slot.charId) sfx('menuConfirm');
     if (p.phase === 'picking' && slot.charId) {
-      p.phase = 'palette';
-      const def = CHARACTERS[slot.charId];
-      p.palette = p.index % def.palettes.length;
-      this.buildPreview(p);
-    } else if (p.phase === 'palette') {
+      sfx('menuConfirm');
+      p.palette = 0;
       p.phase = 'locked';
+      this.buildPreview(p);
       this.checkAllLocked();
     }
     this.refreshAll();
   }
 
   handleBack(p) {
-    if (p.phase === 'palette') p.phase = 'picking';
-    else if (p.phase === 'locked') p.phase = 'palette';
-    this.refreshAll();
+    if (p.phase === 'locked') {
+      p.phase = 'picking';
+      this.refreshAll();
+    }
   }
 
   buildPreview(p) {
@@ -303,7 +296,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
     }
     const def = CHARACTERS[slot.charId];
     this.queuePreviewSheets(def);
-    p.previewRig = new Rig(this, def, p.palette % def.palettes.length);
+    p.palette = 0;
+    p.previewRig = new Rig(this, def, 0);
     p.previewRig.setPosition(p.previewX, PREVIEW_ANCHOR_Y);
     const desiredScale = this.players.length > 3 ? 0.85 : 1.05;
     const visualHeight = def.art?.height
@@ -311,8 +305,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     const maxScale = (PREVIEW_ANCHOR_Y - (VIEW_Y + VIEW_H) - PREVIEW_TOP_MARGIN) / visualHeight;
     p.previewRig.baseScale = Math.min(desiredScale, Math.max(0.4, maxScale));
     this.add.existing(p.previewRig);
-    const palette = def.palettes[p.palette % def.palettes.length];
-    p.previewName = this.add.text(p.previewX, PREVIEW_ANCHOR_Y + 18, `${p.label}  ${def.name}\n${def.element} · ${palette.name}`, {
+    p.previewName = this.add.text(p.previewX, PREVIEW_ANCHOR_Y + 18, `${p.label}  ${def.name}\n${def.element}`, {
       fontFamily: FONT_BODY, fontSize: this.players.length > 3 ? '14px' : '16px',
       color: THEME.mistCss, align: 'center',
     }).setOrigin(0.5, 0);
@@ -400,11 +393,6 @@ export default class CharacterSelectScene extends Phaser.Scene {
       if (p.phase === 'locked') {
         p.box.lineStyle(4, THEME.gold, 1);
         p.box.strokeRoundedRect(x - 4, y - 4, TILE_W + 8, TILE_H + 8, 9);
-      } else if (p.phase === 'palette') {
-        p.box.lineStyle(3, THEME.gold, 1);
-        p.box.strokeRoundedRect(x - 5, y - 5, TILE_W + 10, TILE_H + 10, 9);
-        p.box.lineStyle(3, p.color, 1);
-        p.box.strokeRoundedRect(x - 2 + inset, y - 2 + inset, TILE_W + 4 - inset * 2, TILE_H + 4 - inset * 2, 8);
       } else {
         p.box.lineStyle(3, p.color, 1);
         p.box.strokeRoundedRect(x - 2 + inset, y - 2 + inset, TILE_W + 4 - inset * 2, TILE_H + 4 - inset * 2, 8);
@@ -412,7 +400,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     }
     const phases = this.players.map((p) => p.phase);
     if (phases.every((ph) => ph === 'locked')) this.hint.setText('Everyone locked in — starting…');
-    else this.hint.setText('Move: stick/D-pad/WASD/phone · Confirm: attack/X · Color: ←→ · Back: special/B');
+    else this.hint.setText('Move: stick/D-pad/WASD/phone · Confirm: attack/X · Back: special/B');
     this.drawScrollbar();
   }
 
@@ -421,7 +409,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.starting = true;
     this.time.delayedCall(700, () => {
       showScene(this, 'StageSelect', {
-        players: this.players.map((p) => ({ charId: this.slots[p.cursor].charId, palette: p.palette, slot: p.slot })),
+        players: this.players.map((p) => ({ charId: this.slots[p.cursor].charId, palette: 0, slot: p.slot })),
         stocks: 3,
       });
     });

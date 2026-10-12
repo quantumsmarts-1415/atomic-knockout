@@ -14,13 +14,19 @@ Then open the printed localhost URL (usually http://localhost:5173).
 
 ## Deploy
 
-Netlify builds with `npm run build` and publishes `dist/` (`netlify.toml`).
+Publish once, by hand, from the Netlify UI. Leave automatic deploys, deploy
+previews, and branch deploys off. `netlify.toml` also cancels preview and
+branch builds before they start.
+
+- Build command: `npm run build`
+- Publish directory: `dist`
+- Measured publish size: 1042.8 MB
+
 That folder is the game the browser fetches: pages, source modules, fonts,
 Phaser, and the art the roster actually points at. Review clips, source
 renders, and backups stay out of the upload. PNGs are optimized losslessly
 when `oxipng` is on PATH; the build still finishes without it. The sheets
-themselves are about a gigabyte, so the upload stays full quality and does
-not shrink to a few dozen megabytes.
+themselves are about a gigabyte, so the upload stays full quality.
 
 `npm run dev` is still the local server. It is also the phone-controller
 relay, which a static Netlify site does not include. Keyboard and gamepad

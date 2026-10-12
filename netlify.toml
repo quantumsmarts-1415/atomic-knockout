@@ -1,5 +1,8 @@
-# One-click publish once this repo is connected to Netlify.
-# The site is static. Keyboard and gamepad play from the browser.
+# Manual production publish only. Do not enable automatic deploys,
+# deploy previews, or branch deploys in the Netlify UI.
+# `true` exits 0, which tells Netlify to stop before the build runs,
+# so those contexts do not spend build minutes.
+# Keyboard and gamepad play from this static site.
 # Phone controllers still need the Node relay: `npm run dev`.
 [build]
   command = "npm run build"
@@ -7,6 +10,12 @@
 
 [build.environment]
   NODE_VERSION = "22"
+
+[context.deploy-preview]
+  ignore = "true"
+
+[context.branch-deploy]
+  ignore = "true"
 
 [[redirects]]
   from = "/fx-index"

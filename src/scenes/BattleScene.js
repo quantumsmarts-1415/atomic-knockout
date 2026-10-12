@@ -21,7 +21,7 @@ import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront } from '../engine/b
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 import { Juice } from '../engine/juice.js';
-import { FEEL, frameZoom, percentColor } from '../engine/feel.js';
+import { FEEL, cameraFrame, containFrame, percentColor } from '../engine/feel.js';
 import { clockEndsRound } from '../engine/matchRules.js';
 import {
   resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
@@ -226,84 +226,60 @@ export default class BattleScene extends Phaser.Scene {
     return go;
   }
 
-  // Frame every live fighter: bounding box + padding -> zoom (clamped to
-  // [whole-world, maxZoom]) and center (clamped so the view never leaves
-  // the world), both eased; zooming out is quicker than zooming back in so
-  // a launched fighter doesn't leave the frame.
+  // Frame every live fighter. The zoom is their body box plus a short
+  // margin — enough to see the next step, close when they stand together.
+  // Hits and KOs do not zoom. The center and zoom ease; zooming out is
+  // quicker than zooming in. A hard contain keeps a fast launch on screen
+  // while that margin catches up. The view never leaves the world.
   updateCamera(delta) {
     const rig = this.camRig;
     if (!rig) return;
     const { width: WW, height: WH } = this.world;
     const cfg = rig.cfg;
     const live = (this.fighters ?? []).filter((f) => f.alive && f.visible && f.state !== 'ko' && f.state !== 'dead');
+    const bodies = live.map((f) => ({ x: f.x, y: f.y, w: f.bodyW, h: f.bodyH }));
     let tz = rig.minZoom;
     let tx = WW / 2;
     let ty = WH / 2;
-    if (live.length) {
-      let x0 = Infinity; let x1 = -Infinity; let y0 = Infinity; let y1 = -Infinity;
-      const blast = this.blast;
-      const lead = FEEL.camBlastLead;
-      for (const f of live) {
-        const vx = f.body?.velocity?.x || 0;
-        const vy = f.body?.velocity?.y || 0;
-        // Launches stay in the box and pull it toward the blast line they
-        // are flying at, so the trajectory stays framed. The zoom eases;
-        // nobody is dropped after a few frames.
-        let leadX = vx * FEEL.camLook;
-        let leadY = vy * FEEL.camLook;
-        const flying = !!f.launch;
-        if (blast && flying) {
-          if (vx < -200 || f.x < blast.left + lead) leadX -= lead;
-          if (vx > 200 || f.x > blast.right - lead) leadX += lead;
-          if (vy < -200 || f.y < blast.top + lead) leadY -= lead;
-          if (vy > 200 || f.y > blast.bottom - lead) leadY += lead * 0.8;
-        }
-        const fx = Phaser.Math.Clamp(f.x + leadX, 0, WW);
-        const fy = Phaser.Math.Clamp(f.y + leadY, 0, WH);
-        x0 = Math.min(x0, fx - f.bodyW / 2); x1 = Math.max(x1, fx + f.bodyW / 2);
-        y0 = Math.min(y0, fy - f.bodyH); y1 = Math.max(y1, fy);
-      }
-      if (x0 === Infinity) {
-        tx = rig.cx; ty = rig.cy; tz = rig.zoom;
-      } else {
-        x0 -= cfg.padX ?? FEEL.camPadX; x1 += cfg.padX ?? FEEL.camPadX;
-        y0 -= cfg.padTop ?? FEEL.camPadTop; y1 += cfg.padBottom ?? FEEL.camPadBottom;
-        const boxCx = (x0 + x1) / 2;
-        const boxCy = (y0 + y1) / 2;
-        const spanX = Math.max(FEEL.camMinSpanX, x1 - x0);
-        const spanY = Math.max(FEEL.camMinSpanY, y1 - y0);
-        const cap = this.koZoom || rig.maxZoom;
-        tz = frameZoom(spanX, spanY, W, H, rig.minZoom, cap);
-        tx = boxCx;
-        ty = boxCy;
-        const dead = (W / Math.max(rig.zoom, 0.2)) * FEEL.camDead;
-        if (Math.abs(tx - rig.cx) < dead) tx = rig.cx;
-        if (Math.abs(ty - rig.cy) < dead) ty = rig.cy;
-      }
-    }
-    if (this.koVictim && this.koZoom) {
-      this.koPoint = {
-        x: this.koVictim.x,
-        y: this.koVictim.y - this.koVictim.bodyH * 0.5,
-      };
-    }
-    if (this.koPoint && this.koZoom) {
-      tx = this.koPoint.x;
-      ty = this.koPoint.y;
-      tz = Math.max(tz, this.koZoom);
+    const frame = cameraFrame(bodies, W, H, rig.minZoom, rig.maxZoom, {
+      padX: cfg.padX, padTop: cfg.padTop, padBottom: cfg.padBottom,
+    });
+    if (frame) {
+      tz = frame.zoom;
+      tx = frame.cx;
+      ty = frame.cy;
+      const dead = (W / Math.max(rig.zoom, 0.2)) * FEEL.camDead;
+      if (Math.abs(tx - rig.cx) < dead) tx = rig.cx;
+      if (Math.abs(ty - rig.cy) < dead) ty = rig.cy;
     }
     const first = rig.first;
     rig.first = false;
-    const ko = this.koPoint && this.koZoom;
-    const zMs = ko
-      ? FEEL.koZoomTau
-      : (tz < rig.zoom ? (cfg.zoomOutMs ?? FEEL.camZoomOutTau) : (cfg.zoomInMs ?? FEEL.camZoomInTau));
+    const zMs = tz < rig.zoom
+      ? (cfg.zoomOutMs ?? FEEL.camZoomOutTau)
+      : (cfg.zoomInMs ?? FEEL.camZoomInTau);
     rig.zoom += (tz - rig.zoom) * (first ? 1 : 1 - Math.exp(-Math.max(0, delta) / zMs));
+    const k = first ? 1 : 1 - Math.exp(-Math.max(0, delta) / (cfg.lerpMs ?? 200));
+    rig.cx += (tx - rig.cx) * k;
+    rig.cy += (ty - rig.cy) * k;
+    if (bodies.length) {
+      const edge = FEEL.camEdge;
+      let x0 = Infinity;
+      let x1 = -Infinity;
+      let y0 = Infinity;
+      let y1 = -Infinity;
+      for (const b of bodies) {
+        x0 = Math.min(x0, b.x - b.w / 2 - edge);
+        x1 = Math.max(x1, b.x + b.w / 2 + edge);
+        y0 = Math.min(y0, b.y - b.h - edge);
+        y1 = Math.max(y1, b.y + edge * 0.5);
+      }
+      const held = containFrame(rig.zoom, rig.cx, rig.cy, { x0, y0, x1, y1 }, W, H, rig.minZoom);
+      rig.zoom = held.zoom;
+      rig.cx = held.cx;
+      rig.cy = held.cy;
+    }
     const hw = W / (2 * rig.zoom);
     const hh = H / (2 * rig.zoom);
-    const k = first ? 1 : 1 - Math.exp(-delta / (cfg.lerpMs ?? 200));
-    rig.cx += (Phaser.Math.Clamp(tx, hw, WW - hw) - rig.cx) * k;
-    rig.cy += (Phaser.Math.Clamp(ty, hh, WH - hh) - rig.cy) * k;
     rig.cx = Phaser.Math.Clamp(rig.cx, hw, Math.max(hw, WW - hw));
     rig.cy = Phaser.Math.Clamp(rig.cy, hh, Math.max(hh, WH - hh));
     const shake = this.juice?.shakeOffset(this.visualT || 0, rig.zoom) || { x: 0, y: 0, rot: 0 };
@@ -1683,13 +1659,11 @@ export default class BattleScene extends Phaser.Scene {
     this.finishing = true;
     const finalBlow = !!(info?.final);
     this.finishFinal = finalBlow;
-    // Hold the hit, then drop into slow motion. The zoom tracks the victim.
+    // Hold the hit, then drop into slow motion. The camera stays on the
+    // group; a KO does not punch the zoom in on the victim.
     this.timeScale = 0;
     this.freezeLeft = FEEL.koFreezeFrames;
     this.finishLeft = finalBlow ? FEEL.koSlowFrames : FEEL.stockSlowFrames;
-    this.koZoom = FEEL.koZoom;
-    this.koVictim = victim;
-    this.koPoint = { x: victim.x, y: victim.y - victim.bodyH * 0.5 };
     this.juice?.addTrauma(0.7);
     const color = info?.charged && !finalBlow ? 0x16325a : (finalBlow ? 0xff3a2a : 0x3a6cff);
     this.juice?.koMoment(color, this.blastSide(victim));
@@ -1771,9 +1745,6 @@ export default class BattleScene extends Phaser.Scene {
       this.finishLeft -= 1;
       if (this.finishLeft <= 0) {
         this.ramping = FEEL.koRampFrames;
-        this.koZoom = null;
-        this.koPoint = null;
-        this.koVictim = null;
       }
     } else if (this.ramping > 0) {
       this.ramping -= 1;

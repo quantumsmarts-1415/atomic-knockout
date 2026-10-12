@@ -19,9 +19,15 @@
     "aim": false
   },
   "detonate": {
-    "file": "meteor-impact.jpg",
+    "file": "meteor-impact-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 11.077,
+    "loop": false,
     "blend": "add",
     "black": 16,
+    "smokeFrom": 19,
     "fit": "width",
     "heightFrac": 1.7,
     "crop": "frame",

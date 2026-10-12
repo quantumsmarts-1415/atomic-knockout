@@ -318,12 +318,27 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     ring(scene, fighter.x, y, 0xfff6e8, (fighter.bodyH ?? 80) * 0.75, 3);
     return;
   }
-  if (coatSpec(move) && (phase === 'defense' || phase === 'letgo')) return;
   if (phase === 'letgo') {
     const art = artFor(fighter.charDef?.id, move?.name);
+    const rise = art?.puddle ? breakFrames(art) : null;
+    if (rise?.frames?.length) {
+      const fps = rise.fps > 0 ? rise.fps : 8;
+      fighter._puddleRiseUntil = (scene.simNow ?? 0) + (rise.frames.length / fps) * 1000 + 80;
+      spawnFxSprite(scene, { ...rise, pivotX: art.pivotX, pivotY: art.pivotY }, fighter.x, fighter.y, 1);
+      return;
+    }
+    if (coatSpec(move)) return;
     if (!art?.releaseFlash || !art.frames?.length) return;
     const y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
     drawFxOneShot(scene, fighter, move, fighter.x, y, 1);
+    return;
+  }
+  if (coatSpec(move) && phase === 'defense') return;
+  if (phase === 'absorb') {
+    const art = artFor(fighter.charDef?.id, move?.name);
+    const x = extra.x ?? fighter.x;
+    const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
+    if (art?.frames?.length) drawFxOneShot(scene, fighter, move, x, y, 1);
     return;
   }
   if (phase === 'release' || phase === 'defense') {
@@ -339,6 +354,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       spawnFxSprite(scene, art.impact, at.x, at.y, 1, face);
     }
     if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
+    // A looping floor sheet is held on the fighter. A one-shot ground burst still draws.
+    if (phase === 'defense' && art?.anchor === 'ground' && art.loop && art.frames?.length) return;
     if (art?.detonate && move?.kind === 'burst') {
       spawnFxDetonate(scene, fighter, move, extra.x ?? fighter.x, extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55));
       return;

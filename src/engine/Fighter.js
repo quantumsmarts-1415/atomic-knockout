@@ -1470,6 +1470,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
       if (gate.endDefense) {
         const def = this.defenseMove;
+        if (gate.absorb && def) {
+          playVfx(this.scene, this, def, 'absorb', {
+            x: this.x,
+            y: this.y - (this.bodyH ?? 80) * 0.5,
+          });
+        }
         if (def?.lockAttackMs && attacker && attacker !== this && move?.name) {
           attacker.moveLock = attacker.moveLock ?? {};
           attacker.moveLock[move.name] = time + def.lockAttackMs;

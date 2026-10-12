@@ -1,0 +1,26 @@
+{
+  "file": "tesla-coil-arcs-sheet.jpg",
+  "frames": 4,
+  "fps": 12,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.55,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "charge": {
+    "file": "tesla-coil-arcs-sheet.jpg",
+    "frames": 4,
+    "fps": 10,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.55,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "body"
+  }
+}

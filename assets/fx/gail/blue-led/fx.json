@@ -1,0 +1,10 @@
+{
+  "file": "blue-led-beam.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "length",
+  "stretch": "length",
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false
+}

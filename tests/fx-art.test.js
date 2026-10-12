@@ -5,6 +5,7 @@ import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
 import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, sliceGrid, sliceHorizontal, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
+import { interceptHit } from '../src/engine/defense.js';
 
 test('every move has a folder, a type, and a score', () => {
   const rows = classifyRoster(ROSTER);
@@ -819,4 +820,172 @@ test('gemini fx call 1 wires fey, collin, and nick', () => {
     [meteor.detonate.file, 'assets/fx/nick/meteorite-drop/'],
   ];
   for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
+});
+
+test('gemini fx wires cooper and zane', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  const tesla = read('assets/fx/cooper/tesla-coil/fx.json');
+  assert.equal(tesla.file, 'tesla-coil-arcs-sheet.jpg');
+  assert.equal(tesla.frames, 4);
+  assert.equal(tesla.blend, 'add');
+  assert.equal(tesla.hit, false);
+  assert.equal(tesla.charge.file, 'tesla-coil-arcs-sheet.jpg');
+  assert.equal(tesla.charge.frames, 4);
+  assert.equal(tesla.charge.loop, true);
+  assert.equal(tesla.charge.anchor, 'body');
+  assert.equal(tesla.charge.blend, 'add');
+  const wire = read('assets/fx/cooper/live-wire/fx.json');
+  assert.equal(wire.file, 'live-wire-whip-sheet.jpg');
+  assert.equal(wire.frames, 4);
+  assert.equal(wire.blend, 'normal');
+  assert.equal(wire.pivot, 'left');
+  assert.equal(wire.anchor, 'fist');
+  assert.equal(wire.hit, false);
+  const rod = read('assets/fx/cooper/grounding-rod/fx.json');
+  assert.equal(rod.file, 'grounding-sparks-sheet.jpg');
+  assert.equal(rod.frames, 4);
+  assert.equal(rod.loop, true);
+  assert.equal(rod.blend, 'add');
+  assert.equal(rod.anchor, 'ground');
+  assert.equal(rod.pivot, 'bottom');
+  assert.equal(rod.hit, false);
+  const sword = read('assets/fx/cooper/bronze-sword/fx.json');
+  assert.equal(sword.file, 'bronze-sword-slash.jpg');
+  assert.equal(sword.blend, 'add');
+  assert.equal(sword.anchor, 'fist');
+  assert.equal(sword.hit, false);
+  const dip = read('assets/fx/zane/hot-dip-galvanize/fx.json');
+  assert.equal(dip.file, 'molten-zinc-splash.jpg');
+  assert.equal(dip.blend, 'add');
+  assert.equal(dip.hit, false);
+  assert.equal(dip.bothSides, undefined);
+  assert.equal(dip.charge.file, 'zinc-kettle-sheet.jpg');
+  assert.equal(dip.charge.frames, 4);
+  assert.equal(dip.charge.loop, true);
+  assert.equal(dip.charge.anchor, 'feet');
+  assert.equal(dip.charge.pivot, 'bottom');
+  assert.equal(dip.charge.blend, 'add');
+  const brass = read('assets/fx/zane/brass-knuckles/fx.json');
+  assert.equal(brass.blend, 'add');
+  assert.equal(brass.anchor, 'fist');
+  assert.equal(brass.hit, false);
+  const anode = read('assets/fx/zane/sacrificial-anode/fx.json');
+  assert.equal(anode.file, 'anode-absorb-burst.jpg');
+  assert.equal(anode.blend, 'normal');
+  assert.equal(anode.hit, false);
+  assert.equal(anode.spriteAura, undefined);
+  const fume = read('assets/fx/zane/fume-fever/fx.json');
+  assert.equal(fume.file, 'fume-fever-cloud.jpg');
+  assert.equal(fume.blend, 'screen');
+  assert.equal(fume.luma, true);
+  assert.equal(fume.anchor, 'ground');
+  assert.equal(fume.hit, false);
+  const files = [
+    [tesla.file, 'assets/fx/cooper/tesla-coil/'],
+    [wire.file, 'assets/fx/cooper/live-wire/'],
+    [rod.file, 'assets/fx/cooper/grounding-rod/'],
+    [sword.file, 'assets/fx/cooper/bronze-sword/'],
+    [dip.file, 'assets/fx/zane/hot-dip-galvanize/'],
+    [dip.charge.file, 'assets/fx/zane/hot-dip-galvanize/'],
+    [brass.file, 'assets/fx/zane/brass-knuckles/'],
+    [anode.file, 'assets/fx/zane/sacrificial-anode/'],
+    [fume.file, 'assets/fx/zane/fume-fever/'],
+  ];
+  for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
+  const guard = {
+    state: 'defending',
+    defenseMove: { name: 'Sacrificial Anode', absorbTypes: ['chemical', 'electrical'] },
+    x: 0,
+    y: 0,
+  };
+  const absorbed = interceptHit(guard, { x: 40 }, { type: 'electrical', damage: 6 }, 0);
+  assert.equal(absorbed.result, 'negate');
+  assert.equal(absorbed.endDefense, true);
+  assert.equal(absorbed.absorb, true);
+  const kinetic = interceptHit(guard, { x: 40 }, { type: 'kinetic', damage: 6 }, 0);
+  assert.equal(kinetic.absorb, undefined);
+});
+
+test('gemini fx wires gail and gertrude', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  assert.equal(moveSlug("Mendeleev's Prediction"), 'mendeleev-s-prediction');
+  const arc = read('assets/fx/gail/superconductor-arc/fx.json');
+  assert.equal(arc.file, 'superconductor-arcs-sheet.jpg');
+  assert.equal(arc.frames, 4);
+  assert.equal(arc.loop, true);
+  assert.equal(arc.lifeMs, 1500);
+  assert.equal(arc.blend, 'add');
+  assert.equal(arc.hit, false);
+  assert.equal(arc.charge.anchor, 'body');
+  assert.equal(arc.charge.loop, true);
+  assert.equal(arc.charge.blend, 'add');
+  const seep = read('assets/fx/gail/embrittle/fx.json');
+  assert.equal(seep.file, 'gallium-seep-sheet.jpg');
+  assert.equal(seep.blend, 'normal');
+  assert.equal(seep.pivot, 'top');
+  assert.equal(seep.anchor, 'fist');
+  assert.equal(seep.hit, false);
+  assert.equal(seep.cling.file, 'gallium-seep-sheet.jpg');
+  assert.equal(seep.cling.blend, 'normal');
+  assert.equal(seep.cling.loop, true);
+  const melt = read('assets/fx/gail/melt-down/fx.json');
+  assert.equal(melt.file, 'melt-puddle-sheet.jpg');
+  assert.equal(melt.frames, 6);
+  assert.equal(melt.blend, 'normal');
+  assert.equal(melt.anchor, 'ground');
+  assert.equal(melt.pivot, 'bottom');
+  assert.equal(melt.puddle, true);
+  assert.equal(melt.holdAt, 3);
+  assert.equal(melt.breakFrom, 4);
+  assert.equal(melt.hit, false);
+  const led = read('assets/fx/gail/blue-led/fx.json');
+  assert.equal(led.file, 'blue-led-beam.jpg');
+  assert.equal(led.blend, 'add');
+  assert.equal(led.fit, 'length');
+  assert.equal(led.stretch, 'length');
+  assert.equal(led.pivot, 'left');
+  assert.equal(led.hit, false);
+  const predict = read('assets/fx/gertrude/mendeleev-s-prediction/fx.json');
+  assert.equal(predict.file, 'prediction-strike.jpg');
+  assert.equal(predict.blend, 'add');
+  assert.equal(predict.pivot, 'bottom');
+  assert.equal(predict.hit, false);
+  assert.equal(predict.charge.file, 'prediction-marker-sheet.jpg');
+  assert.equal(predict.charge.frames, 4);
+  assert.equal(predict.charge.loop, true);
+  assert.equal(predict.charge.anchor, 'predict');
+  const jab = read('assets/fx/gertrude/point-contact/fx.json');
+  assert.equal(jab.blend, 'add');
+  assert.equal(jab.anchor, 'fist');
+  assert.equal(jab.hit, false);
+  const gate = read('assets/fx/gertrude/transistor-gate/fx.json');
+  assert.equal(gate.file, 'transistor-gate-sheet.jpg');
+  assert.equal(gate.frames, 4);
+  assert.equal(gate.loop, false);
+  assert.equal(gate.blend, 'add');
+  assert.equal(gate.anchor, 'body');
+  assert.equal(gate.hit, false);
+  assert.equal(gate.spriteAura, undefined);
+  const wave = read('assets/fx/gertrude/crystal-radio-wave/fx.json');
+  assert.equal(wave.projectile.file, 'radio-wave-sheet.jpg');
+  assert.equal(wave.projectile.frames, 4);
+  assert.equal(wave.projectile.loop, true);
+  assert.equal(wave.projectile.blend, 'add');
+  assert.equal(wave.hit, false);
+  assert.equal(fs.existsSync('assets/fx/gertrude/thermal-lens/fx.json'), false);
+  const files = [
+    [arc.file, 'assets/fx/gail/superconductor-arc/'],
+    [seep.file, 'assets/fx/gail/embrittle/'],
+    [seep.cling.file, 'assets/fx/gail/embrittle/'],
+    [melt.file, 'assets/fx/gail/melt-down/'],
+    [led.file, 'assets/fx/gail/blue-led/'],
+    [predict.file, 'assets/fx/gertrude/mendeleev-s-prediction/'],
+    [predict.charge.file, 'assets/fx/gertrude/mendeleev-s-prediction/'],
+    [jab.file, 'assets/fx/gertrude/point-contact/'],
+    [gate.file, 'assets/fx/gertrude/transistor-gate/'],
+    [wave.projectile.file, 'assets/fx/gertrude/crystal-radio-wave/'],
+  ];
+  for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
+  const risen = breakFrames({ frames: ['a', 'b', 'c', 'd', 'e', 'f'], breakFrom: 4, fps: 8, blend: 'normal' });
+  assert.deepEqual(risen.frames, ['e', 'f']);
 });

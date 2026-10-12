@@ -1,0 +1,14 @@
+{
+  "file": "grounding-sparks-sheet.jpg",
+  "frames": 4,
+  "fps": 8,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.4,
+  "crop": "frame",
+  "pivot": "bottom",
+  "anchor": "ground",
+  "hit": false
+}

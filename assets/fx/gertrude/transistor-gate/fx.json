@@ -1,0 +1,14 @@
+{
+  "file": "transistor-gate-sheet.jpg",
+  "frames": 4,
+  "fps": 4,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.45,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false
+}

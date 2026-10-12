@@ -1,0 +1,11 @@
+{
+  "file": "point-contact-spark.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 0.75,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "fist",
+  "hit": false
+}

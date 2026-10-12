@@ -1,0 +1,23 @@
+{
+  "file": "prediction-strike.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.25,
+  "crop": "frame",
+  "pivot": "bottom",
+  "hit": false,
+  "charge": {
+    "file": "prediction-marker-sheet.jpg",
+    "frames": 4,
+    "fps": 8,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.55,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "predict"
+  }
+}

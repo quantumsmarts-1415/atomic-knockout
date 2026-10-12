@@ -1,0 +1,12 @@
+{
+  "file": "live-wire-whip-sheet.jpg",
+  "frames": 4,
+  "blend": "normal",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.2,
+  "crop": "frame",
+  "pivot": "left",
+  "anchor": "fist",
+  "hit": false
+}

@@ -1,0 +1,25 @@
+{
+  "file": "forge-hammer-impact.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 0.95,
+  "crop": "frame",
+  "pivot": "bottom",
+  "anchor": "ground",
+  "hit": false,
+  "charge": {
+    "file": "blowtorch-flame-sheet.jpg",
+    "frames": 4,
+    "fps": 10,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.45,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "body",
+    "flip": true
+  }
+}

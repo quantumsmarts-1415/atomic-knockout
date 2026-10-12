@@ -1,0 +1,17 @@
+{
+  "blend": "normal",
+  "black": 16,
+  "hit": false,
+  "projectile": {
+    "file": "coin-spin-sheet.jpg",
+    "frames": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "normal",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.22,
+    "crop": "frame",
+    "pivot": "center"
+  }
+}

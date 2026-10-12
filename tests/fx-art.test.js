@@ -697,3 +697,126 @@ test('a one-shot pulse keeps the size of the frame it is showing', () => {
   assert.equal(p.gfx.key, 'c');
   assert.equal(p.gfx.rotation, 0);
 });
+
+test('a falling meteorite keeps its painted orientation', () => {
+  const p = {
+    born: 0,
+    fxFrames: ['rock'],
+    fxFps: 8,
+    fxAim: false,
+    vx: -40,
+    vy: 560,
+    gfx: {
+      key: 'rock',
+      rotation: 1.2,
+      scaleX: 2,
+      scaleY: 3,
+      setTexture() {},
+      setDisplaySize() {},
+      setScale(x, y) { this.scaleX = x; this.scaleY = y; },
+    },
+  };
+  stepFxProjectile(p, 50);
+  assert.equal(p.gfx.rotation, 0);
+  assert.equal(p.gfx.scaleX, -2);
+  assert.equal(p.gfx.scaleY, 3);
+});
+
+test('gemini fx call 1 wires fey, collin, and nick', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  const same = (a, b) => fs.readFileSync(a).equals(fs.readFileSync(b));
+  const hammer = read('assets/fx/fey/forge-hammer/fx.json');
+  assert.equal(hammer.file, 'forge-hammer-impact.jpg');
+  assert.equal(hammer.blend, 'add');
+  assert.equal(hammer.anchor, 'ground');
+  assert.equal(hammer.pivot, 'bottom');
+  assert.equal(hammer.hit, false);
+  assert.equal(hammer.charge.file, 'blowtorch-flame-sheet.jpg');
+  assert.equal(hammer.charge.frames, 4);
+  assert.equal(hammer.charge.loop, true);
+  assert.equal(hammer.charge.flip, true);
+  assert.equal(hammer.charge.anchor, 'body');
+  assert.equal(hammer.spriteAura, undefined);
+  const iron = read('assets/fx/fey/cold-iron-cut/fx.json');
+  assert.equal(iron.file, 'cold-iron-slash.jpg');
+  assert.equal(iron.blend, 'add');
+  assert.equal(iron.anchor, 'fist');
+  assert.equal(iron.pivot, 'left');
+  assert.equal(iron.hit, false);
+  const field = read('assets/fx/fey/lodestone-guard/fx.json');
+  assert.equal(field.file, 'lodestone-field-sheet.jpg');
+  assert.equal(field.frames, 4);
+  assert.equal(field.loop, true);
+  assert.equal(field.anchor, 'body');
+  assert.equal(field.blend, 'add');
+  assert.equal(field.hit, false);
+  assert.equal(field.spriteAura, undefined);
+  const thermite = read('assets/fx/fey/thermite/fx.json');
+  const allen = read('assets/fx/allen/thermite-burn/fx.json');
+  assert.deepEqual(thermite, allen);
+  assert.equal(thermite.file, 'thermite-spray-anim.png');
+  assert.equal(thermite.blend, 'add');
+  assert.equal(thermite.hit, false);
+  assert.equal(thermite.cling.file, 'sheet.png');
+  assert.equal(same('assets/fx/fey/thermite/thermite-spray-anim.png', 'assets/fx/allen/thermite-burn/thermite-spray-anim.png'), true);
+  assert.equal(same('assets/fx/fey/thermite/sheet.png', 'assets/fx/allen/thermite-burn/sheet.png'), true);
+  assert.equal(same('assets/fx/fey/thermite/object.png', 'assets/fx/allen/thermite-burn/object.png'), true);
+  const gamma = read('assets/fx/collin/gamma-knife/fx.json');
+  assert.equal(gamma.file, 'gamma-knife-arc.jpg');
+  assert.equal(gamma.blend, 'add');
+  assert.equal(gamma.stretch, 'length');
+  assert.equal(gamma.pivot, 'left');
+  assert.equal(gamma.hit, false);
+  assert.equal(gamma.charge.file, 'gamma-charge-glow.jpg');
+  assert.equal(gamma.charge.anchor, 'body');
+  const kobold = read('assets/fx/collin/kobold-strike/fx.json');
+  assert.equal(kobold.blend, 'add');
+  assert.equal(kobold.anchor, 'ground');
+  assert.equal(kobold.hit, false);
+  assert.equal(fs.existsSync('assets/fx/collin/superalloy-shell/fx.json'), false);
+  const glaze = read('assets/fx/collin/blue-glaze/fx.json');
+  assert.equal(glaze.projectile.file, 'blue-glaze-glob.jpg');
+  assert.equal(glaze.projectile.blend, 'normal');
+  assert.equal(glaze.detonate.file, 'blue-glaze-splash.jpg');
+  assert.equal(glaze.detonate.blend, 'add');
+  assert.equal(glaze.detonate.anchor, 'point');
+  assert.equal(glaze.hit, false);
+  const snap = read('assets/fx/nick/memory-snap/fx.json');
+  assert.equal(snap.file, 'memory-snap-burst.jpg');
+  assert.equal(snap.blend, 'add');
+  assert.equal(snap.pivot, 'left');
+  assert.equal(snap.flip, true);
+  assert.equal(snap.hit, false);
+  const coin = read('assets/fx/nick/nickel-and-dime/fx.json');
+  assert.equal(coin.projectile.file, 'coin-spin-sheet.jpg');
+  assert.equal(coin.projectile.frames, 4);
+  assert.equal(coin.projectile.loop, true);
+  assert.equal(coin.projectile.blend, 'normal');
+  assert.equal(coin.hit, false);
+  assert.equal(fs.existsSync('assets/fx/nick/electroplate/fx.json'), false);
+  const meteor = read('assets/fx/nick/meteorite-drop/fx.json');
+  assert.equal(meteor.projectile.file, 'meteorite.jpg');
+  assert.equal(meteor.projectile.blend, 'normal');
+  assert.equal(meteor.projectile.aim, false);
+  assert.equal(meteor.detonate.file, 'meteor-impact.jpg');
+  assert.equal(meteor.detonate.blend, 'add');
+  assert.equal(meteor.detonate.anchor, 'ground');
+  assert.equal(meteor.detonate.pivot, 'bottom');
+  assert.equal(meteor.hit, false);
+  const files = [
+    [hammer.file, 'assets/fx/fey/forge-hammer/'],
+    [hammer.charge.file, 'assets/fx/fey/forge-hammer/'],
+    [iron.file, 'assets/fx/fey/cold-iron-cut/'],
+    [field.file, 'assets/fx/fey/lodestone-guard/'],
+    [gamma.file, 'assets/fx/collin/gamma-knife/'],
+    [gamma.charge.file, 'assets/fx/collin/gamma-knife/'],
+    [kobold.file, 'assets/fx/collin/kobold-strike/'],
+    [glaze.projectile.file, 'assets/fx/collin/blue-glaze/'],
+    [glaze.detonate.file, 'assets/fx/collin/blue-glaze/'],
+    [snap.file, 'assets/fx/nick/memory-snap/'],
+    [coin.projectile.file, 'assets/fx/nick/nickel-and-dime/'],
+    [meteor.projectile.file, 'assets/fx/nick/meteorite-drop/'],
+    [meteor.detonate.file, 'assets/fx/nick/meteorite-drop/'],
+  ];
+  for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
+});

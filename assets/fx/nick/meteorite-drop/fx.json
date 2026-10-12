@@ -1,0 +1,25 @@
+{
+  "blend": "normal",
+  "black": 16,
+  "hit": false,
+  "projectile": {
+    "file": "meteorite.jpg",
+    "blend": "normal",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.5,
+    "crop": "frame",
+    "pivot": "center",
+    "aim": false
+  },
+  "detonate": {
+    "file": "meteor-impact.jpg",
+    "blend": "add",
+    "black": 16,
+    "fit": "width",
+    "heightFrac": 1.7,
+    "crop": "frame",
+    "pivot": "bottom",
+    "anchor": "ground"
+  }
+}

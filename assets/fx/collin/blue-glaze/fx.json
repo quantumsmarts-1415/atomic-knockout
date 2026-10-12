@@ -1,0 +1,24 @@
+{
+  "blend": "normal",
+  "black": 16,
+  "hit": false,
+  "projectile": {
+    "file": "blue-glaze-glob.jpg",
+    "blend": "normal",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.3,
+    "crop": "frame",
+    "pivot": "center"
+  },
+  "detonate": {
+    "file": "blue-glaze-splash.jpg",
+    "blend": "add",
+    "black": 16,
+    "fit": "width",
+    "heightFrac": 1.05,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "point"
+  }
+}

@@ -457,6 +457,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     lifeMs: extra.lifeMs > 0 ? extra.lifeMs | 0 : 0,
     releaseImpact: !!extra.releaseImpact,
     once: !!extra.once,
+    aim: extra.aim !== false,
   };
 }
 
@@ -799,12 +800,17 @@ async function loadMoveArt(scene, char, slot, move, index) {
       ? await loadSpecFrames(scene, id, slug, folder, detSpec, index, pivotFrom(detSpec, { x: 0.5, y: 1 }), charH, sized, 'det-')
       : null;
     if (!shot?.frames?.length) return null;
+    // A melee that also throws (Nickel and Dime) keeps the painted shot on the
+    // projectile. The punch stays the attack pose.
+    const shotType = meta.projectile?.file && (objectType === 'slash arc' || objectType === 'extend')
+      ? 'projectile'
+      : objectType;
     const detonate = det?.frames?.length
       ? artRecord(objectType, sized, pivotFrom(detSpec, { x: 0.5, y: 1 }), det.frames, {
         ...look, blend: detSpec.blend, fps: detSpec.fps, anchor: detSpec.anchor || 'ground', beam: null,
       })
       : null;
-    const record = artRecord(objectType, sized, shotPivot, shot.frames, {
+    const record = artRecord(shotType, sized, shotPivot, shot.frames, {
       ...look,
       blend: shotSpec.blend,
       spin: shotSpec.spin,
@@ -814,6 +820,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
       loop: shotSpec.loop != null ? !!shotSpec.loop : look.loop,
       scaleWith: shotSpec.scaleWith || look.scaleWith,
       hit: shotSpec.hit === false ? false : look.hit,
+      aim: shotSpec.aim !== false,
       detonate,
       beam: null,
     });
@@ -911,9 +918,13 @@ export function fxProjectileView(scene, owner, move, x, y) {
   img.setDisplaySize(frame.displayW * scale, frame.displayH * scale);
   img.setDepth(16);
   img.setBlendMode?.(phaserBlend(frame.blend || art.blend));
-  if (!art.spin) {
+  if (!art.spin && art.aim !== false) {
     const face = owner?.facing || 1;
     img.rotation = face === -1 ? Math.PI : 0;
+  } else if (art.aim === false) {
+    const face = owner?.facing || 1;
+    img.rotation = 0;
+    if (face < 0) img.setScale(-Math.abs(img.scaleX || 1), Math.abs(img.scaleY || 1));
   }
   const useMask = art.hit !== false;
   let trail = null;
@@ -944,6 +955,7 @@ export function fxProjectileView(scene, owner, move, x, y) {
     fxDisplayH: frame.displayH * scale,
     fxSpin: art.spin || 0,
     fxPulse: art.pulse || 0,
+    fxAim: art.aim !== false,
     fxTrail: trail,
     fxTrailArt: art.trail || null,
   };
@@ -997,6 +1009,14 @@ export function stepFxProjectile(p, time) {
       const s = 1 + Math.sin((time - (p.born || 0)) / 150) * p.fxPulse;
       p.gfx.setDisplaySize(p.fxDisplayW * s, p.fxDisplayH * s);
     }
+    return;
+  }
+  if (p.fxAim === false) {
+    const face = (p.vx || 1) < 0 ? -1 : 1;
+    p.gfx.rotation = 0;
+    const sx = Math.abs(p.gfx.scaleX || 1);
+    const sy = Math.abs(p.gfx.scaleY || 1);
+    p.gfx.setScale(face * sx, sy);
     return;
   }
   p.gfx.rotation = Math.atan2(p.vy || 0, p.vx || 1);
@@ -1903,18 +1923,26 @@ function syncHeld(scene, fighter) {
     const frames = want.art.frames;
     const max = charge.maxChargeMs || 1;
     const frac = Math.min(1, Math.max(0, (now - (fighter.chargeStart ?? now)) / max));
-    const frame = frames[Math.min(frames.length - 1, Math.round(frac * (frames.length - 1)))];
+    const elapsed = now - (fighter.chargeStart ?? now);
+    const frame = want.art.loop
+      ? (frames[fxFrameIndex(want.art, elapsed)] || frames[0])
+      : frames[Math.min(frames.length - 1, Math.round(frac * (frames.length - 1)))];
     applyFrameLook(live.img, frame, want.art, 1);
     if (want.art.anchor === 'body') {
       live.img.setOrigin(0.5, 0.5);
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
+      if (want.art.flip) {
+        const dir = -(fighter.facing || 1);
+        live.img.setScale(dir * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
+      }
       return;
     }
     live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 1);
     const shot = 1 + ((charge.chargeRadiusMult ?? 1) - 1) * frac;
     const hand = sheetFxPoint(fighter, 'shot');
     live.img.setPosition(hand?.x ?? (fighter.x + face * bodyW * 0.65), hand?.y ?? fighter.y);
-    live.img.setScale(face * Math.abs(live.img.scaleX || 1) * shot, Math.abs(live.img.scaleY || 1) * shot);
+    const mirror = want.art.flip ? -face : face;
+    live.img.setScale(mirror * Math.abs(live.img.scaleX || 1) * shot, Math.abs(live.img.scaleY || 1) * shot);
     return;
   }
   if (want.kind === 'feet') {

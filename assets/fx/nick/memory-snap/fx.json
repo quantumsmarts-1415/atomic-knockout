@@ -1,0 +1,11 @@
+{
+  "file": "memory-snap-burst.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 1.35,
+  "crop": "frame",
+  "pivot": "left",
+  "flip": true,
+  "hit": false
+}

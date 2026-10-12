@@ -1,0 +1,20 @@
+{
+  "file": "gamma-knife-arc.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "length",
+  "stretch": "length",
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false,
+  "charge": {
+    "file": "gamma-charge-glow.jpg",
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.4,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "body"
+  }
+}

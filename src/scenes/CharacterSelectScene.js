@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { CHARACTERS } from '../data/characters.js';
+import { artIsUpdated, fighterIdsFromFxIndex } from '../data/updatedArt.js';
 import { buildSelectSlots, familyColor, stepSlot, TABLE_COLS, TABLE_ROWS } from '../data/periodic.js';
 import { Rig } from '../engine/Rig.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
@@ -52,6 +53,9 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.add.text(W / 2, 46, 'CHOOSE YOUR ELEMENT', {
       fontFamily: FONT_DISPLAY, fontSize: '26px', color: THEME.mistCss, letterSpacing: 1,
     }).setOrigin(0.5);
+    this.add.text(W / 2, 66, 'GOLD EDGE  ·  UPDATED ART', {
+      fontFamily: FONT_MONO, fontSize: '11px', color: THEME.goldCss, letterSpacing: 1.5,
+    }).setOrigin(0.5);
 
     const gridW = TABLE_COLS * STRIDE_X - GAP;
     this.gridX = Math.round((W - gridW) / 2);
@@ -64,8 +68,15 @@ export default class CharacterSelectScene extends Phaser.Scene {
     maskG.fillRect(this.gridX - 32, VIEW_Y, gridW + 48, VIEW_H);
     this.grid.setMask(maskG.createGeometryMask());
 
+    this.fxIds = new Set();
     this.tiles = this.slots.map((slot, i) => this.drawTile(slot, i));
+    this.gold = this.add.graphics();
+    this.grid.add(this.gold);
+    this.goldPhase = 0;
+    this.paintGold(0);
     this.drawRowLabels();
+    void this.loadFxIds();
+    window.__akSelect = this;
 
     this.scrollTrack = this.add.graphics();
     this.scrollThumb = this.add.graphics();
@@ -340,6 +351,45 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.load.start();
   }
 
+  tileUpdated(slot) {
+    if (!slot?.charId) return false;
+    return artIsUpdated(CHARACTERS[slot.charId], this.fxIds);
+  }
+
+  async loadFxIds() {
+    try {
+      const res = await fetch('/fx-index');
+      if (!res.ok) return;
+      const next = fighterIdsFromFxIndex(await res.json());
+      let grew = false;
+      for (const id of next) {
+        if (this.fxIds.has(id)) continue;
+        this.fxIds.add(id);
+        grew = true;
+      }
+      if (grew) this.paintGold(this.goldPhase || 0);
+    } catch {
+      // The reviewed roster and move sheets still draw without the index.
+    }
+  }
+
+  paintGold(phase) {
+    const g = this.gold;
+    if (!g) return;
+    g.clear();
+    const sheen = 0.28 + 0.72 * (0.5 + 0.5 * Math.sin(phase));
+    for (const tile of this.tiles) {
+      if (!this.tileUpdated(tile.slot)) continue;
+      const { x, y } = tile;
+      g.lineStyle(4, 0x2a1c08, 0.95);
+      g.strokeRoundedRect(x + 1, y + 1, TILE_W - 2, TILE_H - 2, 6);
+      g.lineStyle(2, THEME.gold, 1);
+      g.strokeRoundedRect(x + 1.5, y + 1.5, TILE_W - 3, TILE_H - 3, 6);
+      g.lineStyle(1, 0xfff6d2, sheen);
+      g.strokeRoundedRect(x + 3.5, y + 3.5, TILE_W - 7, TILE_H - 7, 5);
+    }
+  }
+
   refreshAll() {
     for (const p of this.players) {
       if (p.box.parentContainer !== this.grid) this.grid.add(p.box);
@@ -378,6 +428,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    this.goldPhase = (this.goldPhase || 0) + delta * 0.0035;
+    this.paintGold(this.goldPhase);
     pollGamepads();
     for (const p of this.players) {
       const connected = p.isGamepad ? !!padBySlot(p.slot) : phoneNet.hasSlot(p.slot);

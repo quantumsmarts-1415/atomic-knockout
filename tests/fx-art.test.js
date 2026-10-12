@@ -989,3 +989,108 @@ test('gemini fx wires gail and gertrude', () => {
   const risen = breakFrames({ frames: ['a', 'b', 'c', 'd', 'e', 'f'], breakFrom: 4, fps: 8, blend: 'normal' });
   assert.deepEqual(risen.frames, ['e', 'f']);
 });
+
+test('gemini fx wires arsenio and selena', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  assert.equal(moveSlug('Gray Arsenic Shards'), 'gray-arsenic-shards');
+  assert.equal(moveSlug('Paris Green Slash'), 'paris-green-slash');
+  const powder = read('assets/fx/arsenio/inheritance-powder/fx.json');
+  assert.equal(powder.projectile.file, 'inheritance-powder-puff.jpg');
+  assert.equal(powder.projectile.blend, 'screen');
+  assert.equal(powder.projectile.luma, true);
+  assert.equal(powder.projectile.aim, false);
+  assert.equal(powder.hit, false);
+  const slash = read('assets/fx/arsenio/paris-green-slash/fx.json');
+  assert.equal(slash.file, 'paris-green-slash.jpg');
+  assert.equal(slash.blend, 'add');
+  assert.equal(slash.anchor, 'fist');
+  assert.equal(slash.hit, false);
+  const vapor = read('assets/fx/arsenio/sublimate/fx.json');
+  assert.equal(vapor.file, 'sublimate-vapor-sheet.jpg');
+  assert.equal(vapor.frames, 4);
+  assert.equal(vapor.blend, 'screen');
+  assert.equal(vapor.luma, true);
+  assert.equal(vapor.anchor, 'body');
+  assert.equal(vapor.holdAt, 2);
+  assert.equal(vapor.breakFrom, 3);
+  assert.equal(vapor.ghost, 0.18);
+  assert.equal(vapor.hit, false);
+  assert.equal(vapor.burst.file, 'sublimate-counter-burst.jpg');
+  assert.equal(vapor.burst.blend, 'normal');
+  const shards = read('assets/fx/arsenio/gray-arsenic-shards/fx.json');
+  assert.equal(shards.projectile.file, 'arsenic-shard.jpg');
+  assert.equal(shards.projectile.blend, 'normal');
+  assert.equal(shards.projectile.aim, undefined);
+  assert.equal(shards.hit, false);
+  assert.equal(shards.detonate.file, 'arsenic-shatter.jpg');
+  assert.equal(shards.detonate.blend, 'normal');
+  assert.equal(shards.detonate.anchor, 'point');
+  const poison = read('assets/fx/status/poison/fx.json');
+  assert.equal(poison.file, 'poison-status-sheet.jpg');
+  assert.equal(poison.frames, 4);
+  assert.equal(poison.loop, true);
+  assert.equal(poison.blend, 'screen');
+  assert.equal(poison.luma, true);
+  assert.equal(poison.pivot, 'bottom');
+  assert.equal(poison.anchor, 'feet');
+  assert.equal(poison.hit, false);
+  assert.equal(fs.existsSync('assets/fx/status/poison/poison-status-sheet.jpg'), true);
+  assert.equal(fs.existsSync('assets/fx/arsenio/gray-arsenic-shards/poison-status-sheet.jpg'), false);
+  const bolt = read('assets/fx/selena/photoconductor/fx.json');
+  assert.equal(bolt.file, 'photoconductor-lightning.jpg');
+  assert.equal(bolt.blend, 'add');
+  assert.equal(bolt.fit, 'length');
+  assert.equal(bolt.stretch, 'length');
+  assert.equal(bolt.pivot, 'left');
+  assert.equal(bolt.hit, false);
+  assert.equal(bolt.charge.file, 'light-soak-sheet.jpg');
+  assert.equal(bolt.charge.frames, 2);
+  assert.equal(bolt.charge.loop, true);
+  assert.equal(bolt.charge.blend, 'add');
+  assert.equal(bolt.charge.anchor, 'body');
+  assert.equal(bolt.charge.spans.length, 2);
+  for (const [x, w] of bolt.charge.spans) {
+    assert.ok(x >= 0 && w > 0);
+    assert.ok(x + w <= 688, 'light-soak span stays off the clipped blob');
+  }
+  assert.ok(bolt.charge.spans[1][0] >= 330);
+  const kick = read('assets/fx/selena/crescent-kick/fx.json');
+  assert.equal(kick.file, 'crescent-kick-arc.jpg');
+  assert.equal(kick.blend, 'add');
+  assert.equal(kick.anchor, 'fist');
+  assert.equal(kick.hit, false);
+  const scan = read('assets/fx/selena/photocopy/fx.json');
+  assert.equal(scan.file, 'photocopy-scan-sheet.jpg');
+  assert.equal(scan.frames, 4);
+  assert.equal(scan.loop, true);
+  assert.equal(scan.blend, 'add');
+  assert.equal(scan.span, 'cell');
+  assert.equal(scan.crop, undefined);
+  assert.equal(scan.anchor, 'body');
+  assert.equal(scan.hit, false);
+  const moon = read('assets/fx/selena/moonbeam/fx.json');
+  assert.equal(moon.file, 'moonbeam.jpg');
+  assert.equal(moon.blend, 'add');
+  assert.equal(moon.fit, 'length');
+  assert.equal(moon.stretch, 'length');
+  assert.equal(moon.pivot, 'left');
+  assert.equal(moon.hit, false);
+  const files = [
+    [powder.projectile.file, 'assets/fx/arsenio/inheritance-powder/'],
+    [slash.file, 'assets/fx/arsenio/paris-green-slash/'],
+    [vapor.file, 'assets/fx/arsenio/sublimate/'],
+    [vapor.burst.file, 'assets/fx/arsenio/sublimate/'],
+    [shards.projectile.file, 'assets/fx/arsenio/gray-arsenic-shards/'],
+    [shards.detonate.file, 'assets/fx/arsenio/gray-arsenic-shards/'],
+    [poison.file, 'assets/fx/status/poison/'],
+    [bolt.file, 'assets/fx/selena/photoconductor/'],
+    [bolt.charge.file, 'assets/fx/selena/photoconductor/'],
+    [kick.file, 'assets/fx/selena/crescent-kick/'],
+    [scan.file, 'assets/fx/selena/photocopy/'],
+    [moon.file, 'assets/fx/selena/moonbeam/'],
+  ];
+  for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
+  assert.equal(shellFrame({ frames: [0, 1, 2, 3], holdAt: 2, fps: 8 }, 500), 2);
+  const cond = breakFrames({ frames: [0, 1, 2, 3], breakFrom: 3, fps: 8, blend: 'screen' });
+  assert.deepEqual(cond.frames, [3]);
+});

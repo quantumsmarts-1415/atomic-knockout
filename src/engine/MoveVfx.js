@@ -320,11 +320,19 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   }
   if (phase === 'letgo') {
     const art = artFor(fighter.charDef?.id, move?.name);
-    const rise = art?.puddle ? breakFrames(art) : null;
+    const rise = (art?.puddle || (art?.breakFrom ?? -1) >= 0) ? breakFrames(art) : null;
     if (rise?.frames?.length) {
       const fps = rise.fps > 0 ? rise.fps : 8;
-      fighter._puddleRiseUntil = (scene.simNow ?? 0) + (rise.frames.length / fps) * 1000 + 80;
-      spawnFxSprite(scene, { ...rise, pivotX: art.pivotX, pivotY: art.pivotY }, fighter.x, fighter.y, 1);
+      const atFeet = !!(art.puddle || art.anchor === 'ground');
+      const y = atFeet ? fighter.y : fighter.y - (fighter.bodyH ?? 80) * 0.5;
+      if (art.puddle) {
+        fighter._puddleRiseUntil = (scene.simNow ?? 0) + (rise.frames.length / fps) * 1000 + 80;
+      }
+      spawnFxSprite(scene, { ...rise, pivotX: art.pivotX, pivotY: art.pivotY }, fighter.x, y, 1);
+      if (art.burst?.frames?.length) {
+        const chest = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+        spawnFxSprite(scene, art.burst, fighter.x, chest, 1);
+      }
       return;
     }
     if (coatSpec(move)) return;

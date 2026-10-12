@@ -456,6 +456,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     heatAt: typeof extra.heatAt === 'number' ? extra.heatAt | 0 : -1,
     lifeMs: extra.lifeMs > 0 ? extra.lifeMs | 0 : 0,
     puddle: !!extra.puddle,
+    ghost: extra.ghost === true ? 0.18 : (extra.ghost > 0 ? Number(extra.ghost) : 0),
     releaseImpact: !!extra.releaseImpact,
     once: !!extra.once,
     aim: extra.aim !== false,
@@ -513,6 +514,14 @@ export async function collectFxArt(scene) {
       );
     }
   }
+  if (!byKey.has('status/poison')) {
+    byKey.set('status/poison', null);
+    jobs.push(
+      loadSharedStatus(scene, index)
+        .then((art) => byKey.set('status/poison', art))
+        .catch(() => byKey.set('status/poison', null)),
+    );
+  }
   await Promise.all(jobs);
 }
 
@@ -548,6 +557,27 @@ async function loadHitSpark(scene, char, index) {
   if (!loaded?.frames?.length) return null;
   return artRecord('slash arc', { w: 48, h: 48 }, { x: 0.5, y: 0.5 }, loaded.frames, {
     blend: meta.blend, fps: meta.fps, hit: false, anchor: 'contact',
+  });
+}
+
+/** Shared status sheets (poison, and later on-fire) load for every match. */
+async function loadSharedStatus(scene, index) {
+  const folder = 'status/poison';
+  const meta = await loadFxMeta(folder, index);
+  const file = meta.file || 'poison-status-sheet.jpg';
+  if (!listed(index, `${folder}/${file}`)) return null;
+  const spec = { ...meta, file };
+  const pivot = pivotFrom(spec, { x: 0.5, y: 1 });
+  const loaded = await loadSpecFrames(
+    scene, 'status', 'poison', folder, spec, index, pivot, 132, { w: 48, h: 64 }, '',
+  );
+  if (!loaded?.frames?.length) return null;
+  return artRecord('area or burst', { w: 48, h: 64 }, pivot, loaded.frames, {
+    blend: meta.blend,
+    fps: meta.fps,
+    loop: meta.loop !== false,
+    hit: false,
+    anchor: meta.anchor || 'feet',
   });
 }
 
@@ -629,8 +659,13 @@ function padBounds(bounds, width, height, pad = 2) {
   return { x, y, w: Math.max(1, right - x), h: Math.max(1, bottom - y) };
 }
 
-function refSpan(bounds, spec) {
+function refSpan(bounds, spec, slices) {
   const fit = spec?.fit || 'width';
+  if (spec?.span === 'cell' && slices?.length) {
+    let best = 0;
+    for (const slice of slices) best = Math.max(best, contentSpan({ w: slice.width, h: slice.height }, fit));
+    return best || 1;
+  }
   if (spec?.fitFrame != null && bounds[spec.fitFrame]) return contentSpan(bounds[spec.fitFrame], fit);
   let best = 0;
   for (const box of bounds) best = Math.max(best, contentSpan(box, fit));
@@ -647,11 +682,22 @@ async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH
   const pix = pixelsOf(img);
   const cols = spec?.cols | 0;
   const rows = spec?.rows | 0;
-  const n = count > 1 ? count : 1;
+  const spans = Array.isArray(spec?.spans) && spec.spans.length ? spec.spans : null;
+  const n = spans ? spans.length : (count > 1 ? count : 1);
   const slices = [];
   for (let i = 0; i < n; i++) {
     let slice;
-    if (n === 1) slice = { data: pix.data, width: pix.width, height: pix.height };
+    if (spans) {
+      const span = spans[i] || [0, pix.width];
+      const x = Math.max(0, Math.min(pix.width - 1, span[0] | 0));
+      const room = Math.max(1, pix.width - x);
+      const w = Math.max(1, Math.min((span[1] | 0) || room, room));
+      slice = {
+        data: cropPixels(pix.data, pix.width, pix.height, { x, y: 0, w, h: pix.height }),
+        width: w,
+        height: pix.height,
+      };
+    } else if (n === 1) slice = { data: pix.data, width: pix.width, height: pix.height };
     else if (cols > 1 || rows > 1) slice = sliceGrid(pix.data, pix.width, pix.height, cols || n, rows || 1, i);
     else slice = sliceHorizontal(pix.data, pix.width, pix.height, n, i);
     const smoke = !!spec?.luma || (spec?.smokeFrom != null && i >= (spec.smokeFrom | 0));
@@ -677,7 +723,7 @@ async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH
   }
   const bounds = slices.map((slice) => contentBounds(slice.keyed, slice.width, slice.height));
   const fitMode = spec?.fit || null;
-  const px = fitMode ? pixelsPerSource(charH, spec?.heightFrac, refSpan(bounds, spec)) : 0;
+  const px = fitMode ? pixelsPerSource(charH, spec?.heightFrac, refSpan(bounds, spec, slices)) : 0;
   const crop = spec?.crop === 'frame';
   const frames = [];
   for (let i = 0; i < slices.length; i++) {
@@ -861,7 +907,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
         holdLast: !!meta.holdLast, flip: !!meta.flip, bothSides: !!meta.bothSides, releaseFlash: !!meta.releaseFlash, comboFrames: !!meta.comboFrames, crackFrames: !!meta.crackFrames,
         order: meta.order, fadeAfter: !!meta.fadeAfter, fadeMs: meta.fadeMs, paceCharge: !!meta.paceCharge,
         holdAt: meta.holdAt, breakFrom: meta.breakFrom, overCoat: meta.overCoat, heatAt: meta.heatAt,
-        lifeMs: meta.lifeMs, puddle: !!meta.puddle,
+        lifeMs: meta.lifeMs, puddle: !!meta.puddle, ghost: meta.ghost,
       });
       await attachSides(scene, id, slug, folder, meta, index, charH, sized, record);
       return record;
@@ -1468,6 +1514,7 @@ function dropAttached(fighter, live) {
     fighter.rig?.setVisible?.(true);
     fighter._puddleHid = false;
   }
+  if (live?.fadeRig) fighter.rig?.setAlpha?.(1);
   live?.img?.destroy?.();
   live?.front?.destroy?.();
   live?.lead?.destroy?.();
@@ -1588,6 +1635,10 @@ function syncAttached(scene, fighter) {
       live.img.setScale(face * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
     } else if (want.kind === 'body') {
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
+      if (art.ghost > 0) {
+        fighter.rig?.setAlpha?.(art.ghost);
+        live.fadeRig = true;
+      }
     } else {
       const anchor = fxAnchor(fighter, fighter.defenseMove);
       live.img.setPosition(anchor?.x ?? fighter.x, anchor?.y ?? fighter.y);
@@ -1669,6 +1720,35 @@ function syncFreeze(scene, fighter) {
   const frame = art.frames[fxFrameIndex(art, now - live.born)] || art.frames[0];
   applyFrameLook(live.img, frame, art, 1);
   live.img.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.5);
+}
+
+const livePoison = new WeakMap();
+
+function dropPoison(fighter) {
+  const live = livePoison.get(fighter);
+  live?.img?.destroy?.();
+  if (live) livePoison.delete(fighter);
+}
+
+/** Toxic fumes follow anyone whose poison timer is still running. */
+function syncPoison(scene, fighter) {
+  const now = scene.simNow ?? 0;
+  if (!(fighter.poisonUntil > now)) {
+    dropPoison(fighter);
+    return;
+  }
+  const art = fxNamed('status/poison');
+  if (!art?.frames?.length) return;
+  let live = livePoison.get(fighter);
+  if (!live?.img?.scene) {
+    dropPoison(fighter);
+    live = { img: placeStill(scene, art, fighter.x, fighter.y, 0), born: now };
+    live.img.setDepth(12);
+    livePoison.set(fighter, live);
+  }
+  const frame = art.frames[fxFrameIndex(art, now - live.born)] || art.frames[0];
+  applyFrameLook(live.img, frame, art, 1);
+  live.img.setPosition(fighter.x, fighter.y);
 }
 
 const liveCling = new WeakMap();
@@ -1796,6 +1876,7 @@ export function syncFxActors(scene) {
   stepEmbers(scene);
   for (const fighter of scene.fighters) {
     syncCling(scene, fighter);
+    syncPoison(scene, fighter);
     syncAttached(scene, fighter);
     if ((fighter._puddleRiseUntil ?? 0) > (scene.simNow ?? 0)) {
       fighter.rig?.setVisible?.(false);

@@ -1,0 +1,11 @@
+{
+  "file": "paris-green-slash.jpg",
+  "blend": "add",
+  "black": 16,
+  "fit": "width",
+  "heightFrac": 0.95,
+  "crop": "frame",
+  "pivot": "left",
+  "anchor": "fist",
+  "hit": false
+}

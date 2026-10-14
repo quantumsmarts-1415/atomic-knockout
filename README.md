@@ -3,7 +3,7 @@
 A Smash-style party brawler where every character is a periodic table element.
 Design doc lives in the Obsidian vault: `Projects/Atomic Knockout Build Instructions.md`.
 
-## Run it
+## Run it (browser)
 
 ```
 npm install
@@ -11,6 +11,25 @@ npm run dev
 ```
 
 Then open the printed localhost URL (usually http://localhost:5173).
+
+## Desktop app (Windows)
+
+The game ships as a real desktop app via Electron: its own window (no browser
+chrome), official Atomic Knockout icon, Start Menu + desktop shortcuts, and the
+same local phone-controller relay as `npm run dev`.
+
+```
+npm install
+npm run desktop          # play from source (any OS with Electron)
+npm run dist:win         # build Windows installer + portable .exe → release/
+```
+
+- Installer: `release/Atomic Knockout-0.1.0-win-x64.exe` (NSIS; creates a desktop icon)
+- Portable: `release/Atomic Knockout-0.1.0-portable.exe` (no install; still uses the icon)
+
+Icon source of truth: `assets/branding/atomic-knockout.jpg`. Regenerate ICO/PNG with `npm run icons`.
+
+macOS / Linux desktop builds can be added later with the same Electron shell; Windows is the first supported package target.
 
 ## Deploy
 

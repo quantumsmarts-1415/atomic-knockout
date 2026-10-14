@@ -3,10 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "description": "Atomic Knockout — Smash-style periodic table party brawler",
+  "author": "Quantum Smarts",
+  "main": "desktop/main.js",
   "scripts": {
     "dev": "node server.js",
-    "build": "node tools/publish.mjs",
-    "test": "node --experimental-test-module-mocks tests/engine.test.js && node --experimental-test-module-mocks tests/roster.test.js && node --experimental-test-module-mocks tests/sheets.test.js && node --experimental-test-module-mocks tests/stages.test.js && node --experimental-test-module-mocks tests/join-link.test.js && node --test tests/gamepad.test.js && node --test tests/balance.test.js && node --test tests/moves.test.js && node --test tests/move-clip.test.js && node --test tests/body-layout.test.js && node --test tests/body-scale-data.test.js && node --test tests/import-strip.test.js && node --test tests/periodic.test.js && node --test tests/updated-art.test.js && node --test tests/hud-layout.test.js && node --test tests/import-bulk.test.js && node --test tests/feel.test.js && node --test tests/wave5.test.js && node --test tests/wave6.test.js && node --experimental-test-module-mocks tests/juice.test.js && node --test tests/fx-art.test.js && node --test tests/final-fx.test.js && node --test tests/realtime-match.test.js && node --test --test-timeout 180000 tests/mask-render.test.js",
+    "desktop": "electron .",
+    "branding:icons": "node tools/make-icons.mjs",
+    "build": "node tools/publish-site.mjs",
+    "build:game": "node tools/publish.mjs",
+    "build:site": "node tools/publish-site.mjs",
+    "dist:win": "node tools/package-desktop.mjs",
+    "dist:win:portable": "node tools/package-desktop.mjs --portable-only",
+    "download:url": "node tools/set-download-url.mjs",
+    "test": "node --experimental-test-module-mocks tests/engine.test.js && node --experimental-test-module-mocks tests/roster.test.js && node --experimental-test-module-mocks tests/sheets.test.js && node --experimental-test-module-mocks tests/stages.test.js && node --experimental-test-module-mocks tests/join-link.test.js && node --test tests/gamepad.test.js && node --test tests/balance.test.js && node --test tests/moves.test.js && node --test tests/move-clip.test.js && node --test tests/body-layout.test.js && node --test tests/body-scale-data.test.js && node --test tests/import-strip.test.js && node --test tests/periodic.test.js && node --test tests/updated-art.test.js && node --test tests/hud-layout.test.js && node --test tests/import-bulk.test.js && node --test tests/feel.test.js && node --test tests/wave5.test.js && node --test tests/wave6.test.js && node --experimental-test-module-mocks tests/juice.test.js && node --test tests/fx-art.test.js && node --test tests/final-fx.test.js && node --test tests/realtime-match.test.js && node --test tests/server-desktop.test.js && node --test --test-timeout 180000 tests/mask-render.test.js",
     "check:sheets": "node tools/check-sheets.mjs",
     "sim": "node tools/sim-tournament.mjs"
   },
@@ -16,8 +26,70 @@
     "ws": "^8.21.1"
   },
   "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12",
     "jsqr": "^1.4.0",
     "playwright-core": "^1.64.0",
     "pngjs": "^7.0.0"
+  },
+  "build": {
+    "appId": "com.quantumsmarts.atomicknockout",
+    "productName": "Atomic Knockout",
+    "copyright": "Copyright © Quantum Smarts",
+    "directories": {
+      "output": "release",
+      "buildResources": "branding"
+    },
+    "files": [
+      "desktop/**/*",
+      "server.js",
+      "branding/icon.ico",
+      "branding/icon.png",
+      "branding/icon-256.png",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "game-dist",
+        "to": "game"
+      }
+    ],
+    "asar": true,
+    "win": {
+      "icon": "branding/icon.ico",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "AtomicKnockout-Portable-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Atomic Knockout",
+      "installerIcon": "branding/icon.ico",
+      "uninstallerIcon": "branding/icon.ico",
+      "installerHeaderIcon": "branding/icon.ico",
+      "artifactName": "AtomicKnockout-Setup-${version}.${ext}",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true
+    },
+    "linux": {
+      "icon": "branding/icon-512.png",
+      "category": "Game",
+      "target": ["AppImage"]
+    }
   }
 }

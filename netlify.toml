@@ -2,8 +2,10 @@
 # deploy previews, or branch deploys in the Netlify UI.
 # `true` exits 0, which tells Netlify to stop before the build runs,
 # so those contexts do not spend build minutes.
-# Keyboard and gamepad play from this static site.
-# Phone controllers still need the Node relay: `npm run dev`.
+#
+# The public site is the customer download page (not the in-browser game).
+# Host the ~1.5 GB Windows installer on Google Drive (recommended at first),
+# then: npm run download:url -- "<share-url>" && npm run build
 [build]
   command = "npm run build"
   publish = "dist"
@@ -16,8 +18,3 @@
 
 [context.branch-deploy]
   ignore = "true"
-
-[[redirects]]
-  from = "/fx-index"
-  to = "/fx-index.json"
-  status = 200

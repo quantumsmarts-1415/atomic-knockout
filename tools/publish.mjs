@@ -1,12 +1,13 @@
-// Build the static site Netlify publishes.
+// Build the playable game payload for the desktop package.
 //
-//   npm run build
+//   npm run build:game
 //
-// dist/ is the game the browser actually fetches: HTML, source modules,
+// game-dist/ is the game the desktop app serves: HTML, source modules,
 // fonts, Phaser, and the art files the roster and stages point at.
 // Review clips, Blender/Gemini source, backups, and the Node phone relay
 // stay out. PNG bytes are rewritten losslessly. A sheet that already crops
 // to its visible pixels drops fully transparent padding.
+// The public Netlify site is built separately with npm run build.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync, copyFileSync, statSync, existsSync, rmSync, readdirSync } from 'node:fs';
@@ -17,7 +18,9 @@ import { ROSTER } from '../src/data/characters.js';
 import { STAGES } from '../src/data/stages.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const dist = join(root, 'dist');
+// Playable game payload used by the desktop package. The public Netlify site
+// is the download landing page in site/, not this folder.
+const dist = join(root, process.env.GAME_DIST || 'game-dist');
 
 function addFile(set, rel) {
   if (!rel) return;

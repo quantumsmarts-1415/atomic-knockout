@@ -3,34 +3,64 @@
 A Smash-style party brawler where every character is a periodic table element.
 Design doc lives in the Obsidian vault: `Projects/Atomic Knockout Build Instructions.md`.
 
-## Run it
+## Play (desktop — customer experience)
 
+The real product is a **Windows desktop app**: official icon on the desktop,
+double-click, play in its own window (no browser).
+
+```bash
+npm install
+npm run build:game
+npm run desktop          # Electron window using game-dist/ or the repo
+npm run dist:win         # Windows installer + portable → site/downloads/
 ```
+
+- Installer: creates a Start Menu + **Desktop shortcut** with the cover-art icon
+- Portable: single `.exe` you can run without installing
+- Phone controllers still work from the desktop app over local Wi‑Fi
+
+## Public website (Netlify + Google Drive)
+
+The Netlify site is a **lightweight download page**, not the in-browser game.
+For v0.1, host the ~1.5 GB Windows installer on **Google Drive** — much easier
+than uploading the binary through Netlify.
+
+```bash
+npm run dist:win
+# Upload release/AtomicKnockout-Setup-*.exe to Google Drive
+# Share: Anyone with the link → Viewer
+npm run download:url -- "https://drive.google.com/file/d/FILE_ID/view?usp=sharing" --mb=1581.6
+npm run build            # tiny dist/ landing page for Netlify
+```
+
+- Build command: `npm run build`
+- Publish directory: `dist`
+- Publish from the Netlify UI by hand. Leave automatic deploys, deploy
+  previews, and branch deploys off.
+- Optional: `npm run dist:win -- --publish-local` copies the .exe into
+  `site/downloads/` if you later want Netlify to host the binary itself.
+
+## Dev (browser)
+
+```bash
 npm install
 npm run dev
 ```
 
 Then open the printed localhost URL (usually http://localhost:5173).
 
-## Deploy
+`npm run build:game` still packages the playable asset set into `game-dist/`
+for the desktop app (about a gigabyte of sheets). Review clips, source
+renders, and backups stay out. PNGs are optimized losslessly when `oxipng`
+is on PATH.
 
-Publish once, by hand, from the Netlify UI. Leave automatic deploys, deploy
-previews, and branch deploys off. `netlify.toml` also cancels preview and
-branch builds before they start.
+## Branding
 
-- Build command: `npm run build`
-- Publish directory: `dist`
-- Measured publish size: 1042.8 MB
+Official cover art lives in `branding/cover.jpg`. Rebuild icons after replacing it:
 
-That folder is the game the browser fetches: pages, source modules, fonts,
-Phaser, and the art the roster actually points at. Review clips, source
-renders, and backups stay out of the upload. PNGs are optimized losslessly
-when `oxipng` is on PATH; the build still finishes without it. The sheets
-themselves are about a gigabyte, so the upload stays full quality.
-
-`npm run dev` is still the local server. It is also the phone-controller
-relay, which a static Netlify site does not include. Keyboard and gamepad
-play from the published site.
+```bash
+npm run branding:icons
+```
 
 ## Controls (keyboard, 2 players)
 
@@ -49,6 +79,8 @@ play from the published site.
 - `src/engine/Fighter.js` — one combatant: movement, jumps, attacks, percent/knockback, stocks. Character-agnostic.
 - `src/scenes/BattleScene.js` — the fight: stage, hit resolution, projectiles, blast zones, HUD, win check.
 - `src/scenes/` — menus and flow (title, character select, results, pause).
+- `desktop/` — Electron shell (native window, no browser chrome).
+- `site/` — customer download landing page for Netlify.
 
 ## Damage model
 

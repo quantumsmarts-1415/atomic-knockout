@@ -1,6 +1,15 @@
 {
-  "builtAt": null,
+  "builtAt": "2026-10-14T23:31:46.159Z",
   "version": "0.1.0",
-  "downloads": [],
-  "note": "Upload release/AtomicKnockout-Setup-*.exe to Google Drive (Anyone with the link), then run: npm run download:url -- \"https://drive.google.com/file/d/FILE_ID/view?usp=sharing\" --mb=1581.6"
+  "host": "google-drive",
+  "downloads": [
+    {
+      "file": "AtomicKnockout-Setup.exe",
+      "url": "https://drive.google.com/uc?export=download&confirm=t&id=1moUr2cbWeCnknqzSrBQimhI81rLE8mve",
+      "bytes": 1581600000,
+      "mb": 1581.6,
+      "label": "Windows Installer",
+      "external": true
+    }
+  ]
 }

@@ -1,5 +1,6 @@
 @echo off
-rem Atomic Knockout launcher - starts the server if needed, opens the game
+rem Browser fallback launcher. Prefer the Windows desktop build from
+rem `npm run dist:win` (installer or portable) for an icon + chrome-less window.
 cd /d "%~dp0"
 
 netstat -ano | findstr ":5173" | findstr "LISTENING" >nul

@@ -3,7 +3,8 @@
   "black": 16,
   "anchor": "trail",
   "fit": "height",
-  "heightFrac": 1,
+  "heightFrac": 0.55,
+  "scale": 0.62,
   "pivot": "right",
   "hit": false,
   "flicker": true

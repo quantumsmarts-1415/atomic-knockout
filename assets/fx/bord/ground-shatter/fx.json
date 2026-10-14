@@ -2,12 +2,13 @@
   "blend": "add",
   "black": 16,
   "frames": 5,
-  "fps": 12,
+  "fps": 9,
   "crop": "frame",
   "fit": "width",
-  "heightFrac": 1.7,
+  "heightFrac": 1.9,
+  "scale": 1.2,
   "pivot": "bottom",
-  "anchor": "ground",
+  "anchor": "ground-front",
   "hit": false,
   "flip": true
 }

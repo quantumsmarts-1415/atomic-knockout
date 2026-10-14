@@ -64,11 +64,10 @@ export const STAGES = [
     solids: [
       { x: 640, w: 990 }, // mainX/mainW from the original single-stage build
     ],
-    // gap to platform: 150px (was 187 -- lowered 20% along with the 20%
-    // character-size shrink, per Benjamin). Every jump-capable character
-    // (20/24) clears it with even more margin now (211-492px reach vs 150).
+    // gap to platform: 190px (raised for more vertical space; launch
+    // air-jumpers still clear ~211px+).
     platforms: [
-      { x: 640, y: 410, w: 286 },
+      { x: 640, y: 370, w: 286 },
     ],
   },
   {
@@ -86,10 +85,9 @@ export const STAGES = [
       { x: 330, w: 460 },  // left island: x 100-560
       { x: 950, w: 460 },  // right island: x 720-1180
     ],
-    // same 150px gap as Elemental Isle's platform, same reach profile --
-    // it's the one thing connecting the two halves for anyone who can jump.
+    // same raised gap as Elemental Isle's platform.
     platforms: [
-      { x: 640, y: 410, w: 220 },
+      { x: 640, y: 370, w: 220 },
     ],
   },
   {
@@ -115,8 +113,8 @@ export const STAGES = [
       { x: 640, y: 490, w: 80, h: 70 }, // the pillar: top at 490, sits on the ground at 560
     ],
     platforms: [
-      { x: 350, y: 432, w: 220 },
-      { x: 930, y: 432, w: 220 },
+      { x: 300, y: 392, w: 220 },
+      { x: 980, y: 392, w: 220 },
     ],
   },
   {
@@ -146,9 +144,9 @@ export const STAGES = [
       { x: 640, w: 840 }, // x 220-1060
     ],
     platforms: [
-      { x: 380, y: 456, w: 200 },
-      { x: 640, y: 368, w: 200 },
-      { x: 900, y: 456, w: 200 },
+      { x: 320, y: 416, w: 200 },
+      { x: 640, y: 328, w: 200 },
+      { x: 960, y: 416, w: 200 },
     ],
   },
   // ---------------------------------------------------------------------
@@ -183,11 +181,12 @@ export const STAGES = [
     solids: [
       { x: 640, w: 900 }, // x 190-1090
     ],
-    // sides 128px above the floor, top 128px above the sides
+    // sides ~140px above the floor (launch air-jumper reach ~185, test
+    // spare 40), top another ~128px above the sides; wings pulled outward
     platforms: [
-      { x: 420, y: 432, w: 200 },
-      { x: 860, y: 432, w: 200 },
-      { x: 640, y: 304, w: 200 },
+      { x: 360, y: 420, w: 200 },
+      { x: 920, y: 420, w: 200 },
+      { x: 640, y: 292, w: 200 },
     ],
     blast: { left: -160, right: 1440, top: -300, bottom: 860 },
     spawns: [
@@ -218,9 +217,9 @@ export const STAGES = [
     solids: [
       { x: 640, w: 880 }, // x 200-1080
     ],
-    // 140px above the floor; sweeps x 490-790 every 7s (edges stay over the floor)
+    // ~140px above the floor; wider sweep x 460-820 every 7s
     platforms: [
-      { x: 640, y: 420, w: 220, move: { axis: 'x', range: 300, period: 7000 } },
+      { x: 640, y: 420, w: 220, move: { axis: 'x', range: 360, period: 7000 } },
     ],
     blast: { left: -160, right: 1440, top: -300, bottom: 860 },
     spawns: [
@@ -246,15 +245,18 @@ export const STAGES = [
       terrain: 'terrain.png',
       ambient: { kind: 'embers', color: 0xffa040, count: 34 },
     },
-    groundY: 560,
+    // Painted slab top is ~y 539 (terrain.png alpha). The old groundY 560
+    // left fighters standing inside the basalt art, which read as standing
+    // on empty mid-layer volcano pixels.
+    groundY: 539,
     solids: [
-      { x: 640, w: 1000 }, // x 140-1140
+      { x: 640, w: 990 }, // x 145-1135, matches terrain opaque span
     ],
     platforms: [],
     blast: { left: -150, right: 1430, top: -300, bottom: 860 },
     spawns: [
-      { x: 380, y: 470 }, { x: 900, y: 470 }, { x: 520, y: 470 },
-      { x: 760, y: 470 }, { x: 240, y: 470 }, { x: 1040, y: 470 },
+      { x: 380, y: 450 }, { x: 900, y: 450 }, { x: 520, y: 450 },
+      { x: 760, y: 450 }, { x: 240, y: 450 }, { x: 1040, y: 450 },
     ],
   },
   {
@@ -282,10 +284,10 @@ export const STAGES = [
     solids: [
       { x: 640, w: 1280 },
     ],
-    // neon sign tops, 130px above the roof
+    // neon sign tops, ~140px above the roof, pulled toward the wings
     platforms: [
-      { x: 330, y: 430, w: 210 },
-      { x: 950, y: 430, w: 210 },
+      { x: 280, y: 420, w: 210 },
+      { x: 1000, y: 420, w: 210 },
     ],
     blast: { left: -220, right: 1500, top: -300, bottom: 860 },
     spawns: [
@@ -316,10 +318,10 @@ export const STAGES = [
       { x: 640, w: 960 },                // ramparts, x 160-1120
       { x: 640, y: 500, w: 320, h: 60 }, // raised keep: 60px step (< 91px tank jump)
     ],
-    // balconies 130px above the rampart floor
+    // balconies ~140px above the rampart floor, wider wing spacing
     platforms: [
-      { x: 300, y: 430, w: 180 },
-      { x: 980, y: 430, w: 180 },
+      { x: 250, y: 420, w: 180 },
+      { x: 1030, y: 420, w: 180 },
     ],
     blast: { left: -150, right: 1430, top: -300, bottom: 860 },
     spawns: [
@@ -363,18 +365,22 @@ export const STAGES = [
       { x: 1645, y: 780, w: 470, h: 40 },  // east upper deck (x 1410-1880)
     ],
     platforms: [
-      // wing stairs: 64px steps over the docks up to the upper decks (+20)
-      { x: 590, y: 1056, w: 180 }, { x: 470, y: 992, w: 180 }, { x: 590, y: 928, w: 180 },
-      { x: 470, y: 864, w: 180 }, { x: 590, y: 800, w: 180 },
-      { x: 1970, y: 1056, w: 180 }, { x: 2090, y: 992, w: 180 }, { x: 1970, y: 928, w: 180 },
-      { x: 2090, y: 864, w: 180 }, { x: 1970, y: 800, w: 180 },
-      // lower-deck perches (130px), under the upper decks
-      { x: 1000, y: 1050, w: 200 }, { x: 1560, y: 1050, w: 200 },
-      // gantries (110px over the decks) and the summit halves (110px higher)
-      { x: 830, y: 670, w: 180 }, { x: 1730, y: 670, w: 180 },
-      { x: 1065, y: 560, w: 190 }, { x: 1495, y: 560, w: 190 },
+      // wing stairs: ~80px steps, wider zigzag (was 64px / 120px horizontal)
+      // so platforms are not stacked on top of each other. Docks still give
+      // zero-air-jump tanks a 60px route; air-jumpers clear a step alone.
+      { x: 640, y: 1060, w: 180 }, { x: 420, y: 980, w: 180 }, { x: 640, y: 900, w: 180 },
+      { x: 420, y: 820, w: 180 }, { x: 640, y: 740, w: 180 },
+      { x: 1920, y: 1060, w: 180 }, { x: 2140, y: 980, w: 180 }, { x: 1920, y: 900, w: 180 },
+      { x: 2140, y: 820, w: 180 }, { x: 1920, y: 740, w: 180 },
+      // lower-deck perches, pulled apart under the upper decks (~140px up)
+      { x: 920, y: 1040, w: 200 }, { x: 1640, y: 1040, w: 200 },
+      // gantries (~130px over decks) and summit halves (~120px higher).
+      // Summit halves must kiss the cargo lift (x 1160-1400) so tanks can
+      // step off at the top stop.
+      { x: 780, y: 650, w: 180 }, { x: 1780, y: 650, w: 180 },
+      { x: 1070, y: 530, w: 200 }, { x: 1490, y: 530, w: 200 },
       // cargo lift in the tether shaft: lower deck -> upper decks -> summit
-      { x: 1280, y: 1180, w: 240, move: { axis: 'y', stops: [1180, 780, 560], speed: 220, dwell: 1000 } },
+      { x: 1280, y: 1180, w: 240, move: { axis: 'y', stops: [1180, 780, 530], speed: 220, dwell: 1000 } },
     ],
     blast: { left: -260, right: 2820, top: -300, bottom: 1680 },
     spawns: [

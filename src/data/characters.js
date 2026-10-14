@@ -2456,6 +2456,30 @@ for (const def of Object.values(CHARACTERS)) {
     helen.stats.gravityScale = Math.max(helen.stats.gravityScale, 0.98);
   }
 }
+// Hydrogen's density curve gives Hydra a ~870 jump — too floaty in play.
+// Cap him near the roster middle without touching the shared formula.
+{
+  const hydra = CHARACTERS.hydra;
+  if (hydra?.stats) {
+    hydra.stats.jumpVelocity = Math.min(hydra.stats.jumpVelocity, 720);
+  }
+}
+// Bord's walk sheet faces the viewer's right (mace), while idle faces left
+// (crystal). Without a per-clip facing override the shared art.facing flips
+// the walk backwards.
+{
+  const walk = CHARACTERS.bord?.art?.sheets?.clips?.walk;
+  if (walk && walk.sheetFacing == null) walk.sheetFacing = 1;
+}
+// Bord's painted silhouette is wider than the old hurtbox, so jabs whiffed
+// against empty air in front of the crystal. Widen the body a notch.
+{
+  const bord = CHARACTERS.bord;
+  if (bord?.art) {
+    bord.art.bodyW = Math.max(bord.art.bodyW ?? 0, 58);
+    bord.art.bodyH = Math.max(bord.art.bodyH ?? 0, 108);
+  }
+}
 // Ghosts (Rf–Og) keep a steady percent drain and very weak movement.
 // Their attacks are the strong part. TUNING itself is unchanged.
 for (const def of Object.values(CHARACTERS)) {

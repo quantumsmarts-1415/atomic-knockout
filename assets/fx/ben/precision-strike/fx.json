@@ -1,13 +1,14 @@
 {
   "blend": "add",
-  "black": 16,
+  "black": 24,
   "frames": 3,
-  "fps": 16,
+  "fps": 14,
   "crop": "frame",
   "fit": "height",
-  "heightFrac": 0.55,
+  "heightFrac": 0.5,
   "pivot": "center",
   "anchor": "contact",
   "hit": false,
-  "comboFrames": false
+  "comboFrames": false,
+  "flip": true
 }

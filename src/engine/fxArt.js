@@ -858,6 +858,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
     anchor: meta.anchor || null,
     loop: !!meta.loop,
     hit: meta.hit !== false,
+    aim: meta.aim !== false,
     flicker: !!meta.flicker,
     stretch: meta.stretch === 'length' ? 'length' : null,
     sign: !!meta.sign,
@@ -1415,7 +1416,7 @@ function trackOneShot(scene, img, art, scale, peak, face = 1, box = null) {
   const frames = art.frames?.length || 1;
   const life = art.lifeMs > 0
     ? art.lifeMs
-    : frames > 1 ? (frames / fps) * 1000 + 70 : (art.objectType === 'shield' ? 500 : art.objectType === 'beam' ? 220 : 320);
+    : frames > 1 ? (frames / fps) * 1000 + 40 : (art.objectType === 'shield' ? 500 : art.objectType === 'beam' ? 110 : 180);
   oneShots.push({
     img, art, scale, peak, face, box, born: scene.simNow ?? 0, life,
   });

@@ -428,6 +428,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.squatLeft -= 1;
         if (this.squatLeft <= 0) {
           const held = !!(inp.jump || this._botJumpHold > 0);
+          this.launch = null;
+          this._appliedLaunch = null;
           this.body.setVelocityY(-stats.jumpVelocity * (held ? 1 : FEEL.shortHop));
           this.state = 'jump';
           if (!this.scene?.simFast) {
@@ -440,10 +442,16 @@ export default class Fighter extends Phaser.GameObjects.Container {
           this.state = 'jumpsquat';
           this.squatLeft = FEEL.jumpSquat - 1;
           this.body.setVelocity(0, 0);
+          // Residual knockback launch was still added after the jump impulse,
+          // so damaged fighters hopped higher and fell on a stacked arc.
+          this.launch = null;
+          this._appliedLaunch = null;
           if (this.isBot) this._botJumpHold = FEEL.jumpSquat;
         } else if (this.airJumpsLeft > 0) {
           this.airJumpsLeft -= 1;
           this.body.setVelocityY(-stats.jumpVelocity * 0.92);
+          this.launch = null;
+          this._appliedLaunch = null;
           if (!this.scene?.simFast) {
             sfx('jump');
             this.scene.juice?.dust?.(this.x, this.y, 1);
@@ -482,6 +490,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (this.state === 'attack') this.stateUntil += lag * step;
       else if (this.state !== 'hurt' && this.state !== 'jumpsquat') this.lockedUntil = Math.max(this.lockedUntil || 0, time + lag * step);
       this.landing = lag;
+      // Jump/fall used to stick after landing, so walk never remapped until an
+      // attack or hurt expired back to idle. Clear locomotion air states here.
+      if (this.state === 'jump' || this.state === 'fall') this.state = 'idle';
       if (!this.scene?.simFast) {
         sfx(hard ? 'landHeavy' : 'land');
         this.scene.juice?.dust?.(this.x, this.y, -1);
@@ -628,13 +639,17 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
     // --- pick animation state
     let animState = this.state;
-    if (this.state === 'idle' || this.state === 'walk') {
+    // Remap grounded locomotion even if state briefly lags behind landing
+    // (jump/fall) so walk sheets start as soon as horizontal speed is there.
+    if (this.state === 'idle' || this.state === 'walk' || this.state === 'jump' || this.state === 'fall') {
       if (!onGround) {
         animState = this.body.velocity.y < -40 ? 'jump' : 'fall';
-      } else if (Math.abs(this.body.velocity.x) > 20) {
+      } else if (Math.abs(this.body.velocity.x) > 12) {
         animState = 'walk';
+        if (this.state === 'jump' || this.state === 'fall' || this.state === 'idle') this.state = 'walk';
       } else {
         animState = 'idle';
+        if (this.state === 'jump' || this.state === 'fall' || this.state === 'walk') this.state = 'idle';
       }
     }
     const speedFactor = Math.abs(this.body.velocity.x) / Math.max(1, stats.speed);

@@ -10,7 +10,7 @@ import { phoneNet } from '../net/PhoneNet.js';
 import { fighterInputForSlot, isGamepadSlot, padBySlot, pollGamepads, rumbleSlot } from '../engine/gamepad.js';
 import { computeBotInput } from '../engine/BotAI.js';
 import { buildNavGraph } from '../engine/BotNav.js';
-import { startStageIntro } from '../engine/stageIntros.js';
+import { defaultStageIntro, startStageIntro } from '../engine/stageIntros.js';
 import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
 import { syncCoats } from '../engine/coatView.js';
@@ -29,7 +29,7 @@ import {
 } from '../engine/boxes.js';
 import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
-import { loadRosterArt, registerSheetAnims } from './BootScene.js';
+import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
 const GRAVITY = 1500;
 
@@ -101,6 +101,7 @@ export default class BattleScene extends Phaser.Scene {
       .map((p) => CHARACTERS[p.charId])
       .filter(Boolean);
     registerSheetAnims(this, roster);
+    if (!this.setup.playtestMs) repackOversizedSheets(this, roster);
     this.spawnFighters();
     this.asUi(() => this.buildHud());
     if (this.camRig) this.offscreenG = this.asUi(() => this.add.graphics().setDepth(900));
@@ -143,13 +144,18 @@ export default class BattleScene extends Phaser.Scene {
     // name a winner when time runs out.
     if (this.setup.playtestMs) window.__akReport = null;
 
-    // optional per-stage match intro (engine/stageIntros.js): fighters are
-    // frozen while it plays (+200ms so a skip press can't become an attack);
+    // Per-stage match intro (engine/stageIntros.js): fighters are frozen
+    // while it plays (+200ms so a skip press can't become an attack);
     // confirm (F/K/Enter/Space, phone attack) or a click skips it.
+    // Stages without a theatrical intro still get a short warmup card so the
+    // first seconds of play are not a texture-upload hitch.
     this.introLockUntil = 0;
     // Headless CPU matches skip the stage intro. The round still runs
     // until a stock elimination.
-    this.intro = this.setup.playtestMs ? null : startStageIntro(this, this.stage, {
+    this.intro = this.setup.playtestMs ? null : startStageIntro(this, {
+      ...this.stage,
+      intro: defaultStageIntro(this.stage),
+    }, {
       // Stamp the sim clock. Phaser writes the loop timestamp into time.now
       // on every frame while our clock scale is 0, and the doors' "GO" tween
       // finishes on that frame — so time.now here is how long the game has

@@ -241,10 +241,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.stocks = 3;
     this.facing = 1;
     this.airJumpsLeft = charDef.stats.airJumps;
-    this.state = 'idle'; // idle|walk|jump|fall|attack|hurt|ko|dead
+    this.state = 'idle'; // idle|walk|jump|fall|attack|hurt|ko|dead|grabbing|grabbed
     this.stateUntil = 0;
     this.attackCooldownUntil = 0;
     this.specialCooldownUntil = 0;
+    this.grabCooldownUntil = 0;
+    this.grabTarget = null;
+    this.grabber = null;
+    this.grabEscape = 0;
     this.activeHit = null;   // current live hitbox descriptor
     this.spawnPoint = { x, y };
     this.damageDealt = 0;
@@ -271,7 +275,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
   get isBusy() {
     return this.state === 'attack' || this.state === 'hurt' || this.state === 'ko' || this.state === 'dead' ||
-      this.state === 'charging' || this.state === 'defending' || this.state === 'jumpsquat' || this.state === 'ledge';
+      this.state === 'charging' || this.state === 'defending' || this.state === 'jumpsquat' || this.state === 'ledge' ||
+      this.state === 'grabbing' || this.state === 'grabbed';
   }
 
   update(time, dt) {
@@ -314,6 +319,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.holdLedge(time, step);
       this.rig.facing = this.facing;
       this.rig.animate?.(dt / 1000, 'ledge', 0);
+      return;
+    }
+
+    if (this.state === 'grabbing' || this.state === 'grabbed') {
+      this.holdGrab(time, step, dt);
       return;
     }
 
@@ -1271,6 +1281,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
    */
   takeHit(attacker, move, time, launchDir) {
     if (this.state === 'ko' || this.state === 'dead') return 0;
+    // A hit during a grab always breaks the clinch first.
+    if ((this.state === 'grabbing' || this.state === 'grabbed') && !move?.isGrabThrow) {
+      this.breakGrab(time, false);
+    }
     if (move.stripProtection && !move.isSelf && !move.isCounterAttack && stripProtection(this)) {
       playVfx(this.scene, this, move, 'shatter', {
         x: this.x,
@@ -2020,6 +2034,140 @@ export default class Fighter extends Phaser.GameObjects.Container {
   leaveLedge() {
     if (this.body) this.body.allowGravity = true;
     this.ledge = null;
+  }
+
+  beginGrab(victim, time) {
+    if (!victim?.alive || !victim.body) return;
+    this.state = 'grabbing';
+    this.grabTarget = victim;
+    this.grabStart = time;
+    this.stateUntil = time + FEEL.grabMaxMs;
+    this.activeHit = null;
+    this.launch = null;
+    this._appliedLaunch = null;
+    this.body.setVelocity(0, 0);
+    this.facing = Math.sign(victim.x - this.x) || this.facing || 1;
+
+    victim.state = 'grabbed';
+    victim.grabber = this;
+    victim.grabEscape = 0;
+    victim.stateUntil = this.stateUntil;
+    victim.activeHit = null;
+    victim.launch = null;
+    victim._appliedLaunch = null;
+    victim.body.setVelocity(0, 0);
+    victim.facing = -this.facing;
+    if (!this.scene?.simFast) {
+      sfx('land');
+      this.scene.juice?.puff?.(this.x + this.facing * 20, this.y - this.bodyH * 0.45, 0xf0c14a, 0.55);
+    }
+  }
+
+  holdGrab(time, step, dt) {
+    const grabber = this.state === 'grabbing' ? this : this.grabber;
+    const victim = this.state === 'grabbing' ? this.grabTarget : this;
+    if (!grabber?.alive || !victim?.alive || grabber.state !== 'grabbing' || victim.state !== 'grabbed') {
+      this.breakGrab(time, false);
+      return;
+    }
+
+    const holdX = grabber.x + grabber.facing * ((grabber.bodyW ?? 40) * 0.85 + (victim.bodyW ?? 40) * 0.35);
+    const holdY = grabber.y;
+    grabber.body.setVelocity(0, 0);
+    victim.body.setVelocity(0, 0);
+    victim.body.reset?.(holdX, holdY);
+    victim.x = holdX;
+    victim.y = holdY;
+    victim.facing = -grabber.facing;
+
+    const gInp = grabber.input || {};
+    const vInp = victim.input || {};
+    const gAttack = !!gInp.attack && !grabber._prev.attack;
+    const gSpecial = !!gInp.special && !grabber._prev.special;
+    const gJump = !!gInp.jump && !grabber._prev.jump;
+    grabber._prev.attack = !!gInp.attack;
+    grabber._prev.special = !!gInp.special;
+    grabber._prev.jump = !!gInp.jump;
+    grabber._prev.left = !!gInp.left;
+    grabber._prev.right = !!gInp.right;
+
+    // Victim mashes directions/buttons to break free.
+    const taps = [
+      !!vInp.left && !victim._prev.left,
+      !!vInp.right && !victim._prev.right,
+      !!vInp.jump && !victim._prev.jump,
+      !!vInp.attack && !victim._prev.attack,
+      !!vInp.special && !victim._prev.special,
+    ].filter(Boolean).length;
+    victim._prev.left = !!vInp.left;
+    victim._prev.right = !!vInp.right;
+    victim._prev.jump = !!vInp.jump;
+    victim._prev.attack = !!vInp.attack;
+    victim._prev.special = !!vInp.special;
+    victim.grabEscape = (victim.grabEscape || 0) + taps;
+    if (victim.grabEscape >= FEEL.grabEscapeMash) {
+      grabber.breakGrab(time, true);
+      return;
+    }
+
+    if (gJump) {
+      grabber.breakGrab(time, true);
+      return;
+    }
+    if (gAttack || gSpecial || time >= grabber.stateUntil) {
+      const back = gSpecial || (gInp.left && grabber.facing === 1) || (gInp.right && grabber.facing === -1);
+      grabber.throwGrabbed(time, back ? -1 : 1);
+      return;
+    }
+
+    grabber.rig.facing = grabber.facing;
+    victim.rig.facing = victim.facing;
+    grabber.rig.animate?.(dt / 1000, 'idle', 0);
+    victim.rig.animate?.(dt / 1000, 'hurt', 0);
+  }
+
+  throwGrabbed(time, dirMul = 1) {
+    const victim = this.grabTarget;
+    if (!victim) { this.breakGrab(time, false); return; }
+    const dir = (this.facing || 1) * (dirMul < 0 ? -1 : 1);
+    const kb = FEEL.grabThrowKb * (dirMul < 0 ? FEEL.grabBackMul : 1);
+    this.breakGrab(time, false);
+    this.facing = dir;
+    victim.takeHit(this, {
+      name: 'Grab Throw',
+      type: 'kinetic',
+      damage: FEEL.grabThrowDamage,
+      baseKnockback: kb,
+      knockbackGrowth: FEEL.grabThrowGrowth,
+      angle: dirMul < 0 ? 35 : 42,
+      isGrabThrow: true,
+    }, time, dir);
+    if (!this.scene?.simFast) {
+      sfx('hit');
+      this.scene.juice?.puff?.(victim.x, victim.y - victim.bodyH * 0.5, 0xffe7b0, 0.7);
+    }
+  }
+
+  breakGrab(time, escaped) {
+    const grabber = this.state === 'grabbing' ? this : this.grabber;
+    const victim = this.state === 'grabbing' ? this.grabTarget : this;
+    if (grabber) {
+      grabber.state = 'idle';
+      grabber.grabTarget = null;
+      grabber.grabCooldownUntil = time + FEEL.grabCooldownMs;
+      grabber.body?.setVelocity?.(0, 0);
+    }
+    if (victim && victim !== grabber) {
+      victim.state = 'idle';
+      victim.grabber = null;
+      victim.grabEscape = 0;
+      victim.grabCooldownUntil = time + FEEL.grabCooldownMs * 0.5;
+      if (escaped) {
+        victim.body?.setVelocity?.((victim.facing || 1) * -120, -180);
+        victim.state = 'jump';
+        if (!victim.scene?.simFast) victim.scene.juice?.puff?.(victim.x, victim.y - 20, 0xd0e4ff, 0.4);
+      }
+    }
   }
 
   pullNearby(pull) {

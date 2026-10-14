@@ -8,7 +8,8 @@
   "heightFrac": 1.9,
   "scale": 1.2,
   "pivot": "bottom",
-  "anchor": "ground-front",
+  "anchor": "ground",
   "hit": false,
-  "flip": true
+  "flip": true,
+  "lifeMs": 420
 }

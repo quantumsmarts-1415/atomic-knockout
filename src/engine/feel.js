@@ -73,6 +73,18 @@ export const FEEL = {
   ledgeIntang: 30,
   ledgeMax: 300,
 
+  // Walk-into grab. No dedicated grab art: the grabber holds idle, the
+  // victim is locked a step in front, and throws reuse launch VFX.
+  grabArmMs: 140,          // continuous overlap while walking into them
+  grabMaxMs: 1600,         // auto forward-throw if no input
+  grabCooldownMs: 900,      // after throw or break
+  grabRangeMul: 0.92,      // pushbox overlap still required; this softens edge clips
+  grabEscapeMash: 10,      // victim direction/attack taps to break free
+  grabThrowKb: 220,
+  grabThrowGrowth: 4.2,
+  grabThrowDamage: 6,
+  grabBackMul: 1.08,
+
   // Pose spring. Kept for callers that ease a value; the rig snaps to
   // poseTarget so a short wind-up actually reaches the pose.
   poseK: 600,

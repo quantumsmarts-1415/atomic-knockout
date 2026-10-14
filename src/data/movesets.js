@@ -81,7 +81,9 @@ export const MOVESETS = {
       startupF: 3, endlagF: 10, duration: 150, cooldown: 120, vfx: 'spark',
     }),
     specialDefense: m('Absorb', {
+      // Reach-forward soak: one hand orb pulls typed shots in and banks them.
       immune: [H, E, C, R], powersCharge: true,
+      attractProjectiles: 28,
       duration: 800, cooldown: 280, vfx: 'bubble', vfxColor: 0xf4f7ff,
     }),
     specialDirectional: m('Crimson Tide', {

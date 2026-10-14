@@ -1714,7 +1714,11 @@ function syncAttached(scene, fighter) {
         live.img.setOrigin(art.pivotX, art.pivotY);
         live.img.setPosition(at.x, fighter.y);
       } else {
-        live.img.setPosition(fighter.x + face * bodyW * 0.72, fighter.y - bodyH * 0.55);
+        // frontGap < 3 reads as a body-width factor (Absorb's reach orb);
+        // larger values stay pixel offsets used by vacancy signs / walls.
+        const gap = art.frontGap ?? 0.72;
+        const reach = gap < 3 ? bodyW * gap : bodyW * 0.5 + gap;
+        live.img.setPosition(fighter.x + face * reach, fighter.y - bodyH * 0.55);
       }
       live.img.setScale(face * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
     } else if (want.kind === 'body') {

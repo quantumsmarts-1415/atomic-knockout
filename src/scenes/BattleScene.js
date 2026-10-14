@@ -24,7 +24,7 @@ import { Juice } from '../engine/juice.js';
 import { FEEL, frameZoom, percentColor } from '../engine/feel.js';
 import { clockEndsRound } from '../engine/matchRules.js';
 import {
-  resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
+  resolvePush, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
 import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors } from '../engine/fxArt.js';
@@ -1998,6 +1998,7 @@ export default class BattleScene extends Phaser.Scene {
     tickChargeOrbits(this, time);
     const collisionStart = globalThis.performance.now();
     resolvePush(this.fighters);
+    resolveGrab(this.fighters, time, FEEL);
     this.updateZones(time);
     this.updateMines(time);
 
@@ -2136,12 +2137,23 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (!p.dead) {
         for (const f of this.fighters) {
-          const pull = f.state === 'attack' && f.currentMove?.attractProjectiles;
+          const pull = (f.state === 'attack' && f.currentMove?.attractProjectiles)
+            || (f.state === 'defending' && f.defenseMove?.attractProjectiles);
           if (!pull || f === p.owner || !f.alive) continue;
+          const strength = typeof pull === 'number' ? pull : 16;
           if (Math.abs(f.x - p.gfx.x) > 220 || Math.abs(f.y - p.gfx.y) > 160) continue;
-          p.vx += Math.sign(f.x - p.gfx.x || 1) * pull;
-          p.vy += Math.sign((f.y - f.bodyH * 0.5) - p.gfx.y || 1) * pull * 0.35;
+          p.vx += Math.sign(f.x - p.gfx.x || 1) * strength;
+          p.vy += Math.sign((f.y - f.bodyH * 0.5) - p.gfx.y || 1) * strength * 0.35;
           if (Math.abs(f.x - p.gfx.x) < 28 && Math.abs((f.y - f.bodyH * 0.5) - p.gfx.y) < 40) {
+            // Banking Absorb: credit the soaked shot into her charge bank.
+            if (f.state === 'defending' && f.defenseMove?.powersCharge) {
+              const dmg = (p.move?.damage ?? 0) + (p.move?.damage2 ?? 0);
+              if (dmg > 0) {
+                const cap = f.charDef.moves.basicCharge?.bankCap ?? 18;
+                f._storedCharge = Math.min(cap, (f._storedCharge ?? 0) + dmg * 0.6);
+              }
+              playVfx(this, f, f.defenseMove, 'absorb', { x: p.gfx.x, y: p.gfx.y });
+            }
             p.gfx.destroy();
             p.dead = true;
           }

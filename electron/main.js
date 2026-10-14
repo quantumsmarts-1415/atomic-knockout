@@ -7,6 +7,14 @@ import { startServer } from '../server.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, '..');
 
+// Cloud VMs and some Windows boxes blocklist WebGL; keep a software path so
+// the window still opens. Real GPUs ignore these and use hardware.
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('enable-webgl');
+app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+app.commandLine.appendSwitch('use-gl', 'angle');
+app.commandLine.appendSwitch('use-angle', 'swiftshader');
+
 let mainWindow = null;
 let gameServer = null;
 
@@ -57,6 +65,8 @@ async function createWindow(port) {
 async function boot() {
   // Prefer a free port so a leftover npm run dev does not block the desktop app.
   gameServer = await startServer({ root: gameRoot(), port: 0 });
+  console.log(`Atomic Knockout desktop → http://127.0.0.1:${gameServer.port}/`);
+  console.log(`Phones on the same WiFi: http://${gameServer.lanIp}:${gameServer.port}/controller`);
   await createWindow(gameServer.port);
 }
 

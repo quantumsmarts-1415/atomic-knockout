@@ -8,7 +8,7 @@
 import http from 'node:http';
 import os from 'node:os';
 import { readFile, readdir } from 'node:fs/promises';
-import { extname, join, normalize } from 'node:path';
+import { extname, join, resolve, relative, isAbsolute } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WebSocketServer } from 'ws';
 
@@ -42,17 +42,30 @@ export function lanIp() {
   return 'localhost';
 }
 
+/** Map a URL pathname onto a file under root without leaving the tree. */
+export function resolveGamePath(root, urlPath) {
+  const base = resolve(root);
+  const rel = String(urlPath || '/')
+    .replace(/^\/+/, '')
+    .replace(/\\/g, '/')
+    .split('/')
+    .filter((part) => part && part !== '.' && part !== '..');
+  const filePath = resolve(base, ...rel);
+  const fromRoot = relative(base, filePath);
+  if (fromRoot.startsWith('..') || isAbsolute(fromRoot)) return null;
+  return filePath;
+}
+
 /**
  * Start the game HTTP + WebSocket relay.
  * @param {{ root?: string, port?: number, host?: string, allowSaveArt?: boolean }} [opts]
  * @returns {Promise<{ server: import('node:http').Server, port: number, host: string, root: string, close: () => Promise<void> }>}
  */
 export function startGameServer(opts = {}) {
-  const root = normalize(opts.root || process.env.GAME_ROOT || DEFAULT_ROOT);
+  const root = resolve(opts.root || process.env.GAME_ROOT || DEFAULT_ROOT);
   const host = opts.host || process.env.HOST || '0.0.0.0';
   const wantPort = opts.port == null ? DEFAULT_PORT : Number(opts.port);
   const allowSaveArt = opts.allowSaveArt ?? !process.env.ELECTRON_RUN;
-  const rootPrefix = root.endsWith('/') || root.endsWith('\\') ? root : `${root}/`;
 
   const server = http.createServer(async (req, res) => {
     try {
@@ -94,8 +107,10 @@ export function startGameServer(opts = {}) {
       let urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
       if (urlPath === '/') urlPath = '/index.html';
       if (urlPath === '/controller') urlPath = '/controller.html';
-      const filePath = normalize(join(root, urlPath));
-      if (!filePath.startsWith(rootPrefix) && filePath !== root) {
+      // Windows uses `\`; a naive `${root}/` prefix check 403'd every asset
+      // in the packaged desktop app. relative() is separator-safe.
+      const filePath = resolveGamePath(root, urlPath);
+      if (!filePath) {
         res.writeHead(403).end('Forbidden');
         return;
       }

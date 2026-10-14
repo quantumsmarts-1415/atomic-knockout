@@ -19,3 +19,6 @@ tools/blender/*.blend1
 
 # Python bytecode from Blender running the pipeline scripts
 tools/blender/__pycache__/
+
+# Local Netlify folder
+.netlify

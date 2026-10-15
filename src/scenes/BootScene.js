@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { showScene } from '../ui/flow.js';
+import { hideBootSplash, setBootSplashStatus } from '../ui/bootSplash.js';
 import { loadStageArt } from '../data/stages.js';
 import { CHARACTERS, ROSTER } from '../data/characters.js';
 import { MATCH_STOCKS } from '../engine/matchRules.js';
@@ -256,6 +257,8 @@ export function attachBootLoadUi(scene, {
     bar.fillStyle(0x3ef0e0, 1);
     const fillW = barW * t;
     if (fillW > 0) bar.fillRect(barX, barY, fillW, barH);
+    // Keep the HTML splash in sync — if the canvas is black, users still see %.
+    setBootSplashStatus('Loading art…', t * 100);
   }
 
   function destroy() {
@@ -269,6 +272,7 @@ export function attachBootLoadUi(scene, {
   }
 
   setProgress(0);
+  setBootSplashStatus('Loading art…', 0);
   scene.load.on('progress', setProgress);
   scene.load.on('complete', destroy);
 
@@ -370,9 +374,14 @@ export default class BootScene extends Phaser.Scene {
     const roster = spec?.ids?.length
       ? spec.ids.map((id) => CHARACTERS[id]).filter(Boolean)
       : [];
+    const finishSplash = () => {
+      // Use wall-clock timeout — showScene() stops Boot, which cancels scene timers.
+      setTimeout(() => hideBootSplash(), 80);
+    };
     const proceed = () => {
       if (spec?.select) {
         showScene(this, 'CharacterSelect', { playerSeeds: [{ slot: 0 }, { slot: 1 }] });
+        finishSplash();
         return;
       }
       if (spec) {
@@ -384,6 +393,7 @@ export default class BootScene extends Phaser.Scene {
           seed: spec.seed,
           players: spec.ids.map((charId, i) => ({ charId, palette: i % 4, slot: 100 + i })),
         });
+        finishSplash();
         return;
       }
       // Portraits are in the texture cache now (preload finished). Wait briefly
@@ -397,7 +407,10 @@ export default class BootScene extends Phaser.Scene {
         ])
         : Promise.resolve();
       Promise.resolve(fonts).then(() => {
-        if (this.scene.isActive()) showScene(this, 'Title');
+        if (!this.scene.isActive()) return;
+        setBootSplashStatus('Opening title…');
+        showScene(this, 'Title');
+        finishSplash();
       });
     };
     // Optional strips. A missing manifest is the idle telegraph, not an error.

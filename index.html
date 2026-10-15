@@ -96,7 +96,7 @@
 <body>
   <div id="boot-splash" aria-live="polite">
     <strong>ATOMIC KNOCKOUT</strong>
-    <span>Starting… first launch can take a minute while art loads.</span>
+    <span data-boot-status>Starting… first launch can take a minute while art loads.</span>
   </div>
   <div id="game"></div>
   <script type="importmap">
@@ -109,19 +109,21 @@
   </script>
   <script type="module" src="/src/main.js"></script>
   <script>
-    // Hide once Phaser has a canvas (BootScene then shows its own progress bar).
-    (function hideSplashWhenReady() {
+    // Do NOT hide when the canvas appears — on some Windows GPUs Phaser creates
+    // a black WebGL canvas before anything is drawn. Stay visible until the
+    // game marks itself ready (Title), with a long safety timeout.
+    (function keepSplashUntilReady() {
       const splash = document.getElementById('boot-splash');
       if (!splash) return;
       const tick = () => {
-        if (document.querySelector('#game canvas')) {
+        if (window.__akUiReady) {
           splash.classList.add('is-hidden');
           return;
         }
         requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
-      setTimeout(() => splash.classList.add('is-hidden'), 120000);
+      setTimeout(() => splash.classList.add('is-hidden'), 180000);
     })();
   </script>
 </body>

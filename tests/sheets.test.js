@@ -408,3 +408,38 @@ test('Rig keeps the previous layout when a clip visibleH is invalid', () => {
   assert.strictEqual(sprite.scale, 122 / sheets.visibleH);
   assert.strictEqual(sprite.playKey, 'char-testhero-walk');
 });
+
+test('sprite-mode Rig keeps the fitted cutout scale across animate', () => {
+  const sprite = makeSprite();
+  sprite.height = 800;
+  sprite.scaleX = 1;
+  sprite.scaleY = 1;
+  sprite.setScale = function setScale(x, y) {
+    this.scaleX = x;
+    this.scaleY = y ?? x;
+    this.scale = x;
+    return this;
+  };
+  const charDef = {
+    id: 'cutout-hero',
+    palettes: [{ name: 'Sky', skin: 0, body: 0, accent: 0, eye: 0 }],
+    art: {
+      key: 'char-cutout-hero',
+      file: 'art-src/cutout-hero-cut.png',
+      facing: 1,
+      height: 124,
+    },
+    body: { headRadius: 10, torsoWidth: 10, torsoHeight: 10, armLength: 10, armWidth: 10, legLength: 10, legWidth: 10 },
+  };
+  const scene = {
+    textures: { exists: (key) => key === 'char-cutout-hero' },
+    add: { image: () => sprite, sprite: () => sprite },
+  };
+  const rig = new Rig(scene, charDef, 0);
+  assert.ok(rig.spriteMode);
+  assert.ok(Math.abs(sprite.scaleX - 124 / 800) < 1e-6);
+  rig.baseScale = 1.05;
+  rig.animate(0.016, 'idle');
+  assert.ok(Math.abs(sprite.scaleX - 124 / 800) < 1e-6, `sprite scale stayed fitted, got ${sprite.scaleX}`);
+  assert.ok(Math.abs(rig.scaleY - 1.05) < 1e-6);
+});

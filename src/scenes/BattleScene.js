@@ -24,7 +24,7 @@ import { Juice } from '../engine/juice.js';
 import { FEEL, frameZoom, percentColor } from '../engine/feel.js';
 import { clockEndsRound } from '../engine/matchRules.js';
 import {
-  resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
+  resolvePush, pushSolids, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
 import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors } from '../engine/fxArt.js';
@@ -1165,9 +1165,13 @@ export default class BattleScene extends Phaser.Scene {
     }
     const face = move._flip ? -owner.facing : owner.facing;
     const posed = move._from ? null : sheetReleasePoint(owner, move.roll ? 'roll' : 'shot');
-    const x = move._from?.x ?? posed?.x ?? (owner.x + face * (owner.bodyW / 2 + r + 4));
+    let x = move._from?.x ?? posed?.x ?? (owner.x + face * (owner.bodyW / 2 + r + 4));
     let y = move._from?.y ?? posed?.y ?? (move.roll ? owner.y : owner.y - owner.bodyH * 0.65);
-    if (move.fromAbove) y -= 220;
+    if (move.fromAbove) {
+      y -= move.skyHeight ?? 220;
+      // Start behind the aim point so a diagonal dive crosses into the fight.
+      if (move.skyLead) x -= face * move.skyLead;
+    }
     if (move._rainChild && move._from == null) y -= 160;
     if (!move._orbitChild && !move._fanChild && !move._rainChild && !move._behindChild && !move._salvoChild) {
       spawnMoveExtra(this, owner, move, 'splash', x, y, face);
@@ -1991,7 +1995,8 @@ export default class BattleScene extends Phaser.Scene {
     for (const f of this.fighters) f.update(time, delta);
     tickChargeOrbits(this, time);
     const collisionStart = globalThis.performance.now();
-    resolvePush(this.fighters);
+    this.pushBlockers ??= pushSolids(this.stage, this.stage?.groundY);
+    resolvePush(this.fighters, this.pushBlockers);
     this.updateZones(time);
     this.updateMines(time);
 
@@ -2194,6 +2199,9 @@ export default class BattleScene extends Phaser.Scene {
         p.vy = 0;
         stepFxProjectile(p, time);
       } else if (!(p.move.orbitMs && !p.orbited && time < p.born + p.move.orbitMs)) {
+        if (p.move.fromAbove && p.move.fallAccel) {
+          p.vy += (p.move.fallAccel * delta) / 1000;
+        }
         p.gfx.x += (p.vx * delta) / 1000;
         p.gfx.y += (p.vy * delta) / 1000 + Math.sin(time / 90) * 0.25;
         stepFxProjectile(p, time);

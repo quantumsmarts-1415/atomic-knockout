@@ -17,6 +17,12 @@ const config = {
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
   backgroundColor: '#07060E',
+  // Prefer a working canvas over a blank WebGL context on weak laptop GPUs.
+  render: {
+    antialias: true,
+    powerPreference: 'high-performance',
+    failIfMajorPerformanceCaveat: false,
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

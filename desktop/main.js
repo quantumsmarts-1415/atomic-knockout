@@ -11,6 +11,15 @@ const repoRoot = join(__dirname, '..');
 
 process.env.ELECTRON_RUN = '1';
 
+// Windows laptops often get a pure-black Phaser canvas when GPU/WebGL fails
+// and Chromium refuses the old automatic software fallback. Opt into
+// SwiftShader so the desktop app still paints a loading bar / title screen.
+app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+if (process.env.AK_DISABLE_GPU === '1') {
+  app.disableHardwareAcceleration();
+}
+
 let mainWindow = null;
 let game = null;
 
@@ -55,11 +64,31 @@ function createWindow(port) {
       preload: join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      // Sandbox + flaky laptop GPUs was a common black-canvas combo.
+      sandbox: false,
+      backgroundThrottling: false,
     },
   });
 
   Menu.setApplicationMenu(null);
+
+  // Surface renderer failures in the main-process log (desktop black-screen debug).
+  mainWindow.webContents.on('console-message', (_e, level, message, line, sourceId) => {
+    const tag = ['verbose', 'info', 'warning', 'error'][level] || String(level);
+    console.log(`[renderer:${tag}] ${message} (${sourceId}:${line})`);
+  });
+  mainWindow.webContents.on('did-fail-load', (_e, code, desc, url) => {
+    console.error(`[did-fail-load] ${code} ${desc} ${url}`);
+  });
+  mainWindow.webContents.on('render-process-gone', (_e, details) => {
+    console.error('[render-process-gone]', details);
+  });
+
+  // Optional: ELECTRON_OPEN_DEVTOOLS=1 for local diagnosis.
+  if (process.env.ELECTRON_OPEN_DEVTOOLS === '1') {
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
+  }
+
   mainWindow.loadURL(`http://127.0.0.1:${port}/`);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {

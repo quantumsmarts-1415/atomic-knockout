@@ -231,9 +231,11 @@ export function attachBootLoadUi(scene, {
 
   const track = scene.add.graphics();
   track.fillStyle(0x2a2444, 0.95);
-  track.fillRoundedRect(barX - 4, barY - 4, barW + 8, barH + 8, 10);
-  track.lineStyle(2, 0x3ef0e0, 0.8);
-  track.strokeRoundedRect(barX - 4, barY - 4, barW + 8, barH + 8, 10);
+  // Prefer plain rects — rounded helpers have failed to draw on some GPUs,
+  // leaving only the near-black clear color (looks like a "black screen").
+  track.fillRect(barX - 4, barY - 4, barW + 8, barH + 8);
+  track.lineStyle(2, 0x3ef0e0, 0.9);
+  track.strokeRect(barX - 4, barY - 4, barW + 8, barH + 8);
 
   const bar = scene.add.graphics();
   const statusText = scene.add.text(cx, barY - 58, status, {
@@ -384,9 +386,16 @@ export default class BootScene extends Phaser.Scene {
         });
         return;
       }
-      // Portraits are in the texture cache now (preload finished). Wait for the
-      // bundled faces too, so the title doesn't draw fallback type and then swap.
-      const fonts = (typeof document !== 'undefined' && document.fonts) ? document.fonts.ready : Promise.resolve();
+      // Portraits are in the texture cache now (preload finished). Wait briefly
+      // for bundled faces, but never hang forever on document.fonts.ready —
+      // that promise can stick on some Electron/Windows GPU/font paths and
+      // leave a black window after the load bar is torn down.
+      const fonts = (typeof document !== 'undefined' && document.fonts)
+        ? Promise.race([
+          document.fonts.ready,
+          new Promise((resolve) => setTimeout(resolve, 1500)),
+        ])
+        : Promise.resolve();
       Promise.resolve(fonts).then(() => {
         if (this.scene.isActive()) showScene(this, 'Title');
       });

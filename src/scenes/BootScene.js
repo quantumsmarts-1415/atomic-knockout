@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import { showScene } from '../ui/flow.js';
+import { setBootSplashDetail, setBootSplashStatus } from '../ui/bootSplash.js';
 import { loadStageArt } from '../data/stages.js';
 import { CHARACTERS, ROSTER } from '../data/characters.js';
 import { MATCH_STOCKS } from '../engine/matchRules.js';
@@ -231,9 +232,11 @@ export function attachBootLoadUi(scene, {
 
   const track = scene.add.graphics();
   track.fillStyle(0x2a2444, 0.95);
-  track.fillRoundedRect(barX - 4, barY - 4, barW + 8, barH + 8, 10);
-  track.lineStyle(2, 0x3ef0e0, 0.8);
-  track.strokeRoundedRect(barX - 4, barY - 4, barW + 8, barH + 8, 10);
+  // Prefer plain rects — rounded helpers have failed to draw on some GPUs,
+  // leaving only the near-black clear color (looks like a "black screen").
+  track.fillRect(barX - 4, barY - 4, barW + 8, barH + 8);
+  track.lineStyle(2, 0x3ef0e0, 0.9);
+  track.strokeRect(barX - 4, barY - 4, barW + 8, barH + 8);
 
   const bar = scene.add.graphics();
   const statusText = scene.add.text(cx, barY - 58, status, {
@@ -254,6 +257,9 @@ export function attachBootLoadUi(scene, {
     bar.fillStyle(0x3ef0e0, 1);
     const fillW = barW * t;
     if (fillW > 0) bar.fillRect(barX, barY, fillW, barH);
+    // Keep the HTML splash in sync — if the canvas is black, users still see %.
+    if (typeof window !== 'undefined') window.__akBootProgressed = true;
+    setBootSplashStatus('Loading art…', t * 100);
   }
 
   function destroy() {
@@ -267,8 +273,13 @@ export function attachBootLoadUi(scene, {
   }
 
   setProgress(0);
+  setBootSplashStatus('Loading art…', 0);
   scene.load.on('progress', setProgress);
   scene.load.on('complete', destroy);
+  scene.load.on?.('loaderror', (file) => {
+    const name = file?.src || file?.url || file?.key || 'asset';
+    setBootSplashDetail(`Failed to load: ${name}`);
+  });
 
   return { statusText, percentText, bar, track, bg, setProgress, destroy };
 }
@@ -370,10 +381,12 @@ export default class BootScene extends Phaser.Scene {
       : [];
     const proceed = () => {
       if (spec?.select) {
+        setBootSplashStatus('Opening character select…');
         showScene(this, 'CharacterSelect', { playerSeeds: [{ slot: 0 }, { slot: 1 }] });
         return;
       }
       if (spec) {
+        setBootSplashStatus('Opening battle…');
         showScene(this, 'Battle', {
           stageId: spec.stageId,
           stocks: spec.stocks,
@@ -384,11 +397,21 @@ export default class BootScene extends Phaser.Scene {
         });
         return;
       }
-      // Portraits are in the texture cache now (preload finished). Wait for the
-      // bundled faces too, so the title doesn't draw fallback type and then swap.
-      const fonts = (typeof document !== 'undefined' && document.fonts) ? document.fonts.ready : Promise.resolve();
+      // Portraits are in the texture cache now (preload finished). Wait briefly
+      // for bundled faces, but never hang forever on document.fonts.ready —
+      // that promise can stick on some Electron/Windows GPU/font paths and
+      // leave a black window after the load bar is torn down.
+      // TitleScene hides the HTML splash after it has painted.
+      const fonts = (typeof document !== 'undefined' && document.fonts)
+        ? Promise.race([
+          document.fonts.ready,
+          new Promise((resolve) => setTimeout(resolve, 1500)),
+        ])
+        : Promise.resolve();
       Promise.resolve(fonts).then(() => {
-        if (this.scene.isActive()) showScene(this, 'Title');
+        if (!this.scene.isActive()) return;
+        setBootSplashStatus('Opening title…');
+        showScene(this, 'Title');
       });
     };
     // Optional strips. A missing manifest is the idle telegraph, not an error.

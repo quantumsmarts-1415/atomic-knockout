@@ -7,16 +7,28 @@ import CharacterSelectScene from './scenes/CharacterSelectScene.js';
 import StageSelectScene from './scenes/StageSelectScene.js';
 import ResultsScene from './scenes/ResultsScene.js';
 import PauseMenuScene from './scenes/PauseMenuScene.js';
+import { isElectronShell, setBootSplashStatus } from './ui/bootSplash.js';
 
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
 
+// Electron + flaky laptop GPUs often create a "successful" WebGL context that
+// only ever clears to black. Force the Canvas renderer in the desktop shell.
+const rendererType = isElectronShell() ? Phaser.CANVAS : Phaser.AUTO;
+setBootSplashStatus(isElectronShell() ? 'Starting desktop renderer (Canvas)…' : 'Starting renderer…');
+if (typeof window !== 'undefined') window.__akBootProgressed = true;
+
 const config = {
-  type: Phaser.AUTO,
+  type: rendererType,
   parent: 'game',
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
   backgroundColor: '#07060E',
+  render: {
+    antialias: true,
+    powerPreference: 'high-performance',
+    failIfMajorPerformanceCaveat: false,
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

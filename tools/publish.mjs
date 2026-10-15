@@ -1,12 +1,13 @@
-// Build the static site Netlify publishes.
+// Build the playable game payload for the desktop package.
 //
-//   npm run build
+//   npm run build:game
 //
-// dist/ is the game the browser actually fetches: HTML, source modules,
+// game-dist/ is the game the desktop app serves: HTML, source modules,
 // fonts, Phaser, and the art files the roster and stages point at.
 // Review clips, Blender/Gemini source, backups, and the Node phone relay
 // stay out. PNG bytes are rewritten losslessly. A sheet that already crops
 // to its visible pixels drops fully transparent padding.
+// The public Netlify site is built separately with npm run build.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync, copyFileSync, statSync, existsSync, rmSync, readdirSync } from 'node:fs';
@@ -17,7 +18,9 @@ import { ROSTER } from '../src/data/characters.js';
 import { STAGES } from '../src/data/stages.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const dist = join(root, 'dist');
+// Playable game payload used by the desktop package. The public Netlify site
+// is the download landing page in site/, not this folder.
+const dist = join(root, process.env.GAME_DIST || 'game-dist');
 
 function addFile(set, rel) {
   if (!rel) return;
@@ -51,6 +54,7 @@ function referenced() {
     if (!art?.dir) continue;
     for (const layer of art.layers || []) addFile(set, `${art.dir}${layer.file}`);
     if (art.terrain) addFile(set, `${art.dir}${art.terrain}`);
+    if (art.movingPlatform) addFile(set, `${art.dir}${art.movingPlatform}`);
     const intro = stage.intro?.art || {};
     for (const file of Object.values(intro)) addFile(set, `${art.dir}${file}`);
   }
@@ -228,8 +232,6 @@ function main() {
   const staticFiles = [
     'index.html',
     'controller.html',
-    'node_modules/phaser/dist/phaser.esm.js',
-    'node_modules/qrcode-generator/dist/qrcode.mjs',
   ];
   const copyTree = (rel) => {
     const abs = join(root, rel);
@@ -243,6 +245,20 @@ function main() {
   copyTree('fonts');
   for (const rel of staticFiles) copyRel(rel);
   for (const rel of present) copyRel(rel);
+
+  // electron-builder strips any `node_modules` path from extraResources, which
+  // left the packaged desktop app unable to fetch Phaser. Ship vendors instead.
+  const vendor = [
+    ['node_modules/phaser/dist/phaser.esm.js', 'vendor/phaser.esm.js'],
+    ['node_modules/qrcode-generator/dist/qrcode.mjs', 'vendor/qrcode.mjs'],
+  ];
+  for (const [fromRel, toRel] of vendor) {
+    const from = join(root, fromRel);
+    const to = join(dist, toRel);
+    if (!existsSync(from)) throw new Error(`missing vendor source ${fromRel}`);
+    mkdirSync(dirname(to), { recursive: true });
+    copyFileSync(from, to);
+  }
   const dupesRemoved = dedupeFx(present, seen);
 
   let trimmed = 0;

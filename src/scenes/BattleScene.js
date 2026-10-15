@@ -10,7 +10,7 @@ import { phoneNet } from '../net/PhoneNet.js';
 import { fighterInputForSlot, isGamepadSlot, padBySlot, pollGamepads, rumbleSlot } from '../engine/gamepad.js';
 import { computeBotInput } from '../engine/BotAI.js';
 import { buildNavGraph } from '../engine/BotNav.js';
-import { startStageIntro } from '../engine/stageIntros.js';
+import { defaultStageIntro, startStageIntro } from '../engine/stageIntros.js';
 import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
 import { syncCoats } from '../engine/coatView.js';
@@ -21,15 +21,15 @@ import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront } from '../engine/b
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 import { Juice } from '../engine/juice.js';
-import { FEEL, frameZoom, percentColor } from '../engine/feel.js';
+import { FEEL, cameraFrame, containFrame, percentColor } from '../engine/feel.js';
 import { clockEndsRound } from '../engine/matchRules.js';
 import {
-  resolvePush, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
+  resolvePush, resolveGrab, pushSolids, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
 import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
-import { loadRosterArt, registerSheetAnims } from './BootScene.js';
+import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
 const GRAVITY = 1500;
 
@@ -101,6 +101,7 @@ export default class BattleScene extends Phaser.Scene {
       .map((p) => CHARACTERS[p.charId])
       .filter(Boolean);
     registerSheetAnims(this, roster);
+    if (!this.setup.playtestMs) repackOversizedSheets(this, roster);
     this.spawnFighters();
     this.asUi(() => this.buildHud());
     if (this.camRig) this.offscreenG = this.asUi(() => this.add.graphics().setDepth(900));
@@ -143,13 +144,18 @@ export default class BattleScene extends Phaser.Scene {
     // name a winner when time runs out.
     if (this.setup.playtestMs) window.__akReport = null;
 
-    // optional per-stage match intro (engine/stageIntros.js): fighters are
-    // frozen while it plays (+200ms so a skip press can't become an attack);
+    // Per-stage match intro (engine/stageIntros.js): fighters are frozen
+    // while it plays (+200ms so a skip press can't become an attack);
     // confirm (F/K/Enter/Space, phone attack) or a click skips it.
+    // Stages without a theatrical intro still get a short warmup card so the
+    // first seconds of play are not a texture-upload hitch.
     this.introLockUntil = 0;
     // Headless CPU matches skip the stage intro. The round still runs
     // until a stock elimination.
-    this.intro = this.setup.playtestMs ? null : startStageIntro(this, this.stage, {
+    this.intro = this.setup.playtestMs ? null : startStageIntro(this, {
+      ...this.stage,
+      intro: defaultStageIntro(this.stage),
+    }, {
       // Stamp the sim clock. Phaser writes the loop timestamp into time.now
       // on every frame while our clock scale is 0, and the doors' "GO" tween
       // finishes on that frame — so time.now here is how long the game has
@@ -194,13 +200,32 @@ export default class BattleScene extends Phaser.Scene {
     // A stage maxZoom is a ceiling (Carbon Skyhook must still show its
     // whole world). It does not raise the close-fight cap.
     const cap = stageCam.maxZoom != null ? Math.min(feelCap, stageCam.maxZoom) : feelCap;
-    const minZoom = Math.min(1, Math.max(W / WW, H / WH, stageCam.minZoom ?? 0));
+    const whole = Math.max(W / WW, H / WH);
+    // Big painted stages stop at the whole world so the art still covers
+    // the view. A normal stage can open a little past its edges, into the
+    // blast zone, when a fighter is up there.
+    const blast = this.blast || { left: 0, top: 0, right: WW, bottom: WH };
+    const bounds = this.stage.camera
+      ? { left: 0, top: 0, right: WW, bottom: WH }
+      : {
+        left: Math.min(0, blast.left),
+        top: Math.min(0, blast.top),
+        right: Math.max(WW, blast.right),
+        bottom: Math.max(WH, blast.bottom),
+      };
+    const blastFit = Math.min(W / (bounds.right - bounds.left), H / (bounds.bottom - bounds.top));
+    const minZoom = this.stage.camera
+      ? Math.min(1, Math.max(whole, stageCam.minZoom ?? 0))
+      : Math.min(whole, Math.max(blastFit, 0.5));
     this.camRig = {
-      cfg, minZoom, maxZoom: Math.max(minZoom, cap),
+      cfg, minZoom, maxZoom: Math.max(minZoom, cap), bounds,
       zoom: minZoom, cx: WW / 2, cy: WH / 2, first: true, uiMode: false,
     };
     const main = this.cameras.main;
-    main.setBounds(0, 0, WW, WH).setZoom(minZoom).centerOn(WW / 2, WH / 2);
+    const sky = this.stage.theme?.skyTop;
+    if (sky != null) main.setBackgroundColor(sky);
+    main.setBounds(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top)
+      .setZoom(minZoom).centerOn(WW / 2, WH / 2);
     this.uiCam = this.cameras.add(0, 0, W, H).setName('ui');
     const route = (go) => {
       if (this.camRig.uiMode) main.ignore(go);
@@ -226,86 +251,63 @@ export default class BattleScene extends Phaser.Scene {
     return go;
   }
 
-  // Frame every live fighter: bounding box + padding -> zoom (clamped to
-  // [whole-world, maxZoom]) and center (clamped so the view never leaves
-  // the world), both eased; zooming out is quicker than zooming back in so
-  // a launched fighter doesn't leave the frame.
+  // Frame every live fighter. The zoom is their body box plus a short
+  // margin — enough to see the next step, close when they stand together.
+  // Hits and KOs do not zoom. The center and zoom ease; zooming out is
+  // quicker than zooming in. A hard contain keeps a fast launch on screen
+  // while that margin catches up. The view never leaves the world.
   updateCamera(delta) {
     const rig = this.camRig;
     if (!rig) return;
     const { width: WW, height: WH } = this.world;
     const cfg = rig.cfg;
     const live = (this.fighters ?? []).filter((f) => f.alive && f.visible && f.state !== 'ko' && f.state !== 'dead');
+    const bodies = live.map((f) => ({ x: f.x, y: f.y, w: f.bodyW, h: f.bodyH }));
     let tz = rig.minZoom;
     let tx = WW / 2;
     let ty = WH / 2;
-    if (live.length) {
-      let x0 = Infinity; let x1 = -Infinity; let y0 = Infinity; let y1 = -Infinity;
-      const blast = this.blast;
-      const lead = FEEL.camBlastLead;
-      for (const f of live) {
-        const vx = f.body?.velocity?.x || 0;
-        const vy = f.body?.velocity?.y || 0;
-        // Launches stay in the box and pull it toward the blast line they
-        // are flying at, so the trajectory stays framed. The zoom eases;
-        // nobody is dropped after a few frames.
-        let leadX = vx * FEEL.camLook;
-        let leadY = vy * FEEL.camLook;
-        const flying = !!f.launch;
-        if (blast && flying) {
-          if (vx < -200 || f.x < blast.left + lead) leadX -= lead;
-          if (vx > 200 || f.x > blast.right - lead) leadX += lead;
-          if (vy < -200 || f.y < blast.top + lead) leadY -= lead;
-          if (vy > 200 || f.y > blast.bottom - lead) leadY += lead * 0.8;
-        }
-        const fx = Phaser.Math.Clamp(f.x + leadX, 0, WW);
-        const fy = Phaser.Math.Clamp(f.y + leadY, 0, WH);
-        x0 = Math.min(x0, fx - f.bodyW / 2); x1 = Math.max(x1, fx + f.bodyW / 2);
-        y0 = Math.min(y0, fy - f.bodyH); y1 = Math.max(y1, fy);
-      }
-      if (x0 === Infinity) {
-        tx = rig.cx; ty = rig.cy; tz = rig.zoom;
-      } else {
-        x0 -= cfg.padX ?? FEEL.camPadX; x1 += cfg.padX ?? FEEL.camPadX;
-        y0 -= cfg.padTop ?? FEEL.camPadTop; y1 += cfg.padBottom ?? FEEL.camPadBottom;
-        const boxCx = (x0 + x1) / 2;
-        const boxCy = (y0 + y1) / 2;
-        const spanX = Math.max(FEEL.camMinSpanX, x1 - x0);
-        const spanY = Math.max(FEEL.camMinSpanY, y1 - y0);
-        const cap = this.koZoom || rig.maxZoom;
-        tz = frameZoom(spanX, spanY, W, H, rig.minZoom, cap);
-        tx = boxCx;
-        ty = boxCy;
-        const dead = (W / Math.max(rig.zoom, 0.2)) * FEEL.camDead;
-        if (Math.abs(tx - rig.cx) < dead) tx = rig.cx;
-        if (Math.abs(ty - rig.cy) < dead) ty = rig.cy;
-      }
-    }
-    if (this.koVictim && this.koZoom) {
-      this.koPoint = {
-        x: this.koVictim.x,
-        y: this.koVictim.y - this.koVictim.bodyH * 0.5,
-      };
-    }
-    if (this.koPoint && this.koZoom) {
-      tx = this.koPoint.x;
-      ty = this.koPoint.y;
-      tz = Math.max(tz, this.koZoom);
+    const frame = cameraFrame(bodies, W, H, rig.minZoom, rig.maxZoom, {
+      padX: cfg.padX, padTop: cfg.padTop, padBottom: cfg.padBottom,
+    });
+    if (frame) {
+      tz = frame.zoom;
+      tx = frame.cx;
+      ty = frame.cy;
+      const dead = (W / Math.max(rig.zoom, 0.2)) * FEEL.camDead;
+      if (Math.abs(tx - rig.cx) < dead) tx = rig.cx;
+      if (Math.abs(ty - rig.cy) < dead) ty = rig.cy;
     }
     const first = rig.first;
     rig.first = false;
-    const ko = this.koPoint && this.koZoom;
-    const zMs = ko
-      ? FEEL.koZoomTau
-      : (tz < rig.zoom ? (cfg.zoomOutMs ?? FEEL.camZoomOutTau) : (cfg.zoomInMs ?? FEEL.camZoomInTau));
+    const zMs = tz < rig.zoom
+      ? (cfg.zoomOutMs ?? FEEL.camZoomOutTau)
+      : (cfg.zoomInMs ?? FEEL.camZoomInTau);
     rig.zoom += (tz - rig.zoom) * (first ? 1 : 1 - Math.exp(-Math.max(0, delta) / zMs));
+    const k = first ? 1 : 1 - Math.exp(-Math.max(0, delta) / (cfg.lerpMs ?? 200));
+    rig.cx += (tx - rig.cx) * k;
+    rig.cy += (ty - rig.cy) * k;
+    if (bodies.length) {
+      const edge = FEEL.camEdge;
+      let x0 = Infinity;
+      let x1 = -Infinity;
+      let y0 = Infinity;
+      let y1 = -Infinity;
+      for (const b of bodies) {
+        x0 = Math.min(x0, b.x - b.w / 2 - edge);
+        x1 = Math.max(x1, b.x + b.w / 2 + edge);
+        y0 = Math.min(y0, b.y - b.h - edge);
+        y1 = Math.max(y1, b.y + edge * 0.5);
+      }
+      const held = containFrame(rig.zoom, rig.cx, rig.cy, { x0, y0, x1, y1 }, W, H, rig.minZoom);
+      rig.zoom = held.zoom;
+      rig.cx = held.cx;
+      rig.cy = held.cy;
+    }
     const hw = W / (2 * rig.zoom);
     const hh = H / (2 * rig.zoom);
-    const k = first ? 1 : 1 - Math.exp(-delta / (cfg.lerpMs ?? 200));
-    rig.cx += (Phaser.Math.Clamp(tx, hw, WW - hw) - rig.cx) * k;
-    rig.cy += (Phaser.Math.Clamp(ty, hh, WH - hh) - rig.cy) * k;
-    rig.cx = Phaser.Math.Clamp(rig.cx, hw, Math.max(hw, WW - hw));
-    rig.cy = Phaser.Math.Clamp(rig.cy, hh, Math.max(hh, WH - hh));
+    const b = rig.bounds;
+    rig.cx = Phaser.Math.Clamp(rig.cx, b.left + hw, Math.max(b.left + hw, b.right - hw));
+    rig.cy = Phaser.Math.Clamp(rig.cy, b.top + hh, Math.max(b.top + hh, b.bottom - hh));
     const shake = this.juice?.shakeOffset(this.visualT || 0, rig.zoom) || { x: 0, y: 0, rot: 0 };
     this.cameras.main.setZoom(rig.zoom).centerOn(rig.cx + shake.x, rig.cy + shake.y).setRotation(shake.rot || 0);
     this.drawOffscreenMarkers(live);
@@ -371,10 +373,17 @@ export default class BattleScene extends Phaser.Scene {
     const g = this.add.graphics();
     const top = Phaser.Display.Color.ValueToColor(skyTop);
     const bottom = Phaser.Display.Color.ValueToColor(skyBottom);
+    // Cover the blast zone too, so a zoom-out that follows a high launch
+    // still has sky instead of a hard edge at the top of the stage.
+    const blast = this.blast || { left: 0, top: 0, right: W, bottom: H };
+    const x0 = Math.min(0, blast.left);
+    const y0 = Math.min(0, blast.top);
+    const bw = Math.max(W, blast.right) - x0;
+    const bh = Math.max(H, blast.bottom) - y0;
     for (let i = 0; i < 24; i++) {
       const c = Phaser.Display.Color.Interpolate.ColorWithColor(top, bottom, 24, i);
       g.fillStyle(Phaser.Display.Color.GetColor(c.r, c.g, c.b), 1);
-      g.fillRect(0, (H / 24) * i, W, H / 24 + 1);
+      g.fillRect(x0, y0 + (bh / 24) * i, bw, bh / 24 + 1);
     }
     // faint element-bubble motif in the sky
     const rnd = new Phaser.Math.RandomDataGenerator(['ptg']);
@@ -1165,9 +1174,13 @@ export default class BattleScene extends Phaser.Scene {
     }
     const face = move._flip ? -owner.facing : owner.facing;
     const posed = move._from ? null : sheetReleasePoint(owner, move.roll ? 'roll' : 'shot');
-    const x = move._from?.x ?? posed?.x ?? (owner.x + face * (owner.bodyW / 2 + r + 4));
+    let x = move._from?.x ?? posed?.x ?? (owner.x + face * (owner.bodyW / 2 + r + 4));
     let y = move._from?.y ?? posed?.y ?? (move.roll ? owner.y : owner.y - owner.bodyH * 0.65);
-    if (move.fromAbove) y -= 220;
+    if (move.fromAbove) {
+      y -= move.skyHeight ?? 220;
+      // Start behind the aim point so a diagonal dive crosses into the fight.
+      if (move.skyLead) x -= face * move.skyLead;
+    }
     if (move._rainChild && move._from == null) y -= 160;
     if (!move._orbitChild && !move._fanChild && !move._rainChild && !move._behindChild && !move._salvoChild) {
       spawnMoveExtra(this, owner, move, 'splash', x, y, face);
@@ -1683,13 +1696,11 @@ export default class BattleScene extends Phaser.Scene {
     this.finishing = true;
     const finalBlow = !!(info?.final);
     this.finishFinal = finalBlow;
-    // Hold the hit, then drop into slow motion. The zoom tracks the victim.
+    // Hold the hit, then drop into slow motion. The camera stays on the
+    // group; a KO does not punch the zoom in on the victim.
     this.timeScale = 0;
     this.freezeLeft = FEEL.koFreezeFrames;
     this.finishLeft = finalBlow ? FEEL.koSlowFrames : FEEL.stockSlowFrames;
-    this.koZoom = FEEL.koZoom;
-    this.koVictim = victim;
-    this.koPoint = { x: victim.x, y: victim.y - victim.bodyH * 0.5 };
     this.juice?.addTrauma(0.7);
     const color = info?.charged && !finalBlow ? 0x16325a : (finalBlow ? 0xff3a2a : 0x3a6cff);
     this.juice?.koMoment(color, this.blastSide(victim));
@@ -1771,9 +1782,6 @@ export default class BattleScene extends Phaser.Scene {
       this.finishLeft -= 1;
       if (this.finishLeft <= 0) {
         this.ramping = FEEL.koRampFrames;
-        this.koZoom = null;
-        this.koPoint = null;
-        this.koVictim = null;
       }
     } else if (this.ramping > 0) {
       this.ramping -= 1;
@@ -1991,7 +1999,9 @@ export default class BattleScene extends Phaser.Scene {
     for (const f of this.fighters) f.update(time, delta);
     tickChargeOrbits(this, time);
     const collisionStart = globalThis.performance.now();
-    resolvePush(this.fighters);
+    this.pushBlockers ??= pushSolids(this.stage, this.stage?.groundY);
+    resolvePush(this.fighters, this.pushBlockers);
+    resolveGrab(this.fighters, time, FEEL);
     this.updateZones(time);
     this.updateMines(time);
 
@@ -2130,12 +2140,23 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (!p.dead) {
         for (const f of this.fighters) {
-          const pull = f.state === 'attack' && f.currentMove?.attractProjectiles;
+          const pull = (f.state === 'attack' && f.currentMove?.attractProjectiles)
+            || (f.state === 'defending' && f.defenseMove?.attractProjectiles);
           if (!pull || f === p.owner || !f.alive) continue;
+          const strength = typeof pull === 'number' ? pull : 16;
           if (Math.abs(f.x - p.gfx.x) > 220 || Math.abs(f.y - p.gfx.y) > 160) continue;
-          p.vx += Math.sign(f.x - p.gfx.x || 1) * pull;
-          p.vy += Math.sign((f.y - f.bodyH * 0.5) - p.gfx.y || 1) * pull * 0.35;
+          p.vx += Math.sign(f.x - p.gfx.x || 1) * strength;
+          p.vy += Math.sign((f.y - f.bodyH * 0.5) - p.gfx.y || 1) * strength * 0.35;
           if (Math.abs(f.x - p.gfx.x) < 28 && Math.abs((f.y - f.bodyH * 0.5) - p.gfx.y) < 40) {
+            // Banking Absorb: credit the soaked shot into her charge bank.
+            if (f.state === 'defending' && f.defenseMove?.powersCharge) {
+              const dmg = (p.move?.damage ?? 0) + (p.move?.damage2 ?? 0);
+              if (dmg > 0) {
+                const cap = f.charDef.moves.basicCharge?.bankCap ?? 18;
+                f._storedCharge = Math.min(cap, (f._storedCharge ?? 0) + dmg * 0.6);
+              }
+              playVfx(this, f, f.defenseMove, 'absorb', { x: p.gfx.x, y: p.gfx.y });
+            }
             p.gfx.destroy();
             p.dead = true;
           }
@@ -2194,6 +2215,9 @@ export default class BattleScene extends Phaser.Scene {
         p.vy = 0;
         stepFxProjectile(p, time);
       } else if (!(p.move.orbitMs && !p.orbited && time < p.born + p.move.orbitMs)) {
+        if (p.move.fromAbove && p.move.fallAccel) {
+          p.vy += (p.move.fallAccel * delta) / 1000;
+        }
         p.gfx.x += (p.vx * delta) / 1000;
         p.gfx.y += (p.vy * delta) / 1000 + Math.sin(time / 90) * 0.25;
         stepFxProjectile(p, time);

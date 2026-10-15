@@ -1,0 +1,15 @@
+{
+  "builtAt": "2026-10-15T02:01:20.580Z",
+  "version": "0.1.0",
+  "host": "google-drive",
+  "downloads": [
+    {
+      "file": "AtomicKnockout-Setup.exe",
+      "url": "https://drive.google.com/uc?export=download&confirm=t&id=1FU84n0NfZAOHgTo6023eURKTCiOabQ4P",
+      "bytes": 1581600000,
+      "mb": 1581.6,
+      "label": "Windows Installer",
+      "external": true
+    }
+  ]
+}

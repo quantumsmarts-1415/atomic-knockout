@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atomic Knockout — Download</title>
+  <meta name="description" content="Download Atomic Knockout, the Smash-style periodic table party brawler. Install it, get a desktop icon, and play without a browser." />
+  <link rel="icon" href="/branding/icon.ico" sizes="any" />
+  <link rel="apple-touch-icon" href="/branding/icon-256.png" />
+  <meta property="og:title" content="Atomic Knockout" />
+  <meta property="og:description" content="Smash-style party brawler. Every fighter is an element. Download the desktop game." />
+  <meta property="og:image" content="/branding/cover.jpg" />
+  <style>
+    :root {
+      --bg: #07060E;
+      --panel: #12101c;
+      --text: #f4f1ff;
+      --muted: #b7b0d0;
+      --blue: #00CFFF;
+      --orange: #FF8C00;
+      --orange-hot: #FFB347;
+      --purple: #4B0082;
+      --line: rgba(255,255,255,0.12);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(1200px 600px at 70% -10%, rgba(255,140,0,0.22), transparent 55%),
+        radial-gradient(900px 500px at 10% 10%, rgba(0,207,255,0.16), transparent 50%),
+        radial-gradient(800px 500px at 50% 100%, rgba(75,0,130,0.45), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, Segoe UI, system-ui, sans-serif;
+    }
+    a { color: var(--blue); }
+    .wrap {
+      width: min(1100px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2.5rem 0 4rem;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .brand img {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 2rem;
+      align-items: center;
+      background: linear-gradient(180deg, rgba(18,16,28,0.92), rgba(18,16,28,0.75));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 1.5rem;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+    }
+    .cover {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 22px;
+      display: block;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+    }
+    .kicker {
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin: 0 0 0.75rem;
+    }
+    h1 {
+      margin: 0 0 0.75rem;
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+    }
+    h1 span {
+      display: block;
+      background: linear-gradient(180deg, var(--orange-hot), var(--orange));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .lede {
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.55;
+      margin: 0 0 1.5rem;
+      max-width: 36rem;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 0.95rem 1.35rem;
+      font-weight: 700;
+      font-size: 1rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .btn:disabled, .btn[aria-disabled="true"] {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+    }
+    .btn-primary {
+      color: #1a0d00;
+      background: linear-gradient(180deg, var(--orange-hot), var(--orange));
+      box-shadow: 0 10px 30px rgba(255,140,0,0.35);
+    }
+    .btn-secondary {
+      color: var(--text);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--line);
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .meta strong { color: var(--text); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .card {
+      background: rgba(18,16,28,0.8);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 1.1rem 1.15rem;
+    }
+    .card h2 {
+      margin: 0 0 0.45rem;
+      font-size: 1rem;
+    }
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+    footer {
+      margin-top: 2rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
+      .cover { max-width: 420px; margin: 0 auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <img src="/branding/icon-256.png" alt="Atomic Knockout icon" />
+        <div>ATOMIC KNOCKOUT</div>
+      </div>
+      <a class="btn btn-secondary" href="#download">Download</a>
+    </header>
+
+    <section class="hero" id="download">
+      <img class="cover" src="/branding/cover.jpg" alt="Atomic Knockout cover art" />
+      <div>
+        <p class="kicker">Desktop edition</p>
+        <h1>ATOMIC <span>KNOCKOUT</span></h1>
+        <p class="lede">
+          A Smash-style party brawler where every character is a periodic-table element.
+          Download the Windows app, get a desktop icon, and play in its own window — no browser tab required.
+        </p>
+        <div class="actions" id="download-actions">
+          <a class="btn btn-primary" id="btn-setup" aria-disabled="true">Download for Windows</a>
+          <a class="btn btn-secondary" id="btn-portable" hidden>Portable .exe</a>
+        </div>
+        <p class="meta" id="download-meta">Checking for the latest build…</p>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Install &amp; play</h2>
+        <p>Run the installer, launch from your desktop shortcut, and jump straight into the fight.</p>
+      </article>
+      <article class="card">
+        <h2>Local multiplayer</h2>
+        <p>Keyboard or gamepad on the same machine. Phone controllers work over your Wi‑Fi from the desktop app.</p>
+      </article>
+      <article class="card">
+        <h2>Windows first</h2>
+        <p>The customer download is the Windows desktop build. Until the installer is code-signed, Smart App Control / SmartScreen may warn — that goes away with an Authenticode certificate.</p>
+      </article>
+    </section>
+
+    <footer>
+      Atomic Knockout · Desktop package · Keyboard: P1 WASD + F/G · P2 arrows + K/L
+    </footer>
+  </div>
+  <script>
+    function mb(n) { return typeof n === 'number' ? `${n} MB` : ''; }
+    async function loadDownloads() {
+      const meta = document.getElementById('download-meta');
+      const setup = document.getElementById('btn-setup');
+      const portable = document.getElementById('btn-portable');
+      try {
+        const res = await fetch('/downloads/latest.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('missing manifest');
+        const data = await res.json();
+        const items = data.downloads || [];
+        const installer = items.find((d) => /Setup/i.test(d.file)) || items[0];
+        const port = items.find((d) => /Portable/i.test(d.file));
+        if (!installer) throw new Error('no artifacts');
+        setup.href = installer.url;
+        setup.target = installer.external ? '_blank' : '_self';
+        setup.rel = installer.external ? 'noopener noreferrer' : '';
+        setup.removeAttribute('aria-disabled');
+        setup.textContent = `Download for Windows${installer.mb ? ` (${installer.mb} MB)` : ''}`;
+        if (port) {
+          portable.hidden = false;
+          portable.href = port.url;
+          portable.target = port.external ? '_blank' : '_self';
+          portable.rel = port.external ? 'noopener noreferrer' : '';
+          portable.textContent = `Portable${port.mb ? ` (${port.mb} MB)` : ''}`;
+        }
+        const host = data.host === 'google-drive'
+          ? 'Google Drive'
+          : (installer.external ? 'external host' : (installer.label || 'Installer'));
+        meta.innerHTML = `<strong>v${data.version || '0.1.0'}</strong> · Windows · ${host}${data.builtAt ? ` · ${new Date(data.builtAt).toLocaleDateString()}` : ''}`;
+      } catch {
+        setup.removeAttribute('href');
+        setup.setAttribute('aria-disabled', 'true');
+        setup.textContent = 'Windows build not published yet';
+        meta.textContent = 'Build with npm run dist:win, upload the installer to Google Drive, then npm run download:url -- "<share-link>".';
+      }
+    }
+    loadDownloads();
+  </script>
+</body>
+</html>

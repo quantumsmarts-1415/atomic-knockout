@@ -17,7 +17,15 @@ const DEPTH = 1000; // above the stage, fighters and HUD
 
 export const STAGE_INTROS = {
   doors: doorsIntro,
+  warmup: warmupIntro,
 };
+
+/** Default intro for stages that do not opt into a theatrical one. Covers the
+ *  first-second hitch while big sheets/FX upload to the GPU. */
+export function defaultStageIntro(stage) {
+  if (stage?.intro) return stage.intro;
+  return { type: 'warmup', timing: { hold: 900, fade: 280 } };
+}
 
 export function introKey(stage, name) {
   return stageKey(stage, `intro-${name}`);
@@ -146,5 +154,64 @@ function doorsIntro(scene, stage, def, ctl, done) {
     done();
     showGo(scene);
   }
+  ctl.skip = () => finish(false);
+}
+
+// -------------------------------------------------------------- warmup card
+// Stage title over a short black-to-clear fade while the match textures settle.
+// Skip with the same confirm keys as the door intro. ~1.2s default.
+function warmupIntro(scene, stage, def, ctl, done) {
+  const { width: W, height: H } = scene.scale;
+  const T = { hold: 900, fade: 280, ...(def.timing ?? {}) };
+  const objs = [];
+  const timers = [];
+  const tweens = [];
+  const add = (o) => { objs.push(o); return o; };
+
+  const veil = add(scene.add.rectangle(W / 2, H / 2, W, H, 0x07060E, 0.92).setDepth(DEPTH));
+  const label = add(scene.add.text(W / 2, H / 2 - 36, stage?.name || 'READY', {
+    fontFamily: FONT_DISPLAY, fontSize: '54px', color: '#F0C14A',
+    stroke: '#07060E', strokeThickness: 8,
+  }).setOrigin(0.5).setDepth(DEPTH + 1));
+  const sub = add(scene.add.text(W / 2, H / 2 + 28, 'GET READY', {
+    fontFamily: FONT_DISPLAY, fontSize: '22px', color: '#D8D2E8',
+    stroke: '#07060E', strokeThickness: 5,
+  }).setOrigin(0.5).setDepth(DEPTH + 1).setAlpha(0.85));
+
+  // Touch roster textures so the first in-match frame does not stall on upload.
+  try {
+    for (const f of scene.fighters ?? []) {
+      const spr = f?.rig?.sprite;
+      if (spr?.texture?.key && scene.textures.exists(spr.texture.key)) {
+        const probe = scene.add.image(-80, -80, spr.texture.key).setAlpha(0.01).setDepth(DEPTH - 1);
+        objs.push(probe);
+      }
+    }
+  } catch (_) { /* warmup is best-effort */ }
+
+  let ended = false;
+  function finish(natural) {
+    if (ended) return;
+    ended = true;
+    timers.forEach((t) => t.remove(false));
+    tweens.forEach((t) => t.stop());
+    const fadeTargets = [veil, label, sub];
+    if (natural) {
+      tweens.push(scene.tweens.add({
+        targets: fadeTargets, alpha: 0, duration: T.fade, ease: 'Quad.easeIn',
+        onComplete: () => {
+          objs.forEach((o) => o.destroy?.());
+          done();
+          showGo(scene);
+        },
+      }));
+    } else {
+      objs.forEach((o) => o.destroy?.());
+      done();
+      showGo(scene);
+    }
+  }
+
+  timers.push(scene.time.delayedCall(T.hold, () => finish(true)));
   ctl.skip = () => finish(false);
 }

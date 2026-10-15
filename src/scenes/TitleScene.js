@@ -6,8 +6,16 @@ import {
 } from '../ui/theme.js';
 import { showScene } from '../ui/flow.js';
 import { attachPhoneJoin } from '../ui/phoneJoin.js';
+import { hideBootSplash, isElectronShell, setBootSplashStatus } from '../ui/bootSplash.js';
 import { TITLE_PARTNER_ID } from '../ui/portraits.js';
 import { CHARACTERS } from '../data/characters.js';
+
+// Electron/Windows has been flaky with custom @font-face in Canvas mode.
+// Fall back to system fonts there so the title never renders as blank glyphs.
+const electron = isElectronShell();
+const TITLE_DISPLAY = electron ? 'Segoe UI, Arial, sans-serif' : FONT_DISPLAY;
+const TITLE_BODY = electron ? 'Segoe UI, Arial, sans-serif' : FONT_BODY;
+const TITLE_MONO = electron ? 'Consolas, monospace' : FONT_MONO;
 
 // Bottom console is a fixed band. Portraits stop above it so they never
 // cover the QR, the URL, or the control line. Same 1280x720 layout at
@@ -25,18 +33,19 @@ export default class TitleScene extends Phaser.Scene {
   }
 
   create() {
+    setBootSplashStatus('Painting title…');
     drawMenuBackground(this, W, H);
     this.drawPortraits();
     this.drawNucleus();
 
     this.add.text(W / 2, 28, 'REACTOR ONLINE', {
-      fontFamily: FONT_MONO, fontSize: '13px', color: THEME.tealCss, letterSpacing: 4,
+      fontFamily: TITLE_MONO, fontSize: '13px', color: THEME.tealCss, letterSpacing: 4,
     }).setOrigin(0.5).setDepth(6);
     this.add.text(W / 2, 58, 'ATOMIC KNOCKOUT', {
-      fontFamily: FONT_DISPLAY, fontSize: '36px', color: THEME.mistCss, letterSpacing: 2,
+      fontFamily: TITLE_DISPLAY, fontSize: '36px', color: THEME.mistCss, letterSpacing: 2,
     }).setOrigin(0.5).setDepth(6);
     this.add.text(W / 2, 96, 'AN ELEMENTAL BRAWL', {
-      fontFamily: FONT_BODY, fontSize: '13px', color: THEME.dimCss, letterSpacing: 3,
+      fontFamily: TITLE_BODY, fontSize: '13px', color: THEME.dimCss, letterSpacing: 3,
     }).setOrigin(0.5).setDepth(6);
 
     this.buttons = [
@@ -54,10 +63,10 @@ export default class TitleScene extends Phaser.Scene {
       const y = 118;
       const g = this.add.graphics().setDepth(6);
       const label = this.add.text(x + PILL_W / 2, y + PILL_H / 2, b.label.toUpperCase(), {
-        fontFamily: FONT_BODY, fontSize: '15px', color: THEME.mistCss,
+        fontFamily: TITLE_BODY, fontSize: '15px', color: THEME.mistCss,
       }).setOrigin(0.5).setDepth(7);
       const soon = this.add.text(x + PILL_W - 14, y + 8, b.action ? '' : 'SOON', {
-        fontFamily: FONT_MONO, fontSize: '10px', color: THEME.disabledCss,
+        fontFamily: TITLE_MONO, fontSize: '10px', color: THEME.disabledCss,
       }).setOrigin(1, 0).setDepth(7);
       if (b.action) {
         const zone = this.add.zone(x, y, PILL_W, PILL_H).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(8);
@@ -72,23 +81,26 @@ export default class TitleScene extends Phaser.Scene {
     this.drawConsole();
 
     const kb = this.input.keyboard;
-    kb.on('keydown-UP', () => this.move(-1));
-    kb.on('keydown-DOWN', () => this.move(1));
-    kb.on('keydown-W', () => this.move(-1));
-    kb.on('keydown-S', () => this.move(1));
-    kb.on('keydown-LEFT', () => this.move(-1));
-    kb.on('keydown-RIGHT', () => this.move(1));
-    kb.on('keydown-A', () => this.move(-1));
-    kb.on('keydown-D', () => this.move(1));
+    kb?.on('keydown-UP', () => this.move(-1));
+    kb?.on('keydown-DOWN', () => this.move(1));
+    kb?.on('keydown-W', () => this.move(-1));
+    kb?.on('keydown-S', () => this.move(1));
+    kb?.on('keydown-LEFT', () => this.move(-1));
+    kb?.on('keydown-RIGHT', () => this.move(1));
+    kb?.on('keydown-A', () => this.move(-1));
+    kb?.on('keydown-D', () => this.move(1));
     const go = () => {
       if (this.buttons[this.selected].action) {
         sfx('menuConfirm');
         this.buttons[this.selected].action();
       }
     };
-    kb.on('keydown-ENTER', go);
-    kb.on('keydown-F', go);
-    kb.on('keydown-SPACE', go);
+    kb?.on('keydown-ENTER', go);
+    kb?.on('keydown-F', go);
+    kb?.on('keydown-SPACE', go);
+
+    // Hide the HTML overlay only after Title has finished building.
+    setTimeout(() => hideBootSplash(), 100);
   }
 
   drawPortraits() {
@@ -115,10 +127,10 @@ export default class TitleScene extends Phaser.Scene {
     g.lineStyle(8, THEME.pink, 0.18);
     g.strokeCircle(cx, cy, 86);
     this.add.text(cx, cy - 22, '119', {
-      fontFamily: FONT_MONO, fontSize: '13px', color: THEME.tealCss, letterSpacing: 2,
+      fontFamily: TITLE_MONO, fontSize: '13px', color: THEME.tealCss, letterSpacing: 2,
     }).setOrigin(0.5).setDepth(5);
     this.add.text(cx, cy + 10, 'Pt', {
-      fontFamily: FONT_DISPLAY, fontSize: '48px', color: THEME.mistCss,
+      fontFamily: TITLE_DISPLAY, fontSize: '48px', color: THEME.mistCss,
     }).setOrigin(0.5).setDepth(5);
   }
 
@@ -127,16 +139,16 @@ export default class TitleScene extends Phaser.Scene {
     const g = this.add.graphics().setDepth(6);
     paintPill(g, x, y, w, h, 'idle');
     this.add.text(x + 118, y + 16, 'SCAN TO LINK A CONTROLLER', {
-      fontFamily: FONT_MONO, fontSize: '12px', color: THEME.goldCss, letterSpacing: 1,
+      fontFamily: TITLE_MONO, fontSize: '12px', color: THEME.goldCss, letterSpacing: 1,
     }).setDepth(7);
     this.qrUrl = this.add.text(x + 118, y + 38, '', {
-      fontFamily: FONT_MONO, fontSize: '16px', color: THEME.tealCss,
+      fontFamily: TITLE_MONO, fontSize: '16px', color: THEME.tealCss,
     }).setDepth(7);
     this.qrHint = this.add.text(x + 118, y + 62, 'Same WiFi  ·  P1 WASD+F/G  ·  P2 Arrows+K/L', {
-      fontFamily: FONT_BODY, fontSize: '13px', color: THEME.dimCss,
+      fontFamily: TITLE_BODY, fontSize: '13px', color: THEME.dimCss,
     }).setDepth(7);
     this.add.text(x + w - 18, y + h / 2, 'ENTER TO PLAY', {
-      fontFamily: FONT_MONO, fontSize: '13px', color: THEME.goldCss,
+      fontFamily: TITLE_MONO, fontSize: '13px', color: THEME.goldCss,
     }).setOrigin(1, 0.5).setDepth(7);
 
     // QR sits in the left of the console, clear of both portraits (their

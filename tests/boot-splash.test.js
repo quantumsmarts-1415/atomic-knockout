@@ -8,7 +8,14 @@ test('index splash stays until __akUiReady and catches module failures', () => {
   assert.match(html, /data-boot-status/);
   assert.match(html, /await import\('\/src\/main\.js'\)/);
   assert.match(html, /boot-splash-detail/);
+  assert.match(html, /\/vendor\/phaser\.esm\.js/);
   assert.doesNotMatch(html, /querySelector\('#game canvas'\)/);
+});
+
+test('publish ships Phaser under vendor/ not node_modules/', () => {
+  const pub = readFileSync(new URL('../tools/publish.mjs', import.meta.url), 'utf8');
+  assert.match(pub, /vendor\/phaser\.esm\.js/);
+  assert.match(pub, /electron-builder strips any `node_modules`/);
 });
 
 test('desktop shell forces Canvas renderer for Electron', () => {

@@ -232,8 +232,6 @@ function main() {
   const staticFiles = [
     'index.html',
     'controller.html',
-    'node_modules/phaser/dist/phaser.esm.js',
-    'node_modules/qrcode-generator/dist/qrcode.mjs',
   ];
   const copyTree = (rel) => {
     const abs = join(root, rel);
@@ -247,6 +245,20 @@ function main() {
   copyTree('fonts');
   for (const rel of staticFiles) copyRel(rel);
   for (const rel of present) copyRel(rel);
+
+  // electron-builder strips any `node_modules` path from extraResources, which
+  // left the packaged desktop app unable to fetch Phaser. Ship vendors instead.
+  const vendor = [
+    ['node_modules/phaser/dist/phaser.esm.js', 'vendor/phaser.esm.js'],
+    ['node_modules/qrcode-generator/dist/qrcode.mjs', 'vendor/qrcode.mjs'],
+  ];
+  for (const [fromRel, toRel] of vendor) {
+    const from = join(root, fromRel);
+    const to = join(dist, toRel);
+    if (!existsSync(from)) throw new Error(`missing vendor source ${fromRel}`);
+    mkdirSync(dirname(to), { recursive: true });
+    copyFileSync(from, to);
+  }
   const dupesRemoved = dedupeFx(present, seen);
 
   let trimmed = 0;

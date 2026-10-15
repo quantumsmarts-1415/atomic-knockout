@@ -2,6 +2,7 @@ node_modules/
 dist/
 game-dist/
 release/
+vendor/
 .DS_Store
 
 # Built Windows .exe files stay out of git. latest.json may point at Google Drive.

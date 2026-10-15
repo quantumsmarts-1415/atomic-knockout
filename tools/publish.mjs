@@ -54,6 +54,7 @@ function referenced() {
     if (!art?.dir) continue;
     for (const layer of art.layers || []) addFile(set, `${art.dir}${layer.file}`);
     if (art.terrain) addFile(set, `${art.dir}${art.terrain}`);
+    if (art.movingPlatform) addFile(set, `${art.dir}${art.movingPlatform}`);
     const intro = stage.intro?.art || {};
     for (const file of Object.values(intro)) addFile(set, `${art.dir}${file}`);
   }

@@ -15,7 +15,8 @@ export const GAME_HEIGHT = 720;
 // Electron + flaky laptop GPUs often create a "successful" WebGL context that
 // only ever clears to black. Force the Canvas renderer in the desktop shell.
 const rendererType = isElectronShell() ? Phaser.CANVAS : Phaser.AUTO;
-if (isElectronShell()) setBootSplashStatus('Starting desktop renderer…');
+setBootSplashStatus(isElectronShell() ? 'Starting desktop renderer (Canvas)…' : 'Starting renderer…');
+if (typeof window !== 'undefined') window.__akBootProgressed = true;
 
 const config = {
   type: rendererType,

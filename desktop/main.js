@@ -88,8 +88,27 @@ function createWindow(port) {
   if (process.env.ELECTRON_OPEN_DEVTOOLS === '1') {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
+  mainWindow.webContents.on('before-input-event', (_event, input) => {
+    if (input.type === 'keyDown' && input.key === 'F12') {
+      mainWindow.webContents.toggleDevTools();
+    }
+  });
 
   mainWindow.loadURL(`http://127.0.0.1:${port}/`);
+
+  // If the renderer never reaches Title, surface something besides a black frame.
+  setTimeout(() => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    mainWindow.webContents.executeJavaScript('!!window.__akUiReady', true).then((ready) => {
+      if (ready) return;
+      return mainWindow.webContents.executeJavaScript(
+        `document.querySelector('[data-boot-status]')?.textContent || ''`,
+        true,
+      ).then((status) => {
+        console.error('[boot-watchdog] Title not ready after 45s. Splash:', status);
+      });
+    }).catch(() => {});
+  }, 45000);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);

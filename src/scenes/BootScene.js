@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { showScene } from '../ui/flow.js';
-import { hideBootSplash, setBootSplashStatus } from '../ui/bootSplash.js';
+import { setBootSplashDetail, setBootSplashStatus } from '../ui/bootSplash.js';
 import { loadStageArt } from '../data/stages.js';
 import { CHARACTERS, ROSTER } from '../data/characters.js';
 import { MATCH_STOCKS } from '../engine/matchRules.js';
@@ -258,6 +258,7 @@ export function attachBootLoadUi(scene, {
     const fillW = barW * t;
     if (fillW > 0) bar.fillRect(barX, barY, fillW, barH);
     // Keep the HTML splash in sync — if the canvas is black, users still see %.
+    if (typeof window !== 'undefined') window.__akBootProgressed = true;
     setBootSplashStatus('Loading art…', t * 100);
   }
 
@@ -275,6 +276,10 @@ export function attachBootLoadUi(scene, {
   setBootSplashStatus('Loading art…', 0);
   scene.load.on('progress', setProgress);
   scene.load.on('complete', destroy);
+  scene.load.on?.('loaderror', (file) => {
+    const name = file?.src || file?.url || file?.key || 'asset';
+    setBootSplashDetail(`Failed to load: ${name}`);
+  });
 
   return { statusText, percentText, bar, track, bg, setProgress, destroy };
 }
@@ -374,17 +379,14 @@ export default class BootScene extends Phaser.Scene {
     const roster = spec?.ids?.length
       ? spec.ids.map((id) => CHARACTERS[id]).filter(Boolean)
       : [];
-    const finishSplash = () => {
-      // Use wall-clock timeout — showScene() stops Boot, which cancels scene timers.
-      setTimeout(() => hideBootSplash(), 80);
-    };
     const proceed = () => {
       if (spec?.select) {
+        setBootSplashStatus('Opening character select…');
         showScene(this, 'CharacterSelect', { playerSeeds: [{ slot: 0 }, { slot: 1 }] });
-        finishSplash();
         return;
       }
       if (spec) {
+        setBootSplashStatus('Opening battle…');
         showScene(this, 'Battle', {
           stageId: spec.stageId,
           stocks: spec.stocks,
@@ -393,13 +395,13 @@ export default class BootScene extends Phaser.Scene {
           seed: spec.seed,
           players: spec.ids.map((charId, i) => ({ charId, palette: i % 4, slot: 100 + i })),
         });
-        finishSplash();
         return;
       }
       // Portraits are in the texture cache now (preload finished). Wait briefly
       // for bundled faces, but never hang forever on document.fonts.ready —
       // that promise can stick on some Electron/Windows GPU/font paths and
       // leave a black window after the load bar is torn down.
+      // TitleScene hides the HTML splash after it has painted.
       const fonts = (typeof document !== 'undefined' && document.fonts)
         ? Promise.race([
           document.fonts.ready,
@@ -410,7 +412,6 @@ export default class BootScene extends Phaser.Scene {
         if (!this.scene.isActive()) return;
         setBootSplashStatus('Opening title…');
         showScene(this, 'Title');
-        finishSplash();
       });
     };
     // Optional strips. A missing manifest is the idle telegraph, not an error.

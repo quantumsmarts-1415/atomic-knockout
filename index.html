@@ -19,7 +19,7 @@
       width: 100%;
       height: 100%;
     }
-    /* Shown before Phaser paints so a cold desktop launch doesn't look frozen. */
+    /* Shown until Title is ready so a cold desktop launch never looks frozen. */
     #boot-splash {
       position: fixed;
       inset: 0;
@@ -29,18 +29,26 @@
       align-items: center;
       justify-content: center;
       gap: 0.75rem;
+      padding: 1.5rem;
       background: #07060E;
       color: #E8F6FF;
-      font-family: Sora, Segoe UI, sans-serif;
+      font-family: Segoe UI, system-ui, sans-serif;
       letter-spacing: 0.04em;
-      pointer-events: none;
+      text-align: center;
     }
     #boot-splash strong {
-      font-family: Orbitron, Segoe UI, sans-serif;
       font-size: 1.35rem;
       color: #F0C14A;
     }
-    #boot-splash span { color: #9ad0ff; font-size: 0.95rem; }
+    #boot-splash [data-boot-status] { color: #9ad0ff; font-size: 0.95rem; max-width: 36rem; }
+    #boot-splash-detail {
+      max-width: 44rem;
+      margin: 0;
+      color: #ff8fa3;
+      font-size: 0.82rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
     #boot-splash.is-hidden { display: none; }
     @font-face {
       font-family: Orbitron;
@@ -84,19 +92,13 @@
       font-style: normal;
       font-display: swap;
     }
-    /* No max-width/max-height rule here on purpose: Phaser's Scale.FIT
-       already sets the canvas's own inline width/height to fit #game while
-       keeping the 16:9 aspect ratio. A CSS max-width/max-height cap on top
-       of that computes independently per axis (no aspect-ratio awareness),
-       which can disagree with Phaser's own sizing on some window shapes and
-       show up as the canvas looking stretched/zoomed with part of it
-       cropped by the viewport edge. Let Phaser own the sizing. */
   </style>
 </head>
 <body>
   <div id="boot-splash" aria-live="polite">
     <strong>ATOMIC KNOCKOUT</strong>
     <span data-boot-status>Starting… first launch can take a minute while art loads.</span>
+    <pre id="boot-splash-detail" hidden></pre>
   </div>
   <div id="game"></div>
   <script type="importmap">
@@ -107,24 +109,59 @@
       }
     }
   </script>
-  <script type="module" src="/src/main.js"></script>
   <script>
-    // Do NOT hide when the canvas appears — on some Windows GPUs Phaser creates
-    // a black WebGL canvas before anything is drawn. Stay visible until the
-    // game marks itself ready (Title), with a long safety timeout.
-    (function keepSplashUntilReady() {
+    (function bootGuard() {
       const splash = document.getElementById('boot-splash');
-      if (!splash) return;
+      const status = document.querySelector('[data-boot-status]');
+      const detail = document.getElementById('boot-splash-detail');
+      function show(msg, err) {
+        if (status) status.textContent = msg;
+        if (detail && err) {
+          detail.hidden = false;
+          detail.textContent = err;
+        }
+      }
+      window.__akBootShow = show;
+      window.addEventListener('error', (e) => {
+        show('Boot error — game scripts failed to start.', String(e.message || e.error || e));
+      });
+      window.addEventListener('unhandledrejection', (e) => {
+        const reason = e.reason && (e.reason.stack || e.reason.message || e.reason);
+        show('Boot error — unhandled promise failure.', String(reason || e));
+      });
+      // Never silently remove the splash. Only Title marks __akUiReady.
+      const started = Date.now();
       const tick = () => {
         if (window.__akUiReady) {
-          splash.classList.add('is-hidden');
+          splash?.classList.add('is-hidden');
           return;
+        }
+        const sec = Math.floor((Date.now() - started) / 1000);
+        if (sec === 20 && status && /Starting|Loading art/i.test(status.textContent || '')) {
+          status.textContent = (status.textContent || 'Loading…') + ' (still working…)';
+        }
+        if (sec === 60 && !window.__akBootProgressed) {
+          show(
+            'Still stuck before the title screen.',
+            'If this persists, the Windows build never reached Phaser Boot. Send this message back to the agent.',
+          );
         }
         requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
-      setTimeout(() => splash.classList.add('is-hidden'), 180000);
     })();
+  </script>
+  <script type="module">
+    try {
+      document.querySelector('[data-boot-status]') && (document.querySelector('[data-boot-status]').textContent = 'Loading game code…');
+      await import('/src/main.js');
+      window.__akBootProgressed = true;
+      document.querySelector('[data-boot-status]') && (document.querySelector('[data-boot-status]').textContent = 'Game code loaded — starting renderer…');
+    } catch (err) {
+      const msg = err && (err.stack || err.message || err);
+      if (window.__akBootShow) window.__akBootShow('Failed to load /src/main.js', String(msg));
+      else console.error(err);
+    }
   </script>
 </body>
 </html>

@@ -15,6 +15,14 @@ export function setBootSplashStatus(message, percent = null) {
   line.textContent = `${message}${pct}`;
 }
 
+export function setBootSplashDetail(detail) {
+  if (typeof document === 'undefined') return;
+  const el = document.getElementById('boot-splash-detail');
+  if (!el) return;
+  el.textContent = detail || '';
+  el.hidden = !detail;
+}
+
 export function hideBootSplash() {
   if (typeof document === 'undefined') return;
   const splash = document.getElementById('boot-splash');

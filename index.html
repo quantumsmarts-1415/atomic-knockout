@@ -19,6 +19,29 @@
       width: 100%;
       height: 100%;
     }
+    /* Shown before Phaser paints so a cold desktop launch doesn't look frozen. */
+    #boot-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background: #07060E;
+      color: #E8F6FF;
+      font-family: Sora, Segoe UI, sans-serif;
+      letter-spacing: 0.04em;
+      pointer-events: none;
+    }
+    #boot-splash strong {
+      font-family: Orbitron, Segoe UI, sans-serif;
+      font-size: 1.35rem;
+      color: #F0C14A;
+    }
+    #boot-splash span { color: #9ad0ff; font-size: 0.95rem; }
+    #boot-splash.is-hidden { display: none; }
     @font-face {
       font-family: Orbitron;
       src: url("/fonts/orbitron-700.woff2") format("woff2");
@@ -71,6 +94,10 @@
   </style>
 </head>
 <body>
+  <div id="boot-splash" aria-live="polite">
+    <strong>ATOMIC KNOCKOUT</strong>
+    <span>Starting… first launch can take a minute while art loads.</span>
+  </div>
   <div id="game"></div>
   <script type="importmap">
     {
@@ -81,5 +108,21 @@
     }
   </script>
   <script type="module" src="/src/main.js"></script>
+  <script>
+    // Hide once Phaser has a canvas (BootScene then shows its own progress bar).
+    (function hideSplashWhenReady() {
+      const splash = document.getElementById('boot-splash');
+      if (!splash) return;
+      const tick = () => {
+        if (document.querySelector('#game canvas')) {
+          splash.classList.add('is-hidden');
+          return;
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      setTimeout(() => splash.classList.add('is-hidden'), 120000);
+    })();
+  </script>
 </body>
 </html>

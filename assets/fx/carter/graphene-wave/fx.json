@@ -1,6 +1,6 @@
 {
   "blend": "add",
-  "black": 16,
+  "black": 36,
   "frames": 6,
   "fps": 12,
   "crop": "frame",
@@ -9,5 +9,6 @@
   "pivot": "bottom",
   "anchor": "ground",
   "hit": false,
-  "flip": true
+  "flip": true,
+  "lifeMs": 280
 }

@@ -1,6 +1,7 @@
 {
   "hit": false,
   "black": 16,
+  "aim": false,
   "projectile": {
     "file": "object.png",
     "blend": "normal",
@@ -8,7 +9,8 @@
     "fit": "height",
     "heightFrac": 0.62,
     "crop": "frame",
-    "pivot": "center"
+    "pivot": "center",
+    "aim": false
   },
   "detonate": {
     "file": "pop.png",
@@ -17,6 +19,7 @@
     "fit": "height",
     "heightFrac": 1.05,
     "crop": "frame",
-    "pivot": "center"
+    "pivot": "center",
+    "anchor": "center"
   }
 }

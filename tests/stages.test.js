@@ -191,7 +191,7 @@ function imageSize(buf) {
 }
 
 test('stage intros: known type, art present; door halves exactly cover the 1280x720 screen', () => {
-  const KNOWN = ['doors']; // keep in sync with engine/stageIntros.js STAGE_INTROS
+  const KNOWN = ['doors', 'warmup']; // keep in sync with engine/stageIntros.js STAGE_INTROS
   for (const st of STAGES.filter((s) => s.intro)) {
     assert.ok(KNOWN.includes(st.intro.type), `${st.id}: unknown intro type ${st.intro.type}`);
     assert.ok(st.art, `${st.id}: intro art loads from art.dir`);

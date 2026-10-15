@@ -54,11 +54,22 @@ if (!existsSync(join(root, 'game-dist', 'index.html'))) {
 rmSync(releaseDir, { recursive: true, force: true });
 mkdirSync(releaseDir, { recursive: true });
 
+// Windows Smart App Control / SmartScreen only trust Authenticode-signed
+// installers. Pass a real OV/EV cert via CSC_LINK (+ CSC_KEY_PASSWORD).
+// Without those env vars we skip signing so local/unsigned Drive builds still work.
+const hasCert = !!(process.env.CSC_LINK || process.env.WIN_CSC_LINK);
+const builderEnv = {
+  ...process.env,
+  CSC_IDENTITY_AUTO_DISCOVERY: hasCert ? (process.env.CSC_IDENTITY_AUTO_DISCOVERY || 'true') : 'false',
+};
+if (hasCert) {
+  console.log('Code signing enabled (CSC_LINK / WIN_CSC_LINK present).');
+} else {
+  console.log('Code signing skipped — set CSC_LINK (+ CSC_KEY_PASSWORD) for a Smart App Control–friendly build.');
+}
+
 run('npx', ['electron-builder', ...builderArgs], {
-  env: {
-    ...process.env,
-    CSC_IDENTITY_AUTO_DISCOVERY: 'false',
-  },
+  env: builderEnv,
 });
 
 // Default: keep the ~1.5 GB installer in release/ and host it on Google Drive

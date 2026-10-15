@@ -40,6 +40,25 @@ npm run build            # tiny dist/ landing page for Netlify
 - Optional: `npm run dist:win -- --publish-local` copies the .exe into
   `site/downloads/` if you later want Netlify to host the binary itself.
 
+## Windows trust (Smart App Control / SmartScreen)
+
+Unsigned builds are blocked or warned on locked-down Windows (Smart App
+Control, SmartScreen “unknown publisher”). That is expected until the
+installer is **Authenticode-signed** with an organization (OV) or extended
+validation (EV) code-signing certificate from a public CA (DigiCert,
+Sectigo, SSL.com, etc.). A self-signed cert does **not** help.
+
+When you have a `.pfx` (or cloud HSM / Azure Trusted Signing):
+
+```bash
+export CSC_LINK="/path/to/QuantumSmarts.pfx"   # or WIN_CSC_LINK
+export CSC_KEY_PASSWORD="…"                    # if the PFX is encrypted
+npm run dist:win
+```
+
+`tools/package-desktop.mjs` enables signing automatically when `CSC_LINK`
+or `WIN_CSC_LINK` is set; otherwise it builds unsigned for local testing.
+
 ## Dev (browser)
 
 ```bash

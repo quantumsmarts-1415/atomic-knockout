@@ -2,6 +2,8 @@ import { deriveProfile, TUNING } from './balance.js';
 import { ELEMENTS } from './elements.js';
 import { MOVESETS } from './movesets.js';
 import { IMPORTED_ROSTER, characterFromImport } from './imported.js';
+import { COLORWAYS, chipHex } from './colorways.js';
+import { resolveColorway } from '../engine/colorway.js';
 
 // ---------------------------------------------------------------------------
 // CHARACTER DATA — the single source of truth for the roster.
@@ -2473,6 +2475,25 @@ for (const def of Object.values(CHARACTERS)) {
     def.combat.weight = def.stats.weight;
     def.combat.gravityScale = def.stats.gravityScale;
   }
+}
+
+// Colorways: the reviewed roster's alternates are hue remaps authored in
+// src/data/colorways.js. Slot 0 stays the painted standard look. Each
+// alternate carries its resolved shader numbers plus a chip color for the
+// select swatches, HUD, and off-screen arrows.
+for (const [id, spec] of Object.entries(COLORWAYS)) {
+  const def = CHARACTERS[id];
+  if (!def) continue;
+  const standard = { ...(def.palettes?.[0] ?? { name: 'Standard', skin: 0xe8d2c0, body: 0x4a8fd6, accent: 0x2a3a5a, eye: 0x101820 }) };
+  standard.colorway = null;
+  def.palettes = [standard, ...spec.alts.map((alt) => ({
+    name: alt.name,
+    skin: standard.skin,
+    accent: standard.accent,
+    eye: standard.eye,
+    body: chipHex(alt.hue ?? spec.base, 0.62 * Math.min(1, alt.sat ?? 1), Math.min(0.92, 0.84 + (alt.val ?? 0))),
+    colorway: resolveColorway(spec, alt),
+  }))];
 }
 
 export const ROSTER = Object.values(CHARACTERS);

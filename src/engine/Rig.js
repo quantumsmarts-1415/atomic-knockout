@@ -3,6 +3,7 @@ import { sheetKey, use3dSheets, clipDisplayLayout, positiveFinite } from '../sce
 import { clipPose, moveClipFor, moveTextureKey } from './moveClip.js';
 import { stripIndex, idleBlend, attackPhase, poseTarget, FEEL } from './feel.js';
 import { authoredClipName, sheetFrameIndex, sheetMeta } from './moveSheet.js';
+import { applyColorway } from './colorwayPipeline.js';
 
 // ---------------------------------------------------------------------------
 // Rig — the code-drawn vector cartoon character.
@@ -230,19 +231,21 @@ export class Rig extends Phaser.GameObjects.Container {
     this.baseScale = 1;   // menus can enlarge previews without animate() fighting them
   }
 
-  // Palette variants on raster art: tint toward the palette color. (True
-  // palette swaps would need per-color remapping — revisit if tints look bad.)
+  // Alternate colors on raster art are colorways (engine/colorwayPipeline.js):
+  // a hue remap in the fragment shader, with skin tones masked out. The old
+  // flat tint toward the palette color washed every cut toward white, so
+  // tint is left alone here and stays free for hit flashes.
   applyPaletteTint(scene, charDef, paletteIndex) {
-    if (paletteIndex <= 0) return;
-    const pal = charDef.palettes[paletteIndex % charDef.palettes.length];
-    const c = Phaser.Display.Color.ValueToColor(pal.body);
-    const mix = Phaser.Display.Color.GetColor(
-      Math.round(c.red + (255 - c.red) * 0.55),
-      Math.round(c.green + (255 - c.green) * 0.55),
-      Math.round(c.blue + (255 - c.blue) * 0.55),
-    );
-    this.sprite.setTint(mix);
-    this.paletteTint = mix;
+    this.paletteTint = null;
+    const pal = charDef.palettes?.[paletteIndex % (charDef.palettes?.length || 1)];
+    this.colorway = (paletteIndex > 0 && pal?.colorway) || null;
+    this.applyColorwayTo(this.sprite);
+  }
+
+  /** Route one of this rig's body sprites through the colorway pipeline. */
+  applyColorwayTo(spr) {
+    if (!spr || !this.colorway) return;
+    applyColorway(spr, this.colorway);
   }
 
   applyClipLayout(clipDef) {
@@ -323,6 +326,7 @@ export class Rig extends Phaser.GameObjects.Container {
       if (this[slot]) return this[slot];
       const spr = this.scene.add.sprite(0, 0, tex, 0);
       if ((this.art?.facing ?? this.charDef?.art?.facing ?? 1) === -1) spr.setFlipX(true);
+      this.applyColorwayTo(spr);
       this.add(spr);
       this[slot] = spr;
       return spr;
@@ -351,6 +355,7 @@ export class Rig extends Phaser.GameObjects.Container {
       const key = this.sprite.texture?.key;
       if (!key || !this.scene?.add?.sprite) return;
       this.fadeSprite = this.scene.add.sprite(0, 0, key);
+      this.applyColorwayTo(this.fadeSprite);
       this.add(this.fadeSprite);
       this.fadeSprite.setVisible(false);
     }

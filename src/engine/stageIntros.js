@@ -11,7 +11,9 @@
 import * as Phaser from 'phaser';
 import { stageKey } from '../data/stages.js';
 import { play as sfx } from './sfx.js';
+import { fxLoadState, warmupState } from './matchWarmup.js';
 import { buildMatchCard, showGo as showGoBanner } from '../ui/banners.js';
+import { FONT_MONO, THEME } from '../ui/theme.js';
 
 const DEPTH = 1000; // above the stage, fighters and HUD
 
@@ -144,17 +146,18 @@ function doorsIntro(scene, stage, def, ctl, done) {
     // let any live steam drift out, then clean up
     objs.forEach((o) => { if (o !== steam) o.destroy(); });
     scene.time.delayedCall(natural ? 900 : 0, () => steam.destroy());
-    done();
-    showGo(scene);
+    releaseRound(scene, done);
   }
   ctl.skip = () => finish(false);
 }
 
 // -------------------------------------------------------------- warmup card
-// Match card over a short black-to-clear fade while the match textures settle.
-// Skip with the same confirm keys as the door intro. ~1.8s default.
+// Match card while the selected sheets, FX, and shaders finish uploading.
+// The round stays locked until that work is done. Skip cuts the hold once
+// the ring is charged; it does not drop the upload back into the fight.
 function warmupIntro(scene, stage, def, ctl, done) {
-  const T = { hold: 1500, fade: 280, ...(def.timing ?? {}) };
+  const T = { min: 900, fade: 280, ...(def.timing ?? {}) };
+  const { width: W, height: H } = scene.scale;
   const objs = [];
   const timers = [];
   const tweens = [];
@@ -168,27 +171,42 @@ function warmupIntro(scene, stage, def, ctl, done) {
   });
   card.objs.forEach(add);
 
-  // Touch roster textures so the first in-match frame does not stall on upload.
-  try {
-    for (const f of scene.fighters ?? []) {
-      const spr = f?.rig?.sprite;
-      if (spr?.texture?.key && scene.textures.exists(spr.texture.key)) {
-        const probe = scene.add.image(-80, -80, spr.texture.key).setAlpha(0.01).setDepth(DEPTH - 1);
-        objs.push(probe);
-      }
-    }
-  } catch (_) { /* warmup is best-effort */ }
+  const cy = H / 2 - 10;
+  const charge = add(scene.add.text(W / 2, cy + 132, 'CHARGING THE RING', {
+    fontFamily: FONT_MONO, fontSize: '12px', color: THEME.tealCss, letterSpacing: 3,
+  }).setOrigin(0.5).setDepth(DEPTH + 3));
+  const bar = add(scene.add.graphics().setDepth(DEPTH + 3));
+  const paint = () => {
+    const gpu = warmupState.phase === 'gpu' && warmupState.total > 0;
+    const frac = gpu
+      ? warmupState.done / warmupState.total
+      : (fxLoadState.total > 0 ? fxLoadState.done / fxLoadState.total : 0.08);
+    const pct = Math.round(Math.max(0, Math.min(1, frac)) * 100);
+    charge.setText(gpu ? `WARMING THE RING  ${pct}%` : `CHARGING THE RING  ${pct}%`);
+    bar.clear();
+    const w = 280;
+    const x = W / 2 - w / 2;
+    const y = cy + 154;
+    bar.fillStyle(THEME.ink, 1);
+    bar.fillRoundedRect(x, y, w, 6, 3);
+    const fill = Math.max(8, w * Math.max(0.04, frac));
+    bar.fillStyle(THEME.teal, 1);
+    bar.fillRoundedRect(x, y, Math.min(w, fill), 6, 3);
+  };
+  paint();
+  timers.push(scene.time.addEvent({ delay: 80, loop: true, callback: paint }));
 
+  const started = scene.simNow || 0;
   let ended = false;
+  let armed = false;
   function finish(natural) {
     if (ended) return;
     ended = true;
     timers.forEach((t) => t.remove(false));
     tweens.forEach((t) => t.stop());
-    const fadeTargets = card.fadeTargets;
     if (natural) {
       tweens.push(scene.tweens.add({
-        targets: fadeTargets, alpha: 0, duration: T.fade, ease: 'Quad.easeIn',
+        targets: objs, alpha: 0, duration: T.fade, ease: 'Quad.easeIn',
         onComplete: () => {
           objs.forEach((o) => o.destroy?.());
           done();
@@ -201,7 +219,49 @@ function warmupIntro(scene, stage, def, ctl, done) {
       showGo(scene);
     }
   }
+  function arm(skipped) {
+    if (ended || armed) return;
+    armed = true;
+    charge.setText('REACTOR LIVE');
+    const elapsed = (scene.simNow || 0) - started;
+    const wait = skipped ? 0 : Math.max(0, T.min - elapsed);
+    timers.push(scene.time.delayedCall(wait, () => finish(true)));
+  }
 
-  timers.push(scene.time.delayedCall(T.hold, () => finish(true)));
-  ctl.skip = () => finish(false);
+  let skipped = false;
+  ctl.skip = () => {
+    skipped = true;
+    if (armed) finish(false);
+  };
+  Promise.resolve(scene.matchWarmup).then(() => {
+    if (ended || (scene.sys?.isActive && !scene.sys.isActive())) return;
+    arm(skipped);
+  });
+}
+
+/** Doors finish on their own clock. If FX is still decoding, hold a beat
+ *  here instead of unlocking into the stall. */
+function releaseRound(scene, done) {
+  let cover = null;
+  const timer = setTimeout(() => {
+    cover = showCharging(scene);
+  }, 40);
+  Promise.resolve(scene.matchWarmup).then(() => {
+    clearTimeout(timer);
+    cover?.destroy?.();
+    if (scene.sys?.isActive && !scene.sys.isActive()) return;
+    done();
+    showGo(scene);
+  });
+}
+
+function showCharging(scene) {
+  const { width: W, height: H } = scene.scale;
+  const veil = scene.add.rectangle(W / 2, H / 2, W, H, THEME.void, 0.78).setDepth(DEPTH + 8);
+  const label = scene.add.text(W / 2, H / 2, 'CHARGING THE RING', {
+    fontFamily: FONT_MONO, fontSize: '14px', color: THEME.tealCss, letterSpacing: 4,
+  }).setOrigin(0.5).setDepth(DEPTH + 9);
+  return {
+    destroy() { veil.destroy(); label.destroy(); },
+  };
 }

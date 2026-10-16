@@ -74,10 +74,16 @@ test('fighters move within 3s of a real-time match, even after the menu clock ha
       });
     });
 
+    // The match card stays up until FX and shaders are warm. Movement is
+    // measured after that hand-off, which is also when a stuck intro lock
+    // would keep the fighters frozen.
     await page.waitForFunction(() => {
       const b = window.game?.scene?.getScene?.('Battle');
-      return b?.sys?.isActive?.() && b.fighters?.length >= 2 && b.fighters.every((f) => f.body) && !b.setup?.playtestMs;
-    }, null, { timeout: 20000 });
+      if (!b?.sys?.isActive?.() || b.setup?.playtestMs) return false;
+      if (b.fighters?.length < 2 || !b.fighters.every((f) => f.body)) return false;
+      if (b.intro?.active) return false;
+      return b.simNow > (b.introLockUntil || 0);
+    }, null, { timeout: 90000 });
 
     const before = await page.evaluate(() => window.game.scene.getScene('Battle').fighters.map((f) => f.x));
     // Real time. Nothing calls runSimSteps or captureFrame.
@@ -160,8 +166,11 @@ test('a connected phone controller does not freeze the real-time match', async (
     });
     await page.waitForFunction(() => {
       const b = window.game?.scene?.getScene?.('Battle');
-      return b?.sys?.isActive?.() && b.fighters?.length === 3 && b.fighters.every((f) => f.body) && !b.setup?.playtestMs;
-    }, null, { timeout: 20000 });
+      if (!b?.sys?.isActive?.() || b.setup?.playtestMs) return false;
+      if (b.fighters?.length !== 3 || !b.fighters.every((f) => f.body)) return false;
+      if (b.intro?.active) return false;
+      return b.simNow > (b.introLockUntil || 0);
+    }, null, { timeout: 90000 });
     const send = (patch) => phone.send(JSON.stringify({
       type: 'input', left: false, right: false, up: false, down: false, confirm: false, back: false, ...patch,
     }));

@@ -119,9 +119,9 @@ function loadClip(name) {
   return job;
 }
 
-/** Start fetching the CC0 hits. Playback falls back to the synth until they decode. */
+/** Fetch and decode the CC0 hits. Playback falls back to the synth until they decode. */
 export function preload() {
-  for (const name of Object.keys(CLIPS)) loadClip(name);
+  return Promise.all(Object.keys(CLIPS).map((name) => loadClip(name)));
 }
 
 function playBuf(name, { vol = 0.6, rate = 1 } = {}) {

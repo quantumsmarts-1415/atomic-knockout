@@ -1789,6 +1789,8 @@ export default class BattleScene extends Phaser.Scene {
   // ------------------------------------------------------------------ pause
   togglePause() {
     if (this.matchOver) return;
+    // No pausing while the match card / stage intro is still playing.
+    if (this.intro?.active) return;
     if (this.scene.isPaused('Battle')) return; // handled by pause scene resume
     this.scene.pause();
     this.scene.launch('PauseMenu', { resumeKey: 'Battle' });

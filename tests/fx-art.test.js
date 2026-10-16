@@ -470,7 +470,7 @@ test('a looping sheet crossfades its tail into the first frame', () => {
 
 test('push 2 flow sheets replace the batch 2 stills', () => {
   const expect = {
-    'assets/fx/helen/air-wave/fx.json': { file: 'air-wave-anim.png', frames: 24, blend: 'add', fps: 9.796, luma: undefined },
+    'assets/fx/helen/air-wave/fx.json': { file: 'air-wave-anim.png', frames: 24, blend: 'add', fps: 14, luma: undefined },
     'assets/fx/sully/black-powder/fx.json': { file: 'black-powder-blast-anim.png', frames: 24, blend: 'screen', fps: 10.435, luma: true },
     'assets/fx/sully/volcanic-eruption/fx.json': { file: 'volcanic-eruption-anim.png', frames: 24, blend: 'add', fps: 11.321, luma: undefined },
     'assets/fx/chloe/gas-cloud/fx.json': { file: 'gas-cloud-anim.png', frames: 23, blend: 'screen', fps: 11.129, luma: true },

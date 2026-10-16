@@ -1860,7 +1860,8 @@ export const CHARACTERS = {
           attack: { count: 11, fps: 17, loop: false, frameW: 603, frameH: 724, footY: 0.9655, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
           charge: { count: 12, fps: 18, loop: false, frameW: 1041, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
           defense: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
-          special: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 753, footY: 0.9416, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
+          // Eruption cells are 603×790 so the plume fits. Every sole sits on row 745.
+          special: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 790, footY: 745 / 790, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
         },
       },
     },
@@ -1930,8 +1931,9 @@ export const CHARACTERS = {
         displayScale: 128 / 1032,
         clips: {
           // Approved idle faces right. sheetFacing keeps it unflipped.
-          // art.facing stays -1. There is no walk sheet.
+          // art.facing stays -1. The walk faces right and uses the same sole.
           idle: { count: 6, fps: 6, loop: true, frameW: 666, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
+          walk: { count: 12, fps: 9.93, loop: true, frameW: 666, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
           // Bleach Out, Salt Bond, Gas Cloud, and the jab face right. sheetFacing keeps them unflipped.
           attack: { count: 12, fps: 18, loop: false, frameW: 718, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
           charge: { count: 12, fps: 18, loop: false, frameW: 1188, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
@@ -2376,8 +2378,9 @@ export const CHARACTERS = {
         displayScale: 130 / 993,
         clips: {
           // Approved idle faces right. sheetFacing keeps it unflipped.
-          // art.facing stays -1. There is no walk sheet.
+          // art.facing stays -1. The walk faces right and uses the same sole.
           idle: { count: 6, fps: 6, loop: true, frameW: 666, frameH: 1036, footY: 0.9865, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
+          walk: { count: 12, fps: 11.52, loop: true, frameW: 666, frameH: 1036, footY: 0.9865, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
           // Ruby Laser, Mirror Chrome, Prismatic Shatter, and Chrome Edge face right and set sheetFacing.
           attack: { count: 12, fps: 18, loop: false, frameW: 1180, frameH: 1221, footY: 0.9885, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
           charge: { count: 12, fps: 18, loop: false, frameW: 784, frameH: 1036, footY: 0.9865, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },

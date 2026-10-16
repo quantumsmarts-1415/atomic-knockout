@@ -1049,3 +1049,45 @@ test('van redo clips keep their own cells, and guard and redox use those frames'
   assert.deepEqual(sheetMeta('van', 'special').anchors.fist[5], [320, 277]);
   assert.deepEqual(sheetMeta('van', 'special').anchors.feet[5], [711, 725]);
 });
+
+test('rank 1-2 redraws use their own cells', () => {
+  const walks = {
+    chloe: { frameW: 666, frameH: 1072, footY: 0.9879, fps: 9.93, sheetFacing: 1, cols: 4, rows: 3 },
+    chroma: { frameW: 666, frameH: 1036, footY: 0.9865, fps: 11.52, sheetFacing: 1, cols: 4, rows: 3 },
+  };
+  for (const [id, spec] of Object.entries(walks)) {
+    const art = CHARACTERS[id].art;
+    const def = art.sheets.clips.walk;
+    const png = pngSize(`${art.sheets.dir}${id}_walk.png`);
+    assert.equal(def.frameW, spec.frameW, id);
+    assert.equal(def.frameH, spec.frameH, id);
+    assert.equal(def.footY, spec.footY, id);
+    assert.equal(def.fps, spec.fps, id);
+    assert.equal(def.loop, true, id);
+    assert.equal(def.count, 12, id);
+    assert.equal(def.sheetFacing, spec.sheetFacing, id);
+    assert.equal(def.displayScale, art.height / def.visibleH, id);
+    assert.equal(png.w, spec.frameW * spec.cols, id);
+    assert.equal(png.h, spec.frameH * spec.rows, id);
+    assert.equal(MOVE_SHEETS[id].walk, undefined, id);
+  }
+  const liv = CHARACTERS.liv.art.sheets.clips.defense;
+  const livPng = pngSize('art-src/imported/sheets/liv_defense.png');
+  assert.equal(liv.frameW, 668);
+  assert.equal(liv.frameH, 1011);
+  assert.equal(liv.footY, 0.9792);
+  assert.equal(livPng.w, 668 * 6);
+  assert.equal(livPng.h, 1011 * 2);
+  assert.deepEqual(sheetMeta('liv', 'defense').anchors.fist[1], [544, 538]);
+  assert.deepEqual(sheetMeta('liv', 'defense').anchors.feet[1], [283, 998]);
+  const eruption = CHARACTERS.sully.art.sheets.clips.special;
+  const eruptionPng = pngSize('art-src/gemini-test/sheets/sully_special.png');
+  assert.equal(eruption.frameW, 603);
+  assert.equal(eruption.frameH, 790);
+  assert.equal(eruption.footY, 745 / 790);
+  assert.equal(eruption.displayScale, CHARACTERS.sully.art.height / eruption.visibleH);
+  assert.equal(eruptionPng.w, 603 * 6);
+  assert.equal(eruptionPng.h, 790 * 2);
+  assert.deepEqual(sheetMeta('sully', 'special').anchors.feet[0], [369, 745]);
+  assert.deepEqual(sheetMeta('sully', 'special').anchors.fist[8], [576, 163]);
+});

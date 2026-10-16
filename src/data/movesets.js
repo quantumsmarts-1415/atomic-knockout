@@ -1260,9 +1260,13 @@ export const MOVESETS = {
       duration: 680, cooldown: 800, vfx: 'shield', vfxColor: 0xb7e3c2,
     }),
     specialDirectional: m('Meteorite Drop', {
-      kind: 'projectile', type: K, damage: 9, type2: H, damage2: 7, slam: true, fromAbove: true, delayMs: 1000, fallSpeed: 560,
+      // Painted meteor streaks down-forward; match that dive instead of a
+      // near-vertical drop (projectileSpeed 40 / fallSpeed 560 read as "rock falls").
+      kind: 'projectile', type: K, damage: 9, type2: H, damage2: 7, slam: true, fromAbove: true,
+      delayMs: 280, fallSpeed: 740, fallAccel: 980,
+      skyHeight: 380, skyLead: 200,
       vfx: 'strike', vfxColor: 0x8a93a0,
-      projectileSpeed: 40, projectileRadius: 16, projectileLife: 1600,
+      projectileSpeed: 420, projectileRadius: 16, projectileLife: 1400,
       baseKnockback: 220, knockbackGrowth: 4.2, duration: 220, cooldown: 700,
     }),
   },

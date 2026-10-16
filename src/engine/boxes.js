@@ -115,7 +115,49 @@ function nudge(f, dx) {
   body.updateCenter?.();
 }
 
-export function resolvePush(fighters) {
+function blockedSide(f, dir) {
+  const b = f?.body;
+  if (!b) return false;
+  if (dir < 0) return !!(b.blocked?.left || b.touching?.left);
+  if (dir > 0) return !!(b.blocked?.right || b.touching?.right);
+  return false;
+}
+
+/** World-space AABBs that block horizontal push (pillars / tall solids). */
+export function pushSolids(stage, groundY = 560) {
+  if (!stage?.solids?.length) return [];
+  const out = [];
+  for (const s of stage.solids) {
+    if (s.h == null) continue; // ground slabs are walked on, not shoved into
+    const top = s.y ?? groundY;
+    out.push({
+      left: s.x - s.w / 2,
+      right: s.x + s.w / 2,
+      top,
+      bottom: top + s.h,
+    });
+  }
+  return out;
+}
+
+function clampOutOfSolids(f, solids) {
+  if (!solids?.length || !f) return;
+  const half = Math.max(8, (f.bodyW ?? 40) * 0.45);
+  const head = f.y - (f.bodyH ?? 80);
+  const feet = f.y;
+  for (const s of solids) {
+    if (feet <= s.top + 1 || head >= s.bottom - 1) continue;
+    const left = f.x - half;
+    const right = f.x + half;
+    if (right <= s.left || left >= s.right) continue;
+    const penLeft = right - s.left;
+    const penRight = s.right - left;
+    if (penLeft <= 0 || penRight <= 0) continue;
+    nudge(f, penLeft < penRight ? -penLeft : penRight);
+  }
+}
+
+export function resolvePush(fighters, solids = null) {
   const standing = [];
   for (const f of fighters) {
     if (f._gliding || f.currentMove?.passThrough || (f.state === 'defending' && f.defenseMove?.passThrough)) continue;
@@ -135,14 +177,32 @@ export function resolvePush(fighters) {
       const wb = weightOf(B.f);
       const left = A.f.x <= B.f.x ? A : B;
       const right = left === A ? B : A;
-      const pushLeft = overlapX * (weightOf(right.f) / (wa + wb));
-      const pushRight = overlapX - pushLeft;
+      let pushLeft = overlapX * (weightOf(right.f) / (wa + wb));
+      let pushRight = overlapX - pushLeft;
+      // A wall stops that fighter; the other absorbs the whole separation so
+      // nobody is shoved through solids between physics steps.
+      if (blockedSide(left.f, -1)) { pushRight += pushLeft; pushLeft = 0; }
+      if (blockedSide(right.f, 1)) { pushLeft += pushRight; pushRight = 0; }
+      if (blockedSide(left.f, -1) && blockedSide(right.f, 1)) {
+        pushLeft = 0;
+        pushRight = 0;
+      }
       nudge(left.f, -pushLeft);
       nudge(right.f, pushRight);
       const lv = left.f.body?.velocity;
       const rv = right.f.body?.velocity;
       if (lv && lv.x > 0) lv.x *= 0.2;
       if (rv && rv.x < 0) rv.x *= 0.2;
+    }
+  }
+  if (solids?.length) {
+    // Clamp every grounded body, not only those that entered the push pair
+    // list — a missing push mask must not leave someone buried in a pillar.
+    for (const f of fighters) {
+      if (!f?.alive || f.state === 'ko' || f.state === 'dead') continue;
+      const grounded = f.grounded ?? !!(f.body?.blocked?.down || f.body?.touching?.down);
+      if (!grounded) continue;
+      clampOutOfSolids(f, solids);
     }
   }
 }

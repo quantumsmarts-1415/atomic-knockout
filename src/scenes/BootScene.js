@@ -289,6 +289,15 @@ export function attachBootLoadUi(scene, {
   setProgress(0);
   scene.load.on('progress', setProgress);
   scene.load.on('complete', destroy);
+  // The bundled faces usually arrive a beat after the first paint; re-render
+  // the labels once they do so the loader does not sit in a fallback font.
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    document.fonts.ready.then(() => {
+      for (const t of [kicker, statusText, loadText, percentText]) {
+        if (!t.destroyed && t.active !== false) t.updateText?.();
+      }
+    }).catch(() => {});
+  }
 
   return { statusText, percentText, bar, track, bg, setProgress, destroy };
 }

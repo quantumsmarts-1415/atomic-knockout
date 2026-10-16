@@ -50,6 +50,7 @@ export default class PauseMenuScene extends Phaser.Scene {
     ], { y: py + PANEL.h - 30, depth: 2 });
 
     const group = [panel, kicker, title, ...this.buttons.map((b) => b.container)];
+    this.group = group;
     group.forEach((o) => { o.setAlpha(0); });
     this.tweens.add({ targets: group, alpha: 1, duration: MOTION.base, ease: MOTION.easeOut });
 
@@ -80,7 +81,14 @@ export default class PauseMenuScene extends Phaser.Scene {
   openSettings() {
     if (this.overlay) return;
     this.hints.setVisible(false);
-    this.overlay = openSettings(this, { onClose: () => { this.overlay = null; this.hints.setVisible(true); } });
+    this.tweens.add({ targets: this.group, alpha: 0, duration: MOTION.quick });
+    this.overlay = openSettings(this, {
+      onClose: () => {
+        this.overlay = null;
+        this.hints.setVisible(true);
+        this.tweens.add({ targets: this.group, alpha: 1, duration: MOTION.base, ease: MOTION.easeOut });
+      },
+    });
   }
 
   resumeMatch() {

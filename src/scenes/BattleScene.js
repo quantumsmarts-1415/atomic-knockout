@@ -5,7 +5,9 @@ import { STAGES, stageKey, getStageBlast, getStageSpawns, getStageBounds, getSta
 import { play as sfx } from '../engine/sfx.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { showScene } from '../ui/flow.js';
-import { FONT_BODY, FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME } from '../ui/theme.js';
+import { FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME, drawCard, drawPortraitDisc } from '../ui/theme.js';
+import { menuPortraitKey } from '../ui/portraits.js';
+import { showGameBanner } from '../ui/banners.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { fighterInputForSlot, isGamepadSlot, padBySlot, pollGamepads, rumbleSlot } from '../engine/gamepad.js';
 import { computeBotInput } from '../engine/BotAI.js';
@@ -32,6 +34,7 @@ import { sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
 const GRAVITY = 1500;
+const HUD_DEPTH = 950; // under the match cards (1000), over everything in the arena
 
 // Slot numbering, decided in PlayerJoinScene: 0/1 = keyboard, 2-5 = a phone
 // (PhoneNet's own connection slot), 100+seatIndex = a bot.
@@ -618,42 +621,71 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // ------------------------------------------------------------------- HUD
+  // One card per fighter (ui/theme.js drawCard): portrait disc in the seat
+  // color, name + element symbol, the damage numeral, and stock pips.
   buildHud() {
     const slots = hudLayout(this.fighters.length, W, H);
+    const stocksMax = this.setup.stocks ?? 3;
     this.hud = this.fighters.map((f, i) => {
       const slot = slots[i];
       const { panelW, top } = slot;
       const scale = panelW / 260;
+      const compact = panelW < 200;
       const pip = PLAYER_COLORS[i % PLAYER_COLORS.length];
-      // Reactor shell sized by hudLayout so 3–6 players stay on screen.
-      // The border is the seat color so it stays distinct from palette choices.
-      const panel = this.add.graphics();
       const px = slot.left;
       const py = top;
       const ph = slot.panelH;
-      panel.fillStyle(THEME.shell, 0.92);
-      panel.fillRoundedRect(px, py, panelW, ph, ph / 2);
-      panel.lineStyle(6, pip, 0.35);
-      panel.strokeRoundedRect(px - 2, py - 2, panelW + 4, ph + 4, ph / 2 + 2);
-      panel.lineStyle(2.5, pip, 1);
-      panel.strokeRoundedRect(px, py, panelW, ph, ph / 2);
+      const panel = this.add.graphics().setDepth(HUD_DEPTH);
+      drawCard(panel, px, py, panelW, ph, { accent: pip, radius: 16, edge: 0 });
+      panel.lineStyle(1.5, pip, 0.8);
+      panel.strokeRoundedRect(px, py, panelW, ph, 16);
 
-      const label = `${f.charDef.name} · ${f.charDef.symbol}${f.isBot ? ' (CPU)' : ''}`;
-      const percentSize = Math.max(18, Math.round(26 * scale));
-      const nameMax = panelW - 28 - percentSize * 2.4;
-      const name = this.add.text(px + 18, py + 10, label, {
-        fontFamily: FONT_BODY,
-        fontSize: `${fitLabelSize(label, nameMax, Math.round(15 * scale))}px`,
-        color: THEME.mistCss,
+      const def = f.charDef;
+      const d = compact ? 44 : 56;
+      const disc = drawPortraitDisc(this, px + 10 + d / 2, py + ph / 2, d, {
+        textureKey: menuPortraitKey(def), n: def.atomicNumber, sym: def.symbol, ring: pip, depth: HUD_DEPTH + 1,
       });
-      const percent = this.add.text(slot.right - 18, py + 8, '0%', {
+      const textX = px + 20 + d;
+      const percentSize = Math.max(20, Math.round(30 * scale));
+      const nameMax = panelW - (textX - px) - percentSize * 2.6;
+      const label = def.name.toUpperCase();
+      const name = this.add.text(textX, py + 14, label, {
+        fontFamily: FONT_DISPLAY,
+        fontSize: `${fitLabelSize(label, nameMax, Math.round(14 * scale), 10)}px`,
+        color: THEME.mistCss, letterSpacing: 1,
+      }).setDepth(HUD_DEPTH + 1);
+      const sym = this.add.text(name.x + name.width + 8, py + 16, `${def.symbol}${f.isBot ? ' · CPU' : ''}`, {
+        fontFamily: FONT_MONO, fontSize: `${Math.max(9, Math.round(11 * scale))}px`, color: THEME.dimCss, letterSpacing: 1,
+      }).setDepth(HUD_DEPTH + 1);
+      const percent = this.add.text(slot.right - 16, py + ph / 2 + 2, '0%', {
         fontFamily: FONT_DISPLAY, fontSize: `${percentSize}px`, color: THEME.mistCss,
-      }).setOrigin(1, 0);
-      const stocks = this.add.text(px + 18, py + 40, '', {
-        fontFamily: FONT_MONO, fontSize: `${Math.round(16 * scale)}px`, color: THEME.tealCss,
-      });
-      return { percent, stocks, name };
+        stroke: THEME.voidCss, strokeThickness: 3,
+      }).setOrigin(1, 0.5).setDepth(HUD_DEPTH + 2);
+      const stocks = this.add.graphics().setDepth(HUD_DEPTH + 1);
+      const h = { panel, disc, name, sym, percent, stocks, pip, pipX: textX, pipY: py + ph - 20, stocksMax, pipsShown: -1 };
+      this.paintStocks(h, f.stocks);
+      return h;
     });
+  }
+
+  paintStocks(h, count) {
+    if (h.pipsShown === count) return;
+    h.pipsShown = count;
+    const g = h.stocks;
+    g.clear();
+    const r = 4.5;
+    for (let s = 0; s < h.stocksMax; s++) {
+      const x = h.pipX + r + s * (r * 2 + 7);
+      if (s < count) {
+        g.fillStyle(h.pip, 1);
+        g.fillCircle(x, h.pipY, r);
+        g.lineStyle(1, 0xffffff, 0.25);
+        g.strokeCircle(x, h.pipY, r);
+      } else {
+        g.lineStyle(1.25, h.pip, 0.35);
+        g.strokeCircle(x, h.pipY, r - 0.5);
+      }
+    }
   }
 
   updateHud() {
@@ -665,9 +697,10 @@ export default class BattleScene extends Phaser.Scene {
         if (shown > (h.shown ?? 0)) {
           h.punch = 1;
           if (shown - (h.shown ?? 0) >= 15 && !this.simFast) {
-            const floater = this.add.text(h.percent.x, h.percent.y + 28, `+${shown - (h.shown ?? 0)}`, {
+            const floater = this.add.text(h.percent.x, h.percent.y - 22, `+${shown - (h.shown ?? 0)}`, {
               fontFamily: FONT_DISPLAY, fontSize: '18px', color: THEME.goldCss,
-            }).setOrigin(1, 0).setScrollFactor(0).setDepth(40);
+              stroke: THEME.voidCss, strokeThickness: 3,
+            }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(HUD_DEPTH + 3);
             this.tweens.add({
               targets: floater, y: floater.y - 28, alpha: 0, duration: 500, ease: 'Quad.easeOut',
               onComplete: () => floater.destroy(),
@@ -686,7 +719,12 @@ export default class BattleScene extends Phaser.Scene {
       } else if (h.percentX == null) {
         h.percentX = h.percent.x;
       }
-      h.stocks.setText('●'.repeat(Math.max(0, f.stocks)) + '○'.repeat(Math.max(0, (this.setup.stocks ?? 3) - f.stocks)));
+      this.paintStocks(h, Math.max(0, f.stocks));
+      const dim = !f.alive;
+      if (h.dim !== dim) {
+        h.dim = dim;
+        [h.panel, h.disc, h.name, h.sym, h.percent, h.stocks].forEach((o) => o.setAlpha(dim ? 0.45 : 1));
+      }
     });
   }
 
@@ -1751,6 +1789,8 @@ export default class BattleScene extends Phaser.Scene {
   // ------------------------------------------------------------------ pause
   togglePause() {
     if (this.matchOver) return;
+    // No pausing while the match card / stage intro is still playing.
+    if (this.intro?.active) return;
     if (this.scene.isPaused('Battle')) return; // handled by pause scene resume
     this.scene.pause();
     this.scene.launch('PauseMenu', { resumeKey: 'Battle' });
@@ -2445,18 +2485,12 @@ export default class BattleScene extends Phaser.Scene {
     const winner = alive[0] ?? null;
     if (this.hud) {
       for (const h of this.hud) {
-        h.percent?.setVisible(false);
-        h.stocks?.setVisible(false);
-        h.name?.setVisible(false);
+        for (const o of [h.panel, h.disc, h.name, h.sym, h.percent, h.stocks]) o?.setVisible(false);
       }
     }
 
     this.time.delayedCall(600, () => {
-      const banner = this.asUi(() => this.add.text(W / 2, H / 2 - 40, 'GAME!', {
-        fontFamily: FONT_DISPLAY, fontSize: '96px', color: THEME.goldCss,
-        stroke: THEME.voidCss, strokeThickness: 10,
-      }).setOrigin(0.5).setScale(0.2));
-      this.tweens.add({ targets: banner, scale: 1, duration: 320, ease: 'Back.Out' });
+      showGameBanner(this, { winnerName: winner?.charDef.name ?? null, seat: winner ? this.fighters.indexOf(winner) : 0 });
     });
 
     this.time.delayedCall(1800, () => {

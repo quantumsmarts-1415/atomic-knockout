@@ -230,30 +230,48 @@ export function attachBootLoadUi(scene, {
   bg.fillRect(0, 0, width, height);
 
   const track = scene.add.graphics();
-  track.fillStyle(0x2a2444, 0.95);
+  track.fillStyle(0x120e22, 1);
   track.fillRoundedRect(barX - 4, barY - 4, barW + 8, barH + 8, 10);
-  track.lineStyle(2, 0x3ef0e0, 0.8);
+  track.lineStyle(1.25, 0xe8f6ff, 0.22);
   track.strokeRoundedRect(barX - 4, barY - 4, barW + 8, barH + 8, 10);
 
   const bar = scene.add.graphics();
-  const statusText = scene.add.text(cx, barY - 58, status, {
-    fontFamily: 'Sora, sans-serif',
-    fontSize: '18px',
-    color: '#E8F6FF',
+  const kicker = scene.add.text(cx, barY - 96, 'REACTOR WARMING UP', {
+    fontFamily: '"Share Tech Mono", monospace',
+    fontSize: '12px',
+    color: '#3EF0E0',
+    letterSpacing: 4,
   }).setOrigin(0.5);
-  const percentText = scene.add.text(cx, barY - 30, formatLoadPercent(0), {
+  const statusText = scene.add.text(cx, barY - 66, 'ATOMIC KNOCKOUT', {
     fontFamily: 'Orbitron, sans-serif',
-    fontSize: '22px',
-    color: '#F0C14A',
+    fontSize: '28px',
+    color: '#E8F6FF',
+    letterSpacing: 3,
   }).setOrigin(0.5);
+  const loadText = scene.add.text(cx - 6, barY + 36, status, {
+    fontFamily: '"Share Tech Mono", monospace',
+    fontSize: '13px',
+    color: '#9A91B0',
+    letterSpacing: 1,
+  }).setOrigin(1, 0.5);
+  const percentText = scene.add.text(cx + 6, barY + 36, formatLoadPercent(0), {
+    fontFamily: '"Share Tech Mono", monospace',
+    fontSize: '13px',
+    color: '#F0C14A',
+    letterSpacing: 1,
+  }).setOrigin(0, 0.5);
 
   function setProgress(value) {
     const t = Math.max(0, Math.min(1, Number(value) || 0));
     percentText.setText(formatLoadPercent(t));
     bar.clear();
-    bar.fillStyle(0x3ef0e0, 1);
     const fillW = barW * t;
-    if (fillW > 0) bar.fillRect(barX, barY, fillW, barH);
+    if (fillW > 0) {
+      bar.fillStyle(0x3ef0e0, 1);
+      bar.fillRoundedRect(barX, barY, fillW, barH, Math.min(barH / 2, fillW / 2));
+      bar.fillStyle(0xffffff, 0.18);
+      bar.fillRoundedRect(barX + 2, barY + 2, Math.max(0, fillW - 4), 3, 1.5);
+    }
   }
 
   function destroy() {
@@ -262,6 +280,8 @@ export function attachBootLoadUi(scene, {
     bg.destroy();
     bar.destroy();
     track.destroy();
+    kicker.destroy();
+    loadText.destroy();
     statusText.destroy();
     percentText.destroy();
   }
@@ -269,6 +289,15 @@ export function attachBootLoadUi(scene, {
   setProgress(0);
   scene.load.on('progress', setProgress);
   scene.load.on('complete', destroy);
+  // The bundled faces usually arrive a beat after the first paint; re-render
+  // the labels once they do so the loader does not sit in a fallback font.
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    document.fonts.ready.then(() => {
+      for (const t of [kicker, statusText, loadText, percentText]) {
+        if (!t.destroyed && t.active !== false) t.updateText?.();
+      }
+    }).catch(() => {});
+  }
 
   return { statusText, percentText, bar, track, bg, setProgress, destroy };
 }

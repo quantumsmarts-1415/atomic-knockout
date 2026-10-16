@@ -613,7 +613,9 @@ export const CHARACTERS = {
         displayScale: 0.10593,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 454, frameH: 716, footY: 0.9818, visibleH: 675, bodyH: 675, displayScale: 0.18519 },
+          // Walk v3 matches the idle armour. Taller cell than the idle so the stride fits.
+          // Same body height. The sheet faces right, same as the idle.
+          walk: { count: 12, fps: 9.93, loop: true, frameW: 832, frameH: 1283, footY: 0.9337, visibleH: 1180, bodyH: 1180, displayScale: 125 / 1180 },
         },
       },
     },

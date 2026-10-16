@@ -1095,6 +1095,24 @@ test('rank 1-2 redraws use their own cells', () => {
   assert.deepEqual(sheetMeta('sully', 'special').anchors.fist[8], [576, 163]);
 });
 
+test('ben walk uses the idle body height', () => {
+  const art = CHARACTERS.ben.art;
+  const def = art.sheets.clips.walk;
+  const png = pngSize(`${art.sheets.dir}ben_walk.png`);
+  assert.equal(def.count, 12);
+  assert.equal(def.fps, 9.93);
+  assert.equal(def.loop, true);
+  assert.equal(def.frameW, 832);
+  assert.equal(def.frameH, 1283);
+  assert.equal(def.footY, 0.9337);
+  assert.equal(def.visibleH, 1180);
+  assert.equal(def.displayScale, art.height / def.visibleH);
+  assert.equal(def.sheetFacing, undefined);
+  assert.equal(png.w, 832 * 4);
+  assert.equal(png.h, 1283 * 3);
+  assert.equal(MOVE_SHEETS.ben, undefined);
+});
+
 test('hydra and helen walks use the defringed cells', () => {
   const walks = {
     hydra: { frameW: 1242, frameH: 720, footY: 0.9741, visibleH: 674, height: 122, cols: 6, rows: 6 },

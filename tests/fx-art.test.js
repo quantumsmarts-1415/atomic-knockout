@@ -470,7 +470,7 @@ test('a looping sheet crossfades its tail into the first frame', () => {
 
 test('push 2 flow sheets replace the batch 2 stills', () => {
   const expect = {
-    'assets/fx/helen/air-wave/fx.json': { file: 'air-wave-anim.png', frames: 24, blend: 'add', fps: 9.796, luma: undefined },
+    'assets/fx/helen/air-wave/fx.json': { file: 'air-wave-anim.png', frames: 24, blend: 'add', fps: 14, luma: undefined },
     'assets/fx/sully/black-powder/fx.json': { file: 'black-powder-blast-anim.png', frames: 24, blend: 'screen', fps: 10.435, luma: true },
     'assets/fx/sully/volcanic-eruption/fx.json': { file: 'volcanic-eruption-anim.png', frames: 24, blend: 'add', fps: 11.321, luma: undefined },
     'assets/fx/chloe/gas-cloud/fx.json': { file: 'gas-cloud-anim.png', frames: 23, blend: 'screen', fps: 11.129, luma: true },
@@ -829,6 +829,7 @@ test('gemini fx call 1 wires fey, collin, and nick', () => {
   assert.equal(meteor.projectile.once, true);
   assert.equal(meteor.projectile.blend, 'normal');
   assert.equal(meteor.projectile.aim, false);
+  assert.equal(meteor.projectile.heightFrac, 0.85);
   assert.equal(meteor.detonate.file, 'meteor-impact-anim.png');
   assert.equal(meteor.detonate.frames, 24);
   assert.equal(meteor.detonate.loop, false);
@@ -836,6 +837,7 @@ test('gemini fx call 1 wires fey, collin, and nick', () => {
   assert.equal(meteor.detonate.smokeFrom, 19);
   assert.equal(meteor.detonate.anchor, 'ground');
   assert.equal(meteor.detonate.pivot, 'bottom');
+  assert.equal(meteor.detonate.heightFrac, 2.1);
   assert.equal(meteor.hit, false);
   const files = [
     [hammer.file, 'assets/fx/fey/forge-hammer/'],

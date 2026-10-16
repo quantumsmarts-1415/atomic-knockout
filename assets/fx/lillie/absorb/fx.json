@@ -1,11 +1,12 @@
 {
   "blend": "add",
   "black": 16,
-  "anchor": "body",
+  "anchor": "front",
   "fit": "height",
-  "heightFrac": 1.45,
+  "heightFrac": 0.72,
   "pivot": "center",
   "loop": true,
-  "flicker": true,
-  "hit": false
+  "flicker": false,
+  "hit": false,
+  "frontGap": 0.85
 }

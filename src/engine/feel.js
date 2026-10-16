@@ -73,6 +73,18 @@ export const FEEL = {
   ledgeIntang: 30,
   ledgeMax: 300,
 
+  // Walk-into grab. No dedicated grab art: the grabber holds idle, the
+  // victim is locked a step in front, and throws reuse launch VFX.
+  grabArmMs: 140,          // continuous overlap while walking into them
+  grabMaxMs: 1600,         // auto forward-throw if no input
+  grabCooldownMs: 900,      // after throw or break
+  grabRangeMul: 0.92,      // pushbox overlap still required; this softens edge clips
+  grabEscapeMash: 10,      // victim direction/attack taps to break free
+  grabThrowKb: 220,
+  grabThrowGrowth: 4.2,
+  grabThrowDamage: 6,
+  grabBackMul: 1.08,
+
   // Pose spring. Kept for callers that ease a value; the rig snaps to
   // poseTarget so a short wind-up actually reaches the pose.
   poseK: 600,
@@ -93,27 +105,29 @@ export const FEEL = {
   traumaRot: 0.8 * Math.PI / 180,
   traumaReduced: 0.4,
 
-  // Camera. A close pair should fill about a quarter of the screen, the
-  // way a Smash 1v1 does, without snapping when someone steps in.
-  camPadX: 160,
-  camPadTop: 150,
-  camPadBottom: 100,
-  camLook: 0.04,
-  camMax1: 1.95,
-  camMaxMulti: 1.85,
-  camPosTau: 200,
-  camZoomOutTau: 420,
-  camZoomInTau: 320,
-  koZoomTau: 160,
-  // Floor on the framed world. Tighter than the old 860×520, which kept
-  // every close fight zoomed almost all the way out.
-  camMinSpanX: 520,
-  camMinSpanY: 300,
+  // Camera. Zoom comes only from where the fighters are, the way Smash
+  // frames a match: the group, plus a short margin so the next step is
+  // visible. Hits, damage and KOs do not change it. A close clump fills
+  // the view; a spread group eases out until the whole stage shows.
+  // Side margin is about a short dash. Top margin is most of a hop.
+  camPadX: 130,
+  camPadTop: 120,
+  camPadBottom: 72,
+  camMax1: 2.35,
+  camMaxMulti: 2.1,
+  camPosTau: 220,
+  // Zooming out is quicker than zooming back in, so a launch stays in
+  // frame and the return to a close fight does not snap.
+  camZoomOutTau: 180,
+  camZoomInTau: 480,
+  // Floor on the framed world, just past one fighter plus the margin.
+  // The old 520×300 kept every close fight from filling the screen.
+  camMinSpanX: 400,
+  camMinSpanY: 270,
   camDead: 0.04,
-  koZoom: 1.9,
-  koZoomFrames: 8,
-  // How far the frame leads a launch, so the blast line stays in view.
-  camBlastLead: 200,
+  // Hard inset, smaller than the margin. The eased frame can lag; this
+  // much of each body always stays on screen.
+  camEdge: 48,
 
   // Big moments, in real rendered frames. Freeze, then about two-thirds
   // of a second of slow motion, then a short ramp back to full speed.
@@ -311,14 +325,76 @@ export function launchWeight(weight) {
 
 /**
  * Zoom that frames `span` of the world, never tighter than the minimum span
- * and never past maxZoom. Close fighters land on the cap (about 1.8–2.0)
- * instead of a wide establishing shot.
+ * and never past maxZoom. Close fighters land on the cap instead of a wide
+ * establishing shot.
  */
 export function frameZoom(spanX, spanY, viewW, viewH, minZoom, maxZoom) {
   const sx = Math.max(FEEL.camMinSpanX, spanX || 0);
   const sy = Math.max(FEEL.camMinSpanY, spanY || 0);
   const z = Math.min(viewW / sx, viewH / sy);
   return clamp(z, minZoom, maxZoom);
+}
+
+/**
+ * Smash-style target for a group of bodies. `bodies` are { x, y, w, h }
+ * with y at the feet. The frame is their box plus a short margin — enough
+ * to see where to move, close when they stand together. Damage is not an
+ * input. Returns null when there is nobody to frame.
+ */
+export function cameraFrame(bodies, viewW, viewH, minZoom, maxZoom, pad = {}) {
+  if (!bodies?.length) return null;
+  const padX = pad.padX ?? FEEL.camPadX;
+  const padTop = pad.padTop ?? FEEL.camPadTop;
+  const padBottom = pad.padBottom ?? FEEL.camPadBottom;
+  let x0 = Infinity;
+  let x1 = -Infinity;
+  let y0 = Infinity;
+  let y1 = -Infinity;
+  for (const b of bodies) {
+    const w = b.w || 0;
+    const h = b.h || 0;
+    x0 = Math.min(x0, b.x - w / 2);
+    x1 = Math.max(x1, b.x + w / 2);
+    y0 = Math.min(y0, b.y - h);
+    y1 = Math.max(y1, b.y);
+  }
+  if (x0 === Infinity) return null;
+  x0 -= padX;
+  x1 += padX;
+  y0 -= padTop;
+  y1 += padBottom;
+  const spanX = Math.max(FEEL.camMinSpanX, x1 - x0);
+  const spanY = Math.max(FEEL.camMinSpanY, y1 - y0);
+  return {
+    zoom: frameZoom(spanX, spanY, viewW, viewH, minZoom, maxZoom),
+    cx: (x0 + x1) / 2,
+    cy: (y0 + y1) / 2,
+    spanX,
+    spanY,
+  };
+}
+
+/**
+ * Keep `bounds` ({ x0, y0, x1, y1 }) inside the view. Zooms out when the
+ * eased frame is tighter than the bodies, and shifts the center. Never
+ * zooms in.
+ */
+export function containFrame(zoom, cx, cy, bounds, viewW, viewH, minZoom) {
+  const spanX = Math.max(1, bounds.x1 - bounds.x0);
+  const spanY = Math.max(1, bounds.y1 - bounds.y0);
+  let z = Math.min(zoom, viewW / spanX, viewH / spanY);
+  z = Math.max(z, minZoom || 0);
+  const hw = viewW / (2 * z);
+  const hh = viewH / (2 * z);
+  const loX = bounds.x1 - hw;
+  const hiX = bounds.x0 + hw;
+  const loY = bounds.y1 - hh;
+  const hiY = bounds.y0 + hh;
+  return {
+    zoom: z,
+    cx: loX <= hiX ? clamp(cx, loX, hiX) : (bounds.x0 + bounds.x1) / 2,
+    cy: loY <= hiY ? clamp(cy, loY, hiY) : (bounds.y0 + bounds.y1) / 2,
+  };
 }
 
 /** Horizontal hitstop jitter, ±3px at low damage and ±5px from 16 damage up. */

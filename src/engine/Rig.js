@@ -177,7 +177,12 @@ export class Rig extends Phaser.GameObjects.Container {
     if (art && scene.textures.exists(art.key)) {
       this.spriteMode = true;
       this.sprite = scene.add.image(0, 0, art.key).setOrigin(0.5, 1);
-      this.sprite.setScale((art.height ?? 160) / this.sprite.height);
+      // Fit the cutout to art.height. applyPose must reuse this scale — passing
+      // 1 used to blow the full-res portrait up to screen-filling size on the
+      // character select screen until sheets finished loading.
+      const fit = (art.height ?? 160) / Math.max(1, this.sprite.height || 1);
+      this._layoutScale = fit;
+      this.sprite.setScale(fit);
       if ((art.facing ?? 1) === -1) this.sprite.setFlipX(true);
       this.applyPaletteTint(scene, charDef, paletteIndex);
       this.add(this.sprite);
@@ -555,7 +560,7 @@ export class Rig extends Phaser.GameObjects.Container {
         this.setScale(this.facing * this.baseScale, this.baseScale);
         return;
       }
-      this.applyPose(dt, state, 1);
+      this.applyPose(dt, state, this._layoutScale || 1);
       return;
     }
 

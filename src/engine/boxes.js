@@ -115,10 +115,53 @@ function nudge(f, dx) {
   body.updateCenter?.();
 }
 
-export function resolvePush(fighters) {
+function blockedSide(f, dir) {
+  const b = f?.body;
+  if (!b) return false;
+  if (dir < 0) return !!(b.blocked?.left || b.touching?.left);
+  if (dir > 0) return !!(b.blocked?.right || b.touching?.right);
+  return false;
+}
+
+/** World-space AABBs that block horizontal push (pillars / tall solids). */
+export function pushSolids(stage, groundY = 560) {
+  if (!stage?.solids?.length) return [];
+  const out = [];
+  for (const s of stage.solids) {
+    if (s.h == null) continue; // ground slabs are walked on, not shoved into
+    const top = s.y ?? groundY;
+    out.push({
+      left: s.x - s.w / 2,
+      right: s.x + s.w / 2,
+      top,
+      bottom: top + s.h,
+    });
+  }
+  return out;
+}
+
+function clampOutOfSolids(f, solids) {
+  if (!solids?.length || !f) return;
+  const half = Math.max(8, (f.bodyW ?? 40) * 0.45);
+  const head = f.y - (f.bodyH ?? 80);
+  const feet = f.y;
+  for (const s of solids) {
+    if (feet <= s.top + 1 || head >= s.bottom - 1) continue;
+    const left = f.x - half;
+    const right = f.x + half;
+    if (right <= s.left || left >= s.right) continue;
+    const penLeft = right - s.left;
+    const penRight = s.right - left;
+    if (penLeft <= 0 || penRight <= 0) continue;
+    nudge(f, penLeft < penRight ? -penLeft : penRight);
+  }
+}
+
+export function resolvePush(fighters, solids = null) {
   const standing = [];
   for (const f of fighters) {
     if (f._gliding || f.currentMove?.passThrough || (f.state === 'defending' && f.defenseMove?.passThrough)) continue;
+    if (f.state === 'grabbing' || f.state === 'grabbed') continue;
     const box = pushbox(f);
     if (box) standing.push({ f, box });
   }
@@ -135,8 +178,16 @@ export function resolvePush(fighters) {
       const wb = weightOf(B.f);
       const left = A.f.x <= B.f.x ? A : B;
       const right = left === A ? B : A;
-      const pushLeft = overlapX * (weightOf(right.f) / (wa + wb));
-      const pushRight = overlapX - pushLeft;
+      let pushLeft = overlapX * (weightOf(right.f) / (wa + wb));
+      let pushRight = overlapX - pushLeft;
+      // A wall stops that fighter; the other absorbs the whole separation so
+      // nobody is shoved through solids between physics steps.
+      if (blockedSide(left.f, -1)) { pushRight += pushLeft; pushLeft = 0; }
+      if (blockedSide(right.f, 1)) { pushLeft += pushRight; pushRight = 0; }
+      if (blockedSide(left.f, -1) && blockedSide(right.f, 1)) {
+        pushLeft = 0;
+        pushRight = 0;
+      }
       nudge(left.f, -pushLeft);
       nudge(right.f, pushRight);
       const lv = left.f.body?.velocity;
@@ -144,6 +195,82 @@ export function resolvePush(fighters) {
       if (lv && lv.x > 0) lv.x *= 0.2;
       if (rv && rv.x < 0) rv.x *= 0.2;
     }
+  }
+  if (solids?.length) {
+    // Clamp every grounded body, not only those that entered the push pair
+    // list — a missing push mask must not leave someone buried in a pillar.
+    for (const f of fighters) {
+      if (!f?.alive || f.state === 'ko' || f.state === 'dead') continue;
+      const grounded = f.grounded ?? !!(f.body?.blocked?.down || f.body?.touching?.down);
+      if (!grounded) continue;
+      clampOutOfSolids(f, solids);
+    }
+  }
+}
+
+function canStartGrab(f, time) {
+  if (!f?.alive || f.state === 'ko' || f.state === 'dead') return false;
+  if (f.state === 'grabbing' || f.state === 'grabbed') return false;
+  if (f.state === 'attack' || f.state === 'hurt' || f.state === 'charging' || f.state === 'defending') return false;
+  if (f.state === 'jumpsquat' || f.state === 'ledge') return false;
+  if ((f.grabCooldownUntil || 0) > time) return false;
+  const grounded = !!(f.body?.blocked?.down || f.body?.touching?.down || f.grounded);
+  if (!grounded) return false;
+  const vx = f.body?.velocity?.x || 0;
+  if (Math.abs(vx) < 12) return false;
+  // Must be walking toward the contact side (facing matches travel).
+  if (Math.sign(vx) !== (f.facing || 1)) return false;
+  return true;
+}
+
+/**
+ * Walk-into grab: after continuous grounded pushbox overlap while walking
+ * into someone, lock them for a throw. No dedicated grab art required.
+ */
+export function resolveGrab(fighters, time, feel) {
+  const armMs = feel?.grabArmMs ?? 140;
+  const live = new Set();
+  for (let i = 0; i < fighters.length; i++) {
+    for (let j = i + 1; j < fighters.length; j++) {
+      const A = fighters[i];
+      const B = fighters[j];
+      if (!A?.alive || !B?.alive) continue;
+      if (A.state === 'grabbing' || A.state === 'grabbed' || B.state === 'grabbing' || B.state === 'grabbed') continue;
+      const aBox = pushbox(A);
+      const bBox = pushbox(B);
+      if (!aBox || !bBox) continue;
+      const overlapX = Math.min(aBox.right ?? aBox.x + aBox.width, bBox.right ?? bBox.x + bBox.width)
+        - Math.max(aBox.x, bBox.x);
+      const overlapY = Math.min(aBox.bottom ?? aBox.y + aBox.height, bBox.bottom ?? bBox.y + bBox.height)
+        - Math.max(aBox.y, bBox.y);
+      if (overlapX <= 2 || overlapY <= 2) continue;
+
+      let grabber = null;
+      let victim = null;
+      if (canStartGrab(A, time) && Math.sign(A.facing || 1) === Math.sign(B.x - A.x || A.facing || 1)) {
+        grabber = A; victim = B;
+      } else if (canStartGrab(B, time) && Math.sign(B.facing || 1) === Math.sign(A.x - B.x || B.facing || 1)) {
+        grabber = B; victim = A;
+      }
+      if (!grabber || !victim) continue;
+      if (victim.state === 'hurt' || victim.state === 'ko' || victim.hitlagFrames > 0) continue;
+      if ((victim.phasingUntil || 0) > time) continue;
+      if (victim.state === 'defending' && victim.defenseMove?.grabImmune) continue;
+
+      const key = victim.playerIndex ?? victim.charDef?.id ?? victim.id;
+      live.add(grabber);
+      if (grabber._grabArm?.id !== key) {
+        grabber._grabArm = { id: key, since: time };
+        continue;
+      }
+      if (time - grabber._grabArm.since < armMs) continue;
+
+      grabber._grabArm = null;
+      grabber.beginGrab?.(victim, time);
+    }
+  }
+  for (const f of fighters) {
+    if (f && !live.has(f) && f.state !== 'grabbing') f._grabArm = null;
   }
 }
 

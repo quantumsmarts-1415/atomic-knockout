@@ -1488,6 +1488,10 @@ export const CHARACTERS = {
         displayScale: 126 / 1013,
         clips: {
           idle: { count: 6, fps: 6, loop: true, frameW: 594, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
+          // Walk from Gemini video maggie_walk_v1 (pink-magenta key, in place,
+          // faces right like her idle). Frames 30-60 step 3 = one 33-frame stride
+          // at 24fps, so fps 8 is true walking speed and the loop is seamless.
+          walk: { count: 11, fps: 8, loop: true, frameW: 398, frameH: 688, footY: 0.966, visibleH: 638, bodyH: 638, displayScale: 126 / 638 },
           // Flare Jab. Blinding Flare is also the Unquenchable gather.
           attack: { count: 12, fps: 18, loop: false, frameW: 988, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
           charge: { count: 12, fps: 18, loop: false, frameW: 868, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
@@ -2456,6 +2460,30 @@ for (const def of Object.values(CHARACTERS)) {
   if (helen?.stats) {
     helen.stats.weight = Math.max(helen.stats.weight, 0.92);
     helen.stats.gravityScale = Math.max(helen.stats.gravityScale, 0.98);
+  }
+}
+// Hydrogen's density curve gives Hydra a ~870 jump — too floaty in play.
+// Cap him near the roster middle without touching the shared formula.
+{
+  const hydra = CHARACTERS.hydra;
+  if (hydra?.stats) {
+    hydra.stats.jumpVelocity = Math.min(hydra.stats.jumpVelocity, 720);
+  }
+}
+// Bord's walk sheet faces the viewer's right (mace), while idle faces left
+// (crystal). Without a per-clip facing override the shared art.facing flips
+// the walk backwards.
+{
+  const walk = CHARACTERS.bord?.art?.sheets?.clips?.walk;
+  if (walk && walk.sheetFacing == null) walk.sheetFacing = 1;
+}
+// Bord's painted silhouette is wider than the old hurtbox, so jabs whiffed
+// against empty air in front of the crystal. Widen the body a notch.
+{
+  const bord = CHARACTERS.bord;
+  if (bord?.art) {
+    bord.art.bodyW = Math.max(bord.art.bodyW ?? 0, 58);
+    bord.art.bodyH = Math.max(bord.art.bodyH ?? 0, 108);
   }
 }
 // Ghosts (Rf–Og) keep a steady percent drain and very weak movement.

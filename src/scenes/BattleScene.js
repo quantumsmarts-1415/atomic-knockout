@@ -21,7 +21,7 @@ import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront } from '../engine/b
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 import { Juice } from '../engine/juice.js';
-import { FEEL, cameraFrame, containFrame, percentColor } from '../engine/feel.js';
+import { FEEL, cameraFrame, containFrame, openingZoom, percentColor } from '../engine/feel.js';
 import { clockEndsRound } from '../engine/matchRules.js';
 import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
@@ -218,15 +218,17 @@ export default class BattleScene extends Phaser.Scene {
     const minZoom = this.stage.camera
       ? Math.min(1, Math.max(whole, stageCam.minZoom ?? 0))
       : Math.min(whole, Math.max(blastFit, 0.5));
+    const maxZoom = Math.max(minZoom, cap);
+    const startZoom = openingZoom(minZoom, maxZoom);
     this.camRig = {
-      cfg, minZoom, maxZoom: Math.max(minZoom, cap), bounds,
-      zoom: minZoom, cx: WW / 2, cy: WH / 2, first: true, uiMode: false,
+      cfg, minZoom, maxZoom, bounds,
+      zoom: startZoom, cx: WW / 2, cy: WH / 2, first: true, uiMode: false,
     };
     const main = this.cameras.main;
     const sky = this.stage.theme?.skyTop;
     if (sky != null) main.setBackgroundColor(sky);
     main.setBounds(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top)
-      .setZoom(minZoom).centerOn(WW / 2, WH / 2);
+      .setZoom(startZoom).centerOn(WW / 2, WH / 2);
     this.uiCam = this.cameras.add(0, 0, W, H).setName('ui');
     const route = (go) => {
       if (this.camRig.uiMode) main.ignore(go);
@@ -252,11 +254,11 @@ export default class BattleScene extends Phaser.Scene {
     return go;
   }
 
-  // Frame every live fighter. The zoom is their body box plus a short
-  // margin — enough to see the next step, close when they stand together.
-  // Hits and KOs do not zoom. The center and zoom ease; zooming out is
-  // quicker than zooming in. A hard contain keeps a fast launch on screen
-  // while that margin catches up. The view never leaves the world.
+  // Frame every live fighter. Standard zoom is the baseline; zoom in only
+  // when the group is close, and zoom out when that would crop someone.
+  // Hits and KOs do not change zoom. The center and zoom ease; zooming out
+  // is quicker than zooming in. A hard contain keeps a fast launch on
+  // screen while the frame catches up. The view never leaves the world.
   updateCamera(delta) {
     const rig = this.camRig;
     if (!rig) return;

@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import {
   FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, knockbackRaw, decayLaunch,
   launchVelocity, applyDI, leavesBlast, stripIndex, takeBuffered,
-  poseTarget, launchWeight, hitlagShake, frameZoom, cameraFrame, containFrame, easeOutBack,
+  poseTarget, launchWeight, hitlagShake, frameZoom, cameraFrame, containFrame, openingZoom, easeOutBack,
   traumaOffset,
 } from '../src/engine/feel.js';
 
@@ -138,17 +138,53 @@ test('launch weight floors light gases and hitlag shake stays horizontal', () =>
   assert.ok(wide < 0.7, `wide zoom ${wide}`);
 });
 
+function viewHolds(frame, bodies, viewW, viewH) {
+  const hw = viewW / (2 * frame.zoom);
+  const hh = viewH / (2 * frame.zoom);
+  for (const b of bodies) {
+    const left = b.x - (b.w || 0) / 2;
+    const right = b.x + (b.w || 0) / 2;
+    const top = b.y - (b.h || 0);
+    const bottom = b.y;
+    if (left < frame.cx - hw - 0.5 || right > frame.cx + hw + 0.5) return false;
+    if (top < frame.cy - hh - 0.5 || bottom > frame.cy + hh + 0.5) return false;
+  }
+  return true;
+}
+
 test('zoom frames the group with a little room and does not punch in', () => {
-  const close = cameraFrame([
+  const closeBodies = [
     { x: 620, y: 560, w: 42, h: 110 },
     { x: 680, y: 560, w: 42, h: 110 },
-  ], 1280, 720, 1, FEEL.camMax1);
-  const far = cameraFrame([
+  ];
+  const close = cameraFrame(closeBodies, 1280, 720, 0.4, FEEL.camMax1);
+  const mediumBodies = [
+    { x: 420, y: 560, w: 42, h: 110 },
+    { x: 860, y: 560, w: 42, h: 110 },
+  ];
+  const medium = cameraFrame(mediumBodies, 1280, 720, 0.4, FEEL.camMax1);
+  const farBodies = [
     { x: 200, y: 560, w: 42, h: 110 },
     { x: 1080, y: 400, w: 42, h: 110 },
-  ], 1280, 720, 1, FEEL.camMax1);
-  assert.ok(close.zoom > far.zoom * 1.6, `close ${close.zoom} should focus more than far ${far.zoom}`);
+  ];
+  const far = cameraFrame(farBodies, 1280, 720, 0.4, FEEL.camMax1);
+  const launched = [
+    { x: 200, y: -200, w: 42, h: 110 },
+    { x: 1000, y: 700, w: 42, h: 110 },
+  ];
+  const spread = cameraFrame(launched, 1280, 720, 0.4, FEEL.camMax1);
+  assert.strictEqual(FEEL.camStandard, 1);
+  assert.strictEqual(openingZoom(0.45, FEEL.camMax1), 1);
+  assert.strictEqual(openingZoom(0.45, 1), 1);
   assert.ok(Math.abs(close.zoom - FEEL.camMax1) < 1e-6, `a clump uses the close cap, got ${close.zoom}`);
+  assert.ok(Math.abs(medium.zoom - 1) < 1e-6, `a normal gap stays at standard zoom, got ${medium.zoom}`);
+  assert.ok(Math.abs(far.zoom - 1) < 1e-6, `a spread that still fits stays at 1, got ${far.zoom}`);
+  assert.ok(close.zoom > far.zoom + 1, `close ${close.zoom} should focus more than far ${far.zoom}`);
+  assert.ok(spread.zoom < 0.9 && spread.zoom > 0.4, `a launch that does not fit zooms out, got ${spread.zoom}`);
+  assert.ok(viewHolds(close, closeBodies, 1280, 720), 'close fighters leave the view');
+  assert.ok(viewHolds(medium, mediumBodies, 1280, 720), 'medium fighters leave the view');
+  assert.ok(viewHolds(far, farBodies, 1280, 720), 'far fighters leave the view');
+  assert.ok(viewHolds(spread, launched, 1280, 720), 'launched fighters leave the view');
   // The view is the bodies plus a short margin, not the whole stage and not a crop.
   const viewH = 720 / close.zoom;
   const viewW = 1280 / close.zoom;
@@ -156,10 +192,12 @@ test('zoom frames the group with a little room and does not punch in', () => {
   assert.ok(viewW > 200 && viewW < 700, `close view width ${viewW}`);
   assert.ok(close.cx > 630 && close.cx < 670, `center stays on the pair, got ${close.cx}`);
   // A body the eased camera would crop pulls the zoom out, and only out.
+  // minZoom 1 keeps a stage that cannot go wider than standard from punching out past it.
   const held = containFrame(close.zoom, close.cx, close.cy, {
     x0: 200, y0: 200, x1: 1100, y1: 600,
   }, 1280, 720, 1);
   assert.ok(held.zoom < close.zoom - 0.4, `contain should open up, got ${held.zoom}`);
+  assert.ok(held.zoom >= 1);
   const still = containFrame(1.2, 640, 400, { x0: 600, y0: 500, x1: 700, y1: 560 }, 1280, 720, 1);
   assert.ok(Math.abs(still.zoom - 1.2) < 1e-6);
   assert.ok(FEEL.camZoomOutTau < FEEL.camZoomInTau);

@@ -301,6 +301,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
 
     const step = this.scene?.stepMs || FEEL.stepMs;
+    // Hitstun owns gravity. A glide, a charge float, or a ledge hang must
+    // not leave a still body weightless for the launch.
+    if (this.hitlagFrames > 0 || this.state === 'hurt') this.forceHitstunPhysics();
     if (this.hitlagFrames > 0) {
       this.shiftTimers(step);
       this.hitlagFrames -= 1;
@@ -1775,6 +1778,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.hurtUnits = units;
     this.hurtSign = -dir;
     this.body?.setVelocity(0, 0);
+    if (this.pendingLaunch || (flinch && (dmg > 0 || incoming.trip))) {
+      this.chargeStart = null;
+      if (this.ledge) this.leaveLedge();
+      this.forceHitstunPhysics();
+    }
     if (attacker && attacker !== this && !incoming._projectile && !incoming.isCounterAttack && attacker.hitlagFrames != null) {
       attacker.hitlagFrames = Math.max(attacker.hitlagFrames || 0, frames);
       attacker.hitlagTotal = attacker.hitlagFrames;
@@ -1908,6 +1916,17 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this._flashShow = null;
   }
 
+  /**
+   * Hitstun always falls and always takes the launch, whatever the fighter
+   * was doing. Glide, charge-float, and ledge all clear `allowGravity`;
+   * a still idle body used to keep that and hang after the hit.
+   */
+  forceHitstunPhysics() {
+    this._gliding = false;
+    this._floatFloor = null;
+    if (this.body) this.body.allowGravity = true;
+  }
+
   releaseLaunch() {
     const p = this.pendingLaunch;
     this.pendingLaunch = null;
@@ -1924,6 +1943,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
     };
     this._diShow = 8;
     this._diAngle = angle;
+    this.forceHitstunPhysics();
+    // A body resting on the floor will eat an upward launch if it is still
+    // marked blocked. Clear that so a still fighter can leave the ground.
+    if (vel.y < 0) {
+      this.body.blocked.down = false;
+      this.body.touching.down = false;
+      this.grounded = false;
+    }
+    this.applyLaunch();
   }
 
   peelLaunch() {

@@ -1,25 +1,33 @@
 import * as Phaser from 'phaser';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
-import { drawMenuBackground, drawPanel, THEME, FONT_DISPLAY, FONT_BODY, FONT_MONO } from '../ui/theme.js';
+import {
+  FONT_DISPLAY, FONT_MONO, GRID, MOTION, PLAYER_COLORS, THEME,
+  drawFooterHints, drawHeader, drawMenuBackground, drawPanel, drawPortraitDisc, textStyle,
+} from '../ui/theme.js';
 import { STAGES, stageKey } from '../data/stages.js';
+import { CHARACTERS } from '../data/characters.js';
+import { menuPortraitKey } from '../ui/portraits.js';
 import { play as sfx } from '../engine/sfx.js';
-import { showScene } from '../ui/flow.js';
+import { enterScene, showScene } from '../ui/flow.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { isGamepadSlot, menuInputForSlot, pollGamepads } from '../engine/gamepad.js';
 
 const BOT_SLOT_BASE = 100;
 
 // Grid of stage thumbnails on the right, big preview of the highlighted
-// stage on the left. The last tile is RANDOM.
+// stage on the left with the matchup strip under it. The last tile is RANDOM.
 const COLS = 3;
 const TILE_W = 160;
 const TILE_H = 90;
 const GAP_X = 12;
-const ROW_H = TILE_H + 36; // thumbnail + name label (clear of the cursor box)
+const ROW_H = TILE_H + 38; // thumbnail + name label (clear of the cursor box)
 const GRID_X = 736;
-const GRID_Y = 100;
-const PREVIEW = { x: 40, y: 100, w: 640, h: 360 };
+const GRID_Y = 104;
+const PREVIEW = { x: 44, y: 104, w: 640, h: 360 };
 const RANDOM = 'random';
+
+// Stage copy uses "--" as a dash in the data file; render it as a real one.
+const prose = (s) => String(s ?? '').replace(/\s*--\s*/g, ' — ');
 
 // ---------------------------------------------------------------------------
 // StageSelectScene -- between CharacterSelect and Battle. One shared cursor
@@ -49,24 +57,23 @@ export default class StageSelectScene extends Phaser.Scene {
     this.cursor = Math.max(0, this.entries.indexOf(last));
 
     drawMenuBackground(this, W, H);
-    this.add.text(W / 2, 16, 'REACTOR  ·  ARENA', {
-      fontFamily: FONT_MONO, fontSize: '12px', color: THEME.tealCss, letterSpacing: 3,
-    }).setOrigin(0.5);
-    this.add.text(W / 2, 40, 'CHOOSE A STAGE', {
-      fontFamily: FONT_DISPLAY, fontSize: '28px', color: THEME.mistCss, letterSpacing: 1,
-    }).setOrigin(0.5);
+    drawHeader(this, { kicker: 'Reactor · Arena', title: 'Choose a stage', y: 18 });
 
     this.buildPreview();
+    this.buildMatchup();
     this.tiles = this.entries.map((id, i) => this.buildTile(id, i));
-    this.cursorBox = this.add.graphics();
+    this.cursorBox = this.add.graphics().setDepth(4);
 
-    this.hint = this.add.text(W / 2, H - 24,
-      'Move: D-pad/WASD/Arrows/phone · Confirm: attack button · Back: special button', {
-        fontFamily: FONT_BODY, fontSize: '14px', color: THEME.dimCss,
-      }).setOrigin(0.5);
+    this.status = this.add.text(W / 2, H - GRID.footerY, '', textStyle('mono', { color: THEME.goldCss })).setOrigin(0.5).setDepth(6);
+    this.hints = drawFooterHints(this, [
+      { keys: ['W', 'A', 'S', 'D'], label: 'Move' },
+      { key: 'F', label: 'Fight here' },
+      { key: 'G', label: 'Back' },
+    ]);
 
     this.buildInputs();
-    this.refresh();
+    this.refresh(true);
+    enterScene(this);
   }
 
   // ------------------------------------------------------------- layout
@@ -78,20 +85,22 @@ export default class StageSelectScene extends Phaser.Scene {
 
   buildTile(id, i) {
     const { x, y } = this.tileXY(i);
-    const c = this.add.container(x + TILE_W / 2, y + TILE_H / 2);
+    const c = this.add.container(x + TILE_W / 2, y + TILE_H / 2).setDepth(3);
     const frame = this.add.graphics();
-    frame.fillStyle(THEME.shellIdleFill, 1);
+    frame.fillStyle(THEME.ink, 1);
     frame.fillRoundedRect(-TILE_W / 2 - 3, -TILE_H / 2 - 3, TILE_W + 6, TILE_H + 6, 10);
+    frame.lineStyle(1, THEME.mist, 0.14);
+    frame.strokeRoundedRect(-TILE_W / 2 - 3, -TILE_H / 2 - 3, TILE_W + 6, TILE_H + 6, 10);
     c.add(frame);
     if (id === RANDOM) {
       const g = this.add.graphics();
-      g.fillGradientStyle(0x53468a, 0x53468a, 0x2a2444, 0x2a2444, 1);
+      g.fillGradientStyle(0x463878, 0x463878, 0x1b1533, 0x1b1533, 1);
       g.fillRoundedRect(-TILE_W / 2, -TILE_H / 2, TILE_W, TILE_H, 8);
-      g.lineStyle(1.5, THEME.gold, 0.8);
+      g.lineStyle(1.25, THEME.gold, 0.7);
       g.strokeRoundedRect(-TILE_W / 2 + 6, -TILE_H / 2 + 6, TILE_W - 12, TILE_H - 12, 6);
       c.add(g);
-      c.add(this.add.text(0, 0, '?', {
-        fontFamily: FONT_DISPLAY, fontSize: '50px', color: THEME.goldCss,
+      c.add(this.add.text(0, 2, '?', {
+        fontFamily: FONT_DISPLAY, fontSize: '44px', color: THEME.goldCss,
       }).setOrigin(0.5));
     } else {
       const st = STAGES.find((s) => s.id === id);
@@ -106,73 +115,112 @@ export default class StageSelectScene extends Phaser.Scene {
       }
     }
     const label = this.add.text(x + TILE_W / 2, y + TILE_H + 18,
-      id === RANDOM ? 'Random' : STAGES.find((s) => s.id === id).name, {
-        fontFamily: FONT_BODY, fontSize: '14px', color: THEME.mistCss,
-      }).setOrigin(0.5);
-    const zone = this.add.zone(x, y, TILE_W, TILE_H).setOrigin(0, 0).setInteractive({ useHandCursor: true });
-    zone.on('pointerover', () => { if (this.cursor !== i) { this.cursor = i; sfx('menuMove'); this.refresh(); } });
-    zone.on('pointerdown', () => { this.cursor = i; this.confirm(); });
+      id === RANDOM ? 'Random' : STAGES.find((s) => s.id === id).name, textStyle('caption')).setOrigin(0.5).setDepth(3);
+    const zone = this.add.zone(x, y, TILE_W, TILE_H).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(5);
+    zone.on('pointerover', () => { if (this.cursor !== i && !this.leaving) { this.cursor = i; sfx('menuMove'); this.refresh(); } });
+    zone.on('pointerdown', () => { if (this.leaving) return; this.cursor = i; this.confirm(); });
     return { id, container: c, label };
   }
 
   buildPreview() {
     const { x, y, w, h } = PREVIEW;
-    drawPanel(this, x - 8, y - 8, w + 16, h + 160, 18);
-    this.previewImg = this.add.image(x + w / 2, y + h / 2, '__DEFAULT').setDisplaySize(w, h);
+    drawPanel(this, x - 12, y - 12, w + 24, h + 176, 18, THEME.mist, 0.18).setDepth(2);
+    this.previewImg = this.add.image(x + w / 2, y + h / 2, '__DEFAULT').setDisplaySize(w, h).setDepth(3);
     const m = this.make.graphics({ add: false });
     m.fillStyle(0xffffff, 1);
     m.fillRoundedRect(x, y, w, h, 12);
     this.previewImg.setMask(m.createGeometryMask());
-    this.randomCard = this.add.container(x + w / 2, y + h / 2);
+    this.randomCard = this.add.container(x + w / 2, y + h / 2).setDepth(3);
     const rg = this.add.graphics();
-    rg.fillGradientStyle(0x53468a, 0x3a3268, 0x07060e, 0x07060e, 1);
+    rg.fillGradientStyle(0x463878, 0x332a56, 0x07060e, 0x07060e, 1);
     rg.fillRoundedRect(-w / 2, -h / 2, w, h, 12);
+    rg.lineStyle(1, THEME.gold, 0.35);
+    rg.strokeCircle(0, -10, 110);
+    rg.lineStyle(1, THEME.teal, 0.25);
+    rg.strokeCircle(0, -10, 140);
     this.randomCard.add(rg);
     this.randomCard.add(this.add.text(0, -10, '?', {
-      fontFamily: FONT_DISPLAY, fontSize: '120px', color: THEME.goldCss,
+      fontFamily: FONT_DISPLAY, fontSize: '110px', color: THEME.goldCss,
     }).setOrigin(0.5));
-    this.previewName = this.add.text(x + 4, y + h + 18, '', {
-      fontFamily: FONT_DISPLAY, fontSize: '28px', color: THEME.mistCss,
-    });
-    this.previewTag = this.add.text(x + w - 4, y + h + 26, '', {
-      fontFamily: FONT_MONO, fontSize: '14px', color: THEME.goldCss,
-      backgroundColor: 'rgba(240,193,74,0.14)', padding: { x: 10, y: 4 },
-    }).setOrigin(1, 0);
-    this.previewDesc = this.add.text(x + 4, y + h + 64, '', {
-      fontFamily: FONT_BODY, fontSize: '16px', color: THEME.dimCss, wordWrap: { width: w - 8 },
+    this.previewName = this.add.text(x + 4, y + h + 16, '', textStyle('h2')).setDepth(4);
+    this.previewTagG = this.add.graphics().setDepth(4);
+    this.previewTag = this.add.text(x + w - 14, y + h + 28, '', {
+      fontFamily: FONT_MONO, fontSize: '11px', color: THEME.goldCss, letterSpacing: 1.5,
+    }).setOrigin(1, 0.5).setDepth(5);
+    this.previewDesc = this.add.text(x + 4, y + h + 50, '', textStyle('caption', { fontSize: '14px', wordWrap: { width: w - 8 } })).setDepth(4);
+  }
+
+  buildMatchup() {
+    // who is fighting, in seat order, with their chosen colorway
+    const { x, y, h } = PREVIEW;
+    const top = y + h + 112;
+    const players = this.setup.players;
+    const D = 40;
+    const cellW = Math.min(200, (PREVIEW.w - 8) / players.length);
+    this.add.text(x + 4, top - 14, 'MATCHUP', textStyle('label')).setOrigin(0, 0.5).setDepth(4);
+    players.forEach((p, i) => {
+      const def = CHARACTERS[p.charId];
+      if (!def) return;
+      const cx = x + 4 + i * cellW;
+      const ring = PLAYER_COLORS[i % PLAYER_COLORS.length];
+      drawPortraitDisc(this, cx + D / 2, top + 22, D, { textureKey: menuPortraitKey(def), n: def.atomicNumber, sym: def.symbol, ring, depth: 4 });
+      const pal = def.palettes?.[p.palette ?? 0];
+      this.add.text(cx + D + 10, top + 14, def.name, textStyle('bodyStrong', { fontSize: '14px' })).setOrigin(0, 0.5).setDepth(4);
+      const sub = pal && (def.palettes?.length ?? 0) > 1 ? `P${i + 1}  ·  ${pal.name}` : `P${i + 1}`;
+      this.add.text(cx + D + 10, top + 32, sub, textStyle('label')).setOrigin(0, 0.5).setDepth(4);
+      if (i < players.length - 1 && players.length <= 4) {
+        this.add.text(cx + cellW - 14, top + 22, 'VS', { fontFamily: FONT_MONO, fontSize: '10px', color: THEME.faintCss, letterSpacing: 1 }).setOrigin(0.5).setDepth(4);
+      }
     });
   }
 
-  refresh() {
+  refresh(instant = false) {
     const id = this.entries[this.cursor];
     this.tiles.forEach((t, i) => {
       const on = i === this.cursor;
-      t.container.setScale(on ? 1.06 : 1);
-      t.label.setColor(on ? THEME.goldCss : THEME.mistCss);
-      t.label.setFontStyle(on ? 'bold' : 'normal');
+      if (instant) t.container.setScale(on ? 1.05 : 1);
+      else this.tweens.add({ targets: t.container, scale: on ? 1.05 : 1, duration: MOTION.quick, ease: MOTION.easeOut });
+      t.label.setColor(on ? THEME.mistCss : THEME.dimCss);
     });
     const { x, y } = this.tileXY(this.cursor);
     this.cursorBox.clear();
-    this.cursorBox.lineStyle(6, THEME.pink, 0.45);
-    this.cursorBox.strokeRoundedRect(x - 12, y - 12, TILE_W + 24, TILE_H + 24, 16);
-    this.cursorBox.lineStyle(3, THEME.teal, 1);
-    this.cursorBox.strokeRoundedRect(x - 8, y - 8, TILE_W + 16, TILE_H + 16, 12);
+    this.cursorBox.lineStyle(8, THEME.pink, 0.16);
+    this.cursorBox.strokeRoundedRect(x - 10, y - 10, TILE_W + 20, TILE_H + 20, 14);
+    this.cursorBox.lineStyle(2, THEME.teal, 1);
+    this.cursorBox.strokeRoundedRect(x - 7, y - 7, TILE_W + 14, TILE_H + 14, 12);
 
+    let name;
+    let tag;
+    let desc;
     if (id === RANDOM) {
       this.previewImg.setVisible(false);
       this.randomCard.setVisible(true);
-      this.previewName.setText('Random');
-      this.previewTag.setText('Any stage');
-      this.previewDesc.setText(`Let fate decide -- one of all ${STAGES.length} stages.`);
+      name = 'Random';
+      tag = 'Any arena';
+      desc = `Let the reactor decide — one of all ${STAGES.length} arenas.`;
     } else {
       const st = STAGES.find((s) => s.id === id);
       this.randomCard.setVisible(false);
       const key = stageKey(st, 'preview');
       if (this.textures.exists(key)) this.previewImg.setTexture(key).setDisplaySize(PREVIEW.w, PREVIEW.h).setVisible(true);
       else this.previewImg.setVisible(false);
-      this.previewName.setText(st.name);
-      this.previewTag.setText(st.layout ?? 'Classic');
-      this.previewDesc.setText(st.desc);
+      name = st.name;
+      tag = st.layout ?? 'Classic';
+      desc = prose(st.desc);
+    }
+    this.previewName.setText(name.toUpperCase());
+    this.previewTag.setText(tag.toUpperCase());
+    this.previewDesc.setText(desc);
+    const g = this.previewTagG;
+    g.clear();
+    const tw = this.previewTag.width + 20;
+    g.fillStyle(THEME.gold, 0.14);
+    g.fillRoundedRect(this.previewTag.x - tw + 10, this.previewTag.y - 11, tw, 22, 11);
+    g.lineStyle(1, THEME.gold, 0.5);
+    g.strokeRoundedRect(this.previewTag.x - tw + 10, this.previewTag.y - 11, tw, 22, 11);
+    if (!instant) {
+      this.previewImg.setAlpha(0.6);
+      this.tweens.add({ targets: this.previewImg, alpha: 1, duration: MOTION.base, ease: MOTION.easeOut });
     }
   }
 
@@ -264,9 +312,16 @@ export default class StageSelectScene extends Phaser.Scene {
       this.cursor = this.entries.indexOf(id);
       this.refresh();
     }
-    this.hint.setText(`${st.name} -- get ready!`).setColor(THEME.goldCss);
-    this.cameras.main.flash(160, 255, 79, 163);
-    this.time.delayedCall(550, () => showScene(this, 'Battle', { ...this.setup, stageId: id }));
+    this.hints.setVisible(false);
+    this.status.setText(`STAGE LOCKED  ·  ${st.name.toUpperCase()}`);
+    this.cursorBox.clear();
+    this.cursorBox.lineStyle(8, THEME.gold, 0.2);
+    const { x, y } = this.tileXY(this.cursor);
+    this.cursorBox.strokeRoundedRect(x - 10, y - 10, TILE_W + 20, TILE_H + 20, 14);
+    this.cursorBox.lineStyle(2, THEME.gold, 1);
+    this.cursorBox.strokeRoundedRect(x - 7, y - 7, TILE_W + 14, TILE_H + 14, 12);
+    this.cameras.main.flash(160, 240, 193, 74, false);
+    this.time.delayedCall(600, () => showScene(this, 'Battle', { ...this.setup, stageId: id }, { fade: true }));
   }
 
   back() {

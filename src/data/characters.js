@@ -954,10 +954,10 @@ export const CHARACTERS = {
         displayScale: 120 / 645,
         clips: {
           // Approved idle faces left, same as the move sheets, so art.facing
-          // -1 is the flip. The walk was mirrored in place (the source walked
-          // right) so that same flip does not send her backwards.
+          // -1 is the flip. The walk faces right, so sheetFacing keeps that
+          // cycle from playing backwards.
           idle: { count: 6, fps: 6, loop: true, frameW: 416, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
-          walk: { count: 33, fps: 10, loop: true, frameW: 735, frameH: 667, footY: 0.9685, visibleH: 618, bodyH: 618, displayScale: 0.19417 },
+          walk: { count: 12, fps: 9.29, loop: true, frameW: 444, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645, sheetFacing: 1 },
           attack: { count: 12, fps: 18, loop: false, frameW: 754, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
           charge: { count: 12, fps: 18, loop: false, frameW: 614, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
           defense: { count: 12, fps: 18, loop: false, frameW: 446, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
@@ -1377,11 +1377,10 @@ export const CHARACTERS = {
         displayScale: 128 / 981,
         clips: {
           // Approved idle faces right. sheetFacing keeps it unflipped while
-          // art.facing stays -1. The walk sheet is still the mirrored
-          // left-facing cycle, so that flip points the walk forward. Move
-          // sheets face right and set sheetFacing too.
+          // art.facing stays -1. The walk faces right and uses the same sole.
+          // Move sheets face right and set sheetFacing too.
           idle: { count: 6, fps: 6, loop: true, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
-          walk: { count: 11, fps: 8, loop: true, frameW: 443, frameH: 710, footY: 0.969, visibleH: 666, bodyH: 666, displayScale: 0.19219 },
+          walk: { count: 12, fps: 10.67, loop: true, frameW: 636, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
           attack: { count: 12, fps: 18, loop: false, frameW: 746, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
           charge: { count: 12, fps: 18, loop: false, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
           defense: { count: 12, fps: 18, loop: false, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
@@ -2229,8 +2228,9 @@ export const CHARACTERS = {
         displayScale: 132 / 961,
         clips: {
           // Approved idle faces right. sheetFacing keeps it unflipped.
-          // art.facing stays -1. There is no walk sheet.
+          // art.facing stays -1. The walk faces right and uses the same sole.
           idle: { count: 6, fps: 6, loop: true, frameW: 562, frameH: 1004, footY: 0.9861, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
+          walk: { count: 12, fps: 12.52, loop: true, frameW: 562, frameH: 1004, footY: 0.9861, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
           // Afterburner, Wing Slash, Folded Wings, and Micro Rocket face right and set sheetFacing.
           attack: { count: 12, fps: 18, loop: false, frameW: 822, frameH: 1004, footY: 0.9861, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
           charge: { count: 12, fps: 18, loop: false, frameW: 862, frameH: 1014, footY: 0.9862, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },

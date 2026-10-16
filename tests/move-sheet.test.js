@@ -203,11 +203,13 @@ test('lake drop loops the gather, and brine burst opens on its release frame', (
   assert.equal(sheetFrameIndex(sheetMeta('natalie', 'special'), { state: 'attack', fd, attackFrame: 6 }), 8);
 });
 
-test('natalie idle and move sheets face right while the walk stays mirrored', () => {
+test('natalie idle, walk, and move sheets face right', () => {
   const art = CHARACTERS.natalie.art;
   assert.equal(art.facing, -1);
   assert.equal(art.sheets.clips.idle.sheetFacing, 1);
-  assert.equal(art.sheets.clips.walk.sheetFacing, undefined);
+  assert.equal(art.sheets.clips.walk.sheetFacing, 1);
+  assert.equal(art.sheets.clips.walk.count, 12);
+  assert.equal(art.sheets.clips.walk.frameW, 636);
   for (const name of ['attack', 'charge', 'defense', 'special']) {
     assert.equal(art.sheets.clips[name].sheetFacing, 1);
   }
@@ -1090,4 +1092,40 @@ test('rank 1-2 redraws use their own cells', () => {
   assert.equal(eruptionPng.h, 790 * 2);
   assert.deepEqual(sheetMeta('sully', 'special').anchors.feet[0], [369, 745]);
   assert.deepEqual(sheetMeta('sully', 'special').anchors.fist[8], [576, 163]);
+});
+
+test('rank 1-3 redraws use their own cells', () => {
+  const walks = {
+    natalie: { frameW: 636, frameH: 1028, footY: 0.9864, fps: 10.67, sheetFacing: 1, cols: 4, rows: 3, dir: 'art-src/gemini-test/sheets/' },
+    nitra: { frameW: 444, frameH: 684, footY: 0.9795, fps: 9.29, sheetFacing: 1, cols: 4, rows: 3, dir: 'art-src/gemini-test/sheets/' },
+    rhoda: { frameW: 854, frameH: 1041, footY: 0.9866, fps: 9, sheetFacing: undefined, cols: 4, rows: 3, dir: 'art-src/imported/sheets/' },
+    scarlett: { frameW: 562, frameH: 1004, footY: 0.9861, fps: 12.52, sheetFacing: 1, cols: 4, rows: 3, dir: 'art-src/gemini-test/sheets/' },
+  };
+  for (const [id, spec] of Object.entries(walks)) {
+    const art = CHARACTERS[id].art;
+    const def = art.sheets.clips.walk;
+    const png = pngSize(`${spec.dir}${id}_walk.png`);
+    assert.equal(def.frameW, spec.frameW, id);
+    assert.equal(def.frameH, spec.frameH, id);
+    assert.equal(def.footY, spec.footY, id);
+    assert.equal(def.fps, spec.fps, id);
+    assert.equal(def.loop, true, id);
+    assert.equal(def.count, 12, id);
+    assert.equal(def.sheetFacing, spec.sheetFacing, id);
+    assert.equal(def.visibleH, art.sheets.clips.idle.visibleH, id);
+    assert.equal(def.displayScale, art.height / def.visibleH, id);
+    assert.equal(png.w, spec.frameW * spec.cols, id);
+    assert.equal(png.h, spec.frameH * spec.rows, id);
+    assert.equal(MOVE_SHEETS[id].walk, undefined, id);
+  }
+  const burn = CHARACTERS.scarlett.art.sheets.clips.charge;
+  const burnPng = pngSize('art-src/gemini-test/sheets/scarlett_charge.png');
+  assert.equal(burn.frameW, 862);
+  assert.equal(burn.frameH, 1014);
+  assert.equal(burn.footY, 0.9862);
+  assert.equal(burnPng.w, 862 * 4);
+  assert.equal(burnPng.h, 1014 * 3);
+  assert.deepEqual(sheetMeta('scarlett', 'charge').anchors.fist[6], [799, 286]);
+  assert.deepEqual(sheetMeta('scarlett', 'charge').anchors.feet[5], [330, 996]);
+  assert.equal(sheetMeta('scarlett', 'charge').anchors.feet[6], null);
 });

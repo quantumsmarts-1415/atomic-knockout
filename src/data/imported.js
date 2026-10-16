@@ -7271,14 +7271,14 @@ export const IMPORTED_ROSTER = {
           },
           "walk": {
             "count": 12,
-            "fps": 8,
+            "fps": 9,
             "loop": true,
-            "frameW": 117,
-            "frameH": 146,
-            "footY": 0.9384,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 854,
+            "frameH": 1041,
+            "footY": 0.9866,
+            "visibleH": 997,
+            "bodyH": 997,
+            "displayScale": 132 / 997
           },
           "attack": {
             "count": 8,

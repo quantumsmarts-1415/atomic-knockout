@@ -17,10 +17,10 @@ function colorOf(move) {
   return move?.vfxColor ?? TYPE_COLORS[canonicalType(move?.type)] ?? 0xfff4e0;
 }
 
-function die(scene, obj, ms = 280) {
+function die(scene, obj, ms = 160) {
   if (!obj || !scene?.tweens) return;
   scene.tweens.add({
-    targets: obj, alpha: 0, scale: (obj.scale ?? 1) * 1.35, duration: ms,
+    targets: obj, alpha: 0, scale: (obj.scale ?? 1) * 1.2, duration: ms,
     onComplete: () => obj.destroy?.(),
   });
 }
@@ -80,29 +80,29 @@ function beam(scene, fighter, color, length, move) {
     const frac = move._chargeFrac ?? 0;
     const halo = scene.add.rectangle(x, y, w, 18 + frac * 10, color, 0.22 + frac * 0.28);
     halo.setBlendMode?.('ADD');
-    die(scene, halo, 240);
+    die(scene, halo, 120);
     const core = scene.add.rectangle(x, y, w, 4, 0xfff6e8, 0.65 + frac * 0.3);
     core.setBlendMode?.('ADD');
-    die(scene, core, 200);
+    die(scene, core, 100);
   }
   const rect = scene.add.rectangle(x, y, w, 14, color, 0.85);
   rect.setBlendMode?.('ADD');
-  die(scene, rect, 220);
+  die(scene, rect, 110);
   burst(scene, fighter.x + dir * w, y, 0xfff6e8, 6, 40);
 }
 
 function column(scene, x, y, color, h = 110) {
   if (!scene.add?.rectangle) return;
   const rect = scene.add.rectangle(x, y - h / 2, 18, h, color, 0.8);
-  die(scene, rect, 360);
+  die(scene, rect, 160);
   burst(scene, x, y - h, 0xfff1c9, 5, 30);
 }
 
 function mushroom(scene, x, y, color) {
   const cap = scene.add.circle?.(x, y - 36, 28, color, 0.75);
   const stem = scene.add.rectangle?.(x, y - 8, 16, 40, 0xfff6e8, 0.8);
-  if (cap) die(scene, cap, 420);
-  if (stem) die(scene, stem, 420);
+  if (cap) die(scene, cap, 180);
+  if (stem) die(scene, stem, 180);
   ring(scene, x, y, color, 70, 5);
 }
 
@@ -112,7 +112,7 @@ function supernovaBlast(scene, x, y, radius, color) {
   if (disc) {
     disc.setBlendMode?.('ADD');
     disc.setDepth?.(15);
-    die(scene, disc, 280);
+    die(scene, disc, 140);
   }
   const core = scene.add.circle?.(x, y, r * 0.42, color, 0.62);
   if (core) {
@@ -128,7 +128,7 @@ function supernovaBlast(scene, x, y, radius, color) {
   const end = r / Math.max(10, r * 0.28);
   if (!scene.tweens) { edge.destroy?.(); return; }
   scene.tweens.add({
-    targets: edge, scale: end, alpha: 0, duration: 320,
+    targets: edge, scale: end, alpha: 0, duration: 150,
     onComplete: () => edge.destroy(),
   });
 }

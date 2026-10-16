@@ -10,7 +10,7 @@ import { phoneNet } from '../net/PhoneNet.js';
 import { fighterInputForSlot, isGamepadSlot, padBySlot, pollGamepads, rumbleSlot } from '../engine/gamepad.js';
 import { computeBotInput } from '../engine/BotAI.js';
 import { buildNavGraph } from '../engine/BotNav.js';
-import { startStageIntro } from '../engine/stageIntros.js';
+import { defaultStageIntro, startStageIntro } from '../engine/stageIntros.js';
 import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
 import { syncCoats } from '../engine/coatView.js';
@@ -24,12 +24,12 @@ import { Juice } from '../engine/juice.js';
 import { FEEL, cameraFrame, containFrame, percentColor } from '../engine/feel.js';
 import { clockEndsRound } from '../engine/matchRules.js';
 import {
-  resolvePush, pushSolids, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
+  resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
 import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
-import { loadRosterArt, registerSheetAnims } from './BootScene.js';
+import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
 const GRAVITY = 1500;
 
@@ -101,6 +101,7 @@ export default class BattleScene extends Phaser.Scene {
       .map((p) => CHARACTERS[p.charId])
       .filter(Boolean);
     registerSheetAnims(this, roster);
+    if (!this.setup.playtestMs) repackOversizedSheets(this, roster);
     this.spawnFighters();
     this.asUi(() => this.buildHud());
     if (this.camRig) this.offscreenG = this.asUi(() => this.add.graphics().setDepth(900));
@@ -143,13 +144,18 @@ export default class BattleScene extends Phaser.Scene {
     // name a winner when time runs out.
     if (this.setup.playtestMs) window.__akReport = null;
 
-    // optional per-stage match intro (engine/stageIntros.js): fighters are
-    // frozen while it plays (+200ms so a skip press can't become an attack);
+    // Per-stage match intro (engine/stageIntros.js): fighters are frozen
+    // while it plays (+200ms so a skip press can't become an attack);
     // confirm (F/K/Enter/Space, phone attack) or a click skips it.
+    // Stages without a theatrical intro still get a short warmup card so the
+    // first seconds of play are not a texture-upload hitch.
     this.introLockUntil = 0;
     // Headless CPU matches skip the stage intro. The round still runs
     // until a stock elimination.
-    this.intro = this.setup.playtestMs ? null : startStageIntro(this, this.stage, {
+    this.intro = this.setup.playtestMs ? null : startStageIntro(this, {
+      ...this.stage,
+      intro: defaultStageIntro(this.stage),
+    }, {
       // Stamp the sim clock. Phaser writes the loop timestamp into time.now
       // on every frame while our clock scale is 0, and the doors' "GO" tween
       // finishes on that frame — so time.now here is how long the game has
@@ -1995,6 +2001,7 @@ export default class BattleScene extends Phaser.Scene {
     const collisionStart = globalThis.performance.now();
     this.pushBlockers ??= pushSolids(this.stage, this.stage?.groundY);
     resolvePush(this.fighters, this.pushBlockers);
+    resolveGrab(this.fighters, time, FEEL);
     this.updateZones(time);
     this.updateMines(time);
 
@@ -2133,12 +2140,23 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (!p.dead) {
         for (const f of this.fighters) {
-          const pull = f.state === 'attack' && f.currentMove?.attractProjectiles;
+          const pull = (f.state === 'attack' && f.currentMove?.attractProjectiles)
+            || (f.state === 'defending' && f.defenseMove?.attractProjectiles);
           if (!pull || f === p.owner || !f.alive) continue;
+          const strength = typeof pull === 'number' ? pull : 16;
           if (Math.abs(f.x - p.gfx.x) > 220 || Math.abs(f.y - p.gfx.y) > 160) continue;
-          p.vx += Math.sign(f.x - p.gfx.x || 1) * pull;
-          p.vy += Math.sign((f.y - f.bodyH * 0.5) - p.gfx.y || 1) * pull * 0.35;
+          p.vx += Math.sign(f.x - p.gfx.x || 1) * strength;
+          p.vy += Math.sign((f.y - f.bodyH * 0.5) - p.gfx.y || 1) * strength * 0.35;
           if (Math.abs(f.x - p.gfx.x) < 28 && Math.abs((f.y - f.bodyH * 0.5) - p.gfx.y) < 40) {
+            // Banking Absorb: credit the soaked shot into her charge bank.
+            if (f.state === 'defending' && f.defenseMove?.powersCharge) {
+              const dmg = (p.move?.damage ?? 0) + (p.move?.damage2 ?? 0);
+              if (dmg > 0) {
+                const cap = f.charDef.moves.basicCharge?.bankCap ?? 18;
+                f._storedCharge = Math.min(cap, (f._storedCharge ?? 0) + dmg * 0.6);
+              }
+              playVfx(this, f, f.defenseMove, 'absorb', { x: p.gfx.x, y: p.gfx.y });
+            }
             p.gfx.destroy();
             p.dead = true;
           }

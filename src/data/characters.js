@@ -80,7 +80,8 @@ export const CHARACTERS = {
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 1242, frameH: 720, footY: 0.9736, visibleH: 660, bodyH: 660, displayScale: 0.18485 },
+          // Defringed walk. Same 1242×720 cell, sole raised to the new ink.
+          walk: { count: 33, fps: 10, loop: true, frameW: 1242, frameH: 720, footY: 0.9741, visibleH: 674, bodyH: 674, displayScale: 122 / 674 },
         },
       },
     },
@@ -238,7 +239,8 @@ export const CHARACTERS = {
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 1244, frameH: 692, footY: 0.9639, visibleH: 602, bodyH: 602, displayScale: 0.22924 },
+          // Hue-matched walk. Same 1244×692 cell, sole on the new ink.
+          walk: { count: 33, fps: 10, loop: true, frameW: 1244, frameH: 692, footY: 0.9665, visibleH: 621, bodyH: 621, displayScale: 138 / 621 },
         },
       },
     },
@@ -1859,8 +1861,8 @@ export const CHARACTERS = {
           attack: { count: 11, fps: 17, loop: false, frameW: 603, frameH: 724, footY: 0.9655, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
           charge: { count: 12, fps: 18, loop: false, frameW: 1041, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
           defense: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
-          // Eruption cells are 603×790 so the plume fits. Every sole sits on row 745.
-          special: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 790, footY: 745 / 790, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
+          // Eruption cells are 603×790 (37 px of plume headroom). Sole row is 745; footY is the clip JSON.
+          special: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 790, footY: 0.9443, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
         },
       },
     },

@@ -1086,12 +1086,35 @@ test('rank 1-2 redraws use their own cells', () => {
   const eruptionPng = pngSize('art-src/gemini-test/sheets/sully_special.png');
   assert.equal(eruption.frameW, 603);
   assert.equal(eruption.frameH, 790);
-  assert.equal(eruption.footY, 745 / 790);
+  assert.equal(eruption.footY, 0.9443);
   assert.equal(eruption.displayScale, CHARACTERS.sully.art.height / eruption.visibleH);
   assert.equal(eruptionPng.w, 603 * 6);
   assert.equal(eruptionPng.h, 790 * 2);
   assert.deepEqual(sheetMeta('sully', 'special').anchors.feet[0], [369, 745]);
+  assert.deepEqual(sheetMeta('sully', 'special').anchors.feet[8], [465, 710]);
   assert.deepEqual(sheetMeta('sully', 'special').anchors.fist[8], [576, 163]);
+});
+
+test('hydra and helen walks use the defringed cells', () => {
+  const walks = {
+    hydra: { frameW: 1242, frameH: 720, footY: 0.9741, visibleH: 674, height: 122, cols: 6, rows: 6 },
+    helen: { frameW: 1244, frameH: 692, footY: 0.9665, visibleH: 621, height: 138, cols: 6, rows: 6 },
+  };
+  for (const [id, spec] of Object.entries(walks)) {
+    const art = CHARACTERS[id].art;
+    const def = art.sheets.clips.walk;
+    const png = pngSize(`${art.sheets.dir}${id}_walk.png`);
+    assert.equal(def.count, 33, id);
+    assert.equal(def.fps, 10, id);
+    assert.equal(def.loop, true, id);
+    assert.equal(def.frameW, spec.frameW, id);
+    assert.equal(def.frameH, spec.frameH, id);
+    assert.equal(def.footY, spec.footY, id);
+    assert.equal(def.visibleH, spec.visibleH, id);
+    assert.equal(def.displayScale, spec.height / spec.visibleH, id);
+    assert.equal(png.w, spec.frameW * spec.cols, id);
+    assert.equal(png.h, spec.frameH * spec.rows, id);
+  }
 });
 
 test('rank 1-3 redraws use their own cells', () => {

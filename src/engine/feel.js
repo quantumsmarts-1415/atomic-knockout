@@ -102,6 +102,8 @@ export const FEEL = {
   // Trauma shake (screen pixels before the zoom correction).
   traumaDecay: 1.6,
   traumaMax: 14,
+  // Extra kick along the launch, in the same screen pixels. Zoom is not involved.
+  traumaKick: 16,
   traumaRot: 0.8 * Math.PI / 180,
   traumaReduced: 0.4,
 
@@ -478,19 +480,28 @@ export function attackPhase(fd, frame) {
   return 'recovery';
 }
 
-/** Trauma offset in world pixels, plus a small rotation. */
-export function traumaOffset(trauma, timeSec, zoom, mode) {
+/**
+ * Trauma offset in world pixels, plus a small rotation.
+ * `kick` is { angle, dir, mag } in screen space (negative angle is up).
+ * The kick runs along the hit and does not change the camera zoom.
+ */
+export function traumaOffset(trauma, timeSec, zoom, mode, kick = null) {
   const scale = mode === 'off' ? 0 : mode === 'reduced' ? FEEL.traumaReduced : 1;
   const shake = trauma * trauma * scale;
-  if (shake <= 0.0001) return { x: 0, y: 0, rot: 0 };
+  const mag = kick && kick.mag > 0 ? kick.mag * scale : 0;
+  if (shake <= 0.0001 && mag <= 0.0001) return { x: 0, y: 0, rot: 0 };
   const z = Math.max(zoom || 1, 0.2);
   const n1 = Math.sin(timeSec * 25) + 0.5 * Math.sin(timeSec * 53 + 1.7);
   const n2 = Math.cos(timeSec * 23) + 0.5 * Math.sin(timeSec * 47 + 0.4);
+  const aim = Math.cos(timeSec * 42);
+  const kickAmp = FEEL.traumaKick * mag * aim;
+  const ang = kick?.angle || 0;
+  const dir = kick?.dir || 1;
   // Divide by zoom so the shake occupies the same screen pixels near or far.
   return {
-    x: (FEEL.traumaMax * shake * n1) / z,
-    y: (FEEL.traumaMax * shake * n2 * 0.65) / z,
-    rot: FEEL.traumaRot * shake * n1,
+    x: (FEEL.traumaMax * shake * n1 + Math.cos(ang) * dir * kickAmp) / z,
+    y: (FEEL.traumaMax * shake * n2 * 0.65 + Math.sin(ang) * kickAmp) / z,
+    rot: FEEL.traumaRot * (shake * n1 + mag * 0.35 * aim),
   };
 }
 

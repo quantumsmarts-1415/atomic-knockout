@@ -36,6 +36,17 @@ export function hurtUnion(fighter) {
   };
 }
 
+/** Pull a world point onto the hurtbox so a spark cannot float off the body. */
+export function clampToBody(fighter, point) {
+  if (!point) return null;
+  const u = hurtUnion(fighter);
+  if (!u || !(u.width > 0) || !(u.height > 0)) return { x: point.x, y: point.y };
+  return {
+    x: Math.min(u.x + u.width, Math.max(u.x, point.x)),
+    y: Math.min(u.y + u.height, Math.max(u.y, point.y)),
+  };
+}
+
 export function pushbox(fighter) {
   const grounded = fighter.grounded ?? !!(fighter.body?.blocked?.down || fighter.body?.touching?.down);
   const time = fighter.scene?.simNow ?? fighter.scene?.time?.now ?? 0;

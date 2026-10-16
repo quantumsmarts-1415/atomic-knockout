@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import Fighter from '../engine/Fighter.js';
 import { CHARACTERS } from '../data/characters.js';
 import { STAGES, stageKey, getStageBlast, getStageSpawns, getStageBounds, getStageWorld, moverPosition } from '../data/stages.js';
-import { play as sfx } from '../engine/sfx.js';
+import { play as sfx, preload as preloadSfx } from '../engine/sfx.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { showScene } from '../ui/flow.js';
 import { FONT_BODY, FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME } from '../ui/theme.js';
@@ -127,6 +127,7 @@ export default class BattleScene extends Phaser.Scene {
     this.timeScale = 1;
     this.visualT = 0;
     this.juice = this.simFast ? null : new Juice(this);
+    if (!this.simFast) preloadSfx();
     window.__akBattle = this;
     // Real-time play and the fast sim share one 60 Hz clock. The render loop
     // no longer steps arcade bodies: a hitch used to advance bot timers by

@@ -4,6 +4,7 @@ import {
   FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, knockbackRaw, decayLaunch,
   launchVelocity, applyDI, leavesBlast, stripIndex, takeBuffered,
   poseTarget, launchWeight, hitlagShake, frameZoom, cameraFrame, containFrame, easeOutBack,
+  traumaOffset,
 } from '../src/engine/feel.js';
 
 test('hitlag matches the Ultimate table', () => {
@@ -162,6 +163,23 @@ test('zoom frames the group with a little room and does not punch in', () => {
   const still = containFrame(1.2, 640, 400, { x0: 600, y0: 500, x1: 700, y1: 560 }, 1280, 720, 1);
   assert.ok(Math.abs(still.zoom - 1.2) < 1e-6);
   assert.ok(FEEL.camZoomOutTau < FEEL.camZoomInTau);
+});
+
+test('a hit kicks the screen along the launch and leaves the zoom alone', () => {
+  const right = traumaOffset(0, 0, 1, 'full', { angle: 0, dir: 1, mag: 1 });
+  assert.ok(right.x > 8, `kick x ${right.x}`);
+  assert.ok(Math.abs(right.y) < 0.01, `horizontal kick should not lift, y ${right.y}`);
+  const up = traumaOffset(0, 0, 1, 'full', { angle: -Math.PI / 2, dir: 1, mag: 1 });
+  assert.ok(up.y < -8, `upward kick y ${up.y}`);
+  const quiet = traumaOffset(0.8, 1.2, 1.4, 'off', { angle: 0, dir: 1, mag: 1 });
+  assert.strictEqual(quiet.x, 0);
+  assert.strictEqual(quiet.y, 0);
+  const framed = cameraFrame([
+    { x: 400, y: 560, w: 40, h: 110 },
+    { x: 700, y: 480, w: 40, h: 110 },
+  ], 1280, 720, 1, FEEL.camMax1);
+  assert.ok(framed.zoom > 0);
+  assert.ok(!('damage' in framed));
 });
 
 test('attack strips hold contact instead of spreading frames evenly', () => {

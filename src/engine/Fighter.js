@@ -6,6 +6,7 @@ import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defen
 import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
+import { hitAnchor } from './fxArt.js';
 import { clipNameForMove, sheetMeta } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
@@ -1794,7 +1795,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (ko && flinch) this.scene?.beginFinish?.(this, { final: this.stocks <= 1, charged: (incoming._chargeFrac ?? 0) >= 0.95 });
     if (!this.scene?.simFast && dmg > 0) {
       playHit(dmg, incoming.type, ko && flinch);
-      this.scene.juice?.hit?.(this.x, this.y - this.bodyH * 0.55, dmg, incoming.type, angle);
+      const at = hitAnchor(attacker, this, incoming);
+      this.scene.juice?.hit?.(at.x, at.y, dmg, incoming.type, angle);
+      this.scene.juice?.kick?.(angle, dir, dmg);
     }
     if ((this.hitlagFrames || 0) <= 0 && this.pendingLaunch) this.releaseLaunch(time);
   }

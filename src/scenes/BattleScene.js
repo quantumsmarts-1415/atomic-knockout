@@ -3,6 +3,7 @@ import Fighter from '../engine/Fighter.js';
 import { CHARACTERS } from '../data/characters.js';
 import { STAGES, stageKey, getStageBlast, getStageSpawns, getStageBounds, getStageWorld, moverPosition } from '../data/stages.js';
 import { play as sfx, preload as preloadSfx } from '../engine/sfx.js';
+import { beginMatchWarmup } from '../engine/matchWarmup.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { showScene } from '../ui/flow.js';
 import { FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME, drawCard, drawPortraitDisc } from '../ui/theme.js';
@@ -75,6 +76,10 @@ export default class BattleScene extends Phaser.Scene {
       .map((p) => CHARACTERS[p.charId])
       .filter(Boolean);
     loadRosterArt(this.load, roster, (key) => this.textures.exists(key));
+    // Decode hits and effects while the loader is still on the sheets, so
+    // the match card is not the first thing to touch them.
+    preloadSfx();
+    void collectFxArt(this, roster);
   }
 
   create() {
@@ -150,13 +155,13 @@ export default class BattleScene extends Phaser.Scene {
 
     // Per-stage match intro (engine/stageIntros.js): fighters are frozen
     // while it plays (+200ms so a skip press can't become an attack);
-    // confirm (F/K/Enter/Space, phone attack) or a click skips it.
-    // Stages without a theatrical intro still get a short warmup card so the
-    // first seconds of play are not a texture-upload hitch.
+    // confirm (F/K/Enter/Space, phone attack) or a click skips the hold.
+    // The card stays up until sheets, FX, and the colorway shader have been
+    // uploaded, including on a playtest URL. A fast sim skips that beat.
     this.introLockUntil = 0;
-    // Headless CPU matches skip the stage intro. The round still runs
-    // until a stock elimination.
-    this.intro = this.setup.playtestMs ? null : startStageIntro(this, {
+    this.roundLive = false;
+    if (!this.simFast) this.matchWarmup = beginMatchWarmup(this);
+    this.intro = this.simFast ? null : startStageIntro(this, {
       ...this.stage,
       intro: defaultStageIntro(this.stage),
     }, {
@@ -165,8 +170,12 @@ export default class BattleScene extends Phaser.Scene {
       // finishes on that frame — so time.now here is how long the game has
       // been open, not how long the round has been running. A match started
       // from the menus would stay input-locked until sim time caught up.
-      onDone: () => { this.introLockUntil = this.simNow + 200; },
+      onDone: () => {
+        this.introLockUntil = this.simNow + 200;
+        this.roundLive = true;
+      },
     });
+    if (!this.intro) this.roundLive = true;
     if (this.intro) {
       const skip = () => { if (this.intro?.active) this.intro.skip(); };
       const SKIP_KEYS = new Set(['KeyF', 'KeyK', 'Enter', 'Space']);

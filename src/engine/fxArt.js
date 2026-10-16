@@ -354,9 +354,15 @@ function pixelsOf(img) {
   return { data, width: canvas.width, height: canvas.height };
 }
 
+function textureStore(scene) {
+  return scene?.game?.textures || scene?.textures || null;
+}
+
 function rememberTexture(scene, key, img) {
-  if (scene.textures?.exists(key)) scene.textures.remove(key);
-  scene.textures.addImage(key, img);
+  const textures = textureStore(scene);
+  if (!textures?.addImage) return null;
+  if (textures.exists(key)) textures.remove(key);
+  textures.addImage(key, img);
   return key;
 }
 
@@ -468,72 +474,120 @@ function fxUrl(rel) {
   return `/assets/fx/${String(rel || '').replace(/^\/+/, '')}`;
 }
 
-export async function collectFxArt(scene) {
-  if (!scene || typeof fetch !== 'function' || typeof document === 'undefined') return;
+/** How far the current FX decode has got. The match card reads this. */
+export const fxLoadState = { done: 0, total: 0, busy: false };
+
+let fxTail = Promise.resolve();
+
+function rosterOf(scene, roster) {
+  if (roster?.length) return roster.filter((c) => c?.id);
+  const out = [];
+  const seen = new Set();
+  for (const fighter of scene?.fighters || []) {
+    const char = fighter?.charDef;
+    if (!char?.id || seen.has(char.id)) continue;
+    seen.add(char.id);
+    out.push(char);
+  }
+  return out;
+}
+
+function artCached(scene, key) {
+  if (!byKey.has(key)) return false;
+  const tex = byKey.get(key)?.frames?.[0]?.key;
+  if (!tex) return true;
+  const textures = textureStore(scene);
+  return !textures?.exists || textures.exists(tex);
+}
+
+/** Decode painted FX for these fighters. Calls share one queue, so a stage
+ *  select that starts the work and a battle that awaits it do not decode twice. */
+export function collectFxArt(scene, roster) {
+  if (!scene || typeof fetch !== 'function' || typeof document === 'undefined') return Promise.resolve();
+  const job = fxTail.then(() => collectFxArtNow(scene, roster));
+  fxTail = job.catch(() => {});
+  return job;
+}
+
+async function collectFxArtNow(scene, roster) {
   const index = await readIndex();
+  const chars = rosterOf(scene, roster);
   const jobs = [];
-  for (const fighter of scene.fighters || []) {
-    const id = fighter?.charDef?.id;
-    const moves = fighter?.charDef?.moves || {};
-    for (const [slot, move] of Object.entries(moves)) {
-      if (!id || !move?.name) continue;
-      const key = fxKey(id, move.name);
-      const cached = byKey.get(key);
-      const tex = cached?.frames?.[0]?.key;
-      if (byKey.has(key) && (!tex || scene.textures?.exists?.(tex))) continue;
-      byKey.set(key, null);
-      jobs.push(
-        loadMoveArt(scene, fighter.charDef, slot, move, index)
-          .then((art) => byKey.set(key, art))
-          .catch(() => byKey.set(key, null)),
-      );
+  const queue = (key, run) => {
+    if (artCached(scene, key)) return;
+    byKey.set(key, null);
+    jobs.push(async () => {
+      try {
+        byKey.set(key, await run());
+      } catch {
+        byKey.set(key, null);
+      }
+    });
+  };
+  for (const char of chars) {
+    for (const [slot, move] of Object.entries(char.moves || {})) {
+      if (!move?.name) continue;
+      queue(fxKey(char.id, move.name), () => loadMoveArt(scene, char, slot, move, index));
     }
   }
   const seen = new Set();
-  for (const fighter of scene.fighters || []) {
-    const id = fighter?.charDef?.id;
-    if (!id || seen.has(id)) continue;
-    seen.add(id);
-    const key = `${id}/_hit`;
-    if (!byKey.has(key)) {
-      byKey.set(key, null);
-      jobs.push(
-        loadHitSpark(scene, fighter.charDef, index)
-          .then((art) => byKey.set(key, art))
-          .catch(() => byKey.set(key, null)),
-      );
-    }
-    const freezeKey = `${id}/_freeze`;
-    const freezeRel = `${id}/freeze-block/sheet.png`;
-    const wantFreeze = index ? listed(index, freezeRel) : id === 'nitra';
-    if (!byKey.has(freezeKey) && wantFreeze) {
-      byKey.set(freezeKey, null);
-      jobs.push(
-        loadNamedSheet(scene, fighter.charDef, 'freeze-block', index)
-          .then((art) => byKey.set(freezeKey, art))
-          .catch(() => byKey.set(freezeKey, null)),
-      );
-    }
+  for (const char of chars) {
+    if (seen.has(char.id)) continue;
+    seen.add(char.id);
+    queue(`${char.id}/_hit`, () => loadHitSpark(scene, char, index));
+    const freezeRel = `${char.id}/freeze-block/sheet.png`;
+    const wantFreeze = index ? listed(index, freezeRel) : char.id === 'nitra';
+    if (wantFreeze) queue(`${char.id}/_freeze`, () => loadNamedSheet(scene, char, 'freeze-block', index));
   }
   for (const name of ['on-fire', 'on-fire-small', 'smoke-wisp']) {
-    const key = `status/${name}`;
-    if (byKey.has(key)) continue;
-    byKey.set(key, null);
-    jobs.push(
-      loadStatusSheet(scene, name, index)
-        .then((art) => byKey.set(key, art))
-        .catch(() => byKey.set(key, null)),
-    );
+    queue(`status/${name}`, () => loadStatusSheet(scene, name, index));
   }
-  if (!byKey.has('status/poison')) {
-    byKey.set('status/poison', null);
-    jobs.push(
-      loadSharedStatus(scene, index)
-        .then((art) => byKey.set('status/poison', art))
-        .catch(() => byKey.set('status/poison', null)),
-    );
-  }
-  await Promise.all(jobs);
+  queue('status/poison', () => loadSharedStatus(scene, index));
+  if (!jobs.length) return;
+  // Two at a time. Every sheet is read back in full for its hit mask, and
+  // running the whole roster at once stalls the tab for seconds.
+  fxLoadState.busy = true;
+  fxLoadState.done = 0;
+  fxLoadState.total = jobs.length;
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(2, jobs.length) }, async () => {
+    while (cursor < jobs.length) {
+      const job = jobs[cursor++];
+      await job();
+      fxLoadState.done++;
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+  });
+  await Promise.all(workers);
+  fxLoadState.busy = false;
+}
+
+/** Texture keys for every loaded FX frame, including side layers and peaks. */
+export function fxTextureKeys() {
+  const keys = [];
+  const seenKey = new Set();
+  const seenArt = new WeakSet();
+  const add = (key) => {
+    if (typeof key !== 'string' || !key || seenKey.has(key)) return;
+    seenKey.add(key);
+    keys.push(key);
+  };
+  const visit = (node, depth) => {
+    if (!node || typeof node !== 'object' || depth > 5 || seenArt.has(node)) return;
+    if (typeof node.key === 'string') add(node.key);
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item, depth + 1);
+      return;
+    }
+    seenArt.add(node);
+    if (Array.isArray(node.frames)) visit(node.frames, depth + 1);
+    for (const name of ['peak', 'peakAnim', 'detonate']) visit(node[name], depth + 1);
+    for (const value of Object.values(node)) {
+      if (value && typeof value === 'object' && Array.isArray(value.frames)) visit(value, depth + 1);
+    }
+  };
+  for (const art of byKey.values()) visit(art, 0);
+  return keys;
 }
 
 export function fxNamed(key) {
@@ -982,8 +1036,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
     if (start && tile && end) {
       const composed = composeBeam(start, tile, end, sized.w, sized.h, blackThreshold(meta));
       const key = `fx-${id}-${moveSlug(move.name)}-beam`;
-      if (scene.textures?.exists(key)) scene.textures.remove(key);
-      scene.textures.addImage(key, composed.canvas);
+      rememberTexture(scene, key, composed.canvas);
       const mask = composed.mask;
       return artRecord(objectType, sized, { x: 0, y: 0.5 }, [{ key, mask, displayW: sized.w, displayH: sized.h }], { ...look, beam: true });
     }

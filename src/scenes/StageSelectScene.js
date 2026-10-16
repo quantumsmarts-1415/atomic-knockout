@@ -11,6 +11,7 @@ import { play as sfx } from '../engine/sfx.js';
 import { enterScene, showScene } from '../ui/flow.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { isGamepadSlot, menuInputForSlot, pollGamepads } from '../engine/gamepad.js';
+import { primeMatchArt } from '../engine/matchWarmup.js';
 
 const BOT_SLOT_BASE = 100;
 
@@ -74,6 +75,9 @@ export default class StageSelectScene extends Phaser.Scene {
     this.buildInputs();
     this.refresh(true);
     enterScene(this);
+    // Sheets, hit sounds, and painted FX start decoding while the stage is
+    // still on screen. The match card finishes whatever is left before GO.
+    void primeMatchArt(this, this.setup.players);
   }
 
   // ------------------------------------------------------------- layout

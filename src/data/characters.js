@@ -1072,7 +1072,7 @@ export const CHARACTERS = {
           // Approved idle. Vortex Kick is the normal. Oxidation Burst is the
           // special. Bellows Breath and Ozone Layer have their own sheets.
           idle: { count: 6, fps: 6, loop: true, frameW: 548, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
-          walk: { count: 33, fps: 10, loop: true, frameW: 452, frameH: 701, footY: 0.98, visibleH: 653, bodyH: 653, displayScale: 0.18989 },
+          walk: { count: 12, fps: 10.29, loop: true, frameW: 570, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
           attack: { count: 12, fps: 18, loop: false, frameW: 918, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
           charge: { count: 12, fps: 18, loop: false, frameW: 574, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
           defense: { count: 12, fps: 18, loop: false, frameW: 624, frameH: 1015, footY: 0.9852, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },

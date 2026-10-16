@@ -971,3 +971,38 @@ test('call 6 walks match their clip cells', () => {
   assert.equal(CHARACTERS.allen.art.facing, -1);
   assert.equal(CHARACTERS.van.art.facing, -1);
 });
+
+test('oxana walk and manny attack use the redo cells', () => {
+  const walk = CHARACTERS.oxana.art.sheets.clips.walk;
+  const walkPng = pngSize('art-src/gemini-test/sheets/oxana_walk.png');
+  assert.equal(walk.count, 12);
+  assert.equal(walk.fps, 10.29);
+  assert.equal(walk.loop, true);
+  assert.deepEqual({ frameW: walk.frameW, frameH: walk.frameH, footY: walk.footY }, {
+    frameW: 570, frameH: 1012, footY: 0.9881,
+  });
+  assert.equal(walk.visibleH, 976);
+  assert.equal(walkPng.w, walk.frameW * 4);
+  assert.equal(walkPng.h, walk.frameH * 3);
+  assert.equal(walk.displayScale, CHARACTERS.oxana.art.height / walk.visibleH);
+
+  const attack = CHARACTERS.manny.art.sheets.clips.attack;
+  const attackPng = pngSize('art-src/imported/sheets/manny_attack.png');
+  assert.deepEqual({ frameW: attack.frameW, frameH: attack.frameH, footY: attack.footY }, {
+    frameW: 713, frameH: 740, footY: 0.977,
+  });
+  assert.equal(attack.count, 12);
+  assert.equal(attack.fps, 18);
+  assert.equal(attack.visibleH, 560);
+  assert.equal(attack.displayScale, CHARACTERS.manny.art.height / attack.visibleH);
+  assert.equal(attackPng.w, 713 * 4);
+  assert.equal(attackPng.h, 740 * 3);
+  const meta = sheetMeta('manny', 'attack');
+  assert.equal(meta.release, 6);
+  assert.deepEqual(meta.windup, [0, 5]);
+  assert.deepEqual(meta.active, [6, 6]);
+  assert.deepEqual(meta.recovery, [7, 11]);
+  assert.deepEqual(meta.anchors.fist[6], [706, 329]);
+  assert.deepEqual(meta.anchors.tip[6], [706, 329]);
+  assert.deepEqual(meta.anchors.feet[0], [182, 722]);
+});

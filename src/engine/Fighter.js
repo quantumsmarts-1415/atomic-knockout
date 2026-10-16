@@ -6,6 +6,7 @@ import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defen
 import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
+import { hitAnchor } from './fxArt.js';
 import { clipNameForMove, sheetMeta } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
@@ -300,6 +301,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
 
     const step = this.scene?.stepMs || FEEL.stepMs;
+    // Hitstun owns gravity. A glide, a charge float, or a ledge hang must
+    // not leave a still body weightless for the launch.
+    if (this.hitlagFrames > 0 || this.state === 'hurt') this.forceHitstunPhysics();
     if (this.hitlagFrames > 0) {
       this.shiftTimers(step);
       this.hitlagFrames -= 1;
@@ -1774,6 +1778,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.hurtUnits = units;
     this.hurtSign = -dir;
     this.body?.setVelocity(0, 0);
+    if (this.pendingLaunch || (flinch && (dmg > 0 || incoming.trip))) {
+      this.chargeStart = null;
+      if (this.ledge) this.leaveLedge();
+      this.forceHitstunPhysics();
+    }
     if (attacker && attacker !== this && !incoming._projectile && !incoming.isCounterAttack && attacker.hitlagFrames != null) {
       attacker.hitlagFrames = Math.max(attacker.hitlagFrames || 0, frames);
       attacker.hitlagTotal = attacker.hitlagFrames;
@@ -1794,7 +1803,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (ko && flinch) this.scene?.beginFinish?.(this, { final: this.stocks <= 1, charged: (incoming._chargeFrac ?? 0) >= 0.95 });
     if (!this.scene?.simFast && dmg > 0) {
       playHit(dmg, incoming.type, ko && flinch);
-      this.scene.juice?.hit?.(this.x, this.y - this.bodyH * 0.55, dmg, incoming.type, angle);
+      const at = hitAnchor(attacker, this, incoming);
+      this.scene.juice?.hit?.(at.x, at.y, dmg, incoming.type, angle);
+      this.scene.juice?.kick?.(angle, dir, dmg);
     }
     if ((this.hitlagFrames || 0) <= 0 && this.pendingLaunch) this.releaseLaunch(time);
   }
@@ -1905,6 +1916,17 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this._flashShow = null;
   }
 
+  /**
+   * Hitstun always falls and always takes the launch, whatever the fighter
+   * was doing. Glide, charge-float, and ledge all clear `allowGravity`;
+   * a still idle body used to keep that and hang after the hit.
+   */
+  forceHitstunPhysics() {
+    this._gliding = false;
+    this._floatFloor = null;
+    if (this.body) this.body.allowGravity = true;
+  }
+
   releaseLaunch() {
     const p = this.pendingLaunch;
     this.pendingLaunch = null;
@@ -1921,6 +1943,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
     };
     this._diShow = 8;
     this._diAngle = angle;
+    this.forceHitstunPhysics();
+    // A body resting on the floor will eat an upward launch if it is still
+    // marked blocked. Clear that so a still fighter can leave the ground.
+    if (vel.y < 0) {
+      this.body.blocked.down = false;
+      this.body.touching.down = false;
+      this.grounded = false;
+    }
+    this.applyLaunch();
   }
 
   peelLaunch() {

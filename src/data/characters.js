@@ -82,7 +82,8 @@ export const CHARACTERS = {
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 1242, frameH: 720, footY: 0.9736, visibleH: 660, bodyH: 660, displayScale: 0.18485 },
+          // Defringed walk. Same 1242×720 cell, sole raised to the new ink.
+          walk: { count: 33, fps: 10, loop: true, frameW: 1242, frameH: 720, footY: 0.9741, visibleH: 674, bodyH: 674, displayScale: 122 / 674 },
         },
       },
     },
@@ -240,7 +241,8 @@ export const CHARACTERS = {
         clips: {
           // idle + walk (Gemini). Other clips still fall back to idle.
           idle: { count: 14, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 1244, frameH: 692, footY: 0.9639, visibleH: 602, bodyH: 602, displayScale: 0.22924 },
+          // Hue-matched walk. Same 1244×692 cell, sole on the new ink.
+          walk: { count: 33, fps: 10, loop: true, frameW: 1244, frameH: 692, footY: 0.9665, visibleH: 621, bodyH: 621, displayScale: 138 / 621 },
         },
       },
     },
@@ -613,7 +615,9 @@ export const CHARACTERS = {
         displayScale: 0.10593,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          walk: { count: 33, fps: 10, loop: true, frameW: 454, frameH: 716, footY: 0.9818, visibleH: 675, bodyH: 675, displayScale: 0.18519 },
+          // Walk v3 matches the idle armour. Taller cell than the idle so the stride fits.
+          // Same body height. The sheet faces right, same as the idle.
+          walk: { count: 12, fps: 9.93, loop: true, frameW: 832, frameH: 1283, footY: 0.9337, visibleH: 1180, bodyH: 1180, displayScale: 125 / 1180 },
         },
       },
     },
@@ -956,10 +960,10 @@ export const CHARACTERS = {
         displayScale: 120 / 645,
         clips: {
           // Approved idle faces left, same as the move sheets, so art.facing
-          // -1 is the flip. The walk was mirrored in place (the source walked
-          // right) so that same flip does not send her backwards.
+          // -1 is the flip. The walk faces right, so sheetFacing keeps that
+          // cycle from playing backwards.
           idle: { count: 6, fps: 6, loop: true, frameW: 416, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
-          walk: { count: 33, fps: 10, loop: true, frameW: 735, frameH: 667, footY: 0.9685, visibleH: 618, bodyH: 618, displayScale: 0.19417 },
+          walk: { count: 12, fps: 9.29, loop: true, frameW: 444, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645, sheetFacing: 1 },
           attack: { count: 12, fps: 18, loop: false, frameW: 754, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
           charge: { count: 12, fps: 18, loop: false, frameW: 614, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
           defense: { count: 12, fps: 18, loop: false, frameW: 446, frameH: 684, footY: 0.9795, visibleH: 645, bodyH: 645, displayScale: 120 / 645 },
@@ -1074,7 +1078,7 @@ export const CHARACTERS = {
           // Approved idle. Vortex Kick is the normal. Oxidation Burst is the
           // special. Bellows Breath and Ozone Layer have their own sheets.
           idle: { count: 6, fps: 6, loop: true, frameW: 548, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
-          walk: { count: 33, fps: 10, loop: true, frameW: 452, frameH: 701, footY: 0.98, visibleH: 653, bodyH: 653, displayScale: 0.18989 },
+          walk: { count: 12, fps: 10.29, loop: true, frameW: 570, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
           attack: { count: 12, fps: 18, loop: false, frameW: 918, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
           charge: { count: 12, fps: 18, loop: false, frameW: 574, frameH: 1012, footY: 0.9881, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
           defense: { count: 12, fps: 18, loop: false, frameW: 624, frameH: 1015, footY: 0.9852, visibleH: 976, bodyH: 976, displayScale: 124 / 976 },
@@ -1379,11 +1383,10 @@ export const CHARACTERS = {
         displayScale: 128 / 981,
         clips: {
           // Approved idle faces right. sheetFacing keeps it unflipped while
-          // art.facing stays -1. The walk sheet is still the mirrored
-          // left-facing cycle, so that flip points the walk forward. Move
-          // sheets face right and set sheetFacing too.
+          // art.facing stays -1. The walk faces right and uses the same sole.
+          // Move sheets face right and set sheetFacing too.
           idle: { count: 6, fps: 6, loop: true, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
-          walk: { count: 11, fps: 8, loop: true, frameW: 443, frameH: 710, footY: 0.969, visibleH: 666, bodyH: 666, displayScale: 0.19219 },
+          walk: { count: 12, fps: 10.67, loop: true, frameW: 636, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
           attack: { count: 12, fps: 18, loop: false, frameW: 746, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
           charge: { count: 12, fps: 18, loop: false, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
           defense: { count: 12, fps: 18, loop: false, frameW: 632, frameH: 1028, footY: 0.9864, visibleH: 981, bodyH: 981, displayScale: 128 / 981, sheetFacing: 1 },
@@ -1862,7 +1865,8 @@ export const CHARACTERS = {
           attack: { count: 11, fps: 17, loop: false, frameW: 603, frameH: 724, footY: 0.9655, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
           charge: { count: 12, fps: 18, loop: false, frameW: 1041, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
           defense: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 720, footY: 0.9722, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
-          special: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 753, footY: 0.9416, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
+          // Eruption cells are 603×790 (37 px of plume headroom). Sole row is 745; footY is the clip JSON.
+          special: { count: 12, fps: 18, loop: false, frameW: 603, frameH: 790, footY: 0.9443, visibleH: 669, bodyH: 669, displayScale: 148 / 669 },
         },
       },
     },
@@ -1932,8 +1936,9 @@ export const CHARACTERS = {
         displayScale: 128 / 1032,
         clips: {
           // Approved idle faces right. sheetFacing keeps it unflipped.
-          // art.facing stays -1. There is no walk sheet.
+          // art.facing stays -1. The walk faces right and uses the same sole.
           idle: { count: 6, fps: 6, loop: true, frameW: 666, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
+          walk: { count: 12, fps: 9.93, loop: true, frameW: 666, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
           // Bleach Out, Salt Bond, Gas Cloud, and the jab face right. sheetFacing keeps them unflipped.
           attack: { count: 12, fps: 18, loop: false, frameW: 718, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
           charge: { count: 12, fps: 18, loop: false, frameW: 1188, frameH: 1072, footY: 0.9879, visibleH: 1032, bodyH: 1032, displayScale: 128 / 1032, sheetFacing: 1 },
@@ -2229,8 +2234,9 @@ export const CHARACTERS = {
         displayScale: 132 / 961,
         clips: {
           // Approved idle faces right. sheetFacing keeps it unflipped.
-          // art.facing stays -1. There is no walk sheet.
+          // art.facing stays -1. The walk faces right and uses the same sole.
           idle: { count: 6, fps: 6, loop: true, frameW: 562, frameH: 1004, footY: 0.9861, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
+          walk: { count: 12, fps: 12.52, loop: true, frameW: 562, frameH: 1004, footY: 0.9861, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
           // Afterburner, Wing Slash, Folded Wings, and Micro Rocket face right and set sheetFacing.
           attack: { count: 12, fps: 18, loop: false, frameW: 822, frameH: 1004, footY: 0.9861, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
           charge: { count: 12, fps: 18, loop: false, frameW: 862, frameH: 1014, footY: 0.9862, visibleH: 961, bodyH: 961, displayScale: 132 / 961, sheetFacing: 1 },
@@ -2304,10 +2310,12 @@ export const CHARACTERS = {
         displayScale: 0.22393,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          // The walk, Alloy Fist, and Prism Surge face left, the same way the idle does.
-          walk: { count: 12, fps: 9, loop: true, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
-          attack: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
-          special: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 722, footY: 0.9903, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
+          // Walk, Alloy Fist, and Prism Surge face left, the same way the idle does.
+          // Each clip keeps its own cell and sole. Four-State Guard and Redox Flow
+          // play ranges of the attack and Prism Surge sheets.
+          walk: { count: 12, fps: 11.52, loop: true, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 724, footY: 0.9903, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
+          special: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 733, footY: 0.9727, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
         },
       },
     },
@@ -2376,8 +2384,9 @@ export const CHARACTERS = {
         displayScale: 130 / 993,
         clips: {
           // Approved idle faces right. sheetFacing keeps it unflipped.
-          // art.facing stays -1. There is no walk sheet.
+          // art.facing stays -1. The walk faces right and uses the same sole.
           idle: { count: 6, fps: 6, loop: true, frameW: 666, frameH: 1036, footY: 0.9865, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
+          walk: { count: 12, fps: 11.52, loop: true, frameW: 666, frameH: 1036, footY: 0.9865, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
           // Ruby Laser, Mirror Chrome, Prismatic Shatter, and Chrome Edge face right and set sheetFacing.
           attack: { count: 12, fps: 18, loop: false, frameW: 1180, frameH: 1221, footY: 0.9885, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },
           charge: { count: 12, fps: 18, loop: false, frameW: 784, frameH: 1036, footY: 0.9865, visibleH: 993, bodyH: 993, displayScale: 130 / 993, sheetFacing: 1 },

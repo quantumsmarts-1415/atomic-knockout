@@ -202,16 +202,34 @@ export class Juice {
     this.trauma = Math.min(1, this.trauma + amount);
   }
 
+  /**
+   * Screen kick along the launch. `angle` is screen space (negative is up)
+   * and `dir` is the horizontal facing of the hit. This offsets the camera.
+   * It does not change zoom.
+   */
+  kick(angle, dir = 1, dmg = 8) {
+    if (this.fast) return;
+    const mag = Math.min(1, 0.28 + Math.max(0, dmg) / 22);
+    this.kickState = { angle: angle || 0, dir: dir || 1, mag, life: 0.14 + 0.1 * mag, max: 0.14 + 0.1 * mag };
+  }
+
   shakeOffset(timeSec, zoom) {
     let mode = 'full';
     try { mode = localStorage.getItem('ak-shake') || 'full'; } catch { /* node tests */ }
-    return traumaOffset(this.trauma, timeSec, zoom, mode);
+    const kick = this.kickState && this.kickState.life > 0 ? this.kickState : null;
+    return traumaOffset(this.trauma, timeSec, zoom, mode, kick);
   }
 
   update(dt) {
     if (this.fast) return;
     const step = Math.max(0, Number.isFinite(dt) ? dt : 0);
     this.trauma = Math.max(0, this.trauma - FEEL.traumaDecay * step);
+    if (this.kickState) {
+      this.kickState.life -= step;
+      const u = this.kickState.max > 0 ? Math.max(0, this.kickState.life / this.kickState.max) : 0;
+      this.kickState.mag *= u;
+      if (this.kickState.life <= 0) this.kickState = null;
+    }
     for (let i = this.fx.length - 1; i >= 0; i--) {
       const f = this.fx[i];
       f.life -= step;
@@ -269,20 +287,30 @@ export class Juice {
 
   hit(x, y, dmg, type, angle = 0) {
     if (this.fast) return;
+    const kind = type === 'physical' ? 'kinetic' : (type || 'kinetic');
     const s = 0.9 + 1.15 * Math.min(1, Math.max(0, dmg / 18));
-    const color = sparkColor(type);
+    const color = sparkColor(kind);
     const life = (10 + Math.min(4, dmg * 0.2)) * FEEL.stepMs / 1000;
-    const starKey = type === 'electrical' ? TEX.jag : TEX.star;
+    if (kind === 'heat') this.heatHit(x, y, dmg, s, color, life);
+    else if (kind === 'chemical') this.chemHit(x, y, dmg, s, color, life);
+    else if (kind === 'radiation') this.radHit(x, y, dmg, s, color, life);
+    else this.impactHit(x, y, dmg, s, color, life, angle, kind === 'electrical' ? TEX.jag : TEX.star);
+    if (kind === 'electrical') this.bolt(x, y, color, angle);
+    if (dmg >= 15) this.impactFlash();
+    this.addTrauma(traumaForHit(dmg, false));
+  }
+
+  impactHit(x, y, dmg, s, color, life, angle, starKey) {
     const star = this.borrow(starKey);
     if (star) {
       star.setPosition(x, y).setTint(color).setRotation(angle).setDepth(40);
-      this.track(star, { kind: 'spark', life, scale0: 0.7 * s, scale1: 1.45 * s, alpha0: 0.95 });
+      this.track(star, { kind: 'spark', element: 'impact', life, scale0: 0.7 * s, scale1: 1.45 * s, alpha0: 0.95 });
     }
     const slash = this.borrow(TEX.slash);
     if (slash) {
       slash.setPosition(x, y).setTint(color).setRotation(angle).setDepth(41);
       this.track(slash, {
-        kind: 'spark', life: life * 0.85, scale0: 0.85 * s, scale1: 1.55 * s, alpha0: 0.92,
+        kind: 'spark', element: 'impact', life: life * 0.85, scale0: 0.85 * s, scale1: 1.55 * s, alpha0: 0.92,
       });
     }
     const n = 5 + Math.round(Math.min(2, dmg / 10));
@@ -295,6 +323,7 @@ export class Juice {
       const speed = 260 + dmg * 10 + i * 36;
       this.track(bit, {
         kind: 'line',
+        element: 'impact',
         life: (8 + i) * FEEL.stepMs / 1000,
         scale0: 0.7 + 0.2 * s,
         scale1: 1.15 + 0.25 * s,
@@ -303,16 +332,84 @@ export class Juice {
         vy: Math.sin(a) * speed,
       });
     }
-    if (type === 'electrical') this.bolt(x, y, color, angle);
-    if (type === 'radiation') {
-      const ring = this.borrow(TEX.ring);
-      if (ring) {
-        ring.setPosition(x, y).setTint(color).setDepth(38);
-        this.track(ring, { kind: 'ring', life: 10 * FEEL.stepMs / 1000, scale0: 0.25, scale1: 1.3, alpha0: 0.7 });
-      }
+  }
+
+  /** Embers that lift off the contact. No slash. */
+  heatHit(x, y, dmg, s, color, life) {
+    const core = this.borrow(TEX.star);
+    if (core) {
+      core.setPosition(x, y).setTint(color).setDepth(40);
+      this.track(core, { kind: 'spark', element: 'heat', life, scale0: 0.45 * s, scale1: 1.1 * s, alpha0: 0.95 });
     }
-    if (dmg >= 15) this.impactFlash();
-    this.addTrauma(traumaForHit(dmg, false));
+    const n = 6 + Math.round(Math.min(3, dmg / 8));
+    for (let i = 0; i < n; i++) {
+      const bit = this.borrow(i % 2 ? TEX.puff : TEX.streak);
+      if (!bit) break;
+      const spread = (i - (n - 1) / 2) * 0.35;
+      bit.setPosition(x, y).setTint(i % 2 ? 0xffc14a : color).setRotation(-Math.PI / 2 + spread).setDepth(39);
+      this.track(bit, {
+        kind: i % 2 ? 'puff' : 'line',
+        element: 'heat',
+        life: (9 + i) * FEEL.stepMs / 1000,
+        scale0: 0.35 + 0.08 * s,
+        scale1: 0.7 + 0.1 * s,
+        alpha0: 0.85,
+        vx: Math.sin(spread) * (40 + i * 12),
+        vy: -(90 + dmg * 6 + i * 28),
+      });
+    }
+  }
+
+  /** Slow bubbles instead of a cut. */
+  chemHit(x, y, dmg, s, color, life) {
+    const core = this.borrow(TEX.ring);
+    if (core) {
+      core.setPosition(x, y).setTint(color).setDepth(40);
+      this.track(core, { kind: 'spark', element: 'chemical', life, scale0: 0.2 * s, scale1: 0.85 * s, alpha0: 0.8 });
+    }
+    const n = 5 + Math.round(Math.min(2, dmg / 10));
+    for (let i = 0; i < n; i++) {
+      const bit = this.borrow(i % 2 ? TEX.puffB : TEX.dot);
+      if (!bit) break;
+      const a = -Math.PI / 2 + (i - (n - 1) / 2) * 0.4;
+      bit.setPosition(x, y).setTint(color).setDepth(38);
+      this.track(bit, {
+        kind: 'puff',
+        element: 'chemical',
+        life: (12 + i) * FEEL.stepMs / 1000,
+        scale0: 0.22 * s,
+        scale1: 0.55 * s,
+        alpha0: 0.7,
+        vx: Math.cos(a) * (30 + i * 8),
+        vy: Math.sin(a) * (50 + i * 10),
+      });
+    }
+  }
+
+  /** A ring that opens, plus short rays. */
+  radHit(x, y, dmg, s, color, life) {
+    const ring = this.borrow(TEX.ring);
+    if (ring) {
+      ring.setPosition(x, y).setTint(color).setDepth(38);
+      this.track(ring, { kind: 'spark', element: 'radiation', life: life * 1.2, scale0: 0.2, scale1: 1.45 * s, alpha0: 0.75 });
+    }
+    const n = 6;
+    for (let i = 0; i < n; i++) {
+      const bit = this.borrow(TEX.dot);
+      if (!bit) break;
+      const a = (Math.PI * 2 * i) / n;
+      bit.setPosition(x, y).setTint(color).setDepth(39);
+      this.track(bit, {
+        kind: 'line',
+        element: 'radiation',
+        life: (8 + (i % 3)) * FEEL.stepMs / 1000,
+        scale0: 0.8,
+        scale1: 0.3,
+        alpha0: 0.9,
+        vx: Math.cos(a) * (80 + dmg * 4),
+        vy: Math.sin(a) * (80 + dmg * 4),
+      });
+    }
   }
 
   bolt(x, y, color, angle) {
@@ -468,6 +565,9 @@ export class Juice {
     const W = cam?.width || 1280;
     const H = cam?.height || 720;
     const life = 0.5;
+    const white = this.scene.add.rectangle(W / 2, H / 2, W + 8, H + 8, 0xffffff, 0.82)
+      .setScrollFactor(0).setDepth(86);
+    this.fx.push({ kind: 'gfx', g: white, life: 0.08, max: 0.08, alpha0: 0.82 });
     const flash = this.scene.add.rectangle(W / 2, H / 2, W + 8, H + 8, color, 0.5)
       .setScrollFactor(0).setDepth(84);
     this.fx.push({ kind: 'gfx', g: flash, life, max: life, alpha0: 0.5 });
@@ -515,19 +615,19 @@ export class Juice {
 
   dust(x, y, dir = 1) {
     if (this.fast) return;
-    for (let i = 0; i < 3; i++) {
-      const bit = this.borrow(i === 1 ? TEX.puffB : TEX.puff);
+    for (let i = 0; i < 5; i++) {
+      const bit = this.borrow(i % 2 ? TEX.puffB : TEX.puff);
       if (!bit) return;
-      const size = 0.28 + i * 0.08;
-      bit.setPosition(x + i * 4 * dir, y).setTint(0xd8d2c4).setDepth(8);
+      const size = 0.34 + i * 0.07;
+      bit.setPosition(x + (i - 2) * 6 * dir, y - 2).setTint(0xcfc6b4).setDepth(8);
       this.track(bit, {
         kind: 'dust',
-        life: (8 + i * 2) * FEEL.stepMs / 1000,
+        life: (10 + i * 2) * FEEL.stepMs / 1000,
         scale0: size,
-        scale1: size * 0.4,
-        alpha0: 0.45,
-        vx: dir * (40 + i * 24),
-        vy: -16 - i * 10,
+        scale1: size * 1.35,
+        alpha0: 0.62,
+        vx: dir * (22 + i * 18),
+        vy: -6 - i * 3,
       });
     }
   }

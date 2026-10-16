@@ -102,17 +102,23 @@ export const FEEL = {
   // Trauma shake (screen pixels before the zoom correction).
   traumaDecay: 1.6,
   traumaMax: 14,
+  // Extra kick along the launch, in the same screen pixels. Zoom is not involved.
+  traumaKick: 16,
   traumaRot: 0.8 * Math.PI / 180,
   traumaReduced: 0.4,
 
-  // Camera. Zoom comes only from where the fighters are, the way Smash
-  // frames a match: the group, plus a short margin so the next step is
-  // visible. Hits, damage and KOs do not change it. A close clump fills
-  // the view; a spread group eases out until the whole stage shows.
-  // Side margin is about a short dash. Top margin is most of a hop.
+  // Camera. Standard zoom is 1. The group is framed from where the
+  // fighters are — never from damage, hits, or KOs — and every live
+  // fighter stays in view. Zoom in only when they are actually close.
+  // Otherwise hold 1, and zoom out only when that no longer fits them.
+  // The close margin is a short dash at the sides and most of a hop above.
+  camStandard: 1,
   camPadX: 130,
   camPadTop: 120,
   camPadBottom: 72,
+  // Unpadded body box. Inside both of these, the close margin may zoom in.
+  camCloseX: 420,
+  camCloseY: 220,
   camMax1: 2.35,
   camMaxMulti: 2.1,
   camPosTau: 220,
@@ -335,17 +341,28 @@ export function frameZoom(spanX, spanY, viewW, viewH, minZoom, maxZoom) {
   return clamp(z, minZoom, maxZoom);
 }
 
+/** Zoom a match opens on: standard, unless the stage cannot show that. */
+export function openingZoom(minZoom, maxZoom) {
+  const standard = FEEL.camStandard ?? 1;
+  const hi = Math.max(minZoom, maxZoom);
+  return clamp(Math.min(standard, hi), minZoom, hi);
+}
+
 /**
- * Smash-style target for a group of bodies. `bodies` are { x, y, w, h }
- * with y at the feet. The frame is their box plus a short margin — enough
- * to see where to move, close when they stand together. Damage is not an
- * input. Returns null when there is nobody to frame.
+ * Group target for bodies `{ x, y, w, h }` with y at the feet.
+ * Standard zoom is the baseline. A close clump may zoom in, up to maxZoom.
+ * Anyone who would leave the view zooms the frame out, down to minZoom.
+ * Damage is not an input. Returns null when there is nobody to frame.
  */
 export function cameraFrame(bodies, viewW, viewH, minZoom, maxZoom, pad = {}) {
   if (!bodies?.length) return null;
   const padX = pad.padX ?? FEEL.camPadX;
   const padTop = pad.padTop ?? FEEL.camPadTop;
   const padBottom = pad.padBottom ?? FEEL.camPadBottom;
+  const edge = pad.edge ?? FEEL.camEdge;
+  const closeX = pad.closeX ?? FEEL.camCloseX;
+  const closeY = pad.closeY ?? FEEL.camCloseY;
+  const standard = pad.standard ?? FEEL.camStandard ?? 1;
   let x0 = Infinity;
   let x1 = -Infinity;
   let y0 = Infinity;
@@ -359,14 +376,30 @@ export function cameraFrame(bodies, viewW, viewH, minZoom, maxZoom, pad = {}) {
     y1 = Math.max(y1, b.y);
   }
   if (x0 === Infinity) return null;
-  x0 -= padX;
-  x1 += padX;
-  y0 -= padTop;
-  y1 += padBottom;
-  const spanX = Math.max(FEEL.camMinSpanX, x1 - x0);
-  const spanY = Math.max(FEEL.camMinSpanY, y1 - y0);
+  const bodySpanX = x1 - x0;
+  const bodySpanY = y1 - y0;
+  const close = bodySpanX <= closeX && bodySpanY <= closeY;
+  // Close fights keep a short look-ahead margin. Everyone else is framed
+  // with only the hard edge, so a normal gap is not treated as a clump.
+  const mx0 = close ? padX : edge;
+  const mx1 = close ? padX : edge;
+  const my0 = close ? padTop : edge;
+  const my1 = close ? padBottom : edge;
+  x0 -= mx0;
+  x1 += mx1;
+  y0 -= my0;
+  y1 += my1;
+  const spanX = Math.max(1, x1 - x0);
+  const spanY = Math.max(1, y1 - y0);
+  const fit = Math.min(viewW / spanX, viewH / spanY);
+  let zoom;
+  if (fit >= standard) {
+    zoom = close ? clamp(fit, standard, maxZoom) : clamp(standard, minZoom, maxZoom);
+  } else {
+    zoom = clamp(fit, minZoom, maxZoom);
+  }
   return {
-    zoom: frameZoom(spanX, spanY, viewW, viewH, minZoom, maxZoom),
+    zoom,
     cx: (x0 + x1) / 2,
     cy: (y0 + y1) / 2,
     spanX,
@@ -478,19 +511,28 @@ export function attackPhase(fd, frame) {
   return 'recovery';
 }
 
-/** Trauma offset in world pixels, plus a small rotation. */
-export function traumaOffset(trauma, timeSec, zoom, mode) {
+/**
+ * Trauma offset in world pixels, plus a small rotation.
+ * `kick` is { angle, dir, mag } in screen space (negative angle is up).
+ * The kick runs along the hit and does not change the camera zoom.
+ */
+export function traumaOffset(trauma, timeSec, zoom, mode, kick = null) {
   const scale = mode === 'off' ? 0 : mode === 'reduced' ? FEEL.traumaReduced : 1;
   const shake = trauma * trauma * scale;
-  if (shake <= 0.0001) return { x: 0, y: 0, rot: 0 };
+  const mag = kick && kick.mag > 0 ? kick.mag * scale : 0;
+  if (shake <= 0.0001 && mag <= 0.0001) return { x: 0, y: 0, rot: 0 };
   const z = Math.max(zoom || 1, 0.2);
   const n1 = Math.sin(timeSec * 25) + 0.5 * Math.sin(timeSec * 53 + 1.7);
   const n2 = Math.cos(timeSec * 23) + 0.5 * Math.sin(timeSec * 47 + 0.4);
+  const aim = Math.cos(timeSec * 42);
+  const kickAmp = FEEL.traumaKick * mag * aim;
+  const ang = kick?.angle || 0;
+  const dir = kick?.dir || 1;
   // Divide by zoom so the shake occupies the same screen pixels near or far.
   return {
-    x: (FEEL.traumaMax * shake * n1) / z,
-    y: (FEEL.traumaMax * shake * n2 * 0.65) / z,
-    rot: FEEL.traumaRot * shake * n1,
+    x: (FEEL.traumaMax * shake * n1 + Math.cos(ang) * dir * kickAmp) / z,
+    y: (FEEL.traumaMax * shake * n2 * 0.65 + Math.sin(ang) * kickAmp) / z,
+    rot: FEEL.traumaRot * (shake * n1 + mag * 0.35 * aim),
   };
 }
 

@@ -5,7 +5,7 @@
 
 import { effectBox, fxFolder, moveSlug, objectTypeOf } from '../data/attackFx.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
-import { fxPlacementHits } from './boxes.js';
+import { clampToBody, fxPlacementHits } from './boxes.js';
 import { coatSpec } from './coat.js';
 
 const CELL = 5;
@@ -2300,10 +2300,23 @@ function contactAt(attacker, victim, move) {
   return { x: attacker.x, y: attacker.y - (attacker.bodyH ?? 80) * 0.5 };
 }
 
+/**
+ * Where the hit actually meets the body. A fist or projectile that sits
+ * above the head, or a chest guess that clears a short sprite, is pulled
+ * onto the hurtbox so the spark does not hang in empty air.
+ */
+export function hitAnchor(attacker, victim, move) {
+  const raw = move?._hitAt || contactAt(attacker, victim, move);
+  if (!raw) return null;
+  if (!victim) return raw;
+  return clampToBody(victim, raw) || raw;
+}
+
 /** Hit spark and move impact, at the contact point. */
 export function spawnContactFx(scene, attacker, victim, move) {
   if (!scene || scene.simFast || !attacker) return;
-  const at = move?._hitAt || contactAt(attacker, victim, move);
+  const at = hitAnchor(attacker, victim, move);
+  if (!at) return;
   playPacked(scene, byKey.get(`${attacker.charDef?.id}/_hit`), at.x, at.y, 1);
   const painted = artFor(attacker.charDef?.id, move?.name);
   if (!painted?.releaseImpact) playPacked(scene, painted?.impact, at.x, at.y, 1);

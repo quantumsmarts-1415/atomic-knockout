@@ -34,9 +34,10 @@ test('push 2 call 1 body sheets match their clip cells', () => {
     }
   }
   const surge = sheetMeta('van', 'special');
-  assert.equal(surge.release, 6);
-  assert.deepEqual(surge.active, [6, 8]);
-  assert.equal(surge.anchors.feet[0][0], 688);
+  assert.equal(surge.release, 5);
+  assert.deepEqual(surge.windup, [0, 4]);
+  assert.deepEqual(surge.active, [5, 6]);
+  assert.equal(surge.anchors.feet[0][0], 626);
   assert.equal(sheetMeta('titan', 'charge').count, 12);
   const brace = sheetMeta('sully', 'defense');
   assert.equal(brace.gather, true);
@@ -50,7 +51,7 @@ test('push 2 call 1 body sheets match their clip cells', () => {
   assert.equal(sheetFrameIndex(ram, { state: 'charging', animT: 5 / 18 }), 5);
   assert.equal(sheetFrameIndex(ram, { state: 'charging', animT: 6 / 18 }), 0);
   const fd = { startup: 4, active: 6, recovery: 6, visible: 16 };
-  assert.equal(sheetFrameIndex(surge, { state: 'attack', fd, attackFrame: 4 }), 6);
+  assert.equal(sheetFrameIndex(surge, { state: 'attack', fd, attackFrame: 4 }), 5);
 });
 
 test('call 1 sheets match their clip cells', () => {
@@ -202,11 +203,13 @@ test('lake drop loops the gather, and brine burst opens on its release frame', (
   assert.equal(sheetFrameIndex(sheetMeta('natalie', 'special'), { state: 'attack', fd, attackFrame: 6 }), 8);
 });
 
-test('natalie idle and move sheets face right while the walk stays mirrored', () => {
+test('natalie idle, walk, and move sheets face right', () => {
   const art = CHARACTERS.natalie.art;
   assert.equal(art.facing, -1);
   assert.equal(art.sheets.clips.idle.sheetFacing, 1);
-  assert.equal(art.sheets.clips.walk.sheetFacing, undefined);
+  assert.equal(art.sheets.clips.walk.sheetFacing, 1);
+  assert.equal(art.sheets.clips.walk.count, 12);
+  assert.equal(art.sheets.clips.walk.frameW, 636);
   for (const name of ['attack', 'charge', 'defense', 'special']) {
     assert.equal(art.sheets.clips[name].sheetFacing, 1);
   }
@@ -273,7 +276,7 @@ test('call 5 attack sheets match their clip cells', () => {
     const cells = (png.w / def.frameW) * (png.h / def.frameH);
     assert.ok(cells >= def.count, `${id} cells ${cells}`);
     assert.equal(def.displayScale, art.height / def.visibleH);
-    if (id !== 'chloe' && id !== 'cal' && id !== 'kyle' && id !== 'sully' && id !== 'yara' && id !== 'sandy' && id !== 'rhoda') assert.equal(MOVE_SHEETS[id].charge, undefined);
+    if (id !== 'chloe' && id !== 'cal' && id !== 'kyle' && id !== 'sully' && id !== 'yara' && id !== 'sandy' && id !== 'rhoda' && id !== 'van') assert.equal(MOVE_SHEETS[id].charge, undefined);
     if (id !== 'van' && id !== 'sully' && id !== 'chloe' && id !== 'cal' && id !== 'kyle' && id !== 'yara' && id !== 'rhoda' && id !== 'sandy') assert.equal(MOVE_SHEETS[id].special, undefined);
   }
   assert.equal(CHARACTERS.sully.art.sheets.clips.attack.count, 11);
@@ -950,7 +953,7 @@ test('call 6 walks match their clip cells', () => {
     sully: { fps: 8, sheetFacing: undefined },
     kyle: { fps: 11.08, sheetFacing: undefined },
     cal: { fps: 7.38, sheetFacing: 1 },
-    van: { fps: 9, sheetFacing: undefined },
+    van: { fps: 11.52, sheetFacing: undefined },
   };
   for (const [id, spec] of Object.entries(expect)) {
     const art = CHARACTERS[id].art;
@@ -970,4 +973,200 @@ test('call 6 walks match their clip cells', () => {
   assert.equal(CHARACTERS.cal.art.facing, -1);
   assert.equal(CHARACTERS.allen.art.facing, -1);
   assert.equal(CHARACTERS.van.art.facing, -1);
+});
+
+test('oxana walk and manny attack use the redo cells', () => {
+  const walk = CHARACTERS.oxana.art.sheets.clips.walk;
+  const walkPng = pngSize('art-src/gemini-test/sheets/oxana_walk.png');
+  assert.equal(walk.count, 12);
+  assert.equal(walk.fps, 10.29);
+  assert.equal(walk.loop, true);
+  assert.deepEqual({ frameW: walk.frameW, frameH: walk.frameH, footY: walk.footY }, {
+    frameW: 570, frameH: 1012, footY: 0.9881,
+  });
+  assert.equal(walk.visibleH, 976);
+  assert.equal(walkPng.w, walk.frameW * 4);
+  assert.equal(walkPng.h, walk.frameH * 3);
+  assert.equal(walk.displayScale, CHARACTERS.oxana.art.height / walk.visibleH);
+
+  const attack = CHARACTERS.manny.art.sheets.clips.attack;
+  const attackPng = pngSize('art-src/imported/sheets/manny_attack.png');
+  assert.deepEqual({ frameW: attack.frameW, frameH: attack.frameH, footY: attack.footY }, {
+    frameW: 713, frameH: 740, footY: 0.977,
+  });
+  assert.equal(attack.count, 12);
+  assert.equal(attack.fps, 18);
+  assert.equal(attack.visibleH, 560);
+  assert.equal(attack.displayScale, CHARACTERS.manny.art.height / attack.visibleH);
+  assert.equal(attackPng.w, 713 * 4);
+  assert.equal(attackPng.h, 740 * 3);
+  const meta = sheetMeta('manny', 'attack');
+  assert.equal(meta.release, 6);
+  assert.deepEqual(meta.windup, [0, 5]);
+  assert.deepEqual(meta.active, [6, 6]);
+  assert.deepEqual(meta.recovery, [7, 11]);
+  assert.deepEqual(meta.anchors.fist[6], [706, 329]);
+  assert.deepEqual(meta.anchors.tip[6], [706, 329]);
+  assert.deepEqual(meta.anchors.feet[0], [182, 722]);
+});
+
+test('van redo clips keep their own cells, and guard and redox use those frames', () => {
+  const art = CHARACTERS.van.art;
+  const expect = {
+    walk: { frameW: 1222, frameH: 720, footY: 0.9899, fps: 11.52, file: 'van_walk.png', cols: 3, rows: 4 },
+    attack: { frameW: 1222, frameH: 724, footY: 0.9903, fps: 18, file: 'van_attack.png', cols: 3, rows: 4 },
+    special: { frameW: 1222, frameH: 733, footY: 0.9727, fps: 18, file: 'van_special.png', cols: 3, rows: 4 },
+  };
+  for (const [name, spec] of Object.entries(expect)) {
+    const def = art.sheets.clips[name];
+    const png = pngSize(`${art.sheets.dir}${spec.file}`);
+    assert.equal(def.frameW, spec.frameW, name);
+    assert.equal(def.frameH, spec.frameH, name);
+    assert.equal(def.footY, spec.footY, name);
+    assert.equal(def.fps, spec.fps, name);
+    assert.equal(def.visibleH, 684, name);
+    assert.equal(def.displayScale, art.height / def.visibleH, name);
+    assert.equal(png.w, spec.frameW * spec.cols, name);
+    assert.equal(png.h, spec.frameH * spec.rows, name);
+  }
+  const guard = sheetMeta('van', 'defense');
+  assert.equal(guard.plays, 'attack');
+  assert.equal(guard.pingPong, true);
+  assert.deepEqual(guard.loop, [0, 1]);
+  assert.equal(sheetFrameIndex(guard, { state: 'defending', animT: 0 }), 0);
+  assert.equal(sheetFrameIndex(guard, { state: 'defending', animT: 1 / 18 }), 1);
+  assert.equal(sheetFrameIndex(guard, { state: 'defending', animT: 2 / 18 }), 0);
+  const redox = sheetMeta('van', 'charge');
+  assert.equal(redox.plays, 'special');
+  assert.equal(redox.pingPong, true);
+  assert.deepEqual(redox.loop, [2, 4]);
+  assert.equal(sheetFrameIndex(redox, { state: 'charging', animT: 0 }), 2);
+  assert.equal(sheetFrameIndex(redox, { state: 'charging', animT: 1 / 18 }), 3);
+  assert.equal(sheetFrameIndex(redox, { state: 'charging', animT: 2 / 18 }), 4);
+  assert.equal(sheetFrameIndex(redox, { state: 'charging', animT: 3 / 18 }), 3);
+  assert.equal(sheetFrameIndex(redox, { state: 'charging', animT: 4 / 18 }), 2);
+  const fist = sheetMeta('van', 'attack');
+  assert.deepEqual(fist.anchors.fist[6], [336, 122]);
+  assert.deepEqual(fist.anchors.feet[6], [707, 716]);
+  assert.deepEqual(sheetMeta('van', 'special').anchors.fist[5], [320, 277]);
+  assert.deepEqual(sheetMeta('van', 'special').anchors.feet[5], [711, 725]);
+});
+
+test('rank 1-2 redraws use their own cells', () => {
+  const walks = {
+    chloe: { frameW: 666, frameH: 1072, footY: 0.9879, fps: 9.93, sheetFacing: 1, cols: 4, rows: 3 },
+    chroma: { frameW: 666, frameH: 1036, footY: 0.9865, fps: 11.52, sheetFacing: 1, cols: 4, rows: 3 },
+  };
+  for (const [id, spec] of Object.entries(walks)) {
+    const art = CHARACTERS[id].art;
+    const def = art.sheets.clips.walk;
+    const png = pngSize(`${art.sheets.dir}${id}_walk.png`);
+    assert.equal(def.frameW, spec.frameW, id);
+    assert.equal(def.frameH, spec.frameH, id);
+    assert.equal(def.footY, spec.footY, id);
+    assert.equal(def.fps, spec.fps, id);
+    assert.equal(def.loop, true, id);
+    assert.equal(def.count, 12, id);
+    assert.equal(def.sheetFacing, spec.sheetFacing, id);
+    assert.equal(def.displayScale, art.height / def.visibleH, id);
+    assert.equal(png.w, spec.frameW * spec.cols, id);
+    assert.equal(png.h, spec.frameH * spec.rows, id);
+    assert.equal(MOVE_SHEETS[id].walk, undefined, id);
+  }
+  const liv = CHARACTERS.liv.art.sheets.clips.defense;
+  const livPng = pngSize('art-src/imported/sheets/liv_defense.png');
+  assert.equal(liv.frameW, 668);
+  assert.equal(liv.frameH, 1011);
+  assert.equal(liv.footY, 0.9792);
+  assert.equal(livPng.w, 668 * 6);
+  assert.equal(livPng.h, 1011 * 2);
+  assert.deepEqual(sheetMeta('liv', 'defense').anchors.fist[1], [544, 538]);
+  assert.deepEqual(sheetMeta('liv', 'defense').anchors.feet[1], [283, 998]);
+  const eruption = CHARACTERS.sully.art.sheets.clips.special;
+  const eruptionPng = pngSize('art-src/gemini-test/sheets/sully_special.png');
+  assert.equal(eruption.frameW, 603);
+  assert.equal(eruption.frameH, 790);
+  assert.equal(eruption.footY, 0.9443);
+  assert.equal(eruption.displayScale, CHARACTERS.sully.art.height / eruption.visibleH);
+  assert.equal(eruptionPng.w, 603 * 6);
+  assert.equal(eruptionPng.h, 790 * 2);
+  assert.deepEqual(sheetMeta('sully', 'special').anchors.feet[0], [369, 745]);
+  assert.deepEqual(sheetMeta('sully', 'special').anchors.feet[8], [465, 710]);
+  assert.deepEqual(sheetMeta('sully', 'special').anchors.fist[8], [576, 163]);
+});
+
+test('ben walk uses the idle body height', () => {
+  const art = CHARACTERS.ben.art;
+  const def = art.sheets.clips.walk;
+  const png = pngSize(`${art.sheets.dir}ben_walk.png`);
+  assert.equal(def.count, 12);
+  assert.equal(def.fps, 9.93);
+  assert.equal(def.loop, true);
+  assert.equal(def.frameW, 832);
+  assert.equal(def.frameH, 1283);
+  assert.equal(def.footY, 0.9337);
+  assert.equal(def.visibleH, 1180);
+  assert.equal(def.displayScale, art.height / def.visibleH);
+  assert.equal(def.sheetFacing, undefined);
+  assert.equal(png.w, 832 * 4);
+  assert.equal(png.h, 1283 * 3);
+  assert.equal(MOVE_SHEETS.ben, undefined);
+});
+
+test('hydra and helen walks use the defringed cells', () => {
+  const walks = {
+    hydra: { frameW: 1242, frameH: 720, footY: 0.9741, visibleH: 674, height: 122, cols: 6, rows: 6 },
+    helen: { frameW: 1244, frameH: 692, footY: 0.9665, visibleH: 621, height: 138, cols: 6, rows: 6 },
+  };
+  for (const [id, spec] of Object.entries(walks)) {
+    const art = CHARACTERS[id].art;
+    const def = art.sheets.clips.walk;
+    const png = pngSize(`${art.sheets.dir}${id}_walk.png`);
+    assert.equal(def.count, 33, id);
+    assert.equal(def.fps, 10, id);
+    assert.equal(def.loop, true, id);
+    assert.equal(def.frameW, spec.frameW, id);
+    assert.equal(def.frameH, spec.frameH, id);
+    assert.equal(def.footY, spec.footY, id);
+    assert.equal(def.visibleH, spec.visibleH, id);
+    assert.equal(def.displayScale, spec.height / spec.visibleH, id);
+    assert.equal(png.w, spec.frameW * spec.cols, id);
+    assert.equal(png.h, spec.frameH * spec.rows, id);
+  }
+});
+
+test('rank 1-3 redraws use their own cells', () => {
+  const walks = {
+    natalie: { frameW: 636, frameH: 1028, footY: 0.9864, fps: 10.67, sheetFacing: 1, cols: 4, rows: 3, dir: 'art-src/gemini-test/sheets/' },
+    nitra: { frameW: 444, frameH: 684, footY: 0.9795, fps: 9.29, sheetFacing: 1, cols: 4, rows: 3, dir: 'art-src/gemini-test/sheets/' },
+    rhoda: { frameW: 854, frameH: 1041, footY: 0.9866, fps: 9, sheetFacing: undefined, cols: 4, rows: 3, dir: 'art-src/imported/sheets/' },
+    scarlett: { frameW: 562, frameH: 1004, footY: 0.9861, fps: 12.52, sheetFacing: 1, cols: 4, rows: 3, dir: 'art-src/gemini-test/sheets/' },
+  };
+  for (const [id, spec] of Object.entries(walks)) {
+    const art = CHARACTERS[id].art;
+    const def = art.sheets.clips.walk;
+    const png = pngSize(`${spec.dir}${id}_walk.png`);
+    assert.equal(def.frameW, spec.frameW, id);
+    assert.equal(def.frameH, spec.frameH, id);
+    assert.equal(def.footY, spec.footY, id);
+    assert.equal(def.fps, spec.fps, id);
+    assert.equal(def.loop, true, id);
+    assert.equal(def.count, 12, id);
+    assert.equal(def.sheetFacing, spec.sheetFacing, id);
+    assert.equal(def.visibleH, art.sheets.clips.idle.visibleH, id);
+    assert.equal(def.displayScale, art.height / def.visibleH, id);
+    assert.equal(png.w, spec.frameW * spec.cols, id);
+    assert.equal(png.h, spec.frameH * spec.rows, id);
+    assert.equal(MOVE_SHEETS[id].walk, undefined, id);
+  }
+  const burn = CHARACTERS.scarlett.art.sheets.clips.charge;
+  const burnPng = pngSize('art-src/gemini-test/sheets/scarlett_charge.png');
+  assert.equal(burn.frameW, 862);
+  assert.equal(burn.frameH, 1014);
+  assert.equal(burn.footY, 0.9862);
+  assert.equal(burnPng.w, 862 * 4);
+  assert.equal(burnPng.h, 1014 * 3);
+  assert.deepEqual(sheetMeta('scarlett', 'charge').anchors.fist[6], [799, 286]);
+  assert.deepEqual(sheetMeta('scarlett', 'charge').anchors.feet[5], [330, 996]);
+  assert.equal(sheetMeta('scarlett', 'charge').anchors.feet[6], null);
 });

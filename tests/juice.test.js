@@ -144,3 +144,29 @@ test('hit sparks and smoke return to the pool', () => {
   assert.strictEqual(juice.effectCount(), 0);
   assert.ok(juice.pool.every((p) => !p.active));
 });
+
+test('each damage type builds its own spark, and a kick follows the launch', () => {
+  const juice = new Juice(fakeScene());
+  juice.hit(0, 0, 12, 'heat', 0);
+  assert.ok(juice.fx.some((f) => f.element === 'heat' && f.vy < 0));
+  assert.equal(juice.fx.some((f) => f.img?.key === 'juice-slash'), false);
+  for (let i = 0; i < 30; i++) juice.update(1 / 60);
+  juice.hit(0, 0, 12, 'chemical', 0);
+  assert.ok(juice.fx.some((f) => f.element === 'chemical'));
+  assert.equal(juice.fx.some((f) => f.element === 'impact'), false);
+  for (let i = 0; i < 30; i++) juice.update(1 / 60);
+  juice.hit(0, 0, 12, 'radiation', 0);
+  assert.ok(juice.fx.some((f) => f.element === 'radiation' && f.img?.key === 'juice-ring'));
+  for (let i = 0; i < 30; i++) juice.update(1 / 60);
+  juice.hit(0, 0, 12, 'kinetic', -0.4);
+  assert.ok(juice.fx.some((f) => f.element === 'impact' && f.img?.key === 'juice-slash'));
+  for (let i = 0; i < 30; i++) juice.update(1 / 60);
+  juice.kick(-Math.PI / 2, 1, 20);
+  const up = juice.shakeOffset(0, 1);
+  assert.ok(up.y < -4, `upward kick ${up.y}`);
+  for (let i = 0; i < 40; i++) juice.update(1 / 60);
+  const gone = juice.shakeOffset(0, 1);
+  assert.ok(Math.abs(gone.y) < 1, `kick should end, y ${gone.y}`);
+  juice.dust(100, 500, -1);
+  assert.ok(juice.fx.filter((f) => f.kind === 'dust').length >= 4);
+});

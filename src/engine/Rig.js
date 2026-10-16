@@ -474,9 +474,12 @@ export class Rig extends Phaser.GameObjects.Container {
 
     if (this.sheetMode) {
       const authored = authoredClipName(this.charDef?.id, state, this.moveKey);
-      if (authored && this.sheets.clips[authored] && sheetMeta(this.charDef.id, authored)) {
-        const info = this.sheets.clips[authored];
-        const meta = sheetMeta(this.charDef.id, authored);
+      const meta = authored ? sheetMeta(this.charDef.id, authored) : null;
+      // A charge or guard can play a range of another clip. The shown clip
+      // keeps that clip's cell, sole, and anchors.
+      const shown = meta?.plays && this.sheets.clips[meta.plays] ? meta.plays : authored;
+      if (shown && this.sheets.clips[shown] && meta) {
+        const info = this.sheets.clips[shown];
         const i = sheetFrameIndex(meta, {
           state,
           fd: this.frameData,
@@ -485,15 +488,15 @@ export class Rig extends Phaser.GameObjects.Container {
           animT: this.animT,
         });
         this.sprite.anims.stop();
-        this.sprite.setTexture(sheetKey(this.art, authored), i);
-        if (this.currentClip !== authored) this.applyClipLayout(info);
-        this.currentClip = authored;
-        this.sheetClip = authored;
+        this.sprite.setTexture(sheetKey(this.art, shown), i);
+        if (this.currentClip !== shown) this.applyClipLayout(info);
+        this.currentClip = shown;
+        this.sheetClip = shown;
         this.sheetFrame = i;
         this._authoredSheet = true;
         const blend = (this.frameData && state === 'attack') ? idleBlend(this.frameData, this.attackFrame || 0) : 0;
         this.blendToIdle(blend);
-        this.rememberMask(authored, i);
+        this.rememberMask(shown, i);
         this.sprite.anims.timeScale = 1;
         this.applyPose(dt, state, this._layoutScale || 1);
         return;

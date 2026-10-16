@@ -4,6 +4,7 @@ import { ROSTER } from '../src/data/characters.js';
 import {
   poseName, arcReach, strikeHits, resolvePush, pushSolids, projectileSpriteSize, projectileHits, rectsOverlap,
   fittedSize, maskBook, debugHitCells, debugDashCells, slashRibbon, hitAabb, maskShown, debugCells,
+  clampToBody, hurtUnion,
 } from '../src/engine/boxes.js';
 
 const POSE = { rot: 0, sx: 1, sy: 1, x: 0, y: 0 };
@@ -201,6 +202,19 @@ test('an armed attack draws the volume that lands the hit', () => {
   const hb = hitAabb(van);
   const fist = fighter('hydra', { x: (hb.left + hb.right) / 2, y: (hb.top + hb.bottom) / 2 + 20 });
   assert.equal(strikeHits(van, fist), true);
+});
+
+test('a spark above the head is pulled onto the body', () => {
+  const hog = fighter('hog', { y: 560 });
+  const u = hurtUnion(hog);
+  assert.ok(u.height > 40, `hurt height ${u.height}`);
+  const high = clampToBody(hog, { x: hog.x + 400, y: u.y - 120 });
+  assert.ok(Math.abs(high.y - u.y) < 0.01, `floated to ${high.y}, body top ${u.y}`);
+  assert.ok(Math.abs(high.x - (u.x + u.width)) < 0.01);
+  const midY = u.y + u.height * 0.5;
+  const kept = clampToBody(hog, { x: hog.x, y: midY });
+  assert.ok(Math.abs(kept.y - midY) < 0.01);
+  assert.ok(Math.abs(kept.x - hog.x) < 0.01);
 });
 
 test('the overlay skips hidden and KO fighters', () => {

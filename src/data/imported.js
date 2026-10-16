@@ -5030,15 +5030,17 @@ export const IMPORTED_ROSTER = {
             "displayScale": 0.99248
           },
           "attack": {
-            "count": 5,
-            "fps": 12,
+            "count": 12,
+            "fps": 18,
             "loop": false,
-            "frameW": 139,
-            "frameH": 190,
-            "footY": 0.9158,
-            "visibleH": 134,
-            "bodyH": 134,
-            "displayScale": 0.98507
+            "frameW": 713,
+            "frameH": 740,
+            "footY": 0.977,
+            "visibleH": 560,
+            "bodyH": 560,
+            "displayScale": 0.2357142857142857,
+            "cols": 4,
+            "rows": 3
           }
         }
       }
@@ -7269,14 +7271,14 @@ export const IMPORTED_ROSTER = {
           },
           "walk": {
             "count": 12,
-            "fps": 8,
+            "fps": 9,
             "loop": true,
-            "frameW": 117,
-            "frameH": 146,
-            "footY": 0.9384,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 854,
+            "frameH": 1041,
+            "footY": 0.9866,
+            "visibleH": 997,
+            "bodyH": 997,
+            "displayScale": 132 / 997
           },
           "attack": {
             "count": 8,

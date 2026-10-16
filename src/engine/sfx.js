@@ -84,10 +84,72 @@ function duckOthers() {
   duck.gain.linearRampToValueAtTime(1, t + 0.12);
 }
 
+const CLIPS = {
+  kinetic: 'hit-kinetic.ogg',
+  'kinetic-heavy': 'hit-kinetic-heavy.ogg',
+  heat: 'hit-heat.ogg',
+  electrical: 'hit-electrical.ogg',
+  chemical: 'hit-chemical.ogg',
+  radiation: 'hit-radiation.ogg',
+  land: 'land.ogg',
+  'land-heavy': 'land-heavy.ogg',
+  ko: 'ko.ogg',
+};
+
+const buffers = new Map();
+const loading = new Map();
+
+function clipUrl(name) {
+  return `/assets/sfx/${CLIPS[name]}`;
+}
+
+function loadClip(name) {
+  if (typeof window === 'undefined' || typeof fetch !== 'function') return Promise.resolve(null);
+  if (buffers.has(name)) return Promise.resolve(buffers.get(name));
+  if (loading.has(name)) return loading.get(name);
+  const job = fetch(clipUrl(name))
+    .then((res) => (res.ok ? res.arrayBuffer() : null))
+    .then((raw) => (raw ? ac().decodeAudioData(raw) : null))
+    .then((buf) => {
+      if (buf) buffers.set(name, buf);
+      return buf;
+    })
+    .catch(() => null);
+  loading.set(name, job);
+  return job;
+}
+
+/** Start fetching the CC0 hits. Playback falls back to the synth until they decode. */
+export function preload() {
+  for (const name of Object.keys(CLIPS)) loadClip(name);
+}
+
+function playBuf(name, { vol = 0.6, rate = 1 } = {}) {
+  if (typeof window === 'undefined') return false;
+  const buf = buffers.get(name);
+  if (!buf) {
+    loadClip(name);
+    return false;
+  }
+  const c = ac();
+  const src = c.createBufferSource();
+  const gain = c.createGain();
+  src.buffer = buf;
+  src.playbackRate.value = rate;
+  gain.gain.setValueAtTime(vol, c.currentTime);
+  src.connect(gain).connect(master);
+  src.start();
+  return true;
+}
+
 const SOUNDS = {
   jump: () => tone({ freq: 300, endFreq: 620, type: 'square', dur: 0.12, vol: 0.12 }),
-  land: () => tone({ freq: 140, endFreq: 70, type: 'triangle', dur: 0.08, vol: 0.1 }),
-  landHeavy: () => { noise({ dur: 0.1, vol: 0.18, lowpass: 800 }); tone({ freq: 90, endFreq: 40, type: 'sine', dur: 0.14, vol: 0.2 }); },
+  land: () => { if (!playBuf('land', { vol: 0.55, rate: 0.96 + Math.random() * 0.08 })) tone({ freq: 140, endFreq: 70, type: 'triangle', dur: 0.08, vol: 0.1 }); },
+  landHeavy: () => {
+    if (playBuf('land-heavy', { vol: 0.7 })) return;
+    noise({ dur: 0.1, vol: 0.18, lowpass: 800 });
+    tone({ freq: 90, endFreq: 40, type: 'sine', dur: 0.14, vol: 0.2 });
+  },
   foot: () => tone({ freq: 180, endFreq: 90, type: 'triangle', dur: 0.04, vol: 0.035 }),
   whoosh: () => noise({ dur: 0.12, vol: 0.08, highpass: 900 }),
   hit: () => playHit(8, 'kinetic'),
@@ -119,18 +181,28 @@ function typeTail(type, s) {
   } else noise({ dur: 0.09, vol: 0.12 + 0.1 * s, highpass: 1200 });
 }
 
-/** Three layers on the hit frame. Strength s is 0..1 from damage. */
+function clipFor(type, dmg) {
+  if (type === 'heat' || type === 'electrical' || type === 'chemical' || type === 'radiation') return type;
+  return dmg >= 14 ? 'kinetic-heavy' : 'kinetic';
+}
+
+/** Sample first, synth if the clip has not decoded yet. Strength s is 0..1 from damage. */
 export function playHit(dmg = 8, type = 'kinetic', ko = false) {
   try {
     const s = Math.min(1, Math.max(0, dmg / 20));
-    noise({ dur: 0.008, vol: 0.18 + 0.15 * s, highpass: 2000 });
-    tone({ freq: 180, endFreq: 60, type: 'sine', dur: 0.06 + 0.12 * s, vol: 0.16 + 0.2 * s });
-    typeTail(type, s);
+    const played = playBuf(clipFor(type, dmg), { vol: 0.42 + 0.4 * s, rate: 1.08 - 0.2 * s });
+    if (!played) {
+      noise({ dur: 0.008, vol: 0.18 + 0.15 * s, highpass: 2000 });
+      tone({ freq: 180, endFreq: 60, type: 'sine', dur: 0.06 + 0.12 * s, vol: 0.16 + 0.2 * s });
+      typeTail(type, s);
+    }
     if (dmg >= 18) {
-      tone({ freq: 55, type: 'sine', dur: 0.3, vol: 0.28 });
+      tone({ freq: 55, type: 'sine', dur: 0.3, vol: 0.22 });
       duckOthers();
     }
-    if (ko) SOUNDS.koHit();
+    if (ko) {
+      if (!playBuf('ko', { vol: 0.75 })) SOUNDS.koHit();
+    }
   } catch { /* audio unavailable */ }
 }
 

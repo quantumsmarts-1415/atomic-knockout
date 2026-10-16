@@ -34,9 +34,10 @@ test('push 2 call 1 body sheets match their clip cells', () => {
     }
   }
   const surge = sheetMeta('van', 'special');
-  assert.equal(surge.release, 6);
-  assert.deepEqual(surge.active, [6, 8]);
-  assert.equal(surge.anchors.feet[0][0], 688);
+  assert.equal(surge.release, 5);
+  assert.deepEqual(surge.windup, [0, 4]);
+  assert.deepEqual(surge.active, [5, 6]);
+  assert.equal(surge.anchors.feet[0][0], 626);
   assert.equal(sheetMeta('titan', 'charge').count, 12);
   const brace = sheetMeta('sully', 'defense');
   assert.equal(brace.gather, true);
@@ -50,7 +51,7 @@ test('push 2 call 1 body sheets match their clip cells', () => {
   assert.equal(sheetFrameIndex(ram, { state: 'charging', animT: 5 / 18 }), 5);
   assert.equal(sheetFrameIndex(ram, { state: 'charging', animT: 6 / 18 }), 0);
   const fd = { startup: 4, active: 6, recovery: 6, visible: 16 };
-  assert.equal(sheetFrameIndex(surge, { state: 'attack', fd, attackFrame: 4 }), 6);
+  assert.equal(sheetFrameIndex(surge, { state: 'attack', fd, attackFrame: 4 }), 5);
 });
 
 test('call 1 sheets match their clip cells', () => {
@@ -273,7 +274,7 @@ test('call 5 attack sheets match their clip cells', () => {
     const cells = (png.w / def.frameW) * (png.h / def.frameH);
     assert.ok(cells >= def.count, `${id} cells ${cells}`);
     assert.equal(def.displayScale, art.height / def.visibleH);
-    if (id !== 'chloe' && id !== 'cal' && id !== 'kyle' && id !== 'sully' && id !== 'yara' && id !== 'sandy' && id !== 'rhoda') assert.equal(MOVE_SHEETS[id].charge, undefined);
+    if (id !== 'chloe' && id !== 'cal' && id !== 'kyle' && id !== 'sully' && id !== 'yara' && id !== 'sandy' && id !== 'rhoda' && id !== 'van') assert.equal(MOVE_SHEETS[id].charge, undefined);
     if (id !== 'van' && id !== 'sully' && id !== 'chloe' && id !== 'cal' && id !== 'kyle' && id !== 'yara' && id !== 'rhoda' && id !== 'sandy') assert.equal(MOVE_SHEETS[id].special, undefined);
   }
   assert.equal(CHARACTERS.sully.art.sheets.clips.attack.count, 11);
@@ -950,7 +951,7 @@ test('call 6 walks match their clip cells', () => {
     sully: { fps: 8, sheetFacing: undefined },
     kyle: { fps: 11.08, sheetFacing: undefined },
     cal: { fps: 7.38, sheetFacing: 1 },
-    van: { fps: 9, sheetFacing: undefined },
+    van: { fps: 11.52, sheetFacing: undefined },
   };
   for (const [id, spec] of Object.entries(expect)) {
     const art = CHARACTERS[id].art;
@@ -1005,4 +1006,46 @@ test('oxana walk and manny attack use the redo cells', () => {
   assert.deepEqual(meta.anchors.fist[6], [706, 329]);
   assert.deepEqual(meta.anchors.tip[6], [706, 329]);
   assert.deepEqual(meta.anchors.feet[0], [182, 722]);
+});
+
+test('van redo clips keep their own cells, and guard and redox use those frames', () => {
+  const art = CHARACTERS.van.art;
+  const expect = {
+    walk: { frameW: 1222, frameH: 720, footY: 0.9899, fps: 11.52, file: 'van_walk.png', cols: 3, rows: 4 },
+    attack: { frameW: 1222, frameH: 724, footY: 0.9903, fps: 18, file: 'van_attack.png', cols: 3, rows: 4 },
+    special: { frameW: 1222, frameH: 733, footY: 0.9727, fps: 18, file: 'van_special.png', cols: 3, rows: 4 },
+  };
+  for (const [name, spec] of Object.entries(expect)) {
+    const def = art.sheets.clips[name];
+    const png = pngSize(`${art.sheets.dir}${spec.file}`);
+    assert.equal(def.frameW, spec.frameW, name);
+    assert.equal(def.frameH, spec.frameH, name);
+    assert.equal(def.footY, spec.footY, name);
+    assert.equal(def.fps, spec.fps, name);
+    assert.equal(def.visibleH, 684, name);
+    assert.equal(def.displayScale, art.height / def.visibleH, name);
+    assert.equal(png.w, spec.frameW * spec.cols, name);
+    assert.equal(png.h, spec.frameH * spec.rows, name);
+  }
+  const guard = sheetMeta('van', 'defense');
+  assert.equal(guard.plays, 'attack');
+  assert.equal(guard.pingPong, true);
+  assert.deepEqual(guard.loop, [0, 1]);
+  assert.equal(sheetFrameIndex(guard, { state: 'defending', animT: 0 }), 0);
+  assert.equal(sheetFrameIndex(guard, { state: 'defending', animT: 1 / 18 }), 1);
+  assert.equal(sheetFrameIndex(guard, { state: 'defending', animT: 2 / 18 }), 0);
+  const redox = sheetMeta('van', 'charge');
+  assert.equal(redox.plays, 'special');
+  assert.equal(redox.pingPong, true);
+  assert.deepEqual(redox.loop, [2, 4]);
+  assert.equal(sheetFrameIndex(redox, { state: 'charging', animT: 0 }), 2);
+  assert.equal(sheetFrameIndex(redox, { state: 'charging', animT: 1 / 18 }), 3);
+  assert.equal(sheetFrameIndex(redox, { state: 'charging', animT: 2 / 18 }), 4);
+  assert.equal(sheetFrameIndex(redox, { state: 'charging', animT: 3 / 18 }), 3);
+  assert.equal(sheetFrameIndex(redox, { state: 'charging', animT: 4 / 18 }), 2);
+  const fist = sheetMeta('van', 'attack');
+  assert.deepEqual(fist.anchors.fist[6], [336, 122]);
+  assert.deepEqual(fist.anchors.feet[6], [707, 716]);
+  assert.deepEqual(sheetMeta('van', 'special').anchors.fist[5], [320, 277]);
+  assert.deepEqual(sheetMeta('van', 'special').anchors.feet[5], [711, 725]);
 });

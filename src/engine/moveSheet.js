@@ -41,12 +41,18 @@ export function frameToWorld(anchor, frameW, frameH, footY, scale, artFacing, fa
   return { x: originX + (facing || 1) * localX, y: originY + localY };
 }
 
-function loopIndex(range, animT, fps) {
+function loopIndex(range, animT, fps, pingPong = false) {
   const a = range[0] | 0;
   const b = range[1] | 0;
   const n = Math.max(1, b - a + 1);
-  const i = Math.floor(Math.max(0, animT || 0) * (fps > 0 ? fps : 18)) % n;
-  return a + i;
+  const step = Math.floor(Math.max(0, animT || 0) * (fps > 0 ? fps : 18));
+  if (pingPong && b > a) {
+    const span = b - a;
+    const cycle = span * 2;
+    const p = ((step % cycle) + cycle) % cycle;
+    return a + (p <= span ? p : cycle - p);
+  }
+  return a + (step % n);
 }
 
 function sample(range, t) {
@@ -76,7 +82,7 @@ export function sheetFrameIndex(meta, opts = {}) {
   const count = meta.count || 12;
   const state = opts.state;
   if (state === 'charging' || (state === 'defending' && meta.gather)) {
-    return loopIndex(meta.loop || meta.windup || [0, count - 1], opts.animT, meta.fps);
+    return loopIndex(meta.loop || meta.windup || [0, count - 1], opts.animT, meta.fps, !!meta.pingPong);
   }
   const phases = playback(meta, opts.comboStep | 0);
   const fd = opts.fd;

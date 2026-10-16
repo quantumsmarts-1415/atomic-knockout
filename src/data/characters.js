@@ -2302,10 +2302,12 @@ export const CHARACTERS = {
         displayScale: 0.22393,
         clips: {
           idle: { count: 13, fps: 3.6, loop: true },
-          // The walk, Alloy Fist, and Prism Surge face left, the same way the idle does.
-          walk: { count: 12, fps: 9, loop: true, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
-          attack: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
-          special: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 722, footY: 0.9903, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
+          // Walk, Alloy Fist, and Prism Surge face left, the same way the idle does.
+          // Each clip keeps its own cell and sole. Four-State Guard and Redox Flow
+          // play ranges of the attack and Prism Surge sheets.
+          walk: { count: 12, fps: 11.52, loop: true, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
+          attack: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 724, footY: 0.9903, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
+          special: { count: 12, fps: 18, loop: false, frameW: 1222, frameH: 733, footY: 0.9727, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },
         },
       },
     },

@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import {
   FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, knockbackRaw, decayLaunch,
   launchVelocity, applyDI, leavesBlast, stripIndex, takeBuffered,
-  poseTarget, launchWeight, hitlagShake, frameZoom, easeOutBack,
+  poseTarget, launchWeight, hitlagShake, frameZoom, cameraFrame, containFrame, easeOutBack,
 } from '../src/engine/feel.js';
 
 test('hitlag matches the Ultimate table', () => {
@@ -131,10 +131,37 @@ test('launch weight floors light gases and hitlag shake stays horizontal', () =>
   assert.strictEqual(heavy.x, -5);
   const tight = frameZoom(80, 80, 1280, 720, 1, FEEL.camMax1);
   assert.ok(tight <= FEEL.camMax1 + 1e-6);
-  assert.ok(tight >= 1.8 && tight <= 2.05, `close zoom ${tight}`);
+  assert.ok(tight >= 2.2 && tight <= 2.45, `close zoom ${tight}`);
   assert.ok(FEEL.camMinSpanX <= 520 && FEEL.camMinSpanY <= 300);
   const wide = frameZoom(2400, 1400, 1280, 720, 0.4, FEEL.camMax1);
   assert.ok(wide < 0.7, `wide zoom ${wide}`);
+});
+
+test('zoom frames the group with a little room and does not punch in', () => {
+  const close = cameraFrame([
+    { x: 620, y: 560, w: 42, h: 110 },
+    { x: 680, y: 560, w: 42, h: 110 },
+  ], 1280, 720, 1, FEEL.camMax1);
+  const far = cameraFrame([
+    { x: 200, y: 560, w: 42, h: 110 },
+    { x: 1080, y: 400, w: 42, h: 110 },
+  ], 1280, 720, 1, FEEL.camMax1);
+  assert.ok(close.zoom > far.zoom * 1.6, `close ${close.zoom} should focus more than far ${far.zoom}`);
+  assert.ok(Math.abs(close.zoom - FEEL.camMax1) < 1e-6, `a clump uses the close cap, got ${close.zoom}`);
+  // The view is the bodies plus a short margin, not the whole stage and not a crop.
+  const viewH = 720 / close.zoom;
+  const viewW = 1280 / close.zoom;
+  assert.ok(viewH > 110 + 60 && viewH < 420, `close view height ${viewH}`);
+  assert.ok(viewW > 200 && viewW < 700, `close view width ${viewW}`);
+  assert.ok(close.cx > 630 && close.cx < 670, `center stays on the pair, got ${close.cx}`);
+  // A body the eased camera would crop pulls the zoom out, and only out.
+  const held = containFrame(close.zoom, close.cx, close.cy, {
+    x0: 200, y0: 200, x1: 1100, y1: 600,
+  }, 1280, 720, 1);
+  assert.ok(held.zoom < close.zoom - 0.4, `contain should open up, got ${held.zoom}`);
+  const still = containFrame(1.2, 640, 400, { x0: 600, y0: 500, x1: 700, y1: 560 }, 1280, 720, 1);
+  assert.ok(Math.abs(still.zoom - 1.2) < 1e-6);
+  assert.ok(FEEL.camZoomOutTau < FEEL.camZoomInTau);
 });
 
 test('attack strips hold contact instead of spreading frames evenly', () => {

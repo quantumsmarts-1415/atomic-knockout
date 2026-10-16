@@ -45,10 +45,11 @@
 // 1280x720 view exactly as before:
 //   world:    { width, height } -- stage size in px (default 1280x720).
 //   camera:   { minZoom?, maxZoom?, padX?, padTop?, padBottom?, lerpMs?, zoomInMs?,
-//             zoomOutMs? } -- BattleScene frames every live fighter, eases
-//             pan/zoom, and clamps to the world (zoom never below the level
-//             that shows the whole world). Parallax layers are world-sized and
-//             `par` becomes the Phaser scrollFactor (0 = fixed sky, 1 = terrain).
+//             zoomOutMs? } -- BattleScene frames every live fighter plus a
+//             short margin (Smash-style; hits do not zoom), eases pan/zoom,
+//             and clamps to the world (zoom never below the level that shows
+//             the whole world). Parallax layers are world-sized and `par`
+//             becomes the Phaser scrollFactor (0 = fixed sky, 1 = terrain).
 //   botNav:   true -> CPUs path-find over the surface graph (engine/BotNav.js:
 //             jumps, air jumps, drop-throughs, elevator rides) instead of the
 //             flat-stage chase logic.
@@ -335,7 +336,7 @@ export const STAGES = [
     music: 'bgm-carbon-skyhook',
     theme: { skyTop: 0x070b1c, skyBottom: 0xd77a4a, hills: [0x1a2236, 0x141a2a] },
     world: { width: 2560, height: 1440 },
-    camera: { maxZoom: 1, padX: 240, padTop: 230, padBottom: 180 },
+    camera: { maxZoom: 1 },
     botNav: true,
     art: {
       dir: 'art-src/stages/carbon-skyhook/',

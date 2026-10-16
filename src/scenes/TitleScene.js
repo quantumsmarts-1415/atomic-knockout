@@ -110,7 +110,7 @@ export default class TitleScene extends Phaser.Scene {
   // ---------------------------------------------------------------- menu
   drawMenu() {
     this.entries = [
-      { label: 'Play', keyHint: 'P', onPress: () => this.go('PlayerJoin') },
+      { label: 'Play', onPress: () => this.go('PlayerJoin') },
       { label: 'Campaign', note: 'Coming soon', disabled: true },
       { label: 'Settings', onPress: () => this.openSettings() },
       { label: 'Credits', onPress: () => this.openCredits() },

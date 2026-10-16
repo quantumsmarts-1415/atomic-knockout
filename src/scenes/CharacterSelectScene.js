@@ -9,9 +9,10 @@ import { phoneNet } from '../net/PhoneNet.js';
 import { isGamepadSlot, menuInputForSlot, padBySlot, pollGamepads } from '../engine/gamepad.js';
 import { loadRosterArt, registerSheetAnims } from './BootScene.js';
 import {
-  drawMenuBackground, FONT_BODY, FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME,
+  FONT_DISPLAY, FONT_MONO, GRID, MOTION, PLAYER_COLORS, PLAYER_COLORS_CSS, THEME,
+  drawFooterHints, drawHeader, drawMenuBackground, textStyle,
 } from '../ui/theme.js';
-import { showScene } from '../ui/flow.js';
+import { enterScene, showScene } from '../ui/flow.js';
 
 // Slot numbering, decided in PlayerJoinScene: 0/1 = keyboard, 2-5 = a phone
 // (PhoneNet's own connection slot), 100+seatIndex = a bot. Bots live far
@@ -26,11 +27,17 @@ const TILE_H = 44;
 const GAP = 4;
 const STRIDE_X = TILE_W + GAP;
 const STRIDE_Y = TILE_H + GAP;
-const VIEW_Y = 76;
-const VIEW_H = 332;
+const VIEW_Y = 82;
+const VIEW_H = 326;
 
-const PREVIEW_ANCHOR_Y = 592;
-const PREVIEW_TOP_MARGIN = 16;
+// Preview band under the table. With one or two players the name plate
+// stands beside the fighter; with more it tucks underneath a smaller rig.
+const PREVIEW_TOP = VIEW_Y + VIEW_H + 12;
+const FEET_SIDE = 606;
+const FEET_UNDER = 556;
+const PLATE_H = 96;
+const SWATCH_D = 16;
+const SWATCH_GAP = 8;
 
 export default class CharacterSelectScene extends Phaser.Scene {
   constructor() {
@@ -47,15 +54,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.playable = this.slots.map((s, i) => (s.charId ? i : null)).filter((i) => i !== null);
     this.scrollY = 0;
     drawMenuBackground(this, W, H);
-    this.add.text(W / 2, 22, 'REACTOR  ·  ROSTER', {
-      fontFamily: FONT_MONO, fontSize: '12px', color: THEME.tealCss, letterSpacing: 3,
-    }).setOrigin(0.5);
-    this.add.text(W / 2, 46, 'CHOOSE YOUR ELEMENT', {
-      fontFamily: FONT_DISPLAY, fontSize: '26px', color: THEME.mistCss, letterSpacing: 1,
-    }).setOrigin(0.5);
-    this.add.text(W / 2, 66, 'GOLD EDGE  ·  UPDATED ART', {
-      fontFamily: FONT_MONO, fontSize: '11px', color: THEME.goldCss, letterSpacing: 1.5,
-    }).setOrigin(0.5);
+    drawHeader(this, { kicker: 'Reactor · Roster', title: 'Choose your element', y: 18 });
+    this.drawLegend();
 
     const gridW = TABLE_COLS * STRIDE_X - GAP;
     this.gridX = Math.round((W - gridW) / 2);
@@ -84,15 +84,35 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.playerSlots = this.playerSeeds.map((seed) => seed.slot);
     this.players = this.playerSlots.map((slot, i) => this.makePlayer(slot, i));
     for (const p of this.players) {
+      if (p.isBot) p.palette = this.defaultPalette(p, CHARACTERS[this.slots[p.cursor].charId], true);
+      this.buildPlate(p);
       this.buildPreview(p);
     }
     this.scrollTo(this.players.find((p) => !p.isBot)?.cursor ?? 0);
 
-    this.hint = this.add.text(W / 2, H - 18, '', {
-      fontFamily: FONT_BODY, fontSize: '14px', color: THEME.dimCss,
-    }).setOrigin(0.5);
+    this.status = this.add.text(W / 2, H - GRID.footerY, '', textStyle('mono', { color: THEME.goldCss })).setOrigin(0.5).setDepth(6);
+    this.hints = drawFooterHints(this, [
+      { keys: ['W', 'A', 'S', 'D'], label: 'Move' },
+      { key: 'F', label: 'Confirm' },
+      { keys: ['A', 'D'], label: 'Color' },
+      { key: 'G', label: 'Back' },
+    ]);
+    this.add.text(W - GRID.margin, H - GRID.footerY, 'P2  Arrows + K / L', textStyle('label')).setOrigin(1, 0.5).setDepth(6);
     this.refreshAll();
     this.checkAllLocked();
+    enterScene(this);
+  }
+
+  drawLegend() {
+    // top-right: what the gold edge means
+    const x = W - GRID.margin;
+    const y = 40;
+    const g = this.add.graphics().setDepth(6);
+    g.lineStyle(2, THEME.gold, 1);
+    g.strokeRoundedRect(x - 150, y - 7, 18, 14, 3);
+    g.fillStyle(THEME.shell, 1);
+    g.fillRoundedRect(x - 148, y - 5, 14, 10, 2);
+    this.add.text(x - 124, y, 'REVIEWED ART', textStyle('label', { color: THEME.goldCss })).setOrigin(0, 0.5).setDepth(6);
   }
 
   tileXY(slot) {
@@ -104,9 +124,13 @@ export default class CharacterSelectScene extends Phaser.Scene {
       [0, '1'], [1, '2'], [2, '3'], [3, '4'], [4, '5'], [5, '6'], [6, '7'],
       [8, 'La'], [9, 'Ac'],
     ];
-    // Period 7 leaves column 2 empty, right before Rf. That gap labels the ghost row.
-    this.grid.add(this.add.text(2 * STRIDE_X + TILE_W / 2, 6 * STRIDE_Y + TILE_H / 2, 'GHOST\nRf–Og', {
-      fontFamily: FONT_MONO, fontSize: '10px', color: THEME.tealCss, align: 'center',
+    // Period 7 leaves column 2 empty, right before Rf. That gap labels the
+    // unfinished tail of the table.
+    this.grid.add(this.add.text(2 * STRIDE_X + TILE_W / 2, 6 * STRIDE_Y + TILE_H / 2 - 6, 'Rf – Og', {
+      fontFamily: FONT_MONO, fontSize: '10px', color: THEME.dimCss, align: 'center',
+    }).setOrigin(0.5));
+    this.grid.add(this.add.text(2 * STRIDE_X + TILE_W / 2, 6 * STRIDE_Y + TILE_H / 2 + 7, 'SOON', {
+      fontFamily: FONT_MONO, fontSize: '8px', color: THEME.tealCss, letterSpacing: 1.5,
     }).setOrigin(0.5));
     for (const [row, text] of labels) {
       this.grid.add(this.add.text(-6, row * STRIDE_Y + TILE_H / 2, text, {
@@ -154,7 +178,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     const zone = this.add.zone(x, y, TILE_W, TILE_H).setOrigin(0, 0).setInteractive();
     zone.on('pointerover', () => {
       const human = this.players?.find((p) => p.isKeyboard && p.phase === 'picking');
-      if (!human) return;
+      if (!human || human.cursor === i) return;
       human.cursor = i;
       this.scrollTo(i);
       this.buildPreview(human);
@@ -168,10 +192,13 @@ export default class CharacterSelectScene extends Phaser.Scene {
   pickWithPointer(index) {
     const human = this.players?.find((p) => p.isKeyboard && p.phase !== 'locked');
     if (!human) return;
-    human.cursor = index;
-    this.scrollTo(index);
-    if (human.phase === 'picking') this.handleConfirm(human);
-    else this.refreshAll();
+    if (human.phase === 'picking') {
+      human.cursor = index;
+      this.scrollTo(index);
+      this.handleConfirm(human);
+    } else if (human.phase === 'palette' && index === human.cursor) {
+      this.handleConfirm(human);
+    }
   }
 
   makePlayer(slot, index) {
@@ -191,28 +218,30 @@ export default class CharacterSelectScene extends Phaser.Scene {
       keys = Object.fromEntries(Object.entries(map).map(([k, v]) => [k, kb.addKey(v)]));
     }
 
-    const previewX = this.previewXFor(index, this.playerSlots?.length ?? 2);
+    const n = this.playerSlots?.length ?? 2;
+    const previewX = this.previewXFor(index, n);
     const randomSlotIdx = this.playable[Math.floor(Math.random() * this.playable.length)];
     const start = isBot ? randomSlotIdx : Math.min(index, this.slots.length - 1);
     return {
       slot, index, isKeyboard, isBot, isGamepad, keys,
       color: PLAYER_COLORS[index % PLAYER_COLORS.length],
-      label: `P${index + 1}${isBot ? ' (CPU)' : ''}`,
+      colorCss: PLAYER_COLORS_CSS[index % PLAYER_COLORS_CSS.length],
+      label: `P${index + 1}`,
       cursor: start,
       phase: isBot ? 'locked' : 'picking',
-      // Standard colors only — palette tints washed raster art toward white.
       palette: 0,
       prevBtn: { left: false, right: false, up: false, down: false, confirm: false, back: false },
       box: this.add.graphics(),
       previewX,
       previewRig: null,
-      panel: this.add.container(previewX, 500),
+      sideways: n <= 2,
     };
   }
 
   previewXFor(index, n) {
     if (n <= 1) return W / 2;
-    const margin = 150;
+    if (n === 2) return index === 0 ? 150 : W - 150;
+    const margin = 120;
     return margin + (index * (W - margin * 2)) / (n - 1);
   }
 
@@ -235,7 +264,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     if (y < this.scrollY) this.scrollY = y;
     else if (y + TILE_H > this.scrollY + VIEW_H) this.scrollY = y + TILE_H - VIEW_H;
     this.scrollY = Phaser.Math.Clamp(this.scrollY, 0, this.maxScroll);
-    this.grid.y = VIEW_Y - this.scrollY;
+    this.tweens.add({ targets: this.grid, y: VIEW_Y - this.scrollY, duration: MOTION.base, ease: MOTION.easeOut });
     this.drawScrollbar();
   }
 
@@ -253,13 +282,51 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.scrollThumb.fillRoundedRect(x, ty, 6, thumbH, 3);
   }
 
+  // ------------------------------------------------------------ colorways
+  /** Palettes already claimed by other players on the same fighter. */
+  takenPalettes(p, charId) {
+    return new Set(this.players
+      .filter((o) => o !== p && o.phase !== 'picking' && this.slots[o.cursor]?.charId === charId)
+      .map((o) => o.palette));
+  }
+
+  /** First free colorway: the seat's own index, else the first unclaimed. */
+  defaultPalette(p, def, random = false) {
+    const n = def?.palettes?.length || 1;
+    if (n <= 1) return 0;
+    const taken = this.takenPalettes(p, def.id);
+    const order = random
+      ? Phaser.Utils.Array.Shuffle([...Array(n).keys()])
+      : [p.index % n, ...Array.from({ length: n }, (_, i) => i)];
+    return order.find((i) => !taken.has(i)) ?? order[0];
+  }
+
+  // ------------------------------------------------------------------ input
   handleDir(p, dx, dy) {
-    if (p.phase !== 'locked') sfx('menuMove');
     if (p.phase === 'picking') {
+      sfx('menuMove');
       p.cursor = stepSlot(this.slots, p.cursor, dx, dy);
       this.scrollTo(p.cursor);
       this.buildPreview(p);
+    } else if (p.phase === 'palette' && dx !== 0) {
+      const def = CHARACTERS[this.slots[p.cursor].charId];
+      const n = def.palettes.length;
+      if (n > 1) {
+        sfx('menuMove');
+        p.palette = (p.palette + dx + n) % n;
+        this.buildPreview(p);
+      }
     }
+    this.refreshAll();
+  }
+
+  setPalette(p, i) {
+    if (p.phase !== 'palette') return;
+    const def = CHARACTERS[this.slots[p.cursor].charId];
+    if (i < 0 || i >= def.palettes.length || i === p.palette) return;
+    sfx('menuMove');
+    p.palette = i;
+    this.buildPreview(p);
     this.refreshAll();
   }
 
@@ -267,9 +334,16 @@ export default class CharacterSelectScene extends Phaser.Scene {
     const slot = this.slots[p.cursor];
     if (p.phase === 'picking' && slot.charId) {
       sfx('menuConfirm');
-      p.palette = 0;
-      p.phase = 'locked';
+      const def = CHARACTERS[slot.charId];
+      p.palette = this.defaultPalette(p, def);
+      // fighters with a single look skip straight to locked
+      p.phase = def.palettes.length > 1 ? 'palette' : 'locked';
       this.buildPreview(p);
+      if (p.phase === 'locked') this.checkAllLocked();
+    } else if (p.phase === 'palette') {
+      sfx('menuConfirm');
+      p.phase = 'locked';
+      this.pulsePlate(p);
       this.checkAllLocked();
     }
     this.refreshAll();
@@ -277,38 +351,141 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   handleBack(p) {
     if (p.phase === 'locked') {
+      const def = CHARACTERS[this.slots[p.cursor].charId];
+      p.phase = def?.palettes?.length > 1 ? 'palette' : 'picking';
+    } else if (p.phase === 'palette') {
       p.phase = 'picking';
-      this.refreshAll();
+    } else {
+      return;
+    }
+    sfx('menuMove');
+    this.refreshAll();
+  }
+
+  // ---------------------------------------------------------------- preview
+  plateRect(p) {
+    const w = p.sideways ? 250 : Math.min(236, Math.max(150, this.plateSpacing() - 16));
+    if (p.sideways) {
+      const left = p.previewX < W / 2;
+      return { x: left ? p.previewX + 100 : p.previewX - 100 - w, y: FEET_SIDE - PLATE_H - 4, w, h: PLATE_H };
+    }
+    return { x: p.previewX - w / 2, y: FEET_UNDER + 8, w, h: PLATE_H };
+  }
+
+  plateSpacing() {
+    const n = this.players.length;
+    return n > 1 ? (W - 240) / (n - 1) : W;
+  }
+
+  buildPlate(p) {
+    const r = this.plateRect(p);
+    p.plate = this.add.container(r.x, r.y).setDepth(5);
+    p.plateG = this.add.graphics();
+    p.plateSeat = this.add.text(14, 20, p.label + (p.isBot ? ' · CPU' : ''), {
+      fontFamily: FONT_MONO, fontSize: '10px', color: THEME.voidCss, letterSpacing: 1.5,
+    }).setOrigin(0, 0.5);
+    p.plateName = this.add.text(14, 46, '', { fontFamily: FONT_DISPLAY, fontSize: '17px', color: THEME.mistCss, letterSpacing: 0.5 }).setOrigin(0, 0.5);
+    p.plateMeta = this.add.text(14, 66, '', textStyle('caption')).setOrigin(0, 0.5);
+    p.plateColor = this.add.text(r.w - 14, 66, '', textStyle('label')).setOrigin(1, 0.5);
+    p.plateState = this.add.text(r.w - 14, 20, '', { fontFamily: FONT_MONO, fontSize: '10px', color: THEME.goldCss, letterSpacing: 1.5 }).setOrigin(1, 0.5);
+    p.swatchG = this.add.graphics();
+    p.swatchZones = [];
+    p.plate.add([p.plateG, p.plateSeat, p.plateName, p.plateMeta, p.plateColor, p.plateState, p.swatchG]);
+  }
+
+  pulsePlate(p) {
+    this.tweens.add({ targets: p.plate, scale: { from: 1.03, to: 1 }, duration: MOTION.base, ease: MOTION.pop });
+  }
+
+  updatePlate(p) {
+    const r = this.plateRect(p);
+    const slot = this.slots[p.cursor];
+    const def = slot?.charId ? CHARACTERS[slot.charId] : null;
+    const g = p.plateG;
+    g.clear();
+    const locked = p.phase === 'locked';
+    const inColor = p.phase === 'palette';
+    if (locked) {
+      g.lineStyle(8, THEME.gold, 0.14);
+      g.strokeRoundedRect(-3, -3, r.w + 6, r.h + 6, 15);
+    }
+    g.fillStyle(THEME.ink, 0.9);
+    g.fillRoundedRect(0, 0, r.w, r.h, 12);
+    g.lineStyle(locked ? 1.75 : 1.25, locked ? THEME.gold : p.color, locked ? 0.95 : 0.6);
+    g.strokeRoundedRect(0, 0, r.w, r.h, 12);
+    // seat tag
+    const tagW = p.plateSeat.width + 16;
+    g.fillStyle(p.color, 1);
+    g.fillRoundedRect(8, 11, tagW, 18, 9);
+    p.plateSeat.setX(16);
+    p.plateState.setText(locked ? 'LOCKED' : inColor ? 'PICK A COLOR' : '').setColor(locked ? THEME.goldCss : THEME.tealCss);
+
+    for (const z of p.swatchZones) z.destroy();
+    p.swatchZones = [];
+    p.swatchG.clear();
+    if (!def) {
+      const waiting = slot?.soon ? 'Coming soon' : 'Not forged yet';
+      p.plateName.setText(`${slot.element}`).setColor(THEME.dimCss);
+      p.plateMeta.setText(`${slot.sym} · ${slot.n} · ${waiting}`);
+      p.plateColor.setText('');
+      return;
+    }
+    p.plateName.setText(def.name).setColor(THEME.mistCss);
+    p.plateMeta.setText(`${def.element}  ·  ${def.symbol} ${def.atomicNumber ?? slot.n}`);
+    const pals = def.palettes ?? [];
+    if (pals.length <= 1) {
+      p.plateColor.setText('');
+      return;
+    }
+    // swatch row: filled chips, the current one ringed in the player color
+    const rowY = r.h - 14;
+    const rowX = r.w - 14 - (pals.length * (SWATCH_D + SWATCH_GAP) - SWATCH_GAP);
+    const rowTop = locked || inColor;
+    p.plateColor.setText(rowTop ? pals[p.palette]?.name?.toUpperCase() ?? '' : 'COLORS')
+      .setColor(inColor ? THEME.mistCss : THEME.dimCss)
+      .setPosition(r.w - 14, 46);
+    pals.forEach((pal, i) => {
+      const cx = rowX + i * (SWATCH_D + SWATCH_GAP) + SWATCH_D / 2;
+      const on = i === p.palette && rowTop;
+      p.swatchG.fillStyle(pal.body ?? THEME.shellOn, locked || inColor ? 1 : 0.55);
+      p.swatchG.fillCircle(cx, rowY, SWATCH_D / 2 - (on ? 0 : 1));
+      p.swatchG.lineStyle(1, 0xffffff, 0.18);
+      p.swatchG.strokeCircle(cx, rowY, SWATCH_D / 2 - (on ? 0 : 1));
+      if (on) {
+        p.swatchG.lineStyle(2, locked ? THEME.gold : p.color, 1);
+        p.swatchG.strokeCircle(cx, rowY, SWATCH_D / 2 + 3);
+      }
+      if (p.isKeyboard) {
+        const z = this.add.zone(r.x + cx, r.y + rowY, SWATCH_D + 6, SWATCH_D + 6).setInteractive({ useHandCursor: true }).setDepth(7);
+        z.on('pointerdown', () => this.setPalette(p, i));
+        p.swatchZones.push(z);
+      }
+    });
+    if (inColor) {
+      p.swatchG.fillStyle(THEME.mist, 0.5);
+      p.swatchG.fillTriangle(rowX - 14, rowY, rowX - 8, rowY - 5, rowX - 8, rowY + 5);
     }
   }
 
   buildPreview(p) {
     p.previewRig?.destroy();
     p.previewRig = null;
-    p.previewName?.destroy();
     const slot = this.slots[p.cursor];
-    if (!slot?.charId) {
-      const waiting = slot.soon ? 'Coming soon' : 'Not forged yet';
-      p.previewName = this.add.text(p.previewX, PREVIEW_ANCHOR_Y - 36, `${slot.sym}  ${slot.n}\n${slot.element}\n${waiting}`, {
-        fontFamily: FONT_BODY, fontSize: '16px', color: THEME.dimCss, align: 'center',
-      }).setOrigin(0.5);
-      return;
-    }
+    this.updatePlate(p);
+    if (!slot?.charId) return;
     const def = CHARACTERS[slot.charId];
     this.queuePreviewSheets(def);
-    p.palette = 0;
-    p.previewRig = new Rig(this, def, 0);
-    p.previewRig.setPosition(p.previewX, PREVIEW_ANCHOR_Y);
-    const desiredScale = this.players.length > 3 ? 0.85 : 1.05;
+    p.previewRig = new Rig(this, def, p.palette % def.palettes.length);
+    const feet = p.sideways ? FEET_SIDE : FEET_UNDER;
+    p.previewRig.setPosition(p.previewX, feet);
+    const desiredScale = this.players.length > 3 ? 0.8 : 1.05;
     const visualHeight = def.art?.height
       ?? (def.body.legLength + def.body.torsoHeight + def.body.headRadius * 2);
-    const maxScale = (PREVIEW_ANCHOR_Y - (VIEW_Y + VIEW_H) - PREVIEW_TOP_MARGIN) / visualHeight;
+    const maxScale = (feet - PREVIEW_TOP) / visualHeight;
     p.previewRig.baseScale = Math.min(desiredScale, Math.max(0.4, maxScale));
     this.add.existing(p.previewRig);
-    p.previewName = this.add.text(p.previewX, PREVIEW_ANCHOR_Y + 18, `${p.label}  ${def.name}\n${def.element}`, {
-      fontFamily: FONT_BODY, fontSize: this.players.length > 3 ? '14px' : '16px',
-      color: THEME.mistCss, align: 'center',
-    }).setOrigin(0.5, 0);
+    p.previewRig.setAlpha(0);
+    this.tweens.add({ targets: p.previewRig, alpha: 1, duration: MOTION.quick, ease: MOTION.easeOut });
   }
 
   queuePreviewSheets(def) {
@@ -344,6 +521,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.load.start();
   }
 
+  // ------------------------------------------------------------ gold edge
   tileUpdated(slot) {
     if (!slot?.charId) return false;
     return artIsUpdated(CHARACTERS[slot.charId], this.fxIds);
@@ -393,14 +571,23 @@ export default class CharacterSelectScene extends Phaser.Scene {
       if (p.phase === 'locked') {
         p.box.lineStyle(4, THEME.gold, 1);
         p.box.strokeRoundedRect(x - 4, y - 4, TILE_W + 8, TILE_H + 8, 9);
+        p.box.lineStyle(2, p.color, 1);
+        p.box.strokeRoundedRect(x - 1 + inset, y - 1 + inset, TILE_W + 2 - inset * 2, TILE_H + 2 - inset * 2, 7);
+      } else if (p.phase === 'palette') {
+        p.box.lineStyle(3, THEME.gold, 0.9);
+        p.box.strokeRoundedRect(x - 5, y - 5, TILE_W + 10, TILE_H + 10, 9);
+        p.box.lineStyle(3, p.color, 1);
+        p.box.strokeRoundedRect(x - 2 + inset, y - 2 + inset, TILE_W + 4 - inset * 2, TILE_H + 4 - inset * 2, 8);
       } else {
         p.box.lineStyle(3, p.color, 1);
         p.box.strokeRoundedRect(x - 2 + inset, y - 2 + inset, TILE_W + 4 - inset * 2, TILE_H + 4 - inset * 2, 8);
       }
+      this.updatePlate(p);
     }
     const phases = this.players.map((p) => p.phase);
-    if (phases.every((ph) => ph === 'locked')) this.hint.setText('Everyone locked in — starting…');
-    else this.hint.setText('Move: stick/D-pad/WASD/phone · Confirm: attack/X · Back: special/B');
+    const allLocked = phases.every((ph) => ph === 'locked');
+    this.status.setText(allLocked ? 'ALL FIGHTERS LOCKED  ·  ENTERING THE ARENA' : '');
+    this.hints.setVisible(!allLocked);
     this.drawScrollbar();
   }
 
@@ -409,7 +596,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.starting = true;
     this.time.delayedCall(700, () => {
       showScene(this, 'StageSelect', {
-        players: this.players.map((p) => ({ charId: this.slots[p.cursor].charId, palette: 0, slot: p.slot })),
+        players: this.players.map((p) => ({ charId: this.slots[p.cursor].charId, palette: p.palette, slot: p.slot })),
         stocks: 3,
       });
     });

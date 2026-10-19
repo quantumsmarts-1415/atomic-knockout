@@ -1,0 +1,14 @@
+{
+  "file": "city-of-light-burst-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 14.4,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "scaleWith": "radius",
+  "fit": "height",
+  "heightFrac": 1.7,
+  "pivot": "center"
+}

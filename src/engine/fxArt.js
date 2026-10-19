@@ -237,10 +237,23 @@ export function artFor(fighterId, moveName) {
   return byKey.get(fxKey(fighterId, moveName)) || null;
 }
 
-export function fxReplacesSlash(fighter, move) {
-  const art = artFor(fighter?.charDef?.id, move?.name);
+/** Painted slash art hides the code stroke unless the move asks to keep both. */
+export function slashArtReplacesStroke(art) {
   if (!art?.frames?.length) return false;
+  if (art.keepSlash) return false;
   return art.objectType === 'slash arc' || art.objectType === 'extend';
+}
+
+export function fxReplacesSlash(fighter, move) {
+  return slashArtReplacesStroke(artFor(fighter?.charDef?.id, move?.name));
+}
+
+/** Full-cell beam sized so its width matches the stage. */
+export function stageSpanSize(scene, frame) {
+  const worldW = scene?.world?.width > 0 ? scene.world.width : 1280;
+  const srcW = frame?.displayW > 0 ? frame.displayW : 1;
+  const srcH = frame?.displayH > 0 ? frame.displayH : 1;
+  return { w: worldW, h: worldW * (srcH / srcW) };
 }
 
 export function rasterAlpha({ data, width, height, displayW, displayH, pivotX, pivotY }) {
@@ -467,6 +480,8 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     releaseImpact: !!extra.releaseImpact,
     once: !!extra.once,
     aim: extra.aim !== false,
+    keepSlash: !!extra.keepSlash,
+    stageFit: !!extra.stageFit,
   };
 }
 
@@ -828,6 +843,10 @@ async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH
       // An edge-to-edge beam maps onto the uncharged length. Charge scale stretches width only.
       displayW = Math.max(CELL, box.w);
       displayH = Math.max(CELL, box.w * (h / Math.max(1, w)));
+    } else if (spec?.fit === 'stage') {
+      // The cell already spans the authored stage. Draw time stretches it to this world's width.
+      displayW = Math.max(CELL, w);
+      displayH = Math.max(CELL, h);
     } else if (px > 0) {
       displayW = Math.max(CELL, w * px);
       displayH = Math.max(CELL, h * px);
@@ -924,6 +943,8 @@ async function loadMoveArt(scene, char, slot, move, index) {
     frontGap: meta.frontGap,
     releaseImpact: !!meta.releaseImpact,
     once: !!meta.once,
+    keepSlash: !!meta.keepSlash,
+    stageFit: meta.fit === 'stage',
   };
   const inherit = { blend: meta.blend, black: meta.black };
 
@@ -1068,7 +1089,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
 export function fxProjectileView(scene, owner, move, x, y) {
   const art = artFor(owner?.charDef?.id, move?.name);
   const frame = art?.frames?.[0];
-  if (!frame || !scene?.add?.image) return null;
+  if (!frame || !scene?.add?.image || art.stageFit) return null;
   const img = scene.add.image(x, y, frame.key);
   img.setOrigin(art.pivotX, art.pivotY);
   const scale = fxGameplayScale(move, art);
@@ -1197,6 +1218,20 @@ export function stepPlacedFx(img, art, elapsed, face = 1) {
   applyFrameLook(img, frame, art, 1);
   img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
   applyFacing(img, face);
+}
+
+/** One full-width flash for a pair of rays. The shots themselves stay invisible. */
+export function spawnStageSpan(scene, fighter, art) {
+  if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
+  const frame = art.frames[0];
+  const box = stageSpanSize(scene, frame);
+  const x = box.w / 2;
+  const y = (fighter?.y ?? 0) - (fighter?.bodyH ?? 80) * 0.5;
+  const img = placeStill(scene, art, x, y, 0);
+  applyFrameLook(img, frame, art, 1, box);
+  img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+  trackOneShot(scene, img, art, 1, null, 1, box);
+  return img;
 }
 
 function placeStill(scene, art, x, y, rot) {

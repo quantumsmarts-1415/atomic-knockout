@@ -1,0 +1,13 @@
+{
+  "file": "annihilation-pair-beams-anim.png",
+  "frames": 24,
+  "cols": 2,
+  "rows": 12,
+  "fps": 12,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "stage",
+  "pivot": "center",
+  "hit": false
+}

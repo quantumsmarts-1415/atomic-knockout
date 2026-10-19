@@ -98,7 +98,7 @@ test('call 3 wires Paula peaks, Sandy, and the rest of Erin', () => {
     'assets/fx/paula/white-gold-jab/fx.json': {
       file: 'white-gold-jab-impact-anim.png', frames: 24, loop: false, blend: 'add', anchor: 'fist', peakFrame: 17,
     },
-    'assets/fx/sandy/sledgehammer-swing/fx.json': {
+    'assets/fx/sandy/sledge-slam/fx.json': {
       file: 'hammer-boom-impact-anim.png', frames: 23, loop: false, blend: 'add', anchor: 'fist', peakFrame: 2,
     },
     'assets/fx/sandy/tin-cry/fx.json': {

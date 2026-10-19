@@ -1593,11 +1593,11 @@ export const MOVESETS = {
       baseKnockback: 110, knockbackGrowth: 2.0, duration: 240, cooldown: 640,
     }),
     basicDirectional: melee('Final Lanthanide', {
-      type: K, damage: 9, bonusVsStun: 1.4, rangeW: 74, vfx: 'strike', vfxColor: 0xf0e2b0,
+      type: K, damage: 9, bonusAbovePercent: { at: 150, mult: 3 }, rangeW: 74, vfx: 'strike', vfxColor: 0xf0e2b0,
       baseKnockback: 140, knockbackGrowth: 2.6, duration: 200, cooldown: 380,
     }),
     specialDefense: m('Scintillator', {
-      immune: [R], retort: { when: R, type: R, damage: 2, knockback: 40, growth: 0.4, blind: 440 },
+      immune: [R], retort: { when: R, type: R, damage: 2, knockback: 40, growth: 0.4, stun: 440 },
       duration: 620, cooldown: 840, vfx: 'shield', vfxColor: 0xfff8d8,
     }),
     specialDirectional: m('Annihilation Pair', {
@@ -1784,8 +1784,8 @@ export const MOVESETS = {
       vfx: 'gust', vfxColor: 0xe8eef2, ...fx('Tin Cry'),
       baseKnockback: 80, knockbackGrowth: 1.5, duration: 240, cooldown: 800,
     }),
-    basicDirectional: melee('Sledgehammer Swing', {
-      type: K, damage: 8, rangeW: 86, vfx: 'strike', vfxColor: 0xd8dee6, ...fx('Sledgehammer Swing'),
+    basicDirectional: melee('Sledge Slam', {
+      type: K, damage: 8, rangeW: 86, vfx: 'strike', vfxColor: 0xd8dee6, ...fx('Sledge Slam'),
       baseKnockback: SANDY.sledgeKnockback, knockbackGrowth: SANDY.sledgeGrowth,
       duration: 220, cooldown: 460,
     }),

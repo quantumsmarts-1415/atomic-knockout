@@ -17,7 +17,7 @@ test('batch 3 kits match the approved names and flags', () => {
   assert.deepEqual(names('zora'), ['Ceramic Blade', 'Cubic Cut', 'Zircaloy Cladding', 'Counterfeit Gem']);
   assert.deepEqual(names('rhoda'), ['Catalytic Converter', 'Rose Thorn', 'Tarnish Guard', 'High Beam']);
   assert.deepEqual(names('paula'), ['Cold Fusion', 'White Gold Jab', 'Hydrogen Sponge', 'Fuel Cell Bolt']);
-  assert.deepEqual(names('sandy'), ['Tin Cry', 'Sledgehammer Swing', 'Tin Pest', 'Tin Can Kick']);
+  assert.deepEqual(names('sandy'), ['Tin Cry', 'Sledge Slam', 'Tin Pest', 'Tin Can Kick']);
   assert.deepEqual(names('erin'), ['Undersea Cable', 'Pink Glass Swipe', 'Signal Repeater', 'Resurface Laser']);
   assert.deepEqual(names('yvette'), ['Lattice Clock', 'Stress Gauge', 'Seismic Read', 'Fiber Laser']);
   assert.deepEqual(names('liv'), ['192 Beams', 'Chalcogen Hook', 'Hohlraum', 'Last Instant']);
@@ -155,6 +155,26 @@ test('stress gauge scales with percent and keeps the old formula for other moves
   assert.equal(prepareMove(gauge, {}, { percent: 200 }).damage, 30);
   const old = { type: 'kinetic', damage: 10, bonusVsPercent: 0.65 };
   assert.equal(prepareMove(old, {}, { percent: 100 }).damage, 16.5);
+});
+
+test('final lanthanide triples above 150 percent and scintillator stuns radiation', () => {
+  const strike = kit('lucy').basicDirectional;
+  assert.equal(strike.name, 'Final Lanthanide');
+  assert.equal(strike.type, 'kinetic');
+  assert.equal(prepareMove(strike, {}, { percent: 150 }).damage, 9);
+  assert.equal(prepareMove(strike, {}, { percent: 151 }).damage, 27);
+  const guard = kit('lucy').specialDefense;
+  assert.deepEqual(guard.immune, ['radiation']);
+  assert.equal(guard.retort.stun, 440);
+  assert.equal(guard.retort.blind, undefined);
+  const pair = kit('lucy').specialDirectional;
+  assert.equal(pair.alsoBehind, true);
+  assert.equal(pair.type, 'radiation');
+  const slam = kit('sandy').basicDirectional;
+  assert.equal(slam.name, 'Sledge Slam');
+  assert.equal(slam.type, 'kinetic');
+  assert.equal(slam.baseKnockback, SANDY.sledgeKnockback);
+  assert.equal(slam.explodeOnly, undefined);
 });
 
 test('cold fusion odds are seedable and a fizzle does nothing', () => {

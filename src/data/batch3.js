@@ -135,7 +135,7 @@ export const BATCH3_FX = {
   'Hydrogen Sponge': ['hydrogen-sponge-sheet'],
   'Fuel Cell Bolt': ['fuel-cell-bolt'],
   'Tin Cry': ['tin-cry-sonic-blast'],
-  'Sledgehammer Swing': ['hammer-boom-impact'],
+  'Sledge Slam': ['hammer-boom-impact'],
   'Tin Pest': ['tin-pest-crumble-sheet'],
   'Tin Can Kick': ['tin-can', 'can-ricochet-ping'],
   'Undersea Cable': ['cable-signal-pulse-sheet'],

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, sliceGrid, sliceHorizontal, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, stageSpanSize, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1203,4 +1203,35 @@ test('batch 2 wave 1 keeps the sheets the later flow art did not replace', () =>
   assert.equal(bubble.holdAt, 1);
   assert.equal(bubble.breakFrom, 2);
   assert.equal(fs.existsSync('assets/fx/cal/calcify/fx.json'), false);
+});
+
+test('lucy pairs a blade with the slash and spans annihilation to the stage', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const city = read('assets/fx/lucy/city-of-light/fx.json');
+  assert.equal(city.file, 'city-of-light-burst-anim.png');
+  assert.equal(city.scaleWith, 'radius');
+  assert.equal(city.blend, 'add');
+  assert.equal(fs.existsSync('assets/fx/lucy/city-of-light/city-of-light-burst-anim.png'), true);
+  const blade = read('assets/fx/lucy/final-lanthanide/fx.json');
+  assert.equal(blade.keepSlash, true);
+  assert.equal(blade.hit, false);
+  assert.equal(blade.anchor, 'fist');
+  const flash = read('assets/fx/lucy/scintillator/fx.json');
+  assert.equal(flash.anchor, 'body');
+  assert.equal(flash.loop, true);
+  assert.equal(flash.hit, false);
+  const rays = read('assets/fx/lucy/annihilation-pair/fx.json');
+  assert.equal(rays.fit, 'stage');
+  assert.equal(rays.hit, false);
+  assert.equal(rays.cols, 2);
+  assert.equal(rays.rows, 12);
+  const art = { frames: [{}], objectType: 'slash arc', keepSlash: true };
+  assert.equal(slashArtReplacesStroke(art), false);
+  assert.equal(slashArtReplacesStroke({ frames: [{}], objectType: 'slash arc' }), true);
+  const wide = stageSpanSize({ world: { width: 2560 } }, { displayW: 1280, displayH: 238 });
+  assert.equal(wide.w, 2560);
+  assert.ok(Math.abs(wide.h - 476) < 0.01);
+  const normal = stageSpanSize({}, { displayW: 1280, displayH: 238 });
+  assert.equal(normal.w, 1280);
+  assert.equal(normal.h, 238);
 });

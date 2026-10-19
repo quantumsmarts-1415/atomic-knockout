@@ -508,6 +508,14 @@ export function prepareMove(move, attacker, defender, now = 0) {
       damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
     };
   }
+  if (move.bonusAbovePercent && defender && (defender.percent ?? 0) > (move.bonusAbovePercent.at ?? 0)) {
+    const mult = move.bonusAbovePercent.mult ?? 1;
+    next = {
+      ...next,
+      damage: (next.damage ?? 0) * mult,
+      damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
+    };
+  }
   if (move.bonusVsMark && defender?.mark === move.bonusVsMark && defender.markUntil > now && defender.markedBy === attacker?.charDef?.id) {
     const mult = move.markMult ?? 1.35;
     next = { ...next, damage: (next.damage ?? 0) * mult, damage2: next.damage2 != null ? next.damage2 * mult : next.damage2 };

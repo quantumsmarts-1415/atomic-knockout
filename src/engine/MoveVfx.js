@@ -1,7 +1,7 @@
 // Code-driven move effects. Body clips stay on idle/walk unless a real
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
-import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, wantsContactSpark } from './fxArt.js';
+import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, spawnStageSpan, wantsContactSpark } from './fxArt.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 
@@ -383,6 +383,10 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     // A painted shot stays on the projectile. An ignite (Violet Ember) draws the
     // burst side at the blast, or the shot sheet itself when there is no side.
     if ((art?.objectType === 'projectile' || art?.objectType === 'thrown') && art.frames?.length) {
+      if (art.stageFit) {
+        spawnStageSpan(scene, fighter, art);
+        return;
+      }
       if (phase === 'release' && move?.kind === 'burst' && extra?.x != null && move.igniteDamage != null) {
         const painted = art.burst?.frames?.length ? art.burst : art;
         const s = painted.scale > 0 ? painted.scale : 1;

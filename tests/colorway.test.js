@@ -85,8 +85,11 @@ test('every colorway fighter is a gold-edge (updated art) fighter with 4–6 loo
       assert.ok(Number.isFinite(p.body) && p.body >= 0 && p.body <= 0xffffff);
     }
   }
-  const updated = Object.values(CHARACTERS).filter((c) => artIsUpdated(c, fxIds));
-  assert.equal(updated.length, COLORWAY_IDS.length, 'every updated fighter has colorways');
+  const updated = new Set(
+    Object.values(CHARACTERS).filter((c) => artIsUpdated(c, fxIds)).map((c) => c.id),
+  );
+  for (const id of COLORWAY_IDS) assert.ok(updated.has(id), `${id} is gold without a colorway listing`);
+  assert.ok(updated.has('lucy'), 'lucy lights up from her effect folder before she has colorways');
 });
 
 test('fighters without colorways keep their standard look only', () => {

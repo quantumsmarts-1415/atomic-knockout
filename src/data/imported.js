@@ -4716,9 +4716,9 @@ export const IMPORTED_ROSTER = {
             "count": 5,
             "fps": 12,
             "loop": false,
-            "frameW": 160,
-            "frameH": 169,
-            "footY": 0.9112,
+            "frameW": 159,
+            "frameH": 167,
+            "footY": 0.9162,
             "visibleH": 133,
             "bodyH": 133,
             "displayScale": 0.99248

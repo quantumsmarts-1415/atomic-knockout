@@ -1274,6 +1274,10 @@ export default class BattleScene extends Phaser.Scene {
       this.projectiles.push({ ...shot, gfx: { x, y, destroy() {} } });
       return;
     }
+    if (rainArt?.stageFit) {
+      this.projectiles.push({ ...shot, gfx: { x, y, destroy() {} } });
+      return;
+    }
     const painted = fxProjectileView(this, owner, move, x, y);
     if (painted) {
       this.projectiles.push({ ...shot, ...painted });

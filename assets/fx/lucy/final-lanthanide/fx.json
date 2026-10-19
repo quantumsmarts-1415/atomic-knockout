@@ -1,0 +1,15 @@
+{
+  "file": "final-lanthanide-slash-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.05,
+  "pivot": "center",
+  "anchor": "fist",
+  "hit": false,
+  "keepSlash": true
+}

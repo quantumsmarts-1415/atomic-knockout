@@ -1,8 +1,8 @@
 // Code-driven move effects. Body clips stay on idle/walk unless a real
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
-import { anodizeTint } from './kit.js';
-import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, reverseFrameOrder, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnNozzleCone, spawnStageSpan, wantsContactSpark } from './fxArt.js';
+import { anodizeTint, takingDps } from './kit.js';
+import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, impactRadiusScale, meleeContactPoint, reverseFrameOrder, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnNozzleCone, spawnStageSpan, wantsContactSpark } from './fxArt.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 
@@ -307,7 +307,12 @@ function shieldBubble(scene, fighter, color) {
 }
 
 export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
-  if (!scene?.add || !fighter || scene.simFast) return;
+  if (!scene?.add || !fighter || scene.simFast || move?._noVfx) return;
+  if (phase === 'fizz') {
+    const fizz = artFor(fighter.charDef?.id, move?.name)?.fizz;
+    if (fizz?.frames?.length) spawnFxSprite(scene, fizz, fighter.x, fighter.y, 1);
+    return;
+  }
   if (phase === 'ignite') {
     const y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
     const art = artFor(fighter.charDef?.id, move?.name);
@@ -450,7 +455,9 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         const posed = sheetReleasePoint(fighter, kind) || sheetFxPoint(fighter, kind);
         if (posed) { x = posed.x; y = posed.y; }
       }
-      const scale = anchor?.scale ?? fxGameplayScale(move, art);
+      const fitted = impactRadiusScale(move, art);
+      let scale = fitted != null ? fitted : (anchor?.scale ?? fxGameplayScale(move, art));
+      if (art.scaleTo === 'radius') y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
       if (drawFxOneShot(scene, fighter, move, x, y, scale)) {
         if (art.gas?.frames?.length) spawnFxSprite(scene, art.gas, x, y, scale);
         if (move.vfx === 'binary') {
@@ -471,6 +478,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       const shot = drawFxOneShot(scene, fighter, move, x, y, 1);
       if (shot) {
         if (move.sharpen) shot.image?.setTint?.(anodizeTint(fighter._sharpen, move.sharpen));
+        else if (move.bonusWhileDps && takingDps(fighter, scene.simNow ?? 0)) shot.image?.setTint?.(0xffcd5a);
         return;
       }
     }

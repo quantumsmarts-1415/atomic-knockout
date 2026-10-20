@@ -1,0 +1,45 @@
+{
+  "fist": {
+    "file": "bone-plate.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.36,
+    "pivotX": 0.109375,
+    "pivotY": 0.5,
+    "flip": true,
+    "hit": false
+  },
+  "impact": {
+    "file": "bone-plate-bash-impact-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.515789474,
+    "scaleTo": "radius",
+    "flashRadius": 290,
+    "hit": false
+  },
+  "heal": {
+    "file": "heal-sparkle-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.9,
+    "pivotX": 0.5,
+    "pivotY": 0.66,
+    "hit": false
+  }
+}

@@ -1969,7 +1969,7 @@ test('phosphor bloom, magnetic chill, and curie point match the arrived sheets',
   assert.ok(curieFade(0.725) > 0.4 && curieFade(0.725) < 0.6);
   assert.equal(curiePulse(0.2, 400), 1);
   assert.ok(curiePulse(0.8, 0) >= 1);
-  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie', 'assets/fx/terra']) {
+  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie', 'assets/fx/terra', 'assets/fx/tara', 'assets/fx/rex']) {
     const dirs = fs.statSync(root).isDirectory() && fs.readdirSync(root).some((name) => fs.statSync(`${root}/${name}`).isDirectory())
       ? fs.readdirSync(root).map((name) => `${root}/${name}`).filter((dir) => fs.statSync(dir).isDirectory())
       : [root];
@@ -1977,6 +1977,86 @@ test('phosphor bloom, magnetic chill, and curie point match the arrived sheets',
       for (const file of fs.readdirSync(dir)) {
         assert.equal(file.endsWith('.gif') || file.endsWith('.jpg') || file.endsWith('.py'), false, `${dir}/${file}`);
       }
+    }
+  }
+});
+
+test('tara and rex sheets match the arrived centres and flashes', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const dump = read('assets/fx/tara/capacitor-dump/fx.json');
+  assert.equal(dump.file, 'capacitor-dump-discharge-anim.png');
+  assert.equal(dump.frames, 10);
+  assert.equal(dump.fps, 24);
+  assert.equal(dump.hit, false);
+  assert.ok(Math.abs(dump.pivotX - 40 / 720) < 1e-6);
+  assert.ok(Math.abs(dump.pivotY - 200 / 400) < 1e-6);
+  assert.equal(dump.charge.fillFrames, 20);
+  assert.equal(dump.charge.frames, 24);
+  assert.equal(dump.charge.anchor, 'body');
+  const bash = read('assets/fx/tara/bone-plate-bash/fx.json');
+  assert.equal(bash.file, undefined);
+  assert.equal(bash.fist.black, false);
+  assert.ok(Math.abs(bash.fist.pivotX - 56 / 512) < 1e-6);
+  assert.ok(Math.abs(bash.fist.pivotY - 80 / 160) < 1e-6);
+  assert.equal(bash.impact.scaleTo, 'radius');
+  assert.equal(bash.impact.flashRadius, 290);
+  assert.equal(bash.impact.frames, 24);
+  assert.equal(bash.impact.fps, 16);
+  assert.ok(Math.abs(bash.impact.pivotX - 294 / 588) < 1e-6);
+  assert.ok(Math.abs(bash.impact.pivotY - 294 / 570) < 1e-6);
+  assert.ok(Math.abs(impactRadiusScale({ hitRadius: 36 }, bash.impact) - 36 / 290) < 1e-9);
+  assert.equal(bash.heal.frames, 12);
+  const guard = read('assets/fx/tara/tantalus-guard/fx.json');
+  assert.equal(guard.anchor, 'body');
+  assert.equal(guard.loop, true);
+  assert.ok(Math.abs(guard.fizz.pivotY - 120 / 160) < 1e-6);
+  const pin = read('assets/fx/tara/implant-pin/fx.json');
+  assert.equal(pin.black, false);
+  assert.equal(pin.aim, true);
+  assert.ok(Math.abs(pin.pivotX - 369 / 384) < 1e-6);
+  assert.ok(Math.abs(pin.pivotY - 32 / 64) < 1e-6);
+  assert.equal(pin.cling.anchor, 'feet');
+  assert.equal(pin.cling.loop, true);
+  assert.ok(Math.abs(pin.cling.pivotY - 88 / 128) < 1e-6);
+  const octane = read('assets/fx/rex/high-octane/fx.json');
+  assert.equal(octane.frames, 24);
+  assert.equal(octane.fps, 16);
+  assert.equal(octane.scaleTo, 'radius');
+  assert.equal(octane.flashRadius, 290);
+  assert.equal(octane.hard, 0.62);
+  assert.ok(Math.abs(octane.pivotX - 294 / 588) < 1e-6);
+  assert.ok(Math.abs(octane.pivotY - 252 / 540) < 1e-6);
+  const boom = impactRadiusScale({ radius: 96 }, octane);
+  assert.ok(Math.abs(boom - (96 / 290) * 0.62) < 1e-9);
+  assert.ok(boom < impactRadiusScale({ radius: 96 }, { scaleTo: 'radius', flashRadius: 290 }));
+  assert.equal(octane.charge.scaleWith, 'alpha');
+  assert.equal(octane.boost.frames, 12);
+  assert.equal(octane.boost.fps, 24);
+  assert.equal(octane.boost.flip, true);
+  const slash = read('assets/fx/rex/kings-edge/fx.json');
+  assert.equal(slash.frames, 12);
+  assert.equal(slash.fps, 24);
+  assert.equal(slash.flip, true);
+  assert.equal(slash.oneshot, true);
+  const creep = read('assets/fx/rex/creep-resistance/fx.json');
+  assert.equal(creep.anchor, 'body');
+  assert.equal(creep.loop, true);
+  assert.equal(creep.ring.loop, true);
+  assert.ok(Math.abs(creep.ring.pivotY - 88 / 128) < 1e-6);
+  const lash = read('assets/fx/rex/thermocouple-lash/fx.json');
+  assert.equal(lash.frames, 14);
+  assert.equal(lash.fps, 24);
+  assert.ok(Math.abs(lash.pivotX - 40 / 768) < 1e-6);
+  assert.ok(Math.abs(lash.pivotY - 192 / 384) < 1e-6);
+  assert.equal(lash.hot.scaleTo, 'radius');
+  assert.equal(lash.spark.scaleTo, 'radius');
+  assert.ok(lash.hot.flashRadius < lash.spark.flashRadius);
+  assert.ok(Math.abs(lash.hot.pivotX - 144 / 288) < 1e-6);
+  assert.ok(Math.abs(lash.spark.pivotY - 144 / 288) < 1e-6);
+  for (const id of ['tara', 'rex']) {
+    for (const file of fs.readdirSync(`assets/fx/${id}`, { recursive: true })) {
+      const name = String(file);
+      assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, name);
     }
   }
 });

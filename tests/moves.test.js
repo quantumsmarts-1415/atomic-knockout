@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { gateStored, interceptHit } from '../src/engine/defense.js';
-import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, lightUnquenchable, markedStrikeTargets, prepareMove, scaledByHaste, sheetFrameAt, stripBuffs, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
+import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, finalBlow, lightUnquenchable, markedStrikeTargets, prepareMove, scaledByHaste, sheetFrameAt, stripBuffs, takingDps, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
 import { resolvePacket } from '../src/data/balance.js';
 import { applyImmunities, rearmDefense } from '../src/engine/defense.js';
 
@@ -1262,6 +1262,154 @@ test('dizzy kits follow the approved brief', () => {
   assert.strictEqual(stunned.lockedUntil, 2000);
   assert.strictEqual(stunned.clingFrom.move, 'Stage Light Flash');
   assert.strictEqual(stunned.clingFrom.until, 2000);
+});
+
+test('tara and rex kits follow the approved briefs', () => {
+  const tara = CHARACTERS.tara.moves;
+  const dump = tara.basicCharge;
+  assert.strictEqual(dump.name, 'Capacitor Dump');
+  assert.strictEqual(dump.kind, 'beam');
+  assert.strictEqual(dump.type, 'electrical');
+  assert.strictEqual(dump.damage, 6);
+  assert.strictEqual(dump.chargeDamageMult, 1.75);
+  assert.strictEqual(dump.chargeLengthMult, 2.15);
+  assert.strictEqual(dump.beamLen, 148);
+  assert.strictEqual(dump.beamArtPx, 640);
+  const bash = tara.basicDirectional;
+  assert.strictEqual(bash.name, 'Bone Plate Bash');
+  assert.notStrictEqual(bash.name, 'Tantalizing Hook');
+  assert.strictEqual(bash.type, 'kinetic');
+  assert.ok(bash.damage > 0);
+  assert.strictEqual(bash.pull, undefined);
+  assert.strictEqual(bash.onHit.heal, 2);
+  const healed = { charDef: { id: 'tara' }, percent: 20 };
+  applyOnHit(healed, { charDef: { combat: {} } }, bash, 1000);
+  assert.strictEqual(healed.percent, 18);
+  const guard = tara.specialDefense;
+  assert.strictEqual(guard.name, 'Tantalus Guard');
+  assert.deepStrictEqual(guard.immune, ['chemical']);
+  assert.deepStrictEqual(guard.blocks, ['chemical']);
+  assert.strictEqual(guard.fizzChem, true);
+  const defender = { state: 'defending', defenseMove: guard, x: 0, y: 0, facing: 1 };
+  assert.strictEqual(interceptHit(defender, {}, { type: 'chemical', damage: 9 }, 0).result, 'negate');
+  const pin = tara.specialDirectional;
+  assert.strictEqual(pin.name, 'Implant Pin');
+  assert.strictEqual(pin.type, 'kinetic');
+  assert.strictEqual(pin.damage, 5);
+  assert.strictEqual(pin.stick, true);
+  assert.strictEqual(pin.pinFoot, true);
+  assert.strictEqual(pin.onHit.root, 3000);
+  assert.strictEqual(pin.noKnockback, true);
+  const pinned = { charDef: { combat: {} } };
+  applyOnHit({ charDef: { id: 'tara' } }, pinned, pin, 1000);
+  assert.strictEqual(pinned.rootedUntil, 4000);
+  assert.strictEqual(pinned.clingFrom.move, 'Implant Pin');
+  assert.strictEqual(pinned.clingFrom.until, 4000);
+
+  const rex = CHARACTERS.rex.moves;
+  const octane = rex.basicCharge;
+  assert.strictEqual(octane.name, 'High Octane');
+  assert.strictEqual(octane.kind, 'buff');
+  assert.ok(octane.buff.speed > 1);
+  assert.strictEqual(octane.selfDamage.type, 'heat');
+  assert.ok(octane.selfDamage.damage > 0 && octane.selfDamage.damage < octane.blast.damage);
+  assert.strictEqual(octane.blast.type, 'heat');
+  assert.ok(octane.blast.damage >= 10);
+  assert.ok(octane.radius > 0);
+  const edge = rex.basicDirectional;
+  assert.strictEqual(edge.name, "King's Edge");
+  assert.strictEqual(edge.type, 'kinetic');
+  assert.strictEqual(edge.damage, 8);
+  assert.strictEqual(edge.bonusWhileDps, 3);
+  assert.strictEqual(edge.heatEmpower, undefined);
+  const plain = prepareMove(edge, { burnUntil: 0 }, { charDef: {} }, 1000);
+  assert.strictEqual(plain.damage, 8);
+  const dotted = prepareMove(edge, { burnUntil: 5000 }, { charDef: {} }, 1000);
+  assert.strictEqual(dotted.damage, 11);
+  assert.strictEqual(takingDps({ poisonUntil: 2000 }, 1000), true);
+  assert.strictEqual(takingDps({ burnUntil: 0 }, 1000), false);
+  const creep = rex.specialDefense;
+  assert.strictEqual(creep.noKnockback, true);
+  assert.strictEqual(creep.noPush, true);
+  assert.strictEqual(creep.grabImmune, true);
+  assert.strictEqual(creep.debuffImmune, true);
+  assert.deepStrictEqual(creep.onlyReduce, ['kinetic']);
+  const lash = rex.specialDirectional;
+  assert.strictEqual(lash.name, 'Thermocouple Lash');
+  assert.strictEqual(lash.type, 'electrical');
+  assert.strictEqual(lash.damage, 8);
+  assert.strictEqual(lash.vsHot.type, 'heat');
+  assert.strictEqual(lash.vsHot.damage, 11);
+  assert.ok(lash.rangeW >= 110);
+  const cold = prepareMove(lash, {}, { burnUntil: 0, heatedUntil: 0 }, 1000);
+  assert.strictEqual(cold.type, 'electrical');
+  assert.strictEqual(cold.damage, 8);
+  const hot = prepareMove(lash, {}, { burnUntil: 4000 }, 1000);
+  assert.strictEqual(hot.type, 'heat');
+  assert.strictEqual(hot.damage, 11);
+});
+
+test('only the last hit of a string stuns or launches', () => {
+  const early = finalBlow({
+    multiHit: 3,
+    _hitIndex: 1,
+    baseKnockback: 180,
+    knockbackGrowth: 4,
+    pull: 40,
+    onHit: { stun: 400, poison: { dps: 1 } },
+  });
+  assert.strictEqual(early.noKnockback, true);
+  assert.strictEqual(early.baseKnockback, 0);
+  assert.strictEqual(early.pull, 0);
+  assert.strictEqual(early.onHit.stun, 0);
+  assert.ok(early.onHit.poison);
+  const last = finalBlow({
+    multiHit: 3,
+    _hitIndex: 3,
+    baseKnockback: 180,
+    onHit: { stun: 400 },
+  });
+  assert.strictEqual(last.baseKnockback, 180);
+  assert.strictEqual(last.onHit.stun, 400);
+  const combo = finalBlow({
+    combo: { hits: 3 },
+    _comboStep: 2,
+    _hitIndex: 1,
+    baseKnockback: 55,
+    onHit: { freeze: 300 },
+  });
+  assert.strictEqual(combo.noKnockback, true);
+  assert.strictEqual(combo.onHit.freeze, 0);
+  const finisher = finalBlow({
+    combo: { hits: 3 },
+    _comboStep: 3,
+    baseKnockback: 230,
+  });
+  assert.strictEqual(finisher.baseKnockback, 230);
+  assert.strictEqual(finisher.noKnockback, undefined);
+});
+
+test('attacks do not ignite gas fighters', () => {
+  const plug = CHARACTERS.ira.moves.basicDirectional;
+  assert.strictEqual(plug.name, 'Spark Plug');
+  assert.strictEqual(plug.bonusVsState, undefined);
+  const catalyst = CHARACTERS.pit.moves.basicCharge;
+  assert.strictEqual(catalyst.name, 'Catalyst Ignition');
+  assert.strictEqual(catalyst.bonusVsState, undefined);
+  assert.strictEqual(catalyst.igniteGases, true);
+  assert.ok(catalyst.gasCloud > 0);
+  const gas = { charDef: { combat: { state: 'gas' } } };
+  applyOnHit({ charDef: { id: 'ira' } }, gas, {
+    name: 'Spark Plug',
+    onHit: { burn: { dps: 4, ms: 1200 } },
+  }, 1000);
+  assert.ok(!(gas.burnUntil > 1000));
+  const solid = { charDef: { combat: { state: 'metal' } } };
+  applyOnHit({ charDef: { id: 'ira' } }, solid, {
+    name: 'Spark Plug',
+    onHit: { burn: { dps: 4, ms: 1200 } },
+  }, 1000);
+  assert.ok(solid.burnUntil > 1000);
 });
 
 function fake(id, x, y) {

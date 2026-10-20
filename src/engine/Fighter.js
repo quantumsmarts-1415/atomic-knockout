@@ -3,7 +3,7 @@ import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { canonicalType, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defense.js';
-import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
+import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
 import { armGeyser, fxAnchor, hitAnchor, playRetortPulse } from './fxArt.js';
@@ -966,6 +966,28 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
     if (move.kind === 'buff' || move.kind === 'zone') {
       if (move.yank) this.scene?.yankFront?.(this, move);
+      if (move.blast) {
+        const frac = move._chargeFrac ?? 1;
+        const mult = move.blast.chargeDamageMult ?? 1;
+        const damage = (move.blast.damage ?? 8) * (1 + (mult - 1) * frac);
+        const radius = move.radius ?? move.blast.radius ?? 80;
+        const packet = {
+          name: move.name,
+          kind: 'burst',
+          type: move.blast.type ?? 'heat',
+          damage,
+          radius,
+          baseKnockback: move.blast.knockback ?? 160,
+          knockbackGrowth: move.blast.growth ?? 2.4,
+          _noVfx: true,
+        };
+        const delay = this.scene?.stepMs || 16;
+        this.scene?.time?.delayedCall(delay, () => {
+          if (this.alive) {
+            this.scene.resolveBurst?.(this, packet, { x: this.x, y: this.y - this.bodyH * 0.5 });
+          }
+        });
+      }
       if (move.zone) {
         const zx = this.x + (this.facing || 1) * (move.zone.offsetX ?? 0);
         const zy = move.zone.feet
@@ -1350,6 +1372,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
    */
   takeHit(attacker, move, time, launchDir) {
     if (this.state === 'ko' || this.state === 'dead') return 0;
+    move = finalBlow(move);
     // A hit during a grab always breaks the clinch first.
     if ((this.state === 'grabbing' || this.state === 'grabbed') && !move?.isGrabThrow) {
       this.breakGrab(time, false);
@@ -1449,6 +1472,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
           };
         }
         if (this.defenseMove.fuelHeal) this.percent = Math.max(0, this.percent - this.defenseMove.fuelHeal);
+        if (this.defenseMove.fizzChem && move._projectile) {
+          const chem = [move.type, move.type2, move.type3].some((t) => t && canonicalType(t) === 'chemical');
+          if (chem) playVfx(this.scene, this, this.defenseMove, 'fizz');
+        }
         this.retortFromImmune(attacker, move, time);
         if (this.defenseMove.crackAfterHits) {
           this.wallHits = (this.wallHits ?? 0) + 1;

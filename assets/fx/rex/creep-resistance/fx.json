@@ -1,0 +1,31 @@
+{
+  "file": "creep-resistance-status-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.25,
+  "pivotX": 0.5,
+  "pivotY": 0.55,
+  "anchor": "body",
+  "hit": false,
+  "ring": {
+    "file": "creep-anchor-ring-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.26,
+    "pivotX": 0.5,
+    "pivotY": 0.6875,
+    "hit": false
+  }
+}

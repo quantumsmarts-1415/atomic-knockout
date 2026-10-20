@@ -571,6 +571,54 @@ test('bend don\'t break keeps Holly standing and cuts kinetic hits', () => {
   assert.ok(!guarded.pendingLaunch);
 });
 
+test('an early string hit deals damage without a launch', () => {
+  const scene = createMockScene();
+  const rig = { animate() {}, setFlash() {}, play() {}, updateSheetFacing() {}, setAlpha() {}, setDepth() {} };
+  const victim = new Fighter(scene, 40, 0, CHARACTERS.sandy, 0, 0);
+  victim.rig = rig;
+  const attacker = { x: -40, y: 0, facing: 1, charDef: { id: 'hydra', combat: {} } };
+  const early = victim.takeHit(attacker, {
+    type: 'kinetic', damage: 4, baseKnockback: 240, knockbackGrowth: 6,
+    multiHit: 3, _hitIndex: 1, onHit: { stun: 500 },
+  }, 1000, 1);
+  assert.ok(early > 0);
+  assert.ok(!victim.pendingLaunch);
+  assert.ok(!(victim.lockedUntil > 1000));
+  const finisher = new Fighter(scene, 40, 0, CHARACTERS.sandy, 0, 0);
+  finisher.rig = rig;
+  finisher.takeHit(attacker, {
+    type: 'kinetic', damage: 4, baseKnockback: 240, knockbackGrowth: 6,
+    multiHit: 3, _hitIndex: 3, onHit: { stun: 500 },
+  }, 1000, 1);
+  assert.ok(finisher.pendingLaunch);
+  assert.ok(finisher.lockedUntil > 1000);
+});
+
+test('tantalus guard blocks chemical and a pin roots for three seconds', () => {
+  const scene = createMockScene();
+  const rig = { animate() {}, setFlash() {}, play() {}, updateSheetFacing() {}, setAlpha() {}, setDepth() {} };
+  const tara = new Fighter(scene, 0, 0, CHARACTERS.tara, 0, 0);
+  tara.rig = rig;
+  tara.state = 'defending';
+  tara.defenseMove = CHARACTERS.tara.moves.specialDefense;
+  const foe = { x: -50, y: 0, facing: 1, charDef: { id: 'foe', combat: {} } };
+  const acid = tara.takeHit(foe, {
+    type: 'chemical', damage: 9, baseKnockback: 80, knockbackGrowth: 2, _projectile: true,
+  }, 1000, 1);
+  assert.strictEqual(acid, 0);
+  assert.strictEqual(tara.state, 'defending');
+  assert.strictEqual(tara.percent, 0);
+  const kinetic = tara.takeHit(foe, {
+    type: 'kinetic', damage: 6, baseKnockback: 40, knockbackGrowth: 1,
+  }, 1100, 1);
+  assert.ok(kinetic > 0);
+  const sandy = new Fighter(scene, 80, 0, CHARACTERS.sandy, 0, 0);
+  sandy.rig = rig;
+  sandy.takeHit(tara, CHARACTERS.tara.moves.specialDirectional, 1200, 1);
+  assert.strictEqual(sandy.rootedUntil, 4200);
+  assert.ok(!sandy.pendingLaunch);
+});
+
 test('a dive stops at the ledge and hops back if it is already past it', () => {
   const isle = [{ x: 640, w: 990 }];
   assert.strictEqual(diveVelocityX(640, 220, isle), 220);

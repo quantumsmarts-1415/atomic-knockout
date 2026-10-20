@@ -263,6 +263,37 @@ export function pullFieldSize(radius) {
   return (radius > 0 ? radius : 0) * 2;
 }
 
+/** Distance along a throw: damage, tail stretch, and brightness. */
+export function throwGrowth(distance, spec = {}) {
+  const reach = spec?.reach > 0 ? spec.reach : 1000;
+  const t = Math.max(0, Math.min(1, (Number(distance) || 0) / reach));
+  const mult = spec?.mult > 0 ? spec.mult : 1;
+  const stretch = spec?.stretch > 0 ? spec.stretch : 1.4;
+  return {
+    t,
+    damageMult: 1 + (mult - 1) * t,
+    stretch: 1 + t * stretch,
+    alpha: 0.58 + 0.42 * t,
+  };
+}
+
+/** Handheld unit in front of her, and the world point of its nozzle. */
+export function handheldUnit(fighter, unit) {
+  const face = fighter?.facing || 1;
+  const bodyH = fighter?.bodyH ?? 80;
+  const bodyW = fighter?.bodyW ?? 40;
+  const x = (fighter?.x ?? 0) + face * bodyW * 0.42;
+  const y = (fighter?.y ?? 0) - bodyH * 0.56;
+  const frame = unit?.frames?.[0];
+  let nozzle = { x, y };
+  if (frame) {
+    const dx = ((unit.nozzleX ?? unit.pivotX ?? 0.5) - (unit.pivotX ?? 0.5)) * (frame.displayW || 0);
+    const dy = ((unit.nozzleY ?? unit.pivotY ?? 0.5) - (unit.pivotY ?? 0.5)) * (frame.displayH || 0);
+    nozzle = { x: x + face * dx, y: y + dy };
+  }
+  return { x, y, face, nozzle };
+}
+
 /** Rotor speed while Turbine Gust is charging, in turns per second. */
 export function rotorTurns(frac) {
   const t = Math.max(0, Math.min(1, Number(frac) || 0));
@@ -548,6 +579,8 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     hitRots: Array.isArray(extra.hitRots) ? extra.hitRots : null,
     scaleTo: extra.scaleTo === 'radius' ? 'radius' : null,
     flashRadius: extra.flashRadius > 0 ? extra.flashRadius : 0,
+    nozzleX: typeof extra.nozzleX === 'number' ? extra.nozzleX : null,
+    nozzleY: typeof extra.nozzleY === 'number' ? extra.nozzleY : null,
     maxAlpha: extra.maxAlpha > 0 && extra.maxAlpha < 1 ? extra.maxAlpha : 0,
   };
 }
@@ -975,6 +1008,7 @@ const SIDE_SPECS = [
   ['trail', 'trail-'], ['stain', 'stain-'],
   ['warn', 'warn-'], ['glow', 'glow-'], ['hot', 'hot-'],
   ['rotor', 'rotor-'], ['motor', 'motor-'], ['hold', 'hold-'], ['field', 'field-'],
+  ['fist', 'fist-'], ['dazzle', 'dazzle-'], ['unit', 'unit-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -1010,6 +1044,8 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       hitRots: merged.hitRots,
       scaleTo: merged.scaleTo,
       flashRadius: merged.flashRadius,
+      nozzleX: merged.nozzleX,
+      nozzleY: merged.nozzleY,
     });
   }
   return record;
@@ -1400,6 +1436,12 @@ export function stepFxProjectile(p, time) {
     p.gfx.setScale(face * sx, sy);
   } else {
     p.gfx.rotation = Math.atan2(p.vy || 0, p.vx || 1);
+  }
+  if (p.move?.growWithDistance && p.fxDisplayW) {
+    const dist = Math.abs((p.gfx.x ?? 0) - (p.bornX ?? p.gfx.x ?? 0));
+    const grown = throwGrowth(dist, p.move.growWithDistance);
+    p.gfx.setDisplaySize(p.fxDisplayW * grown.stretch, p.fxDisplayH || p.fxDisplayW);
+    p.gfx.setAlpha?.(grown.alpha);
   }
   stepCurieOrb(p, time);
 }
@@ -1794,6 +1836,7 @@ export function spawnFxSprite(scene, art, x, y, scale = 1, face = 1, box = null)
   const img = placeStill(scene, art, x, y, 0);
   applyFrameLook(img, art.frames[0], art, scale, box);
   applyFacing(img, face);
+  if (art._rot != null) img.rotation = art._rot;
   trackOneShot(scene, img, art, scale, null, face, box);
   return img;
 }
@@ -1980,6 +2023,12 @@ function attachedWant(scene, fighter) {
     if (swinging?.motor?.frames?.length) {
       return { art: swinging.motor, sparks: swinging.spark, kind: 'motor', elapsed: now };
     }
+    if (swinging?.fist?.frames?.length) {
+      return { art: swinging.fist, kind: 'fist', elapsed: now };
+    }
+    if (swinging?.unit?.frames?.length) {
+      return { art: swinging.unit, kind: 'unit', elapsed: now };
+    }
   }
   if (fighter.mitigateUntil > now) {
     const shell = fighter.charDef?.moves?.specialDefense;
@@ -2083,6 +2132,22 @@ function syncAttached(scene, fighter) {
   applyFrameLook(live.img, frame, paint, 1);
   if (want.kind === 'motor') {
     syncMotor(scene, live, want, fighter);
+    return;
+  }
+  if (want.kind === 'fist' || want.kind === 'unit') {
+    const face = fighter.facing || 1;
+    if (want.kind === 'unit') {
+      const held = handheldUnit(fighter, art);
+      live.img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+      live.img.setPosition(held.x, held.y);
+      live.img.setScale(face * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
+    } else {
+      const tip = meleeContactPoint(fighter, fighter.currentMove);
+      live.img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+      live.img.setPosition(tip.x, tip.y);
+      live.img.setScale(Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
+    }
+    live.img.setDepth(14);
     return;
   }
   const face = fighter.facing || 1;
@@ -2324,6 +2389,9 @@ function syncCling(scene, fighter) {
   }
   if (!art?.frames?.length && fighter.buffCling && fighter.heatResistUntil > now && fighter.buffCling.until > now) {
     art = artFor(fighter.buffCling.id, fighter.buffCling.move)?.cling || null;
+  }
+  if (!art?.frames?.length && fighter.dazzledBy && fighter.missNext > 0 && fighter.dazzledBy.until > now) {
+    art = artFor(fighter.dazzledBy.id, fighter.dazzledBy.move)?.dazzle || null;
   }
   if (!art?.frames?.length) {
     dropCling(fighter);
@@ -2825,6 +2893,15 @@ function playPacked(scene, art, x, y, face = 1, along = null, rot = null) {
   const painted = rot != null ? { ...art, _rot: rot } : art;
   if (rot != null) img.rotation = rot;
   trackOneShot(scene, img, painted, drawn, null, face);
+}
+
+/** X-ray cone, origin on the handheld unit's nozzle. Left side rotates around that origin. */
+export function spawnNozzleCone(scene, fighter, move) {
+  const art = artFor(fighter?.charDef?.id, move?.name);
+  if (!art?.frames?.length || !art.unit?.frames?.length || !scene?.add?.image || scene?.simFast) return null;
+  const held = handheldUnit(fighter, art.unit);
+  const rot = held.face < 0 ? Math.PI : 0;
+  return spawnFxSprite(scene, { ...art, _rot: rot }, held.nozzle.x, held.nozzle.y, beamDrawScale(move), 1);
 }
 
 /** Spotlight oneshot, rotated around the lamp origin to the pressed direction. */

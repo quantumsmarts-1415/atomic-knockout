@@ -1,0 +1,28 @@
+{
+  "file": "x-ray-cone-anim.png",
+  "frames": 6,
+  "cols": 3,
+  "rows": 2,
+  "fps": 24,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "pixel",
+  "pivotX": 0.0625,
+  "pivotY": 0.5,
+  "hit": false,
+  "unit": {
+    "file": "x-ray-unit.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.62,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "nozzleX": 0.9375,
+    "nozzleY": 0.546875,
+    "hit": false,
+    "aim": false
+  }
+}

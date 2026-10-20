@@ -1082,6 +1082,45 @@ test('terra kits follow the approved brief', () => {
   assert.strictEqual(bolt.damage, 8);
 });
 
+test('thule kits follow the approved brief', () => {
+  const moves = CHARACTERS.thule.moves;
+  const ultima = moves.basicCharge;
+  assert.strictEqual(ultima.name, 'Ultima Thule');
+  assert.strictEqual(ultima.kind, 'projectile');
+  assert.strictEqual(ultima.type, 'kinetic');
+  assert.strictEqual(ultima.damage, 8);
+  assert.strictEqual(ultima.growWithDistance.reach, 1000);
+  assert.strictEqual(ultima.growWithDistance.mult, 1.85);
+  assert.ok(ultima.projectileSpeed * (ultima.projectileLife / 1000) > 1500, 'the throw can cross the stage');
+  const jab = moves.basicDirectional;
+  assert.strictEqual(jab.name, 'Blue Glow Jab');
+  assert.notStrictEqual(jab.name, 'Polar Night');
+  assert.strictEqual(jab.type, 'kinetic');
+  assert.strictEqual(jab.damage, 7);
+  assert.strictEqual(jab.type2, undefined);
+  assert.strictEqual(jab.hitsRevealed, true);
+  const marked = {};
+  applyOnHit({ charDef: { id: 'thule' } }, marked, jab, 1000);
+  assert.strictEqual(marked.revealedUntil, 1500);
+  assert.strictEqual(marked.revealTint, 0x8ec8ff);
+  const veil = moves.specialDefense;
+  assert.strictEqual(veil.name, 'Aurora Veil');
+  assert.strictEqual(veil.kind, 'block');
+  assert.strictEqual(veil.onStruck.miss, true);
+  assert.strictEqual(veil.onStruck.dazzleCling, true);
+  const foe = {};
+  applyOnHit({ charDef: { id: 'thule' } }, foe, { name: veil.name, onHit: veil.onStruck }, 1000);
+  assert.strictEqual(foe.missNext, 1);
+  assert.strictEqual(foe.dazzledBy.id, 'thule');
+  assert.strictEqual(foe.dazzledBy.move, 'Aurora Veil');
+  const ray = moves.specialDirectional;
+  assert.strictEqual(ray.name, 'Handheld X-Ray');
+  assert.strictEqual(ray.kind, 'beam');
+  assert.strictEqual(ray.type, 'radiation');
+  assert.strictEqual(ray.damage, 9);
+  assert.strictEqual(ray.beamLen, 520);
+});
+
 test('holly kits follow the approved brief', () => {
   const moves = CHARACTERS.holly.moves;
   const laser = moves.basicCharge;

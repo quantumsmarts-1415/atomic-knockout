@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeWaveAlpha, contentSpan, curieFade, curiePulse, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, stickAim, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeWaveAlpha, contentSpan, curieFade, curiePulse, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, stickAim, throwGrowth, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1659,6 +1659,68 @@ test('mri, palm, flex punch, and floor speaker match the arrived sheets', () => 
   assert.equal(floor.anchor, 'ground');
   assert.equal(floor.fit, 'pixel');
   assert.ok(Math.abs(floor.pivotY - (192 - 40) / 192) < 0.001);
+});
+
+test('thule glow jab, far throw, aurora, and x-ray match the arrived sheets', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const ultima = read('assets/fx/thule/ultima-thule/fx.json');
+  assert.equal(ultima.frames, 12);
+  assert.equal(ultima.fps, 24);
+  assert.equal(ultima.loop, true);
+  assert.ok(Math.abs(ultima.pivotX - 420 / 512) < 1e-6);
+  assert.ok(Math.abs(ultima.pivotY - 80 / 160) < 1e-6);
+  assert.equal(ultima.charge.scaleWith, 'alpha');
+  assert.equal(ultima.charge.anchor, 'body');
+  assert.equal(ultima.impact.scaleTo, 'radius');
+  assert.equal(ultima.impact.flashRadius, 290);
+  assert.equal(ultima.impact.frames, 24);
+  assert.equal(ultima.impact.fps, 16);
+  assert.ok(Math.abs(ultima.impact.pivotX - 294 / 588) < 1e-6);
+  assert.ok(Math.abs(ultima.impact.pivotY - 282 / 576) < 1e-6);
+  const flash = impactRadiusScale({ projectileRadius: 18 }, ultima.impact);
+  assert.ok(Math.abs(flash - 18 / 290) < 1e-9);
+  const near = throwGrowth(0, { reach: 1000, mult: 1.85, stretch: 1.45 });
+  const far = throwGrowth(1000, { reach: 1000, mult: 1.85, stretch: 1.45 });
+  assert.equal(near.damageMult, 1);
+  assert.equal(near.stretch, 1);
+  assert.ok(Math.abs(far.damageMult - 1.85) < 1e-9);
+  assert.ok(far.stretch > near.stretch);
+  assert.ok(far.alpha > near.alpha);
+  const jab = read('assets/fx/thule/blue-glow-jab/fx.json');
+  assert.equal(jab.file, undefined);
+  assert.equal(jab.fist.frames, 24);
+  assert.equal(jab.fist.fps, 24);
+  assert.equal(jab.impact.frames, 10);
+  assert.equal(jab.impact.fps, 24);
+  const veil = read('assets/fx/thule/aurora-veil/fx.json');
+  assert.equal(veil.anchor, 'body');
+  assert.equal(veil.loop, true);
+  assert.equal(veil.dazzle.frames, 24);
+  assert.equal(veil.dazzle.anchor, 'body');
+  const ray = read('assets/fx/thule/handheld-x-ray/fx.json');
+  assert.equal(ray.frames, 6);
+  assert.equal(ray.fit, 'pixel');
+  assert.ok(Math.abs(ray.pivotX - 40 / 640) < 1e-6);
+  assert.ok(Math.abs(ray.pivotY - 180 / 360) < 1e-6);
+  assert.equal(ray.unit.black, false);
+  assert.equal(ray.unit.aim, false);
+  assert.ok(Math.abs(ray.unit.nozzleX - 240 / 256) < 1e-6);
+  assert.ok(Math.abs(ray.unit.nozzleY - 105 / 192) < 1e-6);
+  const scale = beamDrawScale({ beamLen: 520, beamArtPx: 480, beamCap: 520, _beamScale: 1 });
+  assert.ok(Math.abs(scale - 520 / 480) < 1e-9);
+  const unit = {
+    pivotX: 0.5, pivotY: 0.5, nozzleX: 240 / 256, nozzleY: 105 / 192,
+    frames: [{ displayW: 200, displayH: 150 }],
+  };
+  const right = handheldUnit({ x: 100, y: 200, facing: 1, bodyW: 40, bodyH: 80 }, unit);
+  const left = handheldUnit({ x: 100, y: 200, facing: -1, bodyW: 40, bodyH: 80 }, unit);
+  assert.ok(right.nozzle.x > right.x);
+  assert.ok(left.nozzle.x < left.x);
+  assert.ok(Math.abs(right.nozzle.y - left.nozzle.y) < 1e-6);
+  for (const file of fs.readdirSync('assets/fx/thule', { recursive: true })) {
+    const name = String(file);
+    assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, name);
+  }
 });
 
 test('holly laser, calibration, bend, and pole piece match the arrived sheets', () => {

@@ -514,6 +514,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.alpha = 1;
       this._hazeFade = false;
     }
+    if ((this.revealedUntil ?? 0) > time) {
+      this.alpha = 1;
+    }
 
     if (onGround && this._wasAir) {
       const hard = (this.fallPeak || 0) > FEEL.landingHardVy;
@@ -725,6 +728,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
     }
     this.rig.animate(dt / 1000, animState, speedFactor);
+    if ((this.revealTintUntil ?? 0) > time) {
+      this.rig.setFlash?.(this.revealTint ?? 0x8ec8ff);
+      this._revealFlash = true;
+    } else if (this._revealFlash) {
+      this.rig.setFlash?.(null);
+      this._revealFlash = false;
+    }
     this.syncChalkTint();
     if (this._sheetFxFrame && this.state === 'attack' && this.attackFrame === this._sheetFxFrame && this.currentMove) {
       this._sheetFxFrame = 0;
@@ -737,7 +747,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
   answerStrike(attacker, time) {
     const fx = this.defenseMove?.onStruck;
     if (!fx || !attacker || attacker === this) return;
-    applyOnHit(this, attacker, { onHit: fx }, time);
+    applyOnHit(this, attacker, { name: this.defenseMove?.name, onHit: fx }, time);
   }
 
   lingerHardening(time) {
@@ -878,6 +888,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.openedStill = !!(this.body && Math.abs(this.body.velocity.x) < 36 && Math.abs(this.body.velocity.y) < 80);
     if (this.missNext > 0) {
       this.missNext -= 1;
+      this.dazzledBy = null;
       move = { ...move, damage: 0, damage2: 0, onHit: null, zone: null };
     }
     // Charge barks (Sound Off) bank damage and an unblock onto the next real swing.

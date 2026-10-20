@@ -30,7 +30,7 @@ import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, tickGeysers } from '../engine/fxArt.js';
+import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
@@ -1277,6 +1277,7 @@ export default class BattleScene extends Phaser.Scene {
       born,
       armAt: move.delayMs ? born + move.delayMs : 0,
       landed: new Set(),
+      bornX: x,
       radius: r,
       spriteW: projectileSpriteSize(move).w,
       spriteH: projectileSpriteSize(move).h,
@@ -1376,6 +1377,7 @@ export default class BattleScene extends Phaser.Scene {
       born: this.time.now,
       armAt: move.delayMs ? this.time.now + move.delayMs : 0,
       landed: new Set(),
+      bornX: x,
       radius: r,
       spriteW: projectileSpriteSize(move).w,
       spriteH: projectileSpriteSize(move).h,
@@ -1555,6 +1557,27 @@ export default class BattleScene extends Phaser.Scene {
         const reach = thick * 0.5 + (target.bodyW ?? 40) * 0.35;
         if (distToSegment(target.x, cy, x0, y0, x1, y1) <= reach) {
           this.landHit(owner, target, move, dir);
+          struck.add(target);
+        }
+      }
+      this.sweepMarked(owner, move, struck);
+      return;
+    }
+    const nozzleArt = artFor(owner.charDef?.id, move.name);
+    if (nozzleArt?.unit?.frames?.length) {
+      const len = (move.beamLen ?? 520) * (move._beamScale ?? 1);
+      const thick = move.beamThick ?? 160;
+      const held = handheldUnit(owner, nozzleArt.unit);
+      const face = owner.facing === 1 ? 1 : -1;
+      const x = face === 1 ? held.nozzle.x : held.nozzle.x - len;
+      const rect = new Phaser.Geom.Rectangle(x, held.nozzle.y - thick / 2, len, thick);
+      playVfx(this, owner, move, 'release', { fired: true });
+      const struck = new Set();
+      for (const target of this.fighters) {
+        if (target === owner || !target.alive || target.state === 'ko') continue;
+        if (target.state === 'defending' && target.defenseMove?.untargetable) continue;
+        if (Phaser.Geom.Intersects.RectangleToRectangle(rect, target.getHurtboxRect())) {
+          this.landHit(owner, target, move, face);
           struck.add(target);
         }
       }
@@ -2574,6 +2597,14 @@ export default class BattleScene extends Phaser.Scene {
         }
         if (shot.tipBonus && p.owner && Math.abs(p.gfx.x - p.owner.x) >= (shot.tipAt ?? 260)) {
           shot = { ...shot, damage: (shot.damage ?? 0) + shot.tipBonus };
+        }
+        if (shot.growWithDistance && p.bornX != null) {
+          const grown = throwGrowth(Math.abs(p.gfx.x - p.bornX), shot.growWithDistance);
+          shot = {
+            ...shot,
+            damage: (shot.damage ?? 0) * grown.damageMult,
+            damage2: shot.damage2 != null ? shot.damage2 * grown.damageMult : shot.damage2,
+          };
         }
         if (shot.slowHit) {
           const sp = Math.hypot(p.vx, p.vy);

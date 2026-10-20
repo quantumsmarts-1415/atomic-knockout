@@ -469,6 +469,42 @@ test('a full defining second freezes for three seconds and the sponge drinks che
   assert.ok(lana._sponge > 8);
 });
 
+test('blue glow jab connects through a phase and flashes the outline', () => {
+  const scene = createMockScene();
+  const rig = { animate() {}, setFlash() {}, play() {}, updateSheetFacing() {}, setAlpha() {}, setDepth() {} };
+  const thule = new Fighter(scene, -70, 0, CHARACTERS.thule, 0, 0);
+  thule.rig = rig;
+  const hidden = new Fighter(scene, 40, 0, CHARACTERS.tess, 0, 0);
+  hidden.rig = rig;
+  hidden.phasingUntil = 9000;
+  const jab = CHARACTERS.thule.moves.basicDirectional;
+  const dmg = hidden.takeHit(thule, jab, 1000, 1);
+  assert.ok(dmg > 0, `phased fighter still takes the jab (${dmg})`);
+  assert.strictEqual(hidden.revealedUntil, 1500);
+  assert.strictEqual(hidden.revealTint, 0x8ec8ff);
+  assert.ok(hidden.phasingUntil > 1000);
+  const still = new Fighter(scene, 40, 0, CHARACTERS.tess, 0, 0);
+  still.rig = rig;
+  still.phasingUntil = 9000;
+  const blocked = still.takeHit(thule, { type: 'kinetic', damage: 8, baseKnockback: 40, knockbackGrowth: 1 }, 1000, 1);
+  assert.strictEqual(blocked, 0);
+});
+
+test('aurora veil dazzles the attacker so the next swing misses', () => {
+  const scene = createMockScene();
+  const rig = { animate() {}, setFlash() {}, play() {}, updateSheetFacing() {}, setAlpha() {}, setDepth() {} };
+  const thule = new Fighter(scene, 40, 0, CHARACTERS.thule, 0, 0);
+  thule.rig = rig;
+  thule.state = 'defending';
+  thule.defenseMove = CHARACTERS.thule.moves.specialDefense;
+  const sandy = new Fighter(scene, -80, 0, CHARACTERS.sandy, 0, 0);
+  sandy.rig = rig;
+  thule.takeHit(sandy, { name: 'jab', type: 'kinetic', damage: 8, baseKnockback: 40, knockbackGrowth: 1 }, 1000, 1);
+  assert.strictEqual(sandy.missNext, 1);
+  assert.strictEqual(sandy.dazzledBy.id, 'thule');
+  assert.strictEqual(sandy.dazzledBy.move, 'Aurora Veil');
+});
+
 test('calibration strike is the listed number through defense and buffs', () => {
   const scene = createMockScene();
   const rig = { animate() {}, setFlash() {}, play() {}, updateSheetFacing() {}, setAlpha() {}, setDepth() {} };

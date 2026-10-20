@@ -1220,7 +1220,8 @@ export function stepFxProjectile(p, time) {
     return;
   }
   if (p.fxSpin) {
-    p.gfx.rotation = ((time - (p.born || 0)) / 1000) * p.fxSpin;
+    const travel = p.move?.floor ? (Math.sign(p.vx || 1) || 1) : 1;
+    p.gfx.rotation = ((time - (p.born || 0)) / 1000) * p.fxSpin * travel;
     if (p.fxPulse && p.fxDisplayW) {
       const s = 1 + Math.sin((time - (p.born || 0)) / 150) * p.fxPulse;
       p.gfx.setDisplaySize(p.fxDisplayW * s, p.fxDisplayH * s);
@@ -1611,8 +1612,9 @@ export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'lance' || art.anchor === 'feet' || art.anchor === 'aura' || art.anchor === 'pin') return null;
   if (art.objectType === 'projectile' || art.objectType === 'thrown') return null;
   if ((art.objectType === 'slash arc' || art.objectType === 'extend') && !art.oneshot) return null;
-  const face = art.bothSides ? 1 : (art.flip ? (fighter?.facing || 1) : 1);
-  const rot = art.objectType === 'beam' && (fighter?.facing || 1) === -1 ? Math.PI : 0;
+  const mirror = !!(art.flip || art.aim === false);
+  const face = art.bothSides ? 1 : (mirror ? (fighter?.facing || 1) : 1);
+  const rot = !mirror && art.objectType === 'beam' && (fighter?.facing || 1) === -1 ? Math.PI : 0;
   const img = placeStill(scene, art, x, y, rot);
   applyFrameLook(img, art.frames[0], art, scale);
   applyFacing(img, face);
@@ -2235,6 +2237,7 @@ export function syncFxActors(scene) {
     }
     if (art.anchor === 'contact' || art.anchor === 'fist') {
       img.setScale(face * Math.abs(img.scaleX || 1), Math.abs(img.scaleY || 1));
+      if (art.pulse) img.setAlpha(0.72 + 0.28 * Math.sin((scene.simNow || 0) * 0.016));
     }
   }
 }

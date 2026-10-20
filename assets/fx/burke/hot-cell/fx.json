@@ -1,0 +1,31 @@
+{
+  "file": "hot-cell-box.png",
+  "frames": 4,
+  "cols": 4,
+  "rows": 1,
+  "fps": 1,
+  "loop": false,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 2.45,
+  "pivotX": 0.5,
+  "pivotY": 0.55,
+  "anchor": "body",
+  "crackFrames": true,
+  "hit": false,
+  "shatter": {
+    "file": "hot-cell-break-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

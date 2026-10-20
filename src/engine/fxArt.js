@@ -228,6 +228,11 @@ export function fxGameplayScale(move, art) {
   }
   if (mode === 'charge') return extra * (0.78 + 0.5 * chargeFrac(move));
   if (mode === 'hold') return extra * (0.42 + 0.58 * chargeFrac(move));
+  if (mode === 'stored') {
+    const cap = Math.max(1, move?.storeHits?.cap ?? 20);
+    const n = Math.max(0, Number(move?._stored) || 0);
+    return extra * (0.55 + 0.85 * Math.min(1, n / cap));
+  }
   return extra;
 }
 
@@ -1605,6 +1610,11 @@ export function stepFxProjectile(p, time) {
   } else {
     p.gfx.rotation = Math.atan2(p.vy || 0, p.vx || 1);
   }
+  if (p.move?.fadeIfMiss && p.gfx?.setAlpha) {
+    const life = p.move.projectileLife > 0 ? p.move.projectileLife : 1;
+    const t = Math.max(0, Math.min(1, (time - (p.born || 0)) / life));
+    p.gfx.setAlpha(1 - t * 0.85);
+  }
   if (p.move?.growWithDistance && p.fxDisplayW) {
     const dist = Math.abs((p.gfx.x ?? 0) - (p.bornX ?? p.gfx.x ?? 0));
     const grown = throwGrowth(dist, p.move.growWithDistance);
@@ -2140,6 +2150,43 @@ export function wantsContactSpark(fighter, move) {
 
 const liveSlash = new WeakMap();
 const liveAttached = new WeakMap();
+const liveDoubles = new WeakMap();
+
+function fighterBodySprite(fighter) {
+  const rig = fighter?.rig;
+  if (!rig) return null;
+  if (rig.clipA?.visible && rig.sprite && rig.sprite.visible === false) return rig.clipA;
+  return rig.sprite || rig.clipA || null;
+}
+
+/** Hollywood stand-in: a tinted copy of her sprite, held in front while the defense is up. */
+function syncStuntDouble(scene, fighter) {
+  const want = fighter?.state === 'defending' && fighter.defenseMove?.stuntDouble && !scene?.simFast;
+  let img = liveDoubles.get(fighter);
+  if (!want) {
+    img?.destroy?.();
+    if (img) liveDoubles.delete(fighter);
+    return;
+  }
+  const spr = fighterBodySprite(fighter);
+  if (!spr?.texture?.key || !scene.add?.image) return;
+  if (!img?.scene) {
+    img?.destroy?.();
+    img = scene.add.image(fighter.x, fighter.y, spr.texture.key);
+    img.setDepth(6);
+    liveDoubles.set(fighter, img);
+  }
+  const frame = spr.frame?.name;
+  if (frame != null && img.texture?.key === spr.texture.key && img.setFrame) img.setFrame(frame);
+  else if (img.texture?.key !== spr.texture.key) img.setTexture(spr.texture.key);
+  const face = fighter.facing || 1;
+  const bodyW = fighter.bodyW ?? 40;
+  img.setPosition(fighter.x + face * bodyW * 1.35, fighter.y);
+  img.setOrigin(spr.originX ?? 0.5, spr.originY ?? 1);
+  img.setScale(Math.abs(spr.scaleX || 1) * face, spr.scaleY || 1);
+  img.setTint(fighter.charDef?.ghost ? 0xfff1c4 : 0xffd27a);
+  img.setAlpha(0.82);
+}
 
 function dropAttached(fighter, live) {
   if (live?.kind === 'trail') fighter.rig?.setDepth?.(0);
@@ -2377,7 +2424,7 @@ function syncAttached(scene, fighter) {
   else if (art.paceCharge && fighter.defenseMove?.chargeMs) {
     const frac = Math.min(1, Math.max(0, ((scene.simNow ?? 0) - (fighter.defenseStart ?? 0)) / fighter.defenseMove.chargeMs));
     index = Math.min(art.frames.length - 1, Math.round(frac * (art.frames.length - 1)));
-  } else if (want.kind === 'wall' && art.crackFrames) {
+  } else if (art.crackFrames && (want.kind === 'wall' || want.kind === 'body' || want.kind === 'front')) {
     index = Math.min(art.frames.length - 1, fighter.wallHits || 0);
   }
   let paint = art;
@@ -2964,6 +3011,7 @@ export function syncFxActors(scene) {
       fighter._puddleHid = false;
     }
     syncHeld(scene, fighter);
+    syncStuntDouble(scene, fighter);
     syncFreeze(scene, fighter);
     const move = fighter.currentMove;
     const art = artFor(fighter?.charDef?.id, move?.name);
@@ -3052,7 +3100,50 @@ function dropHeld(fighter) {
   live?.ghost?.destroy?.();
   live?.glow?.destroy?.();
   for (const block of live?.blocks || []) block?.destroy?.();
+  for (const medal of live?.medals || []) medal?.destroy?.();
   if (live) liveHeld.delete(fighter);
+}
+
+const PACKET_TINT = {
+  kinetic: 0xfff2a8,
+  physical: 0xfff2a8,
+  heat: 0xff7a22,
+  electrical: 0x5ce1ff,
+  chemical: 0xc57bff,
+  radiation: 0x3dff62,
+};
+
+function packetTint(type) {
+  return PACKET_TINT[type] || 0xffffff;
+}
+
+/** Two medal sprites ride the orbiting glows while Double Nobel is charging. */
+function syncChargeMedals(scene, live, fighter, art) {
+  const medal = art?.shards?.medal;
+  if (!medal?.frames?.length) {
+    for (const img of live.medals || []) img?.destroy?.();
+    live.medals = null;
+    return;
+  }
+  live.medals ??= [];
+  while (live.medals.length < 2) {
+    const img = placeStill(scene, medal, fighter.x, fighter.y, 0);
+    img.setDepth(13);
+    live.medals.push(img);
+  }
+  const now = scene.simNow ?? 0;
+  const bodyH = fighter.bodyH ?? 80;
+  const radius = bodyH * 0.46;
+  for (let i = 0; i < live.medals.length; i++) {
+    const img = live.medals[i];
+    const ang = now * 0.0036 + i * Math.PI;
+    applyFrameLook(img, medal.frames[0], medal, 1);
+    img.setOrigin(medal.pivotX ?? 0.5, medal.pivotY ?? 0.67);
+    img.setPosition(
+      fighter.x + Math.cos(ang) * radius,
+      fighter.y - bodyH * 0.55 + Math.sin(ang) * radius * 0.55,
+    );
+  }
 }
 
 /** Alternating blocks rise under the seam glow while the pile is charging. */
@@ -3271,8 +3362,14 @@ function syncHeld(scene, fighter) {
     || (charge?.buff?.weight && (fighter.weightBuffUntil ?? 0) > now)
     || (charge?.tonic && (fighter.attackPowerUntil ?? 0) > now)
     || (charge?.buff?.showBoost && (fighter.kineticResistUntil ?? 0) > now)
+    || ((fighter.bonusHits ?? 0) > 0 && charge?.buff?.bonus && fighter.bonusPacket?.hitsName === charge.buff.bonus.name)
   )) {
     want = { art: art.boost, kind: 'boost' };
+  } else if ((fighter.bonusHits ?? 0) > 0 && fighter.bonusPacket?.hitsName) {
+    const status = artFor(fighter.charDef?.id, fighter.bonusPacket.hitsName)?.boost;
+    if (status?.frames?.length) {
+      want = { art: status, kind: 'boost', tint: packetTint(fighter.bonusPacket.type) };
+    }
   } else if (art?.anchor === 'aura' && art.frames?.length && charge?.overclock) {
     const charging = fighter.state === 'charging';
     const buffed = (fighter.attackHasteUntil ?? 0) > now;
@@ -3340,11 +3437,17 @@ function syncHeld(scene, fighter) {
       live.img.setOrigin(0.5, 0.5);
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
       if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
+      if (want.art.scaleWith === 'hits') {
+        const cap = Math.max(1, charge?.storeHits?.cap ?? 20);
+        const n = fighter._storedCharge ?? 0;
+        live.img.setAlpha(0.32 + 0.68 * Math.min(1, n / cap));
+      }
       if (want.art.scaleWith === 'charge') {
         const s = 0.55 + 0.7 * frac;
         live.img.setScale(Math.abs(live.img.scaleX || 1) * s, Math.abs(live.img.scaleY || 1) * s);
       }
       syncChargePile(scene, live, fighter, art, frac);
+      syncChargeMedals(scene, live, fighter, art);
       if (want.art.tintFrom != null && want.art.tintTo != null) {
         live.img.setTint?.(chargeTint(want.art.tintFrom, want.art.tintTo, frac));
       }
@@ -3396,6 +3499,8 @@ function syncHeld(scene, fighter) {
     live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
     const dir = want.art.flip ? face : 1;
     live.img.setScale(dir * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
+    if (want.tint) live.img.setTint(want.tint);
+    else live.img.clearTint?.();
     return;
   }
   if (want.kind === 'predict') {

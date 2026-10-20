@@ -2250,10 +2250,12 @@ export const MOVESETS = {
       retort: { type: K, damage: 5.3, knockback: 272.8, growth: 2.98 },
       duration: 720, cooldown: 900, vfx: 'shield', vfxColor: 0xe8ffb0,
     }),
-    specialDirectional: m('Chirping Detector', {
-      kind: 'zone', type: R, damage: 2.6, vfx: 'spark', vfxColor: 0xd8ffb0,
-      zone: { type: R, damage: 3.17, ms: 2800, radius: 56, tick: 380, color: 0xd8ffb0 },
-      baseKnockback: 49.6, knockbackGrowth: 0.74, duration: 200, cooldown: 900,
+    specialDirectional: m('Ionizing Beam', {
+      kind: 'beam', type: R, damage: 8.6,
+      // Painted beam spans x 40–480 of the 640 cell. Cap the hit at that span.
+      beamLen: 440, beamThick: 28, beamArtPx: 440, beamCap: 440,
+      vfx: 'laser', vfxColor: 0x9ad0ff,
+      baseKnockback: 78, knockbackGrowth: 1.36, duration: 220, cooldown: 900,
     }),
   },
 
@@ -2261,7 +2263,10 @@ export const MOVESETS = {
     basicCharge: m('Double Nobel', {
       kind: 'burst', type: R, damage: 11.8, chargeDamageMult: 1.35, chargeRadiusMult: 1.15,
       maxChargeMs: 800, radius: 58, vfx: 'spark', vfxColor: 0xfff6c8,
-      chain: { count: 1, delay: 160, type: C, damage: 11.8, radiusScale: 0.9 },
+      chain: {
+        count: 1, delay: 160, type: C, damage: 11.8, radiusScale: 0.9, useImpact: true,
+        knockback: 122.4, growth: 2.18,
+      },
       baseKnockback: 122.4, knockbackGrowth: 2.18, duration: 240, cooldown: 860,
     }),
     basicDirectional: melee('Pocket Vial', {
@@ -2273,9 +2278,14 @@ export const MOVESETS = {
       duration: 560, cooldown: 960, vfx: 'shield', vfxColor: 0xd8f0ff,
     }),
     specialDirectional: m('Pitchblende Toss', {
-      kind: 'projectile', type: R, damage: 10.4, explodeOnly: true, explodeRadius: 48, vfx: 'cloud', vfxColor: 0xc8e070,
-      zone: { type: R, damage: 2.37, ms: 1400, radius: 46, tick: 360, color: 0xc8e070 },
-      projectileSpeed: 380, projectileRadius: 11, projectileLife: 640,
+      kind: 'projectile', type: R, damage: 10.4, explodeOnly: true, explodeRadius: 48,
+      landBurst: true, lob: 460, vfx: 'cloud', vfxColor: 0xc8e070,
+      dropZone: {
+        name: 'Pitchblende Toss', type: R, damage: 2.37,
+        ms: 1400, radius: 46, tick: 360, knockback: 0, growth: 0, color: 0xc8e070,
+        feet: true, sheet: true, useHold: true,
+      },
+      projectileSpeed: 380, projectileRadius: 11, projectileLife: 1000,
       baseKnockback: 108.8, knockbackGrowth: 1.9, duration: 210, cooldown: 780,
     }),
   },
@@ -2295,7 +2305,7 @@ export const MOVESETS = {
       duration: 900, cooldown: 1000, vfx: 'shield', vfxColor: 0xd8d4c8,
     }),
     specialDirectional: m('Express Shipment', {
-      kind: 'projectile', type: R, damage: 17.3, vfx: 'spark', vfxColor: 0xfff0a0,
+      kind: 'projectile', type: R, damage: 17.3, fadeIfMiss: true, vfx: 'spark', vfxColor: 0xfff0a0,
       projectileSpeed: 680, projectileRadius: 8, projectileLife: 260,
       baseKnockback: 151.2, knockbackGrowth: 2.59, duration: 180, cooldown: 720,
     }),
@@ -2313,12 +2323,13 @@ export const MOVESETS = {
       baseKnockback: 108, knockbackGrowth: 1.8, duration: 260, cooldown: 480,
     }),
     specialDefense: m('Stunt Double', {
-      absorbTypes: [K, H, E, C, R],
+      absorbTypes: [K, H, E, C, R], stuntDouble: true,
       duration: 640, cooldown: 1100, vfx: 'shield', vfxColor: 0xfff0c8,
     }),
     specialDirectional: m('Prospecting Probe', {
-      kind: 'beam', type: R, damage: 7.2, bonusVsMetal: 1.45, bonusVsId: { aurelius: 1.8 },
-      beamLen: 200, beamThick: 16, vfx: 'laser', vfxColor: 0xe8ff9a,
+      kind: 'projectile', type: R, damage: 7.2, bonusVsMetal: 1.45, bonusVsId: { aurelius: 1.8 },
+      vfx: 'spark', vfxColor: 0xe8ff9a,
+      projectileSpeed: 620, projectileRadius: 9, projectileLife: 480,
       baseKnockback: 63, knockbackGrowth: 1.17, duration: 180, cooldown: 560,
     }),
   },

@@ -6,10 +6,16 @@ import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defen
 import { applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, prepareMove, rewindPoint, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
-import { armGeyser, fxAnchor, groundTop, hitAnchor, playRetortPulse, spawnMeteor, spawnMoveExtra, spawnReplayGhost } from './fxArt.js';
+import { armGeyser, artFor, fxAnchor, groundTop, hitAnchor, playRetortPulse, spawnFxSprite, spawnMeteor, spawnMoveExtra, spawnReplayGhost } from './fxArt.js';
 import { clipNameForMove, sheetMeta } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
+
+function vaporAttack(move, attacker) {
+  if (!move || move.isSelf || move.isCounterAttack) return false;
+  if (move.gas) return true;
+  return attacker?.charDef?.combat?.state === 'gas';
+}
 import { play as sfx, playHit } from './sfx.js';
 import {
   FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, launchAngle,
@@ -1325,6 +1331,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (move.overhold.scale > 0) scaled._selfBlast = move.overhold.scale;
     }
     if (this._storedCharge && (move.storeHits || move.bankCap)) {
+      scaled._stored = this._storedCharge;
       scaled.damage = (scaled.damage ?? 0) + this._storedCharge;
       this._storedCharge = 0;
     }
@@ -1541,7 +1548,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
     if (this.state === 'charging' && !move.isSelf && !move.isCounterAttack) {
       const store = this.charDef.moves.basicCharge?.storeHits;
-      if (store) this._storedCharge = Math.min(store.cap ?? 24, (this._storedCharge ?? 0) + (store.per ?? 3));
+      if (store) {
+        this._storedCharge = Math.min(store.cap ?? 24, (this._storedCharge ?? 0) + (store.per ?? 3));
+        playVfx(this.scene, this, this.charDef.moves.basicCharge, 'absorb', {
+          x: this.x,
+          y: this.y - (this.bodyH ?? 80) * 0.5,
+        });
+      }
       const steal = this.charDef.moves.basicCharge?.stealHeat;
       if (steal) {
         const heat = (move.type === 'heat' ? (move.damage ?? 0) : 0)
@@ -1614,9 +1627,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
           if (chem) playVfx(this.scene, this, this.defenseMove, 'fizz');
         }
         this.retortFromImmune(attacker, move, time);
+        if (vaporAttack(move, attacker)) this.playVaporAlarm(attacker);
         if (this.defenseMove.crackAfterHits) {
           this.wallHits = (this.wallHits ?? 0) + 1;
           if (this.wallHits >= this.defenseMove.crackAfterHits) {
+            const broken = this.defenseMove;
+            playVfx(this.scene, this, broken, 'break', {
+              x: this.x,
+              y: this.y - (this.bodyH ?? 80) * 0.5,
+            });
             this.state = 'idle';
             this.defenseMove = null;
           }
@@ -1686,6 +1705,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
         damage: this.defenseMove.fuelDamage ?? 4,
         hitsName: this.defenseMove.name,
       };
+      this.playVaporAlarm(attacker);
+      this.retortFromImmune(attacker, move, time);
       this.rig.setFlash(0xaee6ff);
       return 0;
     }
@@ -1870,6 +1891,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
           this.rig.baseScale = this._shrinkFrom * (this.defenseMove.shellShrink ** this.wallHits);
         }
         if (this.wallHits >= this.defenseMove.crackAfterHits) {
+          const broken = this.defenseMove;
+          playVfx(this.scene, this, broken, 'break', {
+            x: this.x,
+            y: this.y - (this.bodyH ?? 80) * 0.5,
+          });
           this.restoreShrink();
           this.state = 'idle';
           this.defenseMove = null;
@@ -2636,6 +2662,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (incoming.type !== on && incoming.type2 !== on) return;
     playVfx(this.scene, this, this.defenseMove, 'ignite');
     lightUnquenchable(this, time);
+  }
+
+  /** Gas, smoke, or vapour that her chamber just swallowed. Sound arcs knock the attacker back. */
+  playVaporAlarm(attacker) {
+    const y = this.y - (this.bodyH ?? 80) * 0.5;
+    playVfx(this.scene, this, this.defenseMove, 'cleanse', { x: this.x, y });
+    const arcs = artFor(this.charDef?.id, this.charDef?.moves?.basicCharge?.name)?.wave;
+    const face = Math.sign((attacker?.x ?? this.x) - this.x) || this.facing || 1;
+    if (arcs?.frames?.length) spawnFxSprite(this.scene, arcs, this.x, y, 0.6, face);
   }
 
   retortFromImmune(attacker, move, time) {

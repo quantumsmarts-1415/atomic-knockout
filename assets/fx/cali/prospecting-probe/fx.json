@@ -1,0 +1,43 @@
+{
+  "file": "neutron-probe.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "pixel",
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "scale": 0.62,
+  "aim": true,
+  "hit": false,
+  "trail": {
+    "file": "probe-neutron-trail-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.22,
+    "pivotX": 1,
+    "pivotY": 0.5,
+    "lagFrac": 0.45,
+    "hit": false
+  },
+  "impact": {
+    "file": "probe-hit-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "scale": 0.7,
+    "hit": false
+  }
+}

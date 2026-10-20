@@ -1,0 +1,17 @@
+{
+  "file": "test-button-hit-anim.png",
+  "frames": 10,
+  "cols": 5,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.72,
+  "pivotX": 0.08,
+  "pivotY": 0.5,
+  "oneshot": true,
+  "flip": true,
+  "hit": false
+}

@@ -1843,6 +1843,55 @@ test('einstein, fermi, and mendel keep the approved batch rules', () => {
   assert.equal(mendel.specialDirectional.type2, 'radiation');
 });
 
+test('amy, curie, burke, and cali keep the approved batch rules', () => {
+  const amy = CHARACTERS.amy.moves;
+  assert.equal(amy.basicCharge.name, 'Alarm Blare');
+  assert.equal(amy.basicCharge.type, 'kinetic');
+  assert.equal(amy.basicCharge.onHit.stun, 280);
+  assert.equal(amy.basicDirectional.name, 'Test Button');
+  assert.equal(amy.basicDirectional.type, 'kinetic');
+  assert.equal(amy.basicDirectional.type2, 'radiation');
+  assert.equal(amy.specialDefense.absorbState, 'gas');
+  assert.equal(amy.specialDefense.retort.knockback, 272.8);
+  assert.equal(amy.specialDirectional.name, 'Ionizing Beam');
+  assert.equal(amy.specialDirectional.kind, 'beam');
+  assert.equal(amy.specialDirectional.type, 'radiation');
+  assert.equal(amy.specialDirectional.beamCap, 440);
+  assert.equal(amy.specialDirectional.beamArtPx, 440);
+  assert.equal(amy.specialDirectional.zone, undefined);
+
+  const curie = CHARACTERS.curie.moves;
+  assert.equal(curie.basicCharge.chain.count, 1);
+  assert.equal(curie.basicCharge.chain.type, 'chemical');
+  assert.equal(curie.basicCharge.chain.useImpact, true);
+  assert.equal(curie.basicCharge.chain.knockback, 122.4);
+  assert.equal(curie.basicDirectional.type2, 'radiation');
+  assert.equal(curie.specialDefense.scanWeak, true);
+  assert.equal(curie.specialDirectional.landBurst, true);
+  assert.equal(curie.specialDirectional.dropZone.useHold, true);
+  assert.equal(curie.specialDirectional.dropZone.knockback, 0);
+  assert.equal(curie.specialDirectional.zone, undefined);
+
+  const burke = CHARACTERS.burke.moves;
+  assert.equal(burke.basicCharge.storeHits.cap, 20);
+  assert.equal(burke.basicDirectional.type, 'kinetic');
+  assert.deepEqual(burke.specialDefense.blocks, ['kinetic', 'heat', 'electrical', 'chemical', 'radiation']);
+  assert.equal(burke.specialDefense.crackAfterHits, 4);
+  assert.equal(burke.specialDirectional.fadeIfMiss, true);
+  assert.equal(burke.specialDirectional.projectileLife, 260);
+
+  const cali = CHARACTERS.cali.moves;
+  assert.equal(cali.basicCharge.buff.bonus.type, 'radiation');
+  assert.equal(cali.basicCharge.buff.bonus.hits, 3);
+  assert.equal(cali.basicDirectional.kind, 'dash');
+  assert.equal(cali.specialDefense.stuntDouble, true);
+  assert.deepEqual(cali.specialDefense.absorbTypes, ['kinetic', 'heat', 'electrical', 'chemical', 'radiation']);
+  assert.equal(cali.specialDirectional.kind, 'projectile');
+  assert.equal(cali.specialDirectional.bonusVsMetal, 1.45);
+  assert.equal(cali.specialDirectional.bonusVsId.aurelius, 1.8);
+  assert.equal(cali.specialDirectional.beamLen, undefined);
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

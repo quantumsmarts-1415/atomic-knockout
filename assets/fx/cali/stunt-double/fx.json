@@ -1,0 +1,15 @@
+{
+  "file": "stunt-swap-flash-anim.png",
+  "frames": 10,
+  "cols": 5,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.7,
+  "pivotX": 0.5,
+  "pivotY": 0.55,
+  "hit": false
+}

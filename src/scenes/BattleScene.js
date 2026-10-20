@@ -1618,6 +1618,16 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   resolveBurst(owner, move, at) {
+    if (move?.chain?.knockback != null && !move._chained) {
+      move = {
+        ...move,
+        baseKnockback: 0,
+        knockbackGrowth: 0,
+        noKnockback: true,
+        noFlinch: true,
+        onHit: move.onHit ? { ...move.onHit, stun: 0, freeze: 0 } : move.onHit,
+      };
+    }
     if (move.spikes && !move._spikeChild) {
       const n = move.spikes.count ?? 4;
       const gap = move.spikes.gap ?? 32;
@@ -1755,7 +1765,14 @@ export default class BattleScene extends Phaser.Scene {
             type: move.chain.type ?? move.type,
             type2: move.chain.type ? undefined : move.type2,
             radius: (move.radius ?? 70) * (move.chain.radiusScale ?? (0.7 + i * 0.15)),
+            _chainImpact: !!move.chain.useImpact,
           };
+          if (move.chain.knockback != null) {
+            echo.baseKnockback = move.chain.knockback;
+            echo.knockbackGrowth = move.chain.growth ?? echo.knockbackGrowth;
+            echo.noKnockback = false;
+            echo.noFlinch = false;
+          }
           this.time.delayedCall((move.chain.delay ?? 160) * i, () => {
             if (owner.alive) this.resolveBurst(owner, echo, spot || undefined);
           });
@@ -1812,7 +1829,8 @@ export default class BattleScene extends Phaser.Scene {
       this.sweepMarked(owner, move, struck);
       return;
     }
-    let len = (move.beamLen ?? 160) * (move._beamScale ?? 1);
+    const rawLen = (move.beamLen ?? 160) * (move._beamScale ?? 1);
+    let len = move.beamCap > 0 ? Math.min(move.beamCap, rawLen) : rawLen;
     if (move.stageWide) {
       const worldW = this.world?.width > 0 ? this.world.width : 1280;
       const face = owner.facing === 1 ? 1 : -1;

@@ -510,10 +510,19 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         y = groundTop(scene, fighter.x, fighter.y);
         spawnSeepPath(scene, fighter, art);
       }
+      if (move._chainImpact && art.impact?.frames?.length) {
+        const s = art.impact.scale > 0 ? art.impact.scale : 1;
+        spawnFxSprite(scene, art.impact, x, y, s, fighter.facing || 1);
+        return;
+      }
       if (drawFxOneShot(scene, fighter, move, x, y, scale)) {
         if (art.wave?.frames?.length) {
-          const waveScale = 0.5 + 0.5 * chargeFrac(move);
-          spawnFxSprite(scene, art.wave, x, y, waveScale, 1);
+          const ratio = move?._baseRadius > 0 && move?.radius > 0 ? move.radius / move._baseRadius : 1;
+          const waveScale = art.wave.scale > 0
+            ? art.wave.scale * (art.wave.scaleWith === 'radius' ? ratio : 1)
+            : (0.5 + 0.5 * chargeFrac(move));
+          const waveFace = art.wave.flip ? (fighter.facing || 1) : 1;
+          spawnFxSprite(scene, art.wave, x, y, waveScale, waveFace);
         }
         if (art.gas?.frames?.length) spawnFxSprite(scene, art.gas, x, y, scale);
         if (move.vfx === 'binary') {

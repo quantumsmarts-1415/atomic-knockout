@@ -711,6 +711,8 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     randomFlip: !!extra.randomFlip,
     tilt: extra.tilt > 0 ? extra.tilt : 0,
     span: extra.span > 0 ? extra.span : 0,
+    ox: typeof extra.ox === 'number' ? extra.ox : 0,
+    oy: typeof extra.oy === 'number' ? extra.oy : 0,
   };
 }
 
@@ -1142,7 +1144,7 @@ const SIDE_SPECS = [
   ['wave', 'wave-'], ['recoil', 'recoil-'], ['meteor', 'meteor-'], ['arc', 'arc-'],
   ['crown', 'crown-'], ['visor', 'visor-'], ['reflect', 'reflect-'],
   ['heated', 'heated-'], ['absorb', 'absorb-'], ['cleanse', 'cleanse-'], ['block', 'block-'],
-  ['pierce', 'pierce-'], ['reticle', 'reticle-'],
+  ['pierce', 'pierce-'], ['reticle', 'reticle-'], ['tip', 'tip-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -1204,7 +1206,33 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       randomFlip: merged.randomFlip,
       tilt: merged.tilt,
       span: merged.span,
+      ox: merged.ox,
+      oy: merged.oy,
     });
+  }
+  if (Array.isArray(meta.steps)) {
+    record.steps = [];
+    for (let i = 0; i < meta.steps.length; i++) {
+      const spec = meta.steps[i];
+      if (!spec?.file) {
+        record.steps.push(null);
+        continue;
+      }
+      const merged = { ...inherit, ...spec };
+      const stepPivot = pivotFrom(merged, { x: 0.5, y: 0.5 });
+      const loaded = await loadSpecFrames(scene, id, slug, folder, merged, index, stepPivot, charH, sized, `step-${i}-`);
+      record.steps.push(loaded?.frames?.length
+        ? artRecord(record.objectType, sized, stepPivot, loaded.frames, {
+          blend: merged.blend,
+          fps: merged.fps,
+          scale: merged.scale,
+          scaleTo: merged.scaleTo,
+          flashRadius: merged.flashRadius,
+          loop: !!merged.loop,
+          hit: false,
+        })
+        : null);
+    }
   }
   await attachShards(scene, id, slug, folder, meta, index, charH, sized, record);
   return record;
@@ -1502,12 +1530,24 @@ export function fxProjectileView(scene, owner, move, x, y) {
     field.setDepth(17);
     field.setBlendMode?.(phaserBlend(fieldFrame.blend || fieldArt.blend));
   }
-  if (trail || hot || field || ghosts.length) {
+  const tipArt = base?.tip;
+  const tipFrame = tipArt?.frames?.[0];
+  let tip = null;
+  if (tipFrame && scene.add?.image) {
+    tip = scene.add.image(x, y, tipFrame.key);
+    tip.setOrigin(tipArt.pivotX ?? 0.5, tipArt.pivotY ?? 0.5);
+    const tipScale = fxGameplayScale(move, tipArt);
+    tip.setDisplaySize(tipFrame.displayW * tipScale, tipFrame.displayH * tipScale);
+    tip.setDepth(17);
+    tip.setBlendMode?.(phaserBlend(tipFrame.blend || tipArt.blend));
+  }
+  if (trail || hot || field || tip || ghosts.length) {
     const destroy = img.destroy?.bind(img);
     img.destroy = (...args) => {
       if (trail?.scene) trail.destroy();
       if (hot?.scene) hot.destroy();
       if (field?.scene) field.destroy();
+      if (tip?.scene) tip.destroy();
       for (const ghost of ghosts) if (ghost?.scene) ghost.destroy();
       return destroy?.(...args);
     };
@@ -1531,6 +1571,8 @@ export function fxProjectileView(scene, owner, move, x, y) {
     fxAim: art.aim !== false,
     fxTrail: trail,
     fxTrailArt: art.trail || null,
+    fxTip: tip,
+    fxTipArt: tipArt || null,
     fxField: field,
     fxFieldArt: fieldArt || null,
     fxHot: hot,
@@ -1628,6 +1670,19 @@ export function stepFxProjectile(p, time) {
   }
   stepProjectileTrail(p);
   stepPullField(p, time);
+  if (p.fxTip?.scene && p.gfx && p.fxTipArt?.frames?.length) {
+    const w = p.fxDisplayW || 40;
+    const h = p.fxDisplayH || 40;
+    p.fxTip.setPosition(p.gfx.x + (p.fxTipArt.ox || 0) * w, p.gfx.y + (p.fxTipArt.oy || 0) * h);
+    const frames = p.fxTipArt.frames;
+    const fps = p.fxTipArt.fps > 0 ? p.fxTipArt.fps : 24;
+    const raw = Math.floor(Math.max(0, time - (p.born || 0)) / (1000 / fps));
+    const i = p.fxTipArt.loop ? raw % frames.length : Math.min(frames.length - 1, raw);
+    if (p._tipFrame !== i && frames[i]?.key) {
+      p._tipFrame = i;
+      p.fxTip.setTexture(frames[i].key);
+    }
+  }
   if (p.move?.roll) {
     const face = (p.vx || 1) < 0 ? -1 : 1;
     p.gfx.rotation = 0;
@@ -2131,9 +2186,12 @@ export function spawnFxDetonate(scene, fighter, move, x, y) {
   const det = art?.detonate;
   const placed = fxDetonatePlacement(scene, fighter, move, x, y);
   if (!placed || !det?.frames?.length || !scene?.add?.image || scene.simFast) return placed;
+  const fitted = impactRadiusScale(move, det);
+  const scale = fitted != null ? fitted : (det.scale > 0 ? det.scale : 1);
   const img = placeStill(scene, det, placed.x, placed.y, 0);
+  applyFrameLook(img, det.frames[0], det, scale);
   img.setDepth(15);
-  trackOneShot(scene, img, det, 1, null);
+  trackOneShot(scene, img, det, scale, null);
   return placed;
 }
 

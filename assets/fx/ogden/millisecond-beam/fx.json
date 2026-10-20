@@ -1,0 +1,14 @@
+{
+  "file": "millisecond-beam-anim.png",
+  "frames": 3,
+  "cols": 3,
+  "rows": 1,
+  "fps": 24,
+  "loop": false,
+  "blend": "additive",
+  "black": true,
+  "fit": "stage",
+  "hit": false,
+  "pivotX": 0.5,
+  "pivotY": 0.5
+}

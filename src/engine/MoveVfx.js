@@ -410,6 +410,21 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   }
   if (phase === 'release' || phase === 'defense') {
     const art = artFor(fighter.charDef?.id, move?.name);
+    if (phase === 'release' && art?.steps?.length) {
+      const step = art.steps[move?._pulseStep];
+      if (move?._pulseStep == null || !step?.frames?.length) return;
+      const fitted = impactRadiusScale(move, step);
+      const s = fitted != null ? fitted : (step.scale > 0 ? step.scale : 1);
+      spawnFxSprite(
+        scene,
+        step,
+        extra.x ?? fighter.x,
+        extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5),
+        s,
+        1,
+      );
+      return;
+    }
     if (phase === 'release' && move?.aimStick && extra?.fired) {
       spawnAimedBeam(scene, fighter, move);
       return;

@@ -1,0 +1,29 @@
+{
+  "file": "broken-noble-status-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 1.25,
+  "anchor": "body",
+  "pivotX": 0.5,
+  "pivotY": 0.55,
+  "shatter": {
+    "file": "broken-noble-throwback-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "additive",
+    "black": true,
+    "fit": "height",
+    "heightFrac": 1.05,
+    "pivotX": 0.5,
+    "pivotY": 0.5
+  }
+}

@@ -2779,7 +2779,8 @@ export const MOVESETS = {
       duration: 640, cooldown: 900, vfx: 'shield', vfxColor: 0xe0d8ff,
     }),
     specialDirectional: m('Millisecond Beam', {
-      kind: 'beam', type: R, damage: 15.5, beamLen: 560, beamThick: 10, vfx: 'laser', vfxColor: 0xf4f0ff,
+      kind: 'beam', type: R, damage: 15.5, spanStage: true,
+      beamLen: 1024, beamThick: 10, beamArtPx: 1024, vfx: 'laser', vfxColor: 0xf4f0ff,
       baseKnockback: 172, knockbackGrowth: 3.61, duration: 70, cooldown: 1400,
     }),
   },

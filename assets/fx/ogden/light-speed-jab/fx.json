@@ -1,0 +1,16 @@
+{
+  "file": "light-speed-jab-anim.png",
+  "frames": 4,
+  "cols": 4,
+  "rows": 1,
+  "fps": 24,
+  "loop": false,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 0.32,
+  "oneshot": true,
+  "flip": true,
+  "pivotX": 0.02,
+  "pivotY": 0.5
+}

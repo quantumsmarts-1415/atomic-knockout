@@ -2615,7 +2615,7 @@ test('batch 23 part 2 scales the bright openings and anchors the seep', () => {
   assert.equal(dartFx.loop, true);
   assert.equal(dartFx.aim, true);
   assert.equal(dartFx.frames, 4);
-  for (const id of ['polonius', 'tate', 'ronan', 'frank', 'ray', 'ace', 'pat', 'uri', 'neptune', 'pluto', 'einstein', 'fermi', 'mendel', 'amy', 'curie', 'burke', 'cali', 'lars', 'ford', 'duke', 'sarge', 'thor', 'boar', 'dash', 'noble', 'roger', 'niko', 'flo']) {
+  for (const id of ['polonius', 'tate', 'ronan', 'frank', 'ray', 'ace', 'pat', 'uri', 'neptune', 'pluto', 'einstein', 'fermi', 'mendel', 'amy', 'curie', 'burke', 'cali', 'lars', 'ford', 'duke', 'sarge', 'thor', 'boar', 'dash', 'noble', 'roger', 'niko', 'flo', 'mac', 'ogden']) {
     for (const file of fs.readdirSync(`assets/fx/${id}`, { recursive: true })) {
       const name = String(file);
       assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, `${id}/${name}`);
@@ -2693,4 +2693,41 @@ test('noble, roger, niko, and flo scale only the bright openings', () => {
   const orb = read('assets/fx/flo/magic-number/fx.json');
   assert.equal(orb.loop, true);
   assert.equal(orb.fizzle.frames, 10);
+});
+
+test('mac and ogden keep the bright blast, the thin beam, and the doll layers', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const cascade = read('assets/fx/mac/decay-cascade/fx.json');
+  assert.equal(cascade.scale, 0.42);
+  assert.equal(cascade.scaleTo, undefined);
+  assert.equal(cascade.steps.length, 5);
+  assert.deepEqual(cascade.steps.slice(0, 4).map((step) => step.scale), [1, 0.82, 0.64, 0.46]);
+  assert.equal(cascade.steps[4].scale, 0.42);
+  const doll = read('assets/fx/mac/nesting-doll/fx.json');
+  assert.equal(doll.crackFrames, true);
+  assert.equal(doll.frames, 3);
+  assert.equal(doll.block.frames, 10);
+  const fuse = read('assets/fx/mac/short-fuse/fx.json');
+  assert.equal(fuse.black, false);
+  assert.equal(fuse.aim, false);
+  assert.equal(fuse.tip.loop, true);
+  assert.ok(Math.abs(fuse.tip.oy - (10 - 54) / 96) < 1e-9);
+  assert.equal(fuse.detonate.scale, 0.336);
+  const blast = read('assets/fx/ogden/end-of-the-table/fx.json');
+  assert.equal(blast.scaleTo, 'radius');
+  assert.equal(blast.flashRadius, 230);
+  assert.ok(Math.abs(blast.pivotY - 287 / 571) < 1e-9);
+  assert.equal(impactRadiusScale({ radius: 72 }, blast), 72 / 230);
+  assert.equal(blast.charge.loop, true);
+  const jab = read('assets/fx/ogden/light-speed-jab/fx.json');
+  assert.equal(jab.oneshot, true);
+  assert.equal(jab.frames, 4);
+  const noble = read('assets/fx/ogden/broken-noble/fx.json');
+  assert.equal(noble.anchor, 'body');
+  assert.equal(noble.shatter.frames, 8);
+  const beam = read('assets/fx/ogden/millisecond-beam/fx.json');
+  assert.equal(beam.fit, 'stage');
+  assert.equal(beam.hit, false);
+  assert.equal(beam.frames, 3);
+  assert.equal(beam.cols, 3);
 });

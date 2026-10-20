@@ -2081,6 +2081,50 @@ test('noble, roger, niko, and flo keep the approved batch rules', () => {
   }
 });
 
+test('mac and ogden keep the approved batch rules', () => {
+  const mac = CHARACTERS.mac.moves;
+  assert.equal(mac.basicCharge.name, 'Decay Cascade');
+  assert.equal(mac.basicCharge.pulses.length, 5);
+  assert.equal(mac.basicCharge.type, 'radiation');
+  assert.equal(mac.basicCharge.igniteAt, undefined);
+  const early = finalBlow({ ...mac.basicCharge, pulses: null, multiHit: 5, _hitIndex: 1, onHit: { stun: 200 } });
+  const last = finalBlow({ ...mac.basicCharge, pulses: null, multiHit: 5, _hitIndex: 5, onHit: { stun: 200 } });
+  assert.equal(early.baseKnockback, 0);
+  assert.equal(early.noKnockback, true);
+  assert.equal(early.onHit.stun, 0);
+  assert.equal(last.baseKnockback, 150);
+  assert.equal(last.onHit.stun, 200);
+  assert.equal(mac.basicDirectional.name, 'Red Hammer');
+  assert.equal(mac.basicDirectional.type, 'kinetic');
+  assert.equal(mac.basicDirectional.type2, 'radiation');
+  assert.equal(mac.specialDefense.crackAfterHits, 3);
+  assert.deepEqual(mac.specialDefense.blocks, ['kinetic', 'heat', 'electrical', 'chemical', 'radiation']);
+  assert.equal(mac.specialDirectional.name, 'Short Fuse');
+  assert.equal(mac.specialDirectional.explodeOnly, true);
+  assert.equal(mac.specialDirectional.igniteAt, undefined);
+  assert.equal(mac.specialDirectional.type, 'radiation');
+  assert.equal(mac.specialDirectional.type2, 'heat');
+  assert.ok(mac.specialDirectional.projectileLife < 1000);
+
+  const ogden = CHARACTERS.ogden.moves;
+  assert.equal(ogden.basicCharge.name, 'End of the Table');
+  assert.equal(ogden.basicCharge.radius, 72);
+  assert.equal(ogden.basicCharge.igniteAt, undefined);
+  assert.equal(ogden.basicCharge.hits.length, 4);
+  assert.equal(ogden.basicDirectional.name, 'Light-Speed Jab');
+  assert.equal(ogden.specialDefense.reflectTypes.includes('chemical'), true);
+  assert.equal(ogden.specialDefense.reflectTypes.includes('electrical'), true);
+  assert.equal(ogden.specialDefense.reflectPower, 1.4);
+  assert.equal(ogden.specialDirectional.name, 'Millisecond Beam');
+  assert.equal(ogden.specialDirectional.spanStage, true);
+  assert.equal(ogden.specialDirectional.beamArtPx, 1024);
+  assert.equal(ogden.specialDirectional.beamThick, 10);
+  assert.equal(ogden.specialDirectional.igniteAt, undefined);
+  for (const move of [...Object.values(mac), ...Object.values(ogden)]) {
+    assert.equal(move.igniteAt, undefined);
+  }
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

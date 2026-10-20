@@ -92,7 +92,8 @@ test('gold marks the reviewed roster plus later sheet or effect fighters', () =>
   assert.equal(artIsUpdated(CHARACTERS.roger, fxIds), true);
   assert.equal(artIsUpdated(CHARACTERS.niko, fxIds), true);
   assert.equal(artIsUpdated(CHARACTERS.flo, fxIds), true);
-  assert.equal(artIsUpdated(CHARACTERS.ogden, fxIds), false);
+  assert.equal(artIsUpdated(CHARACTERS.mac, fxIds), true);
+  assert.equal(artIsUpdated(CHARACTERS.ogden, fxIds), true);
 });
 
 test('a later fighter lights up from a new effect folder or move sheet', () => {

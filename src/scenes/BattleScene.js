@@ -1897,7 +1897,12 @@ export default class BattleScene extends Phaser.Scene {
       len = face > 0 ? Math.max(48, worldW - startX) : Math.max(48, startX);
     }
     const thick = move.beamThick ?? 20;
-    const x = owner.facing === 1 ? owner.x + owner.bodyW * 0.2 : owner.x - owner.bodyW * 0.2 - len;
+    let x = owner.facing === 1 ? owner.x + owner.bodyW * 0.2 : owner.x - owner.bodyW * 0.2 - len;
+    if (move.spanStage) {
+      const worldW = this.world?.width > 0 ? this.world.width : 1280;
+      x = 0;
+      len = worldW;
+    }
     const y = move.ground ? owner.y - thick * 0.5 : owner.y - owner.bodyH * 0.62;
     const rect = new Phaser.Geom.Rectangle(x, y - thick / 2, len, thick);
     const art = artFor(owner.charDef?.id, move.name);

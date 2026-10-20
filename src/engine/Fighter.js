@@ -1188,9 +1188,19 @@ export default class Fighter extends Phaser.GameObjects.Container {
       const landing = burstLanding(this, move);
       if (move.meteor) spawnMeteor(this.scene, this, move, landing, burstAt);
       const pulses = move.pulses?.length ? move.pulses : [{ damage: move.damage, delay: 0 }];
-      for (const pulse of pulses) {
+      const pulseCount = pulses.length;
+      for (let i = 0; i < pulseCount; i++) {
+        const pulse = pulses[i];
         const shot = move.pulses?.length
-          ? { ...move, damage: pulse.damage ?? move.damage, radius: pulse.radius ?? move.radius, pulses: null }
+          ? {
+            ...move,
+            damage: pulse.damage ?? move.damage,
+            radius: pulse.radius ?? move.radius,
+            pulses: null,
+            multiHit: pulseCount,
+            _hitIndex: i + 1,
+            _pulseStep: i,
+          }
           : move;
         this.scene.time.delayedCall(burstAt + (pulse.delay ?? 0), () => {
           if (this.state !== 'attack' && !commitBurst) return;
@@ -1934,11 +1944,16 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.defenseMove = null;
       } else if (this.defenseMove?.crackAfterHits) {
         this.wallHits = (this.wallHits ?? 0) + 1;
-        if (this.defenseMove.shellShrink && this.rig) {
+        const shell = this.defenseMove;
+        playVfx(this.scene, this, shell, 'block', {
+          x: this.x,
+          y: this.y - (this.bodyH ?? 80) * 0.5,
+        });
+        if (shell.shellShrink && this.rig) {
           if (this._shrinkFrom == null) this._shrinkFrom = this.rig.baseScale ?? 1;
-          this.rig.baseScale = this._shrinkFrom * (this.defenseMove.shellShrink ** this.wallHits);
+          this.rig.baseScale = this._shrinkFrom * (shell.shellShrink ** this.wallHits);
         }
-        if (this.wallHits >= this.defenseMove.crackAfterHits) {
+        if (this.wallHits >= shell.crackAfterHits) {
           const broken = this.defenseMove;
           playVfx(this.scene, this, broken, 'break', {
             x: this.x,

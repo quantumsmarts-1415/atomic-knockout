@@ -7,8 +7,7 @@
   "loop": false,
   "blend": "add",
   "black": 24,
-  "fit": "length",
-  "crop": "frame",
+  "fit": "stage",
   "pivot": "left",
   "hit": false
 }

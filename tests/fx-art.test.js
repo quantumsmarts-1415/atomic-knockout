@@ -1236,8 +1236,30 @@ test('lucy pairs a blade with the slash and spans annihilation to the stage', ()
   assert.equal(normal.h, 238);
 });
 
-test('tex gamma camera is a directional additive flash', () => {
+test('tex sheets match the technetium handoff', () => {
   const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const burst = read('assets/fx/tex/metastable-flash/fx.json');
+  assert.equal(burst.file, 'metastable-flash-burst-anim.png');
+  assert.equal(burst.frames, 24);
+  assert.equal(burst.fps, 13.2);
+  assert.equal(burst.scaleWith, 'radius');
+  assert.equal(burst.fit, 'height');
+  assert.equal(burst.pivot, 'center');
+  assert.equal(burst.hit, false);
+  assert.equal(fs.existsSync('assets/fx/tex/metastable-flash/metastable-flash-burst-anim.png'), true);
+  const lasso = read('assets/fx/tex/tracer-lasso/fx.json');
+  assert.equal(lasso.file, 'tracer-lasso-whip-anim.png');
+  assert.equal(lasso.fps, 13.714);
+  assert.equal(lasso.pivot, 'left');
+  assert.equal(lasso.oneshot, true);
+  assert.equal(lasso.hit, false);
+  assert.equal(fs.existsSync('assets/fx/tex/tracer-lasso/tracer-lasso-whip-anim.png'), true);
+  const draw = read('assets/fx/tex/quick-draw/fx.json');
+  assert.equal(draw.shatter.file, 'quick-draw-flash-anim.png');
+  assert.equal(draw.shatter.fps, 12);
+  assert.equal(draw.shatter.pivot, 'left');
+  assert.equal(draw.hit, false);
+  assert.equal(fs.existsSync('assets/fx/tex/quick-draw/quick-draw-flash-anim.png'), true);
   const flash = read('assets/fx/tex/gamma-camera/fx.json');
   assert.equal(flash.file, 'gamma-camera-flash-anim.png');
   assert.equal(flash.frames, 24);
@@ -1247,7 +1269,7 @@ test('tex gamma camera is a directional additive flash', () => {
   assert.equal(flash.loop, false);
   assert.equal(flash.blend, 'add');
   assert.equal(flash.black, 24);
-  assert.equal(flash.fit, 'length');
+  assert.equal(flash.fit, 'stage');
   assert.equal(flash.pivot, 'left');
   assert.equal(flash.hit, false);
   assert.equal(fs.existsSync('assets/fx/tex/gamma-camera/gamma-camera-flash-anim.png'), true);

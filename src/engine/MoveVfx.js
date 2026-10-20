@@ -407,6 +407,10 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       && art.objectType !== 'slash arc'
       && art.objectType !== 'extend';
     if (replaced && !(phase === 'defense' && art.releaseFlash)) {
+      if (art.stageFit) {
+        spawnStageSpan(scene, fighter, art);
+        return;
+      }
       // A burst is drawn once, at the blast, when resolveBurst supplies a point.
       if (move.kind === 'burst' && extra?.x == null) return;
       const anchor = fxAnchor(fighter, move);
@@ -425,6 +429,12 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         }
         return;
       }
+    }
+    if (art?.oneshot && art.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) {
+      const face = fighter.facing || 1;
+      const x = extra.x ?? fighter.x + face * (fighter.bodyW ?? 40) * 0.2;
+      const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
+      if (drawFxOneShot(scene, fighter, move, x, y, 1)) return;
     }
     if (art?.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) return;
   }
@@ -491,8 +501,10 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (!burst?.frames?.length) return;
     const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
     const x = extra.x ?? fighter.x;
-    spawnFxSprite(scene, burst, x, y, 1);
-    if (extra.both) spawnFxSprite(scene, burst, extra.otherX ?? x, extra.otherY ?? y, 1);
+    const aimed = (burst.pivotX ?? 0.5) < 0.05;
+    const face = aimed ? (fighter.facing || 1) : 1;
+    spawnFxSprite(scene, burst, x, y, 1, face);
+    if (extra.both && !aimed) spawnFxSprite(scene, burst, extra.otherX ?? x, extra.otherY ?? y, 1);
     return;
   }
   if (phase === 'shatter') {

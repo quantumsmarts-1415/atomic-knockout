@@ -481,6 +481,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     once: !!extra.once,
     aim: extra.aim !== false,
     keepSlash: !!extra.keepSlash,
+    oneshot: !!extra.oneshot,
     stageFit: !!extra.stageFit,
   };
 }
@@ -944,6 +945,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
     releaseImpact: !!meta.releaseImpact,
     once: !!meta.once,
     keepSlash: !!meta.keepSlash,
+    oneshot: !!meta.oneshot,
     stageFit: meta.fit === 'stage',
   };
   const inherit = { blend: meta.blend, black: meta.black };
@@ -1225,9 +1227,12 @@ export function spawnStageSpan(scene, fighter, art) {
   if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
   const frame = art.frames[0];
   const box = stageSpanSize(scene, frame);
-  const x = box.w / 2;
+  const face = fighter?.facing || 1;
+  const fromLeft = (art.pivotX ?? 0.5) < 0.05;
+  const x = fromLeft ? (face < 0 ? box.w : 0) : box.w / 2;
   const y = (fighter?.y ?? 0) - (fighter?.bodyH ?? 80) * 0.5;
-  const img = placeStill(scene, art, x, y, 0);
+  const rot = fromLeft && face < 0 ? Math.PI : 0;
+  const img = placeStill(scene, art, x, y, rot);
   applyFrameLook(img, frame, art, 1, box);
   img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
   trackOneShot(scene, img, art, 1, null, 1, box);
@@ -1568,7 +1573,7 @@ export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   if (!art?.frames?.length || !scene?.add?.image) return null;
   if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'lance' || art.anchor === 'feet' || art.anchor === 'aura' || art.anchor === 'pin') return null;
   if (art.objectType === 'projectile' || art.objectType === 'thrown') return null;
-  if (art.objectType === 'slash arc' || art.objectType === 'extend') return null;
+  if ((art.objectType === 'slash arc' || art.objectType === 'extend') && !art.oneshot) return null;
   const face = art.bothSides ? 1 : (art.flip ? (fighter?.facing || 1) : 1);
   const rot = art.objectType === 'beam' && (fighter?.facing || 1) === -1 ? Math.PI : 0;
   const img = placeStill(scene, art, x, y, rot);
@@ -2139,7 +2144,7 @@ export function syncFxActors(scene) {
     syncFreeze(scene, fighter);
     const move = fighter.currentMove;
     const art = artFor(fighter?.charDef?.id, move?.name);
-    const swinging = art && art.anchor !== 'lance'
+    const swinging = art && art.anchor !== 'lance' && !art.oneshot
       && (art.objectType === 'slash arc' || art.objectType === 'extend')
       && fighter.state === 'attack' && frameInActive(fighter)
       && !sheetDrawsWeapon(fighter);

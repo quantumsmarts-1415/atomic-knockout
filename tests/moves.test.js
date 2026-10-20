@@ -4,8 +4,8 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { gateStored, interceptHit } from '../src/engine/defense.js';
-import { applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, lightUnquenchable, markedStrikeTargets, scaledByHaste, stripBuffs, tickKit, visibleAlpha, withShatter } from '../src/engine/kit.js';
-import { rearmDefense } from '../src/engine/defense.js';
+import { applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, lightUnquenchable, markedStrikeTargets, scaledByHaste, sheetFrameAt, stripBuffs, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
+import { applyImmunities, rearmDefense } from '../src/engine/defense.js';
 
 const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
 const TYPES = new Set(['kinetic', 'heat', 'electrical', 'chemical', 'radiation', 'physical']);
@@ -578,7 +578,9 @@ test('sterling glow ticks radiation and the seeker does not bonus it', () => {
   assert.strictEqual(glowing.mark, 'glow');
   assert.strictEqual(glowing.markUntil, 4000);
   assert.strictEqual(glowing.glowUntil, 4000);
-  assert.strictEqual(glowing.glowTint, 0x7dffe8);
+  assert.strictEqual(glowing.glowTint, undefined);
+  assert.strictEqual(glowing.clingFrom.move, 'Night-Glow Hook');
+  assert.strictEqual(glowing.clingFrom.until, 4000);
   tickKit(glowing, 1000);
   assert.strictEqual(glowing.percent, 11);
   tickKit(glowing, 1500);
@@ -594,6 +596,69 @@ test('sterling glow ticks radiation and the seeker does not bonus it', () => {
   assert.strictEqual(rocket.name, 'Crimson Rocket');
   assert.strictEqual(rocket.type, 'heat');
   assert.strictEqual(rocket.type2, 'kinetic');
+});
+
+test('cody rods block kinetic and the paint coat is two percent for seven seconds', () => {
+  const moves = CHARACTERS.cody.moves;
+  const dot = moves.basicCharge;
+  assert.strictEqual(dot.name, 'Quantum Dot');
+  assert.strictEqual(dot.chargeSpeedMult, 0.42);
+  assert.strictEqual(dot.chargeDamageMult, 2.3);
+  assert.deepStrictEqual(dot.redFrames, [3, 4, 5, 6, 7, 8, 18, 19, 20]);
+  assert.strictEqual(sheetFrameAt(dot, 0, 1000 / 9.6 * 4), 4);
+  assert.strictEqual(withRedFrame(dot, 4).damage, 4.5);
+  assert.strictEqual(withRedFrame(dot, 0).damage, 3);
+  const rods = moves.specialDefense;
+  const guard = { state: 'defending', defenseMove: rods, x: 0, y: 0 };
+  assert.strictEqual(applyImmunities({ type: 'radiation', damage: 8 }, rods).emptied, true);
+  assert.strictEqual(interceptHit(guard, { x: 40 }, { type: 'kinetic', damage: 6 }, 0).result, 'negate');
+  const heat = interceptHit(guard, { x: 40 }, { type: 'heat', damage: 6 }, 0);
+  assert.strictEqual(heat.result, 'partial');
+  assert.strictEqual(heat.reduction, 0.45);
+  assert.strictEqual(interceptHit(guard, { x: 40 }, { type: 'electrical', damage: 6 }, 0).result, 'pass');
+  const paint = moves.specialDirectional;
+  assert.strictEqual(paint.onHit.poison.dps, 2);
+  assert.strictEqual(paint.onHit.poison.every, 1000);
+  assert.strictEqual(paint.onHit.poison.ms, 7000);
+  assert.strictEqual(paint.onHit.poison.flat, true);
+  assert.strictEqual(paint.onHit.slow, 7000);
+  assert.strictEqual(paint.onHit.coatMs, 7000);
+  const coated = { percent: 10, alive: true, state: 'idle', scene: { noteDot() {} } };
+  applyOnHit({ charDef: { id: 'cody' } }, coated, paint, 0);
+  assert.strictEqual(coated.slowUntil, 7000);
+  assert.strictEqual(coated.clingFrom.until, 7000);
+  tickKit(coated, 1000);
+  assert.strictEqual(coated.percent, 12);
+  tickKit(coated, 7000);
+  assert.strictEqual(coated.percent, 12);
+});
+
+test('ruth swaps whoever touches the line and the hook ignores armor', () => {
+  const moves = CHARACTERS.ruth.moves;
+  assert.strictEqual(moves.basicCharge.name, 'Sunlight Dye');
+  assert.strictEqual(moves.basicCharge.kind, 'beam');
+  assert.strictEqual(moves.basicCharge.type, 'electrical');
+  const hook = moves.basicDirectional;
+  assert.strictEqual(hook.name, 'Hardener Hook');
+  assert.strictEqual(hook.ignoreReductions, true);
+  assert.strictEqual(hook.breaksBlock, true);
+  const swap = moves.specialDefense;
+  assert.strictEqual(swap.name, 'Metathesis Swap');
+  assert.strictEqual(swap.swapLine, true);
+  assert.strictEqual(swap.kind, undefined);
+  const ruth = { x: 200, y: 400, bodyH: 80, bodyW: 40, facing: 1, alive: true };
+  const ahead = { id: 'ahead', x: 520, y: 400, bodyH: 80, bodyW: 40, alive: true, state: 'idle' };
+  const above = { id: 'above', x: 360, y: 200, bodyH: 80, bodyW: 40, alive: true, state: 'idle' };
+  const behind = { id: 'behind', x: 40, y: 400, bodyH: 80, bodyW: 40, alive: true, state: 'idle' };
+  assert.strictEqual(fighterOnSwapLine(ruth, [above, behind, ahead], 1200).id, 'ahead');
+  assert.strictEqual(fighterOnSwapLine(ruth, [above, behind], 1200), null);
+  const crack = moves.specialDirectional;
+  assert.strictEqual(crack.name, 'Ammonia Crack');
+  assert.strictEqual(crack.type, 'chemical');
+  assert.strictEqual(crack.kind, 'burst');
+  assert.ok(crack.coneDeg > 0);
+  assert.strictEqual(crack.zone.type, 'chemical');
+  assert.ok(crack.zone.ms >= 1000);
 });
 
 test('tex tags for ten seconds and the camera hits every tag', () => {

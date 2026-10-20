@@ -698,13 +698,6 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
     }
     this.rig.animate(dt / 1000, animState, speedFactor);
-    if ((this.glowUntil ?? 0) > time) {
-      this.rig.setFlash(this.glowTint ?? 0x7dffe8);
-      this._glowTint = true;
-    } else if (this._glowTint) {
-      this.rig.setFlash(null);
-      this._glowTint = false;
-    }
     if (this._sheetFxFrame && this.state === 'attack' && this.attackFrame === this._sheetFxFrame && this.currentMove) {
       this._sheetFxFrame = 0;
       playVfx(this.scene, this, this.currentMove, 'release', { fromSheet: true });
@@ -1235,6 +1228,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       : time + move.duration + move.cooldown;
     playVfx(this.scene, this, move, 'defense');
     applyOnCast(this, move, time, 1);
+    if (move.swapLine) this.scene?.swapAlongLine?.(this);
   }
 
   // A dive hop keeps its own horizontal speed, then stops at the lip of the

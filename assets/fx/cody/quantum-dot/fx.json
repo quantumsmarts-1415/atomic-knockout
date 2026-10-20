@@ -1,0 +1,16 @@
+{
+  "file": "quantum-dot-orb-anim.png",
+  "frames": 24,
+  "cols": 5,
+  "rows": 5,
+  "fps": 9.6,
+  "loop": true,
+  "blend": "add",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 0.38,
+  "crop": "frame",
+  "pivot": "center",
+  "aim": false,
+  "hit": false
+}

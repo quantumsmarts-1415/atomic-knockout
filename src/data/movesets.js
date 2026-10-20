@@ -897,6 +897,7 @@ export const MOVESETS = {
     basicCharge: m('Quantum Dot', {
       kind: 'projectile', type: E, damage: 3, chargeDamageMult: 2.3, chargeSpeedMult: 0.42,
       maxChargeMs: 1000, vfx: 'spark', vfxColor: 0xff4a3a,
+      redFrames: [3, 4, 5, 6, 7, 8, 18, 19, 20], redFrameCount: 24, redFps: 9.6, redMult: 1.5,
       projectileSpeed: 640, projectileRadius: 8, projectileLife: 680,
       baseKnockback: 90, knockbackGrowth: 2.4, duration: 200, cooldown: 880,
     }),
@@ -905,12 +906,16 @@ export const MOVESETS = {
       baseKnockback: 120, knockbackGrowth: 2.6, duration: 210, cooldown: 460,
     }),
     specialDefense: m('Control Rod', {
-      immune: [R], kind: 'block', onlyReduce: [H], blockReduction: 0.45,
+      immune: [R], blocks: [K], kind: 'block', onlyReduce: [H], blockReduction: 0.45,
       duration: 760, cooldown: 880, vfx: 'shield', vfxColor: 0xf0d24a,
     }),
     specialDirectional: m('Yellow Paint Bomb', {
       kind: 'projectile', type: C, damage: 3, vfx: 'cloud', vfxColor: 0xf0d24a,
-      onHit: { slow: 1100, poison: { dps: 1.1, ms: 1400 } },
+      onHit: {
+        slow: 7000,
+        poison: { dps: 2, every: 1000, ms: 7000, flat: true },
+        coat: 'Yellow Paint', coatMs: 7000,
+      },
       projectileSpeed: 420, projectileRadius: 11, projectileLife: 520,
       baseKnockback: 60, knockbackGrowth: 1, duration: 220, cooldown: 920,
     }),
@@ -1716,19 +1721,18 @@ export const MOVESETS = {
       baseKnockback: 70, knockbackGrowth: 1.3, duration: 200, cooldown: 820,
     }),
     basicDirectional: melee('Hardener Hook', {
-      type: K, damage: 5, breaksBlock: true, rangeW: 70, vfx: 'strike', vfxColor: 0xc8d0d8,
+      type: K, damage: 5, breaksBlock: true, ignoreReductions: true, rangeW: 70, vfx: 'strike', vfxColor: 0xc8d0d8,
       baseKnockback: 90, knockbackGrowth: 1.6, duration: 200, cooldown: 460,
     }),
     specialDefense: m('Metathesis Swap', {
-      kind: 'counter', counterType: K, counterDamage: 3, swap: true,
-      counterKnockback: 30, counterKnockbackGrowth: 0.4,
-      duration: 480, cooldown: 980, vfx: 'shield', vfxColor: 0xd8e4f0,
+      swapLine: true,
+      duration: 280, cooldown: 980, vfx: 'shield', vfxColor: 0xd8e4f0,
     }),
-    specialDirectional: m('Grubbs Catalyst', {
-      kind: 'projectile', type: C, damage: 3, vfx: 'spark', vfxColor: 0x8fd0c8,
-      onHit: { chemVulnerable: 2, chemVulnerableMs: 2200 },
-      projectileSpeed: 420, projectileRadius: 8, projectileLife: 480,
-      baseKnockback: 40, knockbackGrowth: 0.8, duration: 200, cooldown: 640,
+    specialDirectional: m('Ammonia Crack', {
+      kind: 'burst', type: C, damage: 6, radius: 168, coneDeg: 58, offsetX: 72,
+      zone: { type: C, damage: 1.2, ms: 1600, radius: 64, tick: 500, knockback: 12, growth: 0.12, color: 0x9dffb0 },
+      vfx: 'cloud', vfxColor: 0xc8f5c0,
+      baseKnockback: 70, knockbackGrowth: 1.3, duration: 220, cooldown: 720,
     }),
   },
 
@@ -1832,7 +1836,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Night-Glow Hook', {
       type: K, damage: 6.4,
-      onHit: { mark: 'glow', markMs: 4000, glow: { dps: 1, every: 1000, ms: 4000, tint: 0x7dffe8 } },
+      onHit: { mark: 'glow', markMs: 4000, glow: { dps: 1, every: 1000, ms: 4000 } },
       rangeW: 74, vfx: 'strike', vfxColor: 0x7dffe8,
       baseKnockback: 106, knockbackGrowth: 2.12, duration: 200, cooldown: 420,
     }),

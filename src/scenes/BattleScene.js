@@ -18,7 +18,7 @@ import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
 import { syncCoats } from '../engine/coatView.js';
 import { syncAuras } from '../engine/auraView.js';
-import { applyDot, cleanse, markedStrikeTargets, withShatter } from '../engine/kit.js';
+import { applyDot, cleanse, fighterOnSwapLine, markedStrikeTargets, sheetFrameAt, withRedFrame, withShatter } from '../engine/kit.js';
 import { resolvePacket } from '../data/balance.js';
 import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront } from '../engine/batch3.js';
 import { mulberry32 } from '../engine/rng.js';
@@ -30,7 +30,7 @@ import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors } from '../engine/fxArt.js';
+import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
@@ -1353,6 +1353,43 @@ export default class BattleScene extends Phaser.Scene {
     });
   }
 
+  swapAlongLine(fighter) {
+    if (!fighter?.body) return;
+    const target = fighterOnSwapLine(fighter, this.fighters, this.world?.width ?? 0);
+    this.drawSwapLine(fighter);
+    if (!target?.body || target === fighter) return;
+    const ax = target.x;
+    const ay = target.y;
+    target.body.reset(fighter.x, fighter.y);
+    fighter.body.reset(ax, ay);
+    target.body.setVelocity?.(0, 0);
+    fighter.body.setVelocity?.(0, 0);
+    const art = artFor(fighter.charDef?.id, fighter.defenseMove?.name);
+    if (art?.frames?.length) {
+      spawnFxSprite(this, art, fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.5, 1, 1);
+    }
+  }
+
+  drawSwapLine(fighter) {
+    const art = fxNamed('ruth/metathesis-line');
+    const frame = art?.frames?.[0];
+    if (!frame || !this.add?.image || this.simFast) return;
+    const face = fighter.facing || 1;
+    const y = fighter.y - (fighter.bodyH ?? 80) * 0.45;
+    const far = face > 0 ? (this.world?.width ?? fighter.x) : 0;
+    const span = Math.max(8, Math.abs(far - fighter.x));
+    const x = Math.min(fighter.x, far);
+    const img = this.add.image(x, y, frame.key);
+    img.setOrigin(0, 0.5);
+    img.setDisplaySize(span, 16);
+    img.setDepth(12);
+    img.setBlendMode?.(frame.blend === 'add' ? 'ADD' : 'NORMAL');
+    this.tweens?.add?.({
+      targets: img, alpha: 0, duration: 460,
+      onComplete: () => img.destroy?.(),
+    });
+  }
+
   resolveBurst(owner, move, at) {
     const cx = at?.x ?? owner.x + (owner.facing || 1) * (move.offsetX ?? 0);
     const cy = at?.y ?? owner.y - owner.bodyH / 2;
@@ -2396,6 +2433,7 @@ export default class BattleScene extends Phaser.Scene {
           const mul = victim.defenseMove.softenProjectiles;
           shot = { ...shot, damage: (shot.damage ?? 0) * mul, damage2: shot.damage2 != null ? shot.damage2 * mul : shot.damage2 };
         }
+        if (shot.redFrames) shot = withRedFrame(shot, sheetFrameAt(shot, p.born, time, p._fxFrame));
         if (p.move.explodeOnly) {
           this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
           p.gfx.destroy();

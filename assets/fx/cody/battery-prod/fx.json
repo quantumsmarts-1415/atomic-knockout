@@ -1,0 +1,17 @@
+{
+  "file": "battery-prod-zap-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 12,
+  "loop": false,
+  "blend": "add",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 0.85,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "contact",
+  "oneshot": true,
+  "hit": false
+}

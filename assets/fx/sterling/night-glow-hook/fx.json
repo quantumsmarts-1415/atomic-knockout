@@ -13,5 +13,20 @@
   "pivot": "center",
   "anchor": "contact",
   "oneshot": true,
-  "hit": false
+  "hit": false,
+  "cling": {
+    "file": "night-glow-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "body"
+  }
 }

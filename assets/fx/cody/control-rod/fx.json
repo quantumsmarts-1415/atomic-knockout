@@ -1,0 +1,16 @@
+{
+  "file": "control-rod-guard-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 24,
+  "loop": true,
+  "blend": "normal",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.65,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false
+}

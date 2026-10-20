@@ -1273,6 +1273,42 @@ test('sterling sheets scale the seeker down and loop the flare', () => {
   assert.equal(rocket.detonate.anchor, 'point');
   assert.equal(fs.existsSync('assets/fx/sterling/crimson-rocket/crimson-rocket-burst-anim.png'), true);
   assert.equal(fs.existsSync('assets/fx/sterling/crimson-rocket/crimson-rocket-burst-anim.gif'), false);
+  const glow = read('assets/fx/sterling/night-glow-hook/fx.json');
+  assert.equal(glow.cling.file, 'night-glow-status-anim.png');
+  assert.equal(glow.cling.loop, true);
+  assert.equal(glow.cling.fps, 12);
+  assert.equal(glow.cling.anchor, 'body');
+  assert.equal(glow.cling.heightFrac, 1);
+  assert.equal(fs.existsSync('assets/fx/sterling/night-glow-hook/night-glow-status-anim.png'), true);
+});
+
+test('cody and ruth sheets keep the paint coat and the swap line apart', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const dot = read('assets/fx/cody/quantum-dot/fx.json');
+  assert.equal(dot.loop, true);
+  assert.equal(dot.fps, 9.6);
+  assert.equal(dot.aim, false);
+  assert.equal(dot.hit, false);
+  const rods = read('assets/fx/cody/control-rod/fx.json');
+  assert.equal(rods.loop, true);
+  assert.equal(rods.anchor, 'body');
+  assert.equal(rods.blend, 'normal');
+  const paint = read('assets/fx/cody/yellow-paint-bomb/fx.json');
+  assert.equal(paint.cling.file, 'paint-coat-status-anim.png');
+  assert.equal(paint.cling.loop, true);
+  assert.equal(paint.cling.blend, 'normal');
+  assert.equal(paint.cling.black, false);
+  assert.equal(paint.detonate.frames, 23);
+  const line = read('assets/fx/ruth/metathesis-line/fx.json');
+  assert.equal(line.file, 'metathesis-line-tile.png');
+  assert.equal(fs.existsSync('assets/fx/ruth/metathesis-swap/fx.json'), true);
+  assert.notEqual(line.file, read('assets/fx/ruth/metathesis-swap/fx.json').file);
+  const crack = read('assets/fx/ruth/ammonia-crack/fx.json');
+  assert.equal(crack.blend, 'screen');
+  assert.equal(crack.pivot, 'left');
+  const dye = read('assets/fx/ruth/sunlight-dye/fx.json');
+  assert.equal(dye.stretch, 'length');
+  assert.equal(dye.pivot, 'left');
 });
 
 test('tex sheets match the technetium handoff', () => {

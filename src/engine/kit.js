@@ -39,7 +39,7 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.interrupt) lock(victim, time, fx.interrupt, true);
   if (fx.poison) {
     const p = fx.poison;
-    const chem = chemicalMult(attacker?.charDef?.combat, victim.charDef?.combat);
+    const chem = p.flat ? 1 : chemicalMult(attacker?.charDef?.combat, victim.charDef?.combat);
     victim.poisonUntil = time + (p.ms ?? 1600);
     victim.poisonDps = (p.dps ?? 1.4) * chem;
     victim.poisonRamp = (p.ramp ?? 0) * chem;
@@ -68,11 +68,17 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.glowDps = g.dps ?? 1;
     victim.glowEvery = g.every ?? 1000;
     victim.glowTick = time + victim.glowEvery;
-    victim.glowTint = g.tint ?? 0x7dffe8;
   }
   if (fx.coat) {
     victim.debuffCoat = fx.coat;
     victim.debuffCoatUntil = time + (fx.coatMs ?? fx.markMs ?? 2000);
+  }
+  if (attacker?.charDef?.id && (fx.glow || fx.coat)) {
+    victim.clingFrom = {
+      id: attacker.charDef.id,
+      move: move.name,
+      until: fx.glow ? victim.glowUntil : victim.debuffCoatUntil,
+    };
   }
   if (fx.scramble) victim.scrambleUntil = time + (typeof fx.scramble === 'number' ? fx.scramble : 2400);
   if (fx.weaken) {
@@ -621,4 +627,69 @@ export function bonusPackets(attacker, time) {
     if (Number.isFinite(attacker.heatOnHitLeft)) attacker.heatOnHitLeft -= 1;
   }
   return out;
+}
+
+/** Looping sheet frame. A shown frame wins so the bonus matches the color on screen. */
+export function sheetFrameAt(move, born, time, shown) {
+  if (shown != null) return shown;
+  const n = move?.redFrameCount ?? 0;
+  const fps = move?.redFps ?? 8;
+  if (!(n > 1) || !(fps > 0)) return 0;
+  const raw = Math.floor(Math.max(0, time - (born || 0)) / (1000 / fps));
+  return ((raw % n) + n) % n;
+}
+
+/** Red quantum-dot frames deal extra damage. Other frames stay as fired. */
+export function withRedFrame(move, frame) {
+  if (!move?.redFrames?.includes(frame)) return move;
+  const mul = move.redMult ?? 1.5;
+  return {
+    ...move,
+    damage: (move.damage ?? 0) * mul,
+    damage2: move.damage2 != null ? move.damage2 * mul : move.damage2,
+  };
+}
+
+function bodySpan(fighter) {
+  const rect = fighter?.getHurtboxRect?.();
+  if (rect) {
+    return {
+      top: rect.top ?? rect.y ?? 0,
+      bottom: rect.bottom ?? ((rect.y ?? 0) + (rect.height ?? 0)),
+      left: rect.left ?? rect.x ?? 0,
+      right: rect.right ?? ((rect.x ?? 0) + (rect.width ?? 0)),
+    };
+  }
+  const h = fighter?.bodyH ?? 80;
+  const w = fighter?.bodyW ?? 40;
+  const x = fighter?.x ?? 0;
+  const y = fighter?.y ?? 0;
+  return { top: y - h, bottom: y, left: x - w / 2, right: x + w / 2 };
+}
+
+/** Nearest living fighter whose body crosses the ray in front of the owner. */
+export function fighterOnSwapLine(owner, others, worldWidth) {
+  if (!owner) return null;
+  const face = owner.facing || 1;
+  const y = (owner.y ?? 0) - (owner.bodyH ?? 80) * 0.45;
+  const half = 18;
+  const reach = (worldWidth > 0 ? worldWidth : 4000) + 80;
+  const far = (owner.x ?? 0) + face * reach;
+  const minX = Math.min(owner.x ?? 0, far);
+  const maxX = Math.max(owner.x ?? 0, far);
+  let best = null;
+  let bestAhead = Infinity;
+  for (const other of others || []) {
+    if (!other || other === owner || other.alive === false || other.state === 'ko' || other.state === 'dead') continue;
+    const ahead = ((other.x ?? 0) - (owner.x ?? 0)) * face;
+    if (ahead < 12) continue;
+    const box = bodySpan(other);
+    if (y + half < box.top || y - half > box.bottom) continue;
+    if (box.right < minX || box.left > maxX) continue;
+    if (ahead < bestAhead) {
+      best = other;
+      bestAhead = ahead;
+    }
+  }
+  return best;
 }

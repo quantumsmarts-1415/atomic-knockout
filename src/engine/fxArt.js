@@ -559,6 +559,9 @@ async function collectFxArtNow(scene, roster) {
     queue(`status/${name}`, () => loadStatusSheet(scene, name, index));
   }
   queue('status/poison', () => loadSharedStatus(scene, index));
+  if (!index || listed(index, 'ruth/metathesis-line/fx.json')) {
+    queue('ruth/metathesis-line', () => loadFolderSheet(scene, 'ruth', 'metathesis-line', index));
+  }
   if (!jobs.length) return;
   // Two at a time. Every sheet is read back in full for its hit mask, and
   // running the whole roster at once stalls the tab for seconds.
@@ -628,6 +631,22 @@ async function loadStatusSheet(scene, name, index) {
     hit: false,
     anchor: 'body',
     scale: meta.scale,
+  });
+}
+
+async function loadFolderSheet(scene, id, folderName, index) {
+  const folder = `${id}/${folderName}`;
+  const meta = await loadFxMeta(folder, index);
+  const file = meta.file || 'sheet.png';
+  if (index && !listed(index, `${folder}/${file}`)) return null;
+  const spec = { ...meta, file };
+  const pivot = pivotFrom(spec, { x: 0, y: 0.5 });
+  const loaded = await loadSpecFrames(
+    scene, id, folderName, folder, spec, index, pivot, 100, { w: 240, h: 16 }, '',
+  );
+  if (!loaded?.frames?.length) return null;
+  return artRecord('beam', { w: 240, h: 16 }, pivot, loaded.frames, {
+    blend: meta.blend, fps: meta.fps, loop: !!meta.loop, hit: false,
   });
 }
 
@@ -2034,7 +2053,8 @@ function syncCling(scene, fighter) {
     applyFrameLook(live.img, frame, art, 1);
     if (art === status) live.img.setTint?.(burnSourceColor(scene, fighter));
     else live.img.clearTint?.();
-    live.img.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.42);
+    const drop = art.anchor === 'body' ? 0.5 : 0.42;
+    live.img.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * drop);
   }
   const tint = burning ? burnSourceColor(scene, fighter) : 0;
   syncScattered(scene, fighter, liveTongues, fxNamed('status/on-fire-small'), TONGUE_AT, tint, sharedFire);

@@ -551,6 +551,16 @@ export function prepareMove(move, attacker, defender, now = 0) {
   if (move.heatEmpower && selfHot) {
     next = { ...next, damage: (next.damage ?? 0) + move.heatEmpower };
   }
+  // A move can opt into losing output while the attacker is heated or burning.
+  // fullWhenHot (EV Motor Punch) keeps the listed damage instead.
+  if (selfHot && move.hotPenalty && !move.fullWhenHot) {
+    const mult = move.hotPenalty;
+    next = {
+      ...next,
+      damage: (next.damage ?? 0) * mult,
+      damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
+    };
+  }
   const buffed = defender && (
     defender.bonusHits > 0
     || defender.speedBuffUntil > now

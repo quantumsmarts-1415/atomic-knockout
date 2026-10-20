@@ -1,0 +1,33 @@
+{
+  "file": "skeleton-flash-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 16,
+  "loop": false,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 1.5,
+  "scaleTo": "radius",
+  "flashRadius": 230,
+  "oneshot": true,
+  "flip": true,
+  "anchor": "contact",
+  "pivotX": 0.4991304347826087,
+  "pivotY": 0.51171875,
+  "impact": {
+    "file": "x-ray-flash-anim.png",
+    "frames": 6,
+    "cols": 3,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "additive",
+    "black": true,
+    "fit": "height",
+    "heightFrac": 1.15,
+    "pivotX": 0.5,
+    "pivotY": 0.45
+  }
+}

@@ -2009,6 +2009,78 @@ test('thor, boar, and dash keep the approved batch rules', () => {
   assert.equal(dash.specialDirectional.igniteAt, undefined);
 });
 
+test('noble, roger, niko, and flo keep the approved batch rules', () => {
+  const noble = CHARACTERS.noble.moves;
+  assert.equal(noble.basicCharge.name, 'Nitroglycerin Vial');
+  assert.equal(noble.basicCharge.type, 'kinetic');
+  assert.equal(noble.basicCharge.type2, undefined);
+  assert.equal(noble.basicCharge.overhold, undefined);
+  assert.equal(noble.basicCharge.damage, 9.8);
+  assert.equal(noble.basicCharge.radius, 60);
+  assert.equal(noble.basicDirectional.name, 'Medal Swing');
+  assert.equal(noble.specialDefense.truce.ms, 480);
+  assert.equal(noble.specialDirectional.name, 'Carbon Bombardment');
+  assert.equal(noble.specialDirectional.type, 'radiation');
+  assert.equal(noble.specialDirectional.salvo, 6);
+  assert.equal(noble.specialDirectional.igniteAt, undefined);
+  assert.equal(noble.specialDirectional.damage, 2.63);
+  const earlyIon = finalBlow({ ...noble.specialDirectional, multiHit: 6, _hitIndex: 1 });
+  const lastIon = finalBlow({ ...noble.specialDirectional, multiHit: 6, _hitIndex: 6 });
+  assert.equal(earlyIon.baseKnockback, 0);
+  assert.equal(earlyIon.noKnockback, true);
+  assert.equal(lastIon.baseKnockback, 141.6);
+
+  const roger = CHARACTERS.roger.moves;
+  assert.equal(roger.basicCharge.revealAll, true);
+  assert.equal(roger.basicCharge.doubleNext, true);
+  assert.equal(roger.basicDirectional.name, 'Skeleton Flash');
+  assert.equal(roger.basicDirectional.hitRadius, 48);
+  assert.equal(roger.basicDirectional.onHit.xray, 180);
+  assert.equal(roger.basicDirectional.onHit.reveal, true);
+  assert.equal(roger.specialDefense.retort.type, 'radiation');
+  assert.equal(roger.specialDirectional.passBands, true);
+  assert.equal(roger.specialDirectional.beamArtPx, 640);
+  assert.equal(roger.specialDirectional.beamCap, 600);
+  assert.equal(roger.specialDirectional.breaksBlock, true);
+  assert.equal(roger.specialDirectional.igniteAt, undefined);
+  const victim = { percent: 10, phasingUntil: 400 };
+  applyOnHit({ charDef: { id: 'roger' } }, victim, roger.basicDirectional, 1000);
+  assert.equal(victim._xrayUntil, 1180);
+  assert.equal(victim.phasingUntil, 0);
+
+  const niko = CHARACTERS.niko.moves;
+  assert.equal(niko.basicDirectional.name, 'Three-Atom Combo');
+  assert.equal(niko.basicDirectional.multiHit, 3);
+  assert.equal(niko.basicDirectional.type, 'radiation');
+  const tap = finalBlow({ ...niko.basicDirectional, _hitIndex: 1, onHit: { stun: 200 } });
+  const fin = finalBlow({ ...niko.basicDirectional, _hitIndex: 3, onHit: { stun: 200 } });
+  assert.equal(tap.baseKnockback, 0);
+  assert.equal(tap.onHit.stun, 0);
+  assert.equal(fin.baseKnockback, 94.4);
+  assert.equal(fin.onHit.stun, 200);
+  assert.equal(niko.specialDirectional.beamArtPx, 500);
+  assert.equal(niko.specialDirectional.beamCap, 460);
+  assert.equal(niko.specialDirectional.igniteAt, undefined);
+
+  const flo = CHARACTERS.flo.moves;
+  assert.equal(flo.basicCharge.pauseDrain, 5000);
+  assert.equal(flo.basicCharge.pauseAt, 0.95);
+  const ghost = { charDef: { id: 'flo', ghost: true }, percent: 20 };
+  applyOnCast(ghost, { ...flo.basicCharge, _chargeFrac: 0.4 }, 1000, 0.4);
+  assert.equal(ghost.drainPauseUntil, undefined);
+  applyOnCast(ghost, { ...flo.basicCharge, _chargeFrac: 1 }, 2000, 1);
+  assert.equal(ghost.drainPauseUntil, 7000);
+  assert.equal(ghost.clingFrom.until, 7000);
+  assert.equal(flo.basicDirectional.drag, 640);
+  assert.equal(flo.specialDefense.cycleMs, 250);
+  assert.deepEqual(flo.specialDefense.cycle, ['kinetic', 'chemical']);
+  assert.equal(flo.specialDirectional.fizzleOnMiss, true);
+  assert.equal(flo.specialDirectional.igniteAt, undefined);
+  for (const kit of [noble, roger, niko, flo]) {
+    for (const move of Object.values(kit)) assert.equal(move.igniteAt, undefined);
+  }
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

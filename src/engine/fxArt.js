@@ -660,6 +660,8 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     fadeMs: extra.fadeMs > 0 ? extra.fadeMs : 280,
     shrinkAfter: !!extra.shrinkAfter,
     paceCharge: !!extra.paceCharge,
+    fillHold: !!extra.fillHold,
+    tremble: !!extra.tremble,
     stretch: extra.stretch === 'length' ? 'length' : null,
     sign: !!extra.sign,
     guardAt: extra.guardAt > 0 ? extra.guardAt | 0 : 0,
@@ -1140,7 +1142,7 @@ const SIDE_SPECS = [
   ['wave', 'wave-'], ['recoil', 'recoil-'], ['meteor', 'meteor-'], ['arc', 'arc-'],
   ['crown', 'crown-'], ['visor', 'visor-'], ['reflect', 'reflect-'],
   ['heated', 'heated-'], ['absorb', 'absorb-'], ['cleanse', 'cleanse-'], ['block', 'block-'],
-  ['pierce', 'pierce-'],
+  ['pierce', 'pierce-'], ['reticle', 'reticle-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -1195,6 +1197,8 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       stackSeconds: !!merged.stackSeconds,
       surgePips: !!merged.surgePips,
       rise: merged.rise,
+      fillHold: !!merged.fillHold,
+      tremble: !!merged.tremble,
       rampAlpha: merged.rampAlpha,
       randomRot: merged.randomRot,
       randomFlip: merged.randomFlip,
@@ -1278,6 +1282,8 @@ async function loadMoveArt(scene, char, slot, move, index) {
     scaleTo: meta.scaleTo === 'radius' ? 'radius' : null,
     flashRadius: meta.flashRadius > 0 ? meta.flashRadius : 0,
     hard: meta.hard > 0 ? meta.hard : 0,
+    fillHold: !!meta.fillHold,
+    tremble: !!meta.tremble,
   };
   const inherit = { blend: meta.blend, black: meta.black };
 
@@ -2613,6 +2619,9 @@ function syncAttached(scene, fighter) {
   else if (art.paceCharge && fighter.defenseMove?.chargeMs) {
     const frac = Math.min(1, Math.max(0, ((scene.simNow ?? 0) - (fighter.defenseStart ?? 0)) / fighter.defenseMove.chargeMs));
     index = Math.min(art.frames.length - 1, Math.round(frac * (art.frames.length - 1)));
+  } else if (art.fillHold && fighter.defenseMove?.duration) {
+    const frac = Math.min(1, Math.max(0, want.elapsed / fighter.defenseMove.duration));
+    index = Math.min(art.frames.length - 1, Math.round(frac * (art.frames.length - 1)));
   } else if (art.crackFrames && (want.kind === 'wall' || want.kind === 'body' || want.kind === 'front')) {
     index = Math.min(art.frames.length - 1, fighter.wallHits || 0);
   }
@@ -3203,6 +3212,128 @@ function stepSeeps(scene) {
   }
 }
 
+const liveXray = new WeakMap();
+const liveWeak = new WeakMap();
+
+function dropXray(fighter) {
+  const live = liveXray.get(fighter);
+  if (!live) return;
+  live.img?.destroy?.();
+  if (live.key && fighter.scene?.textures?.remove && fighter.scene.textures.exists?.(live.key)) {
+    fighter.scene.textures.remove(live.key);
+  }
+  if (fighter.rig?.sprite && live.savedAlpha != null) fighter.rig.sprite.setAlpha(live.savedAlpha);
+  liveXray.delete(fighter);
+}
+
+/** Invert one body frame so Skeleton Flash can show the target as an x-ray negative. */
+function xrayTexture(scene, spr, key) {
+  const textures = scene?.textures;
+  const frame = spr?.frame;
+  const source = frame?.source?.image || spr?.texture?.getSourceImage?.();
+  if (!textures?.createCanvas || !frame || !source) return null;
+  const w = frame.cutWidth || frame.width;
+  const h = frame.cutHeight || frame.height;
+  if (!(w > 0) || !(h > 0)) return null;
+  if (textures.exists?.(key)) textures.remove(key);
+  const canvas = textures.createCanvas(key, w, h);
+  const ctx = canvas?.getContext?.();
+  if (!ctx) return null;
+  const sx = frame.cutX || 0;
+  const sy = frame.cutY || 0;
+  ctx.drawImage(source, sx, sy, w, h, 0, 0, w, h);
+  const img = ctx.getImageData(0, 0, w, h);
+  const data = img.data;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 8) continue;
+    data[i] = 255 - data[i];
+    data[i + 1] = 255 - data[i + 1];
+    data[i + 2] = 255 - data[i + 2];
+  }
+  ctx.putImageData(img, 0, 0);
+  canvas.refresh?.();
+  return key;
+}
+
+function syncXray(scene, fighter) {
+  const now = scene.simNow ?? 0;
+  const spr = fighter.rig?.sprite;
+  const on = fighter._xrayUntil > now && spr?.scene && fighter.alive && fighter.state !== 'ko';
+  if (!on) {
+    dropXray(fighter);
+    return;
+  }
+  const frameName = spr.frame?.name ?? '';
+  let live = liveXray.get(fighter);
+  if (!live?.img?.scene || live.frame !== frameName) {
+    const saved = live?.savedAlpha != null && live.savedAlpha > 0.05 ? live.savedAlpha : (spr.alpha ?? 1);
+    live?.img?.destroy?.();
+    if (live?.key && scene.textures?.exists?.(live.key)) scene.textures.remove(live.key);
+    const key = `xray-${fighter.charDef?.id || 'f'}-${now | 0}-${frameName}`;
+    const tex = xrayTexture(scene, spr, key);
+    if (!tex || !scene.add?.image) {
+      liveXray.delete(fighter);
+      return;
+    }
+    const img = scene.add.image(spr.x, spr.y, tex);
+    img.setOrigin(spr.originX ?? 0.5, spr.originY ?? 1);
+    img.setDepth((spr.depth ?? 10) + 1);
+    live = { img, frame: frameName, key: tex, savedAlpha: saved };
+    liveXray.set(fighter, live);
+  }
+  spr.setAlpha(0);
+  live.img.setPosition(spr.x, spr.y);
+  live.img.setScale(spr.scaleX || 1, spr.scaleY || 1);
+  live.img.setRotation?.(spr.rotation || 0);
+}
+
+function dropWeak(fighter) {
+  const live = liveWeak.get(fighter);
+  live?.img?.destroy?.();
+  if (live) liveWeak.delete(fighter);
+}
+
+function nearestFoe(scene, fighter) {
+  let best = null;
+  let bestD = Infinity;
+  for (const other of scene.fighters || []) {
+    if (other === fighter || !other.alive || other.state === 'ko' || other.state === 'dead') continue;
+    const d = Math.hypot((other.x ?? 0) - fighter.x, (other.y ?? 0) - fighter.y);
+    if (d < bestD) {
+      best = other;
+      bestD = d;
+    }
+  }
+  return best;
+}
+
+/** Weak-spot reticle stays up until the doubled hit lands. */
+function syncWeakSpot(scene, fighter) {
+  if (!((fighter.doubleNext ?? 0) > 0)) {
+    dropWeak(fighter);
+    return;
+  }
+  const art = artFor(fighter.charDef?.id, 'X-Ray Vision')?.reticle;
+  if (!art?.frames?.length) return;
+  const now = scene.simNow ?? 0;
+  let live = liveWeak.get(fighter);
+  if (!live?.img?.scene) {
+    dropWeak(fighter);
+    live = { img: placeStill(scene, art, fighter.x, fighter.y, 0), born: now };
+    live.img.setDepth(16);
+    liveWeak.set(fighter, live);
+  }
+  const foe = nearestFoe(scene, fighter);
+  const frame = art.frames[fxFrameIndex(art, now - live.born)] || art.frames[0];
+  applyFrameLook(live.img, frame, art, 1);
+  if (foe) {
+    live.img.setPosition(foe.x, foe.y - (foe.bodyH ?? 80) * 0.45);
+  } else {
+    const face = fighter.facing || 1;
+    live.img.setPosition(fighter.x + face * (fighter.bodyW ?? 40) * 1.4, fighter.y - (fighter.bodyH ?? 80) * 0.5);
+  }
+}
+
 export function syncFxActors(scene) {
   if (!scene?.fighters) return;
   stepOneShots(scene);
@@ -3224,6 +3355,8 @@ export function syncFxActors(scene) {
     syncHeld(scene, fighter);
     syncStuntDouble(scene, fighter);
     syncAfterimage(scene, fighter);
+    syncXray(scene, fighter);
+    syncWeakSpot(scene, fighter);
     syncSurgePips(scene, fighter);
     syncFissionHalves(scene, fighter);
     syncFreeze(scene, fighter);
@@ -3717,7 +3850,15 @@ function syncHeld(scene, fighter) {
     const fallbackY = onHand ? fighter.y - bodyH * 0.52 : fighter.y;
     const heldX = hand?.x ?? fallbackX;
     const heldY = hand?.y ?? fallbackY;
-    live.img.setPosition(heldX, heldY);
+    let jx = 0;
+    let jy = 0;
+    if (want.art.tremble) {
+      const amp = 0.8 + 6.5 * frac;
+      const t = now * 0.05;
+      jx = Math.sin(t) * amp;
+      jy = Math.cos(t * 1.31) * amp * 0.65;
+    }
+    live.img.setPosition(heldX + jx, heldY + jy);
     if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
     if (want.art.tintFrom != null && want.art.tintTo != null) {
       live.img.setTint?.(chargeTint(want.art.tintFrom, want.art.tintTo, frac));
@@ -3726,7 +3867,7 @@ function syncHeld(scene, fighter) {
     live.img.setScale(mirror * Math.abs(live.img.scaleX || 1) * shot, Math.abs(live.img.scaleY || 1) * shot);
     if (want.art.tilt) live.img.rotation = -face * want.art.tilt * frac;
     syncRotor(scene, live, want.rotor, fighter, frac);
-    syncChargeGlow(scene, live, want.glow, heldX, heldY, frac, now - (fighter.chargeStart ?? now), fighter);
+    syncChargeGlow(scene, live, want.glow, heldX + jx, heldY + jy, frac, now - (fighter.chargeStart ?? now), fighter);
     return;
   }
   if (want.kind === 'boost') {

@@ -1,0 +1,30 @@
+{
+  "file": "nine-year-wait-stance-anim.png",
+  "frames": 36,
+  "cols": 9,
+  "rows": 4,
+  "fps": 12,
+  "loop": false,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 0.28,
+  "anchor": "body",
+  "fillHold": true,
+  "pivotX": 0.5,
+  "pivotY": 1.05,
+  "shatter": {
+    "file": "nine-year-counter-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "additive",
+    "black": true,
+    "fit": "height",
+    "heightFrac": 1.7,
+    "pivotX": 0.5,
+    "pivotY": 0.5
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "file": "x-ray-reveal-sweep-anim.png",
+  "frames": 14,
+  "cols": 7,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 1.35,
+  "oneshot": true,
+  "flip": true,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "reticle": {
+    "file": "weak-spot-reticle.png",
+    "frames": 1,
+    "cols": 1,
+    "rows": 1,
+    "blend": "additive",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.42,
+    "pivotX": 0.5,
+    "pivotY": 0.5
+  }
+}

@@ -1982,6 +1982,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
         const push = this.defenseMove.truce.push ?? 280;
         attacker.body?.setVelocityX(dir * push);
         this.body?.setVelocityX(-dir * push);
+        const pushArt = artFor(this.charDef?.id, this.defenseMove.name)?.burst;
+        if (pushArt?.frames?.length) {
+          spawnFxSprite(
+            this.scene, pushArt,
+            (this.x + attacker.x) / 2,
+            (this.y + attacker.y) / 2 - 20,
+            1, 1,
+          );
+        }
       }
       if (this.defenseMove?.swap && attacker?.body && this.body && attacker !== this) {
         const ax = attacker.x;
@@ -2188,6 +2197,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const dir = (!radial && launchDir) ? launchDir : away;
     const slip = this.slipperyUntil > time ? (this.slipperyMult ?? 1.3) : 1;
     const grabbed = incoming.pull && attacker && kb > 0 && !(this.defenseMove?.grabImmune && this.state === 'defending');
+    const dragged = incoming.drag && attacker && kb > 0 && !(this.defenseMove?.grabImmune && this.state === 'defending');
     let units = smashUnits(Math.max(0, kb) * slip);
     const grounded = !!(this.body?.blocked?.down || this.body?.touching?.down);
     let angle = launchAngle(incoming, grounded, units);
@@ -2195,18 +2205,22 @@ export default class Fighter extends Phaser.GameObjects.Container {
       units = Math.min(units, 24);
       angle = 0;
     }
-    if (grabbed) {
+    if (grabbed || dragged) {
       angle = 0;
     }
+    const travel = dragged
+      ? (attacker.facing || dir)
+      : (grabbed ? Math.sign((attacker.x - this.x) || dir) : dir);
     const players = this.scene?.fighters?.filter((f) => f.alive && f.state !== 'dead').length || 2;
-    const ko = units > 0 && this.predictKO(units, angle, grabbed ? Math.sign((attacker.x - this.x) || dir) : dir);
+    const ko = units > 0 && this.predictKO(units, angle, travel);
     const hmult = incoming.hitlagMult ?? (incoming.multiHit ? FEEL.hitlagMultiHit : 1);
     const frames = hitlagFrames(dmg, {
       hitlagMult: hmult, type: incoming.type, type2: incoming.type2, players, ko,
     });
     this.pendingLaunch = units > 0 ? {
-      units, angle, dir: grabbed ? Math.sign((attacker.x - this.x) || dir) : dir,
+      units, angle, dir: travel,
       type: incoming.type, pull: grabbed ? incoming.pull : 0,
+      drag: dragged ? incoming.drag : 0,
     } : null;
     this.launch = null;
     this._appliedLaunch = null;
@@ -2408,7 +2422,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const sy = (this.input?.down ? 1 : 0) - (this.input?.jump ? 1 : 0);
     const angle = applyDI(p.angle, sx, sy);
     const vel = launchVelocity(p.units, angle, p.dir || 1);
-    if (p.pull) vel.x = (p.dir || 1) * p.pull;
+    if (p.drag) vel.x = (p.dir || 1) * p.drag;
+    else if (p.pull) vel.x = (p.dir || 1) * p.pull;
     const stun = hitstunFrames(p.units);
     this.launch = {
       x: vel.x, y: vel.y, speed0: Math.hypot(vel.x, vel.y) || 1, type: p.type, units: p.units,

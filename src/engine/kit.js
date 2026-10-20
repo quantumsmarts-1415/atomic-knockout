@@ -16,6 +16,7 @@ export function applyOnHit(attacker, victim, move, time) {
   }
 
   const fx = move.onHit;
+  if (fx?.xray) victim._xrayUntil = time + (fx.xray === true ? 180 : fx.xray);
   if (fx?.revealMs) {
     victim.revealedUntil = time + fx.revealMs;
     victim.revealTint = fx.revealColor ?? 0x8ec8ff;
@@ -478,7 +479,16 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     }
   }
   if (move.debuffImmune) fighter.debuffImmuneUntil = time + move.duration;
-  if (move.pauseDrain) fighter.drainPauseUntil = time + move.pauseDrain;
+  if (move.pauseDrain && frac >= (move.pauseAt ?? 0)) {
+    fighter.drainPauseUntil = time + move.pauseDrain;
+    if (move.pauseAt > 0 && fighter.charDef?.id) {
+      fighter.clingFrom = {
+        id: fighter.charDef.id,
+        move: move.name,
+        until: fighter.drainPauseUntil,
+      };
+    }
+  }
 }
 
 function grantBuff(fighter, buff, time) {

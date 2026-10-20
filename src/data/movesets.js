@@ -2400,10 +2400,9 @@ export const MOVESETS = {
   },
 
   noble: {
-    basicCharge: m('Dynamite Stick', {
-      kind: 'burst', type: K, damage: 9.8, type2: H, damage2: 8.5, chargeDamageMult: 1.7, chargeRadiusMult: 1.25,
-      maxChargeMs: 800, radius: 60, vfx: 'fire', vfxColor: 0xff8844,
-      overhold: { grace: 200, damage: 14.6, damage2: 12.2, radius: 48 },
+    basicCharge: m('Nitroglycerin Vial', {
+      kind: 'burst', type: K, damage: 9.8, chargeDamageMult: 1.7, chargeRadiusMult: 1.25,
+      maxChargeMs: 800, radius: 60, vfx: 'spark', vfxColor: 0xffe08a,
       baseKnockback: 153.4, knockbackGrowth: 2.6, duration: 220, cooldown: 860,
     }),
     basicDirectional: melee('Medal Swing', {
@@ -2415,10 +2414,10 @@ export const MOVESETS = {
       truce: { ms: 480, push: 220 },
       duration: 420, cooldown: 1100, vfx: 'shield', vfxColor: 0xfff6d0,
     }),
-    specialDirectional: m('Blasting Cap', {
-      kind: 'projectile', type: K, damage: 8.5, type2: H, damage2: 7.3, igniteAt: 0.62,
-      igniteDamage: 9, igniteType: H, igniteRadius: 52, vfx: 'fire', vfxColor: 0xff7040,
-      projectileSpeed: 420, projectileRadius: 7, projectileLife: 700,
+    specialDirectional: m('Carbon Bombardment', {
+      kind: 'projectile', type: R, damage: 2.63, salvo: 6, salvoGap: 75,
+      vfx: 'spark', vfxColor: 0xd8d8e0,
+      projectileSpeed: 680, projectileRadius: 9, projectileLife: 360,
       baseKnockback: 141.6, knockbackGrowth: 2.36, duration: 180, cooldown: 640,
     }),
   },
@@ -2538,7 +2537,7 @@ export const MOVESETS = {
       baseKnockback: 212.4, knockbackGrowth: 4.72, duration: 240, cooldown: 860,
     }),
     basicDirectional: melee('Three-Atom Combo', {
-      type: R, damage: 7.4, multiHit: 3, rangeW: 74, vfx: 'spark', vfxColor: 0xffd0a0,
+      type: R, damage: 7.4, multiHit: 3, hitGap: 90, rangeW: 74, vfx: 'spark', vfxColor: 0xffd0a0,
       baseKnockback: 94.4, knockbackGrowth: 1.89, duration: 280, cooldown: 460,
     }),
     specialDefense: m('Nine-Year Wait', {
@@ -2547,7 +2546,8 @@ export const MOVESETS = {
       duration: 700, cooldown: 1100, vfx: 'shield', vfxColor: 0xffe0c0,
     }),
     specialDirectional: m('Zinc Ion Beam', {
-      kind: 'beam', type: R, damage: 17.4, type2: K, damage2: 12.4, beamLen: 250, beamThick: 18,
+      kind: 'beam', type: R, damage: 17.4, type2: K, damage2: 12.4,
+      beamLen: 250, beamThick: 18, beamArtPx: 500, beamCap: 460,
       vfx: 'laser', vfxColor: 0xffe8c0,
       baseKnockback: 188.8, knockbackGrowth: 4.01, duration: 180, cooldown: 700,
     }),
@@ -2556,20 +2556,20 @@ export const MOVESETS = {
   flo: {
     basicCharge: m('Island of Stability', {
       kind: 'burst', type: R, damage: 11.5, chargeDamageMult: 1.25, chargeRadiusMult: 1.3,
-      maxChargeMs: 900, radius: 84, pauseDrain: 5000, vfx: 'spark', vfxColor: 0xd8ffc8,
+      maxChargeMs: 900, radius: 84, pauseDrain: 5000, pauseAt: 0.95, vfx: 'spark', vfxColor: 0xd8ffc8,
       baseKnockback: 124.8, knockbackGrowth: 2.65, duration: 240, cooldown: 1000,
     }),
     basicDirectional: melee('Riptide', {
       kind: 'dash', type: K, damage: 9, type2: R, damage2: 6.6, angleDeg: 0, dashSpeed: 700,
-      rangeW: 100, rangeH: 64, vfx: 'gust', vfxColor: 0xc8e8ff,
+      drag: 640, rangeW: 100, rangeH: 64, vfx: 'gust', vfxColor: 0xc8e8ff,
       baseKnockback: 132.6, knockbackGrowth: 2.81, duration: 280, cooldown: 520,
     }),
     specialDefense: m('Identity Crisis', {
-      cycle: [K, C], cycleMs: 280,
+      cycle: [K, C], cycleMs: 250,
       duration: 800, cooldown: 960, vfx: 'shield', vfxColor: 0xe8e0ff,
     }),
     specialDirectional: m('Magic Number', {
-      kind: 'projectile', type: R, damage: 12.3, vfx: 'spark', vfxColor: 0xf4fff0,
+      kind: 'projectile', type: R, damage: 12.3, fizzleOnMiss: true, vfx: 'spark', vfxColor: 0xf4fff0,
       projectileSpeed: 500, projectileRadius: 8, projectileLife: 480,
       baseKnockback: 148.2, knockbackGrowth: 3.12, duration: 180, cooldown: 820,
     }),
@@ -2738,7 +2738,8 @@ export const MOVESETS = {
       vfx: 'spark', vfxColor: 0xe8f4ff,
     }),
     basicDirectional: melee('Skeleton Flash', {
-      type: K, damage: 12, type2: R, damage2: 10, onHit: { reveal: true }, rangeW: 74,
+      type: K, damage: 12, type2: R, damage2: 10, hitRadius: 48,
+      onHit: { reveal: true, xray: 180 }, rangeW: 74,
       vfx: 'spark', vfxColor: 0xf4fbff,
       baseKnockback: 180, knockbackGrowth: 3.8, duration: 160, cooldown: 420,
     }),
@@ -2748,7 +2749,8 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Penetrating Ray', {
       kind: 'beam', type: R, damage: 16, breaksBlock: true, popShield: true, breakPhase: true,
-      beamLen: 340, beamThick: 14, vfx: 'laser', vfxColor: 0xf4fbff,
+      passBands: true, beamLen: 340, beamThick: 14, beamArtPx: 640, beamCap: 600,
+      vfx: 'laser', vfxColor: 0xf4fbff,
       baseKnockback: 170, knockbackGrowth: 3.6, duration: 160, cooldown: 980,
     }),
   },

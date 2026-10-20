@@ -2615,10 +2615,82 @@ test('batch 23 part 2 scales the bright openings and anchors the seep', () => {
   assert.equal(dartFx.loop, true);
   assert.equal(dartFx.aim, true);
   assert.equal(dartFx.frames, 4);
-  for (const id of ['polonius', 'tate', 'ronan', 'frank', 'ray', 'ace', 'pat', 'uri', 'neptune', 'pluto', 'einstein', 'fermi', 'mendel', 'amy', 'curie', 'burke', 'cali', 'lars', 'ford', 'duke', 'sarge', 'thor', 'boar', 'dash']) {
+  for (const id of ['polonius', 'tate', 'ronan', 'frank', 'ray', 'ace', 'pat', 'uri', 'neptune', 'pluto', 'einstein', 'fermi', 'mendel', 'amy', 'curie', 'burke', 'cali', 'lars', 'ford', 'duke', 'sarge', 'thor', 'boar', 'dash', 'noble', 'roger', 'niko', 'flo']) {
     for (const file of fs.readdirSync(`assets/fx/${id}`, { recursive: true })) {
       const name = String(file);
       assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, `${id}/${name}`);
     }
   }
+});
+
+test('noble, roger, niko, and flo scale only the bright openings', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const vial = read('assets/fx/noble/nitroglycerin-vial/fx.json');
+  assert.equal(vial.scaleTo, 'radius');
+  assert.equal(vial.flashRadius, 230);
+  assert.ok(Math.abs(vial.pivotX - 287 / 575) < 1e-9);
+  assert.equal(vial.charge.tremble, true);
+  assert.equal(vial.charge.black, false);
+  assert.equal(vial.glow.scaleWith, 'alpha');
+  assert.equal(impactRadiusScale({ radius: 60 }, vial), 60 / 230);
+  const medal = read('assets/fx/noble/medal-swing/fx.json');
+  assert.equal(medal.oneshot, true);
+  assert.equal(medal.fist.file, 'prize-medal.png');
+  assert.ok(Math.abs(medal.fist.pivotY - 6 / 176) < 1e-9);
+  const truce = read('assets/fx/noble/peace-prize/fx.json');
+  assert.equal(truce.anchor, 'body');
+  assert.equal(truce.loop, true);
+  assert.equal(truce.burst.frames, 12);
+  const ions = read('assets/fx/noble/carbon-bombardment/fx.json');
+  assert.equal(ions.loop, true);
+  assert.equal(ions.impact.frames, 6);
+
+  const flash = read('assets/fx/roger/skeleton-flash/fx.json');
+  assert.equal(flash.scaleTo, 'radius');
+  assert.equal(flash.flashRadius, 230);
+  assert.ok(Math.abs(flash.pivotY - 262 / 512) < 1e-9);
+  assert.equal(flash.impact.file, 'x-ray-flash-anim.png');
+  assert.equal(impactRadiusScale({ hitRadius: 48 }, flash), 48 / 230);
+  const ray = read('assets/fx/roger/penetrating-ray/fx.json');
+  assert.equal(ray.pivotX, 0);
+  assert.equal(beamDrawScale({ beamLen: 340, beamArtPx: 640, beamCap: 600, _beamScale: 1 }), 340 / 640);
+  assert.equal(beamDrawScale({ beamLen: 340, beamArtPx: 640, beamCap: 600, _beamScale: 3 }), 600 / 640);
+  const tube = read('assets/fx/roger/crookes-tube/fx.json');
+  assert.equal(tube.black, false);
+  assert.equal(tube.anchor, 'body');
+  assert.equal(tube.shatter.frames, 8);
+  const vision = read('assets/fx/roger/x-ray-vision/fx.json');
+  assert.equal(vision.oneshot, true);
+  assert.equal(vision.reticle.file, 'weak-spot-reticle.png');
+
+  const sun = read('assets/fx/niko/rising-sun/fx.json');
+  assert.equal(sun.scale, 0.42);
+  assert.equal(sun.scaleTo, undefined);
+  assert.equal(sun.charge.loop, false);
+  const combo = read('assets/fx/niko/three-atom-combo/fx.json');
+  assert.equal(combo.impact.replacesSpark, true);
+  assert.equal(combo.spark.frames, 6);
+  const wait = read('assets/fx/niko/nine-year-wait/fx.json');
+  assert.equal(wait.fillHold, true);
+  assert.equal(wait.frames, 36);
+  assert.equal(wait.shatter.frames, 10);
+  const zinc = read('assets/fx/niko/zinc-ion-beam/fx.json');
+  assert.equal(zinc.pivotX, 0);
+  assert.equal(beamDrawScale({ beamLen: 250, beamArtPx: 500, beamCap: 460, _beamScale: 1 }), 250 / 500);
+  assert.equal(beamDrawScale({ beamLen: 250, beamArtPx: 500, beamCap: 460, _beamScale: 4 }), 460 / 500);
+
+  const wave = read('assets/fx/flo/island-of-stability/fx.json');
+  assert.equal(wave.scale, 0.42);
+  assert.equal(wave.scaleTo, undefined);
+  assert.ok(Math.abs(wave.pivotY - 287 / 480) < 1e-9);
+  assert.equal(wave.cling.loop, true);
+  const tide = read('assets/fx/flo/riptide/fx.json');
+  assert.equal(tide.oneshot, true);
+  assert.equal(tide.flip, true);
+  const crisis = read('assets/fx/flo/identity-crisis/fx.json');
+  assert.equal(crisis.loop, true);
+  assert.equal(crisis.fps, 12);
+  const orb = read('assets/fx/flo/magic-number/fx.json');
+  assert.equal(orb.loop, true);
+  assert.equal(orb.fizzle.frames, 10);
 });

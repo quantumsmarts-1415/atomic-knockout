@@ -1903,6 +1903,7 @@ export default class BattleScene extends Phaser.Scene {
     const art = artFor(owner.charDef?.id, move.name);
     const anchor = fxAnchor(owner, move);
     playVfx(this, owner, move, 'release', { fired: true });
+    this.placePassBands(owner, move, x, y, len, thick);
     if (anchor && art?.hit !== false) {
       const struck = new Set();
       for (const target of this.fighters) {
@@ -1926,6 +1927,41 @@ export default class BattleScene extends Phaser.Scene {
       }
     }
     this.sweepMarked(owner, move, struck);
+  }
+
+  /** Faint pass-through marks where a penetrating beam crosses a wall or a block. */
+  placePassBands(owner, move, x, y, len, thick) {
+    if (!move?.passBands || this.simFast || !this.add?.rectangle) return;
+    const left = x;
+    const right = x + len;
+    const spots = [];
+    for (const s of this.stage?.solids || []) {
+      if (!(s?.h > 24) || !(s.w > 0)) continue;
+      const sLeft = s.x - s.w / 2;
+      const sRight = s.x + s.w / 2;
+      if (right < sLeft || left > sRight) continue;
+      const top = (s.y ?? 0) - s.h;
+      const bot = s.y ?? 0;
+      if (y < top - 8 || y > bot + 8) continue;
+      spots.push(Math.max(left, Math.min(right, s.x)));
+    }
+    for (const target of this.fighters || []) {
+      if (target === owner || !target.alive) continue;
+      const blocking = target.state === 'defending' && target.defenseMove
+        && (target.defenseMove.kind === 'block' || target.defenseMove.blocks || target.defenseMove.kind === 'wall');
+      if (!blocking) continue;
+      if (target.x < left || target.x > right) continue;
+      spots.push(target.x);
+    }
+    for (const at of spots) {
+      const band = this.add.rectangle(at, y, 8, Math.max(28, thick * 2.4), 0xdff6ff, 0.62);
+      band.setBlendMode?.('ADD');
+      band.setDepth?.(18);
+      this.tweens?.add?.({
+        targets: band, alpha: 0, duration: 160,
+        onComplete: () => band.destroy(),
+      });
+    }
   }
 
   spawnZone(owner, spec, x, y, move) {
@@ -2947,7 +2983,10 @@ export default class BattleScene extends Phaser.Scene {
             });
           }
         }
-        if (p.move.explodeOnly && !p.pinned && !p.move._ghost) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
+        const missed = !!(p.move.fizzleOnMiss && !(p.landed && p.landed.size));
+        if (missed && !off && !p.move._ghost) {
+          playVfx(this, p.owner, p.move, 'fizzle', { x: p.gfx.x, y: p.gfx.y });
+        } else if (p.move.explodeOnly && !p.pinned && !p.move._ghost) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
         else if (!off && !p.move._ghost) this.detonateProjectile(p);
         if (!p.pinned && !p.move._ghost) this.dropProjectileZone(p);
         p.gfx.destroy();

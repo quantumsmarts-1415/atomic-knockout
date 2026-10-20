@@ -822,9 +822,8 @@ export const MOVESETS = {
 
   ray: {
     basicCharge: m('Radium Tonic', {
-      kind: 'buff', maxChargeMs: 1000, duration: 200, cooldown: 1200, vfx: 'spark', vfxColor: 0xd6ff8a,
-      selfDamage: { type: R, damage: 3, withCharge: true, noFlinch: true },
-      buff: { scaleWithCharge: true, ms: 1800, bonus: { type: R, damage: 2, hits: 2 } },
+      kind: 'buff', maxChargeMs: 3000, duration: 200, cooldown: 1200, vfx: 'spark', vfxColor: 0xd6ff8a,
+      tonic: { every: 1000, power: 0.16, cost: 1.1, linger: 2200 },
     }),
     basicDirectional: melee('Alpha Uppercut', {
       type: K, damage: 11, type2: R, damage2: 9, lift: true, rangeW: 50, rangeH: 64, vfx: 'spark',
@@ -837,7 +836,10 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Luminous Splash', {
       kind: 'projectile', type: R, damage: 4, angleable: true, vfx: 'spark', vfxColor: 0xe8ffb0,
-      dropZone: { type: R, damage: 1.1, ms: 1600, radius: 44, tick: 400, knockback: 14, growth: 0.2, color: 0xe8ffb0 },
+      dropZone: {
+        name: 'Luminous Splash', type: R, damage: 1.1, ms: 1600, radius: 44, tick: 400,
+        knockback: 0, growth: 0, color: 0xe8ffb0, feet: true, statusCling: 'Luminous Splash',
+      },
       projectileSpeed: 400, projectileRadius: 10, projectileLife: 600,
       baseKnockback: 50, knockbackGrowth: 0.8, duration: 220, cooldown: 900,
     }),
@@ -1186,21 +1188,23 @@ export const MOVESETS = {
   ace: {
     basicCharge: m('Actinic Ray', {
       kind: 'beam', type: R, damage: 6, chargeDamageMult: 1.5, chargeLengthMult: 1.85,
-      maxChargeMs: 850, beamLen: 138, beamThick: 16, vfx: 'laser', vfxColor: 0x8ad0ff,
+      maxChargeMs: 850, beamLen: 138, beamThick: 16, beamArtPx: 640, vfx: 'laser', vfxColor: 0x8ad0ff,
       baseKnockback: 160, knockbackGrowth: 4.2, duration: 200, cooldown: 820,
     }),
     basicDirectional: melee('Ace of Rays', {
       type: K, damage: 5, type2: R, damage2: 5, rangeW: 70, vfx: 'spark',
       baseKnockback: 150, knockbackGrowth: 3.8, duration: 200, cooldown: 420,
     }),
-    specialDefense: m('Wild Card', {
-      cycle: [K, H, E, C, R], cycleMs: 280, cycleReflect: true,
-      duration: 800, cooldown: 960, vfx: 'shield', vfxColor: 0xf0d24a,
+    specialDefense: m('Smoke Detector', {
+      immune: [R],
+      revealNear: { radius: 220, every: 1000, ms: 1100 },
+      duration: 800, cooldown: 960, vfx: 'shield', vfxColor: 0x8ad0ff,
     }),
-    specialDirectional: m('Royal Flush', {
-      kind: 'projectile', type: R, damage: 2.8, fan: 5, fanSpread: 240, vfx: 'spark',
-      projectileSpeed: 460, projectileRadius: 6, projectileLife: 460,
-      baseKnockback: 60, knockbackGrowth: 1.6, duration: 220, cooldown: 800,
+    specialDirectional: m('Neutron Deck', {
+      kind: 'projectile', type: R, damage: 9, explodeOnly: true, explodeRadius: 56, hitRadius: 56,
+      vfx: 'spark', vfxColor: 0x9fd4ff,
+      projectileSpeed: 420, projectileRadius: 14, projectileLife: 520,
+      baseKnockback: 120, knockbackGrowth: 2.4, duration: 220, cooldown: 800,
     }),
   },
 

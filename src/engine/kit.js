@@ -406,6 +406,7 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     }
   }
   if (move.cleanse) cleanse(fighter, move.cleanse);
+  if (move.tonic) grantTonic(fighter, move, time);
   if (move.blinkMs) {
     fighter.phasingUntil = time + move.blinkMs;
     fighter._blinkUntil = fighter.phasingUntil;
@@ -515,6 +516,18 @@ function grantBuff(fighter, buff, time) {
       dashSpeed: buff.armDash.dashSpeed ?? 560,
     };
   }
+}
+
+/** Seconds of radium tonic already drunk become attack power, then the counter clears. */
+export function grantTonic(fighter, move, time) {
+  const spec = move?.tonic;
+  if (!spec || !fighter) return 0;
+  const steps = Math.max(0, fighter._tonicSteps | 0);
+  fighter._tonicSteps = 0;
+  if (!(steps > 0)) return 0;
+  fighter.attackPower = 1 + steps * (spec.power ?? 0.16);
+  fighter.attackPowerUntil = time + (spec.linger ?? 2200);
+  return steps;
 }
 
 /** Each quick repeat of a half-life swing does half the previous damage. */

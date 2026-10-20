@@ -650,6 +650,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     rampAlpha: !!extra.rampAlpha,
     randomRot: !!extra.randomRot,
     randomFlip: !!extra.randomFlip,
+    tilt: extra.tilt > 0 ? extra.tilt : 0,
   };
 }
 
@@ -1137,6 +1138,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       rampAlpha: merged.rampAlpha,
       randomRot: merged.randomRot,
       randomFlip: merged.randomFlip,
+      tilt: merged.tilt,
     });
   }
   await attachShards(scene, id, slug, folder, meta, index, charH, sized, record);
@@ -2998,6 +3000,23 @@ export function syncFxActors(scene) {
       img.setScale(face * Math.abs(img.scaleX || 1), Math.abs(img.scaleY || 1));
     }
     if (move?.halfLife) img.setAlpha(move._halfLife ?? 1);
+    if (art.burst?.frames?.length && move?.lift && !fighter._liftBurst) {
+      const start = fighter.frameData?.startup ?? 0;
+      const active = Math.max(1, fighter.frameData?.active ?? 1);
+      const along = Math.max(0, (fighter.attackFrame ?? 0) - start) / active;
+      if (along >= 0.7) {
+        fighter._liftBurst = true;
+        const pop = art.burst.scale > 0 ? art.burst.scale : 1;
+        spawnFxSprite(
+          scene,
+          art.burst,
+          fighter.x + face * (fighter.bodyW ?? 40) * 0.28,
+          fighter.y - (fighter.bodyH ?? 80) * 0.92,
+          pop,
+          face,
+        );
+      }
+    }
   }
 }
 
@@ -3012,7 +3031,7 @@ function dropHeld(fighter) {
   if (live) liveHeld.delete(fighter);
 }
 
-function syncChargeGlow(scene, live, glow, x, y, frac, elapsed = 0) {
+function syncChargeGlow(scene, live, glow, x, y, frac, elapsed = 0, fighter = null) {
   if (!glow?.frames?.length) {
     live.glow?.destroy?.();
     live.glow = null;
@@ -3026,8 +3045,23 @@ function syncChargeGlow(scene, live, glow, x, y, frac, elapsed = 0) {
   const frame = glow.frames[fxFrameIndex(glow, elapsed)] || glow.frames[0];
   applyFrameLook(live.glow, frame, glow, 1);
   live.glow.setOrigin(glow.pivotX ?? 0.5, glow.pivotY ?? 0.5);
-  live.glow.setPosition(x, y);
-  if (glow.scaleWith === 'alpha') live.glow.setAlpha(0.28 + 0.72 * frac);
+  if (glow.anchor === 'body' && fighter) {
+    live.glow.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.5);
+  } else {
+    live.glow.setPosition(x, y);
+  }
+  if (glow.scaleWith === 'alpha') {
+    const tonic = fighter?.charDef?.moves?.basicCharge?.tonic;
+    const charging = fighter?.state === 'charging' && fighter.chargeStart != null;
+    if (tonic && charging) {
+      const every = tonic.every ?? 1000;
+      const cap = Math.max(1, Math.floor((fighter.charDef.moves.basicCharge.maxChargeMs ?? every) / every));
+      const steps = Math.floor(((scene.simNow ?? 0) - fighter.chargeStart) / every);
+      live.glow.setAlpha(0.22 + 0.78 * Math.min(1, steps / cap));
+    } else {
+      live.glow.setAlpha(0.28 + 0.72 * frac);
+    }
+  }
 }
 
 function syncMotor(scene, live, want, fighter) {
@@ -3166,6 +3200,7 @@ function syncHeld(scene, fighter) {
   } else if (art?.boost?.frames?.length && (
     (fighter.speedBuffUntil ?? 0) > now
     || (charge?.buff?.weight && (fighter.weightBuffUntil ?? 0) > now)
+    || (charge?.tonic && (fighter.attackPowerUntil ?? 0) > now)
   )) {
     want = { art: art.boost, kind: 'boost' };
   } else if (art?.anchor === 'aura' && art.frames?.length && charge?.overclock) {
@@ -3269,13 +3304,17 @@ function syncHeld(scene, fighter) {
     }
     const mirror = want.art.flip ? -face : face;
     live.img.setScale(mirror * Math.abs(live.img.scaleX || 1) * shot, Math.abs(live.img.scaleY || 1) * shot);
+    if (want.art.tilt) live.img.rotation = -face * want.art.tilt * frac;
     syncRotor(scene, live, want.rotor, fighter, frac);
-    syncChargeGlow(scene, live, want.glow, heldX, heldY, frac, now - (fighter.chargeStart ?? now));
+    syncChargeGlow(scene, live, want.glow, heldX, heldY, frac, now - (fighter.chargeStart ?? now), fighter);
     return;
   }
   if (want.kind === 'boost') {
-    const until = (fighter.speedBuffUntil ?? 0) > now ? fighter.speedBuffUntil : fighter.weightBuffUntil;
-    const elapsed = now - Math.max(0, (until ?? now) - (charge?.buff?.ms ?? 2200));
+    const speedOn = (fighter.speedBuffUntil ?? 0) > now;
+    const weightOn = (fighter.weightBuffUntil ?? 0) > now;
+    const until = speedOn ? fighter.speedBuffUntil : weightOn ? fighter.weightBuffUntil : fighter.attackPowerUntil;
+    const linger = speedOn || weightOn ? (charge?.buff?.ms ?? 2200) : (charge?.tonic?.linger ?? 2200);
+    const elapsed = now - Math.max(0, (until ?? now) - linger);
     const frame = want.art.frames[fxFrameIndex(want.art, elapsed)] || want.art.frames[0];
     applyFrameLook(live.img, frame, want.art, 1);
     live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 0.5);

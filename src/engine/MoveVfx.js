@@ -385,12 +385,13 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (art?.frames?.length) drawFxOneShot(scene, fighter, move, x, y, 1);
     return;
   }
-  if (phase === 'cleanse' || phase === 'block' || phase === 'pierce' || phase === 'linger') {
+  if (phase === 'cleanse' || phase === 'block' || phase === 'pierce' || phase === 'linger' || phase === 'wave') {
     const art = artFor(fighter.charDef?.id, move?.name);
     const side = phase === 'cleanse' ? art?.cleanse
       : phase === 'block' ? art?.block
         : phase === 'pierce' ? art?.pierce
-          : art?.linger;
+          : phase === 'wave' ? art?.wave
+            : art?.linger;
     if (side?.frames?.length) {
       const x = extra.x ?? fighter.x;
       const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
@@ -449,9 +450,10 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         spawnStageSpan(scene, fighter, art);
         return;
       }
-      if (phase === 'release' && move?.kind === 'burst' && extra?.x != null && move.igniteDamage != null) {
-        const painted = art.burst?.frames?.length ? art.burst : art;
-        const s = painted.scale > 0 ? painted.scale : 1;
+      if (phase === 'release' && move?.kind === 'burst' && extra?.x != null && (move.igniteDamage != null || move.explodeRadius != null)) {
+        const painted = art.impact?.frames?.length ? art.impact : art.burst?.frames?.length ? art.burst : art;
+        const fitted = impactRadiusScale(move, painted);
+        const s = fitted != null ? fitted : (painted.scale > 0 ? painted.scale : 1);
         spawnFxSprite(
           scene,
           painted,

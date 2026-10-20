@@ -1816,6 +1816,10 @@ export default class BattleScene extends Phaser.Scene {
         const frame = z.stain.frames[fxFrameIndex(z.stain, time - (z.stainBorn || time))] || z.stain.frames[0];
         z.gfx.setTexture(frame.key);
         z.gfx.setDisplaySize(frame.displayW, frame.displayH);
+        if (z.stain.pulse) {
+          const wave = 0.55 + 0.45 * Math.sin((time - (z.stainBorn || time)) * 0.008);
+          z.gfx.setAlpha?.(wave);
+        }
       }
       if (z.spec?.drift && z.gfx?.scene) {
         const dt = Math.min(40, time - (z._driftAt ?? time));

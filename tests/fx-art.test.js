@@ -2340,7 +2340,30 @@ test('batch 23 part 2 scales the bright openings and anchors the seep', () => {
   assert.equal(turn.boost.loop, true);
   const trace = read('assets/fx/frank/trace-amount/fx.json');
   assert.equal(trace.shatter.file, 'trace-counter-anim.png');
-  for (const id of ['polonius', 'tate', 'ronan', 'frank']) {
+  const tonic = read('assets/fx/ray/radium-tonic/fx.json');
+  assert.equal(tonic.charge.black, false);
+  assert.equal(tonic.charge.anchor, 'hand');
+  assert.equal(tonic.charge.tilt, 0.85);
+  assert.ok(Math.abs(tonic.charge.pivotY - 246 / 256) < 1e-9);
+  assert.equal(tonic.glow.scaleWith, 'alpha');
+  const upper = read('assets/fx/ray/alpha-uppercut/fx.json');
+  assert.equal(upper.burst.scaleTo, undefined);
+  assert.equal(upper.burst.scale, 0.4);
+  assert.ok(Math.abs(upper.burst.pivotX - 287 / 575) < 1e-9);
+  const deck = read('assets/fx/ace/neutron-deck/fx.json');
+  assert.equal(deck.blend, 'normal');
+  assert.equal(deck.impact.scaleTo, 'radius');
+  assert.equal(deck.impact.flashRadius, 230);
+  assert.ok(Math.abs(deck.impact.pivotX - 287 / 575) < 1e-9);
+  assert.ok(Math.abs(deck.impact.pivotY - 287 / 574) < 1e-9);
+  const card = read('assets/fx/ace/ace-of-rays/fx.json');
+  assert.equal(card.fist.black, false);
+  assert.equal(card.fist.file, 'glowing-card.png');
+  const beam = read('assets/fx/ace/actinic-ray/fx.json');
+  assert.equal(beam.pivotX, 0);
+  assert.equal(beam.charge.scaleWith, 'alpha');
+  assert.equal(impactRadiusScale({ hitRadius: 56, projectileRadius: 14 }, { scaleTo: 'radius', flashRadius: 230 }), 56 / 230);
+  for (const id of ['polonius', 'tate', 'ronan', 'frank', 'ray', 'ace']) {
     for (const file of fs.readdirSync(`assets/fx/${id}`, { recursive: true })) {
       const name = String(file);
       assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, `${id}/${name}`);

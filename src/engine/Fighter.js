@@ -3,7 +3,7 @@ import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { canonicalType, enGapMult, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defense.js';
-import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, halfLifeScale, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
+import { applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
 import { armGeyser, fxAnchor, groundTop, hitAnchor, playRetortPulse, spawnMeteor, spawnMoveExtra } from './fxArt.js';
@@ -425,6 +425,22 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.percent = Math.max(0, (this.percent ?? 0) - step);
       }
     }
+    if (this.state === 'defending' && this.defenseMove?.revealNear && time >= (this._revealAt ?? 0)) {
+      const spec = this.defenseMove.revealNear;
+      this._revealAt = time + (spec.every ?? 1000);
+      const reach = spec.radius ?? 220;
+      for (const other of this.scene?.fighters || []) {
+        if (other === this || !other.alive) continue;
+        const hidden = (other.phasingUntil ?? 0) > time
+          || other.state === 'defending' && other.defenseMove?.phase
+          || (other.alpha ?? 1) < 0.5;
+        if (!hidden) continue;
+        if (Math.hypot(other.x - this.x, other.y - this.y) > reach) continue;
+        other.revealedUntil = time + (spec.ms ?? 1100);
+        other.phasingUntil = 0;
+      }
+      playVfx(this.scene, this, this.defenseMove, 'wave');
+    }
     if (this.state === 'defending' && this.defenseMove?.drain && time >= (this._drainAt ?? 0)) {
       const d = this.defenseMove.drain;
       this._drainAt = time + (d.every ?? 1000);
@@ -635,6 +651,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.body.setVelocityY((target - this.y) * 6);
       }
       if (chargeMove?.seep) this.phasingUntil = time + 80;
+      if (chargeMove?.tonic && this.chargeStart != null) {
+        const every = chargeMove.tonic.every ?? 1000;
+        const steps = Math.floor((time - this.chargeStart) / every);
+        if (steps > (this._tonicSteps ?? 0)) {
+          const gained = steps - (this._tonicSteps ?? 0);
+          this._tonicSteps = steps;
+          applyDot(this, (chargeMove.tonic.cost ?? 1) * gained, 'radiation');
+        }
+      }
       if (chargeMove?.eatZones) this.scene?.consumeZones?.(this, chargeMove.eatZones);
       if (chargeMove?.pull) this.pullNearby(chargeMove.pull);
       if (chargeMove?.overhold && this.chargeStart != null && time - this.chargeStart >= (chargeMove.maxChargeMs ?? 0) + (chargeMove.overhold.grace ?? 220)) {
@@ -646,6 +671,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         // pressing a direction cancels the charge -- this slot is only for
         // the neutral (no-direction) case. An aimed release (maglev) keeps
         // the stick as the launch direction instead.
+        if (chargeMove?.tonic) grantTonic(this, chargeMove, time);
         this.state = 'idle';
         this.chargeStart = null;
         this._floatFloor = null;
@@ -683,6 +709,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         } else {
           this.state = 'charging';
           this.chargeStart = time;
+          this._tonicSteps = 0;
           if (this.charDef.moves.basicCharge?.perTravel) this.travel = 0;
         }
       } else if (pressedSpecial && time >= this.specialCooldownUntil && time >= (this.vulnerableUntil ?? 0) && time >= (this.specialMutedUntil ?? 0)) {
@@ -885,6 +912,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
   }
 
   startMove(time, move, slot, moveKey = null) {
+    this._liftBurst = false;
     if (move?.name && (this.moveLock?.[move.name] ?? 0) > time) {
       this.state = 'idle';
       this.attackCooldownUntil = Math.max(this.attackCooldownUntil ?? 0, time + 180);
@@ -1376,6 +1404,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.defenseStart = time;
     this._drainAt = time + (move.drain?.every ?? 1000);
     this._regenAt = time + (move.regenEvery ?? 800);
+    this._revealAt = move.revealNear ? time : 0;
     if (move.rewind) this._rewindSnap = { x: this.x, y: this.y, percent: this.percent ?? 0 };
     if (move.shrink && this.rig) {
       this._shrinkFrom = this.rig.baseScale ?? 1;
@@ -2593,8 +2622,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.scene.noteHit?.(this, attacker, echo);
       const aim = Math.atan2(attacker.y - this.y, attacker.x - this.x);
       playVfx(this.scene, this, defense, 'recoil', {
-        x: this.x,
-        y: this.y - (this.bodyH ?? 80) * 0.5,
+        x: attacker.x,
+        y: attacker.y - (attacker.bodyH ?? 80) * 0.45,
         aim,
       });
     }

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { gateStored, interceptHit } from '../src/engine/defense.js';
-import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, finalBlow, halfLifeScale, lightUnquenchable, markedStrikeTargets, prepareMove, scaledByHaste, sheetFrameAt, stripBuffs, takingDps, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
+import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, markedStrikeTargets, prepareMove, scaledByHaste, sheetFrameAt, stripBuffs, takingDps, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
 import { enGapMult, resolvePacket } from '../src/data/balance.js';
 import { applyImmunities, rearmDefense } from '../src/engine/defense.js';
 
@@ -1676,6 +1676,47 @@ test('polonius, tate, ronan, and frank keep the approved batch rules', () => {
   assert.equal(frank.specialDefense.phaseRetort.type, 'radiation');
   assert.equal(frank.specialDirectional.projectileLife, 220);
   assert.equal(frank.specialDirectional.type, 'radiation');
+});
+
+test('ray and ace keep the approved batch rules', () => {
+  const ray = CHARACTERS.ray.moves;
+  assert.equal(ray.basicCharge.name, 'Radium Tonic');
+  assert.equal(ray.basicCharge.tonic.every, 1000);
+  assert.equal(ray.basicCharge.tonic.cost, 1.1);
+  assert.equal(ray.basicCharge.maxChargeMs, 3000);
+  const drinker = { _tonicSteps: 2 };
+  assert.equal(grantTonic(drinker, ray.basicCharge, 5000), 2);
+  assert.equal(drinker.attackPower, 1.32);
+  assert.equal(drinker.attackPowerUntil, 7200);
+  assert.equal(drinker._tonicSteps, 0);
+  assert.equal(grantTonic(drinker, ray.basicCharge, 8000), 0);
+  assert.equal(ray.basicDirectional.name, 'Alpha Uppercut');
+  assert.equal(ray.basicDirectional.type, 'kinetic');
+  assert.equal(ray.basicDirectional.type2, 'radiation');
+  assert.equal(ray.basicDirectional.lift, true);
+  assert.equal(ray.specialDefense.onlyReduce[0], 'kinetic');
+  assert.equal(ray.specialDefense.recoil.type, 'radiation');
+  assert.equal(ray.specialDirectional.dropZone.knockback, 0);
+  assert.equal(ray.specialDirectional.dropZone.statusCling, 'Luminous Splash');
+  assert.equal(ray.specialDirectional.dropZone.feet, true);
+
+  const ace = CHARACTERS.ace.moves;
+  assert.equal(ace.basicCharge.name, 'Actinic Ray');
+  assert.equal(ace.basicCharge.kind, 'beam');
+  assert.equal(ace.basicCharge.type, 'radiation');
+  assert.equal(ace.basicCharge.beamArtPx, 640);
+  assert.equal(ace.basicDirectional.name, 'Ace of Rays');
+  assert.equal(ace.basicDirectional.type, 'kinetic');
+  assert.equal(ace.basicDirectional.type2, 'radiation');
+  assert.equal(ace.specialDefense.name, 'Smoke Detector');
+  assert.deepEqual(ace.specialDefense.immune, ['radiation']);
+  assert.equal(ace.specialDefense.revealNear.radius, 220);
+  assert.equal(ace.specialDefense.cycle, undefined);
+  assert.equal(ace.specialDirectional.name, 'Neutron Deck');
+  assert.equal(ace.specialDirectional.explodeOnly, true);
+  assert.equal(ace.specialDirectional.hitRadius, 56);
+  assert.equal(ace.specialDirectional.fan, undefined);
+  assert.equal(ace.specialDirectional.type, 'radiation');
 });
 
 function fake(id, x, y) {

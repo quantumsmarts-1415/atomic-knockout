@@ -93,6 +93,19 @@ export function nearestInFront(owner, fighters, range) {
   return best;
 }
 
+/** Unit aim from the held stick. Neutral keeps the facing. Up is the jump key. */
+export function stickAim(input, facing = 1) {
+  let x = 0;
+  let y = 0;
+  if (input?.left) x -= 1;
+  if (input?.right) x += 1;
+  if (input?.jump || input?.up) y -= 1;
+  if (input?.down) y += 1;
+  if (x === 0 && y === 0) x = facing || 1;
+  const span = Math.hypot(x, y) || 1;
+  return { x: x / span, y: y / span };
+}
+
 export function scaleTaken(move, table) {
   if (!move || !table) return move;
   const next = { ...move };

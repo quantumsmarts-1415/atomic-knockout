@@ -20,7 +20,7 @@ import { syncCoats } from '../engine/coatView.js';
 import { syncAuras } from '../engine/auraView.js';
 import { applyDot, applyOnHit, cleanse, fighterOnSwapLine, markedStrikeTargets, sheetFrameAt, withRedFrame, withShatter } from '../engine/kit.js';
 import { resolvePacket } from '../data/balance.js';
-import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront } from '../engine/batch3.js';
+import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront, stickAim } from '../engine/batch3.js';
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 import { Juice } from '../engine/juice.js';
@@ -1260,7 +1260,13 @@ export default class BattleScene extends Phaser.Scene {
       });
     }
     const born = this.time.now;
-    const shotVx = move._vx != null ? move._vx : face * move.projectileSpeed;
+    let shotVx = move._vx != null ? move._vx : face * move.projectileSpeed;
+    if (move.aimStick && move._vx == null && !move._fanChild && !move._rainChild && !move._orbitChild) {
+      const aim = stickAim(owner.input, owner.facing || 1);
+      const speed = move.projectileSpeed ?? 400;
+      shotVx = aim.x * speed;
+      vy = aim.y * speed;
+    }
     const shot = {
       owner, move,
       vx: shotVx,
@@ -2234,6 +2240,7 @@ export default class BattleScene extends Phaser.Scene {
     for (const p of this.projectiles) {
       if (p.move.returns && !p.returning && time > p.born + p.move.projectileLife * 0.45) {
         p.vx *= -1;
+        if (p.move.aimStick) p.vy *= -1;
         p.returning = true;
         p.landed = new Set();
       }

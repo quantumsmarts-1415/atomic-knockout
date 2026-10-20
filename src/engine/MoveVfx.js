@@ -2,7 +2,7 @@
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
 import { anodizeTint } from './kit.js';
-import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, spawnStageSpan, wantsContactSpark } from './fxArt.js';
+import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, spawnStageSpan, swingOrigin, wantsContactSpark } from './fxArt.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 
@@ -439,9 +439,9 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       }
     }
     if (art?.oneshot && art.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) {
-      const face = fighter.facing || 1;
-      let x = extra.x ?? fighter.x + face * (fighter.bodyW ?? 40) * 0.2;
-      let y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
+      const origin = swingOrigin(fighter);
+      let x = extra.x ?? origin.x;
+      let y = extra.y ?? origin.y;
       if (extra.x == null && (art.anchor === 'contact' || art.anchor === 'fist')) {
         const tip = meleeContactPoint(fighter, move);
         x = tip.x;
@@ -516,8 +516,9 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (phase === 'break') {
     const burst = breakFrames(artFor(fighter.charDef?.id, move?.name));
     if (!burst?.frames?.length) return;
-    const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
-    const x = extra.x ?? fighter.x;
+    let y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
+    let x = extra.x ?? fighter.x;
+    if (burst.anchor === 'ground') y = fighter.y;
     const aimed = (burst.pivotX ?? 0.5) < 0.05;
     const face = aimed ? (fighter.facing || 1) : 1;
     spawnFxSprite(scene, burst, x, y, 1, face);

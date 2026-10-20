@@ -1257,6 +1257,22 @@ test('sterling sheets scale the seeker down and loop the flare', () => {
   assert.equal(flare.fps, 9.6);
   assert.equal(flare.anchor, 'front');
   assert.equal(fs.existsSync('assets/fx/sterling/road-flare/road-flare-burn-anim.png'), true);
+  const rocket = read('assets/fx/sterling/crimson-rocket/fx.json');
+  assert.equal(rocket.hit, false);
+  assert.equal(rocket.projectile.file, 'crimson-rocket-burst-anim.png');
+  assert.equal(rocket.projectile.frames, 22);
+  assert.equal(rocket.projectile.fps, 11);
+  assert.equal(rocket.projectile.once, true);
+  assert.equal(rocket.projectile.heightFrac, 0.36);
+  assert.equal(rocket.projectile.aim, false);
+  assert.equal(rocket.detonate.file, 'crimson-rocket-burst-anim.png');
+  assert.equal(rocket.detonate.frames, 22);
+  assert.equal(rocket.detonate.loop, false);
+  assert.equal(rocket.detonate.blend, 'add');
+  assert.equal(rocket.detonate.heightFrac, 1.2);
+  assert.equal(rocket.detonate.anchor, 'point');
+  assert.equal(fs.existsSync('assets/fx/sterling/crimson-rocket/crimson-rocket-burst-anim.png'), true);
+  assert.equal(fs.existsSync('assets/fx/sterling/crimson-rocket/crimson-rocket-burst-anim.gif'), false);
 });
 
 test('tex sheets match the technetium handoff', () => {

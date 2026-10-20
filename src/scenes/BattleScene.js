@@ -1257,7 +1257,8 @@ export default class BattleScene extends Phaser.Scene {
       spriteH: projectileSpriteSize(move).h,
     };
     if (this.simFast) {
-      const frame = artFor(owner.charDef?.id, move.name)?.frames?.[0];
+      const art = artFor(owner.charDef?.id, move.name);
+      const frame = art?.hit === false ? null : art?.frames?.[0];
       this.projectiles.push({
         ...shot,
         gfx: { x, y, destroy() {} },

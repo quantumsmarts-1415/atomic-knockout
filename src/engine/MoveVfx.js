@@ -336,6 +336,12 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   }
   if (phase === 'letgo') {
     const art = artFor(fighter.charDef?.id, move?.name);
+    if (art?.condense?.frames?.length) {
+      const y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+      const s = art.condense.scale > 0 ? art.condense.scale : 1;
+      spawnFxSprite(scene, art.condense, fighter.x, y, s, 1);
+      return;
+    }
     if (art?.reverseOnRelease && art.frames?.length) {
       const face = fighter.facing || 1;
       const x = fighter.x + face * (move?.offsetX ?? (fighter.bodyW ?? 40) * 0.9);
@@ -410,6 +416,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   }
   if (phase === 'release' || phase === 'defense') {
     const art = artFor(fighter.charDef?.id, move?.name);
+    if (phase === 'release' && move?.hideProjectile && !art?.frames?.length && art?.splash?.frames?.length) return;
     if (phase === 'release' && art?.steps?.length) {
       const step = art.steps[move?._pulseStep];
       if (move?._pulseStep == null || !step?.frames?.length) return;
@@ -456,7 +463,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (phase === 'defense' && art?.launch?.frames?.length) {
       spawnFxSprite(scene, art.launch, fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.45, 1, 1);
     }
-    if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'head' || art?.anchor === 'lance' || art?.anchor === 'aura' || art?.anchor === 'afterimage') return;
+    if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'head' || art?.anchor === 'lance' || art?.anchor === 'aura' || art?.anchor === 'afterimage' || (art?.anchor === 'ground' && art.loop)) return;
     if (move?.kind === 'zone' && move.zone?.trap && art?.frames?.length) return;
     // The lingering sheet is the zone itself. A release oneshot would stack a second copy.
     if (move?.zone?.sheet && art?.loop && art?.frames?.length) return;

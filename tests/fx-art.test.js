@@ -2615,7 +2615,7 @@ test('batch 23 part 2 scales the bright openings and anchors the seep', () => {
   assert.equal(dartFx.loop, true);
   assert.equal(dartFx.aim, true);
   assert.equal(dartFx.frames, 4);
-  for (const id of ['polonius', 'tate', 'ronan', 'frank', 'ray', 'ace', 'pat', 'uri', 'neptune', 'pluto', 'einstein', 'fermi', 'mendel', 'amy', 'curie', 'burke', 'cali', 'lars', 'ford', 'duke', 'sarge', 'thor', 'boar', 'dash', 'noble', 'roger', 'niko', 'flo', 'mac', 'ogden']) {
+  for (const id of ['polonius', 'tate', 'ronan', 'frank', 'ray', 'ace', 'pat', 'uri', 'neptune', 'pluto', 'einstein', 'fermi', 'mendel', 'amy', 'curie', 'burke', 'cali', 'lars', 'ford', 'duke', 'sarge', 'thor', 'boar', 'dash', 'noble', 'roger', 'niko', 'flo', 'mac', 'ogden', 'hoss', 'mae', 'copernicus']) {
     for (const file of fs.readdirSync(`assets/fx/${id}`, { recursive: true })) {
       const name = String(file);
       assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, `${id}/${name}`);
@@ -2730,4 +2730,49 @@ test('mac and ogden keep the bright blast, the thin beam, and the doll layers', 
   assert.equal(beam.hit, false);
   assert.equal(beam.frames, 3);
   assert.equal(beam.cols, 3);
+});
+
+test('hoss, mae, and copernicus keep the fixed blasts, the 17-frame split, and the doll-free kits', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const gallop = read('assets/fx/hoss/stampede/fx.json');
+  assert.equal(gallop.anchor, 'ground');
+  assert.equal(gallop.loop, true);
+  assert.equal(gallop.charge.anchor, 'feet');
+  assert.equal(gallop.charge.fps, 12);
+  const shoe = read('assets/fx/hoss/lucky-horseshoe/fx.json');
+  assert.equal(shoe.projectile.black, false);
+  assert.equal(shoe.projectile.aim, false);
+  assert.equal(shoe.detonate.scale, 0.42);
+  assert.equal(shoe.detonate.scaleTo, undefined);
+  assert.equal(shoe.detonate.frames, 24);
+  assert.equal(shoe.impact.frames, 10);
+  assert.equal(shoe.spark.frames, 10);
+  const lock = read('assets/fx/hoss/doubly-magic/fx.json');
+  assert.equal(lock.anchor, 'body');
+  assert.equal(lock.loop, true);
+  const split = read('assets/fx/mae/liquid-drop-split/fx.json');
+  assert.equal(split.burst.frames, 17);
+  assert.equal(split.burst.cols, 6);
+  assert.equal(split.burst.rows, 3);
+  assert.equal(split.burst.scale, 0.42);
+  assert.equal(split.burst.scaleTo, undefined);
+  assert.equal(split.charge.loop, true);
+  const slip = read('assets/fx/mae/border-slip/fx.json');
+  assert.equal(slip.frames, 10);
+  assert.equal(slip.shatter.frames, 8);
+  const neutron = read('assets/fx/mae/neutron-splitter/fx.json');
+  assert.equal(neutron.splash.frames, 12);
+  const boil = read('assets/fx/copernicus/volatile-boil/fx.json');
+  assert.equal(boil.scale, 0.42);
+  assert.equal(boil.scaleTo, undefined);
+  assert.equal(boil.frames, 24);
+  assert.equal(boil.charge.anchor, 'feet');
+  assert.equal(boil.charge.blend, 'normal');
+  const vapor = read('assets/fx/copernicus/evaporate/fx.json');
+  assert.equal(vapor.anchor, 'body');
+  assert.equal(vapor.condense.frames, 10);
+  const glob = read('assets/fx/copernicus/liquid-metal-splash/fx.json');
+  assert.equal(glob.projectile.black, false);
+  assert.equal(glob.detonate.blend, 'normal');
+  assert.equal(glob.detonate.frames, 12);
 });

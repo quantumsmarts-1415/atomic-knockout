@@ -2470,9 +2470,8 @@ export const MOVESETS = {
       maxChargeMs: 700, dashSpeed: 780, hyperArmor: true, rangeW: 110, rangeH: 80, vfx: 'dash', vfxColor: 0xffe0a0,
       baseKnockback: 180, knockbackGrowth: 3.8, duration: 320, cooldown: 900,
     }),
-    basicDirectional: melee('Iron Hoof', {
-      type: K, damage: 12, rangeW: 78, vfx: 'strike', vfxColor: 0xe8d8c0,
-      zone: { type: K, damage: 4, ms: 280, radius: 64, tick: 280, low: true, color: 0xe8d8c0, knockback: 80, growth: 1.2 },
+    basicDirectional: melee('Dense Shoulder', {
+      type: K, damage: 12, hyperArmor: true, rangeW: 84, rangeH: 56, vfx: 'strike', vfxColor: 0xe8d8c0,
       baseKnockback: 180, knockbackGrowth: 4.2, duration: 240, cooldown: 460,
     }),
     specialDefense: m('Doubly Magic', {
@@ -2480,8 +2479,10 @@ export const MOVESETS = {
       duration: 700, cooldown: 1000, vfx: 'shield', vfxColor: 0xf0e8d0,
     }),
     specialDirectional: m('Lucky Horseshoe', {
-      kind: 'projectile', type: K, damage: 12, luckyEvery: 4, ground: true, vfx: 'strike', vfxColor: 0xffd24a,
-      projectileSpeed: 360, projectileRadius: 12, projectileLife: 640,
+      kind: 'projectile', type: K, damage: 12, luckyEvery: 4,
+      lob: 280, landBurst: true, explodeOnly: true, explodeRadius: 64,
+      vfx: 'strike', vfxColor: 0xffd24a,
+      projectileSpeed: 380, projectileRadius: 12, projectileLife: 900,
       baseKnockback: 190, knockbackGrowth: 4.0, duration: 200, cooldown: 700,
     }),
   },
@@ -2510,9 +2511,9 @@ export const MOVESETS = {
   },
 
   copernicus: {
-    basicCharge: m('Heliocentric', {
-      kind: 'burst', type: K, damage: 16, chargeDamageMult: 1.25, chargeRadiusMult: 1.35,
-      maxChargeMs: 800, radius: 120, pull: { radius: 200, speed: 140 }, vfx: 'gust', vfxColor: 0xfff2c8,
+    basicCharge: m('Volatile Boil', {
+      kind: 'burst', type: H, damage: 16, chargeDamageMult: 1.25, chargeRadiusMult: 1.35,
+      maxChargeMs: 800, radius: 120, vfx: 'cloud', vfxColor: 0xffe8c8,
       baseKnockback: 200, knockbackGrowth: 4.0, duration: 240, cooldown: 860,
     }),
     basicDirectional: m('Revolution', {
@@ -2520,12 +2521,13 @@ export const MOVESETS = {
       baseKnockback: 200, knockbackGrowth: 4.4, duration: 260, cooldown: 520,
     }),
     specialDefense: m('Evaporate', {
-      immune: [K], duration: 640, cooldown: 900, vfx: 'shield', vfxColor: 0xe8f0ff,
+      immune: [K], fadeAlpha: 0.22,
+      duration: 640, cooldown: 900, vfx: 'shield', vfxColor: 0xe8f0ff,
     }),
-    specialDirectional: m('Orrery Shot', {
-      kind: 'projectile', type: K, damage: 14, type2: R, damage2: 10, orbitMs: 420, orbitRadius: 56,
-      vfx: 'spark', vfxColor: 0xfff0c0,
-      projectileSpeed: 480, projectileRadius: 10, projectileLife: 1100,
+    specialDirectional: m('Liquid Metal Splash', {
+      kind: 'projectile', type: C, damage: 14, type2: R, damage2: 10, liquidWobble: true,
+      vfx: 'spark', vfxColor: 0xd8e4ee,
+      projectileSpeed: 460, projectileRadius: 10, projectileLife: 720,
       baseKnockback: 240, knockbackGrowth: 5.2, duration: 200, cooldown: 860,
     }),
   },
@@ -2810,6 +2812,7 @@ export const MOVESETS = {
   mae: {
     basicCharge: m('Liquid Drop Split', {
       kind: 'projectile', type: R, damage: 7.64, type2: H, damage2: 6.55, alsoBehind: true,
+      hideProjectile: true,
       chargeDamageMult: 1.45, maxChargeMs: 800, vfx: 'spark', vfxColor: 0xfff0a0,
       projectileSpeed: 460, projectileRadius: 10, projectileLife: 520,
       baseKnockback: 98.28, knockbackGrowth: 2.07, duration: 220, cooldown: 820,
@@ -2824,7 +2827,8 @@ export const MOVESETS = {
       duration: 520, cooldown: 900, vfx: 'shield', vfxColor: 0xe8f4ff,
     }),
     specialDirectional: m('Neutron Splitter', {
-      kind: 'projectile', type: R, damage: 6.55, splitOnHit: true, splitDamage: 5.46, splitSpread: 160,
+      kind: 'projectile', type: R, damage: 6.55, splitOnHit: true, splitDamage: 5.46, splitDeg: 22,
+      hideProjectile: true,
       vfx: 'spark', vfxColor: 0xe8ffc0,
       projectileSpeed: 520, projectileRadius: 7, projectileLife: 480,
       baseKnockback: 87.36, knockbackGrowth: 1.86, duration: 180, cooldown: 780,

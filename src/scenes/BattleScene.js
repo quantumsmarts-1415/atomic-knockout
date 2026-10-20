@@ -1375,6 +1375,15 @@ export default class BattleScene extends Phaser.Scene {
       return;
     }
     if (move.alsoBehind && !move._behindChild) {
+      const splitArt = artFor(owner.charDef?.id, move.name);
+      const splitY = owner.y - (owner.bodyH ?? 80) * 0.5;
+      if (splitArt?.frames?.length) {
+        spawnFxSprite(this, splitArt, owner.x, splitY, splitArt.scale > 0 ? splitArt.scale : 1, owner.facing || 1);
+      }
+      if (splitArt?.burst?.frames?.length) {
+        const burstScale = splitArt.burst.scale > 0 ? splitArt.burst.scale : 1;
+        spawnFxSprite(this, splitArt.burst, owner.x, splitY, burstScale, 1);
+      }
       this.spawnProjectile(owner, { ...move, alsoBehind: false, _behindChild: true });
       this.spawnProjectile(owner, { ...move, alsoBehind: false, _behindChild: true, _flip: true });
       return;
@@ -1480,7 +1489,7 @@ export default class BattleScene extends Phaser.Scene {
       }
     }
     if (move._rainChild && move._from == null) y -= 160;
-    if (!move._orbitChild && !move._fanChild && !move._rainChild && !move._behindChild && !move._salvoChild) {
+    if (!move._orbitChild && !move._fanChild && !move._rainChild && !move._behindChild && !move._salvoChild && !move._splitChild) {
       spawnMoveExtra(this, owner, move, 'splash', x, y, face);
     }
     const shotArt = artFor(owner.charDef?.id, move.name);
@@ -1528,7 +1537,7 @@ export default class BattleScene extends Phaser.Scene {
       this.projectiles.push({ ...shot, gfx: { x, y, destroy() {} } });
       return;
     }
-    if (move._hideArt) {
+    if (move._hideArt || move.hideProjectile) {
       this.projectiles.push({ ...shot, gfx: { x, y, destroy() {} } });
       return;
     }
@@ -3131,7 +3140,6 @@ export default class BattleScene extends Phaser.Scene {
         }
         this.dropProjectileZone(p);
         if (p.move.splitOnHit && !p._splitChild && p.owner) {
-          const spread = p.move.splitSpread ?? 150;
           const child = {
             ...p.move,
             splitOnHit: null,
@@ -3140,8 +3148,22 @@ export default class BattleScene extends Phaser.Scene {
             _splitChild: true,
             _from: { x: p.gfx.x + Math.sign(p.vx || 1) * 18, y: p.gfx.y },
           };
-          this.spawnProjectile(p.owner, { ...child, _vy: -spread * 0.35 });
-          this.spawnProjectile(p.owner, { ...child, _vy: spread * 0.35 });
+          if (p.move.splitDeg > 0) {
+            const speed = Math.hypot(p.vx, p.vy) || p.move.projectileSpeed || 400;
+            const base = Math.atan2(p.vy || 0, p.vx || 1);
+            const turn = p.move.splitDeg * Math.PI / 180;
+            for (const ang of [base - turn, base + turn]) {
+              this.spawnProjectile(p.owner, {
+                ...child,
+                _vx: Math.cos(ang) * speed,
+                _vy: Math.sin(ang) * speed,
+              });
+            }
+          } else {
+            const spread = p.move.splitSpread ?? 150;
+            this.spawnProjectile(p.owner, { ...child, _vy: -spread * 0.35 });
+            this.spawnProjectile(p.owner, { ...child, _vy: spread * 0.35 });
+          }
           p._splitChild = true;
         }
         if (!p.move.pierce && n >= want) {

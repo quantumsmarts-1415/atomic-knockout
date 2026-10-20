@@ -2125,6 +2125,63 @@ test('mac and ogden keep the approved batch rules', () => {
   }
 });
 
+test('hoss, mae, and copernicus keep the approved batch rules', () => {
+  const hoss = CHARACTERS.hoss.moves;
+  assert.equal(hoss.basicCharge.name, 'Stampede');
+  assert.equal(hoss.basicCharge.hyperArmor, true);
+  assert.equal(hoss.basicCharge.type, 'kinetic');
+  assert.equal(hoss.basicCharge.type2, 'radiation');
+  assert.equal(hoss.basicDirectional.name, 'Dense Shoulder');
+  assert.equal(hoss.basicDirectional.hyperArmor, true);
+  assert.equal(hoss.basicDirectional.type, 'kinetic');
+  assert.equal(hoss.basicDirectional.type2, undefined);
+  assert.equal(hoss.basicDirectional.zone, undefined);
+  assert.equal(hoss.basicDirectional.damage, 12);
+  assert.equal(hoss.specialDefense.blockReduction, 0.78);
+  assert.equal(hoss.specialDirectional.name, 'Lucky Horseshoe');
+  assert.equal(hoss.specialDirectional.luckyEvery, 4);
+  assert.equal(hoss.specialDirectional.explodeOnly, true);
+  assert.equal(hoss.specialDirectional.landBurst, true);
+  assert.equal(hoss.specialDirectional.damage, 12);
+  assert.equal(hoss.specialDirectional.igniteAt, undefined);
+
+  const mae = CHARACTERS.mae.moves;
+  assert.equal(mae.basicCharge.alsoBehind, true);
+  assert.equal(mae.basicCharge.hideProjectile, true);
+  assert.equal(mae.basicCharge.type, 'radiation');
+  assert.equal(mae.basicCharge.type2, 'heat');
+  assert.equal(mae.basicDirectional.name, 'Overlooked');
+  assert.equal(mae.specialDefense.swap, true);
+  assert.equal(mae.specialDefense.counterType, 'radiation');
+  assert.equal(mae.specialDirectional.splitOnHit, true);
+  assert.equal(mae.specialDirectional.splitDeg, 22);
+  assert.equal(mae.specialDirectional.hideProjectile, true);
+  assert.equal(mae.specialDirectional.igniteAt, undefined);
+
+  const cope = CHARACTERS.copernicus.moves;
+  assert.equal(cope.basicCharge.name, 'Volatile Boil');
+  assert.equal(cope.basicCharge.type, 'heat');
+  assert.equal(cope.basicCharge.damage, 16);
+  assert.equal(cope.basicCharge.pull, undefined);
+  assert.equal(cope.basicCharge.igniteAt, undefined);
+  assert.equal(cope.basicDirectional.name, 'Revolution');
+  assert.equal(cope.basicDirectional.type, 'kinetic');
+  assert.equal(cope.basicDirectional.type2, 'radiation');
+  assert.deepEqual(cope.specialDefense.immune, ['kinetic']);
+  assert.equal(cope.specialDefense.fadeAlpha, 0.22);
+  assert.equal(cope.specialDirectional.name, 'Liquid Metal Splash');
+  assert.equal(cope.specialDirectional.type, 'chemical');
+  assert.equal(cope.specialDirectional.type2, 'radiation');
+  assert.equal(cope.specialDirectional.damage, 14);
+  assert.equal(cope.specialDirectional.damage2, 10);
+  assert.equal(cope.specialDirectional.liquidWobble, true);
+  assert.equal(cope.specialDirectional.orbitMs, undefined);
+  assert.equal(cope.specialDirectional.igniteAt, undefined);
+  for (const move of [...Object.values(hoss), ...Object.values(mae), ...Object.values(cope)]) {
+    assert.equal(move.igniteAt, undefined);
+  }
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

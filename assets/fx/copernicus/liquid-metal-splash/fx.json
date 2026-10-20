@@ -1,0 +1,28 @@
+{
+  "projectile": {
+    "file": "liquid-metal-glob.png",
+    "frames": 1,
+    "cols": 1,
+    "rows": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.42,
+    "pivotX": 0.5,
+    "pivotY": 0.5
+  },
+  "detonate": {
+    "file": "liquid-metal-splash-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 1.15,
+    "pivotX": 0.5,
+    "pivotY": 0.55
+  }
+}

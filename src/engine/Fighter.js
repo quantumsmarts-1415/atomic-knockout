@@ -972,6 +972,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
           ...move,
           damage: (move.damage ?? 0) * mul,
           damage2: move.damage2 != null ? move.damage2 * mul : move.damage2,
+          _luckyThrow: true,
         };
       }
     }

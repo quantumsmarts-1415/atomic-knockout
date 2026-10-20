@@ -1145,6 +1145,7 @@ const SIDE_SPECS = [
   ['crown', 'crown-'], ['visor', 'visor-'], ['reflect', 'reflect-'],
   ['heated', 'heated-'], ['absorb', 'absorb-'], ['cleanse', 'cleanse-'], ['block', 'block-'],
   ['pierce', 'pierce-'], ['reticle', 'reticle-'], ['tip', 'tip-'],
+  ['condense', 'condense-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -1334,6 +1335,9 @@ async function loadMoveArt(scene, char, slot, move, index) {
         ...look,
         blend: detSpec.blend,
         fps: detSpec.fps,
+        scale: detSpec.scale > 0 ? detSpec.scale : look.scale,
+        scaleTo: detSpec.scaleTo === 'radius' ? 'radius' : look.scaleTo,
+        flashRadius: detSpec.flashRadius > 0 ? detSpec.flashRadius : look.flashRadius,
         loop: detSpec.loop != null ? !!detSpec.loop : look.loop,
         anchor: detSpec.anchor || 'ground',
         maxAlpha: detSpec.maxAlpha > 0 && detSpec.maxAlpha < 1 ? detSpec.maxAlpha : look.maxAlpha,
@@ -1712,6 +1716,14 @@ export function stepFxProjectile(p, time) {
     const life = p.move.projectileLife > 0 ? p.move.projectileLife : 1;
     const t = Math.max(0, Math.min(1, (time - (p.born || 0)) / life));
     p.gfx.setAlpha(1 - t * 0.85);
+  }
+  if (p.move?.liquidWobble && p.fxDisplayW) {
+    const t = (time - (p.born || 0)) / 1000;
+    const speed = Math.hypot(p.vx || 0, p.vy || 0);
+    const stretch = 1 + Math.min(0.45, speed / 1600);
+    const wob = 1 + Math.sin(t * 16) * 0.12;
+    const across = (p.fxDisplayH || p.fxDisplayW) * (wob / Math.max(0.7, stretch));
+    p.gfx.setDisplaySize(p.fxDisplayW * stretch, across);
   }
   if (p.move?.growWithDistance && p.fxDisplayW) {
     const dist = Math.abs((p.gfx.x ?? 0) - (p.bornX ?? p.gfx.x ?? 0));
@@ -2192,6 +2204,15 @@ export function spawnFxDetonate(scene, fighter, move, x, y) {
   applyFrameLook(img, det.frames[0], det, scale);
   img.setDepth(15);
   trackOneShot(scene, img, det, scale, null);
+  if (art?.impact?.frames?.length) {
+    const groundY = art.impact.anchor === 'ground' ? groundTop(scene, placed.x, placed.y) : placed.y;
+    const dust = art.impact.scale > 0 ? art.impact.scale : 1;
+    spawnFxSprite(scene, art.impact, placed.x, groundY, dust, 1);
+  }
+  if (move?._luckyThrow && art?.spark?.frames?.length) {
+    const glint = art.spark.scale > 0 ? art.spark.scale : 1;
+    spawnFxSprite(scene, art.spark, placed.x, placed.y, glint, 1);
+  }
   return placed;
 }
 
@@ -2531,6 +2552,9 @@ function attachedWant(scene, fighter) {
     if (art?.anchor === 'trail' && art.frames?.length) {
       return { art, kind: 'trail', elapsed };
     }
+    if (art?.anchor === 'ground' && art.loop && art.frames?.length) {
+      return { art, kind: 'ground', elapsed };
+    }
   }
   return null;
 }
@@ -2787,6 +2811,12 @@ function syncAttached(scene, fighter) {
       return;
     }
     live.img.setPosition(fighter.x, fighter.y);
+    if (art.flip) {
+      const face = fighter.facing || 1;
+      const sx = Math.abs(live.img.scaleX || 1);
+      const sy = Math.abs(live.img.scaleY || 1);
+      live.img.setScale(face * sx, sy);
+    }
     if (art.puddle) {
       fighter.rig?.setVisible?.(false);
       fighter._puddleHid = true;
@@ -3964,6 +3994,11 @@ function syncHeld(scene, fighter) {
     applyFrameLook(live.img, frame, want.art, fxShrink(want.art, elapsed));
     live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 1);
     live.img.setPosition(fighter.x, fighter.y);
+    if (want.art.flip) {
+      const sx = Math.abs(live.img.scaleX || 1);
+      const sy = Math.abs(live.img.scaleY || 1);
+      live.img.setScale(face * sx, sy);
+    }
     live.img.setAlpha(fxFadeAlpha(want.art, elapsed));
     return;
   }

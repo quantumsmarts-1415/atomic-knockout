@@ -30,7 +30,7 @@ import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors } from '../engine/fxArt.js';
+import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors, tickGeysers } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
@@ -1411,6 +1411,34 @@ export default class BattleScene extends Phaser.Scene {
     });
   }
 
+  throwRods(owner, coat, glow) {
+    const spec = coat?.releaseRods;
+    if (!spec || !owner) return;
+    const face = owner.facing || 1;
+    const speed = spec.projectileSpeed ?? 440;
+    const now = this.simNow ?? this.time?.now ?? 0;
+    for (let i = 0; i < 2; i++) {
+      const at = rodOrbitPoint(owner, now, i, spec);
+      this.spawnProjectile(owner, {
+        name: coat.name,
+        kind: 'projectile',
+        type: glow ? (spec.glowType ?? 'radiation') : (spec.type ?? 'kinetic'),
+        damage: spec.damage ?? 4,
+        vfx: 'spark',
+        vfxColor: glow ? 0xc6ffb0 : 0xd8dde4,
+        projectileSpeed: speed,
+        projectileRadius: spec.projectileRadius ?? 11,
+        projectileLife: spec.projectileLife ?? 500,
+        baseKnockback: spec.baseKnockback ?? 64,
+        knockbackGrowth: spec.knockbackGrowth ?? 1.1,
+        _vx: face * speed,
+        _vy: 0,
+        _from: { x: at.x, y: at.y },
+        _rodGlow: !!glow,
+      });
+    }
+  }
+
   resolveBurst(owner, move, at) {
     const cx = at?.x ?? owner.x + (owner.facing || 1) * (move.offsetX ?? 0);
     const cy = at?.y ?? owner.y - owner.bodyH / 2;
@@ -2147,6 +2175,7 @@ export default class BattleScene extends Phaser.Scene {
 
     for (const f of this.fighters) f.update(time, delta);
     tickChargeOrbits(this, time);
+    tickGeysers(this, time);
     const collisionStart = globalThis.performance.now();
     this.pushBlockers ??= pushSolids(this.stage, this.stage?.groundY);
     resolvePush(this.fighters, this.pushBlockers);

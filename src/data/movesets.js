@@ -1096,16 +1096,26 @@ export const MOVESETS = {
       baseKnockback: 70, knockbackGrowth: 1.2, duration: 240, cooldown: 760,
     }),
     basicDirectional: melee('Counterfeit Check', {
-      type: K, damage: 7, stripBuffs: true, onHit: { strip: true }, breakPhase: true, rangeW: 72, vfx: 'strike',
+      type: E, damage: 7, stripBuffs: true, stripProtection: true, cancelInvis: true,
+      onHit: { strip: true }, breakPhase: true, rangeW: 72, vfx: 'strike', vfxColor: 0xb070ff,
       baseKnockback: 80, knockbackGrowth: 1.3, duration: 220, cooldown: 400,
     }),
-    specialDefense: m('Ice Moon Shell', {
-      blocks: [K, H], duration: 760, cooldown: 900, vfx: 'shield', vfxColor: 0xbfe8ff,
+    specialDefense: m('Neutron Sponge', {
+      blocks: [K, R], soakRadiation: true,
+      releaseRods: {
+        type: K, glowType: R, damage: 4,
+        projectileSpeed: 440, projectileRadius: 11, projectileLife: 500,
+        baseKnockback: 64, knockbackGrowth: 1.1,
+        period: 1100, orbit: 1.05,
+      },
+      duration: 1000, cooldown: 1000, vfx: 'shield', vfxColor: 0xc8f0c0,
     }),
-    specialDirectional: m('Banknote Star', {
-      kind: 'projectile', type: K, damage: 8, vfx: 'strike', vfxColor: 0xf0d24a,
-      projectileSpeed: 480, projectileRadius: 8, projectileLife: 480,
-      baseKnockback: 90, knockbackGrowth: 1.4, duration: 200, cooldown: 600,
+    specialDirectional: m('Icy Geyser', {
+      kind: 'burst', type: K, damage: 8, radius: 72,
+      geyser: { warnMs: 560 },
+      onHit: { slow: 700 },
+      vfx: 'gust', vfxColor: 0xbfe8ff,
+      baseKnockback: 80, knockbackGrowth: 1.4, duration: 240, cooldown: 720,
     }),
   },
 

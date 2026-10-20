@@ -368,6 +368,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       spawnFxSprite(scene, art.impact, at.x, at.y, 1, face);
     }
     if (art?.anchor === 'pin') return;
+    if (phase === 'release' && move?.geyser) return;
+    if (phase === 'release' && !art?.frames?.length && art?.impact?.frames?.length) return;
     if (phase === 'release' && move?.kind === 'mine' && extra?.x == null) return;
     // A held shell (the hohlraum) stays on her body. The detonation is the burst side.
     if (phase === 'release' && art?.anchor === 'body' && art.burst?.frames?.length && extra?.x != null) {

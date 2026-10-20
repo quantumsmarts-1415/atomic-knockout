@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, stageSpanSize, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1567,6 +1567,55 @@ test('batch 11 sheets match the approved handoffs', () => {
       for (const file of fs.readdirSync(dir)) {
         assert.equal(file.endsWith('.gif') || file.endsWith('.jpg'), false, `${dir}/${file}`);
       }
+    }
+  }
+});
+
+test('europa sheets match the approved handoff', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const check = read('assets/fx/europa/counterfeit-check/fx.json');
+  assert.equal(check.impact.file, 'counterfeit-check-impact-anim.png');
+  assert.equal(check.impact.frames, 24);
+  assert.equal(check.impact.cols, 4);
+  assert.equal(check.impact.rows, 6);
+  assert.equal(check.impact.fps, 16);
+  assert.equal(check.impact.blend, 'add');
+  assert.equal(check.impact.hit, false);
+  const crack = read('assets/fx/europa/icy-geyser/fx.json').warn;
+  assert.equal(crack.file, 'icy-geyser-crack-anim.png');
+  assert.equal(crack.loop, true);
+  assert.equal(crack.frames, 24);
+  assert.equal(crack.fps, 16);
+  assert.ok(crack.scale >= 0.5 && crack.scale <= 0.7);
+  assert.ok(Math.abs(crack.pivotX - 0.5) < 1e-6);
+  assert.ok(Math.abs(crack.pivotY - 350 / 576) < 0.002);
+  assert.equal(crack.crop, undefined);
+  const plume = read('assets/fx/europa/icy-geyser/fx.json').burst;
+  assert.equal(plume.file, 'icy-geyser-plume-anim.png');
+  assert.equal(plume.pivot, 'bottom');
+  assert.equal(plume.anchor, 'ground');
+  assert.equal(plume.loop, false);
+  const rods = read('assets/fx/europa/neutron-sponge/fx.json');
+  assert.equal(rods.file, 'control-rod.png');
+  assert.equal(rods.pivotX, 0.5);
+  assert.equal(rods.pivotY, 0.5);
+  assert.equal(rods.aim, false);
+  assert.equal(rods.spin, 7);
+  assert.equal(rods.black, false);
+  assert.equal(rods.glow.file, 'control-rod-radiation.png');
+  assert.equal(rods.glow.spin, 7);
+  assert.equal(rods.glow.aim, false);
+  const left = rodOrbitPoint({ x: 100, y: 200, bodyW: 40, bodyH: 80 }, 0, 0, { period: 1100, orbit: 1.05 });
+  const right = rodOrbitPoint({ x: 100, y: 200, bodyW: 40, bodyH: 80 }, 0, 1, { period: 1100, orbit: 1.05 });
+  assert.ok(left.x > 100);
+  assert.ok(right.x < 100);
+  assert.ok(Math.abs((left.y + right.y) / 2 - (200 - 40)) < 1);
+  const root = 'assets/fx/europa';
+  for (const name of fs.readdirSync(root)) {
+    const dir = `${root}/${name}`;
+    if (!fs.statSync(dir).isDirectory()) continue;
+    for (const file of fs.readdirSync(dir)) {
+      assert.equal(file.endsWith('.gif') || file.endsWith('.jpg'), false, `${dir}/${file}`);
     }
   }
 });

@@ -6,7 +6,7 @@ import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defen
 import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
-import { hitAnchor } from './fxArt.js';
+import { armGeyser, hitAnchor } from './fxArt.js';
 import { clipNameForMove, sheetMeta } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
@@ -777,6 +777,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
         ...coat.letgoBurst,
       });
     }
+    if (coat.releaseRods) {
+      const glow = !!this._soakedRad;
+      this._soakedRad = false;
+      this.scene?.throwRods?.(this, coat, glow);
+    }
     const ready = rearmDefense(coat, time);
     if (ready != null) this.specialCooldownUntil = ready;
   }
@@ -970,6 +975,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.diveArm = time + 160;
       this.diveMove = move;
       this.holdDiveOnDeck();
+    } else if (move.kind === 'burst' && move.geyser) {
+      armGeyser(this.scene, this, move);
     } else if (move.kind === 'burst') {
       // burst hits everything in a radius partway through the animation.
       // Moves that can be interrupted on purpose (Supernova popping early)
@@ -1243,6 +1250,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this._coatShed = null;
     this._coatShedPlayed = false;
     this._coatFadeAt = 0;
+    this._soakedRad = false;
     this.defenseStart = time;
     this._drainAt = time + (move.drain?.every ?? 1000);
     this._regenAt = time + (move.regenEvery ?? 800);
@@ -1336,6 +1344,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       });
     }
     if (this.state === 'defending' && this.defenseMove?.intangible && !move.isSelf && !move.isCounterAttack && !move.hitsRevealed) return 0;
+    if (move.cancelInvis && !move.isSelf && !move.isCounterAttack) this.phasingUntil = 0;
     if (this.phasingUntil > time && !move.isSelf && !move.isCounterAttack && !move.hitsRevealed) return 0;
     if (this.state === 'defending' && this.defenseMove && !move.isSelf && !move.isCounterAttack) {
       this.answerStrike(attacker, time);
@@ -1566,6 +1575,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
       if (this.defenseMove?.healOnBlock) {
         this.percent = Math.max(0, this.percent - this.defenseMove.healOnBlock);
+      }
+      if (gate.result === 'negate' && this.defenseMove?.soakRadiation) {
+        const soaked = [incoming.type, incoming.type2, incoming.type3]
+          .some((t) => t && canonicalType(t) === 'radiation');
+        if (soaked) this._soakedRad = true;
       }
       if (gate.endDefense) {
         const def = this.defenseMove;

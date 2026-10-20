@@ -975,6 +975,33 @@ test('batch 11 kits follow the approved briefs', () => {
   assert.strictEqual(indy.noKnockback, true);
 });
 
+test('europa kits follow the approved brief', () => {
+  const moves = CHARACTERS.europa.moves;
+  const check = moves.basicDirectional;
+  assert.strictEqual(check.name, 'Counterfeit Check');
+  assert.strictEqual(check.type, 'electrical');
+  assert.strictEqual(check.stripProtection, true);
+  assert.strictEqual(check.cancelInvis, true);
+  assert.strictEqual(check.breakPhase, true);
+  const sponge = moves.specialDefense;
+  assert.strictEqual(sponge.name, 'Neutron Sponge');
+  assert.deepStrictEqual(sponge.blocks, ['kinetic', 'radiation']);
+  assert.strictEqual(sponge.soakRadiation, true);
+  assert.strictEqual(sponge.releaseRods.damage, 4);
+  assert.strictEqual(sponge.releaseRods.glowType, 'radiation');
+  const defender = { state: 'defending', defenseMove: sponge, x: 0, y: 0 };
+  assert.strictEqual(interceptHit(defender, {}, { type: 'kinetic', damage: 6 }, 0).result, 'negate');
+  assert.strictEqual(interceptHit(defender, {}, { type: 'radiation', damage: 6 }, 0).result, 'negate');
+  assert.strictEqual(interceptHit(defender, {}, { type: 'heat', damage: 6 }, 0).result, 'pass');
+  const geyser = moves.specialDirectional;
+  assert.strictEqual(geyser.name, 'Icy Geyser');
+  assert.strictEqual(geyser.kind, 'burst');
+  assert.strictEqual(geyser.type, 'kinetic');
+  assert.strictEqual(geyser.onHit.slow, 700);
+  assert.ok(geyser.geyser.warnMs >= 400);
+  assert.strictEqual(moves.basicCharge.name, 'Phosphor Bloom');
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

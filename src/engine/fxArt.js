@@ -908,6 +908,7 @@ const SIDE_SPECS = [
   ['ember', 'ember-'], ['spark', 'spark-'], ['cinder', 'cinder-'], ['mote', 'mote-'], ['puff', 'puff-'],
   ['gas', 'gas-'], ['fizzle', 'fizzle-'], ['linger', 'linger-'],
   ['trail', 'trail-'], ['stain', 'stain-'],
+  ['warn', 'warn-'], ['glow', 'glow-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -935,6 +936,8 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       order: merged.order,
       pulse: merged.pulse,
       maxAlpha: merged.maxAlpha,
+      spin: merged.spin,
+      aim: merged.aim !== false,
     });
   }
   return record;
@@ -1120,7 +1123,8 @@ async function loadMoveArt(scene, char, slot, move, index) {
 }
 
 export function fxProjectileView(scene, owner, move, x, y) {
-  const art = artFor(owner?.charDef?.id, move?.name);
+  const base = artFor(owner?.charDef?.id, move?.name);
+  const art = move?._rodGlow && base?.glow?.frames?.length ? base.glow : base;
   const frame = art?.frames?.[0];
   if (!frame || !scene?.add?.image || art.stageFit) return null;
   const img = scene.add.image(x, y, frame.key);
@@ -1171,6 +1175,7 @@ export function fxProjectileView(scene, owner, move, x, y) {
     fxDisplayH: frame.displayH * scale,
     fxSpin: art.spin || 0,
     fxPulse: art.pulse || 0,
+    fxAlphaPulse: move?._rodGlow ? 0.22 : 0,
     fxAim: art.aim !== false,
     fxTrail: trail,
     fxTrailArt: art.trail || null,
@@ -1224,6 +1229,10 @@ export function stepFxProjectile(p, time) {
     if (p.fxPulse && p.fxDisplayW) {
       const s = 1 + Math.sin((time - (p.born || 0)) / 150) * p.fxPulse;
       p.gfx.setDisplaySize(p.fxDisplayW * s, p.fxDisplayH * s);
+    }
+    if (p.fxAlphaPulse) {
+      const wave = 0.5 + 0.5 * Math.cos((time - (p.born || 0)) * Math.PI * 2 / 700);
+      p.gfx.setAlpha(1 - p.fxAlphaPulse + p.fxAlphaPulse * wave);
     }
     return;
   }
@@ -2166,11 +2175,59 @@ function stepEmbers(scene) {
   }
 }
 
+/** Where one of Europa's two control rods sits while the sponge is held. */
+export function rodOrbitPoint(fighter, time, index, spec) {
+  const period = spec?.period ?? 1100;
+  const reach = (fighter?.bodyW ?? 40) * (spec?.orbit ?? 1.05);
+  const ang = ((time || 0) / period) * Math.PI * 2 + index * Math.PI;
+  return {
+    x: (fighter?.x ?? 0) + Math.cos(ang) * reach,
+    y: (fighter?.y ?? 0) - (fighter?.bodyH ?? 80) * 0.5 + Math.sin(ang) * reach * 0.38,
+    front: Math.sin(ang) > 0,
+  };
+}
+
+const liveRods = new WeakMap();
+
+function dropRods(fighter) {
+  const live = liveRods.get(fighter);
+  live?.forEach((img) => img?.destroy?.());
+  if (live) liveRods.delete(fighter);
+}
+
+/** Two rods orbit her and spin about their centres for as long as the sponge is held. */
+function syncRods(scene, fighter) {
+  const defending = fighter.state === 'defending' && fighter.defenseMove?.releaseRods;
+  const art = defending ? artFor(fighter.charDef?.id, fighter.defenseMove.name) : null;
+  if (!art?.frames?.length || scene.simFast) {
+    dropRods(fighter);
+    return;
+  }
+  let pair = liveRods.get(fighter);
+  if (!pair || pair.some((img) => !img?.scene)) {
+    dropRods(fighter);
+    pair = [0, 1].map(() => placeStill(scene, art, fighter.x, fighter.y, 0));
+    liveRods.set(fighter, pair);
+  }
+  const now = scene.simNow ?? 0;
+  const spec = fighter.defenseMove.releaseRods;
+  const frame = art.frames[0];
+  pair.forEach((img, i) => {
+    const at = rodOrbitPoint(fighter, now, i, spec);
+    applyFrameLook(img, frame, art, 1);
+    img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+    img.setPosition(at.x, at.y);
+    img.rotation = (now / 1000) * (art.spin || 7);
+    img.setDepth(at.front ? 14 : 7);
+  });
+}
+
 export function syncFxActors(scene) {
   if (!scene?.fighters) return;
   stepOneShots(scene);
   stepEmbers(scene);
   for (const fighter of scene.fighters) {
+    syncRods(scene, fighter);
     syncCling(scene, fighter);
     syncPoison(scene, fighter);
     syncAttached(scene, fighter);
@@ -2478,6 +2535,63 @@ function frameInActive(fighter) {
   const start = fd.startup ?? 0;
   const active = Math.max(1, fd.active ?? 1);
   return frame >= start && frame < start + active;
+}
+
+/** Crack at the target's feet, then the plume. The warning follows them. */
+export function armGeyser(scene, owner, move) {
+  if (!scene || !move?.geyser) return;
+  let best = null;
+  let bestD = Infinity;
+  for (const other of scene.fighters || []) {
+    if (other === owner || !other.alive || other.state === 'ko' || other.state === 'dead') continue;
+    if (other.state === 'defending' && other.defenseMove?.untargetable) continue;
+    const d = Math.hypot((other.x ?? 0) - (owner.x ?? 0), (other.y ?? 0) - (owner.y ?? 0));
+    if (d < bestD) { bestD = d; best = other; }
+  }
+  const face = owner?.facing || 1;
+  const now = scene.simNow ?? scene.time?.now ?? 0;
+  scene._geysers ??= [];
+  scene._geysers.push({
+    owner,
+    target: best,
+    move,
+    born: now,
+    until: now + (move.geyser.warnMs ?? 560),
+    x: best?.x ?? (owner?.x ?? 0) + face * 120,
+    y: best?.y ?? owner?.y ?? 0,
+  });
+}
+
+export function tickGeysers(scene, time) {
+  const list = scene?._geysers;
+  if (!list?.length) return;
+  for (let i = list.length - 1; i >= 0; i--) {
+    const g = list[i];
+    const target = g.target;
+    if (target?.alive && target.state !== 'ko' && target.state !== 'dead') {
+      g.x = target.x;
+      g.y = target.y;
+    }
+    const art = artFor(g.owner?.charDef?.id, g.move?.name);
+    if (!scene.simFast && art?.warn?.frames?.length && scene.add?.image) {
+      if (!g.img?.scene) {
+        g.img?.destroy?.();
+        g.img = placeStill(scene, art.warn, g.x, g.y, 0);
+        g.img.setDepth(4);
+      }
+      const frame = art.warn.frames[fxFrameIndex(art.warn, time - g.born)] || art.warn.frames[0];
+      applyFrameLook(g.img, frame, art.warn, 1);
+      g.img.setOrigin(art.warn.pivotX ?? 0.5, art.warn.pivotY ?? 0.61);
+      g.img.setPosition(g.x, g.y);
+    }
+    if (time < g.until) continue;
+    list.splice(i, 1);
+    g.img?.destroy?.();
+    scene.resolveBurst?.(g.owner, g.move, { x: g.x, y: g.y });
+    if (!scene.simFast && art?.burst?.frames?.length) {
+      spawnFxSprite(scene, art.burst, g.x, g.y, 1);
+    }
+  }
 }
 
 export function clearFxIndexCache() {

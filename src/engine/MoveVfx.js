@@ -549,7 +549,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (coatSpec(move)?.flake) return;
     const burst = breakFrames(artFor(fighter.charDef?.id, move?.name));
     if (burst) {
-      spawnFxSprite(scene, burst, x, y, 1);
+      spawnFxSprite(scene, burst, x, y, 1, extra.face || 1);
       if (extra.both) {
         const ox = extra.otherX ?? x + (fighter.facing || 1) * 48;
         const oy = extra.otherY ?? y;

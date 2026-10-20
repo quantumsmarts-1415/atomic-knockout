@@ -6,7 +6,7 @@ import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defen
 import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
-import { armGeyser, hitAnchor, playRetortPulse } from './fxArt.js';
+import { armGeyser, fxAnchor, hitAnchor, playRetortPulse } from './fxArt.js';
 import { clipNameForMove, sheetMeta } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
@@ -1565,6 +1565,19 @@ export default class Fighter extends Phaser.GameObjects.Container {
         damage2: incoming.damage2 != null ? incoming.damage2 * gate.damageMult : incoming.damage2,
         damage3: incoming.damage3 != null ? incoming.damage3 * gate.damageMult : incoming.damage3,
       };
+    }
+    if (gate.shatter && gate.endDefense && gate.result === 'pass') {
+      const broken = this.defenseMove;
+      const anchor = broken ? fxAnchor(this, broken) : null;
+      this.state = 'idle';
+      this.defenseMove = null;
+      if (broken) {
+        playVfx(this.scene, this, broken, 'shatter', {
+          x: anchor?.x ?? this.x,
+          y: anchor?.y ?? this.y,
+          face: this.facing || 1,
+        });
+      }
     }
     if (gate.result === 'pop' || gate.result === 'negate') {
       if (gate.detonate && this.scene?.resolveBurst) {

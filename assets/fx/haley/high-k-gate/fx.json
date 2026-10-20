@@ -1,0 +1,32 @@
+{
+  "file": "high-k-gate-hold-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 1.7,
+  "pivotX": 0.5,
+  "pivotY": 0.9765625,
+  "anchor": "ground-front",
+  "frontGap": 28,
+  "hit": false,
+  "shatter": {
+    "file": "high-k-gate-shatter-anim.png",
+    "frames": 16,
+    "cols": 8,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 1.7,
+    "pivotX": 0.5,
+    "pivotY": 0.9765625,
+    "hit": false
+  }
+}

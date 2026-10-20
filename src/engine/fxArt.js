@@ -2180,6 +2180,7 @@ function syncAttached(scene, fighter) {
       const anchor = fxAnchor(fighter, fighter.defenseMove);
       live.img.setPosition(anchor?.x ?? fighter.x, anchor?.y ?? fighter.y);
       live.img.setScale(face * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
+      if (art.anchor === 'ground-front') live.img.setDepth(14);
     }
     return;
   }

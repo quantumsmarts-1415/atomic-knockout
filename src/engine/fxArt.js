@@ -267,6 +267,17 @@ export function cloudIgnitionScale(radius, sheetW, fit = 0.6) {
   return (span * band) / w;
 }
 
+/** Stretch a jump arc from one fighter to the next. The sheet's span is the painted length. */
+export function spawnJumpArc(scene, art, x0, y0, x1, y1) {
+  if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const dist = Math.hypot(dx, dy);
+  if (!(dist > 8)) return null;
+  const span = art.span > 0 ? art.span : 304;
+  return spawnFxSprite(scene, { ...art, _rot: Math.atan2(dy, dx) }, x0, y0, dist / span, 1);
+}
+
 /** How far behind the tip the trail's pivot sits, in display pixels. */
 export function trailBackOffset(displayW, lagFrac) {
   if (!(displayW > 0) || !(lagFrac > 0)) return 0;
@@ -651,6 +662,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     randomRot: !!extra.randomRot,
     randomFlip: !!extra.randomFlip,
     tilt: extra.tilt > 0 ? extra.tilt : 0,
+    span: extra.span > 0 ? extra.span : 0,
   };
 }
 
@@ -1079,7 +1091,7 @@ const SIDE_SPECS = [
   ['rotor', 'rotor-'], ['motor', 'motor-'], ['hold', 'hold-'], ['field', 'field-'],
   ['fist', 'fist-'], ['dazzle', 'dazzle-'], ['unit', 'unit-'],
   ['fizz', 'fizz-'], ['heal', 'heal-'], ['ring', 'ring-'], ['boost', 'boost-'],
-  ['wave', 'wave-'], ['recoil', 'recoil-'], ['meteor', 'meteor-'],
+  ['wave', 'wave-'], ['recoil', 'recoil-'], ['meteor', 'meteor-'], ['arc', 'arc-'],
   ['crown', 'crown-'], ['visor', 'visor-'], ['reflect', 'reflect-'],
   ['heated', 'heated-'], ['absorb', 'absorb-'], ['cleanse', 'cleanse-'], ['block', 'block-'],
   ['pierce', 'pierce-'],
@@ -1139,6 +1151,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       randomRot: merged.randomRot,
       randomFlip: merged.randomFlip,
       tilt: merged.tilt,
+      span: merged.span,
     });
   }
   await attachShards(scene, id, slug, folder, meta, index, charH, sized, record);
@@ -1542,7 +1555,8 @@ function stepPullField(p, time) {
 export function stepFxProjectile(p, time) {
   if (!p?.fxFrames || !p.gfx?.setTexture) return;
   const fps = p.fxFps > 0 ? p.fxFps : 8;
-  const raw = Math.floor(Math.max(0, time - (p.born || 0)) / (1000 / fps));
+  const freezeCold = p.move?.hatch && !p._showHot;
+  const raw = freezeCold ? 0 : Math.floor(Math.max(0, time - (p.born || 0)) / (1000 / fps));
   const i = p.fxOnce
     ? Math.min(p.fxFrames.length - 1, raw)
     : ((raw % p.fxFrames.length) + p.fxFrames.length) % p.fxFrames.length;
@@ -2667,6 +2681,9 @@ function syncCling(scene, fighter) {
       const level = fighter._poisonLevel ?? 1;
       live.img.setAlpha(Math.min(1, 0.28 + 0.09 * level));
     }
+    if (fighter.clingFrom?.stacks > 0) {
+      live.img.setAlpha(Math.min(1, 0.32 + 0.17 * fighter.clingFrom.stacks));
+    }
     if (art.anchor === 'feet') {
       live.img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 1);
       live.img.setPosition(fighter.x, fighter.y);
@@ -3270,6 +3287,10 @@ function syncHeld(scene, fighter) {
       live.img.setOrigin(0.5, 0.5);
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
       if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
+      if (want.art.scaleWith === 'charge') {
+        const s = 0.55 + 0.7 * frac;
+        live.img.setScale(Math.abs(live.img.scaleX || 1) * s, Math.abs(live.img.scaleY || 1) * s);
+      }
       if (want.art.tintFrom != null && want.art.tintTo != null) {
         live.img.setTint?.(chargeTint(want.art.tintFrom, want.art.tintTo, frac));
       }

@@ -1,0 +1,31 @@
+{
+  "file": "twin-hazard-bolt-anim.png",
+  "frames": 12,
+  "cols": 4,
+  "rows": 3,
+  "fps": 24,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.2,
+  "pivotX": 0.62,
+  "pivotY": 0.5,
+  "aim": true,
+  "hit": false,
+  "impact": {
+    "file": "twin-hazard-impact-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.4991304347826087,
+    "pivotY": 0.50390625,
+    "scale": 0.42,
+    "hit": false
+  }
+}

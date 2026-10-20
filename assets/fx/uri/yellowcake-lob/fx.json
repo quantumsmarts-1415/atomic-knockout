@@ -1,0 +1,42 @@
+{
+  "file": "yellowcake-chunk.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.22,
+  "pivotX": 0.5,
+  "pivotY": 0.525,
+  "spin": 7,
+  "hit": false,
+  "burst": {
+    "file": "yellowcake-burst-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.85,
+    "pivotX": 0.5,
+    "pivotY": 0.7589285714285714,
+    "hit": false
+  },
+  "hold": {
+    "file": "yellowcake-cloud-anim.png",
+    "frames": 32,
+    "cols": 8,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.9,
+    "pivotX": 0.5,
+    "pivotY": 0.82,
+    "hit": false
+  }
+}

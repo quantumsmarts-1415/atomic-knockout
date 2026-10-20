@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { gateStored, interceptHit } from '../src/engine/defense.js';
-import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, markedStrikeTargets, prepareMove, scaledByHaste, sheetFrameAt, stripBuffs, takingDps, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
+import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, markedStrikeTargets, prepareMove, rewindPoint, scaledByHaste, sheetFrameAt, stripBuffs, takingDps, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
 import { enGapMult, resolvePacket } from '../src/data/balance.js';
 import { applyImmunities, rearmDefense } from '../src/engine/defense.js';
 
@@ -1717,6 +1717,75 @@ test('ray and ace keep the approved batch rules', () => {
   assert.equal(ace.specialDirectional.hitRadius, 56);
   assert.equal(ace.specialDirectional.fan, undefined);
   assert.equal(ace.specialDirectional.type, 'radiation');
+});
+
+test('pat, uri, neptune, and pluto keep the approved batch rules', () => {
+  const pat = CHARACTERS.pat.moves;
+  assert.equal(pat.basicCharge.name, 'Proto Daughter');
+  assert.equal(pat.basicCharge.type, 'radiation');
+  assert.equal(pat.basicCharge.homing, 7);
+  assert.equal(pat.basicDirectional.onHit.slowStack, true);
+  assert.equal(pat.specialDefense.rewind, true);
+  assert.equal(pat.specialDirectional.type, 'chemical');
+  assert.equal(pat.specialDirectional.type2, 'radiation');
+  const coated = { slowUntil: 0 };
+  const patter = { charDef: { id: 'pat' } };
+  applyOnHit(patter, coated, pat.basicDirectional, 1000);
+  assert.equal(coated.slowStacks, 1);
+  applyOnHit(patter, coated, pat.basicDirectional, 1200);
+  assert.equal(coated.slowStacks, 2);
+  assert.equal(coated.clingFrom.stacks, 2);
+  assert.equal(coated.clingFrom.move, 'Sediment Layer');
+  const log = [
+    { t: 0, x: 10, y: 20, percent: 4 },
+    { t: 400, x: 30, y: 20, percent: 9 },
+    { t: 900, x: 80, y: 20, percent: 14 },
+  ];
+  assert.equal(rewindPoint(log, 1500).t, 400);
+  assert.equal(rewindPoint(log, 1500).percent, 9);
+
+  const uri = CHARACTERS.uri.moves;
+  assert.equal(uri.basicCharge.chain.jump, true);
+  assert.equal(uri.basicCharge.chain.count, 2);
+  assert.equal(uri.basicDirectional.name, 'Penetrator Dart');
+  assert.equal(uri.basicDirectional.breaksBlock, true);
+  assert.equal(uri.basicDirectional.pierce, undefined);
+  assert.equal(uri.specialDefense.noKnockback, true);
+  assert.equal(uri.specialDefense.blockReduction, 0.82);
+  assert.equal(uri.specialDirectional.landBurst, true);
+  assert.equal(uri.specialDirectional.dropZone.knockback, 0);
+  assert.equal(uri.specialDirectional.dropZone.type2, 'chemical');
+  assert.equal(uri.specialDirectional.dropZone.useHold, true);
+  assert.equal(uri.specialDirectional.zone, undefined);
+
+  const neptune = CHARACTERS.neptune.moves;
+  assert.equal(neptune.basicCharge.name, 'Mad Science Flask');
+  assert.equal(neptune.basicCharge.explodeOnly, true);
+  assert.equal(neptune.basicCharge.hitRadius, 54);
+  assert.equal(neptune.basicCharge.chargeRadiusMult, 1.35);
+  assert.equal(neptune.basicDirectional.name, 'Trident Thrust');
+  assert.equal(neptune.basicDirectional.multiHit, 3);
+  assert.deepEqual(neptune.specialDefense.immune, ['radiation', 'chemical']);
+  assert.equal(neptune.specialDefense.phase, undefined);
+  assert.equal(neptune.specialDirectional.name, 'Breeder Seed');
+  assert.equal(neptune.specialDirectional.hatch.ms, 1000);
+  assert.equal(neptune.specialDirectional.explodeOnly, undefined);
+  assert.equal(neptune.specialDirectional.type, 'heat');
+  assert.equal(neptune.specialDirectional.type2, 'radiation');
+
+  const pluto = CHARACTERS.pluto.moves;
+  assert.equal(pluto.basicCharge.critWindow, true);
+  assert.equal(pluto.basicCharge.overhold.scale, 0.7);
+  assert.equal(pluto.basicDirectional.name, 'Decay-Heat Palm');
+  assert.equal(pluto.basicDirectional.type, 'heat');
+  assert.equal(pluto.basicDirectional.type2, 'radiation');
+  assert.equal(pluto.specialDefense.name, 'Demoted');
+  assert.equal(pluto.specialDefense.phase, 'overhead');
+  assert.equal(pluto.specialDefense.shrink, 0.5);
+  assert.equal(pluto.specialDirectional.name, 'Plutonium Pit');
+  assert.equal(pluto.specialDirectional.landBurst, true);
+  assert.equal(pluto.specialDirectional.type, 'kinetic');
+  assert.equal(pluto.specialDirectional.type2, 'radiation');
 });
 
 function fake(id, x, y) {

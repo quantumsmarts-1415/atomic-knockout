@@ -2363,7 +2363,27 @@ test('batch 23 part 2 scales the bright openings and anchors the seep', () => {
   assert.equal(beam.pivotX, 0);
   assert.equal(beam.charge.scaleWith, 'alpha');
   assert.equal(impactRadiusScale({ hitRadius: 56, projectileRadius: 14 }, { scaleTo: 'radius', flashRadius: 230 }), 56 / 230);
-  for (const id of ['polonius', 'tate', 'ronan', 'frank', 'ray', 'ace']) {
+  const flask = read('assets/fx/neptune/mad-science-flask/fx.json');
+  assert.equal(flask.impact.scaleTo, 'radius');
+  assert.equal(flask.impact.flashRadius, 230);
+  assert.equal(flask.glow.scaleWith, 'alpha');
+  assert.ok(Math.abs(flask.glow.pivotY - 200 / 256) < 1e-9);
+  const blast = read('assets/fx/pluto/critical-mass/fx.json');
+  assert.equal(blast.scaleTo, 'radius');
+  assert.equal(blast.flashRadius, 230);
+  assert.equal(blast.charge.scaleWith, 'charge');
+  assert.equal(blast.warn.file, 'critical-window-cue-anim.png');
+  const arc = read('assets/fx/uri/chain-reaction/fx.json');
+  assert.equal(arc.arc.span, 304);
+  assert.ok(Math.abs(arc.arc.pivotX - 40 / 384) < 1e-9);
+  assert.equal(arc.scaleTo, undefined);
+  const hazard = read('assets/fx/pat/twin-hazard-bolt/fx.json');
+  assert.equal(hazard.impact.scaleTo, undefined);
+  assert.equal(hazard.impact.scale, 0.42);
+  const dart = read('assets/fx/uri/penetrator-dart/fx.json');
+  assert.ok(Math.abs(dart.pierce.pivotX - 100 / 320) < 1e-9);
+  assert.equal(dart.black, false);
+  for (const id of ['polonius', 'tate', 'ronan', 'frank', 'ray', 'ace', 'pat', 'uri', 'neptune', 'pluto']) {
     for (const file of fs.readdirSync(`assets/fx/${id}`, { recursive: true })) {
       const name = String(file);
       assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, `${id}/${name}`);

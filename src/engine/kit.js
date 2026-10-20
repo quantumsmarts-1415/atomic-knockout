@@ -34,7 +34,21 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx?.heal && attacker) attacker.percent = Math.max(0, (attacker.percent ?? 0) - fx.heal);
   if (!fx || immune) return;
 
-  if (fx.slow) victim.slowUntil = time + fx.slow;
+  if (fx.slow) {
+    const stacking = fx.slowStack && victim.slowUntil > time && victim._slowName === move.name;
+    const cap = fx.slowCap ?? 4;
+    victim.slowStacks = stacking ? Math.min(cap, (victim.slowStacks ?? 1) + 1) : 1;
+    victim._slowName = move.name;
+    victim.slowUntil = time + fx.slow;
+    if (fx.slowStack && attacker?.charDef?.id) {
+      victim.clingFrom = {
+        id: attacker.charDef.id,
+        move: move.name,
+        until: victim.slowUntil,
+        stacks: victim.slowStacks,
+      };
+    }
+  }
   if (fx.attackSlow) {
     const spec = typeof fx.attackSlow === 'number' ? { ms: fx.attackSlow } : fx.attackSlow;
     victim.attackHaste = spec.mult ?? 0.72;
@@ -516,6 +530,18 @@ function grantBuff(fighter, buff, time) {
       dashSpeed: buff.armDash.dashSpeed ?? 560,
     };
   }
+}
+
+/** Position and percent from about one second ago. The oldest sample wins if the log is shorter. */
+export function rewindPoint(log, time, back = 1000) {
+  if (!log?.length) return null;
+  const want = time - back;
+  let snap = log[0];
+  for (const sample of log) {
+    if (sample.t <= want) snap = sample;
+    else break;
+  }
+  return snap;
 }
 
 /** Seconds of radium tonic already drunk become attack power, then the counter clears. */

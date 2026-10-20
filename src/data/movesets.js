@@ -2146,7 +2146,7 @@ export const MOVESETS = {
       baseKnockback: 90, knockbackGrowth: 1.6, duration: 220, cooldown: 820,
     }),
     basicDirectional: melee('Sediment Layer', {
-      type: K, damage: 7, onHit: { slow: 420 }, rangeW: 74, vfx: 'strike', vfxColor: 0xd8c48a,
+      type: K, damage: 7, onHit: { slow: 640, slowStack: true, slowCap: 4 }, rangeW: 74, vfx: 'strike', vfxColor: 0xd8c48a,
       baseKnockback: 80, knockbackGrowth: 1.5, duration: 200, cooldown: 420,
     }),
     specialDefense: m('Deep Time Rewind', {
@@ -2163,12 +2163,13 @@ export const MOVESETS = {
     basicCharge: m('Chain Reaction', {
       kind: 'burst', type: R, damage: 6.9, type2: H, damage2: 5.2, chargeDamageMult: 1.45, chargeRadiusMult: 1.25,
       maxChargeMs: 900, radius: 72, vfx: 'fire', vfxColor: 0xffe08a,
-      chain: { count: 2, fromHits: true, scale: 0.55, delay: 140, radiusScale: 0.62 },
+      chain: { count: 2, fromHits: true, jump: true, reach: 280, scale: 0.55, delay: 140, radiusScale: 0.62 },
       baseKnockback: 94.6, knockbackGrowth: 1.55, duration: 260, cooldown: 980,
     }),
-    basicDirectional: melee('Self-Sharpening Jab', {
-      type: K, damage: 5.2, sharpen: { step: 2, cap: 10 }, rangeW: 70, vfx: 'strike', vfxColor: 0xe8d090,
-      baseKnockback: 86, knockbackGrowth: 1.55, duration: 180, cooldown: 340,
+    basicDirectional: m('Penetrator Dart', {
+      kind: 'projectile', type: K, damage: 7, breaksBlock: true, vfx: 'strike', vfxColor: 0xe8a060,
+      projectileSpeed: 680, projectileRadius: 8, projectileLife: 420,
+      baseKnockback: 100, knockbackGrowth: 1.7, duration: 180, cooldown: 420,
     }),
     specialDefense: m('DU Plating', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.82, noKnockback: true,
@@ -2176,31 +2177,38 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Yellowcake Lob', {
       kind: 'projectile', type: R, damage: 5.2, type2: C, damage2: 4.3, explodeOnly: true, explodeRadius: 56,
-      vfx: 'cloud', vfxColor: 0xffe14a,
-      zone: { type: R, damage: 1.2, ms: 1600, radius: 52, tick: 400, color: 0xffe14a },
-      projectileSpeed: 340, projectileRadius: 12, projectileLife: 700,
+      landBurst: true, lob: 480, vfx: 'cloud', vfxColor: 0xffe14a,
+      dropZone: {
+        name: 'Yellowcake Lob', type: R, damage: 1.2, type2: C, damage2: 0.9,
+        ms: 1600, radius: 52, tick: 400, knockback: 0, growth: 0, color: 0xffe14a,
+        feet: true, sheet: true, useHold: true,
+      },
+      projectileSpeed: 340, projectileRadius: 12, projectileLife: 1100,
       baseKnockback: 77.4, knockbackGrowth: 1.38, duration: 220, cooldown: 860,
     }),
   },
 
   neptune: {
-    basicCharge: m('Tidal Surge', {
-      kind: 'dash', type: K, damage: 10.2, angleDeg: 0, chargeDamageMult: 1.3, chargeDashMult: 1.25,
-      maxChargeMs: 800, dashSpeed: 560, rangeW: 100, rangeH: 70, vfx: 'gust', vfxColor: 0x7ec8ff,
-      baseKnockback: 244, knockbackGrowth: 3.9, duration: 280, cooldown: 820,
+    basicCharge: m('Mad Science Flask', {
+      kind: 'projectile', type: C, damage: 6, type2: R, damage2: 5,
+      explodeOnly: true, explodeRadius: 54, hitRadius: 54, landBurst: true, lob: 420,
+      chargeDamageMult: 1.45, chargeRadiusMult: 1.35,
+      maxChargeMs: 900, vfx: 'cloud', vfxColor: 0x3ec8c0,
+      projectileSpeed: 440, projectileRadius: 12, projectileLife: 900,
+      baseKnockback: 110, knockbackGrowth: 1.8, duration: 240, cooldown: 860,
     }),
     basicDirectional: melee('Trident Thrust', {
       type: K, damage: 3.8, type2: R, damage2: 3.8, multiHit: 3, rangeW: 86, vfx: 'strike', vfxColor: 0x9ad0ff,
       baseKnockback: 85.4, knockbackGrowth: 1.46, duration: 240, cooldown: 460,
     }),
-    specialDefense: m('Far Orbit', {
-      phase: true, phaseRetort: { type: K, damage: 9, knockback: 219.6, growth: 2.68 },
-      duration: 520, cooldown: 980, vfx: 'shield', vfxColor: 0x8ec4ff,
+    specialDefense: m('Lab Coat Shield', {
+      immune: [R, C],
+      duration: 760, cooldown: 940, vfx: 'shield', vfxColor: 0xd8fff4,
     }),
     specialDirectional: m('Breeder Seed', {
-      kind: 'projectile', type: H, damage: 9, type2: R, damage2: 7.7, explodeOnly: true, explodeRadius: 58,
-      delayMs: 900, vfx: 'fire', vfxColor: 0xffb45a,
-      projectileSpeed: 280, projectileRadius: 10, projectileLife: 1400,
+      kind: 'projectile', type: H, damage: 9, type2: R, damage2: 7.7, explodeRadius: 58,
+      lob: 400, landBurst: true, hatch: { ms: 1000 }, vfx: 'fire', vfxColor: 0xffb45a,
+      projectileSpeed: 300, projectileRadius: 10, projectileLife: 1600,
       baseKnockback: 122, knockbackGrowth: 2.07, duration: 220, cooldown: 900,
     }),
   },
@@ -2208,8 +2216,8 @@ export const MOVESETS = {
   pluto: {
     basicCharge: m('Critical Mass', {
       kind: 'burst', type: H, damage: 10.7, type2: R, damage2: 10.7, chargeDamageMult: 2.05, chargeRadiusMult: 1.4,
-      maxChargeMs: 900, radius: 64, vfx: 'supernova', vfxColor: 0xffd24a,
-      overhold: { grace: 240, damage: 18.8, damage2: 18.8, radius: 86 },
+      maxChargeMs: 900, radius: 64, critWindow: true, vfx: 'supernova', vfxColor: 0xffd24a,
+      overhold: { grace: 240, damage: 18.8, damage2: 18.8, radius: 86, scale: 0.7 },
       baseKnockback: 173.6, knockbackGrowth: 2.98, duration: 260, cooldown: 980,
     }),
     basicDirectional: melee('Decay-Heat Palm', {
@@ -2217,13 +2225,13 @@ export const MOVESETS = {
       baseKnockback: 124, knockbackGrowth: 2.23, duration: 200, cooldown: 420,
     }),
     specialDefense: m('Demoted', {
-      phase: 'overhead', shrink: 0.62, duration: 760, cooldown: 900, vfx: 'shield', vfxColor: 0xd0c8b0,
+      phase: 'overhead', shrink: 0.5, duration: 760, cooldown: 900, vfx: 'shield', vfxColor: 0xd0c8b0,
     }),
-    specialDirectional: m('Deep Space Probe', {
-      kind: 'projectile', type: R, damage: 0, pierce: true, vfx: 'spark', vfxColor: 0xffe08a,
-      pulse: { type: R, damage: 4.56, every: 360, radius: 58 },
-      projectileSpeed: 140, projectileRadius: 8, projectileLife: 2800,
-      baseKnockback: 24.8, knockbackGrowth: 0.37, duration: 220, cooldown: 1100,
+    specialDirectional: m('Plutonium Pit', {
+      kind: 'projectile', type: K, damage: 9, type2: R, damage2: 7, explodeOnly: true, explodeRadius: 50,
+      lob: 540, landBurst: true, vfx: 'spark', vfxColor: 0xff7040,
+      projectileSpeed: 280, projectileRadius: 16, projectileLife: 1200,
+      baseKnockback: 160, knockbackGrowth: 2.6, duration: 240, cooldown: 980,
     }),
   },
 

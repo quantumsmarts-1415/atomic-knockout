@@ -3,7 +3,7 @@ import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { canonicalType, enGapMult, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defense.js';
-import { applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
+import { applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, prepareMove, rewindPoint, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
 import { armGeyser, fxAnchor, groundTop, hitAnchor, playRetortPulse, spawnMeteor, spawnMoveExtra } from './fxArt.js';
@@ -425,6 +425,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.percent = Math.max(0, (this.percent ?? 0) - step);
       }
     }
+    if (this.state === 'defending' && this.defenseMove?.rewind) {
+      const log = this._rewindLog ?? (this._rewindLog = []);
+      const last = log[log.length - 1];
+      if (!last || time - last.t >= 50) {
+        log.push({ t: time, x: this.x, y: this.y, percent: this.percent ?? 0 });
+      }
+      while (log.length > 1 && time - log[0].t > 1200) log.shift();
+    }
     if (this.state === 'defending' && this.defenseMove?.revealNear && time >= (this._revealAt ?? 0)) {
       const spec = this.defenseMove.revealNear;
       this._revealAt = time + (spec.every ?? 1000);
@@ -482,7 +490,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (!locked && this.state !== 'hurt' && this.state !== 'ko' && this.state !== 'charging' && this.state !== 'defending') {
       let speed = stats.speed;
       if (this.speedBuffUntil > time) speed *= this.speedBuff ?? 1;
-      if (this.slowUntil > time) speed *= 0.55;
+      if (this.slowUntil > time) {
+        const stacks = this.slowStacks ?? 1;
+        speed *= stacks > 1 ? Math.max(0.34, 0.55 - (stacks - 1) * 0.08) : 0.55;
+      }
       let vx = 0;
       if (inp.left) vx -= speed;
       if (inp.right) vx += speed;
@@ -651,6 +662,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.body.setVelocityY((target - this.y) * 6);
       }
       if (chargeMove?.seep) this.phasingUntil = time + 80;
+      if (chargeMove?.critWindow && this.chargeStart != null && !this._critCue) {
+        if (time - this.chargeStart >= (chargeMove.maxChargeMs ?? 0)) {
+          this._critCue = true;
+          playVfx(this.scene, this, chargeMove, 'warn');
+        }
+      }
       if (chargeMove?.tonic && this.chargeStart != null) {
         const every = chargeMove.tonic.every ?? 1000;
         const steps = Math.floor((time - this.chargeStart) / every);
@@ -710,6 +727,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
           this.state = 'charging';
           this.chargeStart = time;
           this._tonicSteps = 0;
+          this._critCue = false;
           if (this.charDef.moves.basicCharge?.perTravel) this.travel = 0;
         }
       } else if (pressedSpecial && time >= this.specialCooldownUntil && time >= (this.vulnerableUntil ?? 0) && time >= (this.specialMutedUntil ?? 0)) {
@@ -1276,6 +1294,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
         : move.pulses,
       _baseProjectileRadius: move.projectileRadius,
       projectileRadius: move.projectileRadius != null ? scale(move.projectileRadius, move.chargeRadiusMult) : move.projectileRadius,
+      explodeRadius: src.explodeRadius != null ? scale(src.explodeRadius, src.chargeRadiusMult) : src.explodeRadius,
+      hitRadius: src.hitRadius != null ? scale(src.hitRadius, src.chargeRadiusMult) : src.hitRadius,
       projectileSpeed: move.projectileSpeed != null && move.chargeSpeedMult != null
         ? scale(move.projectileSpeed, move.chargeSpeedMult)
         : move.projectileSpeed,
@@ -1301,6 +1321,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (move.overhold.damage != null) scaled.damage = move.overhold.damage;
       if (move.overhold.damage2 != null) scaled.damage2 = move.overhold.damage2;
       if (move.overhold.radius != null) scaled.radius = move.overhold.radius;
+      if (move.overhold.scale > 0) scaled._selfBlast = move.overhold.scale;
     }
     if (this._storedCharge && (move.storeHits || move.bankCap)) {
       scaled.damage = (scaled.damage ?? 0) + this._storedCharge;
@@ -1405,7 +1426,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this._drainAt = time + (move.drain?.every ?? 1000);
     this._regenAt = time + (move.regenEvery ?? 800);
     this._revealAt = move.revealNear ? time : 0;
-    if (move.rewind) this._rewindSnap = { x: this.x, y: this.y, percent: this.percent ?? 0 };
+    if (move.rewind) {
+      this._rewindSnap = { t: time, x: this.x, y: this.y, percent: this.percent ?? 0 };
+      this._rewindLog = [this._rewindSnap];
+    }
     if (move.shrink && this.rig) {
       this._shrinkFrom = this.rig.baseScale ?? 1;
       this.rig.baseScale = this._shrinkFrom * move.shrink;
@@ -1701,6 +1725,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
         damage3: scaled(incoming.type3, incoming.damage3),
       };
     }
+    if (gate.result === 'pass' && incoming.breaksBlock && attacker && attacker !== this) {
+      const travel = incoming._travel;
+      const face = travel > 0 ? 1 : travel < 0 ? -1 : (attacker.facing || 1);
+      playVfx(this.scene, attacker, incoming, 'pierce', {
+        x: this.x,
+        y: this.y - (this.bodyH ?? 80) * 0.45,
+        face,
+      });
+    }
     if (gate.damageMult && gate.damageMult !== 1) {
       incoming = {
         ...incoming,
@@ -1747,10 +1780,17 @@ export default class Fighter extends Phaser.GameObjects.Container {
           ...gate.detonate,
         }, { x: this.x, y: this.y - (this.bodyH ?? 80) * 0.45 });
       }
-      if (gate.rewind && this._rewindSnap && this.body) {
-        this.percent = this._rewindSnap.percent;
-        this.body.reset(this._rewindSnap.x, this._rewindSnap.y);
-        this.body.setVelocity(0, 0);
+      if (gate.rewind && this.body) {
+        const snap = rewindPoint(this._rewindLog, time) || this._rewindSnap;
+        if (snap) {
+          this.percent = snap.percent;
+          this.body.reset(snap.x, snap.y);
+          this.body.setVelocity(0, 0);
+          playVfx(this.scene, this, this.defenseMove, 'linger', {
+            x: snap.x,
+            y: snap.y - (this.bodyH ?? 80) * 0.5,
+          });
+        }
       }
       if (this.defenseMove?.scanWeak && attacker && attacker !== this) {
         this.bonusHits = 1;

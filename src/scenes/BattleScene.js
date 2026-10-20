@@ -30,7 +30,7 @@ import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, cloudIgnitionScale, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
+import { artFor, cloudIgnitionScale, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnJumpArc, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
@@ -1585,7 +1585,42 @@ export default class BattleScene extends Phaser.Scene {
         }
       }
     }
-    if (move.chain && !move._chained) {
+    if (move.chain?.jump && !move._chained && struck.size) {
+      const reach = move.chain.reach ?? 280;
+      const arc = artFor(owner?.charDef?.id, move.name)?.arc;
+      for (const hit of struck) {
+        const near = [];
+        for (const other of this.fighters) {
+          if (other === owner || other === hit || !other.alive || other.state === 'ko') continue;
+          const d = Math.hypot(other.x - hit.x, other.y - hit.y);
+          if (d <= reach) near.push({ other, d });
+        }
+        near.sort((a, b) => a.d - b.d);
+        for (let i = 0; i < move.chain.count; i++) {
+          const target = near[i]?.other || near[0]?.other || null;
+          const from = { x: hit.x, y: hit.y - (hit.bodyH ?? 80) * 0.4 };
+          const spot = target
+            ? { x: target.x, y: target.y - (target.bodyH ?? 80) * 0.4 }
+            : from;
+          const echo = {
+            ...move,
+            _chained: true,
+            chain: null,
+            unseen: false,
+            damage: move.chain.damage ?? (move.damage ?? 0) * (move.chain.scale ?? 0.6),
+            damage2: move.chain.type ? undefined : move.damage2,
+            type: move.chain.type ?? move.type,
+            type2: move.chain.type ? undefined : move.type2,
+            radius: (move.radius ?? 70) * (move.chain.radiusScale ?? 0.7),
+          };
+          this.time.delayedCall((move.chain.delay ?? 160) * (i + 1), () => {
+            if (!owner.alive) return;
+            if (arc && target) spawnJumpArc(this, arc, from.x, from.y, spot.x, spot.y);
+            this.resolveBurst(owner, echo, spot);
+          });
+        }
+      }
+    } else if (move.chain && !move._chained) {
       const spots = move.chain.fromHits && struck.size
         ? [...struck].map((f) => ({ x: f.x, y: f.y - (f.bodyH ?? 80) * 0.4 }))
         : [null];
@@ -1750,19 +1785,20 @@ export default class BattleScene extends Phaser.Scene {
       });
       return;
     }
-    if (spec.sheet && painted?.frames?.length) {
+    const sheetArt = spec.useHold && painted?.hold?.frames?.length ? painted.hold : painted;
+    if (spec.sheet && sheetArt?.frames?.length) {
       const face = owner?.facing || 1;
-      const gfx = placeFxImage(this, painted, x, y, face);
+      const gfx = placeFxImage(this, sheetArt, x, y, face);
       gfx?.setDepth?.(6);
       let aura = null;
-      if (painted.stain?.frames?.length) {
+      if (painted?.stain?.frames?.length) {
         aura = placeFxImage(this, painted.stain, x, y, 1);
         aura?.setDepth?.(5);
       }
       this.zones.push({
         owner, spec, x, y, radius,
         gfx: gfx || { destroy() {} },
-        art: painted, face,
+        art: sheetArt, face,
         aura, auraArt: painted.stain || null, auraBorn: this.time.now,
         born: this.time.now,
         until: this.time.now + (spec.ms ?? 1600),
@@ -1922,6 +1958,8 @@ export default class BattleScene extends Phaser.Scene {
           name: z.spec.name ?? 'zone',
           type: z.spec.type,
           damage: tickDamage,
+          type2: z.spec.type2,
+          damage2: z.spec.damage2,
           baseKnockback: z.spec.knockback ?? 40,
           knockbackGrowth: z.spec.growth ?? 0.4,
           onHit: z.spec.onHit,
@@ -2650,6 +2688,45 @@ export default class BattleScene extends Phaser.Scene {
           carried.body.setVelocity(p.vx * 0.95, Math.min(-28, carried.body.velocity.y));
         }
       }
+      if (p.hatchAt && !p._hatched && time >= p.hatchAt) {
+        p._hatched = true;
+        p._showHot = true;
+        this.resolveBurst(p.owner, {
+          ...p.move,
+          radius: p.move.explodeRadius ?? 58,
+          kind: 'burst',
+          hatch: null,
+          landBurst: null,
+          _noVfx: true,
+        }, { x: p.gfx.x, y: p.gfx.y });
+        p.gfx.destroy();
+        p.dead = true;
+        continue;
+      }
+      if (p.move.landBurst && p.move.lob && !p.pinned && !p._hatched && p.vy > 20) {
+        const gy = groundTop(this, p.gfx.x, p.gfx.y + 48);
+        if (p.gfx.y >= gy - 8) {
+          p.gfx.y = gy;
+          if (p.move.hatch) {
+            p.pinned = true;
+            p.pinFreeze = true;
+            p.vx = 0;
+            p.vy = 0;
+            p.hatchAt = time + (p.move.hatch.ms ?? 1000);
+            p.dieAt = p.hatchAt + 240;
+            const heat = artFor(p.owner?.charDef?.id, p.move.name)?.hot;
+            if (heat?.frames?.length) spawnFxSprite(this, heat, p.gfx.x, gy, 1, 1);
+            continue;
+          }
+          if (p.move.explodeOnly) {
+            this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: gy });
+            this.dropProjectileZone(p);
+            p.gfx.destroy();
+            p.dead = true;
+            continue;
+          }
+        }
+      }
       const off = p.gfx.x < -80 || p.gfx.x > this.world.width + 80 || p.gfx.y > this.world.height + 80;
       if (time > p.dieAt || off) {
         if (!off && this.nearOwnerCleanse(p)) {
@@ -2773,7 +2850,7 @@ export default class BattleScene extends Phaser.Scene {
         const counted = p.move._salvoIndex
           ? { ...shot, multiHit: p.move._salvoCount, _hitIndex: p.move._salvoIndex }
           : { ...shot, _hitIndex: n };
-        this.landHit(p.owner, victim, { ...counted, _projectile: true, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, Math.sign(p.vx) || p.owner.facing);
+        this.landHit(p.owner, victim, { ...counted, _projectile: true, _travel: p.vx, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, Math.sign(p.vx) || p.owner.facing);
         if (p.move.stick && n >= want) {
           p.stuck = victim;
           if (p.move.pinFoot) {

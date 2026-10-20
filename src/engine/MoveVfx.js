@@ -385,6 +385,14 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (art?.frames?.length) drawFxOneShot(scene, fighter, move, x, y, 1);
     return;
   }
+  if (phase === 'warn') {
+    const cue = artFor(fighter.charDef?.id, move?.name)?.warn;
+    if (cue?.frames?.length) {
+      const y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+      spawnFxSprite(scene, cue, fighter.x, y, cue.scale > 0 ? cue.scale : 1, 1);
+    }
+    return;
+  }
   if (phase === 'cleanse' || phase === 'block' || phase === 'pierce' || phase === 'linger' || phase === 'wave') {
     const art = artFor(fighter.charDef?.id, move?.name);
     const side = phase === 'cleanse' ? art?.cleanse
@@ -395,7 +403,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (side?.frames?.length) {
       const x = extra.x ?? fighter.x;
       const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
-      spawnFxSprite(scene, side, x, y, 1, fighter.facing || 1);
+      const face = extra.face || fighter.facing || 1;
+      spawnFxSprite(scene, side, x, y, side.scale > 0 ? side.scale : 1, face);
     }
     return;
   }
@@ -428,6 +437,9 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       const s = art.burst.scale > 0 ? art.burst.scale : 1;
       spawnFxSprite(scene, art.burst, extra.x, extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5), s);
       return;
+    }
+    if (phase === 'defense' && art?.launch?.frames?.length) {
+      spawnFxSprite(scene, art.launch, fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.45, 1, 1);
     }
     if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
     if (move?.kind === 'zone' && move.zone?.trap && art?.frames?.length) return;
@@ -486,9 +498,13 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         const posed = sheetReleasePoint(fighter, kind) || sheetFxPoint(fighter, kind);
         if (posed) { x = posed.x; y = posed.y; }
       }
-      const fitted = impactRadiusScale(move, art);
-      let scale = fitted != null ? fitted : (anchor?.scale ?? fxGameplayScale(move, art));
-      if (art.scaleTo === 'radius' && art.anchor !== 'ground') y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+      const selfBlast = move?._selfBlast > 0 ? move._selfBlast : 0;
+      const fitted = selfBlast ? null : impactRadiusScale(move, art);
+      let scale = selfBlast || (fitted != null ? fitted : (anchor?.scale ?? fxGameplayScale(move, art)));
+      if (selfBlast) {
+        x = fighter.x;
+        y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+      } else if (art.scaleTo === 'radius' && art.anchor !== 'ground') y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
       if (move?.riseUnder && art.anchor === 'ground') {
         x = fighter.x;
         y = groundTop(scene, fighter.x, fighter.y);

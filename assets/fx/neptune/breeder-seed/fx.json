@@ -1,0 +1,30 @@
+{
+  "file": "breeder-seed.png",
+  "frames": 2,
+  "cols": 2,
+  "rows": 1,
+  "fps": 1,
+  "loop": false,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.26,
+  "pivotX": 0.5,
+  "pivotY": 0.62,
+  "hit": false,
+  "hot": {
+    "file": "breeder-seed-heatup-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "pivotX": 0.5,
+    "pivotY": 0.6696428571428571,
+    "hit": false
+  }
+}

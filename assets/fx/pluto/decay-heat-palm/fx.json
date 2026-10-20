@@ -1,0 +1,31 @@
+{
+  "file": "decay-heat-palm-glow-anim.png",
+  "frames": 12,
+  "cols": 4,
+  "rows": 3,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.42,
+  "pivotX": 0.5,
+  "pivotY": 0.62,
+  "anchor": "fist",
+  "hit": false,
+  "impact": {
+    "file": "decay-heat-palm-hit-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

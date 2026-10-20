@@ -1236,6 +1236,29 @@ test('lucy pairs a blade with the slash and spans annihilation to the stage', ()
   assert.equal(normal.h, 238);
 });
 
+test('sterling sheets scale the seeker down and loop the flare', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const seeker = read('assets/fx/sterling/bone-seeker/fx.json');
+  assert.equal(seeker.file, 'bone-seeker-pulse-anim.png');
+  assert.equal(seeker.frames, 24);
+  assert.equal(seeker.fps, 13.043);
+  assert.equal(seeker.once, true);
+  assert.equal(seeker.heightFrac, 0.48);
+  assert.equal(seeker.scale, 0.7);
+  assert.equal(seeker.hit, false);
+  assert.equal(fs.existsSync('assets/fx/sterling/bone-seeker/bone-seeker-pulse-anim.png'), true);
+  const hook = read('assets/fx/sterling/night-glow-hook/fx.json');
+  assert.equal(hook.anchor, 'contact');
+  assert.equal(hook.oneshot, true);
+  assert.equal(hook.hit, false);
+  assert.equal(fs.existsSync('assets/fx/sterling/night-glow-hook/night-glow-hook-impact-anim.png'), true);
+  const flare = read('assets/fx/sterling/road-flare/fx.json');
+  assert.equal(flare.loop, true);
+  assert.equal(flare.fps, 9.6);
+  assert.equal(flare.anchor, 'front');
+  assert.equal(fs.existsSync('assets/fx/sterling/road-flare/road-flare-burn-anim.png'), true);
+});
+
 test('tex sheets match the technetium handoff', () => {
   const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
   const burst = read('assets/fx/tex/metastable-flash/fx.json');

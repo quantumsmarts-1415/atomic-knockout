@@ -558,6 +558,44 @@ test('batch 2 kits match the edited move doc', () => {
   assert.strictEqual(scaled.typeScale.kinetic, undefined);
 });
 
+test('sterling glow ticks radiation and the seeker does not bonus it', () => {
+  const moves = CHARACTERS.sterling.moves;
+  const seeker = moves.basicCharge;
+  assert.strictEqual(seeker.name, 'Bone Seeker');
+  assert.strictEqual(seeker.kind, 'projectile');
+  assert.strictEqual(seeker.type, 'radiation');
+  assert.strictEqual(seeker.homing, 6);
+  assert.strictEqual(seeker.bonusVsMark, undefined);
+  const hook = moves.basicDirectional;
+  assert.strictEqual(hook.name, 'Night-Glow Hook');
+  assert.strictEqual(hook.type, 'kinetic');
+  assert.strictEqual(hook.damage, 6.4);
+  assert.strictEqual(hook.onHit.glow.dps, 1);
+  assert.strictEqual(hook.onHit.glow.every, 1000);
+  assert.strictEqual(hook.onHit.glow.ms, 4000);
+  const glowing = { percent: 10, alive: true, state: 'idle', scene: { noteDot() {} } };
+  applyOnHit({ charDef: { id: 'sterling' } }, glowing, hook, 0);
+  assert.strictEqual(glowing.mark, 'glow');
+  assert.strictEqual(glowing.markUntil, 4000);
+  assert.strictEqual(glowing.glowUntil, 4000);
+  assert.strictEqual(glowing.glowTint, 0x7dffe8);
+  tickKit(glowing, 1000);
+  assert.strictEqual(glowing.percent, 11);
+  tickKit(glowing, 1500);
+  assert.strictEqual(glowing.percent, 11);
+  tickKit(glowing, 4000);
+  assert.strictEqual(glowing.percent, 11);
+  const flare = moves.specialDefense;
+  assert.strictEqual(flare.name, 'Road Flare');
+  assert.strictEqual(flare.zone.type, 'heat');
+  assert.strictEqual(flare.zone.follow, true);
+  assert.strictEqual(flare.onStruck.miss, true);
+  const rocket = moves.specialDirectional;
+  assert.strictEqual(rocket.name, 'Crimson Rocket');
+  assert.strictEqual(rocket.type, 'heat');
+  assert.strictEqual(rocket.type2, 'kinetic');
+});
+
 test('tex tags for ten seconds and the camera hits every tag', () => {
   const moves = CHARACTERS.tex.moves;
   const flash = moves.basicCharge;

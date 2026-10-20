@@ -432,8 +432,13 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     }
     if (art?.oneshot && art.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) {
       const face = fighter.facing || 1;
-      const x = extra.x ?? fighter.x + face * (fighter.bodyW ?? 40) * 0.2;
-      const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
+      let x = extra.x ?? fighter.x + face * (fighter.bodyW ?? 40) * 0.2;
+      let y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
+      if (extra.x == null && (art.anchor === 'contact' || art.anchor === 'fist')) {
+        const tip = meleeContactPoint(fighter, move);
+        x = tip.x;
+        y = tip.y;
+      }
       if (drawFxOneShot(scene, fighter, move, x, y, 1)) return;
     }
     if (art?.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) return;

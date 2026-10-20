@@ -1,0 +1,16 @@
+{
+  "file": "road-flare-burn-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 9.6,
+  "loop": true,
+  "blend": "add",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 1.35,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "front",
+  "hit": false
+}

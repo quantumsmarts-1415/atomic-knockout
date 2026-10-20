@@ -1825,18 +1825,20 @@ export const MOVESETS = {
 
   sterling: {
     basicCharge: m('Bone Seeker', {
-      kind: 'projectile', type: R, damage: 7.4, homing: 6, bonusVsMark: 'glow', markMult: 1.5,
-      chargeDamageMult: 1.3, maxChargeMs: 800, vfx: 'spark', vfxColor: 0xfff4c0,
+      kind: 'projectile', type: R, damage: 7.4, homing: 6,
+      chargeDamageMult: 1.3, maxChargeMs: 800, vfx: 'spark', vfxColor: 0xff4a3a,
       projectileSpeed: 340, projectileRadius: 10, projectileLife: 900,
       baseKnockback: 74.2, knockbackGrowth: 1.38, duration: 200, cooldown: 760,
     }),
     basicDirectional: melee('Night-Glow Hook', {
-      type: K, damage: 6.4, onHit: { mark: 'glow', markMs: 7000 }, rangeW: 74, vfx: 'strike', vfxColor: 0xe8ffb0,
+      type: K, damage: 6.4,
+      onHit: { mark: 'glow', markMs: 4000, glow: { dps: 1, every: 1000, ms: 4000, tint: 0x7dffe8 } },
+      rangeW: 74, vfx: 'strike', vfxColor: 0x7dffe8,
       baseKnockback: 106, knockbackGrowth: 2.12, duration: 200, cooldown: 420,
     }),
     specialDefense: m('Road Flare', {
       kind: 'block', blockReduction: 0.35, noKnockback: true, onStruck: { blind: 500, miss: true },
-      zone: { type: H, damage: 1.06, ms: 700, radius: 42, tick: 420, color: 0xff4a2a, knockback: 17, growth: 0.21 },
+      zone: { type: H, damage: 1.06, ms: 700, radius: 42, tick: 420, follow: true, color: 0xff4a2a, knockback: 17, growth: 0.21 },
       duration: 600, cooldown: 860, vfx: 'fire', vfxColor: 0xff4a2a,
     }),
     specialDirectional: m('Crimson Rocket', {

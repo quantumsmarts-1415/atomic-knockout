@@ -62,6 +62,14 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.markedBy = attacker?.charDef?.id ?? null;
     if (fx.reveal) victim.revealedUntil = victim.markUntil;
   }
+  if (fx.glow) {
+    const g = typeof fx.glow === 'object' ? fx.glow : {};
+    victim.glowUntil = time + (g.ms ?? 4000);
+    victim.glowDps = g.dps ?? 1;
+    victim.glowEvery = g.every ?? 1000;
+    victim.glowTick = time + victim.glowEvery;
+    victim.glowTint = g.tint ?? 0x7dffe8;
+  }
   if (fx.coat) {
     victim.debuffCoat = fx.coat;
     victim.debuffCoatUntil = time + (fx.coatMs ?? fx.markMs ?? 2000);
@@ -141,10 +149,12 @@ export function cleanse(fighter, kinds) {
   if (list.includes('mark')) {
     fighter.markUntil = 0;
     fighter.revealedUntil = 0;
+    fighter.glowUntil = 0;
   }
   if (list.includes('debuff')) {
     stripBuffs(fighter);
     fighter.debuffCoatUntil = 0;
+    fighter.glowUntil = 0;
     fighter.slowUntil = 0;
     fighter.weakenUntil = 0;
     fighter.rootedUntil = 0;
@@ -247,6 +257,10 @@ export function tickKit(fighter, time) {
     const dmg = fighter.poisonDps ?? 1.4;
     applyDot(fighter, dmg, 'chemical');
     fighter.poisonDps = dmg + (fighter.poisonRamp ?? 0);
+  }
+  if (fighter.glowUntil && time < fighter.glowUntil && time >= (fighter.glowTick ?? 0)) {
+    fighter.glowTick = time + (fighter.glowEvery ?? 1000);
+    applyDot(fighter, fighter.glowDps ?? 1, 'radiation');
   }
   if (fighter.unquenchableUntil > time && time >= (fighter._unquenchTick ?? 0)) {
     fighter._unquenchTick = time + (fighter.selfDotEvery ?? 1000);

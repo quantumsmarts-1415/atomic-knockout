@@ -1,0 +1,17 @@
+{
+  "file": "bone-seeker-pulse-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 13.043,
+  "loop": false,
+  "once": true,
+  "blend": "add",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 0.48,
+  "scale": 0.7,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false
+}

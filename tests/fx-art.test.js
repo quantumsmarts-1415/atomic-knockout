@@ -1570,3 +1570,42 @@ test('batch 11 sheets match the approved handoffs', () => {
     }
   }
 });
+
+test('percy glass shard and goggles match the sheets on disk', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const shard = read('assets/fx/percy/green-glass-shard/fx.json');
+  assert.equal(shard.projectile.file, 'green-glass-shard-anim.png');
+  assert.equal(shard.projectile.frames, 24);
+  assert.equal(shard.projectile.cols, 4);
+  assert.equal(shard.projectile.rows, 6);
+  assert.equal(shard.projectile.fps, 16);
+  assert.equal(shard.projectile.loop, true);
+  assert.equal(shard.projectile.blend, 'add');
+  assert.equal(shard.projectile.black, 16);
+  assert.equal(shard.projectile.aim, false);
+  assert.equal(shard.projectile.spin, 6);
+  assert.equal(shard.detonate.file, 'green-glass-splinter-anim.png');
+  assert.equal(shard.detonate.frames, 24);
+  assert.equal(shard.detonate.fps, 16);
+  assert.equal(shard.detonate.loop, false);
+  assert.equal(shard.detonate.blend, 'add');
+  assert.equal(shard.detonate.anchor, 'center');
+  const goggles = read('assets/fx/percy/welders-goggles/fx.json');
+  assert.equal(goggles.file, 'welders-goggles-status-anim.png');
+  assert.equal(goggles.frames, 24);
+  assert.equal(goggles.cols, 6);
+  assert.equal(goggles.rows, 4);
+  assert.equal(goggles.fps, 12);
+  assert.equal(goggles.loop, true);
+  assert.equal(goggles.blend, 'add');
+  assert.equal(goggles.black, 16);
+  assert.equal(goggles.anchor, 'front');
+  const root = 'assets/fx/percy';
+  for (const name of fs.readdirSync(root)) {
+    const dir = `${root}/${name}`;
+    if (!fs.statSync(dir).isDirectory()) continue;
+    for (const file of fs.readdirSync(dir)) {
+      assert.equal(file.endsWith('.gif') || file.endsWith('.jpg'), false, `${dir}/${file}`);
+    }
+  }
+});

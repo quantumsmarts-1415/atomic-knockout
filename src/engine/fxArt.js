@@ -908,6 +908,7 @@ const SIDE_SPECS = [
   ['ember', 'ember-'], ['spark', 'spark-'], ['cinder', 'cinder-'], ['mote', 'mote-'], ['puff', 'puff-'],
   ['gas', 'gas-'], ['fizzle', 'fizzle-'], ['linger', 'linger-'],
   ['trail', 'trail-'], ['stain', 'stain-'],
+  ['echo', 'echo-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {

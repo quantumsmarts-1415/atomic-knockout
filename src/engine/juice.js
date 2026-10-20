@@ -247,7 +247,8 @@ export class Juice {
           const grow = f.scale0 + ((f.scale1 ?? f.scale0) - f.scale0) * (1 - u);
           f.img.setScale(grow);
         }
-        f.img.setAlpha((f.alpha0 ?? 1) * u);
+        const fade = f.holdAlpha ? Math.min(1, u / 0.35) : u;
+        f.img.setAlpha((f.alpha0 ?? 1) * fade);
         if (f.spin) f.img.rotation += f.spin * step;
       }
       if (f.g) {
@@ -475,6 +476,57 @@ export class Juice {
     img.setDepth?.(6);
     const life = FEEL.afterimageFrames * FEEL.stepMs / 1000;
     this.track(img, { kind: 'ghost', owner, life, scale0: Math.abs(spr.scaleX || 1), scale1: Math.abs(spr.scaleX || 1), alpha0: alpha, holdScale: true });
+  }
+
+  /** Strike-pose snapshot for a delayed green twin. */
+  snapTwin(fighter) {
+    if (this.fast || !fighter) return null;
+    const spr = this.bodySprite(fighter);
+    if (!spr?.texture?.key) return null;
+    return {
+      key: spr.texture.key,
+      frame: spr.frame?.name,
+      originX: spr.originX ?? 0.5,
+      originY: spr.originY ?? 1,
+      scaleX: spr.scaleX || 1,
+      scaleY: spr.scaleY || 1,
+      rotation: spr.rotation || 0,
+      dx: fighter.rig?.x || 0,
+      dy: fighter.rig?.y || 0,
+    };
+  }
+
+  /**
+   * Green-tinted copy of the strike pose, held behind him for the echo hit.
+   * `snap` is the pose from the strike; facing lives in its scale.
+   */
+  showTwin(fighter, snap, spec = {}) {
+    if (this.fast || !fighter || !snap?.key) return;
+    const img = this.borrow(snap.key);
+    if (!img) return;
+    if (snap.frame != null && img.setFrame) img.setFrame(snap.frame);
+    const face = Math.sign(snap.scaleX) || fighter.facing || 1;
+    const behind = spec.behind ?? 18;
+    img.setPosition(fighter.x + (snap.dx || 0) - face * behind, fighter.y + (snap.dy || 0));
+    img.setOrigin?.(snap.originX, snap.originY);
+    img.setScale(snap.scaleX, snap.scaleY);
+    img.setRotation(snap.rotation || 0);
+    img.setTint(spec.tint ?? 0x6eff82);
+    img.setBlendMode(Phaser.BlendModes.NORMAL);
+    const alpha = spec.alpha ?? 0.45;
+    img.setAlpha(alpha);
+    img.setDepth?.(6);
+    const life = (spec.lifeMs ?? 360) / 1000;
+    this.track(img, {
+      kind: 'ghost',
+      owner: fighter,
+      life,
+      scale0: Math.abs(snap.scaleX || 1),
+      scale1: Math.abs(snap.scaleX || 1),
+      alpha0: alpha,
+      holdScale: true,
+      holdAlpha: true,
+    });
   }
 
   swing(fighter, move) {

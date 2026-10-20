@@ -1,0 +1,15 @@
+{
+  "file": "hatters-fume-cloud-anim.png",
+  "frames": 32,
+  "cols": 8,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.95,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "hit": false
+}

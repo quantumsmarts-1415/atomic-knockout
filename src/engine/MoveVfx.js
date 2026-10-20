@@ -378,7 +378,19 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     const art = artFor(fighter.charDef?.id, move?.name);
     const x = extra.x ?? fighter.x;
     const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
+    if (art?.absorb?.frames?.length) {
+      spawnFxSprite(scene, art.absorb, x, y, 1, fighter.facing || 1);
+      return;
+    }
     if (art?.frames?.length) drawFxOneShot(scene, fighter, move, x, y, 1);
+    return;
+  }
+  if (phase === 'cleanse' || phase === 'block') {
+    const art = artFor(fighter.charDef?.id, move?.name);
+    const side = phase === 'cleanse' ? art?.cleanse : art?.block;
+    if (side?.frames?.length) {
+      spawnFxSprite(scene, side, fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.5, 1, fighter.facing || 1);
+    }
     return;
   }
   if (phase === 'release' || phase === 'defense') {
@@ -414,6 +426,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
     if (move?.kind === 'zone' && move.zone?.trap && art?.frames?.length) return;
     // The lingering sheet is the zone itself. A release oneshot would stack a second copy.
+    if (move?.zone?.sheet && art?.loop && art?.frames?.length) return;
     if (move?.kind === 'zone' && move.zone?.sheet && art?.frames?.length) return;
     // A looping floor sheet is held on the fighter. A one-shot ground burst still draws.
     if (phase === 'defense' && art?.anchor === 'ground' && (art.loop || art.hold?.frames?.length) && art.frames?.length) return;
@@ -551,7 +564,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (phase === 'hit') {
     const painted = artFor(fighter.charDef?.id, move?.name);
     if (painted?.impact?.frames?.length) {
-      spawnFxSprite(scene, painted.impact, x, y, 1);
+      const s = painted.impact.scale > 0 ? painted.impact.scale : 1;
+      spawnFxSprite(scene, painted.impact, x, y, s);
       return;
     }
     burst(scene, x, y, color, 8, 70);

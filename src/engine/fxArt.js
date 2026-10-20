@@ -643,6 +643,13 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     floor: !!extra.floor,
     rumble: !!extra.rumble,
     flat: !!extra.flat,
+    scaleMin: typeof extra.scaleMin === 'number' ? extra.scaleMin : null,
+    scaleMax: typeof extra.scaleMax === 'number' ? extra.scaleMax : null,
+    replacesSpark: !!extra.replacesSpark,
+    rise: extra.rise > 0 ? extra.rise : 0,
+    rampAlpha: !!extra.rampAlpha,
+    randomRot: !!extra.randomRot,
+    randomFlip: !!extra.randomFlip,
   };
 }
 
@@ -1073,6 +1080,7 @@ const SIDE_SPECS = [
   ['fizz', 'fizz-'], ['heal', 'heal-'], ['ring', 'ring-'], ['boost', 'boost-'],
   ['wave', 'wave-'], ['recoil', 'recoil-'], ['meteor', 'meteor-'],
   ['crown', 'crown-'], ['visor', 'visor-'], ['reflect', 'reflect-'],
+  ['heated', 'heated-'], ['absorb', 'absorb-'], ['cleanse', 'cleanse-'], ['block', 'block-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -1121,6 +1129,13 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       rumble: merged.rumble,
       flat: merged.flat,
       guardAt: merged.guardAt,
+      scaleMin: merged.scaleMin,
+      scaleMax: merged.scaleMax,
+      replacesSpark: merged.replacesSpark,
+      rise: merged.rise,
+      rampAlpha: merged.rampAlpha,
+      randomRot: merged.randomRot,
+      randomFlip: merged.randomFlip,
     });
   }
   await attachShards(scene, id, slug, folder, meta, index, charH, sized, record);
@@ -2118,6 +2133,7 @@ function dropAttached(fighter, live) {
   live?.ring?.destroy?.();
   live?.crown?.destroy?.();
   live?.visor?.destroy?.();
+  live?.field?.destroy?.();
   if (live) liveAttached.delete(fighter);
 }
 
@@ -2266,10 +2282,29 @@ function syncVisor(scene, live, visor, fighter) {
   live.visor.setOrigin(visor.pivotX ?? 0.5, visor.pivotY ?? 0.5);
   const face = fighter.facing || 1;
   const bodyH = fighter.bodyH ?? 80;
-  live.visor.setPosition(fighter.x + face * 6, fighter.y - bodyH * 0.42);
+  const drop = visor.anchor === 'body' ? 0.5 : 0.42;
+  live.visor.setPosition(fighter.x + face * (visor.anchor === 'body' ? 0 : 6), fighter.y - bodyH * drop);
   const sx = Math.abs(live.visor.scaleX || 1);
   const sy = Math.abs(live.visor.scaleY || 1);
   live.visor.setScale(visor.flip ? face * sx : sx, sy);
+}
+
+function syncField(scene, live, field, fighter) {
+  if (!field?.frames?.length) {
+    live.field?.destroy?.();
+    live.field = null;
+    return;
+  }
+  if (!live.field?.scene) {
+    live.field?.destroy?.();
+    live.field = placeStill(scene, field, fighter.x, fighter.y, 0);
+    live.field.setDepth(4);
+  }
+  const now = scene.simNow ?? 0;
+  const frame = field.frames[fxFrameIndex(field, now)] || field.frames[0];
+  applyFrameLook(live.field, frame, field, 1);
+  live.field.setOrigin(field.pivotX ?? 0.5, field.pivotY ?? 1);
+  live.field.setPosition(fighter.x, fighter.y);
 }
 
 function syncRing(scene, live, ring, fighter) {
@@ -2387,6 +2422,7 @@ function syncAttached(scene, fighter) {
       syncRing(scene, live, art.ring, fighter);
       syncCrown(scene, live, art.crown, fighter);
       syncVisor(scene, live, art.visor, fighter);
+      syncField(scene, live, art.field, fighter);
       if (art.ghost > 0) {
         fighter.rig?.setAlpha?.(art.ghost);
         live.fadeRig = true;
@@ -2623,6 +2659,10 @@ function syncCling(scene, fighter) {
     applyFrameLook(live.img, frame, art, 1);
     if (art === status) live.img.setTint?.(burnSourceColor(scene, fighter));
     else live.img.clearTint?.();
+    if (art.rampAlpha) {
+      const level = fighter._poisonLevel ?? 1;
+      live.img.setAlpha(Math.min(1, 0.28 + 0.09 * level));
+    }
     if (art.anchor === 'feet') {
       live.img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 1);
       live.img.setPosition(fighter.x, fighter.y);
@@ -2881,6 +2921,10 @@ export function syncFxActors(scene) {
       img.rotation = 0;
     } else {
       img.rotation = face === -1 ? Math.PI : 0;
+      if (art.anchor === 'shoulder') {
+        x = fighter.x + face * (fighter.bodyW ?? 40) * 0.25;
+        y = fighter.y - (fighter.bodyH ?? 80) * 0.62;
+      }
     }
     img.setPosition(x, y);
     const frames = art.frames;
@@ -3063,10 +3107,13 @@ function syncHeld(scene, fighter) {
     if (phase) want = { art, kind: 'lance', phase };
   } else if (art?.anchor === 'feet' && art.frames?.length && fighter.state === 'charging') {
     want = { art, kind: 'feet' };
-  }   else if (art?.charge?.frames?.length && fighter.state === 'charging') {
-    const anchor = art.charge.anchor;
-    const kind = anchor === 'feet' ? 'feet' : anchor === 'predict' ? 'predict' : 'grow';
-    want = { art: art.charge, kind, rotor: art.rotor || null, glow: art.glow || null };
+  } else if ((art?.charge?.frames?.length || art?.heated?.frames?.length) && fighter.state === 'charging') {
+    const prop = fighter.heatTaken && art.heated?.frames?.length ? art.heated : art.charge;
+    if (prop?.frames?.length) {
+      const anchor = prop.anchor;
+      const kind = anchor === 'feet' ? 'feet' : anchor === 'predict' ? 'predict' : 'grow';
+      want = { art: prop, kind, rotor: art.rotor || null, glow: art.glow || null };
+    }
   } else if (art?.boost?.frames?.length && (fighter.speedBuffUntil ?? 0) > now) {
     want = { art: art.boost, kind: 'boost' };
   } else if (art?.anchor === 'aura' && art.frames?.length && charge?.overclock) {
@@ -3153,9 +3200,11 @@ function syncHeld(scene, fighter) {
     }
     const onHand = want.art.anchor === 'hand';
     live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? (onHand ? 0.5 : 1));
-    const shot = want.art.scaleWith === 'alpha'
-      ? 1
-      : 1 + ((charge.chargeRadiusMult ?? 1) - 1) * frac;
+    const shot = want.art.scaleMin != null
+      ? want.art.scaleMin + ((want.art.scaleMax ?? want.art.scaleMin) - want.art.scaleMin) * frac
+      : want.art.scaleWith === 'alpha'
+        ? 1
+        : 1 + ((charge.chargeRadiusMult ?? 1) - 1) * frac;
     const hand = sheetFxPoint(fighter, 'shot');
     const fallbackX = fighter.x + face * bodyW * (onHand ? 0.9 : 0.65);
     const fallbackY = onHand ? fighter.y - bodyH * 0.52 : fighter.y;
@@ -3303,11 +3352,14 @@ export function spawnContactFx(scene, attacker, victim, move) {
     along = impactRadiusScale(move, impact);
   }
   const multi = move?.multiHit > 1;
-  if (multi && !move?.vsHot && painted?.spark?.frames?.length) {
+  const finisher = playsFinalImpact(move);
+  const step = Math.max(0, ((move?._hitIndex ?? 1) | 0) - 1);
+  const lift = !finisher && painted?.spark?.rise ? step * (victim?.bodyH ?? 80) * painted.spark.rise : 0;
+  if (multi && !move?.vsHot && painted?.spark?.frames?.length && (!finisher || !painted?.impact?.replacesSpark)) {
     const sparkFace = painted.spark.flip ? (attacker.facing || 1) : 1;
-    playPacked(scene, painted.spark, at.x, at.y, sparkFace, impactRadiusScale(move, painted.spark));
+    playPacked(scene, painted.spark, at.x, at.y - lift, sparkFace, impactRadiusScale(move, painted.spark));
   }
-  if (playsFinalImpact(move) && !painted?.releaseImpact) {
+  if (finisher && !painted?.releaseImpact) {
     const flash = playPacked(scene, impact, at.x, at.y, face, along, rot);
     if (move?.flameTint && flash?.setTint) flash.setTint(flameTestColor(victim?.charDef?.symbol));
   }

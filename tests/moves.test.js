@@ -1549,6 +1549,79 @@ test('pit ignites gas clouds and flame-tests by electronegativity', () => {
   assert.equal(enGapMult({ en: null }, { en: 1.0 }), 1);
 });
 
+test('hog, talia, pablo, and bianca keep the approved batch rules', () => {
+  const hog = CHARACTERS.hog.moves;
+  assert.equal(hog.basicCharge.name, 'Thermometer Burst');
+  assert.equal(hog.basicCharge.type, 'kinetic');
+  assert.equal(hog.basicCharge.type2, 'chemical');
+  assert.equal(hog.basicCharge.heatTakenBonus, 1.4);
+  assert.equal(hog.basicDirectional.name, 'Quicksilver Lash');
+  assert.equal(hog.basicDirectional.rangeW, 124);
+  assert.equal(hog.specialDefense.amalgam, true);
+  assert.equal(hog.specialDefense.amalgamVs.aurelius, 0.38);
+  assert.equal(hog.specialDirectional.zone.onHit, undefined);
+  assert.equal(hog.specialDirectional.zone.type, 'chemical');
+  assert.equal(hog.specialDirectional.zone.drift, 48);
+  const heated = prepareMove(hog.basicCharge, { heatTaken: true }, { charDef: { id: 'sandy' } }, 0);
+  assert.ok(Math.abs(heated.damage - 5 * 1.4) < 1e-9);
+  assert.ok(Math.abs(heated.damage2 - 3.8 * 1.4) < 1e-9);
+  const cold = prepareMove(hog.basicCharge, { heatTaken: false }, { charDef: { id: 'sandy' } }, 0);
+  assert.equal(cold.damage, 5);
+
+  const talia = CHARACTERS.talia.moves;
+  assert.equal(talia.basicCharge.zone.ramp, 0.5);
+  assert.equal(talia.basicCharge.zone.statusCling, "Poisoner's Poison");
+  assert.equal(talia.basicCharge.zone.sheet, true);
+  assert.equal(talia.specialDefense.immune[0], 'chemical');
+  assert.deepEqual(talia.specialDefense.cleanse, ['poison']);
+  const dart = talia.specialDirectional;
+  assert.equal(dart.damage, 1);
+  assert.equal(dart.onHit.poison.delay, 1100);
+  const victim = { charDef: { combat: { en: 2 } } };
+  applyOnHit({ charDef: { id: 'talia', combat: { en: 1.62 } } }, victim, dart, 1000);
+  assert.equal(victim.poisonTick, 2100);
+  assert.ok(victim.poisonUntil > victim.poisonTick);
+  assert.equal(victim.clingFrom.until, victim.poisonTick);
+  assert.equal(victim.poisonFrom.burstAt, 2100);
+
+  const pablo = CHARACTERS.pablo.moves;
+  assert.equal(pablo.basicCharge.name, 'Machine Gun');
+  assert.equal(pablo.basicCharge.damage, 1);
+  assert.equal(pablo.basicCharge.salvo, 12);
+  assert.equal(pablo.basicCharge.type, 'kinetic');
+  assert.equal(pablo.basicDirectional.name, 'Lead Pipe');
+  assert.equal(pablo.basicDirectional.onHit.interrupt, 200);
+  assert.deepEqual(pablo.specialDefense.immune, ['radiation']);
+  assert.equal(pablo.specialDefense.blockReduction, 0.5);
+  assert.equal(pablo.specialDirectional.name, 'Shotgun');
+  assert.equal(pablo.specialDirectional.fan, 6);
+  assert.equal(pablo.specialDirectional.type, 'kinetic');
+  const early = finalBlow({ ...pablo.basicCharge, multiHit: 12, _hitIndex: 3, baseKnockback: 140, onHit: { stun: 200 } });
+  assert.equal(early.baseKnockback, 0);
+  assert.equal(early.noFlinch, true);
+  assert.equal(early.onHit.stun, 0);
+  const last = finalBlow({ ...pablo.basicCharge, multiHit: 12, _hitIndex: 12, baseKnockback: 140 });
+  assert.equal(last.baseKnockback, 140);
+
+  const bianca = CHARACTERS.bianca.moves;
+  assert.equal(bianca.basicCharge.name, 'Hopper Crystal');
+  assert.equal(bianca.basicCharge.kind, 'burst');
+  assert.equal(bianca.basicCharge.spikes.count, 5);
+  assert.equal(bianca.basicDirectional.multiHit, 3);
+  assert.equal(bianca.basicDirectional.hitRadius, 56);
+  const step = finalBlow({ ...bianca.basicDirectional, _hitIndex: 1 });
+  assert.equal(step.baseKnockback, 0);
+  const kick = finalBlow({ ...bianca.basicDirectional, _hitIndex: 3 });
+  assert.equal(kick.baseKnockback, 120);
+  assert.equal(bianca.specialDefense.slowMetals, 0.28);
+  assert.equal(bianca.specialDefense.float, true);
+  assert.equal(bianca.specialDefense.grabImmune, true);
+  assert.equal(bianca.specialDirectional.lob, 520);
+  assert.equal(bianca.specialDirectional.nearCleanse, 78);
+  assert.equal(bianca.specialDirectional.type, 'chemical');
+  assert.equal(bianca.specialDirectional.dropZone, undefined);
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

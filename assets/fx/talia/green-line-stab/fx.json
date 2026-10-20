@@ -1,0 +1,28 @@
+{
+  "file": "green-line-stab-anim.png",
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.14,
+  "pivotX": 0,
+  "pivotY": 0.5,
+  "flip": true,
+  "hit": false,
+  "fist": {
+    "file": "talia-knife.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.16,
+    "pivotX": 0.15625,
+    "pivotY": 0.5,
+    "flip": true,
+    "hit": false
+  }
+}

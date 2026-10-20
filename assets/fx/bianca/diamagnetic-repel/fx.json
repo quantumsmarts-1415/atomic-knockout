@@ -1,0 +1,32 @@
+{
+  "file": "diamagnetic-status-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.15,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "anchor": "body",
+  "hit": false,
+  "field": {
+    "file": "diamagnetic-float-field-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 24,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.42,
+    "pivotX": 0.5,
+    "pivotY": 1,
+    "anchor": "ground",
+    "hit": false
+  }
+}

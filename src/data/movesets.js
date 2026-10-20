@@ -967,7 +967,11 @@ export const MOVESETS = {
   talia: {
     basicCharge: m('Poisoner\'s Poison', {
       kind: 'burst', type: C, damage: 1, radius: 62, chargeRadiusMult: 1.55, maxChargeMs: 900,
-      zone: { type: C, damage: 1.7, ramp: 0.5, ms: 2400, radius: 68, tick: 340, knockback: 8, growth: 0.1, color: 0x9d6bff },
+      zone: {
+        name: "Poisoner's Poison", type: C, damage: 1.7, ramp: 0.5, ms: 2400, radius: 68,
+        tick: 340, knockback: 8, growth: 0.1, color: 0x9d6bff,
+        sheet: true, offsetX: 96, drift: 28, statusCling: "Poisoner's Poison",
+      },
       baseKnockback: 0, knockbackGrowth: 0, duration: 240, cooldown: 860, vfx: 'cloud',
     }),
     basicDirectional: melee('Green Line Stab', {
@@ -987,23 +991,24 @@ export const MOVESETS = {
 
   bianca: {
     basicCharge: m('Hopper Crystal', {
-      kind: 'projectile', type: K, damage: 7, pierce: true, chargeDamageMult: 1.35,
-      maxChargeMs: 800, vfx: 'spark', vfxColor: 0xc48bff,
-      projectileSpeed: 420, projectileRadius: 12, projectileLife: 520,
-      baseKnockback: 175, knockbackGrowth: 4.2, duration: 220, cooldown: 720,
+      kind: 'burst', type: K, damage: 7, chargeDamageMult: 1.35, chargeRadiusMult: 1.45,
+      maxChargeMs: 800, radius: 24, landAt: true,
+      spikes: { count: 5, gap: 32, start: 36, radius: 22 },
+      vfx: 'spark', vfxColor: 0xc48bff,
+      baseKnockback: 175, knockbackGrowth: 4.2, duration: 280, cooldown: 720,
     }),
     basicDirectional: melee('Staircase Kick', {
-      type: K, damage: 4, multiHit: 3, rangeW: 70, rangeH: 56, vfx: 'strike',
+      type: K, damage: 4, multiHit: 3, rangeW: 70, rangeH: 56, hitRadius: 56, vfx: 'strike',
       baseKnockback: 120, knockbackGrowth: 3.8, duration: 320, cooldown: 520,
     }),
     specialDefense: m('Diamagnetic Repel', {
-      grabImmune: true, slowProjectiles: 0.28, float: true,
+      grabImmune: true, slowMetals: 0.28, float: true,
       duration: 700, cooldown: 880, vfx: 'shield', vfxColor: 0xd7c4ff,
     }),
     specialDirectional: m('Pink Bismuth', {
-      kind: 'projectile', type: C, damage: 6, vfx: 'cloud', vfxColor: 0xff8ac4,
-      dropZone: { type: C, damage: 1.2, ms: 1200, radius: 42, tick: 400, knockback: 16, growth: 0.2, color: 0xff8ac4, cleanseOwner: ['poison'] },
-      projectileSpeed: 360, projectileRadius: 12, projectileLife: 600,
+      kind: 'projectile', type: C, damage: 6, lob: 520, nearCleanse: 78,
+      vfx: 'cloud', vfxColor: 0xff8ac4,
+      projectileSpeed: 260, projectileRadius: 14, projectileLife: 900,
       baseKnockback: 100, knockbackGrowth: 2.4, duration: 220, cooldown: 960,
     }),
   },
@@ -1417,11 +1422,11 @@ export const MOVESETS = {
   },
 
   hog: {
-    basicCharge: melee('Puddle Rise', {
-      type: K, damage: 8.8, lift: true, slide: 170,
-      whileCharging: { keep: 0, except: [H, E, C] },
-      maxChargeMs: 800, rangeW: 70, rangeH: 64, vfx: 'strike', vfxColor: 0xc0c6cc,
-      baseKnockback: 143, knockbackGrowth: 2.42, duration: 240, cooldown: 820,
+    basicCharge: m('Thermometer Burst', {
+      kind: 'burst', type: K, damage: 5, type2: C, damage2: 3.8,
+      chargeDamageMult: 1.55, chargeRadiusMult: 1.35, heatTakenBonus: 1.4,
+      maxChargeMs: 800, radius: 64, vfx: 'strike', vfxColor: 0xc0c6cc,
+      baseKnockback: 143, knockbackGrowth: 2.42, duration: 260, cooldown: 820,
     }),
     basicDirectional: melee('Quicksilver Lash', {
       type: K, damage: 5.5, type2: C, damage2: 5.5, rangeW: 124, rangeH: 28, vfx: 'strike', vfxColor: 0xd5dbe2,
@@ -1433,7 +1438,10 @@ export const MOVESETS = {
     }),
     specialDirectional: m("Hatter's Fume", {
       kind: 'zone', type: C, damage: 2.2, vfx: 'cloud', vfxColor: 0x8a9aa8,
-      zone: { type: C, damage: 1.65, ms: 1500, radius: 70, tick: 380, color: 0x8a9aa8, onHit: { drift: 650, blind: 320 } },
+      zone: {
+        name: "Hatter's Fume", type: C, damage: 1.65, ms: 1500, radius: 70, tick: 380,
+        sheet: true, offsetX: 36, drift: 48, color: 0x8a9aa8,
+      },
       baseKnockback: 33, knockbackGrowth: 0.44, duration: 240, cooldown: 860,
     }),
   },
@@ -1489,10 +1497,11 @@ export const MOVESETS = {
   },
 
   pablo: {
-    basicCharge: m('Lead Balloon', {
-      kind: 'burst', type: K, damage: 13, chargeDamageMult: 1.55, chargeRadiusMult: 1.25,
-      maxChargeMs: 1000, radius: 56, vfx: 'strike', vfxColor: 0x8d939c,
-      baseKnockback: 150, knockbackGrowth: 2.4, duration: 280, cooldown: 860,
+    basicCharge: m('Machine Gun', {
+      kind: 'projectile', type: K, damage: 1, salvo: 12, salvoGap: 70, hitRadius: 34,
+      maxChargeMs: 200, vfx: 'strike', vfxColor: 0xc8cdd4,
+      projectileSpeed: 820, projectileRadius: 7, projectileLife: 320,
+      baseKnockback: 140, knockbackGrowth: 2.4, duration: 180, cooldown: 1200,
     }),
     basicDirectional: melee('Lead Pipe', {
       type: K, damage: 11, onHit: { interrupt: 200 }, rangeW: 76, vfx: 'strike', vfxColor: 0x6e7580,
@@ -1502,10 +1511,11 @@ export const MOVESETS = {
       immune: [R], kind: 'block', onlyReduce: [H], blockReduction: 0.5,
       duration: 720, cooldown: 840, vfx: 'shield', vfxColor: 0x9aa3ae,
     }),
-    specialDirectional: m('Sinker Cast', {
-      kind: 'projectile', type: K, damage: 9, pull: 200, vfx: 'strike', vfxColor: 0x7d868f,
-      projectileSpeed: 400, projectileRadius: 10, projectileLife: 520,
-      baseKnockback: 40, knockbackGrowth: 0.8, duration: 220, cooldown: 680,
+    specialDirectional: m('Shotgun', {
+      kind: 'projectile', type: K, damage: 1.5, fan: 6, fanDeg: 22, barrelFlash: true,
+      vfx: 'strike', vfxColor: 0xb7bdc4,
+      projectileSpeed: 640, projectileRadius: 7, projectileLife: 280,
+      baseKnockback: 50, knockbackGrowth: 0.9, duration: 200, cooldown: 860,
     }),
   },
 

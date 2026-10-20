@@ -75,12 +75,21 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.poison) {
     const p = fx.poison;
     const chem = p.flat ? 1 : chemicalMult(attacker?.charDef?.combat, victim.charDef?.combat);
-    victim.poisonUntil = time + (p.ms ?? 1600);
+    const wait = p.delay > 0 ? p.delay : 0;
+    victim.poisonUntil = time + wait + (p.ms ?? 1600);
     victim.poisonDps = (p.dps ?? 1.4) * chem;
     victim.poisonRamp = (p.ramp ?? 0) * chem;
-    victim.poisonTick = time + (p.delay ?? p.every ?? 280);
+    victim.poisonTick = time + (wait || (p.every ?? 280));
     victim.poisonEvery = p.every ?? 280;
     if (p.inherit) victim.poisonInherit = true;
+    if (wait && attacker?.charDef?.id) {
+      victim.poisonFrom = { id: attacker.charDef.id, move: move.name, burstAt: victim.poisonTick };
+      victim.clingFrom = {
+        id: attacker.charDef.id,
+        move: move.name,
+        until: victim.poisonTick,
+      };
+    }
   }
   if (fx.pinFoot && attacker?.charDef?.id) {
     victim.clingFrom = {
@@ -621,6 +630,14 @@ export function prepareMove(move, attacker, defender, now = 0) {
   const selfHot = attacker && (attacker.burnUntil > now || attacker.heatedUntil > now);
   if (move.heatEmpower && selfHot) {
     next = { ...next, damage: (next.damage ?? 0) + move.heatEmpower };
+  }
+  if (move.heatTakenBonus && attacker?.heatTaken) {
+    const mult = move.heatTakenBonus;
+    next = {
+      ...next,
+      damage: (next.damage ?? 0) * mult,
+      damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
+    };
   }
   if (move.bonusWhileDps && takingDps(attacker, now)) {
     next = { ...next, damage: (next.damage ?? 0) + move.bonusWhileDps };

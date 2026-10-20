@@ -402,6 +402,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.defenseMove = null;
     }
     tickKit(this, time);
+    if (this.poisonFrom && !this.poisonFrom.played && time >= (this.poisonFrom.burstAt ?? 0)) {
+      this.poisonFrom.played = true;
+      const owner = (this.scene?.fighters || []).find((f) => f.charDef?.id === this.poisonFrom.id) || this;
+      const move = { name: this.poisonFrom.move };
+      playVfx(this.scene, owner, move, 'hit', {
+        x: this.x,
+        y: this.y - (this.bodyH ?? 80) * 0.45,
+      });
+    }
     if (this.state === 'defending' && this.defenseMove?.regen && time >= (this._regenAt ?? 0)) {
       this._regenAt = time + (this.defenseMove.regenEvery ?? 800);
       this.percent = Math.max(0, this.percent - this.defenseMove.regen);
@@ -539,8 +548,19 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (this.state === 'defending' && this.defenseMove?.rooted && this.body) {
       this.body.setVelocityX(0);
     }
+    if (this.state === 'defending' && this.defenseMove?.float && this.body) {
+      if (this._floatFloor == null) this._floatFloor = this.y;
+      const target = this._floatFloor - (this.bodyH ?? 80) * 0.62;
+      this.body.allowGravity = false;
+      this.body.setVelocityY((target - this.y) * 5);
+    }
     if (this.state === 'defending' && this.defenseMove?.cleanse) {
+      const hadPoison = (this.poisonUntil ?? 0) > time;
       cleanse(this, this.defenseMove.cleanse);
+      if (hadPoison && !((this.poisonUntil ?? 0) > time) && !this._cleansedFx) {
+        this._cleansedFx = true;
+        playVfx(this.scene, this, this.defenseMove, 'cleanse');
+      }
     }
     if (this.state === 'defending' && this.defenseMove?.fadeAlpha != null) {
       this.alpha = visibleAlpha(this, time, this.defenseMove.fadeAlpha);
@@ -809,6 +829,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.scene?.clearOwnedZones?.(this, coat.zone?.name || coat.name);
     if (coat.fadeAlpha != null) this.alpha = 1;
     this._floatFloor = null;
+    if (coat.float && this.body) this.body.allowGravity = true;
+    this._cleansedFx = false;
     this.restoreShrink();
     playVfx(this.scene, this, coat, 'letgo');
     if (coat.sponge) {
@@ -1515,6 +1537,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
           }
         }
         this.rig.setFlash(0xaee6ff);
+        playVfx(this.scene, this, this.defenseMove, 'block', {
+          x: this.x,
+          y: this.y - (this.bodyH ?? 80) * 0.5,
+        });
         return 0;
       }
       incoming = stripped.move;
@@ -1663,6 +1689,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (this.defenseMove?.healOnBlock) {
         this.percent = Math.max(0, this.percent - this.defenseMove.healOnBlock);
       }
+      if (gate.result === 'negate' && this.defenseMove?.amalgam && attacker) {
+        playVfx(this.scene, this, this.defenseMove, 'absorb', {
+          x: attacker.x,
+          y: attacker.y - (attacker.bodyH ?? 80) * 0.45,
+        });
+      }
       if (gate.result === 'negate' && this.defenseMove?.soakRadiation) {
         const soaked = [incoming.type, incoming.type2, incoming.type3]
           .some((t) => t && canonicalType(t) === 'radiation');
@@ -1810,6 +1842,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
     }
     if (gate.result === 'partial' && !incoming.ignoreReductions && !move.ignoreReductions) {
+      playVfx(this.scene, this, this.defenseMove, 'block', {
+        x: this.x,
+        y: this.y - (this.bodyH ?? 80) * 0.5,
+      });
       const dealt = dealtDamage(attacker, incoming, this);
       const pierce = typeof incoming.defensePierce === 'number' && incoming.defensePierce > 0
         ? Math.min(1, incoming.defensePierce)
@@ -2430,6 +2466,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     for (const f of this.scene?.fighters ?? []) {
       if (f === this || !f.alive || f.state === 'ko' || f.state === 'dead' || !f.body) continue;
       if (pull.metals && !f.charDef?.combat?.metal) continue;
+      if (f.state === 'defending' && f.defenseMove?.grabImmune) continue;
       const dx = this.x - f.x;
       const dy = (this.y - this.bodyH * 0.45) - f.y;
       const d = Math.hypot(dx, dy);
@@ -2492,6 +2529,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
   noteHeatAndRecoil(attacker, incoming, time, dealt) {
     if (dealt?.packets?.some((p) => p.type === 'heat' && p.dealt > 0)) {
       this.heatedUntil = Math.max(this.heatedUntil ?? 0, time + 2200);
+      this.heatTaken = true;
     }
     const defense = this.defenseMove;
     if (this.state !== 'defending' || !defense?.recoil || !attacker || attacker === this) return;
@@ -2550,6 +2588,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     // White phosphorus goes out when that fighter is KO'd, not before.
     this.burnUntil = 0;
     this.burnSticky = false;
+    this.heatTaken = false;
     this.goldUntil = 0;
     if (this.rig) this.rig.holdFrame = false;
     this.body.setVelocity(0, 0);

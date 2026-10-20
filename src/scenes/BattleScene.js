@@ -1065,6 +1065,29 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  spawnBarrelFlash(owner, move) {
+    const art = artFor(owner?.charDef?.id, move?.name)?.muzzle;
+    if (!art?.frames?.length || this.simFast) return;
+    const face = owner.facing || 1;
+    const x = owner.x + face * (owner.bodyW ?? 40) * 0.85;
+    const y = owner.y - (owner.bodyH ?? 80) * 0.48;
+    const rot = art.randomRot ? (Math.random() - 0.5) * 0.8 : 0;
+    const flip = art.randomFlip && Math.random() < 0.5 ? -face : face;
+    spawnFxSprite(this, { ...art, _rot: rot }, x, y, 1, flip);
+  }
+
+  nearOwnerCleanse(p) {
+    const reach = p.move?.nearCleanse;
+    const owner = p.owner;
+    if (!(reach > 0) || !owner || p._nearDone || !p.gfx) return false;
+    const d = Math.hypot(owner.x - p.gfx.x, (owner.y - (owner.bodyH ?? 80) * 0.35) - p.gfx.y);
+    if (d > reach) return false;
+    p._nearDone = true;
+    cleanse(owner, ['poison']);
+    playVfx(this, owner, p.move, 'hit', { x: p.gfx.x, y: p.gfx.y });
+    return true;
+  }
+
   spawnProjectile(owner, move) {
     if (move.rain > 1 && !move._rainChild) {
       const art = artFor(owner?.charDef?.id, move.name);
@@ -1145,7 +1168,7 @@ export default class BattleScene extends Phaser.Scene {
       const n = move.salvo | 0;
       const gap = move.salvoGap ?? 80;
       for (let i = 0; i < n; i++) {
-        const child = { ...move, salvo: 0, _salvoChild: true };
+        const child = { ...move, salvo: 0, _salvoChild: true, _salvoIndex: i + 1, _salvoCount: n };
         const go = () => { if (owner?.alive) this.spawnProjectile(owner, child); };
         if (i === 0 || !this.time?.delayedCall) go();
         else this.time.delayedCall(i * gap, go);
@@ -1215,6 +1238,7 @@ export default class BattleScene extends Phaser.Scene {
       return;
     }
     if (move.fan > 1 && !move._fanChild) {
+      if (move.barrelFlash) this.spawnBarrelFlash(owner, move);
       const n = move.fan | 0;
       const spread = move.fanSpread ?? 220;
       const speed = move.projectileSpeed ?? 400;
@@ -1244,6 +1268,7 @@ export default class BattleScene extends Phaser.Scene {
       }
       return;
     }
+    if (move._salvoChild) this.spawnBarrelFlash(owner, move);
     if (move.recoilSelf && owner?.body?.setVelocityX && !move._fanChild && !move._ghost && !move._salvoChild) {
       owner.body.setVelocityX(-(owner.facing || 1) * move.recoilSelf);
     }
@@ -1470,9 +1495,31 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   resolveBurst(owner, move, at) {
+    if (move.spikes && !move._spikeChild) {
+      const n = move.spikes.count ?? 4;
+      const gap = move.spikes.gap ?? 32;
+      const face = owner.facing || 1;
+      const ground = groundTop(this, owner.x, owner.y);
+      const share = (move.damage ?? 0) / n;
+      for (let i = 0; i < n; i++) {
+        const x = owner.x + face * ((move.spikes.start ?? 28) + i * gap);
+        this.resolveBurst(owner, {
+          ...move,
+          spikes: null,
+          _spikeChild: true,
+          multiHit: n,
+          _hitIndex: i + 1,
+          damage: share,
+          radius: move.spikes.radius ?? move.radius,
+          _noVfx: i > 0,
+          landAt: true,
+        }, { x, y: ground });
+      }
+      return;
+    }
     const cx = at?.x ?? owner.x + (owner.facing || 1) * (move.offsetX ?? 0);
     const cy = at?.y ?? owner.y - owner.bodyH / 2;
-    playVfx(this, owner, move, 'release', { x: cx, y: cy, fromSheet: at == null });
+    if (!move._noVfx) playVfx(this, owner, move, 'release', { x: cx, y: cy, fromSheet: at == null });
 
     let hits = 0;
     const struck = new Set();
@@ -1749,6 +1796,7 @@ export default class BattleScene extends Phaser.Scene {
       if (z.art && z.gfx?.scene) {
         const elapsed = time - (z.born || time);
         stepPlacedFx(z.gfx, z.art, elapsed, z.face || 1);
+        if (z.art.maxAlpha > 0) z.gfx.setAlpha?.(z.art.maxAlpha);
         if (z.art.scaleIn > 0 && z.gfx.setScale) {
           const grow = Math.min(1, elapsed / z.art.scaleIn);
           const s = 0.3 + 0.7 * grow;
@@ -1768,6 +1816,12 @@ export default class BattleScene extends Phaser.Scene {
         const frame = z.stain.frames[fxFrameIndex(z.stain, time - (z.stainBorn || time))] || z.stain.frames[0];
         z.gfx.setTexture(frame.key);
         z.gfx.setDisplaySize(frame.displayW, frame.displayH);
+      }
+      if (z.spec?.drift && z.gfx?.scene) {
+        const dt = Math.min(40, time - (z._driftAt ?? time));
+        z._driftAt = time;
+        z.x += (z.face || 1) * z.spec.drift * dt / 1000;
+        z.gfx.setPosition?.(z.x, z.y);
       }
       if (z.spec?.follow && z.owner?.alive) {
         z.x = z.owner.x;
@@ -1852,6 +1906,13 @@ export default class BattleScene extends Phaser.Scene {
           applyDot(target, dealt, z.spec.type || 'chemical');
           if (z.spec.onHit) applyOnHit(z.owner, target, { name: z.spec.name, onHit: z.spec.onHit }, time);
           continue;
+        }
+        if (z.spec.statusCling && z.owner?.charDef?.id) {
+          const until = time + 480;
+          if (!target.clingFrom || target.clingFrom.until < until) {
+            target.clingFrom = { id: z.owner.charDef.id, move: z.spec.statusCling, until };
+          }
+          target._poisonLevel = (target._poisonLevel ?? 0) + 1;
         }
         this.landHit(z.owner, target, {
           name: z.spec.name ?? 'zone',
@@ -2369,6 +2430,11 @@ export default class BattleScene extends Phaser.Scene {
 
     // projectiles
     for (const p of this.projectiles) {
+      if (p.slowFx?.scene && p.gfx) {
+        stepPlacedFx(p.slowFx, p.slowArt, time - (p.slowBorn || time), 1);
+        p.slowFx.setPosition(p.gfx.x, p.gfx.y);
+        p.slowFx.setScale(0.5);
+      }
       if (p.move.returns && !p.returning && time > p.born + p.move.projectileLife * 0.45) {
         p.vx *= -1;
         p.returning = true;
@@ -2486,12 +2552,22 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (!p.slowed) {
         for (const f of this.fighters) {
-          if (f.state !== 'defending' || !f.defenseMove?.slowProjectiles) continue;
+          if (f.state !== 'defending') continue;
+          const def = f.defenseMove;
+          const mul = def?.slowMetals ?? def?.slowProjectiles;
+          if (!(mul > 0 && mul < 1)) continue;
+          if (def.slowMetals && !p.owner?.charDef?.combat?.metal) continue;
           if (Math.abs(f.x - p.gfx.x) < 110 && Math.abs(f.y - p.gfx.y) < 110) {
-            const mul = f.defenseMove.slowProjectiles;
             p.vx *= mul;
             p.vy *= mul;
             p.slowed = true;
+            const field = artFor(f.charDef?.id, def.name)?.field;
+            if (field?.frames?.length && !p.slowFx) {
+              p.slowFx = placeFxImage(this, field, p.gfx.x, p.gfx.y, 1);
+              p.slowFx?.setDepth?.(8);
+              p.slowArt = field;
+              p.slowBorn = time;
+            }
             break;
           }
         }
@@ -2572,6 +2648,11 @@ export default class BattleScene extends Phaser.Scene {
       }
       const off = p.gfx.x < -80 || p.gfx.x > this.world.width + 80 || p.gfx.y > this.world.height + 80;
       if (time > p.dieAt || off) {
+        if (!off && this.nearOwnerCleanse(p)) {
+          p.gfx.destroy();
+          p.dead = true;
+          continue;
+        }
         if (p.move.pop && p.carried && !p.pinned) {
           for (const carried of p.carried) {
             if (!carried.alive || carried.state === 'ko') continue;
@@ -2617,6 +2698,11 @@ export default class BattleScene extends Phaser.Scene {
         if (victim.state === 'defending' && victim.defenseMove?.intangible) continue;
         if (p.next && time < (p.next.get(victim) ?? 0)) continue;
         if (!projectileHits(p, victim)) continue;
+        if (this.nearOwnerCleanse(p)) {
+          p.gfx.destroy();
+          p.dead = true;
+          break;
+        }
         const def = victim.defenseMove;
         const perfect = def?.reflectProjectiles === 'perfect'
           && time - (victim.defenseStart ?? time) <= (def.perfectMs ?? 200);
@@ -2680,7 +2766,10 @@ export default class BattleScene extends Phaser.Scene {
           break;
         }
         // a projectile shoves you the way it was travelling
-        this.landHit(p.owner, victim, { ...shot, _projectile: true, _hitIndex: n, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, Math.sign(p.vx) || p.owner.facing);
+        const counted = p.move._salvoIndex
+          ? { ...shot, multiHit: p.move._salvoCount, _hitIndex: p.move._salvoIndex }
+          : { ...shot, _hitIndex: n };
+        this.landHit(p.owner, victim, { ...counted, _projectile: true, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, Math.sign(p.vx) || p.owner.facing);
         if (p.move.stick && n >= want) {
           p.stuck = victim;
           if (p.move.pinFoot) {
@@ -2726,7 +2815,10 @@ export default class BattleScene extends Phaser.Scene {
         }
       }
     }
-    this.projectiles = this.projectiles.filter((p) => !p.dead);
+    this.projectiles = this.projectiles.filter((p) => {
+      if (p.dead) p.slowFx?.destroy?.();
+      return !p.dead;
+    });
     this.collisionMs += globalThis.performance.now() - collisionStart;
     this.collisionSteps += 1;
 

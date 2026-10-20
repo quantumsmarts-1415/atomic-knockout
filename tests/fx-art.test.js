@@ -1969,7 +1969,7 @@ test('phosphor bloom, magnetic chill, and curie point match the arrived sheets',
   assert.ok(curieFade(0.725) > 0.4 && curieFade(0.725) < 0.6);
   assert.equal(curiePulse(0.2, 400), 1);
   assert.ok(curiePulse(0.8, 0) >= 1);
-  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie', 'assets/fx/terra', 'assets/fx/tara', 'assets/fx/rex', 'assets/fx/wolf', 'assets/fx/oz', 'assets/fx/ira', 'assets/fx/aurelius', 'assets/fx/pit']) {
+  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie', 'assets/fx/terra', 'assets/fx/tara', 'assets/fx/rex', 'assets/fx/wolf', 'assets/fx/oz', 'assets/fx/ira', 'assets/fx/aurelius', 'assets/fx/pit', 'assets/fx/hog', 'assets/fx/talia', 'assets/fx/pablo', 'assets/fx/bianca']) {
     const dirs = fs.statSync(root).isDirectory() && fs.readdirSync(root).some((name) => fs.statSync(`${root}/${name}`).isDirectory())
       ? fs.readdirSync(root).map((name) => `${root}/${name}`).filter((dir) => fs.statSync(dir).isDirectory())
       : [root];
@@ -2246,5 +2246,52 @@ test('pit sheets scale the cloud ignition and tint the flame test', () => {
   for (const file of fs.readdirSync('assets/fx/pit', { recursive: true })) {
     const name = String(file);
     assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, name);
+  }
+});
+
+test('batch 23 sheets scale the bright openings and keep the props', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const bulb = read('assets/fx/hog/thermometer-burst/fx.json');
+  assert.equal(bulb.scaleTo, 'radius');
+  assert.equal(bulb.flashRadius, 230);
+  assert.ok(Math.abs(bulb.pivotX - 287 / 575) < 1e-9);
+  assert.ok(Math.abs(bulb.pivotY - 287 / 569) < 1e-9);
+  assert.equal(bulb.charge.scaleMin, 0.5);
+  assert.equal(bulb.charge.scaleMax, 1.3);
+  assert.equal(bulb.heated.file, 'thermometer-bulb-heated.png');
+  assert.equal(bulb.charge.black, false);
+  const lash = read('assets/fx/hog/quicksilver-lash/fx.json');
+  assert.equal(lash.anchor, 'shoulder');
+  assert.equal(lash.pivotX, 0);
+  assert.equal(lash.black, false);
+  const fin = read('assets/fx/pablo/machine-gun/fx.json');
+  assert.equal(fin.impact.scaleTo, 'radius');
+  assert.equal(fin.impact.flashRadius, 180);
+  assert.equal(fin.impact.replacesSpark, true);
+  assert.ok(Math.abs(fin.impact.pivotX - 246 / 493) < 1e-9);
+  assert.ok(Math.abs(fin.muzzle.pivotX - 60 / 192) < 1e-9);
+  assert.equal(fin.muzzle.randomRot, true);
+  assert.equal(fin.black, false);
+  const kick = read('assets/fx/bianca/staircase-kick/fx.json');
+  assert.equal(kick.impact.scaleTo, 'radius');
+  assert.equal(kick.impact.flashRadius, 230);
+  assert.ok(Math.abs(kick.impact.pivotX - 287 / 575) < 1e-9);
+  assert.equal(kick.spark.rise, 0.22);
+  const eruption = read('assets/fx/bianca/hopper-crystal/fx.json');
+  assert.equal(eruption.anchor, 'ground');
+  assert.equal(eruption.pivotY, 1);
+  assert.equal(eruption.pivotX, 0);
+  assert.equal(eruption.black, false);
+  const cloud = read('assets/fx/talia/poisoners-poison/fx.json');
+  assert.equal(cloud.maxAlpha, 0.18);
+  assert.equal(cloud.cling.rampAlpha, true);
+  assert.equal(impactRadiusScale({ radius: 64 }, { scaleTo: 'radius', flashRadius: 230 }), 64 / 230);
+  assert.equal(impactRadiusScale({ hitRadius: 34, projectileRadius: 7 }, { scaleTo: 'radius', flashRadius: 180 }), 34 / 180);
+  assert.equal(impactRadiusScale({ hitRadius: 56 }, { scaleTo: 'radius', flashRadius: 230 }), 56 / 230);
+  for (const id of ['hog', 'talia', 'pablo', 'bianca']) {
+    for (const file of fs.readdirSync(`assets/fx/${id}`, { recursive: true })) {
+      const name = String(file);
+      assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, `${id}/${name}`);
+    }
   }
 });

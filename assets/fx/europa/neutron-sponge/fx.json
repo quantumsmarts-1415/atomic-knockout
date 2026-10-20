@@ -1,0 +1,27 @@
+{
+  "file": "control-rod.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "anchor": "pin",
+  "hit": false,
+  "aim": false,
+  "spin": 7,
+  "heightFrac": 0.92,
+  "glow": {
+    "file": "control-rod-radiation.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false,
+    "aim": false,
+    "spin": 7,
+    "heightFrac": 0.92
+  }
+}

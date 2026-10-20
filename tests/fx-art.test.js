@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, stageSpanSize, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, curieFade, curiePulse, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1566,6 +1566,186 @@ test('batch 11 sheets match the approved handoffs', () => {
       if (!fs.statSync(dir).isDirectory()) continue;
       for (const file of fs.readdirSync(dir)) {
         assert.equal(file.endsWith('.gif') || file.endsWith('.jpg'), false, `${dir}/${file}`);
+      }
+    }
+  }
+});
+
+test('europa sheets match the approved handoff', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const check = read('assets/fx/europa/counterfeit-check/fx.json');
+  assert.equal(check.impact.file, 'counterfeit-check-impact-anim.png');
+  assert.equal(check.impact.frames, 24);
+  assert.equal(check.impact.cols, 4);
+  assert.equal(check.impact.rows, 6);
+  assert.equal(check.impact.fps, 16);
+  assert.equal(check.impact.blend, 'add');
+  assert.equal(check.impact.hit, false);
+  const crack = read('assets/fx/europa/icy-geyser/fx.json').warn;
+  assert.equal(crack.file, 'icy-geyser-crack-anim.png');
+  assert.equal(crack.loop, true);
+  assert.equal(crack.frames, 24);
+  assert.equal(crack.fps, 16);
+  assert.ok(crack.scale >= 0.5 && crack.scale <= 0.7);
+  assert.ok(Math.abs(crack.pivotX - 0.5) < 1e-6);
+  assert.ok(Math.abs(crack.pivotY - 350 / 576) < 0.002);
+  assert.equal(crack.crop, undefined);
+  const plume = read('assets/fx/europa/icy-geyser/fx.json').burst;
+  assert.equal(plume.file, 'icy-geyser-plume-anim.png');
+  assert.equal(plume.pivot, 'bottom');
+  assert.equal(plume.anchor, 'ground');
+  assert.equal(plume.loop, false);
+  const rods = read('assets/fx/europa/neutron-sponge/fx.json');
+  assert.equal(rods.file, 'control-rod.png');
+  assert.equal(rods.pivotX, 0.5);
+  assert.equal(rods.pivotY, 0.5);
+  assert.equal(rods.aim, false);
+  assert.equal(rods.spin, 7);
+  assert.equal(rods.black, false);
+  assert.equal(rods.glow.file, 'control-rod-radiation.png');
+  assert.equal(rods.glow.spin, 7);
+  assert.equal(rods.glow.aim, false);
+  const left = rodOrbitPoint({ x: 100, y: 200, bodyW: 40, bodyH: 80 }, 0, 0, { period: 1100, orbit: 1.05 });
+  const right = rodOrbitPoint({ x: 100, y: 200, bodyW: 40, bodyH: 80 }, 0, 1, { period: 1100, orbit: 1.05 });
+  assert.ok(left.x > 100);
+  assert.ok(right.x < 100);
+  assert.ok(Math.abs((left.y + right.y) / 2 - (200 - 40)) < 1);
+  const root = 'assets/fx/europa';
+  for (const name of fs.readdirSync(root)) {
+    const dir = `${root}/${name}`;
+    if (!fs.statSync(dir).isDirectory()) continue;
+    for (const file of fs.readdirSync(dir)) {
+      assert.equal(file.endsWith('.gif') || file.endsWith('.jpg'), false, `${dir}/${file}`);
+    }
+  }
+});
+
+test('mri, palm, flex punch, and floor speaker match the arrived sheets', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const mri = read('assets/fx/goldie/mri-contrast/fx.json');
+  assert.equal(mri.file, 'mri-scan-ring-anim.png');
+  assert.equal(mri.frames, 16);
+  assert.equal(mri.fps, 16);
+  assert.equal(mri.scaleWith, 'radius');
+  assert.equal(mri.span, 'cell');
+  assert.equal(mri.hit, false);
+  const cell = 480;
+  const outer = 0.95 * (cell / 2);
+  const shown = outer * ((132 * mri.heightFrac) / cell);
+  assert.ok(Math.abs(shown - 78) < 1, `ring radius ${shown}`);
+  assert.equal(mri.charge.anchor, 'hand');
+  assert.equal(mri.charge.scaleWith, 'alpha');
+  assert.equal(mri.charge.loop, true);
+  assert.equal(mri.charge.fps, 12);
+  assert.equal(mri.cling.file, 'mri-stun-status-anim.png');
+  assert.equal(mri.cling.frames, 24);
+  assert.equal(mri.cling.fps, 24);
+  assert.equal(mri.cling.anchor, 'body');
+  const palm = read('assets/fx/goldie/magnetocaloric-palm/fx.json').impact;
+  assert.equal(palm.frames, 24);
+  assert.equal(palm.fps, 16);
+  assert.equal(palm.flip, true);
+  assert.equal(palm.pivotX, 0.5);
+  const flex = read('assets/fx/terra/flex-punch/fx.json').impact;
+  assert.equal(flex.file, 'flex-punch-impact-anim.png');
+  assert.equal(flex.flip, true);
+  assert.equal(flex.frames, 24);
+  const floor = read('assets/fx/terra/floor-speaker/fx.json');
+  assert.equal(floor.file, 'floor-speaker-status-anim.png');
+  assert.equal(floor.frames, 24);
+  assert.equal(floor.fps, 12);
+  assert.equal(floor.loop, true);
+  assert.equal(floor.tile, true);
+  assert.equal(floor.anchor, 'ground');
+  assert.equal(floor.fit, 'pixel');
+  assert.ok(Math.abs(floor.pivotY - (192 - 40) / 192) < 0.001);
+});
+
+test('terra sonar and phosphor bolt match the arrived sheets', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const sonar = read('assets/fx/terra/sonar-pulse/fx.json');
+  assert.equal(sonar.file, 'sonar-pulse-anim.png');
+  assert.equal(sonar.frames, 18);
+  assert.equal(sonar.cols, 3);
+  assert.equal(sonar.rows, 6);
+  assert.equal(sonar.fps, 15);
+  assert.equal(sonar.fit, 'stage');
+  assert.equal(sonar.fromBody, true);
+  assert.equal(sonar.hit, false);
+  assert.ok(Math.abs(sonar.pivotX - 60 / 1280) < 1e-6);
+  assert.equal(sonar.pivotY, 0.5);
+  assert.equal(sonar.charge.file, 'alloy-flex-charge-anim.png');
+  assert.equal(sonar.charge.anchor, 'body');
+  assert.equal(sonar.charge.loop, true);
+  assert.equal(sonar.charge.scaleWith, 'alpha');
+  const bolt = read('assets/fx/terra/green-phosphor-bolt/fx.json');
+  assert.equal(bolt.file, 'green-phosphor-bolt-anim.png');
+  assert.equal(bolt.frames, 12);
+  assert.equal(bolt.fps, 24);
+  assert.equal(bolt.loop, true);
+  assert.ok(Math.abs(bolt.pivotX - 400 / 512) < 1e-6);
+  assert.equal(bolt.pivotY, 0.5);
+  assert.equal(bolt.crop, undefined);
+  assert.equal(bolt.impact.file, 'green-phosphor-bolt-impact-anim.png');
+  assert.equal(bolt.impact.frames, 24);
+  assert.equal(bolt.impact.fps, 16);
+  assert.ok(bolt.impact.scale >= 0.3 && bolt.impact.scale <= 0.4);
+  assert.equal(bolt.impact.hit, false);
+});
+
+test('phosphor bloom, magnetic chill, and curie point match the arrived sheets', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const bloom = read('assets/fx/europa/phosphor-bloom/fx.json');
+  assert.equal(bloom.file, 'phosphor-bloom-burst-anim.png');
+  assert.equal(bloom.frames, 24);
+  assert.equal(bloom.cols, 4);
+  assert.equal(bloom.rows, 6);
+  assert.equal(bloom.fps, 16);
+  assert.equal(bloom.blend, 'add');
+  assert.equal(bloom.hit, false);
+  assert.equal(bloom.pivotX, 0.5);
+  assert.equal(bloom.pivotY, 0.5);
+  assert.equal(bloom.anchor, undefined);
+  assert.equal(bloom.charge.file, 'uv-soak-charge-anim.png');
+  assert.equal(bloom.charge.frames, 24);
+  assert.equal(bloom.charge.cols, 6);
+  assert.equal(bloom.charge.rows, 4);
+  assert.equal(bloom.charge.fps, 12);
+  assert.equal(bloom.charge.loop, true);
+  assert.equal(bloom.charge.anchor, 'body');
+  assert.equal(bloom.charge.scaleWith, 'alpha');
+  const chill = read('assets/fx/goldie/magnetic-chill/fx.json');
+  assert.equal(chill.file, 'magnetic-chill-status-anim.png');
+  assert.equal(chill.frames, 24);
+  assert.equal(chill.fps, 12);
+  assert.equal(chill.loop, true);
+  assert.equal(chill.anchor, 'body');
+  assert.equal(chill.blend, 'add');
+  const curie = read('assets/fx/goldie/curie-point-burst/fx.json');
+  assert.equal(curie.projectile.file, 'curie-orb-cool.png');
+  assert.equal(curie.projectile.black, false);
+  assert.equal(curie.projectile.aim, false);
+  assert.equal(curie.hot.file, 'curie-orb-hot.png');
+  assert.equal(curie.hot.black, false);
+  assert.equal(curie.burst.file, 'curie-point-burst-blast-anim.png');
+  assert.equal(curie.burst.frames, 24);
+  assert.equal(curie.burst.fps, 16);
+  assert.equal(curie.burst.blend, 'add');
+  assert.ok(curie.burst.heightFrac <= 1.6, 'the dense blast stays inside the nearby radius');
+  assert.ok(curie.burst.heightFrac >= 1.1);
+  assert.equal(curieFade(0.2), 0);
+  assert.equal(curieFade(0.45), 0);
+  assert.ok(Math.abs(curieFade(1) - 1) < 1e-9);
+  assert.ok(curieFade(0.725) > 0.4 && curieFade(0.725) < 0.6);
+  assert.equal(curiePulse(0.2, 400), 1);
+  assert.ok(curiePulse(0.8, 0) >= 1);
+  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie', 'assets/fx/terra']) {
+    const dirs = fs.statSync(root).isDirectory() && fs.readdirSync(root).some((name) => fs.statSync(`${root}/${name}`).isDirectory())
+      ? fs.readdirSync(root).map((name) => `${root}/${name}`).filter((dir) => fs.statSync(dir).isDirectory())
+      : [root];
+    for (const dir of dirs) {
+      for (const file of fs.readdirSync(dir)) {
+        assert.equal(file.endsWith('.gif') || file.endsWith('.jpg') || file.endsWith('.py'), false, `${dir}/${file}`);
       }
     }
   }

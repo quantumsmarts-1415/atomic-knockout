@@ -975,6 +975,113 @@ test('batch 11 kits follow the approved briefs', () => {
   assert.strictEqual(indy.noKnockback, true);
 });
 
+test('europa kits follow the approved brief', () => {
+  const moves = CHARACTERS.europa.moves;
+  const check = moves.basicDirectional;
+  assert.strictEqual(check.name, 'Counterfeit Check');
+  assert.strictEqual(check.type, 'electrical');
+  assert.strictEqual(check.stripProtection, true);
+  assert.strictEqual(check.cancelInvis, true);
+  assert.strictEqual(check.breakPhase, true);
+  const sponge = moves.specialDefense;
+  assert.strictEqual(sponge.name, 'Neutron Sponge');
+  assert.deepStrictEqual(sponge.blocks, ['kinetic', 'radiation']);
+  assert.strictEqual(sponge.soakRadiation, true);
+  assert.strictEqual(sponge.releaseRods.damage, 4);
+  assert.strictEqual(sponge.releaseRods.glowType, 'radiation');
+  const defender = { state: 'defending', defenseMove: sponge, x: 0, y: 0 };
+  assert.strictEqual(interceptHit(defender, {}, { type: 'kinetic', damage: 6 }, 0).result, 'negate');
+  assert.strictEqual(interceptHit(defender, {}, { type: 'radiation', damage: 6 }, 0).result, 'negate');
+  assert.strictEqual(interceptHit(defender, {}, { type: 'heat', damage: 6 }, 0).result, 'pass');
+  const geyser = moves.specialDirectional;
+  assert.strictEqual(geyser.name, 'Icy Geyser');
+  assert.strictEqual(geyser.kind, 'burst');
+  assert.strictEqual(geyser.type, 'kinetic');
+  assert.strictEqual(geyser.onHit.slow, 700);
+  assert.ok(geyser.geyser.warnMs >= 400);
+  assert.strictEqual(moves.basicCharge.name, 'Phosphor Bloom');
+  assert.strictEqual(moves.basicCharge.type, 'radiation');
+  assert.strictEqual(moves.basicCharge.damage, 9);
+});
+
+test('goldie kits follow the approved brief', () => {
+  const moves = CHARACTERS.goldie.moves;
+  const mri = moves.basicCharge;
+  assert.strictEqual(mri.name, 'MRI Contrast');
+  assert.strictEqual(mri.kind, 'burst');
+  assert.strictEqual(mri.damage, 0);
+  assert.strictEqual(mri.radius, 78);
+  assert.strictEqual(mri.noKnockback, true);
+  assert.strictEqual(mri.baseKnockback, 0);
+  assert.strictEqual(mri.knockbackGrowth, 0);
+  assert.strictEqual(mri.onHit.doublePercent, true);
+  assert.strictEqual(mri.onHit.stun, 1000);
+  const scanned = { percent: 40 };
+  applyOnHit({ charDef: { id: 'goldie' } }, scanned, mri, 1000);
+  assert.strictEqual(scanned.percent, 80);
+  assert.strictEqual(scanned.lockedUntil, 2000);
+  assert.strictEqual(scanned.clingFrom.until, 2000);
+  assert.strictEqual(scanned.clingFrom.move, 'MRI Contrast');
+  const warded = { percent: 25, debuffImmuneUntil: 5000 };
+  applyOnHit({ charDef: { id: 'goldie' } }, warded, mri, 1000);
+  assert.strictEqual(warded.percent, 50);
+  assert.strictEqual(warded.lockedUntil, undefined);
+  const capped = { percent: 600 };
+  applyOnHit({ charDef: { id: 'goldie' } }, capped, mri, 0);
+  assert.strictEqual(capped.percent, 999);
+  const palm = moves.basicDirectional;
+  assert.strictEqual(palm.name, 'Magnetocaloric Palm');
+  assert.strictEqual(palm.type, 'kinetic');
+  assert.strictEqual(palm.damage, 7);
+  assert.strictEqual(palm.type2, 'heat');
+  assert.strictEqual(palm.damage2, 6);
+  const chill = moves.specialDefense;
+  assert.strictEqual(chill.name, 'Magnetic Chill');
+  assert.deepStrictEqual(chill.immune, ['heat']);
+  assert.deepStrictEqual(chill.cleanse, ['burn']);
+  const burning = { burnUntil: 5000, burnSticky: false };
+  cleanse(burning, chill.cleanse);
+  assert.strictEqual(burning.burnUntil, 0);
+  const curie = moves.specialDirectional;
+  assert.strictEqual(curie.name, 'Curie Point Burst');
+  assert.strictEqual(curie.kind, 'projectile');
+  assert.strictEqual(curie.damage, 0);
+  assert.strictEqual(curie._ghost, true);
+  assert.strictEqual(curie.igniteType, 'heat');
+  assert.strictEqual(curie.igniteDamage, 8);
+  assert.strictEqual(curie.igniteRadius, 150);
+  assert.strictEqual(curie.metalsOnly, true);
+  assert.ok(curie.igniteAt > 0.4 && curie.igniteAt < 0.85);
+  assert.strictEqual(CHARACTERS.goldie.combat.metal, true);
+  assert.strictEqual(CHARACTERS.helen.combat.metal, false);
+});
+
+test('terra kits follow the approved brief', () => {
+  const moves = CHARACTERS.terra.moves;
+  const sonar = moves.basicCharge;
+  assert.strictEqual(sonar.name, 'Sonar Pulse');
+  assert.strictEqual(sonar.kind, 'beam');
+  assert.strictEqual(sonar.type, 'kinetic');
+  assert.strictEqual(sonar.damage, 7);
+  assert.strictEqual(sonar.breakPhase, true);
+  assert.strictEqual(sonar.onHit.reveal, true);
+  assert.strictEqual(sonar.stageWide, true);
+  const punch = moves.basicDirectional;
+  assert.strictEqual(punch.name, 'Flex Punch');
+  assert.strictEqual(punch.type, 'kinetic');
+  assert.strictEqual(punch.damage, 8);
+  const speaker = moves.specialDefense;
+  assert.strictEqual(speaker.name, 'Floor Speaker');
+  assert.strictEqual(speaker.retort.type, 'kinetic');
+  assert.strictEqual(speaker.retort.damage, 6);
+  assert.strictEqual(speaker.retortBurst, true);
+  const bolt = moves.specialDirectional;
+  assert.strictEqual(bolt.name, 'Green Phosphor Bolt');
+  assert.strictEqual(bolt.kind, 'projectile');
+  assert.strictEqual(bolt.type, 'radiation');
+  assert.strictEqual(bolt.damage, 8);
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

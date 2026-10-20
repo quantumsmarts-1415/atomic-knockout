@@ -1,0 +1,18 @@
+{
+  "blend": "add",
+  "impact": {
+    "file": "counterfeit-check-impact-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "crop": "frame",
+    "pivot": "center",
+    "hit": false,
+    "heightFrac": 1.05
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "blend": "add",
+  "impact": {
+    "file": "magnetocaloric-palm-impact-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "flip": true,
+    "hit": false,
+    "heightFrac": 1
+  }
+}

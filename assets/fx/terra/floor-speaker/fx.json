@@ -1,0 +1,16 @@
+{
+  "file": "floor-speaker-status-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "pixel",
+  "pivotX": 0.5,
+  "pivotY": 0.7916667,
+  "anchor": "ground",
+  "tile": true,
+  "hit": false
+}

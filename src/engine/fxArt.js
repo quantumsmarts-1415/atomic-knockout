@@ -483,6 +483,8 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     keepSlash: !!extra.keepSlash,
     oneshot: !!extra.oneshot,
     stageFit: !!extra.stageFit,
+    fromBody: !!extra.fromBody,
+    tile: !!extra.tile,
     maxAlpha: extra.maxAlpha > 0 && extra.maxAlpha < 1 ? extra.maxAlpha : 0,
   };
 }
@@ -871,8 +873,8 @@ async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH
       // An edge-to-edge beam maps onto the uncharged length. Charge scale stretches width only.
       displayW = Math.max(CELL, box.w);
       displayH = Math.max(CELL, box.w * (h / Math.max(1, w)));
-    } else if (spec?.fit === 'stage') {
-      // The cell already spans the authored stage. Draw time stretches it to this world's width.
+    } else if (spec?.fit === 'stage' || spec?.fit === 'pixel') {
+      // Stage fit is stretched to the world at draw time. Pixel fit stays at the cell size.
       displayW = Math.max(CELL, w);
       displayH = Math.max(CELL, h);
     } else if (px > 0) {
@@ -908,6 +910,7 @@ const SIDE_SPECS = [
   ['ember', 'ember-'], ['spark', 'spark-'], ['cinder', 'cinder-'], ['mote', 'mote-'], ['puff', 'puff-'],
   ['gas', 'gas-'], ['fizzle', 'fizzle-'], ['linger', 'linger-'],
   ['trail', 'trail-'], ['stain', 'stain-'],
+  ['warn', 'warn-'], ['glow', 'glow-'], ['hot', 'hot-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -935,6 +938,9 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       order: merged.order,
       pulse: merged.pulse,
       maxAlpha: merged.maxAlpha,
+      spin: merged.spin,
+      aim: merged.aim !== false,
+      scaleWith: merged.scaleWith || null,
     });
   }
   return record;
@@ -976,6 +982,8 @@ async function loadMoveArt(scene, char, slot, move, index) {
     keepSlash: !!meta.keepSlash,
     oneshot: !!meta.oneshot,
     stageFit: meta.fit === 'stage',
+    fromBody: !!meta.fromBody,
+    tile: !!meta.tile,
     maxAlpha: meta.maxAlpha > 0 && meta.maxAlpha < 1 ? meta.maxAlpha : 0,
   };
   const inherit = { blend: meta.blend, black: meta.black };
@@ -1120,7 +1128,8 @@ async function loadMoveArt(scene, char, slot, move, index) {
 }
 
 export function fxProjectileView(scene, owner, move, x, y) {
-  const art = artFor(owner?.charDef?.id, move?.name);
+  const base = artFor(owner?.charDef?.id, move?.name);
+  const art = move?._rodGlow && base?.glow?.frames?.length ? base.glow : base;
   const frame = art?.frames?.[0];
   if (!frame || !scene?.add?.image || art.stageFit) return null;
   const img = scene.add.image(x, y, frame.key);
@@ -1144,6 +1153,7 @@ export function fxProjectileView(scene, owner, move, x, y) {
   }
   const useMask = art.hit !== false;
   let trail = null;
+  let hot = null;
   if (art.trail?.frames?.length && scene.add?.image) {
     const tFrame = art.trail.frames[0];
     trail = scene.add.image(x, y, tFrame.key);
@@ -1151,12 +1161,27 @@ export function fxProjectileView(scene, owner, move, x, y) {
     trail.setDisplaySize(tFrame.displayW, tFrame.displayH);
     trail.setDepth(15);
     trail.setBlendMode?.(phaserBlend(tFrame.blend || art.trail.blend));
+  }
+  const hotArt = base?.hot;
+  const hotFrame = hotArt?.frames?.[0];
+  if (hotFrame && scene.add?.image) {
+    hot = scene.add.image(x, y, hotFrame.key);
+    hot.setOrigin(hotArt.pivotX ?? 0.5, hotArt.pivotY ?? 0.5);
+    const hotScale = fxGameplayScale(move, hotArt);
+    hot.setDisplaySize(hotFrame.displayW * hotScale, hotFrame.displayH * hotScale);
+    hot.setDepth(16);
+    hot.setAlpha(0);
+    hot.setBlendMode?.(phaserBlend(hotFrame.blend || hotArt.blend));
+  }
+  if (trail || hot) {
     const destroy = img.destroy?.bind(img);
     img.destroy = (...args) => {
       if (trail?.scene) trail.destroy();
+      if (hot?.scene) hot.destroy();
       return destroy?.(...args);
     };
   }
+  const hotScale = hotFrame ? fxGameplayScale(move, hotArt) : 1;
   return {
     gfx: img,
     fxMask: useMask ? (art.frames[art.hitIndex ?? 0]?.mask || frame.mask) : null,
@@ -1171,9 +1196,13 @@ export function fxProjectileView(scene, owner, move, x, y) {
     fxDisplayH: frame.displayH * scale,
     fxSpin: art.spin || 0,
     fxPulse: art.pulse || 0,
+    fxAlphaPulse: move?._rodGlow ? 0.22 : 0,
     fxAim: art.aim !== false,
     fxTrail: trail,
     fxTrailArt: art.trail || null,
+    fxHot: hot,
+    fxHotW: hotFrame ? hotFrame.displayW * hotScale : 0,
+    fxHotH: hotFrame ? hotFrame.displayH * hotScale : 0,
   };
 }
 
@@ -1189,6 +1218,40 @@ function stepProjectileTrail(p) {
   trail.setOrigin?.(art.pivotX ?? 1, art.pivotY ?? 0.5);
   trail.setPosition(p.gfx.x, p.gfx.y);
   trail.rotation = Math.atan2(p.vy || 0, p.vx || 1);
+}
+
+/** Cool orb stays solid, then fades to the hot orb across the approach to the Curie point. */
+export function curieFade(along) {
+  const t = Math.max(0, Math.min(1, along || 0));
+  if (t <= 0.45) return 0;
+  return Math.min(1, (t - 0.45) / 0.55);
+}
+
+/** A small scale pulse once the orb is heating. Steady before that. */
+export function curiePulse(along, elapsedMs) {
+  const t = Math.max(0, Math.min(1, along || 0));
+  if (t <= 0.55) return 1;
+  return 1 + 0.09 * Math.sin((elapsedMs || 0) * 0.05);
+}
+
+function stepCurieOrb(p, time) {
+  const hot = p?.fxHot;
+  if (!hot?.setPosition || !p.gfx?.setAlpha) return;
+  const life = p.move?.projectileLife > 0 ? p.move.projectileLife : 1;
+  const at = p.move?.igniteAt > 0 ? p.move.igniteAt : 1;
+  const elapsed = Math.max(0, time - (p.born || 0));
+  const along = Math.min(1, elapsed / (life * at));
+  const fade = curieFade(along);
+  const pulse = curiePulse(along, elapsed);
+  p.gfx.setAlpha(1 - fade);
+  hot.setAlpha(fade);
+  hot.setPosition(p.gfx.x, p.gfx.y);
+  const w = p.fxDisplayW || 0;
+  const h = p.fxDisplayH || 0;
+  if (w && h) p.gfx.setDisplaySize(w * pulse, h * pulse);
+  const hw = p.fxHotW || w;
+  const hh = p.fxHotH || h;
+  if (hw && hh) hot.setDisplaySize(hw * pulse, hh * pulse);
 }
 
 export function stepFxProjectile(p, time) {
@@ -1217,25 +1280,26 @@ export function stepFxProjectile(p, time) {
     const sx = Math.abs(p.gfx.scaleX || 1);
     const sy = Math.abs(p.gfx.scaleY || 1);
     p.gfx.setScale(face * sx, sy);
-    return;
-  }
-  if (p.fxSpin) {
+  } else if (p.fxSpin) {
     p.gfx.rotation = ((time - (p.born || 0)) / 1000) * p.fxSpin;
     if (p.fxPulse && p.fxDisplayW) {
       const s = 1 + Math.sin((time - (p.born || 0)) / 150) * p.fxPulse;
       p.gfx.setDisplaySize(p.fxDisplayW * s, p.fxDisplayH * s);
     }
-    return;
-  }
-  if (p.fxAim === false) {
+    if (p.fxAlphaPulse) {
+      const wave = 0.5 + 0.5 * Math.cos((time - (p.born || 0)) * Math.PI * 2 / 700);
+      p.gfx.setAlpha(1 - p.fxAlphaPulse + p.fxAlphaPulse * wave);
+    }
+  } else if (p.fxAim === false) {
     const face = (p.vx || 1) < 0 ? -1 : 1;
     p.gfx.rotation = 0;
     const sx = Math.abs(p.gfx.scaleX || 1);
     const sy = Math.abs(p.gfx.scaleY || 1);
     p.gfx.setScale(face * sx, sy);
-    return;
+  } else {
+    p.gfx.rotation = Math.atan2(p.vy || 0, p.vx || 1);
   }
-  p.gfx.rotation = Math.atan2(p.vy || 0, p.vx || 1);
+  stepCurieOrb(p, time);
 }
 
 /** A sprite that stays until the caller destroys it. Zones and lingering walls use this. */
@@ -1262,8 +1326,22 @@ export function stepPlacedFx(img, art, elapsed, face = 1) {
 export function spawnStageSpan(scene, fighter, art) {
   if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
   const frame = art.frames[0];
-  const box = stageSpanSize(scene, frame);
   const face = fighter?.facing || 1;
+  if (art.fromBody) {
+    const worldW = scene?.world?.width > 0 ? scene.world.width : 1280;
+    const box = { w: worldW, h: frame.displayH > 0 ? frame.displayH : frame.displayW };
+    const bodyW = fighter?.bodyW ?? 40;
+    const bodyH = fighter?.bodyH ?? 80;
+    const x = (fighter?.x ?? 0) + face * bodyW * 0.35;
+    const y = (fighter?.y ?? 0) - bodyH * 0.55;
+    const img = placeStill(scene, art, x, y, 0);
+    applyFrameLook(img, frame, art, 1, box);
+    img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+    applyFacing(img, face);
+    trackOneShot(scene, img, art, 1, null, face, box);
+    return img;
+  }
+  const box = stageSpanSize(scene, frame);
   const fromLeft = (art.pivotX ?? 0.5) < 0.05;
   const x = fromLeft ? (face < 0 ? box.w : 0) : box.w / 2;
   const y = (fighter?.y ?? 0) - (fighter?.bodyH ?? 80) * 0.5;
@@ -1595,6 +1673,16 @@ function stepOneShots(scene) {
   }
 }
 
+/** A short sonar burst from a held floor speaker toward whoever struck her. */
+export function playRetortPulse(scene, defender, attacker) {
+  const art = artFor(defender?.charDef?.id, defender?.charDef?.moves?.basicCharge?.name);
+  if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
+  const face = Math.sign((attacker?.x ?? defender.x) - defender.x) || defender.facing || 1;
+  const x = defender.x + face * (defender.bodyW ?? 40) * 0.2;
+  const y = defender.y - (defender.bodyH ?? 80) * 0.55;
+  return spawnFxSprite(scene, art, x, y, 0.3, face);
+}
+
 /** One additive sprite from an already-loaded side, such as the ribbon ignite. */
 export function spawnFxSprite(scene, art, x, y, scale = 1, face = 1, box = null) {
   if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
@@ -1730,6 +1818,7 @@ function dropAttached(fighter, live) {
   }
   if (live?.fadeRig) fighter.rig?.setAlpha?.(1);
   live?.img?.destroy?.();
+  live?.extra?.forEach((img) => img.destroy?.());
   live?.front?.destroy?.();
   live?.lead?.destroy?.();
   if (live) liveAttached.delete(fighter);
@@ -1796,6 +1885,39 @@ function attachedWant(scene, fighter) {
     }
   }
   return null;
+}
+
+function floorDeck(scene, fighter) {
+  const x = fighter?.x ?? 0;
+  const y = fighter?.y ?? 0;
+  const plats = scene?.stage?.platforms ?? [];
+  const plat = plats.find((s) => s?.w > 0 && Math.abs((s.y ?? y) - y) < 36
+    && x >= s.x - s.w / 2 && x <= s.x + s.w / 2);
+  if (plat) return { cx: plat.x, w: plat.w };
+  const solids = (scene?.stage?.solids ?? []).filter((s) => s && s.h == null && s.w > 0);
+  const deck = solids.find((s) => x >= s.x - s.w / 2 - 12 && x <= s.x + s.w / 2 + 12);
+  if (deck) return { cx: deck.x, w: deck.w };
+  return { cx: x, w: 1 };
+}
+
+function syncFloorTiles(scene, live, art, fighter, frame) {
+  const tileW = frame.displayW > 0 ? frame.displayW : 1024;
+  const deck = floorDeck(scene, fighter);
+  const n = Math.max(1, Math.ceil(deck.w / tileW));
+  live.extra ??= [];
+  while (live.extra.length < n - 1) {
+    const img = placeStill(scene, art, fighter.x, fighter.y, 0);
+    img.setDepth(6);
+    live.extra.push(img);
+  }
+  while (live.extra.length > n - 1) live.extra.pop()?.destroy?.();
+  const left = deck.cx - (n * tileW) / 2;
+  [live.img, ...live.extra].forEach((img, i) => {
+    applyFrameLook(img, frame, art, 1);
+    img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 1);
+    img.setPosition(left + (i + 0.5) * tileW, fighter.y);
+    img.setScale(Math.abs(img.scaleX || 1), Math.abs(img.scaleY || 1));
+  });
 }
 
 function syncAttached(scene, fighter) {
@@ -1865,6 +1987,10 @@ function syncAttached(scene, fighter) {
     return;
   }
   if (want.kind === 'ground') {
+    if (art.tile) {
+      syncFloorTiles(scene, live, art, fighter, frame);
+      return;
+    }
     live.img.setPosition(fighter.x, fighter.y);
     if (art.puddle) {
       fighter.rig?.setVisible?.(false);
@@ -2166,11 +2292,59 @@ function stepEmbers(scene) {
   }
 }
 
+/** Where one of Europa's two control rods sits while the sponge is held. */
+export function rodOrbitPoint(fighter, time, index, spec) {
+  const period = spec?.period ?? 1100;
+  const reach = (fighter?.bodyW ?? 40) * (spec?.orbit ?? 1.05);
+  const ang = ((time || 0) / period) * Math.PI * 2 + index * Math.PI;
+  return {
+    x: (fighter?.x ?? 0) + Math.cos(ang) * reach,
+    y: (fighter?.y ?? 0) - (fighter?.bodyH ?? 80) * 0.5 + Math.sin(ang) * reach * 0.38,
+    front: Math.sin(ang) > 0,
+  };
+}
+
+const liveRods = new WeakMap();
+
+function dropRods(fighter) {
+  const live = liveRods.get(fighter);
+  live?.forEach((img) => img?.destroy?.());
+  if (live) liveRods.delete(fighter);
+}
+
+/** Two rods orbit her and spin about their centres for as long as the sponge is held. */
+function syncRods(scene, fighter) {
+  const defending = fighter.state === 'defending' && fighter.defenseMove?.releaseRods;
+  const art = defending ? artFor(fighter.charDef?.id, fighter.defenseMove.name) : null;
+  if (!art?.frames?.length || scene.simFast) {
+    dropRods(fighter);
+    return;
+  }
+  let pair = liveRods.get(fighter);
+  if (!pair || pair.some((img) => !img?.scene)) {
+    dropRods(fighter);
+    pair = [0, 1].map(() => placeStill(scene, art, fighter.x, fighter.y, 0));
+    liveRods.set(fighter, pair);
+  }
+  const now = scene.simNow ?? 0;
+  const spec = fighter.defenseMove.releaseRods;
+  const frame = art.frames[0];
+  pair.forEach((img, i) => {
+    const at = rodOrbitPoint(fighter, now, i, spec);
+    applyFrameLook(img, frame, art, 1);
+    img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+    img.setPosition(at.x, at.y);
+    img.rotation = (now / 1000) * (art.spin || 7);
+    img.setDepth(at.front ? 14 : 7);
+  });
+}
+
 export function syncFxActors(scene) {
   if (!scene?.fighters) return;
   stepOneShots(scene);
   stepEmbers(scene);
   for (const fighter of scene.fighters) {
+    syncRods(scene, fighter);
     syncCling(scene, fighter);
     syncPoison(scene, fighter);
     syncAttached(scene, fighter);
@@ -2370,6 +2544,7 @@ function syncHeld(scene, fighter) {
     if (want.art.anchor === 'body') {
       live.img.setOrigin(0.5, 0.5);
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
+      if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
       if (charge?.perTravel) {
         const need = charge.perTravel * (charge.perTravelCap ?? 5);
         live.img.setAlpha(Math.min(1, Math.max(0, (fighter.travel ?? 0) / Math.max(1, need))));
@@ -2380,10 +2555,16 @@ function syncHeld(scene, fighter) {
       }
       return;
     }
-    live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 1);
-    const shot = 1 + ((charge.chargeRadiusMult ?? 1) - 1) * frac;
+    const onHand = want.art.anchor === 'hand';
+    live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? (onHand ? 0.5 : 1));
+    const shot = want.art.scaleWith === 'alpha'
+      ? 1
+      : 1 + ((charge.chargeRadiusMult ?? 1) - 1) * frac;
     const hand = sheetFxPoint(fighter, 'shot');
-    live.img.setPosition(hand?.x ?? (fighter.x + face * bodyW * 0.65), hand?.y ?? fighter.y);
+    const fallbackX = fighter.x + face * bodyW * (onHand ? 0.9 : 0.65);
+    const fallbackY = onHand ? fighter.y - bodyH * 0.52 : fighter.y;
+    live.img.setPosition(hand?.x ?? fallbackX, hand?.y ?? fallbackY);
+    if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
     const mirror = want.art.flip ? -face : face;
     live.img.setScale(mirror * Math.abs(live.img.scaleX || 1) * shot, Math.abs(live.img.scaleY || 1) * shot);
     return;
@@ -2461,7 +2642,8 @@ export function spawnContactFx(scene, attacker, victim, move) {
   if (!at) return;
   playPacked(scene, byKey.get(`${attacker.charDef?.id}/_hit`), at.x, at.y, 1);
   const painted = artFor(attacker.charDef?.id, move?.name);
-  if (!painted?.releaseImpact) playPacked(scene, painted?.impact, at.x, at.y, 1);
+  const face = painted?.impact?.flip ? (attacker.facing || 1) : 1;
+  if (!painted?.releaseImpact) playPacked(scene, painted?.impact, at.x, at.y, face);
   if (painted?.cling?.frames?.length && victim && move?.onHit?.coat) {
     victim.clingFrom = {
       id: attacker.charDef?.id,
@@ -2478,6 +2660,63 @@ function frameInActive(fighter) {
   const start = fd.startup ?? 0;
   const active = Math.max(1, fd.active ?? 1);
   return frame >= start && frame < start + active;
+}
+
+/** Crack at the target's feet, then the plume. The warning follows them. */
+export function armGeyser(scene, owner, move) {
+  if (!scene || !move?.geyser) return;
+  let best = null;
+  let bestD = Infinity;
+  for (const other of scene.fighters || []) {
+    if (other === owner || !other.alive || other.state === 'ko' || other.state === 'dead') continue;
+    if (other.state === 'defending' && other.defenseMove?.untargetable) continue;
+    const d = Math.hypot((other.x ?? 0) - (owner.x ?? 0), (other.y ?? 0) - (owner.y ?? 0));
+    if (d < bestD) { bestD = d; best = other; }
+  }
+  const face = owner?.facing || 1;
+  const now = scene.simNow ?? scene.time?.now ?? 0;
+  scene._geysers ??= [];
+  scene._geysers.push({
+    owner,
+    target: best,
+    move,
+    born: now,
+    until: now + (move.geyser.warnMs ?? 560),
+    x: best?.x ?? (owner?.x ?? 0) + face * 120,
+    y: best?.y ?? owner?.y ?? 0,
+  });
+}
+
+export function tickGeysers(scene, time) {
+  const list = scene?._geysers;
+  if (!list?.length) return;
+  for (let i = list.length - 1; i >= 0; i--) {
+    const g = list[i];
+    const target = g.target;
+    if (target?.alive && target.state !== 'ko' && target.state !== 'dead') {
+      g.x = target.x;
+      g.y = target.y;
+    }
+    const art = artFor(g.owner?.charDef?.id, g.move?.name);
+    if (!scene.simFast && art?.warn?.frames?.length && scene.add?.image) {
+      if (!g.img?.scene) {
+        g.img?.destroy?.();
+        g.img = placeStill(scene, art.warn, g.x, g.y, 0);
+        g.img.setDepth(4);
+      }
+      const frame = art.warn.frames[fxFrameIndex(art.warn, time - g.born)] || art.warn.frames[0];
+      applyFrameLook(g.img, frame, art.warn, 1);
+      g.img.setOrigin(art.warn.pivotX ?? 0.5, art.warn.pivotY ?? 0.61);
+      g.img.setPosition(g.x, g.y);
+    }
+    if (time < g.until) continue;
+    list.splice(i, 1);
+    g.img?.destroy?.();
+    scene.resolveBurst?.(g.owner, g.move, { x: g.x, y: g.y });
+    if (!scene.simFast && art?.burst?.frames?.length) {
+      spawnFxSprite(scene, art.burst, g.x, g.y, 1);
+    }
+  }
 }
 
 export function clearFxIndexCache() {

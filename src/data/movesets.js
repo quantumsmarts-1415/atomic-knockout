@@ -1096,16 +1096,26 @@ export const MOVESETS = {
       baseKnockback: 70, knockbackGrowth: 1.2, duration: 240, cooldown: 760,
     }),
     basicDirectional: melee('Counterfeit Check', {
-      type: K, damage: 7, stripBuffs: true, onHit: { strip: true }, breakPhase: true, rangeW: 72, vfx: 'strike',
+      type: E, damage: 7, stripBuffs: true, stripProtection: true, cancelInvis: true,
+      onHit: { strip: true }, breakPhase: true, rangeW: 72, vfx: 'strike', vfxColor: 0xb070ff,
       baseKnockback: 80, knockbackGrowth: 1.3, duration: 220, cooldown: 400,
     }),
-    specialDefense: m('Ice Moon Shell', {
-      blocks: [K, H], duration: 760, cooldown: 900, vfx: 'shield', vfxColor: 0xbfe8ff,
+    specialDefense: m('Neutron Sponge', {
+      blocks: [K, R], soakRadiation: true,
+      releaseRods: {
+        type: K, glowType: R, damage: 4,
+        projectileSpeed: 440, projectileRadius: 11, projectileLife: 500,
+        baseKnockback: 64, knockbackGrowth: 1.1,
+        period: 1100, orbit: 1.05,
+      },
+      duration: 1000, cooldown: 1000, vfx: 'shield', vfxColor: 0xc8f0c0,
     }),
-    specialDirectional: m('Banknote Star', {
-      kind: 'projectile', type: K, damage: 8, vfx: 'strike', vfxColor: 0xf0d24a,
-      projectileSpeed: 480, projectileRadius: 8, projectileLife: 480,
-      baseKnockback: 90, knockbackGrowth: 1.4, duration: 200, cooldown: 600,
+    specialDirectional: m('Icy Geyser', {
+      kind: 'burst', type: K, damage: 8, radius: 72,
+      geyser: { warnMs: 560 },
+      onHit: { slow: 700 },
+      vfx: 'gust', vfxColor: 0xbfe8ff,
+      baseKnockback: 80, knockbackGrowth: 1.4, duration: 240, cooldown: 720,
     }),
   },
 
@@ -1584,10 +1594,11 @@ export const MOVESETS = {
 
   goldie: {
     basicCharge: m('MRI Contrast', {
-      kind: 'burst', type: E, damage: 4, chargeRadiusMult: 1.3, maxChargeMs: 800, radius: 78,
-      onHit: { mark: 'scan', markMs: 2400, vulnerable: 1.08, vulnerableMs: 2000 },
+      kind: 'burst', damage: 0, chargeRadiusMult: 1.3, maxChargeMs: 800, radius: 78,
+      noKnockback: true,
+      onHit: { doublePercent: true, stun: 1000 },
       vfx: 'spark', vfxColor: 0xb8f0ff,
-      baseKnockback: 30, knockbackGrowth: 0.4, duration: 240, cooldown: 880,
+      baseKnockback: 0, knockbackGrowth: 0, duration: 240, cooldown: 880,
     }),
     basicDirectional: melee('Magnetocaloric Palm', {
       type: K, damage: 7, type2: H, damage2: 6, rangeW: 66, vfx: 'strike', vfxColor: 0xffd0a0,
@@ -1596,9 +1607,13 @@ export const MOVESETS = {
     specialDefense: m('Magnetic Chill', {
       immune: [H], cleanse: ['burn'], duration: 640, cooldown: 820, vfx: 'shield', vfxColor: 0xd8f4ff,
     }),
-    specialDirectional: melee('Room-Temp Magnet', {
-      type: K, damage: 7, pull: 160, rangeW: 88, vfx: 'spark', vfxColor: 0xc8e6f4,
-      baseKnockback: 100, knockbackGrowth: 2, duration: 230, cooldown: 540,
+    specialDirectional: m('Curie Point Burst', {
+      kind: 'projectile', type: H, damage: 0, _ghost: true,
+      igniteAt: 0.62, igniteType: H, igniteDamage: 8, igniteRadius: 150,
+      metalsOnly: true,
+      vfx: 'fire', vfxColor: 0xffb060,
+      projectileSpeed: 460, projectileRadius: 12, projectileLife: 820,
+      baseKnockback: 150, knockbackGrowth: 2.2, duration: 230, cooldown: 680,
     }),
   },
 
@@ -1893,6 +1908,7 @@ export const MOVESETS = {
   terra: {
     basicCharge: m('Sonar Pulse', {
       kind: 'beam', type: K, damage: 7, breakPhase: true, onHit: { reveal: true },
+      stageWide: true,
       chargeDamageMult: 1.3, chargeLengthMult: 1.15, maxChargeMs: 800,
       beamLen: 520, beamThick: 16, vfx: 'gust', vfxColor: 0xb8f0c8,
       baseKnockback: 50, knockbackGrowth: 1.0, duration: 220, cooldown: 820,
@@ -1903,6 +1919,7 @@ export const MOVESETS = {
     }),
     specialDefense: m('Floor Speaker', {
       retort: { type: K, damage: 6, knockback: 170, growth: 1.8 },
+      retortBurst: true,
       duration: 480, cooldown: 960, vfx: 'shield', vfxColor: 0x9ad7b0,
     }),
     specialDirectional: m('Green Phosphor Bolt', {

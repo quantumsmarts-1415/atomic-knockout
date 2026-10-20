@@ -1,0 +1,32 @@
+{
+  "file": "phosphor-bloom-burst-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 16,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "hit": false,
+  "heightFrac": 1.4,
+  "charge": {
+    "file": "uv-soak-charge-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "body",
+    "hit": false,
+    "heightFrac": 1.2,
+    "scaleWith": "alpha"
+  }
+}

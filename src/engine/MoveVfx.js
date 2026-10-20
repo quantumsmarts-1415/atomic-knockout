@@ -1,6 +1,7 @@
 // Code-driven move effects. Body clips stay on idle/walk unless a real
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
+import { anodizeTint } from './kit.js';
 import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, spawnStageSpan, wantsContactSpark } from './fxArt.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
@@ -439,7 +440,11 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         x = tip.x;
         y = tip.y;
       }
-      if (drawFxOneShot(scene, fighter, move, x, y, 1)) return;
+      const shot = drawFxOneShot(scene, fighter, move, x, y, 1);
+      if (shot) {
+        if (move.sharpen) shot.image?.setTint?.(anodizeTint(fighter._sharpen, move.sharpen));
+        return;
+      }
     }
     if (art?.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) return;
   }

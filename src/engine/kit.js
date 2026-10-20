@@ -52,6 +52,9 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.muteType = fx.mute;
     victim.muteUntil = time + (fx.muteMs ?? 2600);
   }
+  if (fx.muteSpecialMs) {
+    victim.specialMutedUntil = Math.max(victim.specialMutedUntil ?? 0, time + fx.muteSpecialMs);
+  }
   if (fx.vulnerable) {
     victim.vulnerableMult = fx.vulnerable;
     victim.vulnerableUntil = time + (fx.vulnerableMs ?? 2600);
@@ -337,6 +340,13 @@ export function applyOnCast(fighter, move, time, frac = 1) {
       if (buff.attackPower) buff.attackPower = 1 + (buff.attackPower - 1) * frac;
     }
     grantBuff(fighter, buff, time);
+    if (buff.heatTaken != null && fighter.heatResistUntil > time && fighter.charDef?.id) {
+      fighter.buffCling = {
+        id: fighter.charDef.id,
+        move: move.name,
+        until: fighter.heatResistUntil,
+      };
+    }
   }
   if (move.cleanse) cleanse(fighter, move.cleanse);
   if (move.blinkMs) fighter.phasingUntil = time + move.blinkMs;
@@ -453,6 +463,16 @@ export function scaledByHaste(move, haste = 1) {
     endlagF: frames(move.endlagF, 0),
     activeF: frames(move.activeF, 1),
   };
+}
+
+/** Anodized Edge runs blue on the first swing and gold once the sharpen cap is full. */
+export function anodizeTint(stack, sharpen = {}) {
+  const step = sharpen.step > 0 ? sharpen.step : 1;
+  const cap = sharpen.cap > 0 ? sharpen.cap : 5;
+  const full = Math.max(1, Math.ceil(cap / step));
+  const t = Math.max(0, Math.min(1, ((stack ?? 1) - 1) / full));
+  const mix = (a, b) => Math.round(a + (b - a) * t);
+  return (mix(0x6e, 0xf0) << 16) | (mix(0xc8, 0xc1) << 8) | mix(0xff, 0x4a);
 }
 
 /** Extra shard packet added only once the blade has connected. */

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { gateStored, interceptHit } from '../src/engine/defense.js';
-import { applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, lightUnquenchable, markedStrikeTargets, scaledByHaste, sheetFrameAt, stripBuffs, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
+import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, lightUnquenchable, markedStrikeTargets, scaledByHaste, sheetFrameAt, stripBuffs, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
 import { applyImmunities, rearmDefense } from '../src/engine/defense.js';
 
 const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
@@ -659,6 +659,48 @@ test('ruth swaps whoever touches the line and the hook ignores armor', () => {
   assert.ok(crack.coneDeg > 0);
   assert.strictEqual(crack.zone.type, 'chemical');
   assert.ok(crack.zone.ms >= 1000);
+});
+
+test('niobe pulse locks a special for fifteen seconds and the stone stays put', () => {
+  const moves = CHARACTERS.niobe.moves;
+  const ring = moves.basicCharge;
+  assert.strictEqual(ring.name, 'Particle Ring');
+  assert.strictEqual(ring.kind, 'beam');
+  assert.strictEqual(ring.type, 'electrical');
+  assert.strictEqual(ring.type2, 'radiation');
+  assert.strictEqual(ring.damage, 3.51);
+  assert.strictEqual(ring.damage2, 2.96);
+  const edge = moves.basicDirectional;
+  assert.strictEqual(edge.name, 'Anodized Edge');
+  assert.strictEqual(edge.sharpen.step, 1);
+  assert.strictEqual(edge.sharpen.cap, 5);
+  assert.strictEqual(anodizeTint(1, edge.sharpen), 0x6ec8ff);
+  assert.strictEqual(anodizeTint(6, edge.sharpen), 0xf0c14a);
+  const stone = moves.specialDefense;
+  assert.strictEqual(stone.name, 'Weeping Stone');
+  assert.strictEqual(stone.rooted, true);
+  assert.strictEqual(stone.noKnockback, true);
+  assert.strictEqual(stone.blockReduction, 0.82);
+  assert.deepStrictEqual(stone.onlyReduce, ['kinetic', 'heat']);
+  const pulse = moves.specialDirectional;
+  assert.strictEqual(pulse.name, 'MRI Pulse');
+  assert.strictEqual(pulse.kind, 'beam');
+  assert.strictEqual(pulse.type, 'electrical');
+  assert.strictEqual(pulse.type2, undefined);
+  assert.ok(pulse.damage < ring.damage);
+  assert.strictEqual(pulse.onHit.muteSpecialMs, 15000);
+  const victim = { state: 'idle' };
+  applyOnHit({ charDef: { id: 'niobe' } }, victim, pulse, 400);
+  assert.strictEqual(victim.specialMutedUntil, 15400);
+  const punch = CHARACTERS.tessa.moves.basicCharge;
+  assert.strictEqual(punch.name, 'Peltier Punch');
+  assert.strictEqual(punch.buff.heatTaken, 0.6);
+  assert.strictEqual(punch.buff.ms, 2000);
+  const tessa = { charDef: { id: 'tessa' }, percent: 0 };
+  applyOnCast(tessa, punch, 1000);
+  assert.strictEqual(tessa.heatResistUntil, 3000);
+  assert.strictEqual(tessa.buffCling.move, 'Peltier Punch');
+  assert.strictEqual(tessa.buffCling.until, 3000);
 });
 
 test('tex tags for ten seconds and the camera hits every tag', () => {

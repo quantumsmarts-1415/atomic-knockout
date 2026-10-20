@@ -2487,14 +2487,14 @@ export const MOVESETS = {
       baseKnockback: 44.93, knockbackGrowth: 0.85, duration: 180, cooldown: 380,
     }),
     specialDefense: m('Weeping Stone', {
-      kind: 'block', onlyReduce: [K, H], blockReduction: 0.82, noKnockback: true,
+      kind: 'block', onlyReduce: [K, H], blockReduction: 0.82, noKnockback: true, rooted: true,
       duration: 800, cooldown: 960, vfx: 'shield', vfxColor: 0xc8d0e0,
     }),
-    specialDirectional: m('Magnet Quench', {
-      kind: 'projectile', type: E, damage: 3.51, type2: H, damage2: 2.96, explodeOnly: true, explodeRadius: 62,
-      vfx: 'spark', vfxColor: 0xffd0a0,
-      projectileSpeed: 440, projectileRadius: 10, projectileLife: 480,
-      baseKnockback: 54.91, knockbackGrowth: 0.95, duration: 200, cooldown: 700,
+    specialDirectional: m('MRI Pulse', {
+      kind: 'beam', type: E, damage: 2.4, beamLen: 200, beamThick: 48,
+      onHit: { muteSpecialMs: 15000 },
+      vfx: 'laser', vfxColor: 0xc8d8ff,
+      baseKnockback: 36, knockbackGrowth: 0.55, duration: 200, cooldown: 780,
     }),
   },
 

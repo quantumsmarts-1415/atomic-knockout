@@ -2039,6 +2039,9 @@ function syncCling(scene, fighter) {
   if (!art?.frames?.length && fighter.clingFrom && fighter.clingFrom.until > now) {
     art = artFor(fighter.clingFrom.id, fighter.clingFrom.move)?.cling || null;
   }
+  if (!art?.frames?.length && fighter.buffCling && fighter.heatResistUntil > now && fighter.buffCling.until > now) {
+    art = artFor(fighter.buffCling.id, fighter.buffCling.move)?.cling || null;
+  }
   if (!art?.frames?.length) {
     dropCling(fighter);
   } else {

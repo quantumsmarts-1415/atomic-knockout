@@ -1311,6 +1311,55 @@ test('cody and ruth sheets keep the paint coat and the swap line apart', () => {
   assert.equal(dye.pivot, 'left');
 });
 
+test('niobe sheets keep the pulse full size and tessa only clings the cool shimmer', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const ring = read('assets/fx/niobe/particle-ring/fx.json');
+  assert.equal(ring.file, 'particle-ring-beam-anim.png');
+  assert.equal(ring.frames, 24);
+  assert.equal(ring.fps, 12);
+  assert.equal(ring.stretch, 'length');
+  assert.equal(ring.pivot, 'left');
+  assert.equal(ring.hit, false);
+  assert.equal(ring.black, 24);
+  assert.equal(fs.existsSync('assets/fx/niobe/particle-ring/particle-ring-beam-anim.png'), true);
+  const edge = read('assets/fx/niobe/anodized-edge/fx.json');
+  assert.equal(edge.frames, 23);
+  assert.equal(edge.fps, 11.5);
+  assert.equal(edge.oneshot, true);
+  assert.equal(edge.anchor, 'contact');
+  assert.equal(edge.hit, false);
+  assert.equal(fs.existsSync('assets/fx/niobe/anodized-edge/anodized-edge-slash-anim.png'), true);
+  const stone = read('assets/fx/niobe/weeping-stone/fx.json');
+  assert.equal(stone.loop, true);
+  assert.equal(stone.fps, 10.105);
+  assert.equal(stone.blend, 'normal');
+  assert.equal(stone.black, 24);
+  assert.equal(stone.anchor, 'body');
+  assert.equal(fs.existsSync('assets/fx/niobe/weeping-stone/weeping-stone-shell-anim.png'), true);
+  const pulse = read('assets/fx/niobe/mri-pulse/fx.json');
+  assert.equal(pulse.file, 'mri-pulse-wave-anim.png');
+  assert.equal(pulse.frames, 24);
+  assert.equal(pulse.fps, 12);
+  assert.equal(pulse.stretch, 'length');
+  assert.equal(pulse.fit, 'length');
+  assert.equal(pulse.pivot, 'left');
+  assert.equal(pulse.hit, false);
+  assert.equal(pulse.scale, undefined);
+  assert.equal(fs.existsSync('assets/fx/niobe/mri-pulse/mri-pulse-wave-anim.png'), true);
+  assert.equal(fs.existsSync('assets/fx/niobe/mri-pulse/mri-pulse-wave-anim.gif'), false);
+  const cool = read('assets/fx/tessa/peltier-punch/fx.json');
+  assert.equal(cool.file, undefined);
+  assert.equal(cool.cling.file, 'peltier-cool-status-anim.png');
+  assert.equal(cool.cling.loop, true);
+  assert.equal(cool.cling.fps, 12);
+  assert.equal(cool.cling.anchor, 'body');
+  assert.equal(cool.cling.heightFrac, 1);
+  assert.equal(cool.cling.blend, 'add');
+  assert.equal(fs.existsSync('assets/fx/tessa/peltier-punch/peltier-cool-status-anim.png'), true);
+  assert.equal(fs.existsSync('assets/fx/tessa/peltier-punch/peltier-cool-status-anim.gif'), false);
+  assert.equal(fs.existsSync('assets/fx/tessa/garlic-breath/fx.json'), false);
+});
+
 test('tex sheets match the technetium handoff', () => {
   const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
   const burst = read('assets/fx/tex/metastable-flash/fx.json');

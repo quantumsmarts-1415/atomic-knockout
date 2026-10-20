@@ -559,6 +559,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
       } else if (releasedAttack) {
         this.fireCharge(time);
       }
+    } else if (this.state === 'defending' && (this.specialMutedUntil ?? 0) > time) {
+      this.onDefenseEnd(time);
+      this.state = 'idle';
+      this.defenseMove = null;
+      this.rig.setFlash(null);
     } else if (this.state === 'defending' && this.defenseMove?.hold !== false && !inp.special) {
       this.onDefenseEnd(time);
       this.state = 'idle';
@@ -585,7 +590,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
           this.state = 'charging';
           this.chargeStart = time;
         }
-      } else if (pressedSpecial && time >= this.specialCooldownUntil && time >= (this.vulnerableUntil ?? 0)) {
+      } else if (pressedSpecial && time >= this.specialCooldownUntil && time >= (this.vulnerableUntil ?? 0) && time >= (this.specialMutedUntil ?? 0)) {
         if (dirHeld || !this.charDef.moves.specialDefense) {
           this.startMove(time, this.charDef.moves.specialDirectional, 'special', 'specialDirectional');
         } else {
@@ -1813,7 +1818,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
   shiftTimers(ms) {
     const keys = [
-      'stateUntil', 'attackCooldownUntil', 'specialCooldownUntil', 'vulnerableUntil', 'lockedUntil',
+      'stateUntil', 'attackCooldownUntil', 'specialCooldownUntil', 'specialMutedUntil', 'vulnerableUntil', 'lockedUntil',
       'dashUntil', 'diveUntil', 'diveArm', 'slowUntil', 'rootedUntil', 'speedBuffUntil', 'attackHasteUntil', 'driftUntil',
       'phasingUntil', 'weightBuffUntil', 'poisonUntil', 'stunUntil', 'freezeUntil', 'burnUntil',
       'unquenchableUntil', 'heatOnHitUntil',

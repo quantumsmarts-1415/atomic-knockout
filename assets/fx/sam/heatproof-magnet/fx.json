@@ -1,0 +1,32 @@
+{
+  "file": "heatproof-magnet-slam-anim.png",
+  "frames": 24,
+  "cols": 3,
+  "rows": 8,
+  "fps": 16,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "heightFrac": 1.15,
+  "charge": {
+    "file": "magnet-pull-field-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "pivot": "center",
+    "hit": false,
+    "heightFrac": 1.05,
+    "anchor": "hands",
+    "scaleWith": "charge",
+    "pulse": 0.2
+  }
+}

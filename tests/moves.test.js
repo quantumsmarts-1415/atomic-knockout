@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { gateStored, interceptHit } from '../src/engine/defense.js';
-import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, lightUnquenchable, markedStrikeTargets, scaledByHaste, sheetFrameAt, stripBuffs, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
+import { anodizeTint, applyDot, applyOnCast, applyOnHit, bankStolenPackets, bonusPackets, cleanse, fighterOnSwapLine, lightUnquenchable, markedStrikeTargets, scaledByHaste, sheetFrameAt, stripBuffs, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
 import { resolvePacket } from '../src/data/balance.js';
 import { applyImmunities, rearmDefense } from '../src/engine/defense.js';
 
@@ -973,6 +973,71 @@ test('batch 11 kits follow the approved briefs', () => {
   assert.strictEqual(indy.name, 'Putty Guard');
   assert.strictEqual(indy.blockReduction, 0.5);
   assert.strictEqual(indy.noKnockback, true);
+});
+
+test('prometheus and sam kits follow the approved brief', () => {
+  const prom = CHARACTERS.prometheus.moves;
+  const fire = prom.basicCharge;
+  assert.strictEqual(fire.name, 'Stolen Fire');
+  assert.strictEqual(fire.type, 'kinetic');
+  assert.strictEqual(fire.damage, 4);
+  assert.strictEqual(fire.type2, 'heat');
+  assert.strictEqual(fire.damage2, 4);
+  assert.strictEqual(fire.stealHeat.cap, 14);
+  assert.strictEqual(fire.stealHeat.keep, 0.85);
+  const rock = prom.specialDefense;
+  assert.strictEqual(rock.name, 'Chained to the Rock');
+  assert.strictEqual(rock.noKnockback, true);
+  assert.strictEqual(rock.rooted, true);
+  assert.strictEqual(rock.regen, 3);
+  const battery = prom.specialDirectional;
+  assert.strictEqual(battery.name, 'Beta Battery');
+  assert.strictEqual(battery.kind, 'projectile');
+  assert.strictEqual(battery.zone, undefined);
+  assert.strictEqual(battery.onHit.glow.dps, 1);
+  assert.strictEqual(battery.onHit.glow.every, 1000);
+  assert.strictEqual(battery.onHit.glow.ms, 10000);
+  assert.strictEqual(battery.onHit.glow.immediate, true);
+  const stuck = {
+    percent: 20, alive: true, state: 'idle', x: 100, y: 200, bodyH: 80,
+    scene: { noteDot() {} },
+  };
+  applyOnHit(
+    { charDef: { id: 'prometheus' } },
+    stuck,
+    { ...battery, _hitAt: { x: 120, y: 160 } },
+    0,
+  );
+  assert.strictEqual(stuck.glowTick, 0);
+  assert.strictEqual(stuck.glowUntil, 10000);
+  assert.strictEqual(stuck.stuckFrom.ox, 20);
+  assert.strictEqual(stuck.stuckFrom.oy, -40);
+  assert.strictEqual(stuck.stuckFrom.until, 10000);
+  for (let t = 0; t <= 10000; t += 1000) tickKit(stuck, t);
+  assert.strictEqual(stuck.percent, 30);
+  const holder = {
+    charDef: CHARACTERS.prometheus,
+    lastPackets: [{ type: 'heat', dealt: 10 }, { type: 'kinetic', dealt: 4 }],
+  };
+  bankStolenPackets(holder);
+  assert.ok(Math.abs(holder._storedHeat - 8.5) < 1e-6);
+  holder.lastPackets = [{ type: 'heat', dealt: 20 }];
+  bankStolenPackets(holder);
+  assert.strictEqual(holder._storedHeat, 14);
+  const dot = { charDef: CHARACTERS.prometheus, percent: 0, scene: { noteDot() {} } };
+  applyDot(dot, 4, 'heat');
+  assert.ok(Math.abs(dot._storedHeat - 3.4) < 1e-6);
+
+  const magnet = CHARACTERS.sam.moves.basicCharge;
+  assert.strictEqual(magnet.name, 'Heatproof Magnet');
+  assert.strictEqual(magnet.kind, 'burst');
+  assert.strictEqual(magnet.type, 'kinetic');
+  assert.strictEqual(magnet.damage, 5);
+  assert.strictEqual(magnet.type2, 'heat');
+  assert.strictEqual(magnet.damage2, 4);
+  assert.strictEqual(magnet.pull.metals, true);
+  assert.ok(magnet.pull.radius >= 1600);
+  assert.ok(magnet.chargeRadiusMult > 1);
 });
 
 function fake(id, x, y) {

@@ -229,6 +229,13 @@ export function fxGameplayScale(move, art) {
   return extra;
 }
 
+/** Flame size and alpha from heat stored since the last Stolen Fire. Empty is still a flame. */
+export function storedHeatVisual(heat, cap = 14) {
+  const limit = cap > 0 ? cap : 14;
+  const frac = Math.max(0, Math.min(1, (heat > 0 ? heat : 0) / limit));
+  return { frac, scale: 0.7 + 0.9 * frac, alpha: 0.6 + 0.4 * frac };
+}
+
 export function fxKey(fighterId, moveName) {
   return `${fighterId}/${moveSlug(moveName)}`;
 }
@@ -908,6 +915,7 @@ const SIDE_SPECS = [
   ['ember', 'ember-'], ['spark', 'spark-'], ['cinder', 'cinder-'], ['mote', 'mote-'], ['puff', 'puff-'],
   ['gas', 'gas-'], ['fizzle', 'fizzle-'], ['linger', 'linger-'],
   ['trail', 'trail-'], ['stain', 'stain-'],
+  ['flame', 'flame-'], ['stick', 'stick-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -935,6 +943,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       order: merged.order,
       pulse: merged.pulse,
       maxAlpha: merged.maxAlpha,
+      scaleWith: merged.scaleWith || null,
     });
   }
   return record;
@@ -2166,6 +2175,38 @@ function stepEmbers(scene) {
   }
 }
 
+const liveStick = new WeakMap();
+
+function dropStick(fighter) {
+  const live = liveStick.get(fighter);
+  live?.img?.destroy?.();
+  if (live) liveStick.delete(fighter);
+}
+
+/** Battery (or other stuck prop) follows the contact point, then fades out. */
+function syncStick(scene, fighter) {
+  const now = scene.simNow ?? 0;
+  const stuck = fighter.stuckFrom;
+  const art = stuck && stuck.until > now ? artFor(stuck.id, stuck.move)?.stick : null;
+  if (!art?.frames?.length) {
+    dropStick(fighter);
+    return;
+  }
+  let live = liveStick.get(fighter);
+  if (!live?.img?.scene) {
+    dropStick(fighter);
+    live = { img: placeStill(scene, art, fighter.x, fighter.y, 0), born: stuck.born ?? now };
+    live.img.setDepth(16);
+    liveStick.set(fighter, live);
+  }
+  const frame = art.frames[fxFrameIndex(art, now - live.born)] || art.frames[0];
+  applyFrameLook(live.img, frame, art, 1);
+  live.img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+  live.img.setPosition(fighter.x + (stuck.ox || 0), fighter.y + (stuck.oy || 0));
+  const left = stuck.until - now;
+  live.img.setAlpha(left < 400 ? Math.max(0, left / 400) : 1);
+}
+
 export function syncFxActors(scene) {
   if (!scene?.fighters) return;
   stepOneShots(scene);
@@ -2182,6 +2223,7 @@ export function syncFxActors(scene) {
       fighter._puddleHid = false;
     }
     syncHeld(scene, fighter);
+    syncStick(scene, fighter);
     syncFreeze(scene, fighter);
     const move = fighter.currentMove;
     const art = artFor(fighter?.charDef?.id, move?.name);
@@ -2292,10 +2334,24 @@ function predictSpot(scene, fighter, lead) {
   };
 }
 
+function swingFlame(fighter) {
+  if (fighter?.state !== 'attack') return null;
+  const flame = artFor(fighter.charDef?.id, fighter.currentMove?.name)?.flame;
+  if (!flame?.frames?.length || flame.scaleWith !== 'storedHeat') return null;
+  return flame;
+}
+
+function heatPunch(fighter, charge, art) {
+  return fighter?.state === 'attack'
+    && fighter.currentMove?.name === charge?.name
+    && art?.charge?.scaleWith === 'storedHeat';
+}
+
 function syncHeld(scene, fighter) {
   const now = scene.simNow ?? 0;
   const charge = fighter.charDef?.moves?.basicCharge;
   const art = charge && artFor(fighter.charDef?.id, charge.name);
+  const torch = swingFlame(fighter);
   let want = null;
   if (art?.orbit?.frames?.length && orbitVisible(fighter)) want = { art: art.orbit, kind: 'orbit' };
   else if (art?.anchor === 'lance' && art.frames?.length) {
@@ -2303,7 +2359,9 @@ function syncHeld(scene, fighter) {
     if (phase) want = { art, kind: 'lance', phase };
   } else if (art?.anchor === 'feet' && art.frames?.length && fighter.state === 'charging') {
     want = { art, kind: 'feet' };
-  } else if (art?.charge?.frames?.length && fighter.state === 'charging') {
+  } else if (torch) {
+    want = { art: torch, kind: 'grow' };
+  } else if (art?.charge?.frames?.length && (fighter.state === 'charging' || heatPunch(fighter, charge, art))) {
     const anchor = art.charge.anchor;
     const kind = anchor === 'feet' ? 'feet' : anchor === 'predict' ? 'predict' : 'grow';
     want = { art: art.charge, kind };
@@ -2323,7 +2381,7 @@ function syncHeld(scene, fighter) {
   }
   if (!live?.img?.scene || live.kind !== want.kind) {
     dropHeld(fighter);
-    live = { img: placeStill(scene, want.art, fighter.x, fighter.y, 0), kind: want.kind };
+    live = { img: placeStill(scene, want.art, fighter.x, fighter.y, 0), kind: want.kind, born: now };
     live.img.setDepth(want.kind === 'feet' ? 3 : want.kind === 'grow' ? 11 : want.kind === 'orbit' ? 8 : want.kind === 'aura' ? 9 : 12);
     liveHeld.set(fighter, live);
   }
@@ -2356,32 +2414,58 @@ function syncHeld(scene, fighter) {
   }
   if (want.kind === 'grow') {
     const frames = want.art.frames;
-    const max = charge.maxChargeMs || 1;
+    const max = charge?.maxChargeMs || 1;
     const frac = Math.min(1, Math.max(0, (now - (fighter.chargeStart ?? now)) / max));
-    const elapsed = now - (fighter.chargeStart ?? now);
+    const elapsed = want.art.scaleWith === 'storedHeat'
+      ? now - (live.born ?? now)
+      : now - (fighter.chargeStart ?? now);
     const frame = want.art.loop
       ? (frames[fxFrameIndex(want.art, elapsed)] || frames[0])
       : frames[Math.min(frames.length - 1, Math.round(frac * (frames.length - 1)))];
     applyFrameLook(live.img, frame, want.art, 1);
+    if (want.art.scaleWith === 'storedHeat') {
+      const held = fighter.state === 'charging' ? (fighter._storedHeat ?? 0) : (fighter._spentHeat ?? 0);
+      const look = storedHeatVisual(held, charge?.stealHeat?.cap ?? 14);
+      const tip = meleeContactPoint(fighter, fighter.currentMove || charge);
+      live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 0.833);
+      live.img.setPosition(tip.x, tip.y);
+      live.img.rotation = 0;
+      const sx = Math.abs(live.img.scaleX || 1) * look.scale;
+      const sy = Math.abs(live.img.scaleY || 1) * look.scale;
+      live.img.setScale(face * sx, sy);
+      live.img.setAlpha(look.alpha);
+      return;
+    }
     if (want.art.pulse) {
       const pulse = 0.8 + 0.2 * Math.sin((scene.simNow || 0) * 0.012);
       live.img.setAlpha(pulse * (0.42 + 0.58 * frac));
     }
-    if (want.art.anchor === 'body') {
+    if (want.art.anchor === 'body' || want.art.anchor === 'hands') {
+      const hands = want.art.anchor === 'hands';
       live.img.setOrigin(0.5, 0.5);
-      live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
-      if (charge?.perTravel) {
+      live.img.setPosition(
+        hands ? fighter.x + face * bodyW * 0.28 : fighter.x,
+        fighter.y - bodyH * (hands ? 0.46 : 0.5),
+      );
+      if (charge?.perTravel && !hands) {
         const need = charge.perTravel * (charge.perTravelCap ?? 5);
         live.img.setAlpha(Math.min(1, Math.max(0, (fighter.travel ?? 0) / Math.max(1, need))));
       }
+      const grow = want.art.scaleWith === 'charge'
+        ? 1 + ((charge?.chargeRadiusMult ?? 1) - 1) * frac
+        : 1;
+      const sx = Math.abs(live.img.scaleX || 1) * grow;
+      const sy = Math.abs(live.img.scaleY || 1) * grow;
       if (want.art.flip) {
         const dir = -(fighter.facing || 1);
-        live.img.setScale(dir * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
+        live.img.setScale(dir * sx, sy);
+      } else if (grow !== 1) {
+        live.img.setScale(sx, sy);
       }
       return;
     }
     live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 1);
-    const shot = 1 + ((charge.chargeRadiusMult ?? 1) - 1) * frac;
+    const shot = 1 + ((charge?.chargeRadiusMult ?? 1) - 1) * frac;
     const hand = sheetFxPoint(fighter, 'shot');
     live.img.setPosition(hand?.x ?? (fighter.x + face * bodyW * 0.65), hand?.y ?? fighter.y);
     const mirror = want.art.flip ? -face : face;

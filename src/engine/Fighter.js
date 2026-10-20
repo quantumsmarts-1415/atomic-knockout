@@ -3,7 +3,7 @@ import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { canonicalType, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defense.js';
-import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
+import { applyOnCast, applyOnHit, bankStolenPackets, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
 import { hitAnchor } from './fxArt.js';
@@ -1153,10 +1153,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
       scaled.damage = (scaled.damage ?? 0) + this._storedCharge;
       this._storedCharge = 0;
     }
-    if (move.stealHeat && this._storedHeat) {
-      scaled.type2 = scaled.type2 ?? 'heat';
-      scaled.damage2 = (scaled.damage2 ?? 0) + this._storedHeat;
-      this._storedHeat = 0;
+    if (move.stealHeat) {
+      const stored = this._storedHeat || 0;
+      this._spentHeat = stored;
+      if (stored) {
+        scaled.type2 = scaled.type2 ?? 'heat';
+        scaled.damage2 = (scaled.damage2 ?? 0) + stored;
+        this._storedHeat = 0;
+      }
     }
     if (gambleScale !== 1) {
       if (scaled.damage != null) scaled.damage *= gambleScale;
@@ -1356,12 +1360,6 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (this.state === 'charging' && !move.isSelf && !move.isCounterAttack) {
       const store = this.charDef.moves.basicCharge?.storeHits;
       if (store) this._storedCharge = Math.min(store.cap ?? 24, (this._storedCharge ?? 0) + (store.per ?? 3));
-      const steal = this.charDef.moves.basicCharge?.stealHeat;
-      if (steal) {
-        const heat = (move.type === 'heat' ? (move.damage ?? 0) : 0)
-          + (move.type2 === 'heat' ? (move.damage2 ?? move.damage ?? 0) : 0);
-        if (heat) this._storedHeat = Math.min(steal.cap ?? 16, (this._storedHeat ?? 0) + heat * (steal.keep ?? 0.8));
-      }
     }
 
     let incoming = move;
@@ -2370,6 +2368,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (dealt?.packets?.some((p) => p.type === 'heat' && p.dealt > 0)) {
       this.heatedUntil = Math.max(this.heatedUntil ?? 0, time + 2200);
     }
+    bankStolenPackets(this);
     const defense = this.defenseMove;
     if (this.state !== 'defending' || !defense?.recoil || !attacker || attacker === this) return;
     if (incoming.isCounterAttack || incoming.isSelf) return;

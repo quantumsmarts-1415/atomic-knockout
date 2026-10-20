@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, stageSpanSize, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, stageSpanSize, stepFxProjectile, storedHeatVisual, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1560,6 +1560,63 @@ test('batch 11 sheets match the approved handoffs', () => {
   assert.equal(putty.fps, 19.2);
   assert.equal(putty.anchor, 'body');
   for (const id of ['tessa', 'iona', 'xander', 'caesar', 'barry', 'lana']) {
+    const root = `assets/fx/${id}`;
+    for (const name of fs.readdirSync(root)) {
+      const dir = `${root}/${name}`;
+      if (!fs.statSync(dir).isDirectory()) continue;
+      for (const file of fs.readdirSync(dir)) {
+        assert.equal(file.endsWith('.gif') || file.endsWith('.jpg'), false, `${dir}/${file}`);
+      }
+    }
+  }
+});
+
+test('prometheus stolen fire and sam magnet match the sheets on disk', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const fire = read('assets/fx/prometheus/stolen-fire/fx.json');
+  assert.equal(fire.file, 'stolen-fire-impact-anim.png');
+  assert.equal(fire.frames, 24);
+  assert.equal(fire.cols, 4);
+  assert.equal(fire.rows, 6);
+  assert.equal(fire.fps, 16);
+  assert.equal(fire.loop, false);
+  assert.equal(fire.blend, 'add');
+  assert.equal(fire.oneshot, true);
+  assert.equal(fire.anchor, 'contact');
+  assert.equal(fire.hit, false);
+  const flame = fire.charge;
+  assert.equal(flame.file, 'stolen-fire-flame-anim.png');
+  assert.equal(flame.loop, true);
+  assert.equal(flame.fps, 16);
+  assert.equal(flame.anchor, 'fist');
+  assert.equal(flame.scaleWith, 'storedHeat');
+  assert.ok(Math.abs(flame.pivotY - 480 / 576) < 0.001);
+  assert.equal(flame.crop, undefined);
+  const slam = read('assets/fx/sam/heatproof-magnet/fx.json');
+  assert.equal(slam.file, 'heatproof-magnet-slam-anim.png');
+  assert.equal(slam.frames, 24);
+  assert.equal(slam.cols, 3);
+  assert.equal(slam.rows, 8);
+  assert.equal(slam.fps, 16);
+  assert.equal(slam.loop, false);
+  assert.equal(slam.hit, false);
+  const field = slam.charge;
+  assert.equal(field.file, 'magnet-pull-field-anim.png');
+  assert.equal(field.frames, 24);
+  assert.equal(field.cols, 6);
+  assert.equal(field.rows, 4);
+  assert.equal(field.fps, 12);
+  assert.equal(field.loop, true);
+  assert.equal(field.anchor, 'hands');
+  assert.equal(field.scaleWith, 'charge');
+  assert.equal(field.pulse, 0.2);
+  const cold = storedHeatVisual(0, 14);
+  assert.equal(cold.scale, 0.7);
+  assert.equal(cold.alpha, 0.6);
+  const hot = storedHeatVisual(14, 14);
+  assert.ok(Math.abs(hot.scale - 1.6) < 1e-9);
+  assert.ok(Math.abs(hot.alpha - 1) < 1e-9);
+  for (const id of ['prometheus', 'sam']) {
     const root = `assets/fx/${id}`;
     for (const name of fs.readdirSync(root)) {
       const dir = `${root}/${name}`;

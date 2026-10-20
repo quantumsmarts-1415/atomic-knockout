@@ -1,0 +1,15 @@
+{
+  "file": "reactor-surge-anim.png",
+  "frames": 16,
+  "cols": 4,
+  "rows": 4,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "pixel",
+  "pivotX": 0,
+  "pivotY": 0.78125,
+  "scaleWith": "surge",
+  "hit": false
+}

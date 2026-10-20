@@ -1214,18 +1214,17 @@ export const MOVESETS = {
       maxChargeMs: 900, radius: 58, vfx: 'spark', vfxColor: 0xf0d24a,
       baseKnockback: 120, knockbackGrowth: 1.7, duration: 280, cooldown: 1000,
     }),
-    basicDirectional: melee('Thunderclap', {
-      type: K, damage: 6, type2: E, damage2: 4, onHit: { interrupt: 140 }, rangeW: 80, vfx: 'spark',
+    basicDirectional: melee('Fuel Rod Jab', {
+      type: K, damage: 6, type2: R, damage2: 4, rangeW: 80, vfx: 'spark',
       baseKnockback: 100, knockbackGrowth: 1.5, duration: 200, cooldown: 480,
     }),
     specialDefense: m('Breeder Blanket', {
-      immune: [R], fuelFrom: 'radiation', fuelType: R, fuelDamage: 4,
+      immune: [R], surgeFrom: 'radiation', surgeCap: 4,
       duration: 800, cooldown: 940, vfx: 'shield', vfxColor: 0xc8b48a,
     }),
-    specialDirectional: m('Lantern Mantle', {
-      kind: 'projectile', type: H, damage: 6, type2: R, damage2: 4, explodeOnly: true, explodeRadius: 50,
-      vfx: 'fire', vfxColor: 0xfff6d0,
-      projectileSpeed: 400, projectileRadius: 10, projectileLife: 540,
+    specialDirectional: m('Reactor Surge', {
+      kind: 'beam', type: E, damage: 8, surgePer: 2, surgeCap: 4, ground: true,
+      beamLen: 360, beamThick: 18, beamArtPx: 620, vfx: 'laser', vfxColor: 0x7ec8ff,
       baseKnockback: 110, knockbackGrowth: 1.6, duration: 220, cooldown: 960,
     }),
   },
@@ -2489,18 +2488,18 @@ export const MOVESETS = {
   },
 
   dash: {
-    basicCharge: m('Triple Dash', {
-      kind: 'dash', type: K, damage: 9.9, type2: R, damage2: 7.2, weaveEvery: 7, hyperArmor: true,
-      chargeDamageMult: 1.2, maxChargeMs: 500, dashSpeed: 880, rangeW: 90, rangeH: 70, vfx: 'dash', vfxColor: 0xd0f0ff,
+    basicCharge: m('Half-Life Sprint', {
+      kind: 'dash', type: K, damage: 9.9, type2: R, damage2: 7.2, hyperArmor: true,
+      chargeDamageMult: 1.2, chargeDashMult: 1.35, maxChargeMs: 500, dashSpeed: 880, rangeW: 90, rangeH: 70, vfx: 'dash', vfxColor: 0xd0f0ff,
       baseKnockback: 158.4, knockbackGrowth: 3.52, duration: 420, cooldown: 900,
     }),
     basicDirectional: melee('Blink Kick', {
       kind: 'dash', type: K, damage: 10.8, type2: R, damage2: 7.2, dashSpeed: 700, rangeW: 84, rangeH: 64,
-      vfx: 'dash', vfxColor: 0xe8f4ff,
+      reappear: 0.65, vfx: 'dash', vfxColor: 0xe8f4ff,
       baseKnockback: 176, knockbackGrowth: 3.87, duration: 200, cooldown: 420,
     }),
     specialDefense: m('Afterimage Decay', {
-      phase: true, leaveAfterimage: true,
+      phase: true, afterimageCopy: true, hitRadius: 48,
       phaseRetort: { type: R, damage: 8.1, knockback: 123.2, growth: 2.11 },
       duration: 420, cooldown: 860, vfx: 'shield', vfxColor: 0xe8f8ff,
     }),
@@ -2727,7 +2726,8 @@ export const MOVESETS = {
       immune: [K], duration: 640, cooldown: 900, vfx: 'shield', vfxColor: 0xd8ecff,
     }),
     specialDirectional: m('Spectral Line', {
-      kind: 'beam', type: R, damage: 14.1, beamLen: 300, beamThick: 8, vfx: 'laser', vfxColor: 0x9ad0ff,
+      kind: 'beam', type: R, damage: 14.1, beamLen: 300, beamThick: 8, beamArtPx: 600, beamCap: 560,
+      vfx: 'laser', vfxColor: 0x9ad0ff,
       baseKnockback: 131.6, knockbackGrowth: 2.82, duration: 160, cooldown: 820,
     }),
   },

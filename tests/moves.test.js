@@ -1950,6 +1950,65 @@ test('lars, ford, duke, and sarge keep the approved batch rules', () => {
   assert.equal(sarge.specialDirectional.type2, 'heat');
 });
 
+test('thor, boar, and dash keep the approved batch rules', () => {
+  const thor = CHARACTERS.thor.moves;
+  assert.equal(thor.basicCharge.name, 'Thunder Hammer');
+  assert.equal(thor.basicCharge.type, 'kinetic');
+  assert.equal(thor.basicCharge.type2, 'electrical');
+  assert.equal(thor.basicCharge.radius, 58);
+  assert.equal(thor.basicDirectional.name, 'Fuel Rod Jab');
+  assert.equal(thor.basicDirectional.type, 'kinetic');
+  assert.equal(thor.basicDirectional.type2, 'radiation');
+  assert.equal(thor.basicDirectional.damage, 6);
+  assert.equal(thor.basicDirectional.damage2, 4);
+  assert.equal(thor.basicDirectional.onHit, undefined);
+  assert.equal(thor.specialDefense.immune[0], 'radiation');
+  assert.equal(thor.specialDefense.surgeFrom, 'radiation');
+  assert.equal(thor.specialDefense.surgeCap, 4);
+  assert.equal(thor.specialDefense.fuelFrom, undefined);
+  assert.equal(thor.specialDirectional.name, 'Reactor Surge');
+  assert.equal(thor.specialDirectional.kind, 'beam');
+  assert.equal(thor.specialDirectional.type, 'electrical');
+  assert.equal(thor.specialDirectional.ground, true);
+  assert.equal(thor.specialDirectional.damage, 8);
+  assert.equal(thor.specialDirectional.surgePer, 2);
+  assert.equal(thor.specialDirectional.beamLen, 360);
+  assert.equal(thor.specialDirectional.beamArtPx, 620);
+  assert.equal(thor.specialDirectional.baseKnockback, 110);
+  assert.equal(thor.specialDirectional.igniteAt, undefined);
+
+  const boar = CHARACTERS.boar.moves;
+  assert.equal(boar.basicCharge.name, 'Quantum Leap');
+  assert.equal(boar.basicCharge.leap.dist, 120);
+  assert.equal(boar.basicCharge.type, 'radiation');
+  assert.equal(boar.basicDirectional.type, 'kinetic');
+  assert.equal(boar.basicDirectional.type2, 'electrical');
+  assert.deepEqual(boar.specialDefense.immune, ['kinetic']);
+  assert.equal(boar.specialDirectional.beamLen, 300);
+  assert.equal(boar.specialDirectional.beamArtPx, 600);
+  assert.equal(boar.specialDirectional.beamCap, 560);
+  assert.equal(boar.specialDirectional.type, 'radiation');
+  assert.equal(boar.specialDirectional.igniteAt, undefined);
+
+  const dash = CHARACTERS.dash.moves;
+  assert.equal(dash.basicCharge.name, 'Half-Life Sprint');
+  assert.equal(dash.basicCharge.weaveEvery, undefined);
+  assert.equal(dash.basicCharge.chargeDashMult, 1.35);
+  assert.equal(dash.basicCharge.hyperArmor, true);
+  assert.equal(dash.basicCharge.damage, 9.9);
+  assert.equal(dash.basicCharge.type2, 'radiation');
+  assert.equal(dash.basicDirectional.reappear, 0.65);
+  assert.equal(dash.specialDefense.afterimageCopy, true);
+  assert.equal(dash.specialDefense.leaveAfterimage, undefined);
+  assert.equal(dash.specialDefense.hitRadius, 48);
+  assert.equal(dash.specialDefense.phase, true);
+  assert.equal(dash.specialDefense.phaseRetort.type, 'radiation');
+  assert.equal(dash.specialDefense.phaseRetort.damage, 8.1);
+  assert.equal(dash.specialDirectional.projectileRadius, 4);
+  assert.equal(dash.specialDirectional.type, 'radiation');
+  assert.equal(dash.specialDirectional.igniteAt, undefined);
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

@@ -233,6 +233,7 @@ export function fxGameplayScale(move, art) {
     const n = Math.max(0, Number(move?._stored) || 0);
     return extra * (0.55 + 0.85 * Math.min(1, n / cap));
   }
+  if (mode === 'surge') return extra * surgeBeamScale(move?._surge, move?.surgeCap);
   return extra;
 }
 
@@ -338,6 +339,20 @@ export function stackPipIndex(frames, heldMs, every = 1000, maxMs = 3000, unbloc
   const cap = maxMs > 0 ? maxMs : step;
   const full = (Number(heldMs) || 0) >= (unblockAt ?? 0.95) * cap;
   return full ? last : Math.min(Math.max(0, last - 1), stacks);
+}
+
+/** Reactor Surge width: a tap is half the sheet, a full blanket is the whole bolt. */
+export function surgeBeamScale(charges, cap = 4) {
+  const slots = cap > 0 ? cap : 4;
+  const t = Math.max(0, Math.min(1, (Number(charges) || 0) / slots));
+  return 0.5 + 0.5 * t;
+}
+
+/** Reactor Surge alpha: dim with an empty blanket, solid at four charges. */
+export function surgeAlpha(move) {
+  const cap = Math.max(1, move?.surgeCap ?? 4);
+  const n = Math.max(0, Math.min(cap, Number(move?._surge) || 0));
+  return 0.35 + 0.65 * (n / cap);
 }
 
 /** Impact scale that fits a bright flash disc to the move's hit radius. */
@@ -687,6 +702,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     scaleMax: typeof extra.scaleMax === 'number' ? extra.scaleMax : null,
     replacesSpark: !!extra.replacesSpark,
     stackSeconds: !!extra.stackSeconds,
+    surgePips: !!extra.surgePips,
     rise: extra.rise > 0 ? extra.rise : 0,
     rampAlpha: !!extra.rampAlpha,
     randomRot: !!extra.randomRot,
@@ -1177,6 +1193,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       scaleMax: merged.scaleMax,
       replacesSpark: merged.replacesSpark,
       stackSeconds: !!merged.stackSeconds,
+      surgePips: !!merged.surgePips,
       rise: merged.rise,
       rampAlpha: merged.rampAlpha,
       randomRot: merged.randomRot,
@@ -1933,6 +1950,9 @@ export function fxAnchor(fighter, move) {
   const bodyH = fighter.bodyH ?? 80;
   const bodyW = fighter.bodyW ?? 40;
   if (art.objectType === 'beam') {
+    if (move?.ground) {
+      return { x: fighter.x, y: fighter.y, scale: beamDrawScale(move) };
+    }
     const posed = sheetReleasePoint(fighter, 'shot') || sheetFxPoint(fighter, 'shot');
     return {
       x: posed?.x ?? fighter.x + face * bodyW * 0.2,
@@ -2052,7 +2072,7 @@ export function spawnFxSprite(scene, art, x, y, scale = 1, face = 1, box = null)
 export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   const art = artFor(fighter?.charDef?.id, move?.name);
   if (!art?.frames?.length || !scene?.add?.image) return null;
-  if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'head' || art.anchor === 'lance' || art.anchor === 'feet' || art.anchor === 'aura' || art.anchor === 'pin') return null;
+  if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'head' || art.anchor === 'lance' || art.anchor === 'feet' || art.anchor === 'aura' || art.anchor === 'pin' || art.anchor === 'afterimage') return null;
   if (art.objectType === 'projectile' || art.objectType === 'thrown') return null;
   if ((art.objectType === 'slash arc' || art.objectType === 'extend') && !art.oneshot) return null;
   const face = art.bothSides ? 1 : (art.flip ? (fighter?.facing || 1) : 1);
@@ -2063,8 +2083,11 @@ export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   let painted = art;
   if (art.scaleWith === 'charge') {
     painted = { ...art, _chargeAlpha: chargeWaveAlpha(chargeFrac(move)) };
-    img.setAlpha?.(painted._chargeAlpha);
   }
+  if (art.scaleWith === 'surge') {
+    painted = { ...painted, _chargeAlpha: surgeAlpha(move) };
+  }
+  if (painted._chargeAlpha != null) img.setAlpha?.(painted._chargeAlpha);
   if (art.bothSides) {
     const mirror = placeStill(scene, art, x, y, 0);
     applyFrameLook(mirror, art.frames[0], art, scale);
@@ -2171,6 +2194,8 @@ export function wantsContactSpark(fighter, move) {
 const liveSlash = new WeakMap();
 const liveAttached = new WeakMap();
 const liveDoubles = new WeakMap();
+const liveAfter = new WeakMap();
+const livePips = new WeakMap();
 const liveHalves = new WeakMap();
 
 function fighterBodySprite(fighter) {
@@ -2207,6 +2232,76 @@ function syncStuntDouble(scene, fighter) {
   img.setScale(Math.abs(spr.scaleX || 1) * face, spr.scaleY || 1);
   img.setTint(fighter.charDef?.ghost ? 0xfff1c4 : 0xffd27a);
   img.setAlpha(0.82);
+}
+
+/** A tinted copy of his sprite stands ahead of him and takes the hit. */
+function syncAfterimage(scene, fighter) {
+  const want = fighter?.state === 'defending' && fighter.defenseMove?.afterimageCopy && !scene?.simFast;
+  let live = liveAfter.get(fighter);
+  if (!want) {
+    live?.copy?.destroy?.();
+    live?.tint?.destroy?.();
+    if (live) liveAfter.delete(fighter);
+    return;
+  }
+  const spr = fighterBodySprite(fighter);
+  if (!spr?.texture?.key || !scene.add?.image) return;
+  if (!live?.copy?.scene) {
+    live?.copy?.destroy?.();
+    live?.tint?.destroy?.();
+    live = { copy: scene.add.image(fighter.x, fighter.y, spr.texture.key), tint: null };
+    live.copy.setDepth(6);
+    liveAfter.set(fighter, live);
+  }
+  const frame = spr.frame?.name;
+  if (frame != null && live.copy.texture?.key === spr.texture.key && live.copy.setFrame) live.copy.setFrame(frame);
+  else if (live.copy.texture?.key !== spr.texture.key) live.copy.setTexture(spr.texture.key);
+  const face = fighter.facing || 1;
+  const bodyW = fighter.bodyW ?? 40;
+  const bodyH = fighter.bodyH ?? 80;
+  const x = fighter.x + face * bodyW * 1.35;
+  live.copy.setPosition(x, fighter.y);
+  live.copy.setOrigin(spr.originX ?? 0.5, spr.originY ?? 1);
+  live.copy.setScale(Math.abs(spr.scaleX || 1) * face, spr.scaleY || 1);
+  live.copy.setTint(0xb8ff9a);
+  live.copy.setAlpha(0.72);
+  const glow = artFor(fighter.charDef?.id, fighter.defenseMove.name);
+  if (glow?.anchor === 'afterimage' && glow.frames?.length) {
+    if (!live.tint?.scene) {
+      live.tint?.destroy?.();
+      live.tint = placeStill(scene, glow, x, fighter.y, 0);
+      live.tint.setDepth(7);
+    }
+    const elapsed = (scene.simNow ?? 0) - (fighter.defenseStart ?? 0);
+    const cell = glow.frames[fxFrameIndex(glow, elapsed)] || glow.frames[0];
+    applyFrameLook(live.tint, cell, glow, 1);
+    live.tint.setOrigin(glow.pivotX ?? 0.5, glow.pivotY ?? 0.5);
+    live.tint.setPosition(x, fighter.y - bodyH * 0.5);
+  }
+}
+
+/** Blanket pips stay up for as long as Reactor Surge charges are stored. */
+function syncSurgePips(scene, fighter) {
+  const n = fighter?._surgeCharges ?? 0;
+  let img = livePips.get(fighter);
+  const glow = artFor(fighter?.charDef?.id, fighter?.charDef?.moves?.specialDefense?.name)?.glow;
+  const show = n > 0 && glow?.surgePips && glow.frames?.length && !scene?.simFast && fighter?.state !== 'ko';
+  if (!show) {
+    img?.destroy?.();
+    if (img) livePips.delete(fighter);
+    return;
+  }
+  if (!img?.scene) {
+    img?.destroy?.();
+    img = placeStill(scene, glow, fighter.x, fighter.y, 0);
+    img.setDepth(16);
+    livePips.set(fighter, img);
+  }
+  const frame = glow.frames[Math.min(glow.frames.length - 1, n)] || glow.frames[0];
+  applyFrameLook(img, frame, glow, 1);
+  img.setOrigin(glow.pivotX ?? 0.5, glow.pivotY ?? 0.5);
+  const bodyH = fighter.bodyH ?? 80;
+  img.setPosition(fighter.x, fighter.y - bodyH * 1.05);
 }
 
 function paintHalf(img, spr, fighter, x, tint) {
@@ -2365,8 +2460,12 @@ function attachedWant(scene, fighter) {
   }
   if (fighter.state === 'attack' && fighter.dashUntil && now < fighter.dashUntil) {
     const art = artFor(fighter.charDef?.id, fighter.currentMove?.name);
+    const elapsed = now - (fighter.dashUntil - (fighter.frameData?.visible || 1) * (scene.stepMs || 16.667));
+    if (art?.anchor === 'head' && art.frames?.length) {
+      return { art, kind: 'head', elapsed };
+    }
     if (art?.anchor === 'trail' && art.frames?.length) {
-      return { art, kind: 'trail', elapsed: now - (fighter.dashUntil - (fighter.frameData?.visible || 1) * (scene.stepMs || 16.667)) };
+      return { art, kind: 'trail', elapsed };
     }
   }
   return null;
@@ -2541,6 +2640,18 @@ function syncAttached(scene, fighter) {
       live.img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
       live.img.setPosition(held.x, held.y);
       live.img.setScale(face * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
+    } else if (art.anchor === 'hand') {
+      const bodyW = fighter.bodyW ?? 40;
+      const bodyH = fighter.bodyH ?? 80;
+      const hand = sheetFxPoint(fighter, 'shot');
+      live.img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+      live.img.setPosition(
+        hand?.x ?? fighter.x + face * bodyW * 0.42,
+        hand?.y ?? fighter.y - bodyH * 0.52,
+      );
+      const sx = Math.abs(live.img.scaleX || 1);
+      const sy = Math.abs(live.img.scaleY || 1);
+      live.img.setScale(art.flip ? face * sx : sx, sy);
     } else {
       const tip = meleeContactPoint(fighter, fighter.currentMove);
       live.img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
@@ -2614,6 +2725,16 @@ function syncAttached(scene, fighter) {
       fighter._puddleHid = true;
       live.hideRig = true;
     }
+    return;
+  }
+  if (want.kind === 'head') {
+    const bodyH = fighter.bodyH ?? 80;
+    const bodyW = fighter.bodyW ?? 40;
+    const face = fighter.facing || 1;
+    live.img.setPosition(fighter.x + face * bodyW * 0.2, fighter.y - bodyH * 0.72);
+    const sx = Math.abs(live.img.scaleX || 1);
+    const sy = Math.abs(live.img.scaleY || 1);
+    live.img.setScale(face * sx, sy);
     return;
   }
   const bodyW = fighter.bodyW ?? 40;
@@ -3102,6 +3223,8 @@ export function syncFxActors(scene) {
     }
     syncHeld(scene, fighter);
     syncStuntDouble(scene, fighter);
+    syncAfterimage(scene, fighter);
+    syncSurgePips(scene, fighter);
     syncFissionHalves(scene, fighter);
     syncFreeze(scene, fighter);
     const move = fighter.currentMove;
@@ -3315,6 +3438,7 @@ function syncChargeGlow(scene, live, glow, x, y, frac, elapsed = 0, fighter = nu
   } else {
     live.glow.setPosition(x, y);
   }
+  if (glow.rise > 0) live.glow.y -= (fighter?.bodyH ?? 80) * glow.rise;
   if (glow.scaleWith === 'alpha') {
     const tonic = fighter?.charDef?.moves?.basicCharge?.tonic;
     const charging = fighter?.state === 'charging' && fighter.chargeStart != null;

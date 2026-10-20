@@ -1,0 +1,14 @@
+{
+  "file": "spectral-line-beam-anim.png",
+  "frames": 10,
+  "cols": 5,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "pixel",
+  "pivotX": 0,
+  "pivotY": 0.5,
+  "hit": false
+}

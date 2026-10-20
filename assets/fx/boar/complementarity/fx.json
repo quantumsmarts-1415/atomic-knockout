@@ -1,0 +1,17 @@
+{
+  "file": "wave-form-status-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 24,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.55,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "anchor": "body",
+  "ghost": 0.4,
+  "hit": false
+}

@@ -441,7 +441,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (phase === 'defense' && art?.launch?.frames?.length) {
       spawnFxSprite(scene, art.launch, fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.45, 1, 1);
     }
-    if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'head' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
+    if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'head' || art?.anchor === 'lance' || art?.anchor === 'aura' || art?.anchor === 'afterimage') return;
     if (move?.kind === 'zone' && move.zone?.trap && art?.frames?.length) return;
     // The lingering sheet is the zone itself. A release oneshot would stack a second copy.
     if (move?.zone?.sheet && art?.loop && art?.frames?.length) return;
@@ -488,7 +488,14 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         return;
       }
       // A burst is drawn once, at the blast, when resolveBurst supplies a point.
-      if ((move.kind === 'burst' || move.kind === 'dive') && extra?.x == null) return;
+      // A leap vanishes at the old spot; the landing flash is spawned after the teleport.
+      if ((move.kind === 'burst' || move.kind === 'dive') && extra?.x == null) {
+        if (move.leap && art?.frames?.length) {
+          drawFxOneShot(scene, fighter, move, fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.5, 1);
+        }
+        return;
+      }
+      if (phase === 'release' && move?.leap && extra?.x != null) return;
       const anchor = fxAnchor(fighter, move);
       const landed = extra?.x != null && !!(move?.predict || move?.landAt);
       let x = landed ? extra.x : (anchor?.x ?? extra.x ?? fighter.x);
@@ -617,8 +624,9 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     const x = extra.x ?? fighter.x;
     const aimed = (burst.pivotX ?? 0.5) < 0.05;
     const face = aimed ? (fighter.facing || 1) : 1;
-    spawnFxSprite(scene, burst, x, y, 1, face);
-    if (extra.both && !aimed) spawnFxSprite(scene, burst, extra.otherX ?? x, extra.otherY ?? y, 1);
+    const scale = impactRadiusScale(move, burst) ?? 1;
+    spawnFxSprite(scene, burst, x, y, scale, face);
+    if (extra.both && !aimed) spawnFxSprite(scene, burst, extra.otherX ?? x, extra.otherY ?? y, scale);
     return;
   }
   if (phase === 'shatter') {

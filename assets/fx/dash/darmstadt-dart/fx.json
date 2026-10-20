@@ -1,0 +1,16 @@
+{
+  "file": "darmstadt-dart-anim.png",
+  "frames": 4,
+  "cols": 4,
+  "rows": 1,
+  "fps": 24,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.16,
+  "pivotX": 0.82,
+  "pivotY": 0.5,
+  "aim": true,
+  "hit": false
+}

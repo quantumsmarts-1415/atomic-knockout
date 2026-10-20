@@ -144,6 +144,9 @@ test('every colorway fighter is a gold-edge (updated art) fighter with 4–6 loo
   assert.ok(updated.has('ford'), 'ford lights up from his effect folder before he has colorways');
   assert.ok(updated.has('duke'), 'duke lights up from his effect folder before he has colorways');
   assert.ok(updated.has('sarge'), 'sarge lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('thor'), 'thor lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('boar'), 'boar lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('dash'), 'dash lights up from his effect folder before he has colorways');
 });
 
 test('fighters without colorways keep their standard look only', () => {

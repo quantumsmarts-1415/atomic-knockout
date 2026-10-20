@@ -31,6 +31,7 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx?.miss && (fx.dazzleCling || !immune)) {
     victim.missNext = (victim.missNext ?? 0) + (fx.miss === true ? 1 : fx.miss);
   }
+  if (fx?.heal && attacker) attacker.percent = Math.max(0, (attacker.percent ?? 0) - fx.heal);
   if (!fx || immune) return;
 
   if (fx.slow) victim.slowUntil = time + fx.slow;
@@ -75,7 +76,13 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.poisonEvery = p.every ?? 280;
     if (p.inherit) victim.poisonInherit = true;
   }
-  if (fx.heal && attacker) attacker.percent = Math.max(0, (attacker.percent ?? 0) - fx.heal);
+  if (fx.pinFoot && attacker?.charDef?.id) {
+    victim.clingFrom = {
+      id: attacker.charDef.id,
+      move: move.name,
+      until: victim.rootedUntil,
+    };
+  }
   if (fx.mute) {
     victim.muteType = fx.mute;
     victim.muteUntil = time + (fx.muteMs ?? 2600);
@@ -123,7 +130,7 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.weakenUntil = time + (fx.weaken.ms ?? 1600);
     victim.weakenMult = fx.weaken.mult ?? 0.75;
   }
-  if (fx.burn) {
+  if (fx.burn && victim.charDef?.combat?.state !== 'gas') {
     const sticky = !!fx.burn.untilKo;
     // A washable burn does not put out white phosphorus.
     if (!(victim.burnSticky && !sticky)) {
@@ -521,6 +528,43 @@ export function withShatter(move) {
   return { ...move, damage: (move.damage ?? 0) + extra };
 }
 
+/** Poison, burn, glow, or a self damage-over-time is still ticking. */
+export function takingDps(fighter, now = 0) {
+  if (!fighter) return false;
+  if ((fighter.poisonUntil ?? 0) > now) return true;
+  if ((fighter.burnUntil ?? 0) > now) return true;
+  if ((fighter.glowUntil ?? 0) > now) return true;
+  if ((fighter.unquenchableUntil ?? 0) > now && (fighter.selfDotDps ?? 0) > 0) return true;
+  return false;
+}
+
+/**
+ * Multi-hit strings and combos only launch on the last connection.
+ * Earlier hits still deal their damage. An uncounted landing stays a finisher.
+ */
+export function finalBlow(move) {
+  if (!move) return move;
+  const multi = move.multiHit > 1 ? move.multiHit : 0;
+  const combo = move.combo?.hits > 1 ? move.combo.hits : 0;
+  if (!(multi > 1) && !(combo > 1)) return move;
+  const comboIndex = move._comboStep != null ? move._comboStep : combo;
+  const hitIndex = move._hitIndex != null ? move._hitIndex : (multi || 1);
+  const comboFinal = !(combo > 1) || comboIndex >= combo;
+  const hitFinal = !(multi > 1) || hitIndex >= multi;
+  if (comboFinal && hitFinal) return move;
+  const onHit = move.onHit ? { ...move.onHit, stun: 0, freeze: 0 } : move.onHit;
+  return {
+    ...move,
+    baseKnockback: 0,
+    knockbackGrowth: 0,
+    launchMult: 0,
+    pull: 0,
+    noKnockback: true,
+    noFlinch: true,
+    onHit,
+  };
+}
+
 /** Per-target damage tweaks that stay on the move instead of a character branch. */
 export function prepareMove(move, attacker, defender, now = 0) {
   if (!move) return move;
@@ -571,6 +615,9 @@ export function prepareMove(move, attacker, defender, now = 0) {
   const selfHot = attacker && (attacker.burnUntil > now || attacker.heatedUntil > now);
   if (move.heatEmpower && selfHot) {
     next = { ...next, damage: (next.damage ?? 0) + move.heatEmpower };
+  }
+  if (move.bonusWhileDps && takingDps(attacker, now)) {
+    next = { ...next, damage: (next.damage ?? 0) + move.bonusWhileDps };
   }
   // A move can opt into losing output while the attacker is heated or burning.
   // fullWhenHot (EV Motor Punch) keeps the listed damage instead.

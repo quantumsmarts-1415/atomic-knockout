@@ -2438,6 +2438,7 @@ export default class BattleScene extends Phaser.Scene {
         p.gfx.x = host.x + p.stuckOx;
         p.gfx.y = host.y + p.stuckOy;
         stepFxProjectile(p, time);
+        if (p.pinFoot) p.gfx.rotation = p.stickRot;
         continue;
       }
       if (!p.slowed) {
@@ -2636,14 +2637,22 @@ export default class BattleScene extends Phaser.Scene {
           break;
         }
         // a projectile shoves you the way it was travelling
-        this.landHit(p.owner, victim, { ...shot, _projectile: true, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, Math.sign(p.vx) || p.owner.facing);
+        this.landHit(p.owner, victim, { ...shot, _projectile: true, _hitIndex: n, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, Math.sign(p.vx) || p.owner.facing);
         if (p.move.stick && n >= want) {
           p.stuck = victim;
-          p.stuckOx = p.gfx.x - victim.x;
-          p.stuckOy = p.gfx.y - victim.y;
+          if (p.move.pinFoot) {
+            const face = Math.sign((victim.x ?? 0) - (p.owner?.x ?? victim.x)) || p.owner?.facing || 1;
+            p.pinFoot = true;
+            p.stickRot = Math.atan2(1, face * 0.45);
+            p.stuckOx = 0;
+            p.stuckOy = 0;
+          } else {
+            p.stuckOx = p.gfx.x - victim.x;
+            p.stuckOy = p.gfx.y - victim.y;
+          }
           p.vx = 0;
           p.vy = 0;
-          p.dieAt = time + (p.move.onHit?.muteMs ?? p.move.stickMs ?? 2600);
+          p.dieAt = time + (p.move.onHit?.root ?? p.move.onHit?.muteMs ?? p.move.stickMs ?? 2600);
           break;
         }
         if (p.move.carry && victim.body && n < want) {

@@ -199,12 +199,19 @@ export function resolvePush(fighters, solids = null) {
         pushLeft = 0;
         pushRight = 0;
       }
+      const planted = (f) => f.state === 'defending' && f.defenseMove?.noPush;
+      if (planted(left.f)) { pushRight += pushLeft; pushLeft = 0; }
+      if (planted(right.f)) { pushLeft += pushRight; pushRight = 0; }
+      if (planted(left.f) && planted(right.f)) {
+        pushLeft = 0;
+        pushRight = 0;
+      }
       nudge(left.f, -pushLeft);
       nudge(right.f, pushRight);
       const lv = left.f.body?.velocity;
       const rv = right.f.body?.velocity;
-      if (lv && lv.x > 0) lv.x *= 0.2;
-      if (rv && rv.x < 0) rv.x *= 0.2;
+      if (lv && lv.x > 0 && !planted(left.f)) lv.x *= 0.2;
+      if (rv && rv.x < 0 && !planted(right.f)) rv.x *= 0.2;
     }
   }
   if (solids?.length) {

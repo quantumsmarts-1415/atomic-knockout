@@ -1,0 +1,17 @@
+{
+  "file": "kings-edge-slash-anim.png",
+  "frames": 12,
+  "cols": 4,
+  "rows": 3,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.1,
+  "pivotX": 0.18,
+  "pivotY": 0.5,
+  "flip": true,
+  "oneshot": true,
+  "hit": false
+}

@@ -1,0 +1,43 @@
+{
+  "file": "penetrator-dart.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.12,
+  "pivotX": 0.970982143,
+  "pivotY": 0.5,
+  "aim": true,
+  "hit": false,
+  "trail": {
+    "file": "penetrator-trail-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.09,
+    "pivotX": 0.91796875,
+    "pivotY": 0.5,
+    "lagFrac": 0.881696429,
+    "hit": false
+  },
+  "impact": {
+    "file": "armor-pierce-flash-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.55,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

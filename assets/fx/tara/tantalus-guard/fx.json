@@ -1,0 +1,31 @@
+{
+  "file": "tantalus-guard-status-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.25,
+  "pivotX": 0.5,
+  "pivotY": 0.55,
+  "anchor": "body",
+  "hit": false,
+  "fizz": {
+    "file": "acid-drain-fizz-anim.png",
+    "frames": 14,
+    "cols": 7,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.42,
+    "pivotX": 0.5,
+    "pivotY": 0.75,
+    "hit": false
+  }
+}

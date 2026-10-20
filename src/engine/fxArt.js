@@ -227,7 +227,32 @@ export function fxGameplayScale(move, art) {
     if (base > 0 && now > 0) return extra * (now / base);
   }
   if (mode === 'charge') return extra * (0.78 + 0.5 * chargeFrac(move));
+  if (mode === 'hold') return extra * (0.42 + 0.58 * chargeFrac(move));
   return extra;
+}
+
+/** Orange toward white-hot. Phaser tint multiplies, so 0 is dim and white is the sheet. */
+export function chargeTint(from, to, frac) {
+  const t = Math.max(0, Math.min(1, Number(frac) || 0));
+  const mix = (a, b) => Math.round(a + (b - a) * t);
+  const r = mix((from >> 16) & 255, (to >> 16) & 255);
+  const g = mix((from >> 8) & 255, (to >> 8) & 255);
+  const b = mix(from & 255, to & 255);
+  return (r << 16) | (g << 8) | b;
+}
+
+/** How far behind the tip the trail's pivot sits, in display pixels. */
+export function trailBackOffset(displayW, lagFrac) {
+  if (!(displayW > 0) || !(lagFrac > 0)) return 0;
+  return displayW * lagFrac;
+}
+
+/** A multi-hit string plays its big impact on the last connection only. */
+export function playsFinalImpact(move) {
+  const multi = move?.multiHit > 1 ? move.multiHit : 0;
+  if (!(multi > 1)) return true;
+  const index = move._hitIndex != null ? move._hitIndex : multi;
+  return index >= multi;
 }
 
 /** 0–1 charge fraction stored on a released move. */
@@ -252,10 +277,11 @@ export function beamDrawScale(move) {
 /** Impact scale that fits a bright flash disc to the move's hit radius. */
 export function impactRadiusScale(move, art) {
   if (art?.scaleTo !== 'radius') return null;
-  const radius = move?.projectileRadius ?? move?.radius ?? 0;
+  const radius = move?.hitRadius ?? move?.projectileRadius ?? move?.radius ?? 0;
   const flash = art.flashRadius > 0 ? art.flashRadius : 1;
   if (!(radius > 0)) return 1;
-  return radius / flash;
+  const hard = art.hard > 0 ? art.hard : 1;
+  return (radius / flash) * hard;
 }
 
 /** Pull-field cell spans the pull diameter, so its edge is the pull radius. */
@@ -579,6 +605,11 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     hitRots: Array.isArray(extra.hitRots) ? extra.hitRots : null,
     scaleTo: extra.scaleTo === 'radius' ? 'radius' : null,
     flashRadius: extra.flashRadius > 0 ? extra.flashRadius : 0,
+    hard: extra.hard > 0 ? extra.hard : 0,
+    fillFrames: extra.fillFrames > 1 ? extra.fillFrames | 0 : 0,
+    tintFrom: typeof extra.tintFrom === 'number' ? extra.tintFrom : null,
+    tintTo: typeof extra.tintTo === 'number' ? extra.tintTo : null,
+    lagFrac: extra.lagFrac > 0 ? extra.lagFrac : 0,
     nozzleX: typeof extra.nozzleX === 'number' ? extra.nozzleX : null,
     nozzleY: typeof extra.nozzleY === 'number' ? extra.nozzleY : null,
     maxAlpha: extra.maxAlpha > 0 && extra.maxAlpha < 1 ? extra.maxAlpha : 0,
@@ -1009,6 +1040,7 @@ const SIDE_SPECS = [
   ['warn', 'warn-'], ['glow', 'glow-'], ['hot', 'hot-'],
   ['rotor', 'rotor-'], ['motor', 'motor-'], ['hold', 'hold-'], ['field', 'field-'],
   ['fist', 'fist-'], ['dazzle', 'dazzle-'], ['unit', 'unit-'],
+  ['fizz', 'fizz-'], ['heal', 'heal-'], ['ring', 'ring-'], ['boost', 'boost-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -1044,6 +1076,11 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       hitRots: merged.hitRots,
       scaleTo: merged.scaleTo,
       flashRadius: merged.flashRadius,
+      hard: merged.hard,
+      fillFrames: merged.fillFrames,
+      tintFrom: merged.tintFrom,
+      tintTo: merged.tintTo,
+      lagFrac: merged.lagFrac,
       nozzleX: merged.nozzleX,
       nozzleY: merged.nozzleY,
     });
@@ -1091,6 +1128,9 @@ async function loadMoveArt(scene, char, slot, move, index) {
     tile: !!meta.tile,
     reverseOnRelease: !!meta.reverseOnRelease,
     maxAlpha: meta.maxAlpha > 0 && meta.maxAlpha < 1 ? meta.maxAlpha : 0,
+    scaleTo: meta.scaleTo === 'radius' ? 'radius' : null,
+    flashRadius: meta.flashRadius > 0 ? meta.flashRadius : 0,
+    hard: meta.hard > 0 ? meta.hard : 0,
   };
   const inherit = { blend: meta.blend, black: meta.black };
 
@@ -1337,8 +1377,10 @@ function stepProjectileTrail(p) {
     trail.setDisplaySize?.(frame.displayW, frame.displayH);
   }
   trail.setOrigin?.(art.pivotX ?? 1, art.pivotY ?? 0.5);
-  trail.setPosition(p.gfx.x, p.gfx.y);
-  trail.rotation = Math.atan2(p.vy || 0, p.vx || 1);
+  const rot = Math.atan2(p.vy || 0, p.vx || 1);
+  const lag = trailBackOffset(p.fxDisplayW, art.lagFrac);
+  trail.setPosition(p.gfx.x - Math.cos(rot) * lag, p.gfx.y - Math.sin(rot) * lag);
+  trail.rotation = rot;
 }
 
 /** Cool orb stays solid, then fades to the hot orb across the approach to the Curie point. */
@@ -1975,6 +2017,7 @@ function dropAttached(fighter, live) {
   live?.extra?.forEach((img) => img.destroy?.());
   live?.front?.destroy?.();
   live?.lead?.destroy?.();
+  live?.ring?.destroy?.();
   if (live) liveAttached.delete(fighter);
 }
 
@@ -2086,6 +2129,24 @@ function syncFloorTiles(scene, live, art, fighter, frame) {
   });
 }
 
+function syncRing(scene, live, ring, fighter) {
+  if (!ring?.frames?.length) {
+    live.ring?.destroy?.();
+    live.ring = null;
+    return;
+  }
+  if (!live.ring?.scene) {
+    live.ring?.destroy?.();
+    live.ring = placeStill(scene, ring, fighter.x, fighter.y, 0);
+    live.ring.setDepth(4);
+  }
+  const now = scene.simNow ?? 0;
+  const frame = ring.frames[fxFrameIndex(ring, now)] || ring.frames[0];
+  applyFrameLook(live.ring, frame, ring, 1);
+  live.ring.setOrigin(ring.pivotX ?? 0.5, ring.pivotY ?? 1);
+  live.ring.setPosition(fighter.x, fighter.y);
+}
+
 function syncAttached(scene, fighter) {
   const want = attachedWant(scene, fighter);
   let live = liveAttached.get(fighter);
@@ -2145,7 +2206,10 @@ function syncAttached(scene, fighter) {
       const tip = meleeContactPoint(fighter, fighter.currentMove);
       live.img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
       live.img.setPosition(tip.x, tip.y);
-      live.img.setScale(Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
+      const face = fighter.facing || 1;
+      const sx = Math.abs(live.img.scaleX || 1);
+      const sy = Math.abs(live.img.scaleY || 1);
+      live.img.setScale(art.flip ? face * sx : sx, sy);
     }
     live.img.setDepth(14);
     return;
@@ -2172,6 +2236,7 @@ function syncAttached(scene, fighter) {
       live.img.setScale(face * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
     } else if (want.kind === 'body') {
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
+      syncRing(scene, live, art.ring, fighter);
       if (art.ghost > 0) {
         fighter.rig?.setAlpha?.(art.ghost);
         live.fadeRig = true;
@@ -2408,8 +2473,13 @@ function syncCling(scene, fighter) {
     applyFrameLook(live.img, frame, art, 1);
     if (art === status) live.img.setTint?.(burnSourceColor(scene, fighter));
     else live.img.clearTint?.();
-    const drop = art.anchor === 'body' ? 0.5 : 0.42;
-    live.img.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * drop);
+    if (art.anchor === 'feet') {
+      live.img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 1);
+      live.img.setPosition(fighter.x, fighter.y);
+    } else {
+      const drop = art.anchor === 'body' ? 0.5 : 0.42;
+      live.img.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * drop);
+    }
   }
   const tint = burning ? burnSourceColor(scene, fighter) : 0;
   syncScattered(scene, fighter, liveTongues, fxNamed('status/on-fire-small'), TONGUE_AT, tint, sharedFire);
@@ -2761,6 +2831,8 @@ function syncHeld(scene, fighter) {
     const anchor = art.charge.anchor;
     const kind = anchor === 'feet' ? 'feet' : anchor === 'predict' ? 'predict' : 'grow';
     want = { art: art.charge, kind, rotor: art.rotor || null };
+  } else if (art?.boost?.frames?.length && (fighter.speedBuffUntil ?? 0) > now) {
+    want = { art: art.boost, kind: 'boost' };
   } else if (art?.anchor === 'aura' && art.frames?.length && charge?.overclock) {
     const charging = fighter.state === 'charging';
     const buffed = (fighter.attackHasteUntil ?? 0) > now;
@@ -2813,9 +2885,12 @@ function syncHeld(scene, fighter) {
     const max = charge.maxChargeMs || 1;
     const frac = Math.min(1, Math.max(0, (now - (fighter.chargeStart ?? now)) / max));
     const elapsed = now - (fighter.chargeStart ?? now);
-    const frame = want.art.loop
-      ? (frames[fxFrameIndex(want.art, elapsed)] || frames[0])
-      : frames[Math.min(frames.length - 1, Math.round(frac * (frames.length - 1)))];
+    const fill = want.art.fillFrames > 1 ? want.art.fillFrames : 0;
+    const frame = fill
+      ? frames[Math.min(fill - 1, Math.round(frac * (fill - 1)))]
+      : want.art.loop
+        ? (frames[fxFrameIndex(want.art, elapsed)] || frames[0])
+        : frames[Math.min(frames.length - 1, Math.round(frac * (frames.length - 1)))];
     applyFrameLook(live.img, frame, want.art, 1);
     if (want.art.pulse) {
       const pulse = 0.8 + 0.2 * Math.sin((scene.simNow || 0) * 0.012);
@@ -2825,6 +2900,9 @@ function syncHeld(scene, fighter) {
       live.img.setOrigin(0.5, 0.5);
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
       if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
+      if (want.art.tintFrom != null && want.art.tintTo != null) {
+        live.img.setTint?.(chargeTint(want.art.tintFrom, want.art.tintTo, frac));
+      }
       if (charge?.perTravel) {
         const need = charge.perTravel * (charge.perTravelCap ?? 5);
         live.img.setAlpha(Math.min(1, Math.max(0, (fighter.travel ?? 0) / Math.max(1, need))));
@@ -2846,9 +2924,22 @@ function syncHeld(scene, fighter) {
     const fallbackY = onHand ? fighter.y - bodyH * 0.52 : fighter.y;
     live.img.setPosition(hand?.x ?? fallbackX, hand?.y ?? fallbackY);
     if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
+    if (want.art.tintFrom != null && want.art.tintTo != null) {
+      live.img.setTint?.(chargeTint(want.art.tintFrom, want.art.tintTo, frac));
+    }
     const mirror = want.art.flip ? -face : face;
     live.img.setScale(mirror * Math.abs(live.img.scaleX || 1) * shot, Math.abs(live.img.scaleY || 1) * shot);
     syncRotor(scene, live, want.rotor, fighter, frac);
+    return;
+  }
+  if (want.kind === 'boost') {
+    const elapsed = now - Math.max(0, (fighter.speedBuffUntil ?? now) - (charge?.buff?.ms ?? 2200));
+    const frame = want.art.frames[fxFrameIndex(want.art, elapsed)] || want.art.frames[0];
+    applyFrameLook(live.img, frame, want.art, 1);
+    live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 0.5);
+    live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
+    const dir = want.art.flip ? face : 1;
+    live.img.setScale(dir * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
     return;
   }
   if (want.kind === 'predict') {
@@ -2951,7 +3042,11 @@ export function spawnContactFx(scene, attacker, victim, move) {
   playPacked(scene, byKey.get(`${attacker.charDef?.id}/_hit`), at.x, at.y, 1);
   const painted = artFor(attacker.charDef?.id, move?.name);
   const face = painted?.impact?.flip ? (attacker.facing || 1) : 1;
-  const impact = painted?.impact;
+  const now = scene.simNow ?? 0;
+  const hot = victim && (victim.burnUntil > now || victim.heatedUntil > now || victim.heatOnHitUntil > now);
+  let impact = painted?.impact;
+  if (move?.vsHot && hot && painted?.hot?.frames?.length) impact = painted.hot;
+  else if (move?.vsHot && !hot && painted?.spark?.frames?.length) impact = painted.spark;
   let along = null;
   let rot = null;
   if (impact?.hitScales?.length) {
@@ -2962,7 +3057,16 @@ export function spawnContactFx(scene, attacker, victim, move) {
   } else if (along == null) {
     along = impactRadiusScale(move, impact);
   }
-  if (!painted?.releaseImpact) playPacked(scene, impact, at.x, at.y, face, along, rot);
+  const multi = move?.multiHit > 1;
+  if (multi && !move?.vsHot && painted?.spark?.frames?.length) {
+    const sparkFace = painted.spark.flip ? (attacker.facing || 1) : 1;
+    playPacked(scene, painted.spark, at.x, at.y, sparkFace, impactRadiusScale(move, painted.spark));
+  }
+  if (playsFinalImpact(move) && !painted?.releaseImpact) playPacked(scene, impact, at.x, at.y, face, along, rot);
+  if (move?.onHit?.heal && painted?.heal?.frames?.length) {
+    const chest = attacker.y - (attacker.bodyH ?? 80) * 0.62;
+    playPacked(scene, painted.heal, attacker.x, chest, 1);
+  }
   if (painted?.cling?.frames?.length && victim && move?.onHit?.coat) {
     victim.clingFrom = {
       id: attacker.charDef?.id,

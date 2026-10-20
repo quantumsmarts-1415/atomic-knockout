@@ -653,41 +653,45 @@ export const MOVESETS = {
   tara: {
     basicCharge: m('Capacitor Dump', {
       kind: 'beam', type: E, damage: 6, chargeDamageMult: 1.75, chargeLengthMult: 2.15,
-      maxChargeMs: 760, beamLen: 148, beamThick: 24, vfx: 'laser', vfxColor: 0x7ec8ff,
+      maxChargeMs: 760, beamLen: 148, beamThick: 24, beamArtPx: 640, vfx: 'laser', vfxColor: 0x7ec8ff,
       baseKnockback: 140, knockbackGrowth: 3.0, duration: 200, cooldown: 740,
     }),
-    basicDirectional: melee('Tantalizing Hook', {
-      type: K, damage: 4, pull: 210, rangeW: 92, rangeH: 42, vfx: 'spark',
-      baseKnockback: 40, knockbackGrowth: 1.2, duration: 240, cooldown: 460,
+    basicDirectional: melee('Bone Plate Bash', {
+      type: K, damage: 6, onHit: { heal: 2 }, hitRadius: 36,
+      rangeW: 84, rangeH: 48, vfx: 'strike', vfxColor: 0xb7c4d4,
+      baseKnockback: 120, knockbackGrowth: 2.2, duration: 240, cooldown: 460,
     }),
     specialDefense: m('Tantalus Guard', {
-      immune: [C], duration: 820, cooldown: 760, vfx: 'shield', vfxColor: 0xb7f27a,
+      immune: [C], blocks: [C], fizzChem: true,
+      duration: 820, cooldown: 760, vfx: 'shield', vfxColor: 0xb7f27a,
     }),
     specialDirectional: m('Implant Pin', {
-      kind: 'projectile', type: K, damage: 5, visualShape: 'spearhead', vfx: 'strike',
-      onHit: { root: 780 }, projectileSpeed: 500, projectileRadius: 7, projectileLife: 520,
-      baseKnockback: 70, knockbackGrowth: 2, duration: 220, cooldown: 860,
+      kind: 'projectile', type: K, damage: 5, stick: true, pinFoot: true, vfx: 'strike',
+      onHit: { root: 3000, pinFoot: true }, noKnockback: true,
+      projectileSpeed: 500, projectileRadius: 7, projectileLife: 520, stickMs: 3000,
+      baseKnockback: 0, knockbackGrowth: 0, duration: 220, cooldown: 860,
     }),
   },
 
   wolf: {
     basicCharge: m('White-Hot Filament', {
       kind: 'burst', type: H, damage: 7, chargeDamageMult: 1.9, chargeRadiusMult: 1.85,
-      maxChargeMs: 1200, radius: 56, vfx: 'fire', vfxColor: 0xfff1c2,
+      maxChargeMs: 3400, radius: 56, vfx: 'fire', vfxColor: 0xfff1c2,
       baseKnockback: 160, duration: 280, cooldown: 1100,
     }),
-    basicDirectional: melee('Tin Eater', {
-      kind: 'dash', type: K, damage: 7, dashSpeed: 440, rangeW: 84, rangeH: 72,
-      bonusVsId: { sandy: 2 }, vfx: 'dash', baseKnockback: 170, knockbackGrowth: 3.8,
-      duration: 280, cooldown: 760,
+    basicDirectional: melee('Carbide Drill', {
+      type: K, damage: 3, multiHit: 5, hitRadius: 96,
+      rangeW: 96, rangeH: 48, startupF: 4, activeF: 28,
+      vfx: 'strike', vfxColor: 0xffe2a8,
+      baseKnockback: 170, knockbackGrowth: 3.8,
+      duration: 600, cooldown: 860,
     }),
     specialDefense: m('Unmeltable', {
-      immune: [H], kind: 'block', onlyReduce: [K], blockReduction: 0.22,
+      immune: [H], blocks: [H], kind: 'block', onlyReduce: [K], blockReduction: 0.22,
       duration: 780, cooldown: 760, vfx: 'shield', vfxColor: 0xffe2a8,
     }),
     specialDirectional: m('Armor Piercer', {
-      kind: 'projectile', type: K, damage: 7, breaksBlock: true, pierce: true,
-      visualShape: 'spearhead', vfx: 'strike',
+      kind: 'projectile', type: K, damage: 7, breaksBlock: true, pierce: true, vfx: 'strike',
       projectileSpeed: 580, projectileRadius: 7, projectileLife: 460,
       baseKnockback: 190, duration: 220, cooldown: 1280,
     }),
@@ -696,19 +700,22 @@ export const MOVESETS = {
   rex: {
     basicCharge: m('High Octane', {
       kind: 'buff', duration: 200, cooldown: 1200, maxChargeMs: 700, vfx: 'fire', vfxColor: 0xff9a2a,
+      radius: 96, chargeRadiusMult: 1.25,
+      selfDamage: { type: H, damage: 3, noFlinch: true },
+      blast: { type: H, damage: 11, chargeDamageMult: 1.55, knockback: 180, growth: 2.6 },
       buff: { ms: 2200, speed: 1.18, heated: true, armDash: { heat: 5, dashSpeed: 520 } },
     }),
     basicDirectional: melee("King's Edge", {
-      type: K, damage: 8, heatEmpower: 3, rangeW: 76, vfx: 'strike',
+      type: K, damage: 8, bonusWhileDps: 3, rangeW: 76, vfx: 'strike',
       baseKnockback: 150, knockbackGrowth: 2.8, duration: 250, cooldown: 560,
     }),
     specialDefense: m('Creep Resistance', {
-      kind: 'block', onlyReduce: [K], blockReduction: 0.32, noKnockback: true,
+      kind: 'block', onlyReduce: [K], blockReduction: 0.32, noKnockback: true, noPush: true,
       debuffImmune: true, grabImmune: true,
       duration: 700, cooldown: 960, vfx: 'shield', vfxColor: 0xd9dde6,
     }),
     specialDirectional: melee('Thermocouple Lash', {
-      type: E, damage: 8, rangeW: 112, rangeH: 30, vfx: 'spark', vfxColor: 0xffb45a,
+      type: E, damage: 8, rangeW: 112, rangeH: 30, hitRadius: 22, vfx: 'spark', vfxColor: 0xffb45a,
       vsHot: { type: H, damage: 11 },
       baseKnockback: 140, knockbackGrowth: 2.2, duration: 240, cooldown: 720,
     }),
@@ -740,7 +747,7 @@ export const MOVESETS = {
   pit: {
     basicCharge: m('Catalyst Ignition', {
       kind: 'burst', type: H, damage: 7, chargeDamageMult: 1.55, chargeRadiusMult: 1.45,
-      maxChargeMs: 800, radius: 88, bonusVsState: { gas: 1.7 }, igniteGases: true, gasCloud: 6,
+      maxChargeMs: 800, radius: 88, igniteGases: true, gasCloud: 6,
       vfx: 'fire', vfxColor: 0xfff6d0, baseKnockback: 150, duration: 260, cooldown: 980,
     }),
     basicDirectional: melee('Record Scratch', {
@@ -1392,7 +1399,7 @@ export const MOVESETS = {
       baseKnockback: 100, knockbackGrowth: 1.6, duration: 300, cooldown: 1200,
     }),
     basicDirectional: melee('Spark Plug', {
-      type: K, damage: 4, type2: E, damage2: 3, bonusVsState: { gas: 1.55 }, rangeW: 64, vfx: 'spark', vfxColor: 0xffe08a,
+      type: K, damage: 4, type2: E, damage2: 3, rangeW: 64, vfx: 'spark', vfxColor: 0xffe08a,
       baseKnockback: 90, knockbackGrowth: 1.6, duration: 200, cooldown: 480,
     }),
     specialDefense: m('Prototype Kilogram', {

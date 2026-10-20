@@ -1074,9 +1074,11 @@ export const MOVESETS = {
       maxChargeMs: 800, beamLen: 128, beamThick: 26, vfx: 'fire', vfxColor: 0xffb45a,
       baseKnockback: 90, knockbackGrowth: 1.6, duration: 200, cooldown: 640,
     }),
-    basicDirectional: melee('Ceria Polish', {
-      type: K, damage: 3, multiHit: 4, bonusVsBlock: 0.8, popShield: true, rangeW: 64, vfx: 'strike',
-      baseKnockback: 40, knockbackGrowth: 0.7, duration: 340, cooldown: 400,
+    basicDirectional: melee('Catalytic Burn', {
+      type: H, damage: 8, rangeW: 70, vfx: 'fire', vfxColor: 0xffb45a,
+      cleanse: ['poison', 'burn', 'glow'],
+      cleanseCling: { move: 'Self-Cleaning', ms: 500 },
+      baseKnockback: 100, knockbackGrowth: 1.8, duration: 220, cooldown: 460,
     }),
     specialDefense: m('Self-Cleaning', {
       immune: [H], cleanse: ['poison', 'burn', 'slow', 'debuff'],

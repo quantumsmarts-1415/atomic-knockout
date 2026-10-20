@@ -453,6 +453,10 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         return;
       }
     }
+    if (art?.burst?.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend') && !art.oneshot) {
+      const tip = meleeContactPoint(fighter, move);
+      spawnFxSprite(scene, art.burst, tip.x, tip.y, 1, fighter.facing || 1);
+    }
     if (art?.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) return;
   }
   const color = extra.color ?? colorOf(move);

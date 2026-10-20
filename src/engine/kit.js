@@ -160,6 +160,7 @@ export function cleanse(fighter, kinds) {
   const list = kinds ?? [];
   if (list.includes('poison')) fighter.poisonUntil = 0;
   if (list.includes('burn') && !fighter.burnSticky) fighter.burnUntil = 0;
+  if (list.includes('glow')) fighter.glowUntil = 0;
   if (list.includes('blind')) {
     fighter.blindUntil = 0;
     fighter.dazzleUntil = 0;
@@ -359,6 +360,13 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     }
   }
   if (move.cleanse) cleanse(fighter, move.cleanse);
+  if (move.cleanseCling && fighter.charDef?.id) {
+    fighter.clingFrom = {
+      id: fighter.charDef.id,
+      move: move.cleanseCling.move || move.name,
+      until: time + (move.cleanseCling.ms ?? 500),
+    };
+  }
   if (move.blinkMs) fighter.phasingUntil = time + move.blinkMs;
   if (move.revealAll && fighter.scene?.fighters) {
     for (const other of fighter.scene.fighters) other.phasingUntil = 0;

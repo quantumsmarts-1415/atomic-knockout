@@ -744,7 +744,9 @@ export default class BattleScene extends Phaser.Scene {
   dropProjectileZone(p) {
     if (!p?.move?.dropZone || p.dropped) return;
     p.dropped = true;
-    this.spawnZone(p.owner, p.move.dropZone, p.gfx.x, p.gfx.y, p.move);
+    let y = p.gfx.y;
+    if (p.move.dropZone.feet) y = groundTop(this, p.gfx.x, p.gfx.y + 80);
+    this.spawnZone(p.owner, p.move.dropZone, p.gfx.x, y, p.move);
   }
 
   /** Painted blast for a shot that is not already an explode-only burst. */
@@ -1214,10 +1216,13 @@ export default class BattleScene extends Phaser.Scene {
       }
       return;
     }
+    if (move.recoilSelf && owner?.body?.setVelocityX && !move._fanChild && !move._ghost && !move._salvoChild) {
+      owner.body.setVelocityX(-(owner.facing || 1) * move.recoilSelf);
+    }
     const style = projectileStyle(move);
     const r = style.radius;
     let vy = move._vy ?? 0;
-    if (move.ground) vy = Math.max(vy, 180);
+    if (move.ground && !move.floor) vy = Math.max(vy, 180);
     if (move.lob != null && move._vy == null) {
       const up = typeof move.lob === 'number' ? move.lob : (move.lob.vy ?? 460);
       vy = -Math.abs(up);
@@ -1230,6 +1235,10 @@ export default class BattleScene extends Phaser.Scene {
     const posed = move._from ? null : sheetReleasePoint(owner, move.roll ? 'roll' : 'shot');
     let x = move._from?.x ?? posed?.x ?? (owner.x + face * (owner.bodyW / 2 + r + 4));
     let y = move._from?.y ?? posed?.y ?? (move.roll ? owner.y : owner.y - owner.bodyH * 0.65);
+    if (move.floor) {
+      y = groundTop(this, x, owner.y + 4);
+      vy = 0;
+    }
     if (move.fromAbove) {
       y -= move.skyHeight ?? 220;
       // Start behind the aim point so a diagonal dive crosses into the fight.
@@ -1557,7 +1566,7 @@ export default class BattleScene extends Phaser.Scene {
       return;
     }
     const stain = painted?.stain;
-    if (stain?.frames?.length) {
+    if (stain?.frames?.length && !spec.sheet) {
       const gy = groundTop(this, x, y);
       const frame = stain.frames[0];
       const gfx = this.add.image(x, gy, frame.key);
@@ -1579,10 +1588,16 @@ export default class BattleScene extends Phaser.Scene {
       const face = owner?.facing || 1;
       const gfx = placeFxImage(this, painted, x, y, face);
       gfx?.setDepth?.(6);
+      let aura = null;
+      if (painted.stain?.frames?.length) {
+        aura = placeFxImage(this, painted.stain, x, y, 1);
+        aura?.setDepth?.(5);
+      }
       this.zones.push({
         owner, spec, x, y, radius,
         gfx: gfx || { destroy() {} },
         art: painted, face,
+        aura, auraArt: painted.stain || null, auraBorn: this.time.now,
         born: this.time.now,
         until: this.time.now + (spec.ms ?? 1600),
         next: this.time.now + (spec.delay ?? 0),
@@ -1613,6 +1628,7 @@ export default class BattleScene extends Phaser.Scene {
   updateZones(time) {
     for (const z of this.zones) {
       if (z.art && z.gfx?.scene) stepPlacedFx(z.gfx, z.art, time - (z.born || time), z.face || 1);
+      if (z.aura?.scene && z.auraArt) stepPlacedFx(z.aura, z.auraArt, time - (z.auraBorn || time), 1);
       if (z.stain?.frames?.length && z.gfx?.setTexture) {
         const frame = z.stain.frames[fxFrameIndex(z.stain, time - (z.stainBorn || time))] || z.stain.frames[0];
         z.gfx.setTexture(frame.key);
@@ -1625,6 +1641,8 @@ export default class BattleScene extends Phaser.Scene {
       }
       if (time >= z.until) {
         z.gfx.destroy();
+        z.aura?.destroy?.();
+        z.aura = null;
         z.dead = true;
         continue;
       }
@@ -1642,6 +1660,8 @@ export default class BattleScene extends Phaser.Scene {
             name: z.spec.name ?? 'trap',
             type: z.spec.type,
             damage: z.spec.damage ?? 1,
+            type2: z.spec.type2,
+            damage2: z.spec.damage2,
             baseKnockback: z.spec.knockback ?? 220,
             knockbackGrowth: z.spec.growth ?? 2,
             angleDeg: z.spec.angleDeg ?? 0,
@@ -1649,7 +1669,12 @@ export default class BattleScene extends Phaser.Scene {
             trip: !!z.spec.trip,
             tripMs: z.spec.tripMs,
           });
+          if (z.art?.burst?.frames?.length) {
+            spawnFxSprite(this, z.art.burst, z.x, z.y, 1, z.face || 1);
+          }
           z.gfx?.destroy?.();
+          z.aura?.destroy?.();
+          z.aura = null;
           z.dead = true;
           break;
         }
@@ -1713,7 +1738,12 @@ export default class BattleScene extends Phaser.Scene {
         }
       }
     }
-    this.zones = this.zones.filter((z) => !z.dead);
+    this.zones = this.zones.filter((z) => {
+      if (!z.dead) return true;
+      z.aura?.destroy?.();
+      z.aura = null;
+      return false;
+    });
   }
 
   // launchDir: the direction the attack points (-1 / 1). Omitted for radial
@@ -2329,9 +2359,13 @@ export default class BattleScene extends Phaser.Scene {
       }
       else if (holdSky) {
         // A delayed call-down stays overhead until its timer, then falls.
-      } else if (p.move.roll) {
+      } else if (p.move.roll || p.move.floor) {
         p.gfx.x += (p.vx * delta) / 1000;
         p.vy = 0;
+        if (p.move.floor) {
+          const gy = groundTop(this, p.gfx.x, p.gfx.y + 24);
+          p.gfx.y = gy - (p.fxDisplayH || 0) * (p.move.floorLift ?? 0);
+        }
         stepFxProjectile(p, time);
       } else if (!(p.move.orbitMs && !p.orbited && time < p.born + p.move.orbitMs)) {
         if (p.move.fromAbove && p.move.fallAccel) {

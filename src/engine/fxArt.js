@@ -764,13 +764,20 @@ function finishFrame(scene, key, data, width, height, displayW, displayH, pivotX
 }
 
 function pivotFrom(spec, fallback) {
-  if (spec?.pivot === 'top') return { x: 0.5, y: 0 };
-  if (spec?.pivot === 'bottom') return { x: 0.5, y: 1 };
-  if (spec?.pivot === 'bottom-left') return { x: 0, y: 1 };
-  if (spec?.pivot === 'right') return { x: 1, y: 0.5 };
-  if (spec?.pivot === 'left') return { x: 0, y: 0.5 };
-  if (spec?.pivot === 'center') return { x: 0.5, y: 0.5 };
-  return fallback;
+  let pivot = fallback;
+  if (spec?.pivot === 'top') pivot = { x: 0.5, y: 0 };
+  else if (spec?.pivot === 'bottom') pivot = { x: 0.5, y: 1 };
+  else if (spec?.pivot === 'bottom-left') pivot = { x: 0, y: 1 };
+  else if (spec?.pivot === 'right') pivot = { x: 1, y: 0.5 };
+  else if (spec?.pivot === 'left') pivot = { x: 0, y: 0.5 };
+  else if (spec?.pivot === 'center') pivot = { x: 0.5, y: 0.5 };
+  if (typeof spec?.pivotX === 'number' || typeof spec?.pivotY === 'number') {
+    return {
+      x: typeof spec.pivotX === 'number' ? spec.pivotX : pivot.x,
+      y: typeof spec.pivotY === 'number' ? spec.pivotY : pivot.y,
+    };
+  }
+  return pivot;
 }
 
 function padBounds(bounds, width, height, pad = 2) {
@@ -927,6 +934,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       lifeMs: merged.lifeMs,
       order: merged.order,
       pulse: merged.pulse,
+      maxAlpha: merged.maxAlpha,
     });
   }
   return record;
@@ -993,6 +1001,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
         fps: detSpec.fps,
         loop: detSpec.loop != null ? !!detSpec.loop : look.loop,
         anchor: detSpec.anchor || 'ground',
+        maxAlpha: detSpec.maxAlpha > 0 && detSpec.maxAlpha < 1 ? detSpec.maxAlpha : look.maxAlpha,
         beam: null,
       })
       : null;
@@ -2361,6 +2370,10 @@ function syncHeld(scene, fighter) {
     if (want.art.anchor === 'body') {
       live.img.setOrigin(0.5, 0.5);
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
+      if (charge?.perTravel) {
+        const need = charge.perTravel * (charge.perTravelCap ?? 5);
+        live.img.setAlpha(Math.min(1, Math.max(0, (fighter.travel ?? 0) / Math.max(1, need))));
+      }
       if (want.art.flip) {
         const dir = -(fighter.facing || 1);
         live.img.setScale(dir * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));

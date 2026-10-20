@@ -1,0 +1,17 @@
+{
+  "file": "arc-lamp-jab-flash-anim.png",
+  "frames": 24,
+  "cols": 3,
+  "rows": 8,
+  "fps": 12,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "heightFrac": 0.52,
+  "anchor": "contact",
+  "oneshot": true
+}

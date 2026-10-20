@@ -1,0 +1,17 @@
+{
+  "file": "hidden-strike-lunge-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 12,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "right",
+  "hit": false,
+  "heightFrac": 0.55,
+  "pivotY": 0.701,
+  "anchor": "trail"
+}

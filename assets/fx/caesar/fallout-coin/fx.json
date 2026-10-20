@@ -1,0 +1,32 @@
+{
+  "file": "fallout-coin-flip-anim.png",
+  "frames": 32,
+  "cols": 6,
+  "rows": 6,
+  "fps": 6.45,
+  "loop": true,
+  "blend": "normal",
+  "black": 20,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "heightFrac": 0.48,
+  "aim": false,
+  "stain": {
+    "file": "radiation-aura-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "crop": "frame",
+    "pivot": "bottom",
+    "hit": false,
+    "heightFrac": 1.35,
+    "anchor": "ground"
+  }
+}

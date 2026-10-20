@@ -1,0 +1,16 @@
+{
+  "file": "putty-guard-dent-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 19.2,
+  "loop": true,
+  "blend": "normal",
+  "black": 20,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "heightFrac": 1.4,
+  "anchor": "body"
+}

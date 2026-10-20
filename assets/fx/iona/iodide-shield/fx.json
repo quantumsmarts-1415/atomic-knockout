@@ -1,0 +1,16 @@
+{
+  "file": "iodide-shield-ring-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 24,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "heightFrac": 1.25,
+  "anchor": "body"
+}

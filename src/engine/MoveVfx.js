@@ -336,6 +336,11 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       }
       return;
     }
+    if (art?.burst?.frames?.length && move?.sponge) {
+      const y = fighter.y - (fighter.bodyH ?? 80) * 0.45;
+      spawnFxSprite(scene, art.burst, fighter.x + (fighter.facing || 1) * 28, y, 1, fighter.facing || 1);
+      return;
+    }
     if (coatSpec(move)) return;
     if (!art?.releaseFlash || !art.frames?.length) return;
     const y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
@@ -415,7 +420,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         return;
       }
       // A burst is drawn once, at the blast, when resolveBurst supplies a point.
-      if (move.kind === 'burst' && extra?.x == null) return;
+      if ((move.kind === 'burst' || move.kind === 'dive') && extra?.x == null) return;
       const anchor = fxAnchor(fighter, move);
       let x = anchor?.x ?? extra.x ?? fighter.x;
       let y = anchor?.y ?? extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);

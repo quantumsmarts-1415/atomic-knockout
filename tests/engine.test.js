@@ -429,6 +429,45 @@ test('a charged sniper ignores defense and a pass-through shot does not', () => 
   assert.ok(Math.abs(charged - 10) < 1e-6, `charged damage ${charged}`);
 });
 
+test('a full defining second freezes for three seconds and the sponge drinks chemical hits', () => {
+  const mockScene = createMockScene();
+  mockScene.simFast = true;
+  const rig = () => ({ animate() {}, setFlash() {}, play() {}, updateSheetFacing() {} });
+  const caesar = new Fighter(mockScene, 0, 0, CHARACTERS.caesar, 0, 0);
+  caesar.rig = rig();
+  caesar.state = 'charging';
+  caesar.chargeStart = 0;
+  caesar.fireCharge(1000);
+  assert.strictEqual(caesar.currentMove.onHit.freeze, 3000);
+  assert.strictEqual(caesar.currentMove.onHit.coatMs, 3000);
+  caesar.state = 'charging';
+  caesar.chargeStart = 0;
+  caesar.fireCharge(0);
+  assert.strictEqual(caesar.currentMove.onHit.freeze, 1000);
+
+  const lana = new Fighter(mockScene, 0, 0, CHARACTERS.lana, 0, 0);
+  lana.rig = rig();
+  lana.body = {
+    setVelocity() {}, setVelocityX() {}, setVelocityY() {},
+    velocity: { x: 0, y: 0 }, blocked: { down: true }, touching: { down: true },
+  };
+  lana.state = 'defending';
+  lana.defenseMove = CHARACTERS.lana.moves.specialDefense;
+  const foe = { x: -40, y: 0, facing: 1, charDef: { id: 'foe', combat: {} } };
+  const soaked = lana.takeHit(foe, {
+    name: 'splash', type: 'chemical', damage: 8,
+    baseKnockback: 40, knockbackGrowth: 1,
+  }, 1000, 1);
+  assert.strictEqual(soaked, 0);
+  assert.strictEqual(lana._sponge, 8);
+  const nicked = lana.takeHit(foe, {
+    name: 'jab', type: 'kinetic', damage: 10,
+    baseKnockback: 40, knockbackGrowth: 1,
+  }, 1100, 1);
+  assert.ok(nicked > 0 && nicked < 10, `partial sponge damage ${nicked}`);
+  assert.ok(lana._sponge > 8);
+});
+
 test('a dive stops at the ledge and hops back if it is already past it', () => {
   const isle = [{ x: 640, w: 990 }];
   assert.strictEqual(diveVelocityX(640, 220, isle), 220);

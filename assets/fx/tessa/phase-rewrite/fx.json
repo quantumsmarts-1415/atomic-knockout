@@ -1,0 +1,16 @@
+{
+  "file": "phase-rewrite-shell-anim.png",
+  "frames": 32,
+  "cols": 4,
+  "rows": 8,
+  "fps": 6.68,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "heightFrac": 1.15,
+  "anchor": "body"
+}

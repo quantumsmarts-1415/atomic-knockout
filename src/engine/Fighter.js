@@ -365,6 +365,16 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this._regenAt = time + (this.defenseMove.regenEvery ?? 800);
       this.percent = Math.max(0, this.percent - this.defenseMove.regen);
     }
+    if (this.state === 'defending' && this.defenseMove?.clearType && time >= (this._regenAt ?? 0)) {
+      this._regenAt = time + (this.defenseMove.regenEvery ?? 500);
+      const type = this.defenseMove.clearType;
+      const pile = this.takenByType?.[type] ?? 0;
+      const step = Math.min(pile, this.defenseMove.clearStep ?? 2);
+      if (step > 0) {
+        this.takenByType[type] = pile - step;
+        this.percent = Math.max(0, (this.percent ?? 0) - step);
+      }
+    }
     if (this.state === 'defending' && this.defenseMove?.drain && time >= (this._drainAt ?? 0)) {
       const d = this.defenseMove.drain;
       this._drainAt = time + (d.every ?? 1000);
@@ -592,6 +602,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         } else {
           this.state = 'charging';
           this.chargeStart = time;
+          if (this.charDef.moves.basicCharge?.perTravel) this.travel = 0;
         }
       } else if (pressedSpecial && time >= this.specialCooldownUntil && time >= (this.vulnerableUntil ?? 0) && time >= (this.specialMutedUntil ?? 0)) {
         if (dirHeld || !this.charDef.moves.specialDefense) {
@@ -608,7 +619,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
     if (this.diveUntil || (this.dashUntil && time < this.dashUntil && !this._gliding)) this.holdDiveOnDeck();
     if (this.diveUntil && time >= (this.diveArm ?? 0) && (onGround || time >= this.diveUntil)) {
-      this.scene.resolveBurst?.(this, this.diveMove);
+      const slam = this.diveMove;
+      const at = slam?.slamAtFeet ? { x: this.x, y: this.y } : undefined;
+      this.scene.resolveBurst?.(this, slam, at);
       this.diveUntil = 0;
     }
 
@@ -706,6 +719,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
     }
     this.rig.animate(dt / 1000, animState, speedFactor);
+    this.syncChalkTint();
     if (this._sheetFxFrame && this.state === 'attack' && this.attackFrame === this._sheetFxFrame && this.currentMove) {
       this._sheetFxFrame = 0;
       playVfx(this.scene, this, this.currentMove, 'release', { fromSheet: true });
@@ -738,6 +752,21 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this._floatFloor = null;
     this.restoreShrink();
     playVfx(this.scene, this, coat, 'letgo');
+    if (coat.sponge) {
+      const stored = this._sponge ?? 0;
+      this._sponge = 0;
+      const push = coat.sponge.push ?? 80;
+      this.scene?.resolveBurst?.(this, {
+        name: coat.name,
+        kind: 'burst',
+        isCounterAttack: true,
+        type: 'kinetic',
+        damage: Math.min(4, stored * 0.3),
+        radius: coat.sponge.radius ?? 74,
+        baseKnockback: push + Math.min(120, stored * 12),
+        knockbackGrowth: 0.8,
+      });
+    }
     if (coat.letgoBurst) {
       this.scene?.resolveBurst?.(this, {
         name: coat.name,
@@ -1182,6 +1211,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
     if (move.unblockAtFull) this.unblockNext = frac >= (move.unblockAt ?? 0.95);
     if (move.chargePierce) scaled.defensePierce = Math.max(0, Math.min(1, frac * move.chargePierce));
+    if (move.recoilSelf != null) scaled.recoilSelf = scale(move.recoilSelf, 1.5);
     if (move.onHit && move.chargeControlMult) {
       const mul = 1 + ((move.chargeControlMult ?? 1) - 1) * frac;
       const onHit = {};
@@ -1419,6 +1449,32 @@ export default class Fighter extends Phaser.GameObjects.Container {
         damage2: scaled(incoming.type2, incoming.damage2),
         damage3: scaled(incoming.type3, incoming.damage3),
       };
+    }
+    if (!move.isSelf && !move.isCounterAttack && this.state === 'defending' && this.defenseMove?.sponge) {
+      const sponge = this.defenseMove.sponge;
+      const keep = sponge.keep ?? 0.4;
+      const next = { ...incoming };
+      let stored = 0;
+      const soak = (typeKey, dmgKey) => {
+        const amount = next[dmgKey];
+        if (amount == null || !next[typeKey]) return;
+        const chem = canonicalType(next[typeKey]) === 'chemical';
+        const taken = chem ? amount : amount * keep;
+        stored += taken;
+        next[dmgKey] = chem ? 0 : amount - taken;
+        if (chem) next[typeKey] = undefined;
+      };
+      soak('type', 'damage');
+      soak('type2', 'damage2');
+      soak('type3', 'damage3');
+      const cap = sponge.cap ?? 16;
+      this._sponge = Math.min(cap, (this._sponge ?? 0) + stored);
+      const total = (next.damage || 0) + (next.damage2 || 0) + (next.damage3 || 0);
+      if (total <= 0) {
+        this.rig?.setFlash?.(0xd7ecff);
+        return 0;
+      }
+      incoming = next;
     }
     if (!move.isSelf && this.state === 'defending' && this.defenseMove?.absorbGas && move.gas) {
       const heal = this.defenseMove.absorbHeal ?? 0;
@@ -1895,6 +1951,36 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (rig.sprite) out.push(rig.sprite);
     if (rig.clipA && rig.clipA.visible) out.push(rig.clipA);
     return out;
+  }
+
+  syncChalkTint() {
+    const rig = this.rig;
+    if (!rig) return;
+    const tint = this.state === 'defending' && this.defenseMove?.chalkTint
+      ? this.defenseMove.chalkTint
+      : 0;
+    if (tint) {
+      rig.paletteTint = tint;
+      this._chalkOn = true;
+      if (this._flashShow > 0) return;
+      for (const spr of this.hitFlashTargets()) spr.setTint?.(tint);
+      if (!rig.sprite) {
+        for (const part of [rig.torso, rig.head, rig.frontArm, rig.backArm, rig.frontLeg, rig.backLeg]) {
+          part?.setTint?.(tint);
+        }
+      }
+      return;
+    }
+    if (!this._chalkOn) return;
+    this._chalkOn = false;
+    rig.paletteTint = null;
+    if (this._flashShow > 0) return;
+    for (const spr of this.hitFlashTargets()) spr.clearTint?.();
+    if (!rig.sprite) {
+      for (const part of [rig.torso, rig.head, rig.frontArm, rig.backArm, rig.frontLeg, rig.backLeg]) {
+        part?.clearTint?.();
+      }
+    }
   }
 
   applyHitFlash() {

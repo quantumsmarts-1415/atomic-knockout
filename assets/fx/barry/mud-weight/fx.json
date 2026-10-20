@@ -1,0 +1,17 @@
+{
+  "file": "mud-weight-impact-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 12,
+  "loop": false,
+  "blend": "normal",
+  "black": 24,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "heightFrac": 0.8,
+  "anchor": "contact",
+  "oneshot": true
+}

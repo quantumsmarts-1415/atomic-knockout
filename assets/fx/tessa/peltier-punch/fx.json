@@ -1,4 +1,19 @@
 {
+  "file": "peltier-punch-impact-anim.png",
+  "frames": 23,
+  "cols": 4,
+  "rows": 6,
+  "fps": 11.5,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "heightFrac": 0.85,
+  "anchor": "contact",
+  "oneshot": true,
   "cling": {
     "file": "peltier-cool-status-anim.png",
     "frames": 24,
@@ -9,9 +24,10 @@
     "blend": "add",
     "black": 16,
     "fit": "height",
-    "heightFrac": 1,
     "crop": "frame",
     "pivot": "center",
+    "hit": false,
+    "heightFrac": 1,
     "anchor": "body"
   }
 }

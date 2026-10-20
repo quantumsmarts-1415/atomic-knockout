@@ -322,6 +322,24 @@ export function beamDrawScale(move) {
   return len / move.beamArtPx;
 }
 
+/** Twelve Long Reign pips fill in over as many seconds survived. */
+export function survivedPipAlpha(seconds, pips = 12) {
+  const sec = Math.max(0, Number(seconds) || 0);
+  const n = pips > 0 ? pips : 12;
+  return 0.2 + 0.8 * Math.min(1, sec / n);
+}
+
+/** Sound Off pips: cell k is k seconds, and the last cell is a full unblockable charge. */
+export function stackPipIndex(frames, heldMs, every = 1000, maxMs = 3000, unblockAt = 0.95) {
+  const count = frames > 0 ? frames : 1;
+  const last = count - 1;
+  const step = every > 0 ? every : 1000;
+  const stacks = Math.floor(Math.max(0, Number(heldMs) || 0) / step);
+  const cap = maxMs > 0 ? maxMs : step;
+  const full = (Number(heldMs) || 0) >= (unblockAt ?? 0.95) * cap;
+  return full ? last : Math.min(Math.max(0, last - 1), stacks);
+}
+
 /** Impact scale that fits a bright flash disc to the move's hit radius. */
 export function impactRadiusScale(move, art) {
   if (art?.scaleTo !== 'radius') return null;
@@ -668,6 +686,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     scaleMin: typeof extra.scaleMin === 'number' ? extra.scaleMin : null,
     scaleMax: typeof extra.scaleMax === 'number' ? extra.scaleMax : null,
     replacesSpark: !!extra.replacesSpark,
+    stackSeconds: !!extra.stackSeconds,
     rise: extra.rise > 0 ? extra.rise : 0,
     rampAlpha: !!extra.rampAlpha,
     randomRot: !!extra.randomRot,
@@ -1157,6 +1176,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       scaleMin: merged.scaleMin,
       scaleMax: merged.scaleMax,
       replacesSpark: merged.replacesSpark,
+      stackSeconds: !!merged.stackSeconds,
       rise: merged.rise,
       rampAlpha: merged.rampAlpha,
       randomRot: merged.randomRot,
@@ -2032,7 +2052,7 @@ export function spawnFxSprite(scene, art, x, y, scale = 1, face = 1, box = null)
 export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   const art = artFor(fighter?.charDef?.id, move?.name);
   if (!art?.frames?.length || !scene?.add?.image) return null;
-  if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'lance' || art.anchor === 'feet' || art.anchor === 'aura' || art.anchor === 'pin') return null;
+  if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'head' || art.anchor === 'lance' || art.anchor === 'feet' || art.anchor === 'aura' || art.anchor === 'pin') return null;
   if (art.objectType === 'projectile' || art.objectType === 'thrown') return null;
   if ((art.objectType === 'slash arc' || art.objectType === 'extend') && !art.oneshot) return null;
   const face = art.bothSides ? 1 : (art.flip ? (fighter?.facing || 1) : 1);
@@ -2151,6 +2171,7 @@ export function wantsContactSpark(fighter, move) {
 const liveSlash = new WeakMap();
 const liveAttached = new WeakMap();
 const liveDoubles = new WeakMap();
+const liveHalves = new WeakMap();
 
 function fighterBodySprite(fighter) {
   const rig = fighter?.rig;
@@ -2186,6 +2207,75 @@ function syncStuntDouble(scene, fighter) {
   img.setScale(Math.abs(spr.scaleX || 1) * face, spr.scaleY || 1);
   img.setTint(fighter.charDef?.ghost ? 0xfff1c4 : 0xffd27a);
   img.setAlpha(0.82);
+}
+
+function paintHalf(img, spr, fighter, x, tint) {
+  const frame = spr.frame?.name;
+  if (frame != null && img.texture?.key === spr.texture.key && img.setFrame) img.setFrame(frame);
+  else if (img.texture?.key !== spr.texture.key) img.setTexture(spr.texture.key);
+  img.setOrigin(spr.originX ?? 0.5, spr.originY ?? 1);
+  img.setScale(spr.scaleX || 1, spr.scaleY || 1);
+  img.setPosition(x, fighter.y);
+  img.setTint(tint);
+  img.setAlpha(0.9);
+}
+
+/** Two tinted copies of his sprite slide apart, then the merge line closes across the gap. */
+function syncFissionHalves(scene, fighter) {
+  const want = fighter?.state === 'defending' && fighter.defenseMove?.fissionSplit && !scene?.simFast;
+  let live = liveHalves.get(fighter);
+  if (!want) {
+    live?.left?.destroy?.();
+    live?.right?.destroy?.();
+    live?.zap?.destroy?.();
+    if (live) liveHalves.delete(fighter);
+    if (fighter?._fissionHid) {
+      fighter.rig?.setVisible?.(true);
+      fighter._fissionHid = false;
+    }
+    return;
+  }
+  const spr = fighterBodySprite(fighter);
+  if (!spr?.texture?.key || !scene.add?.image) return;
+  if (!live?.left?.scene || !live?.right?.scene) {
+    live?.left?.destroy?.();
+    live?.right?.destroy?.();
+    live?.zap?.destroy?.();
+    live = {
+      left: scene.add.image(fighter.x, fighter.y, spr.texture.key),
+      right: scene.add.image(fighter.x, fighter.y, spr.texture.key),
+      zap: null,
+      zapBorn: 0,
+    };
+    live.left.setDepth(6);
+    live.right.setDepth(6);
+    liveHalves.set(fighter, live);
+    fighter.rig?.setVisible?.(false);
+    fighter._fissionHid = true;
+  }
+  const now = scene.simNow ?? 0;
+  const dur = fighter.defenseMove.duration > 0 ? fighter.defenseMove.duration : 480;
+  const t = Math.max(0, Math.min(1, (now - (fighter.defenseStart ?? now)) / dur));
+  const gap = Math.sin(t * Math.PI) * (fighter.bodyW ?? 40) * 1.35;
+  paintHalf(live.left, spr, fighter, fighter.x - gap, 0xffe2a0);
+  paintHalf(live.right, spr, fighter, fighter.x + gap, 0xd2b0ff);
+  const zapArt = artFor(fighter.charDef?.id, fighter.defenseMove?.name)?.arc;
+  if (zapArt?.frames?.length && gap > 10) {
+    if (!live.zap?.scene) {
+      live.zap?.destroy?.();
+      live.zap = placeStill(scene, zapArt, fighter.x, fighter.y, 0);
+      live.zap.setDepth(7);
+      live.zapBorn = now;
+    }
+    const frame = zapArt.frames[fxFrameIndex(zapArt, now - (live.zapBorn ?? now))] || zapArt.frames[0];
+    const width = Math.max(24, gap * 2);
+    applyFrameLook(live.zap, frame, { ...zapArt, stretch: 'length' }, width / Math.max(1, frame.displayW || 1));
+    live.zap.setOrigin(0.5, 0.5);
+    live.zap.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.45);
+  } else if (live.zap) {
+    live.zap.destroy();
+    live.zap = null;
+  }
 }
 
 function dropAttached(fighter, live) {
@@ -3012,6 +3102,7 @@ export function syncFxActors(scene) {
     }
     syncHeld(scene, fighter);
     syncStuntDouble(scene, fighter);
+    syncFissionHalves(scene, fighter);
     syncFreeze(scene, fighter);
     const move = fighter.currentMove;
     const art = artFor(fighter?.charDef?.id, move?.name);
@@ -3191,6 +3282,19 @@ export function spawnReplayGhost(scene, defender, attacker, move) {
   }
 }
 
+function stackPipFrame(glow, fighter, scene) {
+  if (!glow?.stackSeconds || !fighter || fighter.state !== 'charging') return null;
+  const move = fighter.charDef?.moves?.basicCharge;
+  const index = stackPipIndex(
+    glow.frames.length,
+    (scene?.simNow ?? 0) - (fighter.chargeStart ?? 0),
+    move?.chargeStack?.every ?? 1000,
+    move?.maxChargeMs ?? 3000,
+    move?.unblockAt ?? 0.95,
+  );
+  return glow.frames[index] || glow.frames[0];
+}
+
 function syncChargeGlow(scene, live, glow, x, y, frac, elapsed = 0, fighter = null) {
   if (!glow?.frames?.length) {
     live.glow?.destroy?.();
@@ -3202,7 +3306,8 @@ function syncChargeGlow(scene, live, glow, x, y, frac, elapsed = 0, fighter = nu
     live.glow = placeStill(scene, glow, x, y, 0);
     live.glow.setDepth(12);
   }
-  const frame = glow.frames[fxFrameIndex(glow, elapsed)] || glow.frames[0];
+  const stacked = stackPipFrame(glow, fighter, scene);
+  const frame = stacked || glow.frames[fxFrameIndex(glow, elapsed)] || glow.frames[0];
   applyFrameLook(live.glow, frame, glow, 1);
   live.glow.setOrigin(glow.pivotX ?? 0.5, glow.pivotY ?? 0.5);
   if (glow.anchor === 'body' && fighter) {
@@ -3417,6 +3522,15 @@ function syncHeld(scene, fighter) {
     live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
     return;
   }
+  if (want.kind === 'grow' && want.art.anchor === 'head') {
+    const elapsed = now - (fighter.chargeStart ?? now);
+    const frame = want.art.frames[fxFrameIndex(want.art, elapsed)] || want.art.frames[0];
+    applyFrameLook(live.img, frame, want.art, 1);
+    live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 0.5);
+    live.img.setPosition(fighter.x + face * bodyW * 0.12, fighter.y - bodyH * 0.78);
+    syncChargeGlow(scene, live, want.glow, fighter.x, fighter.y - bodyH * 0.55, 0, elapsed, fighter);
+    return;
+  }
   if (want.kind === 'grow') {
     const frames = want.art.frames;
     const max = charge.maxChargeMs || 1;
@@ -3441,6 +3555,10 @@ function syncHeld(scene, fighter) {
         const cap = Math.max(1, charge?.storeHits?.cap ?? 20);
         const n = fighter._storedCharge ?? 0;
         live.img.setAlpha(0.32 + 0.68 * Math.min(1, n / cap));
+      }
+      if (want.art.scaleWith === 'survived') {
+        const sec = Math.max(0, ((scene.simNow ?? 0) - (fighter.bornAt ?? scene.simNow ?? 0)) / 1000);
+        live.img.setAlpha(survivedPipAlpha(sec, 12));
       }
       if (want.art.scaleWith === 'charge') {
         const s = 0.55 + 0.7 * frac;

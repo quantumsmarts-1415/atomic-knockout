@@ -2427,7 +2427,7 @@ export const MOVESETS = {
   lars: {
     basicCharge: m('Cyclotron Beam', {
       kind: 'beam', type: R, damage: 7.7, chargeDamageMult: 1.45, chargeLengthMult: 1.4,
-      maxChargeMs: 850, beamLen: 220, beamThick: 16, vfx: 'laser', vfxColor: 0xc8f0ff,
+      maxChargeMs: 850, beamLen: 220, beamThick: 16, beamArtPx: 552, beamCap: 460, vfx: 'laser', vfxColor: 0xc8f0ff,
       baseKnockback: 68.64, knockbackGrowth: 1.2, duration: 200, cooldown: 820,
     }),
     basicDirectional: melee('Spiral Fist', {
@@ -2435,7 +2435,7 @@ export const MOVESETS = {
       baseKnockback: 94.38, knockbackGrowth: 1.63, duration: 200, cooldown: 400,
     }),
     specialDefense: m('Dee Plates', {
-      reflectProjectiles: true, duration: 640, cooldown: 860, vfx: 'shield', vfxColor: 0xd8e8ff,
+      reflectProjectiles: true, spiralReflect: true, duration: 640, cooldown: 860, vfx: 'shield', vfxColor: 0xd8e8ff,
     }),
     specialDirectional: m('Atom Smasher', {
       kind: 'projectile', type: R, damage: 6.82, type2: K, damage2: 6.05, vfx: 'spark', vfxColor: 0xe8f4ff,
@@ -2455,7 +2455,7 @@ export const MOVESETS = {
       baseKnockback: 178.6, knockbackGrowth: 3.95, duration: 320, cooldown: 560,
     }),
     specialDefense: m('Fission Split', {
-      phase: true,
+      phase: true, fissionSplit: true,
       zone: { type: R, damage: 3.76, ms: 500, radius: 70, tick: 200, color: 0xc8ff9a },
       duration: 480, cooldown: 980, vfx: 'shield', vfxColor: 0xd8ffc0,
     }),
@@ -2693,7 +2693,7 @@ export const MOVESETS = {
   ford: {
     basicCharge: melee('Dense Nucleus', {
       type: K, damage: 12.7, type2: R, damage2: 10.6, chargeDamageMult: 1.35,
-      maxChargeMs: 750, rangeW: 78, rangeH: 52, vfx: 'spark', vfxColor: 0xfff0c0,
+      maxChargeMs: 750, rangeW: 78, rangeH: 52, hitRadius: 46, vfx: 'spark', vfxColor: 0xfff0c0,
       baseKnockback: 208.8, knockbackGrowth: 4.41, duration: 220, cooldown: 820,
     }),
     basicDirectional: melee('Backscatter', {
@@ -2706,6 +2706,7 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Transmute Ray', {
       kind: 'beam', type: R, damage: 15.9, onHit: { scramble: 2200 }, beamLen: 240, beamThick: 16,
+      beamArtPx: 554, beamCap: 460,
       vfx: 'laser', vfxColor: 0xfff6c0,
       baseKnockback: 185.6, knockbackGrowth: 3.94, duration: 180, cooldown: 900,
     }),
@@ -2796,7 +2797,7 @@ export const MOVESETS = {
       duration: 900, cooldown: 1100, vfx: 'shield', vfxColor: 0xf0e8c8,
     }),
     specialDirectional: m('Decay Mortar', {
-      kind: 'projectile', type: R, damage: 19.6, type2: H, damage2: 14, lob: 480, explodeOnly: true,
+      kind: 'projectile', type: R, damage: 19.6, type2: H, damage2: 14, lob: 480, explodeOnly: true, landBurst: true,
       explodeRadius: 78, vfx: 'spark', vfxColor: 0xffd070,
       projectileSpeed: 340, projectileRadius: 11, projectileLife: 900,
       baseKnockback: 231.8, knockbackGrowth: 4.88, duration: 220, cooldown: 860,

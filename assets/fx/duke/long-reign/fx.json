@@ -1,0 +1,21 @@
+{
+  "blend": "add",
+  "black": 16,
+  "charge": {
+    "file": "long-reign-charge-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 24,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.1,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "body",
+    "scaleWith": "survived",
+    "hit": false
+  }
+}

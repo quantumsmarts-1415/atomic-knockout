@@ -1,0 +1,17 @@
+{
+  "file": "periodic-slab.png",
+  "frames": 4,
+  "cols": 4,
+  "rows": 1,
+  "fps": 1,
+  "loop": false,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 1.45,
+  "pivotX": 0.5,
+  "pivotY": 0.55,
+  "anchor": "front",
+  "crackFrames": true,
+  "hit": false
+}

@@ -1892,6 +1892,64 @@ test('amy, curie, burke, and cali keep the approved batch rules', () => {
   assert.equal(cali.specialDirectional.beamLen, undefined);
 });
 
+test('lars, ford, duke, and sarge keep the approved batch rules', () => {
+  const lars = CHARACTERS.lars.moves;
+  assert.equal(lars.basicCharge.name, 'Cyclotron Beam');
+  assert.equal(lars.basicCharge.type, 'radiation');
+  assert.equal(lars.basicCharge.beamCap, 460);
+  assert.equal(lars.basicCharge.beamArtPx, 552);
+  assert.equal(lars.basicCharge.beamLen, 220);
+  assert.equal(lars.basicDirectional.type, 'kinetic');
+  assert.equal(lars.specialDefense.spiralReflect, true);
+  assert.equal(lars.specialDefense.reflectProjectiles, true);
+  assert.equal(lars.specialDirectional.type, 'radiation');
+  assert.equal(lars.specialDirectional.type2, 'kinetic');
+
+  const ford = CHARACTERS.ford.moves;
+  assert.equal(ford.basicCharge.hitRadius, 46);
+  assert.equal(ford.basicCharge.type, 'kinetic');
+  assert.equal(ford.basicCharge.type2, 'radiation');
+  assert.equal(ford.basicDirectional.onHit.reverse, true);
+  assert.equal(ford.specialDefense.foilEvery, 8);
+  assert.equal(ford.specialDefense.phase, true);
+  assert.equal(ford.specialDirectional.beamCap, 460);
+  assert.equal(ford.specialDirectional.beamArtPx, 554);
+  assert.equal(ford.specialDirectional.onHit.scramble, 2200);
+  assert.equal(ford.specialDirectional.type, 'radiation');
+
+  const duke = CHARACTERS.duke.moves;
+  assert.equal(duke.basicCharge.perSecond, 0.66);
+  assert.equal(duke.basicCharge.perSecondCap, 9.4);
+  assert.equal(duke.basicDirectional.type, 'kinetic');
+  assert.equal(duke.basicDirectional.type2, 'radiation');
+  assert.equal(duke.specialDefense.fissionSplit, true);
+  assert.equal(duke.specialDefense.phase, true);
+  assert.equal(duke.specialDefense.zone.type, 'radiation');
+  assert.equal(duke.specialDefense.zone.damage, 3.76);
+  assert.equal(duke.specialDirectional.type, 'kinetic');
+  assert.equal(duke.specialDirectional.type2, 'radiation');
+
+  const sarge = CHARACTERS.sarge.moves;
+  assert.equal(sarge.basicCharge.chargeStack.damage, 5.6);
+  assert.equal(sarge.basicCharge.chargeStack.cap, 17);
+  assert.equal(sarge.basicCharge.unblockAtFull, true);
+  assert.equal(sarge.basicDirectional.multiHit, 6);
+  const early = finalBlow({ ...sarge.basicDirectional, _hitIndex: 1, onHit: { stun: 200 } });
+  assert.equal(early.baseKnockback, 0);
+  assert.equal(early.noKnockback, true);
+  assert.equal(early.onHit.stun, 0);
+  const sixth = finalBlow({ ...sarge.basicDirectional, _hitIndex: 6, onHit: { stun: 200 } });
+  assert.equal(sixth.baseKnockback, 97.6);
+  assert.equal(sixth.onHit.stun, 200);
+  assert.deepEqual(sarge.specialDefense.blocks, ['kinetic', 'heat', 'electrical', 'chemical', 'radiation']);
+  assert.equal(sarge.specialDefense.crackAfterHits, 5);
+  assert.equal(sarge.specialDirectional.landBurst, true);
+  assert.equal(sarge.specialDirectional.explodeOnly, true);
+  assert.equal(sarge.specialDirectional.igniteAt, undefined);
+  assert.equal(sarge.specialDirectional.type, 'radiation');
+  assert.equal(sarge.specialDirectional.type2, 'heat');
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

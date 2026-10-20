@@ -1,0 +1,31 @@
+{
+  "file": "heavy-ion-bolt-anim.png",
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 24,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.32,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "aim": true,
+  "hit": false,
+  "impact": {
+    "file": "heavy-ion-impact-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.4991304347826087,
+    "pivotY": 0.458984375,
+    "scale": 0.42,
+    "hit": false
+  }
+}

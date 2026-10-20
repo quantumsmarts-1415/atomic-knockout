@@ -441,7 +441,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (phase === 'defense' && art?.launch?.frames?.length) {
       spawnFxSprite(scene, art.launch, fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.45, 1, 1);
     }
-    if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
+    if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'head' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
     if (move?.kind === 'zone' && move.zone?.trap && art?.frames?.length) return;
     // The lingering sheet is the zone itself. A release oneshot would stack a second copy.
     if (move?.zone?.sheet && art?.loop && art?.frames?.length) return;
@@ -535,12 +535,14 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       const face = fighter.facing || 1;
       let x = extra.x ?? fighter.x + face * (fighter.bodyW ?? 40) * 0.2;
       let y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
+      if (extra.x == null && art.anchor === 'ground') y = fighter.y;
       if (extra.x == null && (art.anchor === 'contact' || art.anchor === 'fist')) {
         const tip = meleeContactPoint(fighter, move);
         x = tip.x;
         y = tip.y;
       }
-      const shot = drawFxOneShot(scene, fighter, move, x, y, 1);
+      const fitted = impactRadiusScale(move, art);
+      const shot = drawFxOneShot(scene, fighter, move, x, y, fitted != null ? fitted : 1);
       if (shot) {
         if (move.sharpen) shot.image?.setTint?.(anodizeTint(fighter._sharpen, move.sharpen));
         else if (move.bonusWhileDps && takingDps(fighter, scene.simNow ?? 0)) shot.image?.setTint?.(0xffcd5a);

@@ -1111,6 +1111,65 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  catchInSpiral(p, host, time) {
+    const cy = host.y - (host.bodyH ?? 80) * 0.45;
+    const ang = Math.atan2((p.gfx?.y ?? host.y) - cy, (p.gfx?.x ?? host.x) - host.x);
+    const speed = Math.hypot(p.vx, p.vy) || p.move?.projectileSpeed || 420;
+    p.spiraling = true;
+    p.spiralFrom = time;
+    p.spiralMs = 500;
+    p.spiralHost = host;
+    p.spiralAng = ang;
+    p._exitSpeed = speed;
+    p._exitAng = ang + Math.PI;
+    p.vx = 0;
+    p.vy = 0;
+    const trail = artFor(host.charDef?.id, host.defenseMove?.name)?.reflect;
+    if (trail?.frames?.length) spawnFxSprite(this, trail, host.x, cy, 1, 1);
+  }
+
+  /** Dee plates: the real shot rides the spiral, then leaves along the way it came in from. */
+  stepSpiralReflect(p, time) {
+    const host = p.spiralHost;
+    const release = () => {
+      p.spiraling = false;
+      p._spiraled = true;
+      const speed = p._exitSpeed || p.move?.projectileSpeed || 420;
+      const ang = p._exitAng || 0;
+      p.vx = Math.cos(ang) * speed;
+      p.vy = Math.sin(ang) * speed * 0.35;
+      if (host?.alive) {
+        p.owner = host;
+        p.landed = new Set();
+        p.dieAt = time + (p.move?.projectileLife ?? 480);
+      }
+      return false;
+    };
+    if (!host?.alive || host.state === 'ko' || host.state === 'dead' || !p.gfx) return release();
+    const t = Math.min(1, (time - (p.spiralFrom ?? time)) / (p.spiralMs || 500));
+    const cy = host.y - (host.bodyH ?? 80) * 0.45;
+    const r0 = Math.max(36, (host.bodyW ?? 40) * 1.05);
+    let x;
+    let y;
+    if (t < 0.75) {
+      const u = t / 0.75;
+      const ang = (p.spiralAng || 0) + 1.15 * Math.PI * 2 * u;
+      const r = r0 * (1.05 - 0.35 * u);
+      x = host.x + Math.cos(ang) * r;
+      y = cy + Math.sin(ang) * r * 0.7;
+    } else {
+      const u = (t - 0.75) / 0.25;
+      const r = r0 * 0.7 + u * 110;
+      x = host.x + Math.cos(p._exitAng || 0) * r;
+      y = cy + Math.sin(p._exitAng || 0) * r * 0.45;
+    }
+    p.gfx.x = x;
+    p.gfx.y = y;
+    stepFxProjectile(p, time);
+    if (t < 1) return true;
+    return release();
+  }
+
   bounceOffOutline(p, victim) {
     const cx = victim.x;
     const cy = victim.y - (victim.bodyH ?? 80) * 0.48;
@@ -2730,6 +2789,7 @@ export default class BattleScene extends Phaser.Scene {
         if (p.pinFoot) p.gfx.rotation = p.stickRot;
         continue;
       }
+      if (p.spiraling && this.stepSpiralReflect(p, time)) continue;
       if (!p.slowed) {
         for (const f of this.fighters) {
           if (f.state !== 'defending') continue;
@@ -2943,6 +3003,10 @@ export default class BattleScene extends Phaser.Scene {
           break;
         }
         const reflect = def?.reflectProjectiles === true || perfect || (def?.reflectMetals && metalShot);
+        if (victim.state === 'defending' && reflect && def?.spiralReflect && !p.spiraling && !p._spiraled) {
+          this.catchInSpiral(p, victim, time);
+          break;
+        }
         if (victim.state === 'defending' && reflect) {
           this.landHit(victim, p.owner, { ...p.move, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, -Math.sign(p.vx) || victim.facing);
           this.detonateProjectile(p);

@@ -1785,6 +1785,12 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
     }
     if (gate.result === 'pop' || gate.result === 'negate') {
+      if (gate.result === 'negate' && this.defenseMove?.foilEvery) {
+        playVfx(this.scene, this, this.defenseMove, 'block', {
+          x: this.x,
+          y: this.y - (this.bodyH ?? 80) * 0.5,
+        });
+      }
       if (gate.result === 'negate' && this.defenseMove?.kind === 'wall') {
         const face = this.facing || 1;
         playVfx(this.scene, this, this.defenseMove, 'block', {

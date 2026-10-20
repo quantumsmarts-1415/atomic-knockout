@@ -1,0 +1,37 @@
+{
+  "blend": "add",
+  "black": 16,
+  "charge": {
+    "file": "sound-off-barks-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.05,
+    "pivotX": 0.1875,
+    "pivotY": 0.42,
+    "anchor": "head",
+    "hit": false
+  },
+  "glow": {
+    "file": "stack-pips.png",
+    "frames": 6,
+    "cols": 1,
+    "rows": 6,
+    "fps": 1,
+    "loop": false,
+    "blend": "add",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.55,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "body",
+    "stackSeconds": true,
+    "hit": false
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "file": "cyclotron-beam-anim.png",
+  "frames": 10,
+  "cols": 5,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "pixel",
+  "pivotX": 0,
+  "pivotY": 0.5,
+  "hit": false,
+  "charge": {
+    "file": "cyclotron-charge-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 24,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.35,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "body",
+    "hit": false
+  }
+}

@@ -155,7 +155,16 @@ export function applyOnHit(attacker, victim, move, time) {
       until: fx.glow ? victim.glowUntil : (fx.coat ? victim.debuffCoatUntil : victim.lockedUntil),
     };
   }
-  if (fx.scramble) victim.scrambleUntil = time + (typeof fx.scramble === 'number' ? fx.scramble : 2400);
+  if (fx.scramble) {
+    victim.scrambleUntil = time + (typeof fx.scramble === 'number' ? fx.scramble : 2400);
+    if (attacker?.charDef?.id && move?.name) {
+      victim.clingFrom = {
+        id: attacker.charDef.id,
+        move: move.name,
+        until: victim.scrambleUntil,
+      };
+    }
+  }
   if (fx.weaken) {
     victim.weakenUntil = time + (fx.weaken.ms ?? 1600);
     victim.weakenMult = fx.weaken.mult ?? 0.75;

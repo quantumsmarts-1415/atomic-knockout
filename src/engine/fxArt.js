@@ -1081,6 +1081,7 @@ const SIDE_SPECS = [
   ['wave', 'wave-'], ['recoil', 'recoil-'], ['meteor', 'meteor-'],
   ['crown', 'crown-'], ['visor', 'visor-'], ['reflect', 'reflect-'],
   ['heated', 'heated-'], ['absorb', 'absorb-'], ['cleanse', 'cleanse-'], ['block', 'block-'],
+  ['pierce', 'pierce-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -2321,8 +2322,9 @@ function syncRing(scene, live, ring, fighter) {
   const now = scene.simNow ?? 0;
   const frame = ring.frames[fxFrameIndex(ring, now)] || ring.frames[0];
   applyFrameLook(live.ring, frame, ring, 1);
-  live.ring.setOrigin(ring.pivotX ?? 0.5, ring.pivotY ?? 1);
-  live.ring.setPosition(fighter.x, fighter.y);
+  const onBody = ring.anchor === 'body';
+  live.ring.setOrigin(ring.pivotX ?? 0.5, onBody ? (ring.pivotY ?? 0.5) : (ring.pivotY ?? 1));
+  live.ring.setPosition(fighter.x, onBody ? fighter.y - (fighter.bodyH ?? 80) * 0.5 : fighter.y);
 }
 
 function syncAttached(scene, fighter) {
@@ -2873,9 +2875,55 @@ function tickMeteors(scene) {
   }
 }
 
+const seeps = [];
+
+/** Sink at the departure floor, then a glow that slides to the rise. */
+export function spawnSeepPath(scene, fighter, art) {
+  const from = fighter?._seepFrom;
+  if (!from || !art || !scene?.add || scene.simFast) return;
+  const y0 = groundTop(scene, from.x, from.y);
+  const y1 = groundTop(scene, fighter.x, fighter.y);
+  if (art.launch?.frames?.length) spawnFxSprite(scene, art.launch, from.x, y0, 1, 1);
+  if (!art.trail?.frames?.length) return;
+  const img = placeStill(scene, art.trail, from.x, y0, 0);
+  applyFrameLook(img, art.trail.frames[0], art.trail, 1);
+  img.setOrigin(art.trail.pivotX ?? 0.5, art.trail.pivotY ?? 1);
+  img.setDepth(5);
+  seeps.push({
+    img,
+    art: art.trail,
+    x0: from.x,
+    y0,
+    x1: fighter.x,
+    y1,
+    born: scene.simNow ?? 0,
+    life: 380,
+  });
+}
+
+function stepSeeps(scene) {
+  const now = scene.simNow ?? 0;
+  for (let i = seeps.length - 1; i >= 0; i--) {
+    const seep = seeps[i];
+    if (!seep.img?.scene) {
+      seeps.splice(i, 1);
+      continue;
+    }
+    const t = Math.min(1, (now - seep.born) / seep.life);
+    seep.img.setPosition(seep.x0 + (seep.x1 - seep.x0) * t, seep.y0 + (seep.y1 - seep.y0) * t);
+    const frame = seep.art.frames[fxFrameIndex(seep.art, now - seep.born)] || seep.art.frames[0];
+    applyFrameLook(seep.img, frame, seep.art, 1);
+    if (t >= 1) {
+      seep.img.destroy?.();
+      seeps.splice(i, 1);
+    }
+  }
+}
+
 export function syncFxActors(scene) {
   if (!scene?.fighters) return;
   stepOneShots(scene);
+  stepSeeps(scene);
   stepEmbers(scene);
   tickMeteors(scene);
   for (const fighter of scene.fighters) {
@@ -2949,6 +2997,7 @@ export function syncFxActors(scene) {
     if (art.anchor === 'contact' || art.anchor === 'fist') {
       img.setScale(face * Math.abs(img.scaleX || 1), Math.abs(img.scaleY || 1));
     }
+    if (move?.halfLife) img.setAlpha(move._halfLife ?? 1);
   }
 }
 
@@ -3114,7 +3163,10 @@ function syncHeld(scene, fighter) {
       const kind = anchor === 'feet' ? 'feet' : anchor === 'predict' ? 'predict' : 'grow';
       want = { art: prop, kind, rotor: art.rotor || null, glow: art.glow || null };
     }
-  } else if (art?.boost?.frames?.length && (fighter.speedBuffUntil ?? 0) > now) {
+  } else if (art?.boost?.frames?.length && (
+    (fighter.speedBuffUntil ?? 0) > now
+    || (charge?.buff?.weight && (fighter.weightBuffUntil ?? 0) > now)
+  )) {
     want = { art: art.boost, kind: 'boost' };
   } else if (art?.anchor === 'aura' && art.frames?.length && charge?.overclock) {
     const charging = fighter.state === 'charging';
@@ -3222,7 +3274,8 @@ function syncHeld(scene, fighter) {
     return;
   }
   if (want.kind === 'boost') {
-    const elapsed = now - Math.max(0, (fighter.speedBuffUntil ?? now) - (charge?.buff?.ms ?? 2200));
+    const until = (fighter.speedBuffUntil ?? 0) > now ? fighter.speedBuffUntil : fighter.weightBuffUntil;
+    const elapsed = now - Math.max(0, (until ?? now) - (charge?.buff?.ms ?? 2200));
     const frame = want.art.frames[fxFrameIndex(want.art, elapsed)] || want.art.frames[0];
     applyFrameLook(live.img, frame, want.art, 1);
     live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 0.5);

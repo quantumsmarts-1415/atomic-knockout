@@ -2,7 +2,7 @@
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
 import { anodizeTint, takingDps } from './kit.js';
-import { artFor, breakFrames, chargeFrac, drawFxOneShot, fxAnchor, fxGameplayScale, impactRadiusScale, meleeContactPoint, reverseFrameOrder, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnNozzleCone, spawnStageSpan, wantsContactSpark } from './fxArt.js';
+import { artFor, breakFrames, chargeFrac, drawFxOneShot, fxAnchor, fxGameplayScale, groundTop, impactRadiusScale, meleeContactPoint, reverseFrameOrder, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnNozzleCone, spawnSeepPath, spawnStageSpan, wantsContactSpark } from './fxArt.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 
@@ -385,11 +385,16 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (art?.frames?.length) drawFxOneShot(scene, fighter, move, x, y, 1);
     return;
   }
-  if (phase === 'cleanse' || phase === 'block') {
+  if (phase === 'cleanse' || phase === 'block' || phase === 'pierce' || phase === 'linger') {
     const art = artFor(fighter.charDef?.id, move?.name);
-    const side = phase === 'cleanse' ? art?.cleanse : art?.block;
+    const side = phase === 'cleanse' ? art?.cleanse
+      : phase === 'block' ? art?.block
+        : phase === 'pierce' ? art?.pierce
+          : art?.linger;
     if (side?.frames?.length) {
-      spawnFxSprite(scene, side, fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.5, 1, fighter.facing || 1);
+      const x = extra.x ?? fighter.x;
+      const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
+      spawnFxSprite(scene, side, x, y, 1, fighter.facing || 1);
     }
     return;
   }
@@ -482,6 +487,11 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       const fitted = impactRadiusScale(move, art);
       let scale = fitted != null ? fitted : (anchor?.scale ?? fxGameplayScale(move, art));
       if (art.scaleTo === 'radius' && art.anchor !== 'ground') y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+      if (move?.riseUnder && art.anchor === 'ground') {
+        x = fighter.x;
+        y = groundTop(scene, fighter.x, fighter.y);
+        spawnSeepPath(scene, fighter, art);
+      }
       if (drawFxOneShot(scene, fighter, move, x, y, scale)) {
         if (art.wave?.frames?.length) {
           const waveScale = 0.5 + 0.5 * chargeFrac(move);

@@ -1,0 +1,32 @@
+{
+  "file": "radon-spa-mist-anim.png",
+  "frames": 32,
+  "cols": 8,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.35,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "anchor": "body",
+  "hit": false,
+  "ring": {
+    "file": "radon-spa-heal-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.2,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "body",
+    "hit": false
+  }
+}

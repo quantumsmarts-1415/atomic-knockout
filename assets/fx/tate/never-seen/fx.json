@@ -1,0 +1,17 @@
+{
+  "file": "never-seen-status-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.5,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "anchor": "body",
+  "maxAlpha": 0.55,
+  "hit": false
+}

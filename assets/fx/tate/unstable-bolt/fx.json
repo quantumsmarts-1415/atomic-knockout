@@ -1,0 +1,31 @@
+{
+  "file": "unstable-bolt-anim.png",
+  "frames": 12,
+  "cols": 4,
+  "rows": 3,
+  "fps": 24,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.22,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "aim": true,
+  "hit": false,
+  "impact": {
+    "file": "unstable-bolt-hit-anim.png",
+    "frames": 10,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.65,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

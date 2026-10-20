@@ -2295,3 +2295,55 @@ test('batch 23 sheets scale the bright openings and keep the props', () => {
     }
   }
 });
+
+test('batch 23 part 2 scales the bright openings and anchors the seep', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const glow = read('assets/fx/polonius/blue-glow-burst/fx.json');
+  assert.equal(glow.scaleTo, 'radius');
+  assert.equal(glow.flashRadius, 230);
+  assert.ok(Math.abs(glow.pivotX - 287 / 575) < 1e-9);
+  assert.ok(Math.abs(glow.pivotY - 287 / 575) < 1e-9);
+  assert.equal(glow.charge.scaleWith, 'alpha');
+  assert.equal(glow.charge.anchor, 'body');
+  assert.equal(glow.cling.anchor, 'body');
+  const curtain = read('assets/fx/polonius/behind-the-arras/fx.json');
+  assert.equal(curtain.black, false);
+  assert.equal(curtain.anchor, 'ground-front');
+  assert.ok(Math.abs(curtain.pivotY - 380 / 384) < 1e-9);
+  assert.equal(curtain.block.file, 'arras-block-anim.png');
+  assert.equal(curtain.pierce.file, 'arras-pierce-anim.png');
+  const vapor = read('assets/fx/tate/self-vaporize/fx.json');
+  assert.equal(vapor.scaleTo, 'radius');
+  assert.equal(vapor.flashRadius, 230);
+  assert.ok(Math.abs(vapor.pivotY - 287 / 570) < 1e-9);
+  assert.equal(vapor.linger.file, 'reappear-shimmer-anim.png');
+  const unseen = read('assets/fx/tate/never-seen/fx.json');
+  assert.equal(unseen.anchor, 'body');
+  assert.equal(unseen.maxAlpha, 0.55);
+  const rise = read('assets/fx/ronan/ground-seep/fx.json');
+  assert.equal(rise.anchor, 'ground');
+  assert.equal(rise.scaleTo, 'radius');
+  assert.equal(rise.flashRadius, 300);
+  assert.ok(Math.abs(rise.pivotX - 296 / 593) < 1e-9);
+  assert.ok(Math.abs(rise.pivotY - 474 / 475) < 1e-9);
+  assert.equal(rise.launch.pivotY, 1);
+  assert.ok(Math.abs(rise.trail.pivotY - 80 / 96) < 1e-9);
+  assert.equal(impactRadiusScale({ radius: 46 }, { scaleTo: 'radius', flashRadius: 300 }), 46 / 300);
+  const creep = read('assets/fx/ronan/radon-creep/fx.json');
+  assert.equal(creep.loop, true);
+  assert.ok(creep.pivotY > 0.9);
+  const turn = read('assets/fx/frank/beta-turn/fx.json');
+  assert.equal(turn.scaleTo, undefined);
+  assert.equal(turn.scale, 0.46);
+  assert.ok(Math.abs(turn.pivotX - 287 / 575) < 1e-9);
+  assert.equal(turn.boost.anchor, 'body');
+  assert.equal(turn.boost.loop, true);
+  const trace = read('assets/fx/frank/trace-amount/fx.json');
+  assert.equal(trace.shatter.file, 'trace-counter-anim.png');
+  for (const id of ['polonius', 'tate', 'ronan', 'frank']) {
+    for (const file of fs.readdirSync(`assets/fx/${id}`, { recursive: true })) {
+      const name = String(file);
+      assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, `${id}/${name}`);
+    }
+  }
+});

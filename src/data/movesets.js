@@ -1016,7 +1016,7 @@ export const MOVESETS = {
   polonius: {
     basicCharge: m('Blue Glow Burst', {
       kind: 'burst', type: H, damage: 9, type2: R, damage2: 8, chargeDamageMult: 1.55, chargeRadiusMult: 1.6,
-      maxChargeMs: 900, radius: 64, vfx: 'fire', vfxColor: 0x6ad0ff,
+      maxChargeMs: 900, radius: 64, selfGlowMs: 1400, vfx: 'fire', vfxColor: 0x6ad0ff,
       baseKnockback: 140, knockbackGrowth: 3.0, duration: 260, cooldown: 780,
     }),
     basicDirectional: melee('Rapier Thrust', {
@@ -1045,11 +1045,11 @@ export const MOVESETS = {
       baseKnockback: 100, knockbackGrowth: 1.6, duration: 260, cooldown: 860,
     }),
     basicDirectional: melee('Targeted Alpha', {
-      type: R, damage: 8, breaksBlock: true, rangeW: 52, vfx: 'spark',
+      type: R, damage: 8, breaksBlock: true, ignoreReductions: true, rangeW: 52, vfx: 'spark',
       baseKnockback: 100, knockbackGrowth: 1.8, duration: 210, cooldown: 360,
     }),
     specialDefense: m('Never Seen', {
-      phase: true, drain: { damage: 1, type: R, every: 1000 },
+      phase: true, fadeAlpha: 0.15, drain: { damage: 1, type: R, every: 1000 },
       duration: 900, cooldown: 1040, vfx: 'shield', vfxColor: 0xc9d6e0,
     }),
     specialDirectional: m('Unstable Bolt', {
@@ -1232,8 +1232,9 @@ export const MOVESETS = {
       buff: { ms: 2600, weight: 1.32, scaleWithCharge: true, bonus: { type: R, damage: 4, hits: 4, name: 'Beta Turn' } },
     }),
     basicDirectional: melee('Vanishing Jab', {
-      type: K, damage: 6, type2: R, damage2: 4, rangeW: 64, rangeH: 40, vfx: 'spark', vfxColor: 0xffe08a,
-      baseKnockback: 120, knockbackGrowth: 2.4, duration: 160, cooldown: 360,
+      type: K, damage: 6, type2: R, damage2: 4, rangeW: 40, rangeH: 14, flicker: true,
+      startupF: 1, endlagF: 8, vfx: 'spark', vfxColor: 0xffe08a,
+      baseKnockback: 120, knockbackGrowth: 2.4, duration: 140, cooldown: 360,
     }),
     specialDefense: m('Trace Amount', {
       phase: true, phaseRetort: { type: R, damage: 8, knockback: 90, growth: 1.6 },
@@ -1241,7 +1242,7 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Alpha Flick', {
       kind: 'projectile', type: R, damage: 10, vfx: 'spark', vfxColor: 0xffd36a,
-      projectileSpeed: 540, projectileRadius: 8, projectileLife: 360,
+      projectileSpeed: 520, projectileRadius: 8, projectileLife: 220,
       baseKnockback: 150, knockbackGrowth: 2.8, duration: 180, cooldown: 520,
     }),
   },
@@ -1749,9 +1750,10 @@ export const MOVESETS = {
       maxChargeMs: 800, radius: 46, vfx: 'cloud', vfxColor: 0xd4f5a8,
       baseKnockback: 47.52, knockbackGrowth: 0.95, duration: 240, cooldown: 980,
     }),
-    basicDirectional: melee('Decay Daughters', {
-      type: K, damage: 8.32, rangeW: 68, vfx: 'strike', vfxColor: 0xc6e88a,
-      zone: { type: R, damage: 0.66, ms: 900, radius: 40, tick: 460, color: 0xd4f5a8, knockback: 9.5, growth: 0.12 },
+    basicDirectional: melee('Half-Life Hook', {
+      type: K, damage: 5.2, type2: R, damage2: 3.12,
+      halfLife: { pause: 900, floor: 0.0625 },
+      rangeW: 74, rangeH: 52, vfx: 'strike', vfxColor: 0xc6e88a,
       baseKnockback: 83.16, knockbackGrowth: 1.54, duration: 200, cooldown: 460,
     }),
     specialDefense: m('Radon Spa', {
@@ -1760,10 +1762,12 @@ export const MOVESETS = {
       duration: 700, cooldown: 1000, vfx: 'shield', vfxColor: 0xd8f0a0,
     }),
     specialDirectional: m('Radon Creep', {
-      kind: 'projectile', type: R, damage: 7.13, ground: true, vfx: 'cloud', vfxColor: 0xc6e070,
-      dropZone: { type: R, damage: 0.66, ms: 1000, radius: 42, tick: 460, color: 0xc6e070, knockback: 7.13, growth: 0.12 },
-      projectileSpeed: 280, projectileRadius: 12, projectileLife: 700,
-      baseKnockback: 35.64, knockbackGrowth: 0.71, duration: 220, cooldown: 640,
+      kind: 'zone', type: R, damage: 0, vfx: 'cloud', vfxColor: 0xc6e070,
+      zone: {
+        type: R, damage: 0.66, ms: 1500, radius: 52, tick: 460, color: 0xc6e070,
+        knockback: 0, growth: 0, sheet: true, feet: true, drift: 110, offsetX: 36,
+      },
+      duration: 220, cooldown: 640,
     }),
   },
 

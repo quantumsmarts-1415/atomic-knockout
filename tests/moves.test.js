@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { gateStored, interceptHit } from '../src/engine/defense.js';
-import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, finalBlow, lightUnquenchable, markedStrikeTargets, prepareMove, scaledByHaste, sheetFrameAt, stripBuffs, takingDps, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
+import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, finalBlow, halfLifeScale, lightUnquenchable, markedStrikeTargets, prepareMove, scaledByHaste, sheetFrameAt, stripBuffs, takingDps, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
 import { enGapMult, resolvePacket } from '../src/data/balance.js';
 import { applyImmunities, rearmDefense } from '../src/engine/defense.js';
 
@@ -1620,6 +1620,62 @@ test('hog, talia, pablo, and bianca keep the approved batch rules', () => {
   assert.equal(bianca.specialDirectional.nearCleanse, 78);
   assert.equal(bianca.specialDirectional.type, 'chemical');
   assert.equal(bianca.specialDirectional.dropZone, undefined);
+});
+
+test('polonius, tate, ronan, and frank keep the approved batch rules', () => {
+  const polonius = CHARACTERS.polonius.moves;
+  assert.equal(polonius.basicCharge.name, 'Blue Glow Burst');
+  assert.equal(polonius.basicCharge.type, 'heat');
+  assert.equal(polonius.basicCharge.type2, 'radiation');
+  assert.equal(polonius.basicCharge.selfGlowMs, 1400);
+  assert.equal(polonius.basicDirectional.name, 'Rapier Thrust');
+  assert.equal(polonius.specialDefense.kind, 'wall');
+  assert.equal(polonius.specialDefense.behindMult, 2);
+  assert.equal(polonius.specialDefense.pierceMult, 2);
+  assert.equal(polonius.specialDirectional.stripBuffs, true);
+  assert.equal(polonius.specialDirectional.onHit.strip, true);
+
+  const tate = CHARACTERS.tate.moves;
+  assert.equal(tate.basicCharge.blinkMs, 420);
+  assert.equal(tate.basicCharge.type, 'heat');
+  assert.equal(tate.basicCharge.type2, 'radiation');
+  assert.equal(tate.basicDirectional.ignoreReductions, true);
+  assert.equal(tate.basicDirectional.breaksBlock, true);
+  assert.equal(tate.specialDefense.fadeAlpha, 0.15);
+  assert.equal(tate.specialDefense.phase, true);
+  assert.equal(tate.specialDefense.drain.every, 1000);
+  assert.equal(tate.specialDirectional.type, 'chemical');
+  assert.equal(tate.specialDirectional.type2, 'radiation');
+
+  const ronan = CHARACTERS.ronan.moves;
+  assert.equal(ronan.basicCharge.riseUnder, true);
+  assert.equal(ronan.basicDirectional.name, 'Half-Life Hook');
+  assert.equal(ronan.basicDirectional.type, 'kinetic');
+  assert.equal(ronan.basicDirectional.type2, 'radiation');
+  assert.equal(ronan.basicDirectional.halfLife.pause, 900);
+  const hook = {};
+  assert.equal(halfLifeScale(hook, ronan.basicDirectional, 1000), 1);
+  assert.equal(halfLifeScale(hook, ronan.basicDirectional, 1500), 0.5);
+  assert.equal(halfLifeScale(hook, ronan.basicDirectional, 1800), 0.25);
+  assert.equal(halfLifeScale(hook, ronan.basicDirectional, 4000), 1);
+  assert.equal(ronan.specialDefense.regen, 1.5);
+  assert.equal(ronan.specialDirectional.kind, 'zone');
+  assert.equal(ronan.specialDirectional.zone.drift, 110);
+  assert.equal(ronan.specialDirectional.zone.sheet, true);
+  assert.equal(ronan.specialDirectional.zone.feet, true);
+  assert.equal(ronan.specialDirectional.zone.knockback, 0);
+  assert.equal(ronan.specialDirectional.dropZone, undefined);
+
+  const frank = CHARACTERS.frank.moves;
+  assert.equal(frank.basicCharge.buff.weight, 1.32);
+  assert.equal(frank.basicCharge.buff.bonus.type, 'radiation');
+  assert.equal(frank.basicDirectional.flicker, true);
+  assert.equal(frank.basicDirectional.startupF, 1);
+  assert.equal(frank.basicDirectional.rangeH, 14);
+  assert.equal(frank.specialDefense.phase, true);
+  assert.equal(frank.specialDefense.phaseRetort.type, 'radiation');
+  assert.equal(frank.specialDirectional.projectileLife, 220);
+  assert.equal(frank.specialDirectional.type, 'radiation');
 });
 
 function fake(id, x, y) {

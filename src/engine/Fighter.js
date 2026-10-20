@@ -3,7 +3,7 @@ import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { canonicalType, enGapMult, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defense.js';
-import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
+import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, halfLifeScale, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
 import { armGeyser, fxAnchor, groundTop, hitAnchor, playRetortPulse, spawnMeteor, spawnMoveExtra } from './fxArt.js';
@@ -569,6 +569,23 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.alpha = 1;
       this._hazeFade = false;
     }
+    if (this.state === 'attack' && this.currentMove?.flicker) {
+      this.alpha = Math.floor(time / 50) % 2 === 0 ? 1 : 0.12;
+      this._flickerHid = true;
+    } else if (this._flickerHid) {
+      this.alpha = 1;
+      this._flickerHid = false;
+    }
+    if ((this._blinkUntil ?? 0) > time) {
+      this.alpha = 0;
+      this._blinkHid = true;
+    } else if (this._blinkHid) {
+      this.alpha = 1;
+      this._blinkHid = false;
+      const gone = this._blinkMove;
+      this._blinkMove = null;
+      if (gone) playVfx(this.scene, this, gone, 'linger');
+    }
     if ((this.revealedUntil ?? 0) > time) {
       this.alpha = 1;
     }
@@ -934,6 +951,16 @@ export default class Fighter extends Phaser.GameObjects.Container {
         _comboStep: step,
       };
     }
+    if (move.halfLife) {
+      const gen = halfLifeScale(this, move, time);
+      move = {
+        ...move,
+        damage: (move.damage ?? 0) * gen,
+        damage2: move.damage2 != null ? move.damage2 * gen : move.damage2,
+        damage3: move.damage3 != null ? move.damage3 * gen : move.damage3,
+        _halfLife: gen,
+      };
+    }
     if (move.echoWithin) {
       const again = this._echoName === move.name && time - (this._echoAt ?? -1e9) < move.echoWithin;
       if (again) {
@@ -1285,6 +1312,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
     }
     if (move.riseUnder && this.body && this.scene?.fighters) {
+      const from = { x: this.x, y: this.y };
       let best = null;
       let bestD = Infinity;
       for (const f of this.scene.fighters) {
@@ -1292,7 +1320,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
         const d = Math.hypot(f.x - this.x, f.y - this.y);
         if (d < bestD) { bestD = d; best = f; }
       }
-      if (best) this.body.reset(best.x, best.y);
+      if (best) {
+        this._seepFrom = from;
+        this.body.reset(best.x, best.y);
+      }
     }
     if (move.zone && move.chargeRadiusMult) {
       scaled.zone = { ...move.zone, radius: scale(move.zone.radius ?? 70, move.chargeRadiusMult) };
@@ -1648,6 +1679,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
         damage2: incoming.damage2 != null ? incoming.damage2 * gate.damageMult : incoming.damage2,
         damage3: incoming.damage3 != null ? incoming.damage3 * gate.damageMult : incoming.damage3,
       };
+      if (gate.damageMult > 1 && this.defenseMove) {
+        const face = this.facing || 1;
+        playVfx(this.scene, this, this.defenseMove, 'pierce', {
+          x: this.x + face * (this.bodyW ?? 40) * 0.2,
+          y: this.y - (this.bodyH ?? 80) * 0.45,
+        });
+      }
     }
     if (gate.shatter && gate.endDefense && gate.result === 'pass') {
       const broken = this.defenseMove;
@@ -1663,6 +1701,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
     }
     if (gate.result === 'pop' || gate.result === 'negate') {
+      if (gate.result === 'negate' && this.defenseMove?.kind === 'wall') {
+        const face = this.facing || 1;
+        playVfx(this.scene, this, this.defenseMove, 'block', {
+          x: this.x + face * ((this.bodyW ?? 40) * 0.5 + 16),
+          y: this.y - (this.bodyH ?? 80) * 0.42,
+        });
+      }
       if (gate.detonate && this.scene?.resolveBurst) {
         this.scene.resolveBurst(this, {
           name: this.defenseMove?.name ?? 'detonate',

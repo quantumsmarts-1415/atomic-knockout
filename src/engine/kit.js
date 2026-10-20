@@ -406,7 +406,18 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     }
   }
   if (move.cleanse) cleanse(fighter, move.cleanse);
-  if (move.blinkMs) fighter.phasingUntil = time + move.blinkMs;
+  if (move.blinkMs) {
+    fighter.phasingUntil = time + move.blinkMs;
+    fighter._blinkUntil = fighter.phasingUntil;
+    fighter._blinkMove = move;
+  }
+  if (move.selfGlowMs && fighter.charDef?.id) {
+    fighter.clingFrom = {
+      id: fighter.charDef.id,
+      move: move.name,
+      until: time + move.selfGlowMs,
+    };
+  }
   if (move.revealAll && fighter.scene?.fighters) {
     for (const other of fighter.scene.fighters) other.phasingUntil = 0;
   }
@@ -504,6 +515,20 @@ function grantBuff(fighter, buff, time) {
       dashSpeed: buff.armDash.dashSpeed ?? 560,
     };
   }
+}
+
+/** Each quick repeat of a half-life swing does half the previous damage. */
+export function halfLifeScale(fighter, move, time) {
+  const spec = move?.halfLife;
+  if (!spec || !fighter) return 1;
+  const pause = spec.pause ?? 900;
+  const floor = spec.floor ?? 0.0625;
+  const last = fighter._halfLifeAt ?? 0;
+  let gen = fighter._halfLifeGen ?? 1;
+  if (!(last > 0) || time - last > pause) gen = 1;
+  fighter._halfLifeGen = Math.max(floor, gen * 0.5);
+  fighter._halfLifeAt = time;
+  return gen;
 }
 
 /** Shorten a swing's commitment while an attack-speed buff is up. */

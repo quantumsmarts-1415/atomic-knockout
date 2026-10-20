@@ -1630,9 +1630,59 @@ test('percy glass shard and goggles match the sheets on disk', () => {
   assert.equal(goggles.blend, 'add');
   assert.equal(goggles.black, 16);
   assert.equal(goggles.anchor, 'front');
-  const root = 'assets/fx/percy';
-  for (const name of fs.readdirSync(root)) {
-    const dir = `${root}/${name}`;
+  for (const id of ['percy']) {
+    const fxRoot = `assets/fx/${id}`;
+    for (const name of fs.readdirSync(fxRoot)) {
+      const dir = `${fxRoot}/${name}`;
+      if (!fs.statSync(dir).isDirectory()) continue;
+      for (const file of fs.readdirSync(dir)) {
+        assert.equal(file.endsWith('.gif') || file.endsWith('.jpg'), false, `${dir}/${file}`);
+      }
+    }
+  }
+});
+
+test('nadia sheets match the approved handoff', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const magnet = read('assets/fx/nadia/magnet-pull/fx.json');
+  assert.equal(magnet.file, 'magnet-pull-slam-anim.png');
+  assert.equal(magnet.frames, 24);
+  assert.equal(magnet.fps, 16);
+  assert.equal(magnet.loop, false);
+  assert.equal(magnet.blend, 'add');
+  assert.equal(magnet.charge.file, 'magnet-charge-status-anim.png');
+  assert.equal(magnet.charge.loop, true);
+  assert.equal(magnet.charge.anchor, 'body');
+  assert.equal(magnet.charge.pulse, 0.2);
+  const bass = read('assets/fx/nadia/bass-drop/fx.json');
+  assert.equal(bass.file, 'bass-drop-blast-anim.png');
+  assert.equal(bass.frames, 16);
+  assert.equal(bass.fps, 15);
+  assert.equal(bass.loop, false);
+  assert.equal(bass.flip, true);
+  assert.equal(bass.pivotX, 0.0625);
+  assert.equal(bass.prop.file, 'bass-speaker-prop.png');
+  assert.equal(bass.prop.black, false);
+  assert.equal(bass.prop.pivotY, 0.612);
+  const flip = read('assets/fx/nadia/polarity-flip/fx.json');
+  assert.equal(flip.file, 'polarity-flip-status-anim.png');
+  assert.equal(flip.loop, true);
+  assert.equal(flip.anchor, 'body');
+  assert.equal(flip.fps, 12);
+  const rotor = read('assets/fx/nadia/rotor-throw/fx.json');
+  assert.equal(rotor.projectile.file, 'rotor-sprite.png');
+  assert.equal(rotor.projectile.black, false);
+  assert.equal(rotor.projectile.aim, false);
+  assert.equal(rotor.projectile.spin, 8);
+  assert.equal(rotor.projectile.pivotX, 0.5141);
+  assert.equal(rotor.projectile.pivotY, 0.4725);
+  assert.equal(rotor.arcs.file, 'rotor-throw-arcs-anim.png');
+  assert.equal(rotor.arcs.frames, 24);
+  assert.equal(rotor.arcs.fps, 16);
+  assert.equal(rotor.arcs.loop, true);
+  assert.equal(rotor.arcs.pivot, 'center');
+  for (const name of fs.readdirSync('assets/fx/nadia')) {
+    const dir = `assets/fx/nadia/${name}`;
     if (!fs.statSync(dir).isDirectory()) continue;
     for (const file of fs.readdirSync(dir)) {
       assert.equal(file.endsWith('.gif') || file.endsWith('.jpg'), false, `${dir}/${file}`);

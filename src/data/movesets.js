@@ -2565,12 +2565,13 @@ export const MOVESETS = {
   nadia: {
     basicCharge: m('Magnet Pull', {
       kind: 'burst', type: K, damage: 6.4, chargeDamageMult: 1.4, chargeRadiusMult: 1.15,
-      maxChargeMs: 800, radius: 70, pull: { radius: 240, speed: 160, metals: true }, vfx: 'gust', vfxColor: 0xd8c8ff,
+      maxChargeMs: 800, radius: 110, pull: { radius: 1800, speed: 160, metals: true }, vfx: 'gust', vfxColor: 0xd8c8ff,
       baseKnockback: 86.8, knockbackGrowth: 1.49, duration: 240, cooldown: 900,
     }),
-    basicDirectional: melee('Bass Drop Punch', {
-      type: K, damage: 5.6, rangeW: 72, vfx: 'strike', vfxColor: 0xc8b8f0,
-      baseKnockback: 130.2, knockbackGrowth: 2.73, duration: 220, cooldown: 480,
+    basicDirectional: m('Bass Drop Punch', {
+      kind: 'burst', type: K, damage: 5.6, radius: 150, coneDeg: 70, offsetX: 36,
+      vfx: 'strike', vfxColor: 0xc8b8f0,
+      baseKnockback: 200, knockbackGrowth: 3.6, duration: 280, cooldown: 420,
     }),
     specialDefense: m('Polarity Flip', {
       repelMetals: true, reflectMetals: true, repelPower: 1.15,
@@ -2578,9 +2579,9 @@ export const MOVESETS = {
       duration: 640, cooldown: 860, vfx: 'shield', vfxColor: 0xd0c0ff,
     }),
     specialDirectional: m('Rotor Throw', {
-      kind: 'projectile', type: K, damage: 4.8, type2: E, damage2: 4, dragMetals: true, dragRadius: 96,
+      kind: 'projectile', type: K, damage: 4.8, type2: E, damage2: 4, dragMetals: true, dragRadius: 112,
       vfx: 'spark', vfxColor: 0xc8b8ff,
-      projectileSpeed: 400, projectileRadius: 12, projectileLife: 560,
+      projectileSpeed: 400, projectileRadius: 18, projectileLife: 560,
       baseKnockback: 55.8, knockbackGrowth: 0.99, duration: 200, cooldown: 680,
     }),
   },

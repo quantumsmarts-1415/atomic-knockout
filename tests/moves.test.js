@@ -1014,6 +1014,32 @@ test('percy kits that have arrived follow the approved brief', () => {
   assert.ok(welder.poisonUntil > 1200);
 });
 
+test('nadia kits follow the approved brief', () => {
+  const nadia = CHARACTERS.nadia.moves;
+  const magnet = nadia.basicCharge;
+  assert.strictEqual(magnet.name, 'Magnet Pull');
+  assert.strictEqual(magnet.kind, 'burst');
+  assert.strictEqual(magnet.type, 'kinetic');
+  assert.strictEqual(magnet.pull.metals, true);
+  assert.ok(magnet.pull.radius >= 1600);
+  const bass = nadia.basicDirectional;
+  assert.strictEqual(bass.name, 'Bass Drop Punch');
+  assert.strictEqual(bass.kind, 'burst');
+  assert.strictEqual(bass.type, 'kinetic');
+  assert.ok(bass.baseKnockback >= 180);
+  assert.ok(bass.coneDeg > 0);
+  const flip = nadia.specialDefense;
+  assert.strictEqual(flip.repelMetals, true);
+  assert.strictEqual(flip.reflectMetals, true);
+  const rotor = nadia.specialDirectional;
+  assert.strictEqual(rotor.name, 'Rotor Throw');
+  assert.strictEqual(rotor.kind, 'projectile');
+  assert.strictEqual(rotor.type, 'kinetic');
+  assert.strictEqual(rotor.type2, 'electrical');
+  assert.strictEqual(rotor.dragMetals, true);
+  assert.ok(rotor.dragRadius >= 96);
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

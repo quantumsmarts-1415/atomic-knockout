@@ -2,7 +2,7 @@
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
 import { anodizeTint } from './kit.js';
-import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, spawnStageSpan, wantsContactSpark } from './fxArt.js';
+import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, propPoint, spawnFxDetonate, spawnFxSprite, spawnStageSpan, wantsContactSpark } from './fxArt.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 
@@ -428,6 +428,12 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         const kind = art?.anchor === 'ground' ? 'ground' : 'shot';
         const posed = sheetReleasePoint(fighter, kind) || sheetFxPoint(fighter, kind);
         if (posed) { x = posed.x; y = posed.y; }
+      }
+      if (art.prop?.frames?.length) {
+        const at = propPoint(fighter, art.prop);
+        x = at.x;
+        y = at.y;
+        fighter._speakerThump = scene.simNow ?? 0;
       }
       const scale = anchor?.scale ?? fxGameplayScale(move, art);
       if (drawFxOneShot(scene, fighter, move, x, y, scale)) {

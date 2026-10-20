@@ -975,6 +975,71 @@ test('batch 11 kits follow the approved briefs', () => {
   assert.strictEqual(indy.noKnockback, true);
 });
 
+test('percy kits that have arrived follow the approved brief', () => {
+  const percy = CHARACTERS.percy.moves;
+  assert.strictEqual(percy.basicCharge.name, 'Frozen Light');
+  assert.strictEqual(percy.basicCharge.kind, 'beam');
+  assert.strictEqual(percy.basicCharge.type, 'heat');
+  assert.strictEqual(percy.basicCharge.delayMs, 1000);
+  const twin = percy.basicDirectional;
+  assert.strictEqual(twin.name, 'Green Twin Strike');
+  assert.strictEqual(twin.type, 'kinetic');
+  assert.strictEqual(twin.damage, 6);
+  assert.strictEqual(twin.multiHit, 2);
+  assert.strictEqual(twin.hitGap, 250);
+  assert.ok(twin.activeF * (1000 / 60) > twin.hitGap);
+  assert.strictEqual(twin.twin.tint, 0x6eff82);
+  assert.ok(twin.twin.alpha >= 0.4 && twin.twin.alpha <= 0.5);
+  const goggles = percy.specialDefense;
+  assert.strictEqual(goggles.frontOnly, true);
+  assert.deepStrictEqual(goggles.blocks, ['heat']);
+  assert.strictEqual(goggles.blindImmune, true);
+  assert.strictEqual(goggles.debuffImmune, undefined);
+  assert.ok(goggles.cleanse.includes('blind'));
+  const shard = percy.specialDirectional;
+  assert.strictEqual(shard.name, 'Green Glass Shard');
+  assert.strictEqual(shard.type, 'kinetic');
+  assert.strictEqual(shard.damage, 8);
+  assert.strictEqual(shard.explodeOnly, true);
+  assert.strictEqual(shard.splinter, true);
+  const welder = { blindUntil: 900, dazzleUntil: 900, state: 'idle' };
+  applyOnCast(welder, goggles, 1000, 1);
+  assert.strictEqual(welder.blindUntil, 0);
+  assert.strictEqual(welder.dazzleUntil, 0);
+  assert.strictEqual(welder.blindImmuneUntil, 1640);
+  applyOnHit({ charDef: { id: 'rhoda' } }, welder, {
+    onHit: { dazzle: { ms: 800 }, poison: { ms: 500, dps: 1, flat: true } },
+  }, 1200);
+  assert.strictEqual(welder.dazzleUntil, 0);
+  assert.ok(welder.poisonUntil > 1200);
+});
+
+test('nadia kits follow the approved brief', () => {
+  const nadia = CHARACTERS.nadia.moves;
+  const magnet = nadia.basicCharge;
+  assert.strictEqual(magnet.name, 'Magnet Pull');
+  assert.strictEqual(magnet.kind, 'burst');
+  assert.strictEqual(magnet.type, 'kinetic');
+  assert.strictEqual(magnet.pull.metals, true);
+  assert.ok(magnet.pull.radius >= 1600);
+  const bass = nadia.basicDirectional;
+  assert.strictEqual(bass.name, 'Bass Drop Punch');
+  assert.strictEqual(bass.kind, 'burst');
+  assert.strictEqual(bass.type, 'kinetic');
+  assert.ok(bass.baseKnockback >= 180);
+  assert.ok(bass.coneDeg > 0);
+  const flip = nadia.specialDefense;
+  assert.strictEqual(flip.repelMetals, true);
+  assert.strictEqual(flip.reflectMetals, true);
+  const rotor = nadia.specialDirectional;
+  assert.strictEqual(rotor.name, 'Rotor Throw');
+  assert.strictEqual(rotor.kind, 'projectile');
+  assert.strictEqual(rotor.type, 'kinetic');
+  assert.strictEqual(rotor.type2, 'electrical');
+  assert.strictEqual(rotor.dragMetals, true);
+  assert.ok(rotor.dragRadius >= 96);
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

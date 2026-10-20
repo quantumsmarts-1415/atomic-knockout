@@ -1,0 +1,33 @@
+{
+  "file": "green-twin-strike-impact-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 16,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "heightFrac": 0.9,
+  "anchor": "contact",
+  "oneshot": true,
+  "echo": {
+    "file": "green-twin-echo-anim.png",
+    "frames": 12,
+    "cols": 6,
+    "rows": 2,
+    "fps": 12,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "crop": "frame",
+    "pivot": "center",
+    "hit": false,
+    "heightFrac": 1,
+    "flip": true
+  }
+}

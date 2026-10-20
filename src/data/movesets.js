@@ -1646,20 +1646,22 @@ export const MOVESETS = {
 
   percy: {
     basicCharge: m('Frozen Light', {
-      kind: 'beam', type: H, damage: 9, delayMs: 200, chargeDamageMult: 1.35, chargeLengthMult: 1.2,
+      kind: 'beam', type: H, damage: 9, delayMs: 1000, chargeDamageMult: 1.35, chargeLengthMult: 1.2,
       maxChargeMs: 800, beamLen: 220, beamThick: 18, vfx: 'laser', vfxColor: 0xd6ff4a,
       baseKnockback: 80, knockbackGrowth: 1.5, duration: 220, cooldown: 760,
     }),
     basicDirectional: melee('Green Twin Strike', {
-      type: K, damage: 6, multiHit: 2, rangeW: 76, vfx: 'strike', vfxColor: 0x8fdb4a,
-      baseKnockback: 70, knockbackGrowth: 1.4, duration: 240, cooldown: 400,
+      type: K, damage: 6, multiHit: 2, hitGap: 250, rangeW: 76, vfx: 'strike', vfxColor: 0x8fdb4a,
+      twin: { tint: 0x6eff82, alpha: 0.45, behind: 18, lifeMs: 360 },
+      startupF: 4, activeF: 22, endlagF: 12,
+      baseKnockback: 70, knockbackGrowth: 1.4, duration: 460, cooldown: 400,
     }),
     specialDefense: m("Welder's Goggles", {
-      frontOnly: true, blocks: [H], debuffImmune: true, cleanse: ['blind'],
+      frontOnly: true, blocks: [H], blindImmune: true, cleanse: ['blind'],
       duration: 640, cooldown: 840, vfx: 'shield', vfxColor: 0xc6e85a,
     }),
     specialDirectional: m('Green Glass Shard', {
-      kind: 'projectile', type: K, damage: 8, explodeOnly: true, explodeRadius: 50,
+      kind: 'projectile', type: K, damage: 8, explodeOnly: true, splinter: true, explodeRadius: 50,
       vfx: 'spark', vfxColor: 0xc6f070,
       projectileSpeed: 460, projectileRadius: 8, projectileLife: 420,
       baseKnockback: 80, knockbackGrowth: 1.6, duration: 200, cooldown: 540,
@@ -2563,12 +2565,13 @@ export const MOVESETS = {
   nadia: {
     basicCharge: m('Magnet Pull', {
       kind: 'burst', type: K, damage: 6.4, chargeDamageMult: 1.4, chargeRadiusMult: 1.15,
-      maxChargeMs: 800, radius: 70, pull: { radius: 240, speed: 160, metals: true }, vfx: 'gust', vfxColor: 0xd8c8ff,
+      maxChargeMs: 800, radius: 110, pull: { radius: 1800, speed: 160, metals: true }, vfx: 'gust', vfxColor: 0xd8c8ff,
       baseKnockback: 86.8, knockbackGrowth: 1.49, duration: 240, cooldown: 900,
     }),
-    basicDirectional: melee('Bass Drop Punch', {
-      type: K, damage: 5.6, rangeW: 72, vfx: 'strike', vfxColor: 0xc8b8f0,
-      baseKnockback: 130.2, knockbackGrowth: 2.73, duration: 220, cooldown: 480,
+    basicDirectional: m('Bass Drop Punch', {
+      kind: 'burst', type: K, damage: 5.6, radius: 150, coneDeg: 70, offsetX: 36,
+      vfx: 'strike', vfxColor: 0xc8b8f0,
+      baseKnockback: 200, knockbackGrowth: 3.6, duration: 280, cooldown: 420,
     }),
     specialDefense: m('Polarity Flip', {
       repelMetals: true, reflectMetals: true, repelPower: 1.15,
@@ -2576,9 +2579,9 @@ export const MOVESETS = {
       duration: 640, cooldown: 860, vfx: 'shield', vfxColor: 0xd0c0ff,
     }),
     specialDirectional: m('Rotor Throw', {
-      kind: 'projectile', type: K, damage: 4.8, type2: E, damage2: 4, dragMetals: true, dragRadius: 96,
+      kind: 'projectile', type: K, damage: 4.8, type2: E, damage2: 4, dragMetals: true, dragRadius: 112,
       vfx: 'spark', vfxColor: 0xc8b8ff,
-      projectileSpeed: 400, projectileRadius: 12, projectileLife: 560,
+      projectileSpeed: 400, projectileRadius: 18, projectileLife: 560,
       baseKnockback: 55.8, knockbackGrowth: 0.99, duration: 200, cooldown: 680,
     }),
   },

@@ -1,0 +1,33 @@
+{
+  "projectile": {
+    "file": "rotor-sprite.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "pivotX": 0.5141,
+    "pivotY": 0.4725,
+    "hit": false,
+    "heightFrac": 0.42,
+    "aim": false,
+    "spin": 8
+  },
+  "arcs": {
+    "file": "rotor-throw-arcs-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 16,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "crop": "frame",
+    "pivot": "center",
+    "hit": false,
+    "heightFrac": 0.95
+  },
+  "blend": "normal",
+  "black": false,
+  "hit": false
+}

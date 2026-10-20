@@ -1,0 +1,38 @@
+{
+  "projectile": {
+    "file": "green-glass-shard-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 16,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "crop": "frame",
+    "pivot": "center",
+    "hit": false,
+    "heightFrac": 0.4,
+    "aim": false,
+    "spin": 6
+  },
+  "detonate": {
+    "file": "green-glass-splinter-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "crop": "frame",
+    "pivot": "center",
+    "hit": false,
+    "heightFrac": 0.9,
+    "anchor": "center"
+  },
+  "blend": "add",
+  "black": 16,
+  "hit": false
+}

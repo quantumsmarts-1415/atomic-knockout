@@ -167,7 +167,7 @@ export function interceptHit(defender, attacker, move, time) {
   }
 
   // phase:true dodges everything. phase:'overhead' still takes ground-tagged hits.
-  if (defense.phase && !move?.breakPhase && !(defense.phase === 'overhead' && move?.ground)) {
+  if (defense.phase && !move?.breakPhase && !move?.hitsRevealed && !(defense.phase === 'overhead' && move?.ground)) {
     const ret = defense.phaseRetort;
     if (ret && !move?.isCounterAttack) {
       return {

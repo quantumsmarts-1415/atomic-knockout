@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { gateStored, interceptHit } from '../src/engine/defense.js';
-import { applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, lightUnquenchable, scaledByHaste, stripBuffs, tickKit, withShatter } from '../src/engine/kit.js';
+import { applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, lightUnquenchable, markedStrikeTargets, scaledByHaste, stripBuffs, tickKit, visibleAlpha, withShatter } from '../src/engine/kit.js';
 import { rearmDefense } from '../src/engine/defense.js';
 
 const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
@@ -556,6 +556,69 @@ test('batch 2 kits match the edited move doc', () => {
   assert.strictEqual(scaled.result, 'pass');
   assert.strictEqual(scaled.typeScale.heat, 0.5);
   assert.strictEqual(scaled.typeScale.kinetic, undefined);
+});
+
+test('tex tags for ten seconds and the camera hits every tag', () => {
+  const moves = CHARACTERS.tex.moves;
+  const flash = moves.basicCharge;
+  assert.strictEqual(flash.name, 'Metastable Flash');
+  assert.strictEqual(flash.kind, 'burst');
+  assert.strictEqual(flash.type, 'radiation');
+  assert.strictEqual(flash.damage, 14);
+  const lasso = moves.basicDirectional;
+  assert.strictEqual(lasso.name, 'Tracer Lasso');
+  assert.strictEqual(lasso.type, 'kinetic');
+  assert.strictEqual(lasso.type2, 'radiation');
+  assert.strictEqual(lasso.damage, 7);
+  assert.strictEqual(lasso.damage2, 7);
+  assert.strictEqual(lasso.breakPhase, true);
+  assert.strictEqual(lasso.onHit.mark, 'tracer');
+  assert.strictEqual(lasso.onHit.markMs, 10000);
+  assert.strictEqual(lasso.onHit.reveal, true);
+  const tagged = { alive: true, state: 'idle' };
+  applyOnHit({ charDef: { id: 'tex' } }, tagged, lasso, 1000);
+  assert.strictEqual(tagged.mark, 'tracer');
+  assert.strictEqual(tagged.markUntil, 11000);
+  assert.strictEqual(tagged.markedBy, 'tex');
+  assert.strictEqual(tagged.revealedUntil, 11000);
+  assert.strictEqual(tagged.phasingUntil, 0);
+  assert.strictEqual(visibleAlpha(tagged, 10999, 0.15), 1);
+  assert.strictEqual(visibleAlpha(tagged, 11000, 0.15), 0.15);
+  cleanse(tagged, ['mark']);
+  assert.strictEqual(tagged.markUntil, 0);
+  assert.strictEqual(tagged.revealedUntil, 0);
+
+  const draw = moves.specialDefense;
+  assert.strictEqual(draw.name, 'Quick Draw');
+  assert.strictEqual(draw.kind, 'counter');
+  const guard = { state: 'defending', defenseMove: draw, facing: 1, x: 0, y: 0, bodyH: 116 };
+  const answer = interceptHit(guard, { x: 80, y: 0 }, { type: 'kinetic', damage: 9 }, 0);
+  assert.strictEqual(answer.result, 'counter');
+  assert.strictEqual(answer.counter.type, 'radiation');
+  assert.strictEqual(answer.counter.damage, 7);
+  assert.strictEqual(answer.counter.isCounterAttack, true);
+
+  const camera = moves.specialDirectional;
+  assert.strictEqual(camera.name, 'Gamma Camera');
+  assert.strictEqual(camera.kind, 'beam');
+  assert.strictEqual(camera.type, 'radiation');
+  assert.strictEqual(camera.damage, 11);
+  assert.strictEqual(camera.hitMarked, 'tracer');
+  const tex = { charDef: { id: 'tex' }, alive: true, state: 'idle' };
+  const near = { alive: true, state: 'idle', mark: 'tracer', markUntil: 5000, markedBy: 'tex' };
+  const far = { alive: true, state: 'defending', mark: 'tracer', markUntil: 5000, markedBy: 'tex' };
+  const other = { alive: true, state: 'idle', mark: 'tracer', markUntil: 5000, markedBy: 'ivy' };
+  const expired = { alive: true, state: 'idle', mark: 'tracer', markUntil: 1000, markedBy: 'tex' };
+  const struck = new Set([near]);
+  const extra = markedStrikeTargets(tex, camera, [tex, near, far, other, expired], 2000, struck);
+  assert.deepStrictEqual(extra, [far]);
+  const hiding = {
+    state: 'defending',
+    defenseMove: { phase: true, fadeAlpha: 0.15 },
+    facing: 1, x: 400, y: 0, bodyH: 116,
+  };
+  assert.strictEqual(interceptHit(hiding, tex, { ...camera, hitsRevealed: true }, 0).result, 'pass');
+  assert.strictEqual(interceptHit(hiding, tex, camera, 0).result, 'negate');
 });
 
 function fake(id, x, y) {

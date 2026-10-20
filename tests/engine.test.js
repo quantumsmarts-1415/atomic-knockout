@@ -357,6 +357,34 @@ test('Melt Down ignores hits, Transistor Gate banks electrical, and a peel knock
   assert.ok(dummy.hurtUnits <= 24);
 });
 
+test('a tagged Gamma Camera connects through a phase', () => {
+  const mockScene = createMockScene();
+  const rig = () => ({ animate() {}, setFlash() {}, play() {}, updateSheetFacing() {} });
+  const body = () => ({
+    setVelocity() {}, setVelocityX() {}, setVelocityY() {},
+    velocity: { x: 0, y: 0 }, blocked: {}, touching: {},
+  });
+  const hidden = new Fighter(mockScene, 0, 0, { ...baseCharDef, id: 'hide', moves: {} }, 0, 0);
+  hidden.rig = rig();
+  hidden.body = body();
+  hidden.phasingUntil = 5000;
+  hidden.state = 'defending';
+  hidden.defenseMove = { phase: true, intangible: true };
+  const dmg = hidden.takeHit({ x: -80, y: 0, facing: 1, charDef: { id: 'tex' } }, {
+    name: 'Gamma Camera', type: 'radiation', damage: 11, hitsRevealed: true,
+    baseKnockback: 60, knockbackGrowth: 1.2,
+  }, 1000, 1);
+  assert.ok(dmg > 0, `tagged flash damage ${dmg}`);
+  const faded = new Fighter(mockScene, 40, 0, { ...baseCharDef, id: 'hide2', moves: {} }, 0, 0);
+  faded.rig = rig();
+  faded.body = body();
+  faded.phasingUntil = 5000;
+  assert.strictEqual(faded.takeHit({ x: -80, y: 0, facing: 1, charDef: { id: 'tex' } }, {
+    name: 'Gamma Camera', type: 'radiation', damage: 11,
+    baseKnockback: 60, knockbackGrowth: 1.2,
+  }, 1000, 1), 0);
+});
+
 test('a dive stops at the ledge and hops back if it is already past it', () => {
   const isle = [{ x: 640, w: 990 }];
   assert.strictEqual(diveVelocityX(640, 220, isle), 220);

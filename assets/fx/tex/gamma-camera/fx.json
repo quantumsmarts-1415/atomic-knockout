@@ -1,0 +1,14 @@
+{
+  "file": "gamma-camera-flash-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 13.395,
+  "loop": false,
+  "blend": "add",
+  "black": 24,
+  "fit": "length",
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false
+}

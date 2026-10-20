@@ -18,7 +18,7 @@ import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
 import { syncCoats } from '../engine/coatView.js';
 import { syncAuras } from '../engine/auraView.js';
-import { applyDot, cleanse, withShatter } from '../engine/kit.js';
+import { applyDot, cleanse, markedStrikeTargets, withShatter } from '../engine/kit.js';
 import { resolvePacket } from '../data/balance.js';
 import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront } from '../engine/batch3.js';
 import { mulberry32 } from '../engine/rng.js';
@@ -1049,13 +1049,9 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   sweepMarked(owner, move, already) {
-    if (!move?.hitMarked || !owner) return;
     const now = this.time.now;
-    for (const target of this.fighters) {
-      if (already?.has(target) || target === owner || !target.alive || target.state === 'ko') continue;
-      if (target.mark !== move.hitMarked || !(target.markUntil > now)) continue;
-      if (target.markedBy !== owner.charDef?.id) continue;
-      this.landHit(owner, target, { ...move, hitMarked: null });
+    for (const target of markedStrikeTargets(owner, move, this.fighters, now, already)) {
+      this.landHit(owner, target, { ...move, hitMarked: null, hitsRevealed: true });
     }
   }
 

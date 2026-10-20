@@ -60,6 +60,7 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.mark = fx.mark;
     victim.markUntil = time + (fx.markMs ?? 3600);
     victim.markedBy = attacker?.charDef?.id ?? null;
+    if (fx.reveal) victim.revealedUntil = victim.markUntil;
   }
   if (fx.coat) {
     victim.debuffCoat = fx.coat;
@@ -99,6 +100,25 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.strip) stripBuffs(victim);
 }
 
+/** Fighters a marked-target move hits even when they are off the shot. */
+export function markedStrikeTargets(owner, move, fighters, now, already) {
+  if (!move?.hitMarked || !owner || !fighters) return [];
+  const out = [];
+  for (const target of fighters) {
+    if (already?.has?.(target) || target === owner || !target.alive || target.state === 'ko') continue;
+    if (target.mark !== move.hitMarked || !(target.markUntil > now)) continue;
+    if (target.markedBy !== owner.charDef?.id) continue;
+    out.push(target);
+  }
+  return out;
+}
+
+/** A tracer tag keeps its target drawn at full strength through a fade. */
+export function visibleAlpha(fighter, time, faded) {
+  if ((fighter?.revealedUntil ?? 0) > time) return 1;
+  return faded;
+}
+
 function lock(victim, time, ms, cancelAttack) {
   victim.lockedUntil = Math.max(victim.lockedUntil ?? 0, time + ms);
   if (!cancelAttack) return;
@@ -118,7 +138,10 @@ export function cleanse(fighter, kinds) {
     fighter.dazzleUntil = 0;
   }
   if (list.includes('slow')) fighter.slowUntil = 0;
-  if (list.includes('mark')) fighter.markUntil = 0;
+  if (list.includes('mark')) {
+    fighter.markUntil = 0;
+    fighter.revealedUntil = 0;
+  }
   if (list.includes('debuff')) {
     stripBuffs(fighter);
     fighter.debuffCoatUntil = 0;

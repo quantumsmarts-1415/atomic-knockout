@@ -1897,7 +1897,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Tracer Lasso', {
       type: K, damage: 7, type2: R, damage2: 7, breakPhase: true,
-      onHit: { mark: 'tracer', markMs: 5000, reveal: true }, rangeW: 104, vfx: 'spark', vfxColor: 0xd4ff9a,
+      onHit: { mark: 'tracer', markMs: 10000, reveal: true }, rangeW: 104, vfx: 'spark', vfxColor: 0xd4ff9a,
       baseKnockback: 70, knockbackGrowth: 1.4, duration: 210, cooldown: 460,
     }),
     specialDefense: m('Quick Draw', {

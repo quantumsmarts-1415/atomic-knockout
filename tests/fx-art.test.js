@@ -1235,3 +1235,20 @@ test('lucy pairs a blade with the slash and spans annihilation to the stage', ()
   assert.equal(normal.w, 1280);
   assert.equal(normal.h, 238);
 });
+
+test('tex gamma camera is a directional additive flash', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const flash = read('assets/fx/tex/gamma-camera/fx.json');
+  assert.equal(flash.file, 'gamma-camera-flash-anim.png');
+  assert.equal(flash.frames, 24);
+  assert.equal(flash.cols, 4);
+  assert.equal(flash.rows, 6);
+  assert.equal(flash.fps, 13.395);
+  assert.equal(flash.loop, false);
+  assert.equal(flash.blend, 'add');
+  assert.equal(flash.black, 24);
+  assert.equal(flash.fit, 'length');
+  assert.equal(flash.pivot, 'left');
+  assert.equal(flash.hit, false);
+  assert.equal(fs.existsSync('assets/fx/tex/gamma-camera/gamma-camera-flash-anim.png'), true);
+});

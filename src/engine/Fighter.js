@@ -3,7 +3,7 @@ import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { canonicalType, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defense.js';
-import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, weakestType } from './kit.js';
+import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
 import { hitAnchor } from './fxArt.js';
@@ -489,7 +489,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       cleanse(this, this.defenseMove.cleanse);
     }
     if (this.state === 'defending' && this.defenseMove?.fadeAlpha != null) {
-      this.alpha = this.defenseMove.fadeAlpha;
+      this.alpha = visibleAlpha(this, time, this.defenseMove.fadeAlpha);
       this._hazeFade = true;
     } else if (this._hazeFade) {
       this.alpha = 1;
@@ -1295,8 +1295,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
         y: this.y - (this.bodyH ?? 80) * 0.45,
       });
     }
-    if (this.state === 'defending' && this.defenseMove?.intangible && !move.isSelf && !move.isCounterAttack) return 0;
-    if (this.phasingUntil > time && !move.isSelf && !move.isCounterAttack) return 0;
+    if (this.state === 'defending' && this.defenseMove?.intangible && !move.isSelf && !move.isCounterAttack && !move.hitsRevealed) return 0;
+    if (this.phasingUntil > time && !move.isSelf && !move.isCounterAttack && !move.hitsRevealed) return 0;
     if (this.state === 'defending' && this.defenseMove && !move.isSelf && !move.isCounterAttack) {
       this.answerStrike(attacker, time);
     }

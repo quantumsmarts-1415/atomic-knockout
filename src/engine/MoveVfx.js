@@ -372,6 +372,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     }
     if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
     if (move?.kind === 'zone' && move.zone?.trap && art?.frames?.length) return;
+    // The lingering sheet is the zone itself. A release oneshot would stack a second copy.
+    if (move?.kind === 'zone' && move.zone?.sheet && art?.frames?.length) return;
     // A looping floor sheet is held on the fighter. A one-shot ground burst still draws.
     if (phase === 'defense' && art?.anchor === 'ground' && art.loop && art.frames?.length) return;
     // A crumble or melt is held on the feet, then the rise plays on letgo.

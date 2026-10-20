@@ -224,14 +224,22 @@ function incomingMult(type, atk, def) {
 
 /**
  * One damage packet after attacker and defender modifiers.
- * `opts.kinDefMult` is a runtime corrosion debuff (1 = none).
+ * `opts.kinDefMult` scales kinetic defense (1 = full defense, lower corrodes it).
  * `opts.heatTakenMult` stacks on top of a runtime heat resist.
  */
 export function resolvePacket(amount, type, atkCombat, defCombat, opts = {}) {
   if (!(amount > 0)) return 0;
   let dmg = amount * outgoingMult(type, atkCombat);
   if (opts.ignoreDefense) return dmg < 0 ? 0 : dmg;
+  const kind = canonicalType(type);
   let mult = incomingMult(type, atkCombat, defCombat);
+  // Corrosion scales the kinetic defense stat down. 1 leaves it alone.
+  if (kind === 'kinetic' && opts.kinDefMult != null && opts.kinDefMult < 1 && defCombat) {
+    const corroded = 1 - (defCombat.kineticDef || 0) * opts.kinDefMult;
+    mult = clamp(corroded, TUNING.incomingClamp[0], TUNING.incomingClamp[1]);
+  }
+  const pierce = opts.pierce > 0 ? Math.min(1, opts.pierce) : 0;
+  if (pierce && mult < 1) mult += (1 - mult) * pierce;
   // Ceramic and similar hits skip armor and buff reductions. Element
   // defense still applies, and a full block is decided before this.
   if (opts.ignoreReductions) {
@@ -239,13 +247,14 @@ export function resolvePacket(amount, type, atkCombat, defCombat, opts = {}) {
     dmg *= mult;
     return dmg < 0 ? 0 : dmg;
   }
-  if (canonicalType(type) === 'kinetic' && opts.kinDefMult != null) mult *= opts.kinDefMult;
-  if (canonicalType(type) === 'kinetic' && opts.kineticTakenMult != null) mult *= opts.kineticTakenMult;
-  if (canonicalType(type) === 'heat' && opts.heatTakenMult != null) mult *= opts.heatTakenMult;
+  const lift = (v) => (pierce && v != null && v < 1 ? v + (1 - v) * pierce : v);
+  if (canonicalType(type) === 'kinetic' && opts.kineticTakenMult != null) mult *= lift(opts.kineticTakenMult);
+  if (canonicalType(type) === 'heat' && opts.heatTakenMult != null) mult *= lift(opts.heatTakenMult);
   if (canonicalType(type) === 'chemical' && opts.chemTakenMult != null) mult *= opts.chemTakenMult;
+  if (canonicalType(type) === 'electrical' && opts.elecTakenMult != null) mult *= opts.elecTakenMult;
   if (canonicalType(type) === 'chemical' && opts.chemDealtMult != null) dmg *= opts.chemDealtMult;
   dmg *= mult;
-  if (opts.takenMult) dmg *= opts.takenMult;
+  if (opts.takenMult) dmg *= lift(opts.takenMult);
   return dmg < 0 ? 0 : dmg;
 }
 

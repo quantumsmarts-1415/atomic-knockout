@@ -18,7 +18,7 @@ import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
 import { syncCoats } from '../engine/coatView.js';
 import { syncAuras } from '../engine/auraView.js';
-import { applyDot, cleanse, fighterOnSwapLine, markedStrikeTargets, sheetFrameAt, withRedFrame, withShatter } from '../engine/kit.js';
+import { applyDot, applyOnHit, cleanse, fighterOnSwapLine, markedStrikeTargets, sheetFrameAt, withRedFrame, withShatter } from '../engine/kit.js';
 import { resolvePacket } from '../data/balance.js';
 import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront } from '../engine/batch3.js';
 import { mulberry32 } from '../engine/rng.js';
@@ -1201,8 +1201,16 @@ export default class BattleScene extends Phaser.Scene {
           });
         } else {
           const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
-          this.spawnProjectile(owner, { ...move, fan: null, _fanChild: true, _vy: t * spread });
+          this.spawnProjectile(owner, {
+            ...move, fan: null, _fanChild: true, _vy: t * spread, _hideArt: !!move.oneArt,
+          });
         }
+      }
+      // The volley sheet is the whole fan, so it flies straight down the aim line.
+      if (move.oneArt && !(move.fanDeg > 0)) {
+        this.spawnProjectile(owner, {
+          ...move, fan: null, _fanChild: true, _vy: 0, _ghost: true,
+        });
       }
       return;
     }
@@ -1272,6 +1280,10 @@ export default class BattleScene extends Phaser.Scene {
       return;
     }
     if (rainArt?.stageFit) {
+      this.projectiles.push({ ...shot, gfx: { x, y, destroy() {} } });
+      return;
+    }
+    if (move._hideArt) {
       this.projectiles.push({ ...shot, gfx: { x, y, destroy() {} } });
       return;
     }
@@ -1563,6 +1575,20 @@ export default class BattleScene extends Phaser.Scene {
       });
       return;
     }
+    if (spec.sheet && painted?.frames?.length) {
+      const face = owner?.facing || 1;
+      const gfx = placeFxImage(this, painted, x, y, face);
+      gfx?.setDepth?.(6);
+      this.zones.push({
+        owner, spec, x, y, radius,
+        gfx: gfx || { destroy() {} },
+        art: painted, face,
+        born: this.time.now,
+        until: this.time.now + (spec.ms ?? 1600),
+        next: this.time.now + (spec.delay ?? 0),
+      });
+      return;
+    }
     if (painted?.frames?.length) {
       this.zones.push({
         owner, spec, x, y, radius,
@@ -1658,10 +1684,13 @@ export default class BattleScene extends Phaser.Scene {
           continue;
         }
         if (z.spec.percentOnly) {
-          const dealt = resolvePacket(
-            tickDamage, z.spec.type, z.owner?.charDef?.combat, target.charDef?.combat,
-          );
+          const dealt = z.spec.flat
+            ? (tickDamage ?? 0)
+            : resolvePacket(
+              tickDamage, z.spec.type, z.owner?.charDef?.combat, target.charDef?.combat,
+            );
           applyDot(target, dealt, z.spec.type || 'chemical');
+          if (z.spec.onHit) applyOnHit(z.owner, target, { name: z.spec.name, onHit: z.spec.onHit }, time);
           continue;
         }
         this.landHit(z.owner, target, {
@@ -2355,9 +2384,9 @@ export default class BattleScene extends Phaser.Scene {
             });
           }
         }
-        if (p.move.explodeOnly && !p.pinned) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
-        else if (!off) this.detonateProjectile(p);
-        if (!p.pinned) this.dropProjectileZone(p);
+        if (p.move.explodeOnly && !p.pinned && !p.move._ghost) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
+        else if (!off && !p.move._ghost) this.detonateProjectile(p);
+        if (!p.pinned && !p.move._ghost) this.dropProjectileZone(p);
         p.gfx.destroy();
         p.dead = true;
         continue;
@@ -2379,7 +2408,7 @@ export default class BattleScene extends Phaser.Scene {
         p.dead = true;
         continue;
       }
-      if (p.pinned || (p.armAt && time < p.armAt)) continue;
+      if (p.move._ghost || p.pinned || (p.armAt && time < p.armAt)) continue;
       for (const victim of this.fighters) {
         if (victim === p.owner || !victim.alive || victim.state === 'ko' || !victim.visible || p.landed.has(victim)) continue;
         if (victim.state === 'defending' && victim.defenseMove?.untargetable) continue;

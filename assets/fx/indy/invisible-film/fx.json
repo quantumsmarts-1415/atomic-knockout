@@ -1,0 +1,15 @@
+{
+  "file": "invisible-film-floor-anim.png",
+  "frames": 24,
+  "cols": 3,
+  "rows": 8,
+  "fps": 24,
+  "loop": true,
+  "blend": "add",
+  "black": 22,
+  "fit": "height",
+  "heightFrac": 0.5,
+  "crop": "frame",
+  "pivot": "bottom",
+  "hit": false
+}

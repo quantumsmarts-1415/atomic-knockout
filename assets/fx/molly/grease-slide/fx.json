@@ -1,0 +1,16 @@
+{
+  "file": "grease-slide-block-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 12,
+  "loop": false,
+  "blend": "normal",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 0.62,
+  "crop": "frame",
+  "pivot": "center",
+  "aim": false,
+  "hit": false
+}

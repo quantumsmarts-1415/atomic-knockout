@@ -1,0 +1,15 @@
+{
+  "file": "solder-whip-shot-anim.png",
+  "frames": 21,
+  "cols": 3,
+  "rows": 7,
+  "fps": 10.5,
+  "loop": false,
+  "blend": "add",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 0.42,
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false
+}

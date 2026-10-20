@@ -878,18 +878,24 @@ export const MOVESETS = {
       projectileSpeed: 560, projectileRadius: 6, projectileLife: 460,
       baseKnockback: 280, knockbackGrowth: 4.6, duration: 200, cooldown: 860,
     }),
-    basicDirectional: melee('Silver Lining', {
+    basicDirectional: melee('Current Slash', {
       type: K, damage: 4, type2: E, damage2: 3, rangeW: 86, vfx: 'spark',
       baseKnockback: 160, knockbackGrowth: 3.8, duration: 220, cooldown: 480,
     }),
-    specialDefense: m('Photo Negative', {
-      immune: [H, R], capture: true, duration: 700, cooldown: 840, vfx: 'shield', vfxColor: 0xd8dde6,
+    specialDefense: m('Mirror Flash', {
+      reflectTypes: [H, E, R], reflectPower: 1,
+      counterKnockback: 120, counterKnockbackGrowth: 1.6,
+      duration: 1000, cooldown: 900, vfx: 'shield', vfxColor: 0xe8eef4,
     }),
-    specialDirectional: m('Darkroom Print', {
-      kind: 'projectile', type: H, damage: 3, replayCapture: true, onHit: { blind: 260 },
-      vfx: 'spark', vfxColor: 0xfff6d0,
-      projectileSpeed: 520, projectileRadius: 8, projectileLife: 480,
-      baseKnockback: 90, knockbackGrowth: 1.5, duration: 220, cooldown: 960,
+    specialDirectional: m('Tarnish Cloud', {
+      kind: 'zone', type: C, damage: 2, vfx: 'cloud', vfxColor: 0x6a6a62,
+      zone: {
+        name: 'Tarnish Cloud', type: C, damage: 2, flat: true, percentOnly: true,
+        ms: 7000, radius: 84, tick: 1000, offsetX: 70, sheet: true,
+        knockback: 0, growth: 0,
+        onHit: { corrode: { mult: 0.7, ms: 7000 } },
+      },
+      duration: 240, cooldown: 980,
     }),
   },
 
@@ -1284,10 +1290,11 @@ export const MOVESETS = {
       maxChargeMs: 900, beamLen: 140, beamThick: 18, vfx: 'fire', vfxColor: 0xff4a3a,
       baseKnockback: 90, knockbackGrowth: 1.6, duration: 220, cooldown: 760,
     }),
-    basicDirectional: melee('Grease Slide', {
-      kind: 'dash', type: K, damage: 7, onHit: { slow: 450 }, dashSpeed: 500,
-      rangeW: 96, rangeH: 40, vfx: 'dash', vfxColor: 0x6a7078,
-      baseKnockback: 80, knockbackGrowth: 1.8, duration: 240, cooldown: 500,
+    basicDirectional: m('Grease Slide', {
+      kind: 'projectile', type: K, damage: 7, ground: true, trip: true, tripMs: 680,
+      vfx: 'strike', vfxColor: 0x6a7078,
+      projectileSpeed: 340, projectileRadius: 16, projectileLife: 760,
+      baseKnockback: 36, knockbackGrowth: 0.45, duration: 200, cooldown: 520,
     }),
     specialDefense: m('Dry Lube', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.4, noKnockback: true,
@@ -1295,7 +1302,10 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Nitrogenase', {
       kind: 'zone', type: C, damage: 2, vfx: 'cloud', vfxColor: 0x7dcea0,
-      zone: { type: C, damage: 0.7, ms: 1100, radius: 56, tick: 460, color: 0x7dcea0, bonusVsId: { nitra: 2 } },
+      zone: {
+        name: 'Nitrogenase', type: C, damage: 0.7, ms: 1100, radius: 56, tick: 460,
+        offsetX: 48, sheet: true, color: 0x7dcea0, bonusVsId: { nitra: 2 },
+      },
       baseKnockback: 40, knockbackGrowth: 0.6, duration: 240, cooldown: 860,
     }),
   },
@@ -1419,21 +1429,27 @@ export const MOVESETS = {
 
   indy: {
     basicCharge: m('Invisible Film', {
-      kind: 'zone', type: E, damage: 2, maxChargeMs: 800, vfx: 'spark', vfxColor: 0xb9d4e8,
-      zone: { type: E, damage: 2.6, ms: 1900, radius: 74, tick: 340, low: true, color: 0x9ec4d8 },
-      baseKnockback: 40, knockbackGrowth: 0.6, duration: 220, cooldown: 900,
+      kind: 'zone', type: E, damage: 3.2, maxChargeMs: 800, vfx: 'spark', vfxColor: 0xb9d4e8,
+      zone: {
+        name: 'Invisible Film', type: E, damage: 3.2, ms: 10000, radius: 88, tick: 700,
+        offsetX: 64, low: true, feet: true, sheet: true, knockback: 22, growth: 0.3, color: 0x9ec4d8,
+      },
+      baseKnockback: 22, knockbackGrowth: 0.3, duration: 220, cooldown: 980,
     }),
     basicDirectional: melee('Sticky Seal', {
-      type: K, damage: 7, onHit: { root: 480 }, rangeW: 66, vfx: 'strike', vfxColor: 0xd8dee6,
-      baseKnockback: 60, knockbackGrowth: 1.2, duration: 200, cooldown: 440,
+      type: K, damage: 7, onHit: { root: 3000 }, rangeW: 66, vfx: 'strike', vfxColor: 0xd8dee6,
+      baseKnockback: 0, knockbackGrowth: 0, duration: 200, cooldown: 440,
     }),
     specialDefense: m('Putty Guard', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.5, noKnockback: true,
       duration: 700, cooldown: 820, vfx: 'shield', vfxColor: 0xc5ced6,
     }),
-    specialDirectional: melee('Solder Whip', {
-      type: H, damage: 6, type2: K, damage2: 5, lift: true, rangeW: 128, rangeH: 32, vfx: 'spark', vfxColor: 0xe8eef4,
-      baseKnockback: 110, knockbackGrowth: 2.0, duration: 220, cooldown: 480,
+    specialDirectional: m('Solder Whip', {
+      kind: 'projectile', type: H, damage: 6,
+      onHit: { elecTaken: { mult: 1.4, ms: 5000 } },
+      vfx: 'spark', vfxColor: 0xe8eef4,
+      projectileSpeed: 500, projectileRadius: 9, projectileLife: 480,
+      baseKnockback: 70, knockbackGrowth: 1.3, duration: 200, cooldown: 560,
     }),
   },
 
@@ -1737,23 +1753,29 @@ export const MOVESETS = {
   },
 
   saab: {
-    basicCharge: m('Printing Press', {
-      type: K, damage: 7, chargeDamageMult: 1.35, maxChargeMs: 800,
-      onHit: { mark: 'type', markMs: 4200 }, rangeW: 80, rangeH: 48, vfx: 'strike', vfxColor: 0x9aa0a8,
-      baseKnockback: 100, knockbackGrowth: 1.8, duration: 240, cooldown: 800,
+    basicCharge: m('Sniper Round', {
+      kind: 'projectile', type: K, damage: 5.5, chargeDamageMult: 2.2, chargePierce: 1,
+      chargeBright: true, maxChargeMs: 950, vfx: 'strike', vfxColor: 0xfff2c8,
+      projectileSpeed: 880, projectileRadius: 5, projectileLife: 380,
+      baseKnockback: 80, knockbackGrowth: 1.4, duration: 180, cooldown: 860,
     }),
-    basicDirectional: melee('Kohl Swipe', {
-      type: K, damage: 4, type2: C, damage2: 4, bonusVsMark: 'type', markMult: 1.4,
-      onHit: { blind: 340 }, rangeW: 72, vfx: 'strike', vfxColor: 0x3a3a42,
-      baseKnockback: 80, knockbackGrowth: 1.6, duration: 200, cooldown: 440,
+    basicDirectional: m('Toxic Dust Cloud', {
+      kind: 'projectile', type: C, damage: 2.8, vfx: 'cloud', vfxColor: 0xc8c09a,
+      onHit: {
+        slow: 2200,
+        attackSlow: { mult: 0.72, ms: 2200 },
+        coat: 'Toxic Cough', coatMs: 2200,
+      },
+      projectileSpeed: 360, projectileRadius: 18, projectileLife: 480,
+      baseKnockback: 28, knockbackGrowth: 0.35, duration: 200, cooldown: 620,
     }),
     specialDefense: m('Flame Retardant', {
       immune: [H], cleanse: ['burn'],
       duration: 640, cooldown: 840, vfx: 'shield', vfxColor: 0xd0d4d8,
     }),
     specialDirectional: m('Stibnite Needles', {
-      kind: 'projectile', type: K, damage: 2.2, fan: 4, fanSpread: 200,
-      bonusVsMark: 'type', markMult: 1.4, vfx: 'spark', vfxColor: 0xb8bcc2,
+      kind: 'projectile', type: K, damage: 2.2, fan: 4, fanSpread: 200, oneArt: true,
+      vfx: 'spark', vfxColor: 0xb8bcc2,
       projectileSpeed: 500, projectileRadius: 5, projectileLife: 360,
       baseKnockback: 50, knockbackGrowth: 1.2, duration: 200, cooldown: 560,
     }),

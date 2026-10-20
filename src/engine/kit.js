@@ -15,6 +15,16 @@ export function applyOnHit(attacker, victim, move, time) {
   if (!fx || immune) return;
 
   if (fx.slow) victim.slowUntil = time + fx.slow;
+  if (fx.attackSlow) {
+    const spec = typeof fx.attackSlow === 'number' ? { ms: fx.attackSlow } : fx.attackSlow;
+    victim.attackHaste = spec.mult ?? 0.72;
+    victim.attackHasteUntil = time + (spec.ms ?? 1800);
+  }
+  if (fx.elecTaken) {
+    const spec = typeof fx.elecTaken === 'number' ? { mult: fx.elecTaken } : fx.elecTaken;
+    victim.elecTakenMult = spec.mult ?? 1.35;
+    victim.elecTakenUntil = time + (spec.ms ?? 5000);
+  }
   if (fx.stun) lock(victim, time, fx.stun, true);
   if (fx.freeze) {
     lock(victim, time, fx.freeze, true);
@@ -451,7 +461,7 @@ function grantBuff(fighter, buff, time) {
 
 /** Shorten a swing's commitment while an attack-speed buff is up. */
 export function scaledByHaste(move, haste = 1) {
-  if (!(haste > 1) || !move) return move;
+  if (!(haste > 0) || haste === 1 || !move) return move;
   const scale = 1 / haste;
   const ms = (n, floor) => Math.max(floor, Math.round((n ?? 0) * scale));
   const frames = (n, floor) => (n == null ? n : Math.max(floor, Math.round(n * scale)));
@@ -621,6 +631,9 @@ export function combatOpts(defender) {
   const opts = {};
   if (defender.kinDefMultUntil > now) opts.kinDefMult = defender.kinDefMult ?? 0.75;
   if (defender.heatResistUntil > now) opts.heatTakenMult = defender.heatResistMult ?? 0.4;
+  if (defender.elecTakenUntil > now && defender.elecTakenMult != null) {
+    opts.elecTakenMult = defender.elecTakenMult;
+  }
   let chem = null;
   if (defender.chemResistUntil > now && defender.chemResistMult != null) chem = defender.chemResistMult;
   if (defender.chemVulnerableUntil > now && defender.chemVulnerableMult != null) {

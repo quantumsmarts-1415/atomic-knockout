@@ -1,0 +1,30 @@
+{
+  "file": "sniper-round-shot-anim.png",
+  "frames": 22,
+  "cols": 4,
+  "rows": 6,
+  "fps": 11,
+  "loop": false,
+  "blend": "add",
+  "black": 22,
+  "fit": "height",
+  "heightFrac": 0.28,
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false,
+  "charge": {
+    "file": "sniper-charge-stages.png",
+    "frames": 3,
+    "cols": 3,
+    "rows": 1,
+    "fps": 8,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.42,
+    "crop": "frame",
+    "pivot": "center",
+    "pulse": 1
+  }
+}

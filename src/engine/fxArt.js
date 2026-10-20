@@ -483,6 +483,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     keepSlash: !!extra.keepSlash,
     oneshot: !!extra.oneshot,
     stageFit: !!extra.stageFit,
+    maxAlpha: extra.maxAlpha > 0 && extra.maxAlpha < 1 ? extra.maxAlpha : 0,
   };
 }
 
@@ -925,6 +926,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       scale: merged.scale,
       lifeMs: merged.lifeMs,
       order: merged.order,
+      pulse: merged.pulse,
     });
   }
   return record;
@@ -966,6 +968,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
     keepSlash: !!meta.keepSlash,
     oneshot: !!meta.oneshot,
     stageFit: meta.fit === 'stage',
+    maxAlpha: meta.maxAlpha > 0 && meta.maxAlpha < 1 ? meta.maxAlpha : 0,
   };
   const inherit = { blend: meta.blend, black: meta.black };
 
@@ -1113,7 +1116,12 @@ export function fxProjectileView(scene, owner, move, x, y) {
   if (!frame || !scene?.add?.image || art.stageFit) return null;
   const img = scene.add.image(x, y, frame.key);
   img.setOrigin(art.pivotX, art.pivotY);
-  const scale = fxGameplayScale(move, art);
+  let scale = fxGameplayScale(move, art);
+  if (move.chargeBright) {
+    const frac = Math.max(0, Math.min(1, Number(move._chargeFrac) || 0));
+    scale *= 0.78 + 0.22 * frac;
+    img.setAlpha(0.32 + 0.68 * frac);
+  }
   img.setDisplaySize(frame.displayW * scale, frame.displayH * scale);
   img.setDepth(16);
   img.setBlendMode?.(phaserBlend(frame.blend || art.blend));
@@ -1552,7 +1560,8 @@ function stepOneShots(scene) {
     const frame = shot.art.frames[fxFrameIndex(shot.art, elapsed)] || shot.art.frames[0];
     applyFrameLook(shot.img, frame, shot.art, shot.scale, shot.box);
     applyFacing(shot.img, shot.face);
-    shot.img.setAlpha?.(fxFadeAlpha(shot.art, elapsed));
+    const cap = shot.art.maxAlpha > 0 ? shot.art.maxAlpha : 1;
+    shot.img.setAlpha?.(fxFadeAlpha(shot.art, elapsed) * cap);
     if (shot.peak?.scene) {
       const on = shot.art.peakFrame === fxFrameIndex(shot.art, elapsed);
       shot.peak.setVisible(on);
@@ -2345,6 +2354,10 @@ function syncHeld(scene, fighter) {
       ? (frames[fxFrameIndex(want.art, elapsed)] || frames[0])
       : frames[Math.min(frames.length - 1, Math.round(frac * (frames.length - 1)))];
     applyFrameLook(live.img, frame, want.art, 1);
+    if (want.art.pulse) {
+      const pulse = 0.8 + 0.2 * Math.sin((scene.simNow || 0) * 0.012);
+      live.img.setAlpha(pulse * (0.42 + 0.58 * frac));
+    }
     if (want.art.anchor === 'body') {
       live.img.setOrigin(0.5, 0.5);
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);

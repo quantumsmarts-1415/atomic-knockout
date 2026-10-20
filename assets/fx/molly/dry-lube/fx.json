@@ -1,0 +1,16 @@
+{
+  "file": "dry-lube-sheen-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 24,
+  "loop": true,
+  "blend": "screen",
+  "black": 64,
+  "fit": "height",
+  "heightFrac": 1.5,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false
+}

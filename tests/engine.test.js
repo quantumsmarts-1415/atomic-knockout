@@ -385,6 +385,50 @@ test('a tagged Gamma Camera connects through a phase', () => {
   }, 1000, 1), 0);
 });
 
+test('a charged sniper ignores defense and a pass-through shot does not', () => {
+  const mockScene = createMockScene();
+  mockScene.simFast = true;
+  const rig = () => ({ animate() {}, setFlash() {}, play() {}, updateSheetFacing() {} });
+  const saab = new Fighter(mockScene, 0, 0, CHARACTERS.saab, 0, 0);
+  saab.rig = rig();
+  saab.state = 'charging';
+  saab.chargeStart = 0;
+  saab.fireCharge(950);
+  assert.strictEqual(saab.currentMove.name, 'Sniper Round');
+  assert.ok(Math.abs(saab.currentMove.damage - 12.1) < 1e-6);
+  assert.strictEqual(saab.currentMove.defensePierce, 1);
+  assert.strictEqual(saab.currentMove._chargeFrac, 1);
+  assert.ok(!saab.currentMove.pierce);
+  saab.state = 'charging';
+  saab.chargeStart = 0;
+  saab.fireCharge(475);
+  assert.ok(Math.abs(saab.currentMove.defensePierce - 0.5) < 1e-6);
+  assert.ok(saab.currentMove.damage > 5.5 && saab.currentMove.damage < 12.1);
+
+  const wall = new Fighter(mockScene, 80, 0, {
+    ...baseCharDef,
+    id: 'wall',
+    combat: { kineticDef: 0.5 },
+    moves: {},
+  }, 0, 0);
+  wall.rig = rig();
+  wall.body = {
+    setVelocity() {}, setVelocityX() {}, setVelocityY() {},
+    velocity: { x: 0, y: 0 }, blocked: { down: true }, touching: { down: true },
+  };
+  const attacker = { x: -40, y: 0, facing: 1, charDef: { id: 'wall-arm', combat: {} } };
+  const through = wall.takeHit(attacker, {
+    name: 'Hopper Crystal', type: 'kinetic', damage: 10, pierce: true,
+    baseKnockback: 10, knockbackGrowth: 0.1,
+  }, 1000, 1);
+  assert.ok(Math.abs(through - 5) < 1e-6, `pass-through damage ${through}`);
+  const charged = wall.takeHit(attacker, {
+    name: 'Sniper Round', type: 'kinetic', damage: 10, defensePierce: 1,
+    baseKnockback: 10, knockbackGrowth: 0.1,
+  }, 2000, 1);
+  assert.ok(Math.abs(charged - 10) < 1e-6, `charged damage ${charged}`);
+});
+
 test('a dive stops at the ledge and hops back if it is already past it', () => {
   const isle = [{ x: 640, w: 990 }];
   assert.strictEqual(diveVelocityX(640, 220, isle), 220);

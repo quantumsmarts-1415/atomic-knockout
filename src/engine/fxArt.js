@@ -1613,7 +1613,8 @@ export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   if (art.objectType === 'projectile' || art.objectType === 'thrown') return null;
   if ((art.objectType === 'slash arc' || art.objectType === 'extend') && !art.oneshot) return null;
   const face = art.bothSides ? 1 : (art.flip ? (fighter?.facing || 1) : 1);
-  const rot = art.objectType === 'beam' && (fighter?.facing || 1) === -1 ? Math.PI : 0;
+  // A flipped beam mirrors. Rotating it as well would turn the shaft upside down.
+  const rot = !art.flip && art.objectType === 'beam' && (fighter?.facing || 1) === -1 ? Math.PI : 0;
   const img = placeStill(scene, art, x, y, rot);
   applyFrameLook(img, art.frames[0], art, scale);
   applyFacing(img, face);

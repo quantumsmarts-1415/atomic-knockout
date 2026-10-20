@@ -1969,7 +1969,7 @@ test('phosphor bloom, magnetic chill, and curie point match the arrived sheets',
   assert.ok(curieFade(0.725) > 0.4 && curieFade(0.725) < 0.6);
   assert.equal(curiePulse(0.2, 400), 1);
   assert.ok(curiePulse(0.8, 0) >= 1);
-  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie', 'assets/fx/terra', 'assets/fx/tara', 'assets/fx/rex', 'assets/fx/wolf']) {
+  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie', 'assets/fx/terra', 'assets/fx/tara', 'assets/fx/rex', 'assets/fx/wolf', 'assets/fx/oz', 'assets/fx/ira', 'assets/fx/aurelius']) {
     const dirs = fs.statSync(root).isDirectory() && fs.readdirSync(root).some((name) => fs.statSync(`${root}/${name}`).isDirectory())
       ? fs.readdirSync(root).map((name) => `${root}/${name}`).filter((dir) => fs.statSync(dir).isDirectory())
       : [root];
@@ -2126,4 +2126,78 @@ test('wolf sheets match the filament, drill, and penetrator', () => {
   assert.equal(dart.impact.frames, 10);
   assert.equal(dart.impact.fps, 24);
   assert.equal(dart.impact.loop, false);
+});
+
+test('oz, ira, and aurelius sheets keep the arrived centres', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const slam = read('assets/fx/oz/densest-slam/fx.json');
+  assert.equal(slam.anchor, 'ground');
+  assert.equal(slam.scaleTo, 'radius');
+  assert.equal(slam.flashRadius, 300);
+  assert.equal(slam.hit, false);
+  assert.ok(Math.abs(slam.pivotX - 326 / 653) < 1e-9);
+  assert.ok(Math.abs(slam.pivotY - 297 / 298) < 1e-9);
+  assert.equal(slam.charge.anchor, 'body');
+  assert.equal(slam.charge.scaleWith, 'alpha');
+  assert.equal(slam.charge.rumble, true);
+  assert.equal(slam.wave.stretch, 'length');
+  assert.ok(Math.abs(slam.wave.pivotY - 200 / 256) < 1e-9);
+  const nib = read('assets/fx/oz/nib-stab/fx.json');
+  assert.equal(nib.fist.black, false);
+  assert.ok(Math.abs(nib.fist.pivotX - 238 / 256) < 1e-9);
+  assert.ok(Math.abs(nib.fist.pivotY - 48 / 96) < 1e-9);
+  const puff = read('assets/fx/oz/tetroxide-puff/fx.json');
+  assert.equal(puff.anchor, 'body');
+  assert.equal(puff.loop, true);
+  assert.equal(puff.scaleIn, 300);
+  const impact = read('assets/fx/ira/extinction-layer/fx.json');
+  assert.equal(impact.anchor, 'ground');
+  assert.equal(impact.scaleTo, 'radius');
+  assert.equal(impact.flashRadius, 200);
+  assert.equal(impact.frames, 23);
+  assert.equal(impact.fps, 15.333);
+  assert.ok(Math.abs(impact.pivotX - 468 / 937) < 1e-9);
+  assert.ok(Math.abs(impact.pivotY - 364 / 365) < 1e-9);
+  assert.equal(impact.charge.anchor, 'predict');
+  assert.equal(impact.charge.floor, true);
+  assert.ok(Math.abs(impact.charge.pivotY - 110 / 160) < 1e-9);
+  assert.ok(Math.abs(impact.trail.pivotX - 470 / 640) < 1e-9);
+  assert.ok(Math.abs(impact.trail.pivotY - 470 / 640) < 1e-9);
+  assert.equal(impact.trail.flat, true);
+  assert.equal(impact.meteor.spin, 2.2);
+  const plug = read('assets/fx/ira/spark-plug/fx.json');
+  assert.ok(Math.abs(plug.fist.pivotX - 238 / 256) < 1e-9);
+  assert.ok(Math.abs(plug.fist.pivotY - 44 / 96) < 1e-9);
+  const iris = read('assets/fx/ira/iris-scatter/fx.json');
+  for (const type of ['kinetic', 'heat', 'electrical', 'chemical']) {
+    assert.equal(iris.shards[type].file, `iris-shard-${type}.png`);
+    assert.ok(Math.abs(iris.shards[type].pivotX - 182 / 192) < 1e-9);
+    assert.ok(Math.abs(iris.shards[type].pivotY - 48 / 96) < 1e-9);
+  }
+  const ingot = read('assets/fx/aurelius/ingot-lob/fx.json');
+  assert.equal(ingot.black, false);
+  assert.equal(ingot.spin, 2.2);
+  assert.ok(Math.abs(ingot.pivotX - 128 / 256) < 1e-9);
+  assert.ok(Math.abs(ingot.pivotY - 90 / 160) < 1e-9);
+  assert.equal(ingot.impact.scale, 0.5);
+  assert.equal(ingot.impact.scaleTo, undefined);
+  assert.equal(impactRadiusScale({ projectileRadius: 14 }, ingot.impact), null);
+  assert.ok(Math.abs(ingot.impact.pivotX - 287 / 575) < 1e-9);
+  assert.ok(Math.abs(ingot.impact.pivotY - 287 / 572) < 1e-9);
+  const visor = read('assets/fx/aurelius/golden-visor/fx.json');
+  assert.equal(visor.anchor, 'body');
+  assert.equal(visor.visor.black, false);
+  assert.equal(visor.visor.flip, true);
+  assert.ok(Math.abs(visor.reflect.pivotX - 60 / 448) < 1e-9);
+  assert.ok(Math.abs(visor.reflect.pivotY - 128 / 256) < 1e-9);
+  const contact = read('assets/fx/aurelius/circuit-contact/fx.json');
+  assert.equal(contact.file, undefined);
+  assert.equal(contact.impact.frames, 12);
+  assert.equal(contact.impact.pivotX, 0.5);
+  for (const id of ['oz', 'ira', 'aurelius']) {
+    for (const file of fs.readdirSync(`assets/fx/${id}`, { recursive: true })) {
+      const name = String(file);
+      assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, name);
+    }
+  }
 });

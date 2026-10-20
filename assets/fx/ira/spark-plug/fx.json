@@ -1,0 +1,29 @@
+{
+  "fist": {
+    "file": "spark-plug-tip.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.12,
+    "pivotX": 0.9296875,
+    "pivotY": 0.4583333333333333,
+    "flip": true,
+    "hit": false
+  },
+  "impact": {
+    "file": "spark-plug-hit-anim.png",
+    "frames": 9,
+    "cols": 3,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.35,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

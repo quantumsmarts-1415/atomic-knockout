@@ -724,7 +724,7 @@ export const MOVESETS = {
   oz: {
     basicCharge: m('Densest Slam', {
       kind: 'burst', type: K, damage: 7, chargeDamageMult: 1.75, chargeRadiusMult: 2.15,
-      maxChargeMs: 900, radius: 54, vfx: 'strike',
+      maxChargeMs: 900, radius: 54, groundImpact: true, vfx: 'strike',
       baseKnockback: 190, knockbackGrowth: 3.2, duration: 300, cooldown: 1120,
     }),
     basicDirectional: melee('Nib Stab', {
@@ -732,14 +732,13 @@ export const MOVESETS = {
       baseKnockback: 140, knockbackGrowth: 2, duration: 200, cooldown: 680,
     }),
     specialDefense: m('Immovable Object', {
-      kind: 'block', onlyReduce: [K], blockReduction: 0.55, noKnockback: true,
+      kind: 'block', onlyReduce: [K], blockReduction: 0.55, noKnockback: true, rooted: true,
       recoil: { type: K, damage: 4, knockback: 120 },
       duration: 780, cooldown: 980, vfx: 'shield', vfxColor: 0x9aa4b8,
     }),
     specialDirectional: m('Tetroxide Puff', {
-      kind: 'burst', type: C, damage: 5, radius: 68, vfx: 'cloud', vfxColor: 0xc6f07a,
-      onHit: { drift: 900 },
-      zone: { type: C, damage: 1.8, ms: 1800, radius: 60, tick: 420, color: 0xc6f07a },
+      kind: 'burst', type: C, damage: 5, radius: 68, offsetX: 78, vfx: 'cloud', vfxColor: 0xc6f07a,
+      zone: { type: C, damage: 1.8, ms: 1800, radius: 60, tick: 420, color: 0xc6f07a, sheet: true },
       baseKnockback: 110, knockbackGrowth: 2.4, duration: 280, cooldown: 1100,
     }),
   },
@@ -943,21 +942,23 @@ export const MOVESETS = {
 
   aurelius: {
     basicCharge: m('Midas Touch', {
-      type: K, damage: 7.5, pull: 140, onHit: { freeze: 640 }, rangeW: 56, rangeH: 48,
+      type: K, damage: 7.5, pull: 140,
+      onHit: { freeze: 640, gold: 640, coat: 'Midas Touch', coatMs: 640 },
+      rangeW: 56, rangeH: 48,
       maxChargeMs: 700, chargeDamageMult: 1.25, vfx: 'spark', vfxColor: 0xf0c84a,
       baseKnockback: 16.9, knockbackGrowth: 0.23, duration: 240, cooldown: 960,
     }),
-    basicDirectional: melee('Gold Leaf Sweep', {
-      type: K, damage: 7.5, rangeW: 120, rangeH: 34, vfx: 'strike', vfxColor: 0xf0c84a,
-      baseKnockback: 94, knockbackGrowth: 3.01, duration: 190, cooldown: 420,
+    basicDirectional: melee('Circuit Contact', {
+      type: K, damage: 4.5, type2: E, damage2: 3, rangeW: 70, rangeH: 48, vfx: 'spark', vfxColor: 0xf0c84a,
+      baseKnockback: 120, knockbackGrowth: 2.4, duration: 200, cooldown: 460,
     }),
     specialDefense: m('Golden Visor', {
       immune: [C], reflectTypes: [H, R], duration: 720, cooldown: 900, vfx: 'shield', vfxColor: 0xf0c84a,
     }),
     specialDirectional: m('Ingot Lob', {
-      kind: 'projectile', type: K, damage: 7.5, angleable: true, vfx: 'strike', vfxColor: 0xf0c84a,
-      projectileSpeed: 330, projectileRadius: 14, projectileLife: 700,
-      baseKnockback: 131.6, knockbackGrowth: 3.01, duration: 240, cooldown: 860,
+      kind: 'projectile', type: K, damage: 7.5, lob: 620, vfx: 'strike', vfxColor: 0xf0c84a,
+      projectileSpeed: 280, projectileRadius: 14, projectileLife: 900,
+      baseKnockback: 200, knockbackGrowth: 3.01, duration: 240, cooldown: 860,
     }),
   },
 
@@ -1395,8 +1396,9 @@ export const MOVESETS = {
   ira: {
     basicCharge: m('Extinction Layer', {
       kind: 'burst', type: K, damage: 4, type2: H, damage2: 4, chargeDamageMult: 1.55, chargeRadiusMult: 1.25,
-      maxChargeMs: 1200, radius: 52, vfx: 'strike', vfxColor: 0xd8d2c8,
-      baseKnockback: 100, knockbackGrowth: 1.6, duration: 300, cooldown: 1200,
+      maxChargeMs: 1200, radius: 52, predict: { lead: 0.45 }, floor: true, meteor: true, impactAt: 0.9,
+      vfx: 'strike', vfxColor: 0xd8d2c8,
+      baseKnockback: 100, knockbackGrowth: 1.6, duration: 640, cooldown: 1200,
     }),
     basicDirectional: melee('Spark Plug', {
       type: K, damage: 4, type2: E, damage2: 3, rangeW: 64, vfx: 'spark', vfxColor: 0xffe08a,
@@ -1406,7 +1408,7 @@ export const MOVESETS = {
       flatHit: 8, duration: 640, cooldown: 980, vfx: 'shield', vfxColor: 0xe6e2da,
     }),
     specialDirectional: m('Iris Scatter', {
-      kind: 'projectile', type: K, damage: 1.8, fanTypes: [K, H, E, C], fanSpread: 220, vfx: 'spark',
+      kind: 'projectile', type: K, damage: 1.8, fanTypes: [K, H, E, C], fanDeg: 30, ghostCopies: 3, vfx: 'spark',
       projectileSpeed: 440, projectileRadius: 7, projectileLife: 420,
       baseKnockback: 70, knockbackGrowth: 1.6, duration: 220, cooldown: 720,
     }),

@@ -56,6 +56,9 @@ test('gold marks the reviewed roster plus later sheet or effect fighters', () =>
   assert.equal(artIsUpdated(CHARACTERS.tara, fxIds), true);
   assert.equal(artIsUpdated(CHARACTERS.rex, fxIds), true);
   assert.equal(artIsUpdated(CHARACTERS.wolf, fxIds), true);
+  assert.equal(artIsUpdated(CHARACTERS.oz, fxIds), true);
+  assert.equal(artIsUpdated(CHARACTERS.ira, fxIds), true);
+  assert.equal(artIsUpdated(CHARACTERS.aurelius, fxIds), true);
   assert.equal(artIsUpdated(CHARACTERS.ogden, fxIds), false);
 });
 

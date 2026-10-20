@@ -1155,12 +1155,32 @@ export default class BattleScene extends Phaser.Scene {
     if (move.fanTypes?.length && !move._fanChild) {
       const types = move.fanTypes;
       const spread = move.fanSpread ?? 200;
+      const speed = move.projectileSpeed ?? 400;
+      const aim = stickAim(owner);
+      const base = Math.atan2(aim.y, aim.x);
       for (let i = 0; i < types.length; i++) {
-        const t = types.length === 1 ? 0 : (i / (types.length - 1) - 0.5);
-        this.spawnProjectile(owner, {
-          ...move, fanTypes: null, _fanChild: true, _vy: t * spread,
-          type: types[i], type2: undefined, damage2: undefined,
-        });
+        if (move.fanDeg > 0) {
+          const vel = fanVelocity(speed, i, types.length, move.fanDeg);
+          const ang = base + Math.atan2(vel.vy, vel.vx);
+          this.spawnProjectile(owner, {
+            ...move,
+            fanTypes: null,
+            fanDeg: 0,
+            _fanChild: true,
+            _vx: Math.cos(ang) * speed,
+            _vy: Math.sin(ang) * speed,
+            _shard: types[i],
+            type: types[i],
+            type2: undefined,
+            damage2: undefined,
+          });
+        } else {
+          const t = types.length === 1 ? 0 : (i / (types.length - 1) - 0.5);
+          this.spawnProjectile(owner, {
+            ...move, fanTypes: null, _fanChild: true, _vy: t * spread,
+            type: types[i], type2: undefined, damage2: undefined,
+          });
+        }
       }
       return;
     }
@@ -1719,7 +1739,23 @@ export default class BattleScene extends Phaser.Scene {
 
   updateZones(time) {
     for (const z of this.zones) {
-      if (z.art && z.gfx?.scene) stepPlacedFx(z.gfx, z.art, time - (z.born || time), z.face || 1);
+      if (z.art && z.gfx?.scene) {
+        const elapsed = time - (z.born || time);
+        stepPlacedFx(z.gfx, z.art, elapsed, z.face || 1);
+        if (z.art.scaleIn > 0 && z.gfx.setScale) {
+          const grow = Math.min(1, elapsed / z.art.scaleIn);
+          const s = 0.3 + 0.7 * grow;
+          const fadeMs = z.art.fadeMs > 0 ? z.art.fadeMs : 0;
+          let alpha = 1;
+          if (fadeMs > 0) {
+            const left = (z.until || time) - time;
+            if (left < fadeMs) alpha = Math.max(0, left / fadeMs);
+          }
+          const face = (z.face || 1) < 0 ? -1 : 1;
+          z.gfx.setScale(face * Math.abs(z.gfx.scaleX || 1) * s, Math.abs(z.gfx.scaleY || 1) * s);
+          z.gfx.setAlpha?.(alpha);
+        }
+      }
       if (z.aura?.scene && z.auraArt) stepPlacedFx(z.aura, z.auraArt, time - (z.auraBorn || time), 1);
       if (z.stain?.frames?.length && z.gfx?.setTexture) {
         const frame = z.stain.frames[fxFrameIndex(z.stain, time - (z.stainBorn || time))] || z.stain.frames[0];

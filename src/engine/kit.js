@@ -50,6 +50,12 @@ export function applyOnHit(attacker, victim, move, time) {
     lock(victim, time, fx.freeze, true);
     victim.frozenUntil = Math.max(victim.frozenUntil ?? 0, time + fx.freeze);
   }
+  if (fx.gold) {
+    const ms = fx.gold === true ? 640 : fx.gold;
+    victim.goldUntil = Math.max(victim.goldUntil ?? 0, time + ms);
+    victim.weightBuff = Math.max(victim.weightBuff ?? 1, 2.7);
+    victim.weightBuffUntil = Math.max(victim.weightBuffUntil ?? 0, victim.goldUntil);
+  }
   if (fx.root) victim.rootedUntil = Math.max(victim.rootedUntil ?? 0, time + fx.root);
   if (fx.blind) victim.blindUntil = time + fx.blind;
   if (fx.dazzle) {

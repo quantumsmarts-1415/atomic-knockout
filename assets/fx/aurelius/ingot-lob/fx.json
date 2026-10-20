@@ -1,0 +1,28 @@
+{
+  "file": "gold-ingot.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.42,
+  "pivotX": 0.5,
+  "pivotY": 0.5625,
+  "spin": 2.2,
+  "aim": true,
+  "hit": false,
+  "impact": {
+    "file": "ingot-impact-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "scale": 0.5,
+    "pivotX": 0.4991304347826087,
+    "pivotY": 0.5017482517482518,
+    "hit": false
+  }
+}

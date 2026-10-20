@@ -460,6 +460,7 @@ export class Rig extends Phaser.GameObjects.Container {
   }
 
   animate(dt, state, speedFactor = 1) {
+    if (this.holdFrame) return;
     this.animT += dt;
     const t = this.animT;
     this._authoredSheet = false;

@@ -2,7 +2,7 @@
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
 import { anodizeTint, takingDps } from './kit.js';
-import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, impactRadiusScale, meleeContactPoint, reverseFrameOrder, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnNozzleCone, spawnStageSpan, wantsContactSpark } from './fxArt.js';
+import { artFor, breakFrames, chargeFrac, drawFxOneShot, fxAnchor, fxGameplayScale, impactRadiusScale, meleeContactPoint, reverseFrameOrder, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnNozzleCone, spawnStageSpan, wantsContactSpark } from './fxArt.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 
@@ -308,6 +308,16 @@ function shieldBubble(scene, fighter, color) {
 
 export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (!scene?.add || !fighter || scene.simFast || move?._noVfx) return;
+  if (phase === 'recoil' || phase === 'reflect') {
+    const painted = artFor(fighter.charDef?.id, move?.name);
+    const side = phase === 'recoil' ? painted?.recoil : painted?.reflect;
+    if (side?.frames?.length) {
+      const x = extra.x ?? fighter.x;
+      const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
+      spawnFxSprite(scene, { ...side, _rot: extra.aim ?? 0 }, x, y, 1, 1);
+    }
+    return;
+  }
   if (phase === 'fizz') {
     const fizz = artFor(fighter.charDef?.id, move?.name)?.fizz;
     if (fizz?.frames?.length) spawnFxSprite(scene, fizz, fighter.x, fighter.y, 1);
@@ -448,17 +458,22 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       // A burst is drawn once, at the blast, when resolveBurst supplies a point.
       if ((move.kind === 'burst' || move.kind === 'dive') && extra?.x == null) return;
       const anchor = fxAnchor(fighter, move);
-      let x = anchor?.x ?? extra.x ?? fighter.x;
-      let y = anchor?.y ?? extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
-      if (extra?.fromSheet && art?.anchor !== 'body') {
+      const landed = extra?.x != null && !!(move?.predict || move?.landAt);
+      let x = landed ? extra.x : (anchor?.x ?? extra.x ?? fighter.x);
+      let y = landed ? extra.y : (anchor?.y ?? extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55));
+      if (extra?.fromSheet && art?.anchor !== 'body' && !landed) {
         const kind = art?.anchor === 'ground' ? 'ground' : 'shot';
         const posed = sheetReleasePoint(fighter, kind) || sheetFxPoint(fighter, kind);
         if (posed) { x = posed.x; y = posed.y; }
       }
       const fitted = impactRadiusScale(move, art);
       let scale = fitted != null ? fitted : (anchor?.scale ?? fxGameplayScale(move, art));
-      if (art.scaleTo === 'radius') y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
+      if (art.scaleTo === 'radius' && art.anchor !== 'ground') y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
       if (drawFxOneShot(scene, fighter, move, x, y, scale)) {
+        if (art.wave?.frames?.length) {
+          const waveScale = 0.5 + 0.5 * chargeFrac(move);
+          spawnFxSprite(scene, art.wave, x, y, waveScale, 1);
+        }
         if (art.gas?.frames?.length) spawnFxSprite(scene, art.gas, x, y, scale);
         if (move.vfx === 'binary') {
           drawBinaryDigit(scene, fighter, x, y, move._retried ? '0' : '1');

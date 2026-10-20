@@ -613,6 +613,10 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     nozzleX: typeof extra.nozzleX === 'number' ? extra.nozzleX : null,
     nozzleY: typeof extra.nozzleY === 'number' ? extra.nozzleY : null,
     maxAlpha: extra.maxAlpha > 0 && extra.maxAlpha < 1 ? extra.maxAlpha : 0,
+    scaleIn: extra.scaleIn > 0 ? extra.scaleIn : 0,
+    floor: !!extra.floor,
+    rumble: !!extra.rumble,
+    flat: !!extra.flat,
   };
 }
 
@@ -1041,6 +1045,8 @@ const SIDE_SPECS = [
   ['rotor', 'rotor-'], ['motor', 'motor-'], ['hold', 'hold-'], ['field', 'field-'],
   ['fist', 'fist-'], ['dazzle', 'dazzle-'], ['unit', 'unit-'],
   ['fizz', 'fizz-'], ['heal', 'heal-'], ['ring', 'ring-'], ['boost', 'boost-'],
+  ['wave', 'wave-'], ['recoil', 'recoil-'], ['meteor', 'meteor-'],
+  ['crown', 'crown-'], ['visor', 'visor-'], ['reflect', 'reflect-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -1083,6 +1089,41 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       lagFrac: merged.lagFrac,
       nozzleX: merged.nozzleX,
       nozzleY: merged.nozzleY,
+      stretch: merged.stretch,
+      scaleIn: merged.scaleIn,
+      floor: merged.floor,
+      rumble: merged.rumble,
+      flat: merged.flat,
+    });
+  }
+  await attachShards(scene, id, slug, folder, meta, index, charH, sized, record);
+  return record;
+}
+
+async function attachShards(scene, id, slug, folder, meta, index, charH, sized, record) {
+  const bag = meta?.shards;
+  if (!bag || typeof bag !== 'object') return record;
+  const pivot = pivotFrom(meta, { x: 0.5, y: 0.5 });
+  record.shards = {};
+  for (const [type, spec] of Object.entries(bag)) {
+    if (!spec?.file) continue;
+    const merged = {
+      blend: meta.blend,
+      black: meta.black,
+      fit: meta.fit,
+      heightFrac: meta.heightFrac,
+      ...spec,
+    };
+    const used = pivotFrom(merged, pivot);
+    const loaded = await loadSpecFrames(scene, id, slug, folder, merged, index, used, charH, sized, `shard-${type}-`);
+    if (!loaded?.frames?.length) continue;
+    record.shards[type] = artRecord(record.objectType, sized, used, loaded.frames, {
+      blend: merged.blend,
+      fps: merged.fps,
+      aim: merged.aim !== false,
+      hit: false,
+      spin: merged.spin,
+      scale: merged.scale,
     });
   }
   return record;
@@ -1224,7 +1265,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
         holdLast: !!meta.holdLast, flip: !!meta.flip, bothSides: !!meta.bothSides, releaseFlash: !!meta.releaseFlash, comboFrames: !!meta.comboFrames, crackFrames: !!meta.crackFrames,
         order: meta.order, fadeAfter: !!meta.fadeAfter, fadeMs: meta.fadeMs, paceCharge: !!meta.paceCharge,
         holdAt: meta.holdAt, breakFrom: meta.breakFrom, overCoat: meta.overCoat, heatAt: meta.heatAt,
-        lifeMs: meta.lifeMs, puddle: !!meta.puddle, ghost: meta.ghost,
+        lifeMs: meta.lifeMs, puddle: !!meta.puddle, ghost: meta.ghost, scaleIn: meta.scaleIn,
       });
       await attachSides(scene, id, slug, folder, meta, index, charH, sized, record);
       return record;
@@ -1265,6 +1306,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
   if (!frames.length) {
     const record = artRecord(objectType, sized, pivot, [], { ...look, beam: null });
     await attachSides(scene, id, slug, folder, meta, index, charH, sized, record);
+    if (record.shards && Object.keys(record.shards).length) return record;
     for (const [name] of SIDE_SPECS) {
       if (record[name]?.frames?.length) return record;
     }
@@ -1275,7 +1317,10 @@ async function loadMoveArt(scene, char, slot, move, index) {
 
 export function fxProjectileView(scene, owner, move, x, y) {
   const base = artFor(owner?.charDef?.id, move?.name);
-  const art = move?._rodGlow && base?.glow?.frames?.length ? base.glow : base;
+  const shard = move?._shard && base?.shards?.[move._shard];
+  const art = shard?.frames?.length
+    ? shard
+    : (move?._rodGlow && base?.glow?.frames?.length ? base.glow : base);
   const frame = art?.frames?.[0];
   if (!frame || !scene?.add?.image || art.stageFit) return null;
   const img = scene.add.image(x, y, frame.key);
@@ -1300,6 +1345,20 @@ export function fxProjectileView(scene, owner, move, x, y) {
   const useMask = art.hit !== false;
   let trail = null;
   let hot = null;
+  const ghosts = [];
+  const copies = move?.ghostCopies | 0;
+  if (copies > 0 && scene.add?.image) {
+    const fade = [0.45, 0.28, 0.14];
+    for (let i = 0; i < copies; i++) {
+      const ghost = scene.add.image(x, y, frame.key);
+      ghost.setOrigin(art.pivotX, art.pivotY);
+      ghost.setDisplaySize(frame.displayW * scale, frame.displayH * scale);
+      ghost.setDepth(15);
+      ghost.setAlpha(fade[i] ?? 0.12);
+      ghost.setBlendMode?.(phaserBlend(frame.blend || art.blend));
+      ghosts.push(ghost);
+    }
+  }
   if (art.trail?.frames?.length && scene.add?.image) {
     const tFrame = art.trail.frames[0];
     trail = scene.add.image(x, y, tFrame.key);
@@ -1331,12 +1390,13 @@ export function fxProjectileView(scene, owner, move, x, y) {
     field.setDepth(17);
     field.setBlendMode?.(phaserBlend(fieldFrame.blend || fieldArt.blend));
   }
-  if (trail || hot || field) {
+  if (trail || hot || field || ghosts.length) {
     const destroy = img.destroy?.bind(img);
     img.destroy = (...args) => {
       if (trail?.scene) trail.destroy();
       if (hot?.scene) hot.destroy();
       if (field?.scene) field.destroy();
+      for (const ghost of ghosts) if (ghost?.scene) ghost.destroy();
       return destroy?.(...args);
     };
   }
@@ -1364,6 +1424,7 @@ export function fxProjectileView(scene, owner, move, x, y) {
     fxHot: hot,
     fxHotW: hotFrame ? hotFrame.displayW * hotScale : 0,
     fxHotH: hotFrame ? hotFrame.displayH * hotScale : 0,
+    fxGhosts: ghosts,
   };
 }
 
@@ -1484,6 +1545,16 @@ export function stepFxProjectile(p, time) {
     const grown = throwGrowth(dist, p.move.growWithDistance);
     p.gfx.setDisplaySize(p.fxDisplayW * grown.stretch, p.fxDisplayH || p.fxDisplayW);
     p.gfx.setAlpha?.(grown.alpha);
+  }
+  if (p.fxGhosts?.length && p.gfx) {
+    const rot = Math.atan2(p.vy || 0, p.vx || 1);
+    p.fxGhosts.forEach((ghost, i) => {
+      if (!ghost?.setPosition) return;
+      const back = (i + 1) * 16;
+      ghost.setPosition(p.gfx.x - Math.cos(rot) * back, p.gfx.y - Math.sin(rot) * back);
+      ghost.rotation = p.gfx.rotation || 0;
+      if (ghost.setScale && p.gfx.scaleX != null) ghost.setScale(p.gfx.scaleX, p.gfx.scaleY || 1);
+    });
   }
   stepCurieOrb(p, time);
 }
@@ -2018,6 +2089,8 @@ function dropAttached(fighter, live) {
   live?.front?.destroy?.();
   live?.lead?.destroy?.();
   live?.ring?.destroy?.();
+  live?.crown?.destroy?.();
+  live?.visor?.destroy?.();
   if (live) liveAttached.delete(fighter);
 }
 
@@ -2129,6 +2202,49 @@ function syncFloorTiles(scene, live, art, fighter, frame) {
   });
 }
 
+function syncCrown(scene, live, crown, fighter) {
+  if (!crown?.frames?.length) {
+    live.crown?.destroy?.();
+    live.crown = null;
+    return;
+  }
+  if (!live.crown?.scene) {
+    live.crown?.destroy?.();
+    live.crown = placeStill(scene, crown, fighter.x, fighter.y, 0);
+    live.crown.setDepth(16);
+  }
+  const now = scene.simNow ?? 0;
+  const frame = crown.frames[fxFrameIndex(crown, now)] || crown.frames[0];
+  applyFrameLook(live.crown, frame, crown, 1);
+  live.crown.setOrigin(crown.pivotX ?? 0.5, crown.pivotY ?? 1);
+  const bodyH = fighter.bodyH ?? 80;
+  const bob = Math.sin(now * 0.004) * 6;
+  live.crown.setPosition(fighter.x, fighter.y - bodyH - 18 + bob);
+}
+
+function syncVisor(scene, live, visor, fighter) {
+  if (!visor?.frames?.length) {
+    live.visor?.destroy?.();
+    live.visor = null;
+    return;
+  }
+  if (!live.visor?.scene) {
+    live.visor?.destroy?.();
+    live.visor = placeStill(scene, visor, fighter.x, fighter.y, 0);
+    live.visor.setDepth(13);
+  }
+  const now = scene.simNow ?? 0;
+  const frame = visor.frames[fxFrameIndex(visor, now)] || visor.frames[0];
+  applyFrameLook(live.visor, frame, visor, 1);
+  live.visor.setOrigin(visor.pivotX ?? 0.5, visor.pivotY ?? 0.5);
+  const face = fighter.facing || 1;
+  const bodyH = fighter.bodyH ?? 80;
+  live.visor.setPosition(fighter.x + face * 6, fighter.y - bodyH * 0.42);
+  const sx = Math.abs(live.visor.scaleX || 1);
+  const sy = Math.abs(live.visor.scaleY || 1);
+  live.visor.setScale(visor.flip ? face * sx : sx, sy);
+}
+
 function syncRing(scene, live, ring, fighter) {
   if (!ring?.frames?.length) {
     live.ring?.destroy?.();
@@ -2237,6 +2353,8 @@ function syncAttached(scene, fighter) {
     } else if (want.kind === 'body') {
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
       syncRing(scene, live, art.ring, fighter);
+      syncCrown(scene, live, art.crown, fighter);
+      syncVisor(scene, live, art.visor, fighter);
       if (art.ghost > 0) {
         fighter.rig?.setAlpha?.(art.ghost);
         live.fadeRig = true;
@@ -2617,10 +2735,77 @@ function syncRods(scene, fighter) {
   });
 }
 
+const meteors = [];
+
+/** Visual rock falling onto a charged landing point. The hit stays a burst. */
+export function spawnMeteor(scene, owner, move, target, ms) {
+  if (!scene?.add?.image || scene.simFast || !owner || !target) return null;
+  const art = artFor(owner.charDef?.id, move?.name);
+  const rock = art?.meteor;
+  if (!rock?.frames?.length) return null;
+  const face = Math.sign((target.x ?? 0) - (owner.x ?? 0)) || owner.facing || 1;
+  const from = { x: target.x - face * 260, y: target.y - 380 };
+  const img = placeStill(scene, rock, from.x, from.y, 0);
+  img.setDepth(18);
+  let trail = null;
+  if (art.trail?.frames?.length) {
+    trail = placeStill(scene, art.trail, from.x, from.y, 0);
+    trail.setDepth(17);
+    if (art.trail.flat && face < 0) trail.setScale(-Math.abs(trail.scaleX || 1), Math.abs(trail.scaleY || 1));
+  }
+  meteors.push({
+    scene, img, trail, trailArt: art.trail || null, rock,
+    from, to: { x: target.x, y: target.y },
+    born: scene.simNow ?? 0,
+    ms: ms > 0 ? ms : 560,
+    face,
+    spin: rock.spin || 2.2,
+  });
+  return img;
+}
+
+function tickMeteors(scene) {
+  const now = scene?.simNow ?? 0;
+  for (let i = meteors.length - 1; i >= 0; i--) {
+    const meteor = meteors[i];
+    if (meteor.scene !== scene || !meteor.img?.scene) {
+      meteor.img?.destroy?.();
+      meteor.trail?.destroy?.();
+      meteors.splice(i, 1);
+      continue;
+    }
+    const t = Math.min(1, (now - meteor.born) / meteor.ms);
+    const x = meteor.from.x + (meteor.to.x - meteor.from.x) * t;
+    const y = meteor.from.y + (meteor.to.y - meteor.from.y) * t;
+    meteor.img.setPosition(x, y);
+    meteor.img.rotation = ((now - meteor.born) / 1000) * meteor.spin;
+    const trailArt = meteor.trailArt;
+    if (meteor.trail?.setPosition && trailArt?.frames?.length) {
+      const frame = trailArt.frames[fxFrameIndex(trailArt, now - meteor.born)] || trailArt.frames[0];
+      if (meteor.trail.texture?.key !== frame.key) {
+        meteor.trail.setTexture?.(frame.key);
+        meteor.trail.setDisplaySize?.(frame.displayW, frame.displayH);
+      }
+      meteor.trail.setOrigin?.(trailArt.pivotX ?? 0.5, trailArt.pivotY ?? 0.5);
+      meteor.trail.setPosition(x, y);
+      meteor.trail.rotation = 0;
+      const sx = Math.abs(meteor.trail.scaleX || 1);
+      const sy = Math.abs(meteor.trail.scaleY || 1);
+      meteor.trail.setScale(trailArt.flat && meteor.face < 0 ? -sx : sx, sy);
+    }
+    if (t >= 1) {
+      meteor.img.destroy?.();
+      meteor.trail?.destroy?.();
+      meteors.splice(i, 1);
+    }
+  }
+}
+
 export function syncFxActors(scene) {
   if (!scene?.fighters) return;
   stepOneShots(scene);
   stepEmbers(scene);
+  tickMeteors(scene);
   for (const fighter of scene.fighters) {
     syncRods(scene, fighter);
     syncCling(scene, fighter);
@@ -2903,6 +3088,7 @@ function syncHeld(scene, fighter) {
       if (want.art.tintFrom != null && want.art.tintTo != null) {
         live.img.setTint?.(chargeTint(want.art.tintFrom, want.art.tintTo, frac));
       }
+      if (want.art.rumble && frac > 0.2) scene.juice?.addTrauma?.(0.004 * frac);
       if (charge?.perTravel) {
         const need = charge.perTravel * (charge.perTravelCap ?? 5);
         live.img.setAlpha(Math.min(1, Math.max(0, (fighter.travel ?? 0) / Math.max(1, need))));
@@ -2944,12 +3130,16 @@ function syncHeld(scene, fighter) {
   }
   if (want.kind === 'predict') {
     const elapsed = now - (fighter.chargeStart ?? now);
-    const frame = want.art.frames[fxFrameIndex(want.art, elapsed)] || want.art.frames[0];
+    const max = charge.maxChargeMs || 1;
+    const frac = Math.min(1, Math.max(0, elapsed / max));
+    const frame = want.art.frames[fxFrameIndex(want.art, elapsed * (1 + frac * 2))] || want.art.frames[0];
     applyFrameLook(live.img, frame, want.art, 1);
     live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 0.5);
     const lead = charge?.predict?.lead ?? 1;
     const at = predictSpot(scene, fighter, lead);
-    live.img.setPosition(at.x, at.y);
+    const y = want.art.floor ? groundTop(scene, at.x, fighter.y) : at.y;
+    live.img.setPosition(at.x, y);
+    if (want.art.floor) live.img.setAlpha(0.45 + 0.55 * frac);
     return;
   }
   if (want.kind === 'feet') {

@@ -6,7 +6,7 @@ import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defen
 import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
-import { armGeyser, fxAnchor, hitAnchor, playRetortPulse } from './fxArt.js';
+import { armGeyser, fxAnchor, groundTop, hitAnchor, playRetortPulse, spawnMeteor, spawnMoveExtra } from './fxArt.js';
 import { clipNameForMove, sheetMeta } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
@@ -225,6 +225,33 @@ function applyAttackPower(attacker, resolved, now) {
   for (const p of resolved.packets) p.dealt *= mul;
 }
 
+/** Feet for a ground slam, or the predicted floor point a meteor is already falling toward. */
+function burstLanding(fighter, move) {
+  if (!move) return null;
+  if (move.groundImpact) return { x: fighter.x, y: fighter.y };
+  if (!move.predict) return null;
+  const scene = fighter.scene;
+  let best = null;
+  let bestD = Infinity;
+  for (const other of scene?.fighters || []) {
+    if (other === fighter || !other.alive || other.state === 'ko' || other.state === 'dead') continue;
+    const d = Math.hypot(other.x - fighter.x, other.y - fighter.y);
+    if (d < bestD) { bestD = d; best = other; }
+  }
+  const lead = move.predict.lead ?? 0.32;
+  let at;
+  if (!best) {
+    const face = fighter.facing || 1;
+    at = { x: fighter.x + face * 140, y: fighter.y };
+  } else {
+    const vx = best.body?.velocity?.x ?? 0;
+    const vy = best.body?.velocity?.y ?? 0;
+    at = { x: best.x + vx * lead, y: best.y - (best.bodyH ?? 80) * 0.45 + vy * lead };
+  }
+  if (move.floor) at.y = groundTop(scene, at.x, at.y);
+  return at;
+}
+
 export default class Fighter extends Phaser.GameObjects.Container {
   constructor(scene, x, y, charDef, paletteIndex, playerIndex) {
     super(scene, x, y);
@@ -402,7 +429,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       inp.left = inp.right;
       inp.right = left;
     }
-    let pressedJump = inp.jump && !this._prev.jump;
+    let pressedJump = inp.jump && !this._prev.jump && !((this.goldUntil ?? 0) > time);
     let pressedAttack = inp.attack && !this._prev.attack;
     let pressedSpecial = inp.special && !this._prev.special;
     const releasedAttack = !inp.attack && this._prev.attack;
@@ -727,12 +754,20 @@ export default class Fighter extends Phaser.GameObjects.Container {
         this.scene.juice?.dust?.(this.x - this.facing * 8, this.y, -this.facing);
       }
     }
+    this.rig.holdFrame = (this.goldUntil ?? 0) > time;
     this.rig.animate(dt / 1000, animState, speedFactor);
-    if ((this.revealTintUntil ?? 0) > time) {
+    const goldNow = (this.goldUntil ?? 0) > time;
+    const revealNow = (this.revealTintUntil ?? 0) > time;
+    if (goldNow) {
+      this.rig.setFlash?.(0xffc85a);
+      this._goldFlash = true;
+    } else if (revealNow) {
       this.rig.setFlash?.(this.revealTint ?? 0x8ec8ff);
       this._revealFlash = true;
-    } else if (this._revealFlash) {
+      this._goldFlash = false;
+    } else if (this._goldFlash || this._revealFlash) {
       this.rig.setFlash?.(null);
+      this._goldFlash = false;
       this._revealFlash = false;
     }
     this.syncChalkTint();
@@ -1020,7 +1055,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
       // burst hits everything in a radius partway through the animation.
       // Moves that can be interrupted on purpose (Supernova popping early)
       // still go off. `pulses` releases that same burst as a timed chain.
-      const burstAt = commitBurst ? step : Math.round((move.duration ?? step) * 0.4);
+      const impactFrac = move.impactAt > 0 && move.impactAt <= 1 ? move.impactAt : 0.4;
+      const burstAt = commitBurst ? step : Math.round((move.duration ?? step) * impactFrac);
+      const landing = burstLanding(this, move);
+      if (move.meteor) spawnMeteor(this.scene, this, move, landing, burstAt);
       const pulses = move.pulses?.length ? move.pulses : [{ damage: move.damage, delay: 0 }];
       for (const pulse of pulses) {
         const shot = move.pulses?.length
@@ -1028,23 +1066,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
           : move;
         this.scene.time.delayedCall(burstAt + (pulse.delay ?? 0), () => {
           if (this.state !== 'attack' && !commitBurst) return;
-          let at;
-          if (shot.predict && this.scene?.fighters) {
-            let best = null;
-            let bestD = Infinity;
-            for (const f of this.scene.fighters) {
-              if (f === this || !f.alive || f.state === 'ko' || f.state === 'dead') continue;
-              const d = Math.hypot(f.x - this.x, f.y - this.y);
-              if (d < bestD) { bestD = d; best = f; }
-            }
-            if (best) {
-              const lead = shot.predict.lead ?? 0.32;
-              const vx = best.body?.velocity?.x ?? 0;
-              const vy = best.body?.velocity?.y ?? 0;
-              at = { x: best.x + vx * lead, y: best.y - (best.bodyH ?? 80) * 0.45 + vy * lead };
-            }
-          }
-          this.scene.resolveBurst(this, shot, at);
+          this.scene.resolveBurst(this, shot, landing || undefined);
         });
       }
     } else {
@@ -1695,6 +1717,17 @@ export default class Fighter extends Phaser.GameObjects.Container {
       return 0;
     }
     if (gate.result === 'counter') {
+      if (attacker && attacker !== this && this.defenseMove) {
+        const aim = Math.atan2(
+          (attacker.y - (attacker.bodyH ?? 80) * 0.45) - (this.y - this.bodyH * 0.5),
+          attacker.x - this.x,
+        );
+        playVfx(this.scene, this, this.defenseMove, 'reflect', {
+          x: this.x,
+          y: this.y - this.bodyH * 0.5,
+          aim,
+        });
+      }
       if (this.defenseMove?.retortBurst && attacker && attacker !== this) {
         playRetortPulse(this.scene, this, attacker);
       }
@@ -1826,6 +1859,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const contagious = this.poisonInherit && this.poisonUntil > time;
     if (!incoming.fixed && this.state === 'defending' && this.defenseMove?.flatHit != null && !move.isSelf && dmg > 0 && incoming.name !== 'zone') {
       dmg = this.defenseMove.flatHit;
+      if (!this.scene?.simFast) {
+        const at = hitAnchor(attacker, this, incoming);
+        spawnMoveExtra(
+          this.scene, this, this.defenseMove, 'impact',
+          at?.x ?? this.x, at?.y ?? (this.y - this.bodyH * 0.45), 1,
+        );
+      }
     }
     if (ownBlast || move.isSelf) {
       // isSelf is a designed cost (Supernova) and stays at full damage.
@@ -1959,7 +1999,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const keys = [
       'stateUntil', 'attackCooldownUntil', 'specialCooldownUntil', 'specialMutedUntil', 'vulnerableUntil', 'lockedUntil',
       'dashUntil', 'diveUntil', 'diveArm', 'slowUntil', 'rootedUntil', 'speedBuffUntil', 'attackHasteUntil', 'driftUntil',
-      'phasingUntil', 'weightBuffUntil', 'poisonUntil', 'stunUntil', 'freezeUntil', 'burnUntil',
+      'phasingUntil', 'weightBuffUntil', 'goldUntil', 'poisonUntil', 'stunUntil', 'freezeUntil', 'burnUntil',
       'unquenchableUntil', 'heatOnHitUntil',
       'slipperyUntil', 'kineticResistUntil', 'heatedUntil',
       'mitigateUntil', 'lingerImmuneUntil', 'frozenUntil',
@@ -2458,7 +2498,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
       isCounterAttack: true,
     };
     const cdmg = attacker.takeHit(this, echo, time, this.facing);
-    if (cdmg > 0) this.scene.noteHit?.(this, attacker, echo);
+    if (cdmg > 0) {
+      this.scene.noteHit?.(this, attacker, echo);
+      const aim = Math.atan2(attacker.y - this.y, attacker.x - this.x);
+      playVfx(this.scene, this, defense, 'recoil', {
+        x: this.x,
+        y: this.y - (this.bodyH ?? 80) * 0.5,
+        aim,
+      });
+    }
   }
 
   /** Damage taken always counts. Damage dealt counts only when someone else landed it. */
@@ -2494,6 +2542,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
     // White phosphorus goes out when that fighter is KO'd, not before.
     this.burnUntil = 0;
     this.burnSticky = false;
+    this.goldUntil = 0;
+    if (this.rig) this.rig.holdFrame = false;
     this.body.setVelocity(0, 0);
     this.body.setEnable(false);
     this.launch = null;

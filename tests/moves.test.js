@@ -1473,6 +1473,52 @@ test('attacks do not ignite gas fighters', () => {
   assert.ok(solid.burnUntil > 1000);
 });
 
+test('oz, ira, and aurelius keep the approved move rules', () => {
+  const oz = CHARACTERS.oz.moves;
+  assert.equal(oz.specialDirectional.name, 'Tetroxide Puff');
+  assert.equal(oz.specialDirectional.type, 'chemical');
+  assert.equal(oz.specialDirectional.onHit, undefined);
+  assert.equal(oz.specialDirectional.zone.sheet, true);
+  assert.equal(oz.basicCharge.groundImpact, true);
+  assert.equal(oz.basicCharge.chargeRadiusMult, 2.15);
+  assert.equal(oz.specialDefense.rooted, true);
+  assert.equal(oz.specialDefense.noKnockback, true);
+  assert.equal(oz.specialDefense.blockReduction, 0.55);
+  assert.equal(oz.specialDefense.recoil.damage, 4);
+  const ira = CHARACTERS.ira.moves;
+  assert.equal(ira.basicDirectional.name, 'Spark Plug');
+  assert.equal(ira.basicDirectional.type, 'kinetic');
+  assert.equal(ira.basicDirectional.type2, 'electrical');
+  assert.equal(ira.basicDirectional.bonusVsState, undefined);
+  assert.equal(ira.specialDefense.flatHit, 8);
+  assert.deepEqual(ira.specialDirectional.fanTypes, ['kinetic', 'heat', 'electrical', 'chemical']);
+  assert.equal(ira.specialDirectional.fanDeg, 30);
+  assert.equal(ira.specialDirectional.ghostCopies, 3);
+  const iraCharges = Object.values(ira).map((move) => move.maxChargeMs || 0);
+  assert.equal(Math.max(...iraCharges), ira.basicCharge.maxChargeMs);
+  assert.ok(ira.basicCharge.maxChargeMs < CHARACTERS.wolf.moves.basicCharge.maxChargeMs);
+  assert.equal(ira.basicCharge.meteor, true);
+  assert.equal(ira.basicCharge.impactAt, 0.9);
+  const gold = CHARACTERS.aurelius.moves;
+  assert.equal(gold.basicDirectional.name, 'Circuit Contact');
+  assert.equal(gold.basicDirectional.type, 'kinetic');
+  assert.equal(gold.basicDirectional.type2, 'electrical');
+  assert.ok(gold.basicDirectional.rangeW < 110);
+  assert.deepEqual(gold.specialDefense.immune, ['chemical']);
+  assert.deepEqual(gold.specialDefense.reflectTypes, ['heat', 'radiation']);
+  assert.equal(gold.basicCharge.onHit.freeze, 640);
+  assert.equal(gold.basicCharge.onHit.gold, 640);
+  assert.equal(gold.specialDirectional.lob, 620);
+  assert.equal(gold.specialDirectional.angleable, undefined);
+  assert.equal(gold.specialDirectional.baseKnockback, 200);
+  const caught = { charDef: { combat: { state: 'metal' } } };
+  applyOnHit({ charDef: { id: 'aurelius' } }, caught, gold.basicCharge, 1000);
+  assert.ok(caught.goldUntil > 1000);
+  assert.equal(caught.weightBuff, 2.7);
+  assert.ok(caught.weightBuffUntil >= caught.goldUntil);
+  assert.ok(caught.frozenUntil > 1000);
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

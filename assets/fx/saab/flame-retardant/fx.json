@@ -1,0 +1,16 @@
+{
+  "file": "flame-retardant-coat-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 24,
+  "loop": true,
+  "blend": "screen",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 1.55,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false
+}

@@ -481,7 +481,9 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     once: !!extra.once,
     aim: extra.aim !== false,
     keepSlash: !!extra.keepSlash,
+    oneshot: !!extra.oneshot,
     stageFit: !!extra.stageFit,
+    maxAlpha: extra.maxAlpha > 0 && extra.maxAlpha < 1 ? extra.maxAlpha : 0,
   };
 }
 
@@ -558,6 +560,9 @@ async function collectFxArtNow(scene, roster) {
     queue(`status/${name}`, () => loadStatusSheet(scene, name, index));
   }
   queue('status/poison', () => loadSharedStatus(scene, index));
+  if (!index || listed(index, 'ruth/metathesis-line/fx.json')) {
+    queue('ruth/metathesis-line', () => loadFolderSheet(scene, 'ruth', 'metathesis-line', index));
+  }
   if (!jobs.length) return;
   // Two at a time. Every sheet is read back in full for its hit mask, and
   // running the whole roster at once stalls the tab for seconds.
@@ -627,6 +632,22 @@ async function loadStatusSheet(scene, name, index) {
     hit: false,
     anchor: 'body',
     scale: meta.scale,
+  });
+}
+
+async function loadFolderSheet(scene, id, folderName, index) {
+  const folder = `${id}/${folderName}`;
+  const meta = await loadFxMeta(folder, index);
+  const file = meta.file || 'sheet.png';
+  if (index && !listed(index, `${folder}/${file}`)) return null;
+  const spec = { ...meta, file };
+  const pivot = pivotFrom(spec, { x: 0, y: 0.5 });
+  const loaded = await loadSpecFrames(
+    scene, id, folderName, folder, spec, index, pivot, 100, { w: 240, h: 16 }, '',
+  );
+  if (!loaded?.frames?.length) return null;
+  return artRecord('beam', { w: 240, h: 16 }, pivot, loaded.frames, {
+    blend: meta.blend, fps: meta.fps, loop: !!meta.loop, hit: false,
   });
 }
 
@@ -905,6 +926,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       scale: merged.scale,
       lifeMs: merged.lifeMs,
       order: merged.order,
+      pulse: merged.pulse,
     });
   }
   return record;
@@ -944,7 +966,9 @@ async function loadMoveArt(scene, char, slot, move, index) {
     releaseImpact: !!meta.releaseImpact,
     once: !!meta.once,
     keepSlash: !!meta.keepSlash,
+    oneshot: !!meta.oneshot,
     stageFit: meta.fit === 'stage',
+    maxAlpha: meta.maxAlpha > 0 && meta.maxAlpha < 1 ? meta.maxAlpha : 0,
   };
   const inherit = { blend: meta.blend, black: meta.black };
 
@@ -1092,7 +1116,12 @@ export function fxProjectileView(scene, owner, move, x, y) {
   if (!frame || !scene?.add?.image || art.stageFit) return null;
   const img = scene.add.image(x, y, frame.key);
   img.setOrigin(art.pivotX, art.pivotY);
-  const scale = fxGameplayScale(move, art);
+  let scale = fxGameplayScale(move, art);
+  if (move.chargeBright) {
+    const frac = Math.max(0, Math.min(1, Number(move._chargeFrac) || 0));
+    scale *= 0.78 + 0.22 * frac;
+    img.setAlpha(0.32 + 0.68 * frac);
+  }
   img.setDisplaySize(frame.displayW * scale, frame.displayH * scale);
   img.setDepth(16);
   img.setBlendMode?.(phaserBlend(frame.blend || art.blend));
@@ -1225,9 +1254,12 @@ export function spawnStageSpan(scene, fighter, art) {
   if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
   const frame = art.frames[0];
   const box = stageSpanSize(scene, frame);
-  const x = box.w / 2;
+  const face = fighter?.facing || 1;
+  const fromLeft = (art.pivotX ?? 0.5) < 0.05;
+  const x = fromLeft ? (face < 0 ? box.w : 0) : box.w / 2;
   const y = (fighter?.y ?? 0) - (fighter?.bodyH ?? 80) * 0.5;
-  const img = placeStill(scene, art, x, y, 0);
+  const rot = fromLeft && face < 0 ? Math.PI : 0;
+  const img = placeStill(scene, art, x, y, rot);
   applyFrameLook(img, frame, art, 1, box);
   img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
   trackOneShot(scene, img, art, 1, null, 1, box);
@@ -1528,7 +1560,8 @@ function stepOneShots(scene) {
     const frame = shot.art.frames[fxFrameIndex(shot.art, elapsed)] || shot.art.frames[0];
     applyFrameLook(shot.img, frame, shot.art, shot.scale, shot.box);
     applyFacing(shot.img, shot.face);
-    shot.img.setAlpha?.(fxFadeAlpha(shot.art, elapsed));
+    const cap = shot.art.maxAlpha > 0 ? shot.art.maxAlpha : 1;
+    shot.img.setAlpha?.(fxFadeAlpha(shot.art, elapsed) * cap);
     if (shot.peak?.scene) {
       const on = shot.art.peakFrame === fxFrameIndex(shot.art, elapsed);
       shot.peak.setVisible(on);
@@ -1568,7 +1601,7 @@ export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   if (!art?.frames?.length || !scene?.add?.image) return null;
   if (art.anchor === 'trail' || art.anchor === 'ground-front' || art.anchor === 'body' || art.anchor === 'front' || art.anchor === 'lance' || art.anchor === 'feet' || art.anchor === 'aura' || art.anchor === 'pin') return null;
   if (art.objectType === 'projectile' || art.objectType === 'thrown') return null;
-  if (art.objectType === 'slash arc' || art.objectType === 'extend') return null;
+  if ((art.objectType === 'slash arc' || art.objectType === 'extend') && !art.oneshot) return null;
   const face = art.bothSides ? 1 : (art.flip ? (fighter?.facing || 1) : 1);
   const rot = art.objectType === 'beam' && (fighter?.facing || 1) === -1 ? Math.PI : 0;
   const img = placeStill(scene, art, x, y, rot);
@@ -2015,6 +2048,9 @@ function syncCling(scene, fighter) {
   if (!art?.frames?.length && fighter.clingFrom && fighter.clingFrom.until > now) {
     art = artFor(fighter.clingFrom.id, fighter.clingFrom.move)?.cling || null;
   }
+  if (!art?.frames?.length && fighter.buffCling && fighter.heatResistUntil > now && fighter.buffCling.until > now) {
+    art = artFor(fighter.buffCling.id, fighter.buffCling.move)?.cling || null;
+  }
   if (!art?.frames?.length) {
     dropCling(fighter);
   } else {
@@ -2029,7 +2065,8 @@ function syncCling(scene, fighter) {
     applyFrameLook(live.img, frame, art, 1);
     if (art === status) live.img.setTint?.(burnSourceColor(scene, fighter));
     else live.img.clearTint?.();
-    live.img.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.42);
+    const drop = art.anchor === 'body' ? 0.5 : 0.42;
+    live.img.setPosition(fighter.x, fighter.y - (fighter.bodyH ?? 80) * drop);
   }
   const tint = burning ? burnSourceColor(scene, fighter) : 0;
   syncScattered(scene, fighter, liveTongues, fxNamed('status/on-fire-small'), TONGUE_AT, tint, sharedFire);
@@ -2139,7 +2176,7 @@ export function syncFxActors(scene) {
     syncFreeze(scene, fighter);
     const move = fighter.currentMove;
     const art = artFor(fighter?.charDef?.id, move?.name);
-    const swinging = art && art.anchor !== 'lance'
+    const swinging = art && art.anchor !== 'lance' && !art.oneshot
       && (art.objectType === 'slash arc' || art.objectType === 'extend')
       && fighter.state === 'attack' && frameInActive(fighter)
       && !sheetDrawsWeapon(fighter);
@@ -2317,6 +2354,10 @@ function syncHeld(scene, fighter) {
       ? (frames[fxFrameIndex(want.art, elapsed)] || frames[0])
       : frames[Math.min(frames.length - 1, Math.round(frac * (frames.length - 1)))];
     applyFrameLook(live.img, frame, want.art, 1);
+    if (want.art.pulse) {
+      const pulse = 0.8 + 0.2 * Math.sin((scene.simNow || 0) * 0.012);
+      live.img.setAlpha(pulse * (0.42 + 0.58 * frac));
+    }
     if (want.art.anchor === 'body') {
       live.img.setOrigin(0.5, 0.5);
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);

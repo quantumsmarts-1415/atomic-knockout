@@ -1,0 +1,19 @@
+{
+  "hit": false,
+  "black": 24,
+  "blend": "add",
+  "shatter": {
+    "file": "quick-draw-flash-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 12,
+    "loop": false,
+    "blend": "add",
+    "black": 24,
+    "fit": "height",
+    "heightFrac": 1.45,
+    "crop": "frame",
+    "pivot": "left"
+  }
+}

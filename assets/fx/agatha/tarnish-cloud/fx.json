@@ -1,0 +1,15 @@
+{
+  "file": "tarnish-cloud-haze-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 24,
+  "loop": true,
+  "blend": "normal",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 1.45,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false
+}

@@ -1,0 +1,15 @@
+{
+  "file": "mri-pulse-wave-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 12,
+  "loop": false,
+  "blend": "add",
+  "black": 24,
+  "fit": "length",
+  "stretch": "length",
+  "pivot": "left",
+  "crop": "frame",
+  "hit": false
+}

@@ -15,6 +15,16 @@ export function applyOnHit(attacker, victim, move, time) {
   if (!fx || immune) return;
 
   if (fx.slow) victim.slowUntil = time + fx.slow;
+  if (fx.attackSlow) {
+    const spec = typeof fx.attackSlow === 'number' ? { ms: fx.attackSlow } : fx.attackSlow;
+    victim.attackHaste = spec.mult ?? 0.72;
+    victim.attackHasteUntil = time + (spec.ms ?? 1800);
+  }
+  if (fx.elecTaken) {
+    const spec = typeof fx.elecTaken === 'number' ? { mult: fx.elecTaken } : fx.elecTaken;
+    victim.elecTakenMult = spec.mult ?? 1.35;
+    victim.elecTakenUntil = time + (spec.ms ?? 5000);
+  }
   if (fx.stun) lock(victim, time, fx.stun, true);
   if (fx.freeze) {
     lock(victim, time, fx.freeze, true);
@@ -39,7 +49,7 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.interrupt) lock(victim, time, fx.interrupt, true);
   if (fx.poison) {
     const p = fx.poison;
-    const chem = chemicalMult(attacker?.charDef?.combat, victim.charDef?.combat);
+    const chem = p.flat ? 1 : chemicalMult(attacker?.charDef?.combat, victim.charDef?.combat);
     victim.poisonUntil = time + (p.ms ?? 1600);
     victim.poisonDps = (p.dps ?? 1.4) * chem;
     victim.poisonRamp = (p.ramp ?? 0) * chem;
@@ -52,6 +62,9 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.muteType = fx.mute;
     victim.muteUntil = time + (fx.muteMs ?? 2600);
   }
+  if (fx.muteSpecialMs) {
+    victim.specialMutedUntil = Math.max(victim.specialMutedUntil ?? 0, time + fx.muteSpecialMs);
+  }
   if (fx.vulnerable) {
     victim.vulnerableMult = fx.vulnerable;
     victim.vulnerableUntil = time + (fx.vulnerableMs ?? 2600);
@@ -60,10 +73,25 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.mark = fx.mark;
     victim.markUntil = time + (fx.markMs ?? 3600);
     victim.markedBy = attacker?.charDef?.id ?? null;
+    if (fx.reveal) victim.revealedUntil = victim.markUntil;
+  }
+  if (fx.glow) {
+    const g = typeof fx.glow === 'object' ? fx.glow : {};
+    victim.glowUntil = time + (g.ms ?? 4000);
+    victim.glowDps = g.dps ?? 1;
+    victim.glowEvery = g.every ?? 1000;
+    victim.glowTick = time + victim.glowEvery;
   }
   if (fx.coat) {
     victim.debuffCoat = fx.coat;
     victim.debuffCoatUntil = time + (fx.coatMs ?? fx.markMs ?? 2000);
+  }
+  if (attacker?.charDef?.id && (fx.glow || fx.coat)) {
+    victim.clingFrom = {
+      id: attacker.charDef.id,
+      move: move.name,
+      until: fx.glow ? victim.glowUntil : victim.debuffCoatUntil,
+    };
   }
   if (fx.scramble) victim.scrambleUntil = time + (typeof fx.scramble === 'number' ? fx.scramble : 2400);
   if (fx.weaken) {
@@ -99,6 +127,25 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.strip) stripBuffs(victim);
 }
 
+/** Fighters a marked-target move hits even when they are off the shot. */
+export function markedStrikeTargets(owner, move, fighters, now, already) {
+  if (!move?.hitMarked || !owner || !fighters) return [];
+  const out = [];
+  for (const target of fighters) {
+    if (already?.has?.(target) || target === owner || !target.alive || target.state === 'ko') continue;
+    if (target.mark !== move.hitMarked || !(target.markUntil > now)) continue;
+    if (target.markedBy !== owner.charDef?.id) continue;
+    out.push(target);
+  }
+  return out;
+}
+
+/** A tracer tag keeps its target drawn at full strength through a fade. */
+export function visibleAlpha(fighter, time, faded) {
+  if ((fighter?.revealedUntil ?? 0) > time) return 1;
+  return faded;
+}
+
 function lock(victim, time, ms, cancelAttack) {
   victim.lockedUntil = Math.max(victim.lockedUntil ?? 0, time + ms);
   if (!cancelAttack) return;
@@ -118,10 +165,15 @@ export function cleanse(fighter, kinds) {
     fighter.dazzleUntil = 0;
   }
   if (list.includes('slow')) fighter.slowUntil = 0;
-  if (list.includes('mark')) fighter.markUntil = 0;
+  if (list.includes('mark')) {
+    fighter.markUntil = 0;
+    fighter.revealedUntil = 0;
+    fighter.glowUntil = 0;
+  }
   if (list.includes('debuff')) {
     stripBuffs(fighter);
     fighter.debuffCoatUntil = 0;
+    fighter.glowUntil = 0;
     fighter.slowUntil = 0;
     fighter.weakenUntil = 0;
     fighter.rootedUntil = 0;
@@ -225,6 +277,10 @@ export function tickKit(fighter, time) {
     applyDot(fighter, dmg, 'chemical');
     fighter.poisonDps = dmg + (fighter.poisonRamp ?? 0);
   }
+  if (fighter.glowUntil && time < fighter.glowUntil && time >= (fighter.glowTick ?? 0)) {
+    fighter.glowTick = time + (fighter.glowEvery ?? 1000);
+    applyDot(fighter, fighter.glowDps ?? 1, 'radiation');
+  }
   if (fighter.unquenchableUntil > time && time >= (fighter._unquenchTick ?? 0)) {
     fighter._unquenchTick = time + (fighter.selfDotEvery ?? 1000);
     applyDot(fighter, fighter.selfDotDps ?? 1, fighter.selfDotType ?? 'heat');
@@ -294,6 +350,13 @@ export function applyOnCast(fighter, move, time, frac = 1) {
       if (buff.attackPower) buff.attackPower = 1 + (buff.attackPower - 1) * frac;
     }
     grantBuff(fighter, buff, time);
+    if (buff.heatTaken != null && fighter.heatResistUntil > time && fighter.charDef?.id) {
+      fighter.buffCling = {
+        id: fighter.charDef.id,
+        move: move.name,
+        until: fighter.heatResistUntil,
+      };
+    }
   }
   if (move.cleanse) cleanse(fighter, move.cleanse);
   if (move.blinkMs) fighter.phasingUntil = time + move.blinkMs;
@@ -398,7 +461,7 @@ function grantBuff(fighter, buff, time) {
 
 /** Shorten a swing's commitment while an attack-speed buff is up. */
 export function scaledByHaste(move, haste = 1) {
-  if (!(haste > 1) || !move) return move;
+  if (!(haste > 0) || haste === 1 || !move) return move;
   const scale = 1 / haste;
   const ms = (n, floor) => Math.max(floor, Math.round((n ?? 0) * scale));
   const frames = (n, floor) => (n == null ? n : Math.max(floor, Math.round(n * scale)));
@@ -410,6 +473,16 @@ export function scaledByHaste(move, haste = 1) {
     endlagF: frames(move.endlagF, 0),
     activeF: frames(move.activeF, 1),
   };
+}
+
+/** Anodized Edge runs blue on the first swing and gold once the sharpen cap is full. */
+export function anodizeTint(stack, sharpen = {}) {
+  const step = sharpen.step > 0 ? sharpen.step : 1;
+  const cap = sharpen.cap > 0 ? sharpen.cap : 5;
+  const full = Math.max(1, Math.ceil(cap / step));
+  const t = Math.max(0, Math.min(1, ((stack ?? 1) - 1) / full));
+  const mix = (a, b) => Math.round(a + (b - a) * t);
+  return (mix(0x6e, 0xf0) << 16) | (mix(0xc8, 0xc1) << 8) | mix(0xff, 0x4a);
 }
 
 /** Extra shard packet added only once the blade has connected. */
@@ -558,6 +631,9 @@ export function combatOpts(defender) {
   const opts = {};
   if (defender.kinDefMultUntil > now) opts.kinDefMult = defender.kinDefMult ?? 0.75;
   if (defender.heatResistUntil > now) opts.heatTakenMult = defender.heatResistMult ?? 0.4;
+  if (defender.elecTakenUntil > now && defender.elecTakenMult != null) {
+    opts.elecTakenMult = defender.elecTakenMult;
+  }
   let chem = null;
   if (defender.chemResistUntil > now && defender.chemResistMult != null) chem = defender.chemResistMult;
   if (defender.chemVulnerableUntil > now && defender.chemVulnerableMult != null) {
@@ -584,4 +660,69 @@ export function bonusPackets(attacker, time) {
     if (Number.isFinite(attacker.heatOnHitLeft)) attacker.heatOnHitLeft -= 1;
   }
   return out;
+}
+
+/** Looping sheet frame. A shown frame wins so the bonus matches the color on screen. */
+export function sheetFrameAt(move, born, time, shown) {
+  if (shown != null) return shown;
+  const n = move?.redFrameCount ?? 0;
+  const fps = move?.redFps ?? 8;
+  if (!(n > 1) || !(fps > 0)) return 0;
+  const raw = Math.floor(Math.max(0, time - (born || 0)) / (1000 / fps));
+  return ((raw % n) + n) % n;
+}
+
+/** Red quantum-dot frames deal extra damage. Other frames stay as fired. */
+export function withRedFrame(move, frame) {
+  if (!move?.redFrames?.includes(frame)) return move;
+  const mul = move.redMult ?? 1.5;
+  return {
+    ...move,
+    damage: (move.damage ?? 0) * mul,
+    damage2: move.damage2 != null ? move.damage2 * mul : move.damage2,
+  };
+}
+
+function bodySpan(fighter) {
+  const rect = fighter?.getHurtboxRect?.();
+  if (rect) {
+    return {
+      top: rect.top ?? rect.y ?? 0,
+      bottom: rect.bottom ?? ((rect.y ?? 0) + (rect.height ?? 0)),
+      left: rect.left ?? rect.x ?? 0,
+      right: rect.right ?? ((rect.x ?? 0) + (rect.width ?? 0)),
+    };
+  }
+  const h = fighter?.bodyH ?? 80;
+  const w = fighter?.bodyW ?? 40;
+  const x = fighter?.x ?? 0;
+  const y = fighter?.y ?? 0;
+  return { top: y - h, bottom: y, left: x - w / 2, right: x + w / 2 };
+}
+
+/** Nearest living fighter whose body crosses the ray in front of the owner. */
+export function fighterOnSwapLine(owner, others, worldWidth) {
+  if (!owner) return null;
+  const face = owner.facing || 1;
+  const y = (owner.y ?? 0) - (owner.bodyH ?? 80) * 0.45;
+  const half = 18;
+  const reach = (worldWidth > 0 ? worldWidth : 4000) + 80;
+  const far = (owner.x ?? 0) + face * reach;
+  const minX = Math.min(owner.x ?? 0, far);
+  const maxX = Math.max(owner.x ?? 0, far);
+  let best = null;
+  let bestAhead = Infinity;
+  for (const other of others || []) {
+    if (!other || other === owner || other.alive === false || other.state === 'ko' || other.state === 'dead') continue;
+    const ahead = ((other.x ?? 0) - (owner.x ?? 0)) * face;
+    if (ahead < 12) continue;
+    const box = bodySpan(other);
+    if (y + half < box.top || y - half > box.bottom) continue;
+    if (box.right < minX || box.left > maxX) continue;
+    if (ahead < bestAhead) {
+      best = other;
+      bestAhead = ahead;
+    }
+  }
+  return best;
 }

@@ -1,0 +1,15 @@
+{
+  "file": "silver-bullet-shot-anim.png",
+  "frames": 22,
+  "cols": 4,
+  "rows": 6,
+  "fps": 11,
+  "loop": false,
+  "blend": "normal",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 0.34,
+  "crop": "frame",
+  "pivot": "right",
+  "hit": false
+}

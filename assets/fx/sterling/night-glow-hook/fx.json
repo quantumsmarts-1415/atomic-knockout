@@ -1,0 +1,32 @@
+{
+  "file": "night-glow-hook-impact-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 13.043,
+  "loop": false,
+  "blend": "add",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 0.95,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "contact",
+  "oneshot": true,
+  "hit": false,
+  "cling": {
+    "file": "night-glow-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "body"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "file": "mirror-flash-reflect-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 12,
+  "loop": false,
+  "blend": "add",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 0.58,
+  "maxAlpha": 0.45,
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false
+}

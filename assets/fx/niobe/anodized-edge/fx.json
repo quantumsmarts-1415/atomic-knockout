@@ -1,0 +1,17 @@
+{
+  "file": "anodized-edge-slash-anim.png",
+  "frames": 23,
+  "cols": 4,
+  "rows": 6,
+  "fps": 11.5,
+  "loop": false,
+  "blend": "add",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 0.95,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "contact",
+  "oneshot": true,
+  "hit": false
+}

@@ -3,7 +3,7 @@ import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { canonicalType, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defense.js';
-import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, weakestType } from './kit.js';
+import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
 import { hitAnchor } from './fxArt.js';
@@ -172,7 +172,10 @@ function dealtDamage(attacker, move, defender) {
   if (move?.chemDealtMult) opts.chemDealtMult = move.chemDealtMult;
   if (move?.ignoreDefense) opts.ignoreDefense = true;
   if (move?.ignoreReductions) opts.ignoreReductions = true;
-    if (defender.charDef?.combat) {
+  if (typeof move?.defensePierce === 'number' && move.defensePierce > 0) {
+    opts.pierce = Math.min(1, move.defensePierce);
+  }
+  if (defender.charDef?.combat) {
     const resolved = resolveMoveDamage(move, attacker?.charDef, defender.charDef, opts);
     for (const bonus of bonusPackets(attacker, now)) {
       const dealt = resolvePacket(bonus.damage, bonus.type, attacker?.charDef?.combat, defender.charDef.combat, opts);
@@ -489,7 +492,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       cleanse(this, this.defenseMove.cleanse);
     }
     if (this.state === 'defending' && this.defenseMove?.fadeAlpha != null) {
-      this.alpha = this.defenseMove.fadeAlpha;
+      this.alpha = visibleAlpha(this, time, this.defenseMove.fadeAlpha);
       this._hazeFade = true;
     } else if (this._hazeFade) {
       this.alpha = 1;
@@ -559,6 +562,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
       } else if (releasedAttack) {
         this.fireCharge(time);
       }
+    } else if (this.state === 'defending' && (this.specialMutedUntil ?? 0) > time) {
+      this.onDefenseEnd(time);
+      this.state = 'idle';
+      this.defenseMove = null;
+      this.rig.setFlash(null);
     } else if (this.state === 'defending' && this.defenseMove?.hold !== false && !inp.special) {
       this.onDefenseEnd(time);
       this.state = 'idle';
@@ -585,7 +593,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
           this.state = 'charging';
           this.chargeStart = time;
         }
-      } else if (pressedSpecial && time >= this.specialCooldownUntil && time >= (this.vulnerableUntil ?? 0)) {
+      } else if (pressedSpecial && time >= this.specialCooldownUntil && time >= (this.vulnerableUntil ?? 0) && time >= (this.specialMutedUntil ?? 0)) {
         if (dirHeld || !this.charDef.moves.specialDefense) {
           this.startMove(time, this.charDef.moves.specialDirectional, 'special', 'specialDirectional');
         } else {
@@ -856,7 +864,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         vfx: 'fire',
       };
     }
-    if (this.attackHasteUntil > time && (this.attackHaste ?? 1) > 1) {
+    if (this.attackHasteUntil > time && (this.attackHaste ?? 1) > 0 && (this.attackHaste ?? 1) !== 1) {
       move = scaledByHaste(move, this.attackHaste);
     }
     if (move.shatter) this._bladeDown = false;
@@ -1173,6 +1181,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this._nextBonus = Math.min(cap, Math.floor(heldMs / every) * stepDmg);
     }
     if (move.unblockAtFull) this.unblockNext = frac >= (move.unblockAt ?? 0.95);
+    if (move.chargePierce) scaled.defensePierce = Math.max(0, Math.min(1, frac * move.chargePierce));
     if (move.onHit && move.chargeControlMult) {
       const mul = 1 + ((move.chargeControlMult ?? 1) - 1) * frac;
       const onHit = {};
@@ -1228,6 +1237,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       : time + move.duration + move.cooldown;
     playVfx(this.scene, this, move, 'defense');
     applyOnCast(this, move, time, 1);
+    if (move.swapLine) this.scene?.swapAlongLine?.(this);
   }
 
   // A dive hop keeps its own horizontal speed, then stops at the lip of the
@@ -1295,8 +1305,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
         y: this.y - (this.bodyH ?? 80) * 0.45,
       });
     }
-    if (this.state === 'defending' && this.defenseMove?.intangible && !move.isSelf && !move.isCounterAttack) return 0;
-    if (this.phasingUntil > time && !move.isSelf && !move.isCounterAttack) return 0;
+    if (this.state === 'defending' && this.defenseMove?.intangible && !move.isSelf && !move.isCounterAttack && !move.hitsRevealed) return 0;
+    if (this.phasingUntil > time && !move.isSelf && !move.isCounterAttack && !move.hitsRevealed) return 0;
     if (this.state === 'defending' && this.defenseMove && !move.isSelf && !move.isCounterAttack) {
       this.answerStrike(attacker, time);
     }
@@ -1630,14 +1640,18 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
     if (gate.result === 'partial' && !incoming.ignoreReductions && !move.ignoreReductions) {
       const dealt = dealtDamage(attacker, incoming, this);
-      let dmg = dealt.total * (1 - gate.reduction);
+      const pierce = typeof incoming.defensePierce === 'number' && incoming.defensePierce > 0
+        ? Math.min(1, incoming.defensePierce)
+        : 0;
+      const reduction = gate.reduction * (1 - pierce);
+      let dmg = dealt.total * (1 - reduction);
       if (this.currentMove?.guardStrike && this.state === 'attack') dmg *= (1 - this.currentMove.guardStrike);
       if (this.state === 'charging' && this.charDef.moves.basicCharge?.whileCharging) {
         dmg *= this.charDef.moves.basicCharge.whileCharging.keep ?? 0.5;
       }
       const ownBlast = attacker === this && !move.isSelf;
       if (ownBlast) dmg *= TUNING.selfDamageMult;
-      this.lastPackets = dealt.packets.map((p) => ({ ...p, dealt: p.dealt * (1 - gate.reduction) * (ownBlast ? TUNING.selfDamageMult : 1) }));
+      this.lastPackets = dealt.packets.map((p) => ({ ...p, dealt: p.dealt * (1 - reduction) * (ownBlast ? TUNING.selfDamageMult : 1) }));
       this.percent = Math.min(999, this.percent + dmg);
       this.creditDamage(attacker, dmg, incoming.type);
       this.igniteFromGuard(incoming, time, dmg);
@@ -1647,7 +1661,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
           incoming.knockbackGrowth,
           this.percent,
           this.weightNow(),
-          (1 - gate.reduction) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1),
+          (1 - reduction) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1),
         );
         this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, false);
       }
@@ -1812,7 +1826,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
   shiftTimers(ms) {
     const keys = [
-      'stateUntil', 'attackCooldownUntil', 'specialCooldownUntil', 'vulnerableUntil', 'lockedUntil',
+      'stateUntil', 'attackCooldownUntil', 'specialCooldownUntil', 'specialMutedUntil', 'vulnerableUntil', 'lockedUntil',
       'dashUntil', 'diveUntil', 'diveArm', 'slowUntil', 'rootedUntil', 'speedBuffUntil', 'attackHasteUntil', 'driftUntil',
       'phasingUntil', 'weightBuffUntil', 'poisonUntil', 'stunUntil', 'freezeUntil', 'burnUntil',
       'unquenchableUntil', 'heatOnHitUntil',

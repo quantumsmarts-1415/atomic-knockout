@@ -343,7 +343,8 @@ function tryAttacks(time, bot, target, ai, input, bounds) {
   let wantBasic = ready && dist <= basicRange && dy < ATTACK_DY
     && time >= ai.nextAttackAt && time >= (bot.attackCooldownUntil ?? 0);
   let wantSpecial = ready && dist <= specialRange && dy < ATTACK_DY + 20
-    && time >= ai.nextSpecialAt && time >= (bot.specialCooldownUntil ?? 0);
+    && time >= ai.nextSpecialAt && time >= (bot.specialCooldownUntil ?? 0)
+    && time >= (bot.specialMutedUntil ?? 0);
   // Both buttons are edge-triggered on the same frame; attack would eat the
   // special press. Alternate so a bot actually uses both directional moves.
   if (wantSpecial && diveLeavesDeck(bot, input, target, bounds)) wantSpecial = false;
@@ -428,7 +429,7 @@ function applyScriptedSlots(time, bot, input) {
   } else if (t >= 4220 && t < 5300) {
     neutral();
     input.attack = false;
-    input.special = bot.state === 'defending' || !busy;
+    input.special = (bot.specialMutedUntil ?? 0) <= time && (bot.state === 'defending' || !busy);
   } else if (t >= 5300 && t < 5420) {
     neutral();
     input.attack = false;

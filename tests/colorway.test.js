@@ -90,6 +90,16 @@ test('every colorway fighter is a gold-edge (updated art) fighter with 4–6 loo
   );
   for (const id of COLORWAY_IDS) assert.ok(updated.has(id), `${id} is gold without a colorway listing`);
   assert.ok(updated.has('lucy'), 'lucy lights up from her effect folder before she has colorways');
+  assert.ok(updated.has('tex'), 'tex lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('sterling'), 'sterling lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('cody'), 'cody lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('ruth'), 'ruth lights up from her effect folder before she has colorways');
+  assert.ok(updated.has('niobe'), 'niobe lights up from her effect folder before she has colorways');
+  assert.ok(updated.has('tessa'), 'tessa lights up from her cool-shimmer folder before she has colorways');
+  assert.ok(updated.has('molly'), 'molly lights up from her effect folder before she has colorways');
+  assert.ok(updated.has('agatha'), 'agatha lights up from her effect folder before she has colorways');
+  assert.ok(updated.has('indy'), 'indy lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('saab'), 'saab lights up from his effect folder before he has colorways');
 });
 
 test('fighters without colorways keep their standard look only', () => {

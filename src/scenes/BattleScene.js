@@ -18,7 +18,7 @@ import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
 import { syncCoats } from '../engine/coatView.js';
 import { syncAuras } from '../engine/auraView.js';
-import { applyDot, cleanse, withShatter } from '../engine/kit.js';
+import { applyDot, applyOnHit, cleanse, fighterOnSwapLine, markedStrikeTargets, sheetFrameAt, withRedFrame, withShatter } from '../engine/kit.js';
 import { resolvePacket } from '../data/balance.js';
 import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront } from '../engine/batch3.js';
 import { mulberry32 } from '../engine/rng.js';
@@ -30,7 +30,7 @@ import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors } from '../engine/fxArt.js';
+import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
@@ -1049,13 +1049,9 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   sweepMarked(owner, move, already) {
-    if (!move?.hitMarked || !owner) return;
     const now = this.time.now;
-    for (const target of this.fighters) {
-      if (already?.has(target) || target === owner || !target.alive || target.state === 'ko') continue;
-      if (target.mark !== move.hitMarked || !(target.markUntil > now)) continue;
-      if (target.markedBy !== owner.charDef?.id) continue;
-      this.landHit(owner, target, { ...move, hitMarked: null });
+    for (const target of markedStrikeTargets(owner, move, this.fighters, now, already)) {
+      this.landHit(owner, target, { ...move, hitMarked: null, hitsRevealed: true });
     }
   }
 
@@ -1205,8 +1201,16 @@ export default class BattleScene extends Phaser.Scene {
           });
         } else {
           const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
-          this.spawnProjectile(owner, { ...move, fan: null, _fanChild: true, _vy: t * spread });
+          this.spawnProjectile(owner, {
+            ...move, fan: null, _fanChild: true, _vy: t * spread, _hideArt: !!move.oneArt,
+          });
         }
+      }
+      // The volley sheet is the whole fan, so it flies straight down the aim line.
+      if (move.oneArt && !(move.fanDeg > 0)) {
+        this.spawnProjectile(owner, {
+          ...move, fan: null, _fanChild: true, _vy: 0, _ghost: true,
+        });
       }
       return;
     }
@@ -1261,7 +1265,8 @@ export default class BattleScene extends Phaser.Scene {
       spriteH: projectileSpriteSize(move).h,
     };
     if (this.simFast) {
-      const frame = artFor(owner.charDef?.id, move.name)?.frames?.[0];
+      const art = artFor(owner.charDef?.id, move.name);
+      const frame = art?.hit === false ? null : art?.frames?.[0];
       this.projectiles.push({
         ...shot,
         gfx: { x, y, destroy() {} },
@@ -1275,6 +1280,10 @@ export default class BattleScene extends Phaser.Scene {
       return;
     }
     if (rainArt?.stageFit) {
+      this.projectiles.push({ ...shot, gfx: { x, y, destroy() {} } });
+      return;
+    }
+    if (move._hideArt) {
       this.projectiles.push({ ...shot, gfx: { x, y, destroy() {} } });
       return;
     }
@@ -1353,6 +1362,43 @@ export default class BattleScene extends Phaser.Scene {
       radius: r,
       spriteW: projectileSpriteSize(move).w,
       spriteH: projectileSpriteSize(move).h,
+    });
+  }
+
+  swapAlongLine(fighter) {
+    if (!fighter?.body) return;
+    const target = fighterOnSwapLine(fighter, this.fighters, this.world?.width ?? 0);
+    this.drawSwapLine(fighter);
+    if (!target?.body || target === fighter) return;
+    const ax = target.x;
+    const ay = target.y;
+    target.body.reset(fighter.x, fighter.y);
+    fighter.body.reset(ax, ay);
+    target.body.setVelocity?.(0, 0);
+    fighter.body.setVelocity?.(0, 0);
+    const art = artFor(fighter.charDef?.id, fighter.defenseMove?.name);
+    if (art?.frames?.length) {
+      spawnFxSprite(this, art, fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.5, 1, 1);
+    }
+  }
+
+  drawSwapLine(fighter) {
+    const art = fxNamed('ruth/metathesis-line');
+    const frame = art?.frames?.[0];
+    if (!frame || !this.add?.image || this.simFast) return;
+    const face = fighter.facing || 1;
+    const y = fighter.y - (fighter.bodyH ?? 80) * 0.45;
+    const far = face > 0 ? (this.world?.width ?? fighter.x) : 0;
+    const span = Math.max(8, Math.abs(far - fighter.x));
+    const x = Math.min(fighter.x, far);
+    const img = this.add.image(x, y, frame.key);
+    img.setOrigin(0, 0.5);
+    img.setDisplaySize(span, 16);
+    img.setDepth(12);
+    img.setBlendMode?.(frame.blend === 'add' ? 'ADD' : 'NORMAL');
+    this.tweens?.add?.({
+      targets: img, alpha: 0, duration: 460,
+      onComplete: () => img.destroy?.(),
     });
   }
 
@@ -1529,6 +1575,20 @@ export default class BattleScene extends Phaser.Scene {
       });
       return;
     }
+    if (spec.sheet && painted?.frames?.length) {
+      const face = owner?.facing || 1;
+      const gfx = placeFxImage(this, painted, x, y, face);
+      gfx?.setDepth?.(6);
+      this.zones.push({
+        owner, spec, x, y, radius,
+        gfx: gfx || { destroy() {} },
+        art: painted, face,
+        born: this.time.now,
+        until: this.time.now + (spec.ms ?? 1600),
+        next: this.time.now + (spec.delay ?? 0),
+      });
+      return;
+    }
     if (painted?.frames?.length) {
       this.zones.push({
         owner, spec, x, y, radius,
@@ -1624,10 +1684,13 @@ export default class BattleScene extends Phaser.Scene {
           continue;
         }
         if (z.spec.percentOnly) {
-          const dealt = resolvePacket(
-            tickDamage, z.spec.type, z.owner?.charDef?.combat, target.charDef?.combat,
-          );
+          const dealt = z.spec.flat
+            ? (tickDamage ?? 0)
+            : resolvePacket(
+              tickDamage, z.spec.type, z.owner?.charDef?.combat, target.charDef?.combat,
+            );
           applyDot(target, dealt, z.spec.type || 'chemical');
+          if (z.spec.onHit) applyOnHit(z.owner, target, { name: z.spec.name, onHit: z.spec.onHit }, time);
           continue;
         }
         this.landHit(z.owner, target, {
@@ -2321,9 +2384,9 @@ export default class BattleScene extends Phaser.Scene {
             });
           }
         }
-        if (p.move.explodeOnly && !p.pinned) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
-        else if (!off) this.detonateProjectile(p);
-        if (!p.pinned) this.dropProjectileZone(p);
+        if (p.move.explodeOnly && !p.pinned && !p.move._ghost) this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
+        else if (!off && !p.move._ghost) this.detonateProjectile(p);
+        if (!p.pinned && !p.move._ghost) this.dropProjectileZone(p);
         p.gfx.destroy();
         p.dead = true;
         continue;
@@ -2345,7 +2408,7 @@ export default class BattleScene extends Phaser.Scene {
         p.dead = true;
         continue;
       }
-      if (p.pinned || (p.armAt && time < p.armAt)) continue;
+      if (p.move._ghost || p.pinned || (p.armAt && time < p.armAt)) continue;
       for (const victim of this.fighters) {
         if (victim === p.owner || !victim.alive || victim.state === 'ko' || !victim.visible || p.landed.has(victim)) continue;
         if (victim.state === 'defending' && victim.defenseMove?.untargetable) continue;
@@ -2399,6 +2462,7 @@ export default class BattleScene extends Phaser.Scene {
           const mul = victim.defenseMove.softenProjectiles;
           shot = { ...shot, damage: (shot.damage ?? 0) * mul, damage2: shot.damage2 != null ? shot.damage2 * mul : shot.damage2 };
         }
+        if (shot.redFrames) shot = withRedFrame(shot, sheetFrameAt(shot, p.born, time, p._fxFrame));
         if (p.move.explodeOnly) {
           this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
           p.gfx.destroy();

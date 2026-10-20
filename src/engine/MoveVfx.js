@@ -1,6 +1,7 @@
 // Code-driven move effects. Body clips stay on idle/walk unless a real
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
+import { anodizeTint } from './kit.js';
 import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, spawnStageSpan, wantsContactSpark } from './fxArt.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
@@ -371,6 +372,8 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     }
     if (art?.anchor === 'trail' || art?.anchor === 'ground-front' || art?.anchor === 'body' || art?.anchor === 'front' || art?.anchor === 'lance' || art?.anchor === 'aura') return;
     if (move?.kind === 'zone' && move.zone?.trap && art?.frames?.length) return;
+    // The lingering sheet is the zone itself. A release oneshot would stack a second copy.
+    if (move?.kind === 'zone' && move.zone?.sheet && art?.frames?.length) return;
     // A looping floor sheet is held on the fighter. A one-shot ground burst still draws.
     if (phase === 'defense' && art?.anchor === 'ground' && art.loop && art.frames?.length) return;
     // A crumble or melt is held on the feet, then the rise plays on letgo.
@@ -407,6 +410,10 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       && art.objectType !== 'slash arc'
       && art.objectType !== 'extend';
     if (replaced && !(phase === 'defense' && art.releaseFlash)) {
+      if (art.stageFit) {
+        spawnStageSpan(scene, fighter, art);
+        return;
+      }
       // A burst is drawn once, at the blast, when resolveBurst supplies a point.
       if (move.kind === 'burst' && extra?.x == null) return;
       const anchor = fxAnchor(fighter, move);
@@ -423,6 +430,21 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         if (move.vfx === 'binary') {
           drawBinaryDigit(scene, fighter, x, y, move._retried ? '0' : '1');
         }
+        return;
+      }
+    }
+    if (art?.oneshot && art.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) {
+      const face = fighter.facing || 1;
+      let x = extra.x ?? fighter.x + face * (fighter.bodyW ?? 40) * 0.2;
+      let y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
+      if (extra.x == null && (art.anchor === 'contact' || art.anchor === 'fist')) {
+        const tip = meleeContactPoint(fighter, move);
+        x = tip.x;
+        y = tip.y;
+      }
+      const shot = drawFxOneShot(scene, fighter, move, x, y, 1);
+      if (shot) {
+        if (move.sharpen) shot.image?.setTint?.(anodizeTint(fighter._sharpen, move.sharpen));
         return;
       }
     }
@@ -491,8 +513,10 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     if (!burst?.frames?.length) return;
     const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
     const x = extra.x ?? fighter.x;
-    spawnFxSprite(scene, burst, x, y, 1);
-    if (extra.both) spawnFxSprite(scene, burst, extra.otherX ?? x, extra.otherY ?? y, 1);
+    const aimed = (burst.pivotX ?? 0.5) < 0.05;
+    const face = aimed ? (fighter.facing || 1) : 1;
+    spawnFxSprite(scene, burst, x, y, 1, face);
+    if (extra.both && !aimed) spawnFxSprite(scene, burst, extra.otherX ?? x, extra.otherY ?? y, 1);
     return;
   }
   if (phase === 'shatter') {

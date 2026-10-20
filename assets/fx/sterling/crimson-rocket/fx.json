@@ -1,0 +1,37 @@
+{
+  "blend": "add",
+  "black": 24,
+  "hit": false,
+  "projectile": {
+    "file": "crimson-rocket-burst-anim.png",
+    "frames": 22,
+    "cols": 4,
+    "rows": 6,
+    "fps": 11,
+    "loop": false,
+    "once": true,
+    "blend": "add",
+    "black": 24,
+    "fit": "height",
+    "heightFrac": 0.36,
+    "crop": "frame",
+    "pivot": "center",
+    "aim": false,
+    "hit": false
+  },
+  "detonate": {
+    "file": "crimson-rocket-burst-anim.png",
+    "frames": 22,
+    "cols": 4,
+    "rows": 6,
+    "fps": 11,
+    "loop": false,
+    "blend": "add",
+    "black": 24,
+    "fit": "height",
+    "heightFrac": 1.2,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "point"
+  }
+}

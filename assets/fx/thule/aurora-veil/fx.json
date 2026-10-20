@@ -1,0 +1,32 @@
+{
+  "file": "aurora-veil-status-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.05,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "anchor": "body",
+  "hit": false,
+  "dazzle": {
+    "file": "aurora-dazzle-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.05,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "body",
+    "hit": false
+  }
+}

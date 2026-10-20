@@ -2,7 +2,7 @@
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
 import { anodizeTint } from './kit.js';
-import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, reverseFrameOrder, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnStageSpan, wantsContactSpark } from './fxArt.js';
+import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, reverseFrameOrder, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnNozzleCone, spawnStageSpan, wantsContactSpark } from './fxArt.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 
@@ -370,6 +370,10 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     const art = artFor(fighter.charDef?.id, move?.name);
     if (phase === 'release' && move?.aimStick && extra?.fired) {
       spawnAimedBeam(scene, fighter, move);
+      return;
+    }
+    if (phase === 'release' && art?.unit?.frames?.length && extra?.fired) {
+      spawnNozzleCone(scene, fighter, move);
       return;
     }
     if (phase === 'release' && art?.objectType === 'beam' && art.frames?.length && !extra?.fired) return;

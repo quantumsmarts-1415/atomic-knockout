@@ -16,6 +16,21 @@ export function applyOnHit(attacker, victim, move, time) {
   }
 
   const fx = move.onHit;
+  if (fx?.revealMs) {
+    victim.revealedUntil = time + fx.revealMs;
+    victim.revealTint = fx.revealColor ?? 0x8ec8ff;
+    victim.revealTintUntil = victim.revealedUntil;
+  }
+  if (fx?.dazzleCling && attacker?.charDef?.id) {
+    victim.dazzledBy = {
+      id: attacker.charDef.id,
+      move: move.name,
+      until: time + (fx.dazzleMs ?? 12000),
+    };
+  }
+  if (fx?.miss && (fx.dazzleCling || !immune)) {
+    victim.missNext = (victim.missNext ?? 0) + (fx.miss === true ? 1 : fx.miss);
+  }
   if (!fx || immune) return;
 
   if (fx.slow) victim.slowUntil = time + fx.slow;
@@ -43,7 +58,6 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.dazzleColor = spec?.color ?? 0xfff6e8;
     victim.blindUntil = Math.max(victim.blindUntil ?? 0, victim.dazzleUntil);
   }
-  if (fx.miss) victim.missNext = (victim.missNext ?? 0) + (fx.miss === true ? 1 : fx.miss);
   if (fx.reveal) victim.phasingUntil = 0;
   if (fx.chemVulnerable) {
     victim.chemVulnerableMult = fx.chemVulnerable;

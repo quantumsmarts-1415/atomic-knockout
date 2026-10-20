@@ -1985,22 +1985,30 @@ export const MOVESETS = {
 
   thule: {
     basicCharge: m('Ultima Thule', {
-      kind: 'projectile', type: K, damage: 8, tipBonus: 4, tipAt: 200, chargeDamageMult: 1.25,
+      kind: 'projectile', type: K, damage: 8,
+      growWithDistance: { reach: 1000, mult: 1.85, stretch: 1.45 },
+      chargeDamageMult: 1.25,
       maxChargeMs: 800, vfx: 'spark', vfxColor: 0xc8e6ff,
-      projectileSpeed: 540, projectileRadius: 8, projectileLife: 640,
+      projectileSpeed: 760, projectileRadius: 18, projectileLife: 2400,
       baseKnockback: 90, knockbackGrowth: 1.6, duration: 200, cooldown: 800,
     }),
-    basicDirectional: melee('Polar Night', {
-      type: K, damage: 7, type2: H, damage2: 5, onHit: { freeze: 240 }, rangeW: 74, vfx: 'strike', vfxColor: 0xb7d4ff,
-      baseKnockback: 80, knockbackGrowth: 1.6, duration: 200, cooldown: 440,
+    basicDirectional: melee('Blue Glow Jab', {
+      type: K, damage: 7, hitsRevealed: true,
+      onHit: { revealMs: 500, revealColor: 0x8ec8ff },
+      rangeW: 70, vfx: 'strike', vfxColor: 0x8ec8ff,
+      baseKnockback: 80, knockbackGrowth: 1.5, duration: 180, cooldown: 420,
     }),
     specialDefense: m('Aurora Veil', {
-      kind: 'block', blockReduction: 0.52, noKnockback: true, onStruck: { blind: 420, miss: true },
+      kind: 'block', blockReduction: 0.52, noKnockback: true,
+      onStruck: { miss: true, dazzleCling: true },
       duration: 600, cooldown: 840, vfx: 'shield', vfxColor: 0xb8f0c8,
     }),
     specialDirectional: m('Handheld X-Ray', {
-      kind: 'beam', type: R, damage: 9, beamLen: 150, beamThick: 32, vfx: 'laser', vfxColor: 0xd0e8ff,
-      baseKnockback: 50, knockbackGrowth: 1.0, duration: 180, cooldown: 500,
+      kind: 'beam', type: R, damage: 9,
+      // Painted tip sits 480 px past the nozzle (cell x 520, origin x 40). Draw that tip out to 520.
+      beamLen: 520, beamThick: 260, beamArtPx: 480, beamCap: 520,
+      vfx: 'laser', vfxColor: 0xd0e8ff,
+      baseKnockback: 50, knockbackGrowth: 1.0, duration: 240, cooldown: 560,
     }),
   },
 

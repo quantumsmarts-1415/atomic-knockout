@@ -484,6 +484,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     oneshot: !!extra.oneshot,
     stageFit: !!extra.stageFit,
     fromBody: !!extra.fromBody,
+    tile: !!extra.tile,
     maxAlpha: extra.maxAlpha > 0 && extra.maxAlpha < 1 ? extra.maxAlpha : 0,
   };
 }
@@ -872,8 +873,8 @@ async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH
       // An edge-to-edge beam maps onto the uncharged length. Charge scale stretches width only.
       displayW = Math.max(CELL, box.w);
       displayH = Math.max(CELL, box.w * (h / Math.max(1, w)));
-    } else if (spec?.fit === 'stage') {
-      // The cell already spans the authored stage. Draw time stretches it to this world's width.
+    } else if (spec?.fit === 'stage' || spec?.fit === 'pixel') {
+      // Stage fit is stretched to the world at draw time. Pixel fit stays at the cell size.
       displayW = Math.max(CELL, w);
       displayH = Math.max(CELL, h);
     } else if (px > 0) {
@@ -982,6 +983,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
     oneshot: !!meta.oneshot,
     stageFit: meta.fit === 'stage',
     fromBody: !!meta.fromBody,
+    tile: !!meta.tile,
     maxAlpha: meta.maxAlpha > 0 && meta.maxAlpha < 1 ? meta.maxAlpha : 0,
   };
   const inherit = { blend: meta.blend, black: meta.black };
@@ -1671,6 +1673,16 @@ function stepOneShots(scene) {
   }
 }
 
+/** A short sonar burst from a held floor speaker toward whoever struck her. */
+export function playRetortPulse(scene, defender, attacker) {
+  const art = artFor(defender?.charDef?.id, defender?.charDef?.moves?.basicCharge?.name);
+  if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
+  const face = Math.sign((attacker?.x ?? defender.x) - defender.x) || defender.facing || 1;
+  const x = defender.x + face * (defender.bodyW ?? 40) * 0.2;
+  const y = defender.y - (defender.bodyH ?? 80) * 0.55;
+  return spawnFxSprite(scene, art, x, y, 0.3, face);
+}
+
 /** One additive sprite from an already-loaded side, such as the ribbon ignite. */
 export function spawnFxSprite(scene, art, x, y, scale = 1, face = 1, box = null) {
   if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
@@ -1806,6 +1818,7 @@ function dropAttached(fighter, live) {
   }
   if (live?.fadeRig) fighter.rig?.setAlpha?.(1);
   live?.img?.destroy?.();
+  live?.extra?.forEach((img) => img.destroy?.());
   live?.front?.destroy?.();
   live?.lead?.destroy?.();
   if (live) liveAttached.delete(fighter);
@@ -1872,6 +1885,39 @@ function attachedWant(scene, fighter) {
     }
   }
   return null;
+}
+
+function floorDeck(scene, fighter) {
+  const x = fighter?.x ?? 0;
+  const y = fighter?.y ?? 0;
+  const plats = scene?.stage?.platforms ?? [];
+  const plat = plats.find((s) => s?.w > 0 && Math.abs((s.y ?? y) - y) < 36
+    && x >= s.x - s.w / 2 && x <= s.x + s.w / 2);
+  if (plat) return { cx: plat.x, w: plat.w };
+  const solids = (scene?.stage?.solids ?? []).filter((s) => s && s.h == null && s.w > 0);
+  const deck = solids.find((s) => x >= s.x - s.w / 2 - 12 && x <= s.x + s.w / 2 + 12);
+  if (deck) return { cx: deck.x, w: deck.w };
+  return { cx: x, w: 1 };
+}
+
+function syncFloorTiles(scene, live, art, fighter, frame) {
+  const tileW = frame.displayW > 0 ? frame.displayW : 1024;
+  const deck = floorDeck(scene, fighter);
+  const n = Math.max(1, Math.ceil(deck.w / tileW));
+  live.extra ??= [];
+  while (live.extra.length < n - 1) {
+    const img = placeStill(scene, art, fighter.x, fighter.y, 0);
+    img.setDepth(6);
+    live.extra.push(img);
+  }
+  while (live.extra.length > n - 1) live.extra.pop()?.destroy?.();
+  const left = deck.cx - (n * tileW) / 2;
+  [live.img, ...live.extra].forEach((img, i) => {
+    applyFrameLook(img, frame, art, 1);
+    img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 1);
+    img.setPosition(left + (i + 0.5) * tileW, fighter.y);
+    img.setScale(Math.abs(img.scaleX || 1), Math.abs(img.scaleY || 1));
+  });
 }
 
 function syncAttached(scene, fighter) {
@@ -1941,6 +1987,10 @@ function syncAttached(scene, fighter) {
     return;
   }
   if (want.kind === 'ground') {
+    if (art.tile) {
+      syncFloorTiles(scene, live, art, fighter, frame);
+      return;
+    }
     live.img.setPosition(fighter.x, fighter.y);
     if (art.puddle) {
       fighter.rig?.setVisible?.(false);
@@ -2505,10 +2555,16 @@ function syncHeld(scene, fighter) {
       }
       return;
     }
-    live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 1);
-    const shot = 1 + ((charge.chargeRadiusMult ?? 1) - 1) * frac;
+    const onHand = want.art.anchor === 'hand';
+    live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? (onHand ? 0.5 : 1));
+    const shot = want.art.scaleWith === 'alpha'
+      ? 1
+      : 1 + ((charge.chargeRadiusMult ?? 1) - 1) * frac;
     const hand = sheetFxPoint(fighter, 'shot');
-    live.img.setPosition(hand?.x ?? (fighter.x + face * bodyW * 0.65), hand?.y ?? fighter.y);
+    const fallbackX = fighter.x + face * bodyW * (onHand ? 0.9 : 0.65);
+    const fallbackY = onHand ? fighter.y - bodyH * 0.52 : fighter.y;
+    live.img.setPosition(hand?.x ?? fallbackX, hand?.y ?? fallbackY);
+    if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
     const mirror = want.art.flip ? -face : face;
     live.img.setScale(mirror * Math.abs(live.img.scaleX || 1) * shot, Math.abs(live.img.scaleY || 1) * shot);
     return;
@@ -2586,7 +2642,8 @@ export function spawnContactFx(scene, attacker, victim, move) {
   if (!at) return;
   playPacked(scene, byKey.get(`${attacker.charDef?.id}/_hit`), at.x, at.y, 1);
   const painted = artFor(attacker.charDef?.id, move?.name);
-  if (!painted?.releaseImpact) playPacked(scene, painted?.impact, at.x, at.y, 1);
+  const face = painted?.impact?.flip ? (attacker.facing || 1) : 1;
+  if (!painted?.releaseImpact) playPacked(scene, painted?.impact, at.x, at.y, face);
   if (painted?.cling?.frames?.length && victim && move?.onHit?.coat) {
     victim.clingFrom = {
       id: attacker.charDef?.id,

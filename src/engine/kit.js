@@ -90,11 +90,11 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.debuffCoat = fx.coat;
     victim.debuffCoatUntil = time + (fx.coatMs ?? fx.markMs ?? 2000);
   }
-  if (attacker?.charDef?.id && (fx.glow || fx.coat)) {
+  if (attacker?.charDef?.id && (fx.glow || fx.coat || fx.stun)) {
     victim.clingFrom = {
       id: attacker.charDef.id,
       move: move.name,
-      until: fx.glow ? victim.glowUntil : victim.debuffCoatUntil,
+      until: fx.glow ? victim.glowUntil : (fx.coat ? victim.debuffCoatUntil : victim.lockedUntil),
     };
   }
   if (fx.scramble) victim.scrambleUntil = time + (typeof fx.scramble === 'number' ? fx.scramble : 2400);

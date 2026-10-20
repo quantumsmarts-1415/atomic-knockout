@@ -1919,6 +1919,7 @@ export const MOVESETS = {
     }),
     specialDefense: m('Floor Speaker', {
       retort: { type: K, damage: 6, knockback: 170, growth: 1.8 },
+      retortBurst: true,
       duration: 480, cooldown: 960, vfx: 'shield', vfxColor: 0x9ad7b0,
     }),
     specialDirectional: m('Green Phosphor Bolt', {

@@ -1020,6 +1020,8 @@ test('goldie kits follow the approved brief', () => {
   applyOnHit({ charDef: { id: 'goldie' } }, scanned, mri, 1000);
   assert.strictEqual(scanned.percent, 80);
   assert.strictEqual(scanned.lockedUntil, 2000);
+  assert.strictEqual(scanned.clingFrom.until, 2000);
+  assert.strictEqual(scanned.clingFrom.move, 'MRI Contrast');
   const warded = { percent: 25, debuffImmuneUntil: 5000 };
   applyOnHit({ charDef: { id: 'goldie' } }, warded, mri, 1000);
   assert.strictEqual(warded.percent, 50);
@@ -1072,6 +1074,7 @@ test('terra kits follow the approved brief', () => {
   assert.strictEqual(speaker.name, 'Floor Speaker');
   assert.strictEqual(speaker.retort.type, 'kinetic');
   assert.strictEqual(speaker.retort.damage, 6);
+  assert.strictEqual(speaker.retortBurst, true);
   const bolt = moves.specialDirectional;
   assert.strictEqual(bolt.name, 'Green Phosphor Bolt');
   assert.strictEqual(bolt.kind, 'projectile');

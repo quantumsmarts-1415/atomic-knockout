@@ -1620,6 +1620,47 @@ test('europa sheets match the approved handoff', () => {
   }
 });
 
+test('mri, palm, flex punch, and floor speaker match the arrived sheets', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const mri = read('assets/fx/goldie/mri-contrast/fx.json');
+  assert.equal(mri.file, 'mri-scan-ring-anim.png');
+  assert.equal(mri.frames, 16);
+  assert.equal(mri.fps, 16);
+  assert.equal(mri.scaleWith, 'radius');
+  assert.equal(mri.span, 'cell');
+  assert.equal(mri.hit, false);
+  const cell = 480;
+  const outer = 0.95 * (cell / 2);
+  const shown = outer * ((132 * mri.heightFrac) / cell);
+  assert.ok(Math.abs(shown - 78) < 1, `ring radius ${shown}`);
+  assert.equal(mri.charge.anchor, 'hand');
+  assert.equal(mri.charge.scaleWith, 'alpha');
+  assert.equal(mri.charge.loop, true);
+  assert.equal(mri.charge.fps, 12);
+  assert.equal(mri.cling.file, 'mri-stun-status-anim.png');
+  assert.equal(mri.cling.frames, 24);
+  assert.equal(mri.cling.fps, 24);
+  assert.equal(mri.cling.anchor, 'body');
+  const palm = read('assets/fx/goldie/magnetocaloric-palm/fx.json').impact;
+  assert.equal(palm.frames, 24);
+  assert.equal(palm.fps, 16);
+  assert.equal(palm.flip, true);
+  assert.equal(palm.pivotX, 0.5);
+  const flex = read('assets/fx/terra/flex-punch/fx.json').impact;
+  assert.equal(flex.file, 'flex-punch-impact-anim.png');
+  assert.equal(flex.flip, true);
+  assert.equal(flex.frames, 24);
+  const floor = read('assets/fx/terra/floor-speaker/fx.json');
+  assert.equal(floor.file, 'floor-speaker-status-anim.png');
+  assert.equal(floor.frames, 24);
+  assert.equal(floor.fps, 12);
+  assert.equal(floor.loop, true);
+  assert.equal(floor.tile, true);
+  assert.equal(floor.anchor, 'ground');
+  assert.equal(floor.fit, 'pixel');
+  assert.ok(Math.abs(floor.pivotY - (192 - 40) / 192) < 0.001);
+});
+
 test('terra sonar and phosphor bolt match the arrived sheets', () => {
   const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
   const sonar = read('assets/fx/terra/sonar-pulse/fx.json');

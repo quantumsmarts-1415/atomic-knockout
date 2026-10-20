@@ -6,7 +6,7 @@ import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defen
 import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
-import { armGeyser, hitAnchor } from './fxArt.js';
+import { armGeyser, hitAnchor, playRetortPulse } from './fxArt.js';
 import { clipNameForMove, sheetMeta } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
@@ -1638,6 +1638,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
       return 0;
     }
     if (gate.result === 'counter') {
+      if (this.defenseMove?.retortBurst && attacker && attacker !== this) {
+        playRetortPulse(this.scene, this, attacker);
+      }
       if (this.defenseMove?.truce && attacker && attacker !== this) {
         const ms = this.defenseMove.truce.ms ?? 900;
         this.muteAllUntil = time + ms;

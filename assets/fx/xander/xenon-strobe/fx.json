@@ -1,0 +1,17 @@
+{
+  "file": "xenon-strobe-pulse-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 12,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false,
+  "heightFrac": 0.7,
+  "aim": false,
+  "once": true
+}

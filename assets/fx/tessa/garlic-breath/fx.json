@@ -1,0 +1,18 @@
+{
+  "file": "garlic-breath-puff-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 12,
+  "loop": false,
+  "blend": "screen",
+  "black": 24,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "heightFrac": 0.72,
+  "anchor": "contact",
+  "oneshot": true,
+  "flip": true
+}

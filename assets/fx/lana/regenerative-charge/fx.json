@@ -1,0 +1,31 @@
+{
+  "file": "regenerative-charge-burst-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 12,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "heightFrac": 0.95,
+  "charge": {
+    "file": "regen-glow-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "crop": "frame",
+    "pivot": "center",
+    "hit": false,
+    "heightFrac": 1,
+    "anchor": "body"
+  }
+}

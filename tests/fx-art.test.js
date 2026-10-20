@@ -1348,7 +1348,8 @@ test('niobe sheets keep the pulse full size and tessa only clings the cool shimm
   assert.equal(fs.existsSync('assets/fx/niobe/mri-pulse/mri-pulse-wave-anim.png'), true);
   assert.equal(fs.existsSync('assets/fx/niobe/mri-pulse/mri-pulse-wave-anim.gif'), false);
   const cool = read('assets/fx/tessa/peltier-punch/fx.json');
-  assert.equal(cool.file, undefined);
+  assert.equal(cool.file, 'peltier-punch-impact-anim.png');
+  assert.equal(cool.frames, 23);
   assert.equal(cool.cling.file, 'peltier-cool-status-anim.png');
   assert.equal(cool.cling.loop, true);
   assert.equal(cool.cling.fps, 12);
@@ -1357,7 +1358,7 @@ test('niobe sheets keep the pulse full size and tessa only clings the cool shimm
   assert.equal(cool.cling.blend, 'add');
   assert.equal(fs.existsSync('assets/fx/tessa/peltier-punch/peltier-cool-status-anim.png'), true);
   assert.equal(fs.existsSync('assets/fx/tessa/peltier-punch/peltier-cool-status-anim.gif'), false);
-  assert.equal(fs.existsSync('assets/fx/tessa/garlic-breath/fx.json'), false);
+  assert.equal(fs.existsSync('assets/fx/tessa/garlic-breath/fx.json'), true);
 });
 
 test('tex sheets match the technetium handoff', () => {
@@ -1464,7 +1465,7 @@ test('molly agatha indy and saab sheets match the batch handoffs', () => {
   assert.equal(solder.rows, 7);
   assert.equal(solder.fps, 10.5);
   assert.equal(solder.blend, 'add');
-  assert.equal(fs.existsSync('assets/fx/indy/putty-guard/fx.json'), false);
+  assert.equal(fs.existsSync('assets/fx/indy/putty-guard/fx.json'), true);
   const shot = read('assets/fx/saab/sniper-round/fx.json');
   assert.equal(shot.frames, 22);
   assert.equal(shot.fps, 11);
@@ -1503,6 +1504,68 @@ test('molly agatha indy and saab sheets match the batch handoffs', () => {
       for (const file of fs.readdirSync(dir)) {
         assert.equal(file.endsWith('.gif') || file.endsWith('.jpg'), false, `${dir}/${file}`);
         if (file.endsWith('.png')) assert.equal(fs.existsSync(`${dir}/${file}`), true);
+      }
+    }
+  }
+});
+
+test('batch 11 sheets match the approved handoffs', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const tremor = read('assets/fx/tessa/tellus-tremor/fx.json');
+  assert.equal(tremor.blend, 'normal');
+  assert.equal(tremor.pivot, 'bottom');
+  assert.equal(tremor.aim, false);
+  assert.equal(tremor.loop, false);
+  const phase = read('assets/fx/tessa/phase-rewrite/fx.json');
+  assert.equal(phase.frames, 32);
+  assert.equal(phase.fps, 6.68);
+  assert.equal(phase.loop, true);
+  assert.equal(phase.anchor, 'body');
+  const pile = read('assets/fx/iona/touch-powder/fx.json');
+  assert.equal(pile.file, 'touch-powder-pile.png');
+  assert.equal(pile.black, false);
+  assert.equal(pile.blend, 'normal');
+  assert.equal(pile.burst.file, 'touch-powder-blast-anim.png');
+  assert.equal(pile.burst.heightFrac, 0.58);
+  assert.equal(pile.burst.maxAlpha, 0.45);
+  const vapor = read('assets/fx/iona/violet-vapor/fx.json');
+  assert.equal(vapor.blend, 'normal');
+  assert.equal(vapor.aim, false);
+  const tick = read('assets/fx/caesar/defining-second/fx.json');
+  assert.equal(tick.heightFrac, 0.58);
+  assert.equal(tick.maxAlpha, 0.45);
+  assert.equal(tick.cling.file, 'time-freeze-status-anim.png');
+  assert.equal(tick.cling.loop, true);
+  const coin = read('assets/fx/caesar/fallout-coin/fx.json');
+  assert.equal(coin.frames, 32);
+  assert.equal(coin.fps, 6.45);
+  assert.equal(coin.blend, 'normal');
+  assert.equal(coin.loop, true);
+  assert.equal(coin.stain.loop, true);
+  const pellet = read('assets/fx/barry/poison-pellet/fx.json');
+  assert.equal(pellet.projectile.loop, true);
+  assert.equal(pellet.projectile.spin, 8);
+  assert.equal(pellet.projectile.blend, 'normal');
+  assert.equal(pellet.detonate.file, 'poison-pellet-cloud-anim.png');
+  const strike = read('assets/fx/lana/hidden-strike/fx.json');
+  assert.equal(strike.anchor, 'trail');
+  assert.equal(strike.pivot, 'right');
+  assert.equal(strike.pivotY, 0.701);
+  const glow = read('assets/fx/lana/regenerative-charge/fx.json');
+  assert.equal(glow.charge.anchor, 'body');
+  assert.equal(glow.charge.loop, true);
+  const putty = read('assets/fx/indy/putty-guard/fx.json');
+  assert.equal(putty.blend, 'normal');
+  assert.equal(putty.loop, true);
+  assert.equal(putty.fps, 19.2);
+  assert.equal(putty.anchor, 'body');
+  for (const id of ['tessa', 'iona', 'xander', 'caesar', 'barry', 'lana']) {
+    const root = `assets/fx/${id}`;
+    for (const name of fs.readdirSync(root)) {
+      const dir = `${root}/${name}`;
+      if (!fs.statSync(dir).isDirectory()) continue;
+      for (const file of fs.readdirSync(dir)) {
+        assert.equal(file.endsWith('.gif') || file.endsWith('.jpg'), false, `${dir}/${file}`);
       }
     }
   }

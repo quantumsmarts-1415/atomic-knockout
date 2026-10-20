@@ -1,0 +1,16 @@
+{
+  "file": "electron-tribute-shell-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 13.71,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "hit": false,
+  "heightFrac": 1.2,
+  "anchor": "body"
+}

@@ -1,0 +1,39 @@
+{
+  "blend": "add",
+  "black": 16,
+  "hit": false,
+  "maxAlpha": 0.72,
+  "projectile": {
+    "file": "cracking-catalyst-crack-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 12,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "crop": "frame",
+    "pivot": "center",
+    "hit": false,
+    "heightFrac": 0.22,
+    "once": true,
+    "aim": false
+  },
+  "detonate": {
+    "file": "cracking-catalyst-crack-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 12,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "crop": "frame",
+    "pivot": "center",
+    "hit": false,
+    "heightFrac": 0.52,
+    "maxAlpha": 0.72
+  }
+}

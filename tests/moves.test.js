@@ -908,6 +908,73 @@ test('saab sniper charge pierces defense and the dust cough slows attacks', () =
   assert.strictEqual(needles.bonusVsMark, undefined);
 });
 
+test('batch 11 kits follow the approved briefs', () => {
+  const tessa = CHARACTERS.tessa.moves;
+  assert.strictEqual(tessa.specialDirectional.floor, true);
+  assert.strictEqual(tessa.specialDirectional.ground, undefined);
+  assert.strictEqual(tessa.specialDefense.kind, 'shield');
+  assert.strictEqual(tessa.specialDefense.healOnBlock, 7);
+
+  const iona = CHARACTERS.iona.moves;
+  assert.strictEqual(iona.basicDirectional.name, 'Iodine Spray');
+  assert.strictEqual(iona.basicDirectional.onHit.heal, 2);
+  assert.strictEqual(iona.specialDefense.cleanse, undefined);
+  assert.strictEqual(iona.specialDefense.clearType, 'radiation');
+  assert.deepStrictEqual(iona.specialDefense.immune, ['radiation']);
+  assert.strictEqual(iona.specialDirectional.kind, 'zone');
+  assert.strictEqual(iona.specialDirectional.zone.trap, true);
+  assert.strictEqual(iona.specialDirectional.zone.type2, 'heat');
+
+  const xander = CHARACTERS.xander.moves;
+  assert.strictEqual(xander.basicCharge.kind, 'projectile');
+  assert.strictEqual(xander.basicCharge.type, 'electrical');
+  assert.strictEqual(xander.basicCharge.type2, 'heat');
+  assert.strictEqual(xander.basicCharge.recoilSelf, 240);
+  assert.strictEqual(xander.basicDirectional.damage, 4.2);
+  assert.strictEqual(xander.specialDirectional.kind, 'projectile');
+  assert.strictEqual(xander.specialDefense.retort.stun, 420);
+
+  const caesar = CHARACTERS.caesar.moves;
+  assert.strictEqual(caesar.basicCharge.damage, 0);
+  assert.strictEqual(caesar.basicCharge.onHit.freeze, 1000);
+  assert.strictEqual(caesar.basicCharge.chargeControlMult, 3);
+  assert.strictEqual(caesar.basicDirectional.hyperArmor, true);
+  assert.ok(caesar.basicDirectional.dashSpeed < 400);
+  assert.ok(caesar.basicDirectional.damage >= 12);
+  assert.strictEqual(caesar.specialDirectional.dropZone.ms, 10000);
+  assert.strictEqual(caesar.specialDirectional.dropZone.sheet, true);
+
+  const barry = CHARACTERS.barry.moves;
+  assert.strictEqual(barry.basicCharge.kind, 'dive');
+  assert.strictEqual(barry.basicCharge.slamAtFeet, true);
+  assert.strictEqual(barry.specialDefense.chalkTint, 0xe2e4d6);
+  assert.strictEqual(barry.specialDefense.weightMult, 1.45);
+  assert.deepStrictEqual(barry.specialDefense.immune, ['radiation']);
+  assert.strictEqual(barry.specialDirectional.floor, true);
+  assert.strictEqual(barry.specialDirectional.floorLift, 0.22);
+
+  const lana = CHARACTERS.lana.moves;
+  assert.strictEqual(lana.basicCharge.perTravel, 140);
+  assert.strictEqual(lana.specialDefense.name, 'Hydrogen Sponge');
+  assert.strictEqual(lana.specialDefense.reflectProjectiles, undefined);
+  assert.strictEqual(lana.specialDefense.sponge.keep, 0.4);
+  assert.strictEqual(lana.specialDirectional.kind, 'projectile');
+  assert.strictEqual(lana.specialDirectional.onHit.corrode.mult, 0.68);
+  assert.strictEqual(lana.specialDirectional.onHit.chemVulnerable, 1.4);
+  const cracked = { state: 'idle' };
+  applyOnHit({ charDef: { id: 'lana' } }, cracked, lana.specialDirectional, 500);
+  assert.strictEqual(cracked.kinDefMult, 0.68);
+  assert.strictEqual(cracked.chemVulnerableMult, 1.4);
+  const open = resolvePacket(10, 'chemical', null, {}, {});
+  const soft = resolvePacket(10, 'chemical', null, {}, { chemTakenMult: 1.4 });
+  assert.ok(Math.abs(soft - open * 1.4) < 1e-6);
+
+  const indy = CHARACTERS.indy.moves.specialDefense;
+  assert.strictEqual(indy.name, 'Putty Guard');
+  assert.strictEqual(indy.blockReduction, 0.5);
+  assert.strictEqual(indy.noKnockback, true);
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

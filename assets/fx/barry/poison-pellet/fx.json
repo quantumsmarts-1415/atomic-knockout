@@ -1,0 +1,38 @@
+{
+  "projectile": {
+    "file": "poison-pellet-roll-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 13.09,
+    "loop": true,
+    "blend": "normal",
+    "black": 24,
+    "fit": "height",
+    "crop": "frame",
+    "pivot": "center",
+    "hit": false,
+    "heightFrac": 0.46,
+    "aim": false,
+    "spin": 8
+  },
+  "detonate": {
+    "file": "poison-pellet-cloud-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 12,
+    "loop": false,
+    "blend": "normal",
+    "black": 24,
+    "fit": "height",
+    "crop": "frame",
+    "pivot": "bottom",
+    "hit": false,
+    "heightFrac": 1.05,
+    "anchor": "ground"
+  },
+  "blend": "normal",
+  "black": 24,
+  "hit": false
+}

@@ -100,6 +100,11 @@ test('every colorway fighter is a gold-edge (updated art) fighter with 4–6 loo
   assert.ok(updated.has('agatha'), 'agatha lights up from her effect folder before she has colorways');
   assert.ok(updated.has('indy'), 'indy lights up from his effect folder before he has colorways');
   assert.ok(updated.has('saab'), 'saab lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('iona'), 'iona lights up from her effect folder before she has colorways');
+  assert.ok(updated.has('xander'), 'xander lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('caesar'), 'caesar lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('barry'), 'barry lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('lana'), 'lana lights up from her effect folder before she has colorways');
 });
 
 test('fighters without colorways keep their standard look only', () => {

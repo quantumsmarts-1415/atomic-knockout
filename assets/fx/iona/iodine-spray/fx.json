@@ -1,0 +1,18 @@
+{
+  "file": "iodine-spray-jet-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 12,
+  "loop": false,
+  "blend": "normal",
+  "black": 24,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false,
+  "heightFrac": 0.78,
+  "anchor": "contact",
+  "oneshot": true,
+  "flip": true
+}

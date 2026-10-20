@@ -1,0 +1,19 @@
+{
+  "cling": {
+    "file": "cisplatin-clamp-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.05,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "body",
+    "guardAt": 8,
+    "hit": false
+  }
+}

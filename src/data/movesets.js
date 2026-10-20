@@ -750,15 +750,17 @@ export const MOVESETS = {
       vfx: 'fire', vfxColor: 0xfff6d0, baseKnockback: 150, duration: 260, cooldown: 980,
     }),
     basicDirectional: melee('Record Scratch', {
-      type: K, damage: 6, rangeW: 78, onHit: { interrupt: 220 }, vfx: 'strike',
+      type: K, damage: 6, rangeW: 78, angleDeg: 15, onHit: { interrupt: 220 }, vfx: 'strike',
       baseKnockback: 110, knockbackGrowth: 2, duration: 210, cooldown: 480,
     }),
     specialDefense: m('Cisplatin Clamp', {
       kind: 'counter', counterDamage: 7, counterType: C, rootMs: 700,
+      counterKnockback: 0, counterKnockbackGrowth: 0, counterCoat: 'Cisplatin Clamp',
       duration: 560, cooldown: 860, vfx: 'shield', vfxColor: 0xe7eef2,
     }),
     specialDirectional: m('Flame Test', {
-      kind: 'projectile', type: H, damage: 5, type2: C, damage2: 5, vfx: 'fire',
+      kind: 'projectile', type: H, damage: 5, type2: C, damage2: 5, enScale: true, flameTint: true,
+      vfx: 'fire',
       projectileSpeed: 460, projectileRadius: 12, projectileLife: 680,
       baseKnockback: 150, duration: 230, cooldown: 900,
     }),

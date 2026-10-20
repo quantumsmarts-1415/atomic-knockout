@@ -241,6 +241,32 @@ export function chargeTint(from, to, frac) {
   return (r << 16) | (g << 8) | b;
 }
 
+/** Classic flame-test colours. A pale default covers elements without one. */
+export const FLAME_TEST = {
+  Na: 0xffc83c,
+  K: 0xc8a0ff,
+  Li: 0xff3c50,
+  Sr: 0xe6283c,
+  Ba: 0x96ff78,
+  Cu: 0x50ffa0,
+  Ca: 0xff8232,
+  B: 0x78ff64,
+};
+
+export const FLAME_PALE = 0xfff3d6;
+
+export function flameTestColor(symbol) {
+  return FLAME_TEST[symbol] ?? FLAME_PALE;
+}
+
+/** Ignition sprite scale so the sheet covers about 0.5–0.7 of a gas cloud. */
+export function cloudIgnitionScale(radius, sheetW, fit = 0.6) {
+  const band = Math.max(0.5, Math.min(0.7, Number(fit) || 0.6));
+  const span = radius > 0 ? radius * 2 : 120;
+  const w = sheetW > 0 ? sheetW : 1;
+  return (span * band) / w;
+}
+
 /** How far behind the tip the trail's pivot sits, in display pixels. */
 export function trailBackOffset(displayW, lagFrac) {
   if (!(displayW > 0) || !(lagFrac > 0)) return 0;
@@ -1094,6 +1120,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       floor: merged.floor,
       rumble: merged.rumble,
       flat: merged.flat,
+      guardAt: merged.guardAt,
     });
   }
   await attachShards(scene, id, slug, folder, meta, index, charH, sized, record);
@@ -2326,6 +2353,11 @@ function syncAttached(scene, fighter) {
       const sx = Math.abs(live.img.scaleX || 1);
       const sy = Math.abs(live.img.scaleY || 1);
       live.img.setScale(art.flip ? face * sx : sx, sy);
+      if (art.spin) {
+        const half = (frame?.displayW || 0) / 2;
+        live.img.setPosition(tip.x - face * half * 0.92, tip.y);
+        live.img.rotation = ((scene.simNow ?? 0) / 1000) * art.spin * face;
+      }
     }
     live.img.setDepth(14);
     return;
@@ -2883,7 +2915,26 @@ function dropHeld(fighter) {
   live?.img?.destroy?.();
   live?.rotor?.destroy?.();
   live?.ghost?.destroy?.();
+  live?.glow?.destroy?.();
   if (live) liveHeld.delete(fighter);
+}
+
+function syncChargeGlow(scene, live, glow, x, y, frac, elapsed = 0) {
+  if (!glow?.frames?.length) {
+    live.glow?.destroy?.();
+    live.glow = null;
+    return;
+  }
+  if (!live.glow?.scene) {
+    live.glow?.destroy?.();
+    live.glow = placeStill(scene, glow, x, y, 0);
+    live.glow.setDepth(12);
+  }
+  const frame = glow.frames[fxFrameIndex(glow, elapsed)] || glow.frames[0];
+  applyFrameLook(live.glow, frame, glow, 1);
+  live.glow.setOrigin(glow.pivotX ?? 0.5, glow.pivotY ?? 0.5);
+  live.glow.setPosition(x, y);
+  if (glow.scaleWith === 'alpha') live.glow.setAlpha(0.28 + 0.72 * frac);
 }
 
 function syncMotor(scene, live, want, fighter) {
@@ -3015,7 +3066,7 @@ function syncHeld(scene, fighter) {
   }   else if (art?.charge?.frames?.length && fighter.state === 'charging') {
     const anchor = art.charge.anchor;
     const kind = anchor === 'feet' ? 'feet' : anchor === 'predict' ? 'predict' : 'grow';
-    want = { art: art.charge, kind, rotor: art.rotor || null };
+    want = { art: art.charge, kind, rotor: art.rotor || null, glow: art.glow || null };
   } else if (art?.boost?.frames?.length && (fighter.speedBuffUntil ?? 0) > now) {
     want = { art: art.boost, kind: 'boost' };
   } else if (art?.anchor === 'aura' && art.frames?.length && charge?.overclock) {
@@ -3108,7 +3159,9 @@ function syncHeld(scene, fighter) {
     const hand = sheetFxPoint(fighter, 'shot');
     const fallbackX = fighter.x + face * bodyW * (onHand ? 0.9 : 0.65);
     const fallbackY = onHand ? fighter.y - bodyH * 0.52 : fighter.y;
-    live.img.setPosition(hand?.x ?? fallbackX, hand?.y ?? fallbackY);
+    const heldX = hand?.x ?? fallbackX;
+    const heldY = hand?.y ?? fallbackY;
+    live.img.setPosition(heldX, heldY);
     if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
     if (want.art.tintFrom != null && want.art.tintTo != null) {
       live.img.setTint?.(chargeTint(want.art.tintFrom, want.art.tintTo, frac));
@@ -3116,6 +3169,7 @@ function syncHeld(scene, fighter) {
     const mirror = want.art.flip ? -face : face;
     live.img.setScale(mirror * Math.abs(live.img.scaleX || 1) * shot, Math.abs(live.img.scaleY || 1) * shot);
     syncRotor(scene, live, want.rotor, fighter, frac);
+    syncChargeGlow(scene, live, want.glow, heldX, heldY, frac, now - (fighter.chargeStart ?? now));
     return;
   }
   if (want.kind === 'boost') {
@@ -3175,6 +3229,7 @@ function playPacked(scene, art, x, y, face = 1, along = null, rot = null) {
   const painted = rot != null ? { ...art, _rot: rot } : art;
   if (rot != null) img.rotation = rot;
   trackOneShot(scene, img, painted, drawn, null, face);
+  return img;
 }
 
 /** X-ray cone, origin on the handheld unit's nozzle. Left side rotates around that origin. */
@@ -3252,7 +3307,10 @@ export function spawnContactFx(scene, attacker, victim, move) {
     const sparkFace = painted.spark.flip ? (attacker.facing || 1) : 1;
     playPacked(scene, painted.spark, at.x, at.y, sparkFace, impactRadiusScale(move, painted.spark));
   }
-  if (playsFinalImpact(move) && !painted?.releaseImpact) playPacked(scene, impact, at.x, at.y, face, along, rot);
+  if (playsFinalImpact(move) && !painted?.releaseImpact) {
+    const flash = playPacked(scene, impact, at.x, at.y, face, along, rot);
+    if (move?.flameTint && flash?.setTint) flash.setTint(flameTestColor(victim?.charDef?.symbol));
+  }
   if (move?.onHit?.heal && painted?.heal?.frames?.length) {
     const chest = attacker.y - (attacker.bodyH ?? 80) * 0.62;
     playPacked(scene, painted.heal, attacker.x, chest, 1);

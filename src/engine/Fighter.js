@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
-import { canonicalType, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
+import { canonicalType, enGapMult, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defense.js';
 import { applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, lightUnquenchable, prepareMove, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
@@ -174,6 +174,14 @@ function dealtDamage(attacker, move, defender) {
     return { total: amount, packets: [{ type, base: amount, dealt: amount }] };
   }
   move = prepareMove(move, attacker, defender, now);
+  if (move?.enScale && attacker?.charDef?.combat && defender.charDef?.combat) {
+    const mult = enGapMult(attacker.charDef.combat, defender.charDef.combat);
+    move = {
+      ...move,
+      damage: canonicalType(move.type) === 'heat' ? (move.damage ?? 0) * mult : move.damage,
+      damage2: canonicalType(move.type2) === 'heat' ? (move.damage2 ?? 0) * mult : move.damage2,
+    };
+  }
   const opts = combatOpts(defender);
   if (move?.chemDealtMult) opts.chemDealtMult = move.chemDealtMult;
   if (move?.ignoreDefense) opts.ignoreDefense = true;

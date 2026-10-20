@@ -30,7 +30,7 @@ import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
+import { artFor, cloudIgnitionScale, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
@@ -1509,26 +1509,33 @@ export default class BattleScene extends Phaser.Scene {
     }
     if (move.igniteGases && this.zones?.length) {
       const sparks = [];
+      const ignite = artFor(owner?.charDef?.id, move.name)?.ignite;
       for (const z of this.zones) {
-        if (z.dead) continue;
+        if (z.dead || !(z.spec?.gas || z.spec?.cloud)) continue;
         const reach = (move.radius ?? 80) + (z.radius ?? 0);
         if (Phaser.Math.Distance.Between(cx, cy, z.x, z.y) <= reach) {
-          sparks.push({ x: z.x, y: z.y, radius: Math.max(36, (z.radius ?? 40) * 0.65) });
+          sparks.push(z);
         }
       }
-      for (const s of sparks) {
+      for (const z of sparks) {
+        const radius = Math.max(36, (z.radius ?? 40) * 0.65);
         this.resolveBurst(owner, {
           ...move,
           igniteGases: false,
           bonusVsState: null,
+          _noVfx: true,
           type: 'heat',
           damage: move.gasCloud ?? 6,
           type2: undefined,
           damage2: undefined,
-          radius: s.radius,
+          radius,
           chain: null,
           zone: null,
-        }, { x: s.x, y: s.y });
+        }, { x: z.x, y: z.y });
+        if (ignite?.frames?.length && !this.simFast) {
+          const sheet = ignite.frames[0].displayW || 615;
+          spawnFxSprite(this, ignite, z.x, z.y, cloudIgnitionScale(z.radius, sheet, 0.6));
+        }
       }
     }
     if (move.chain && !move._chained) {

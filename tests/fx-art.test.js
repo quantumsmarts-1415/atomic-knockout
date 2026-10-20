@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeTint, chargeWaveAlpha, contentSpan, curieFade, curiePulse, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, playsFinalImpact, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, stickAim, throwGrowth, tintToward, trailBackOffset, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeTint, chargeWaveAlpha, cloudIgnitionScale, contentSpan, curieFade, curiePulse, fadeLoopFrames, flameTestColor, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, playsFinalImpact, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, stickAim, throwGrowth, tintToward, trailBackOffset, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1969,7 +1969,7 @@ test('phosphor bloom, magnetic chill, and curie point match the arrived sheets',
   assert.ok(curieFade(0.725) > 0.4 && curieFade(0.725) < 0.6);
   assert.equal(curiePulse(0.2, 400), 1);
   assert.ok(curiePulse(0.8, 0) >= 1);
-  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie', 'assets/fx/terra', 'assets/fx/tara', 'assets/fx/rex', 'assets/fx/wolf', 'assets/fx/oz', 'assets/fx/ira', 'assets/fx/aurelius']) {
+  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie', 'assets/fx/terra', 'assets/fx/tara', 'assets/fx/rex', 'assets/fx/wolf', 'assets/fx/oz', 'assets/fx/ira', 'assets/fx/aurelius', 'assets/fx/pit']) {
     const dirs = fs.statSync(root).isDirectory() && fs.readdirSync(root).some((name) => fs.statSync(`${root}/${name}`).isDirectory())
       ? fs.readdirSync(root).map((name) => `${root}/${name}`).filter((dir) => fs.statSync(dir).isDirectory())
       : [root];
@@ -2199,5 +2199,52 @@ test('oz, ira, and aurelius sheets keep the arrived centres', () => {
       const name = String(file);
       assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, name);
     }
+  }
+});
+
+test('pit sheets scale the cloud ignition and tint the flame test', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const lamp = read('assets/fx/pit/catalyst-ignition/fx.json');
+  assert.equal(lamp.charge.anchor, 'hand');
+  assert.equal(lamp.charge.black, false);
+  assert.equal(lamp.glow.scaleWith, 'alpha');
+  assert.equal(lamp.glow.frames, 24);
+  assert.equal(lamp.glow.fps, 12);
+  assert.equal(lamp.ignite.frames, 24);
+  assert.equal(lamp.ignite.fps, 24);
+  assert.equal(lamp.ignite.hit, false);
+  assert.ok(Math.abs(lamp.ignite.pivotX - 307 / 615) < 1e-9);
+  assert.ok(Math.abs(lamp.ignite.pivotY - 289 / 586) < 1e-9);
+  const cloud = cloudIgnitionScale(64, 615, 0.6);
+  assert.ok(Math.abs(cloud - (128 * 0.6) / 615) < 1e-9);
+  assert.ok(cloudIgnitionScale(64, 615, 0.9) <= (128 * 0.7) / 615);
+  assert.ok(cloudIgnitionScale(64, 615, 0.2) >= (128 * 0.5) / 615);
+  const scratch = read('assets/fx/pit/record-scratch/fx.json');
+  assert.equal(scratch.fist.black, false);
+  assert.equal(scratch.fist.spin, 12);
+  assert.ok(Math.abs(scratch.fist.pivotX - 192 / 384) < 1e-9);
+  assert.equal(scratch.impact.flip, true);
+  assert.equal(scratch.impact.frames, 10);
+  assert.equal(scratch.impact.fps, 24);
+  const clamp = read('assets/fx/pit/cisplatin-clamp/fx.json');
+  assert.equal(clamp.cling.guardAt, 8);
+  assert.equal(clamp.cling.anchor, 'body');
+  assert.equal(clamp.cling.frames, 24);
+  const snap = { frames: Array.from({ length: 24 }, () => ({})), fps: 24, guardAt: 8 };
+  assert.equal(fxFrameIndex(snap, 0), 0);
+  assert.equal(fxFrameIndex(snap, (7 / 24) * 1000), 7);
+  assert.ok(fxFrameIndex(snap, 1000) >= 8);
+  const loop = read('assets/fx/pit/flame-test/fx.json');
+  assert.equal(loop.black, false);
+  assert.ok(Math.abs(loop.pivotX - 292 / 320) < 1e-9);
+  assert.ok(Math.abs(loop.pivotY - 48 / 96) < 1e-9);
+  assert.ok(Math.abs(loop.impact.pivotY - 324 / 384) < 1e-9);
+  assert.equal(flameTestColor('Na'), 0xffc83c);
+  assert.equal(flameTestColor('Li'), 0xff3c50);
+  assert.equal(flameTestColor('Cu'), 0x50ffa0);
+  assert.equal(flameTestColor('Pt'), 0xfff3d6);
+  for (const file of fs.readdirSync('assets/fx/pit', { recursive: true })) {
+    const name = String(file);
+    assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, name);
   }
 });

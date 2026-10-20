@@ -1,0 +1,27 @@
+{
+  "file": "flame-test-loop.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.16,
+  "pivotX": 0.9125,
+  "pivotY": 0.5,
+  "aim": true,
+  "hit": false,
+  "impact": {
+    "file": "flame-test-flare-anim.png",
+    "frames": 16,
+    "cols": 8,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.9,
+    "pivotX": 0.5,
+    "pivotY": 0.84375,
+    "hit": false
+  }
+}

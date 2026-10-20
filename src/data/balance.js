@@ -205,6 +205,12 @@ export function chemicalMult(atk, def) {
   if (!def) return 1;
   if (def.noble) return 0;
   if (atk?.en == null || def.en == null) return 1;
+  return enGapMult(atk, def);
+}
+
+/** Heat scale for a flame test. 1 when either EN is unpublished, including nobles. */
+export function enGapMult(atk, def) {
+  if (atk?.en == null || def?.en == null) return 1;
   const mult = 1 + TUNING.chemPerEn * Math.abs(atk.en - def.en);
   return clamp(mult, TUNING.chemClamp[0], TUNING.chemClamp[1]);
 }

@@ -1,0 +1,30 @@
+{
+  "fist": {
+    "file": "platinum-record.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.5,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "spin": 12,
+    "hit": false
+  },
+  "impact": {
+    "file": "record-scratch-arc-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "flip": true,
+    "hit": false
+  }
+}

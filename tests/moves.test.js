@@ -5,7 +5,7 @@ import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { gateStored, interceptHit } from '../src/engine/defense.js';
 import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, finalBlow, lightUnquenchable, markedStrikeTargets, prepareMove, scaledByHaste, sheetFrameAt, stripBuffs, takingDps, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
-import { resolvePacket } from '../src/data/balance.js';
+import { enGapMult, resolvePacket } from '../src/data/balance.js';
 import { applyImmunities, rearmDefense } from '../src/engine/defense.js';
 
 const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
@@ -1517,6 +1517,36 @@ test('oz, ira, and aurelius keep the approved move rules', () => {
   assert.equal(caught.weightBuff, 2.7);
   assert.ok(caught.weightBuffUntil >= caught.goldUntil);
   assert.ok(caught.frozenUntil > 1000);
+});
+
+test('pit ignites gas clouds and flame-tests by electronegativity', () => {
+  const pit = CHARACTERS.pit.moves;
+  assert.equal(pit.basicCharge.name, 'Catalyst Ignition');
+  assert.equal(pit.basicCharge.igniteGases, true);
+  assert.equal(pit.basicCharge.bonusVsState, undefined);
+  assert.ok(pit.basicCharge.gasCloud > 0);
+  assert.equal(pit.basicDirectional.name, 'Record Scratch');
+  assert.equal(pit.basicDirectional.type, 'kinetic');
+  assert.equal(pit.basicDirectional.angleDeg, 15);
+  assert.ok(pit.basicDirectional.baseKnockback > 0);
+  const clamp = pit.specialDefense;
+  assert.equal(clamp.name, 'Cisplatin Clamp');
+  assert.equal(clamp.counterType, 'chemical');
+  assert.equal(clamp.counterDamage, 7);
+  assert.equal(clamp.rootMs, 700);
+  assert.equal(clamp.counterKnockback, 0);
+  assert.equal(clamp.counterCoat, 'Cisplatin Clamp');
+  const flare = pit.specialDirectional;
+  assert.equal(flare.name, 'Flame Test');
+  assert.equal(flare.type, 'heat');
+  assert.equal(flare.type2, 'chemical');
+  assert.equal(flare.enScale, true);
+  assert.equal(flare.flameTint, true);
+  const wide = enGapMult({ en: 2.28 }, { en: 0.93 });
+  const close = enGapMult({ en: 2.28 }, { en: 2.2 });
+  assert.ok(wide > close);
+  assert.equal(enGapMult({ en: 2.28 }, { en: null }), 1);
+  assert.equal(enGapMult({ en: null }, { en: 1.0 }), 1);
 });
 
 function fake(id, x, y) {

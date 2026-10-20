@@ -1054,6 +1054,31 @@ test('goldie kits follow the approved brief', () => {
   assert.strictEqual(CHARACTERS.helen.combat.metal, false);
 });
 
+test('terra kits follow the approved brief', () => {
+  const moves = CHARACTERS.terra.moves;
+  const sonar = moves.basicCharge;
+  assert.strictEqual(sonar.name, 'Sonar Pulse');
+  assert.strictEqual(sonar.kind, 'beam');
+  assert.strictEqual(sonar.type, 'kinetic');
+  assert.strictEqual(sonar.damage, 7);
+  assert.strictEqual(sonar.breakPhase, true);
+  assert.strictEqual(sonar.onHit.reveal, true);
+  assert.strictEqual(sonar.stageWide, true);
+  const punch = moves.basicDirectional;
+  assert.strictEqual(punch.name, 'Flex Punch');
+  assert.strictEqual(punch.type, 'kinetic');
+  assert.strictEqual(punch.damage, 8);
+  const speaker = moves.specialDefense;
+  assert.strictEqual(speaker.name, 'Floor Speaker');
+  assert.strictEqual(speaker.retort.type, 'kinetic');
+  assert.strictEqual(speaker.retort.damage, 6);
+  const bolt = moves.specialDirectional;
+  assert.strictEqual(bolt.name, 'Green Phosphor Bolt');
+  assert.strictEqual(bolt.kind, 'projectile');
+  assert.strictEqual(bolt.type, 'radiation');
+  assert.strictEqual(bolt.damage, 8);
+});
+
 function fake(id, x, y) {
   return {
     x, y, alive: true, state: 'idle', charDef: CHARACTERS[id], bodyW: 60, bodyH: 110,

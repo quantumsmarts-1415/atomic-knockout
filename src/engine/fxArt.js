@@ -483,6 +483,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     keepSlash: !!extra.keepSlash,
     oneshot: !!extra.oneshot,
     stageFit: !!extra.stageFit,
+    fromBody: !!extra.fromBody,
     maxAlpha: extra.maxAlpha > 0 && extra.maxAlpha < 1 ? extra.maxAlpha : 0,
   };
 }
@@ -980,6 +981,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
     keepSlash: !!meta.keepSlash,
     oneshot: !!meta.oneshot,
     stageFit: meta.fit === 'stage',
+    fromBody: !!meta.fromBody,
     maxAlpha: meta.maxAlpha > 0 && meta.maxAlpha < 1 ? meta.maxAlpha : 0,
   };
   const inherit = { blend: meta.blend, black: meta.black };
@@ -1322,8 +1324,22 @@ export function stepPlacedFx(img, art, elapsed, face = 1) {
 export function spawnStageSpan(scene, fighter, art) {
   if (!art?.frames?.length || !scene?.add?.image || scene.simFast) return null;
   const frame = art.frames[0];
-  const box = stageSpanSize(scene, frame);
   const face = fighter?.facing || 1;
+  if (art.fromBody) {
+    const worldW = scene?.world?.width > 0 ? scene.world.width : 1280;
+    const box = { w: worldW, h: frame.displayH > 0 ? frame.displayH : frame.displayW };
+    const bodyW = fighter?.bodyW ?? 40;
+    const bodyH = fighter?.bodyH ?? 80;
+    const x = (fighter?.x ?? 0) + face * bodyW * 0.35;
+    const y = (fighter?.y ?? 0) - bodyH * 0.55;
+    const img = placeStill(scene, art, x, y, 0);
+    applyFrameLook(img, frame, art, 1, box);
+    img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+    applyFacing(img, face);
+    trackOneShot(scene, img, art, 1, null, face, box);
+    return img;
+  }
+  const box = stageSpanSize(scene, frame);
   const fromLeft = (art.pivotX ?? 0.5) < 0.05;
   const x = fromLeft ? (face < 0 ? box.w : 0) : box.w / 2;
   const y = (fighter?.y ?? 0) - (fighter?.bodyH ?? 80) * 0.5;

@@ -1,0 +1,32 @@
+{
+  "file": "sonar-pulse-anim.png",
+  "frames": 18,
+  "cols": 3,
+  "rows": 6,
+  "fps": 15,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "stage",
+  "fromBody": true,
+  "pivotX": 0.046875,
+  "pivotY": 0.5,
+  "hit": false,
+  "charge": {
+    "file": "alloy-flex-charge-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "body",
+    "hit": false,
+    "heightFrac": 1.05,
+    "scaleWith": "alpha"
+  }
+}

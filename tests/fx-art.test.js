@@ -1620,6 +1620,38 @@ test('europa sheets match the approved handoff', () => {
   }
 });
 
+test('terra sonar and phosphor bolt match the arrived sheets', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const sonar = read('assets/fx/terra/sonar-pulse/fx.json');
+  assert.equal(sonar.file, 'sonar-pulse-anim.png');
+  assert.equal(sonar.frames, 18);
+  assert.equal(sonar.cols, 3);
+  assert.equal(sonar.rows, 6);
+  assert.equal(sonar.fps, 15);
+  assert.equal(sonar.fit, 'stage');
+  assert.equal(sonar.fromBody, true);
+  assert.equal(sonar.hit, false);
+  assert.ok(Math.abs(sonar.pivotX - 60 / 1280) < 1e-6);
+  assert.equal(sonar.pivotY, 0.5);
+  assert.equal(sonar.charge.file, 'alloy-flex-charge-anim.png');
+  assert.equal(sonar.charge.anchor, 'body');
+  assert.equal(sonar.charge.loop, true);
+  assert.equal(sonar.charge.scaleWith, 'alpha');
+  const bolt = read('assets/fx/terra/green-phosphor-bolt/fx.json');
+  assert.equal(bolt.file, 'green-phosphor-bolt-anim.png');
+  assert.equal(bolt.frames, 12);
+  assert.equal(bolt.fps, 24);
+  assert.equal(bolt.loop, true);
+  assert.ok(Math.abs(bolt.pivotX - 400 / 512) < 1e-6);
+  assert.equal(bolt.pivotY, 0.5);
+  assert.equal(bolt.crop, undefined);
+  assert.equal(bolt.impact.file, 'green-phosphor-bolt-impact-anim.png');
+  assert.equal(bolt.impact.frames, 24);
+  assert.equal(bolt.impact.fps, 16);
+  assert.ok(bolt.impact.scale >= 0.3 && bolt.impact.scale <= 0.4);
+  assert.equal(bolt.impact.hit, false);
+});
+
 test('phosphor bloom, magnetic chill, and curie point match the arrived sheets', () => {
   const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
   const bloom = read('assets/fx/europa/phosphor-bloom/fx.json');
@@ -1666,7 +1698,7 @@ test('phosphor bloom, magnetic chill, and curie point match the arrived sheets',
   assert.ok(curieFade(0.725) > 0.4 && curieFade(0.725) < 0.6);
   assert.equal(curiePulse(0.2, 400), 1);
   assert.ok(curiePulse(0.8, 0) >= 1);
-  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie']) {
+  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie', 'assets/fx/terra']) {
     const dirs = fs.statSync(root).isDirectory() && fs.readdirSync(root).some((name) => fs.statSync(`${root}/${name}`).isDirectory())
       ? fs.readdirSync(root).map((name) => `${root}/${name}`).filter((dir) => fs.statSync(dir).isDirectory())
       : [root];

@@ -1527,7 +1527,13 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   resolveBeam(owner, move) {
-    const len = (move.beamLen ?? 160) * (move._beamScale ?? 1);
+    let len = (move.beamLen ?? 160) * (move._beamScale ?? 1);
+    if (move.stageWide) {
+      const worldW = this.world?.width > 0 ? this.world.width : 1280;
+      const face = owner.facing === 1 ? 1 : -1;
+      const startX = owner.x + face * owner.bodyW * 0.2;
+      len = face > 0 ? Math.max(48, worldW - startX) : Math.max(48, startX);
+    }
     const thick = move.beamThick ?? 20;
     const x = owner.facing === 1 ? owner.x + owner.bodyW * 0.2 : owner.x - owner.bodyW * 0.2 - len;
     const y = move.ground ? owner.y - thick * 0.5 : owner.y - owner.bodyH * 0.62;

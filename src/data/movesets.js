@@ -1908,6 +1908,7 @@ export const MOVESETS = {
   terra: {
     basicCharge: m('Sonar Pulse', {
       kind: 'beam', type: K, damage: 7, breakPhase: true, onHit: { reveal: true },
+      stageWide: true,
       chargeDamageMult: 1.3, chargeLengthMult: 1.15, maxChargeMs: 800,
       beamLen: 520, beamThick: 16, vfx: 'gust', vfxColor: 0xb8f0c8,
       baseKnockback: 50, knockbackGrowth: 1.0, duration: 220, cooldown: 820,

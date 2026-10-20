@@ -1220,7 +1220,8 @@ export function stepFxProjectile(p, time) {
     return;
   }
   if (p.fxSpin) {
-    p.gfx.rotation = ((time - (p.born || 0)) / 1000) * p.fxSpin;
+    const travel = p.move?.floor ? (Math.sign(p.vx || 1) || 1) : 1;
+    p.gfx.rotation = ((time - (p.born || 0)) / 1000) * p.fxSpin * travel;
     if (p.fxPulse && p.fxDisplayW) {
       const s = 1 + Math.sin((time - (p.born || 0)) / 150) * p.fxPulse;
       p.gfx.setDisplaySize(p.fxDisplayW * s, p.fxDisplayH * s);

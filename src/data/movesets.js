@@ -1083,7 +1083,7 @@ export const MOVESETS = {
       duration: 740, cooldown: 880, vfx: 'fire', vfxColor: 0xffd0a0,
     }),
     specialDirectional: m('Dwarf Planet', {
-      kind: 'projectile', type: K, damage: 6, ground: true, vfx: 'strike',
+      kind: 'projectile', type: K, damage: 6, ground: true, floor: true, floorLift: 0.5, vfx: 'strike',
       projectileSpeed: 300, projectileRadius: 16, projectileLife: 780,
       baseKnockback: 140, knockbackGrowth: 2.4, duration: 240, cooldown: 640,
     }),

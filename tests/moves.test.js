@@ -969,6 +969,13 @@ test('batch 11 kits follow the approved briefs', () => {
   const soft = resolvePacket(10, 'chemical', null, {}, { chemTakenMult: 1.4 });
   assert.ok(Math.abs(soft - open * 1.4) < 1e-6);
 
+  const ceres = CHARACTERS.ceres.moves.specialDirectional;
+  assert.strictEqual(ceres.name, 'Dwarf Planet');
+  assert.strictEqual(ceres.damage, 6);
+  assert.strictEqual(ceres.ground, true);
+  assert.strictEqual(ceres.floor, true);
+  assert.strictEqual(ceres.floorLift, 0.5);
+
   const indy = CHARACTERS.indy.moves.specialDefense;
   assert.strictEqual(indy.name, 'Putty Guard');
   assert.strictEqual(indy.blockReduction, 0.5);

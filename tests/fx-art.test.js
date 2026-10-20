@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeWaveAlpha, contentSpan, curieFade, curiePulse, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, stickAim, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeWaveAlpha, contentSpan, curieFade, curiePulse, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, stickAim, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1659,6 +1659,56 @@ test('mri, palm, flex punch, and floor speaker match the arrived sheets', () => 
   assert.equal(floor.anchor, 'ground');
   assert.equal(floor.fit, 'pixel');
   assert.ok(Math.abs(floor.pivotY - (192 - 40) / 192) < 0.001);
+});
+
+test('holly laser, calibration, bend, and pole piece match the arrived sheets', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const laser = read('assets/fx/holly/stone-breaker/fx.json');
+  assert.equal(laser.file, 'holmium-laser-beam-anim.png');
+  assert.equal(laser.frames, 6);
+  assert.equal(laser.fps, 24);
+  assert.equal(laser.loop, true);
+  assert.equal(laser.fit, 'pixel');
+  assert.ok(Math.abs(laser.pivotX - 60 / 1280) < 1e-6);
+  assert.ok(Math.abs(laser.pivotY - 120 / 240) < 1e-6);
+  assert.equal(laser.charge.scaleWith, 'alpha');
+  assert.equal(laser.charge.anchor, 'body');
+  assert.equal(laser.impact.flip, true);
+  assert.equal(laser.impact.frames, 12);
+  const tap = beamDrawScale({ beamLen: 136, beamArtPx: 1100, beamCap: 1100, _beamScale: 1 });
+  assert.ok(Math.abs(tap - 136 / 1100) < 1e-9);
+  const full = beamDrawScale({ beamLen: 136, beamArtPx: 1100, beamCap: 1100, _beamScale: 1.7 });
+  assert.ok(full > tap && full < 1);
+  const strike = read('assets/fx/holly/calibration-strike/fx.json');
+  assert.equal(strike.file, undefined);
+  assert.equal(strike.impact.frames, 14);
+  assert.equal(strike.impact.fps, 24);
+  assert.equal(strike.impact.pivotX, 0.5);
+  const bend = read('assets/fx/holly/bend-dont-break/fx.json');
+  assert.equal(bend.anchor, 'body');
+  assert.equal(bend.loop, true);
+  assert.equal(bend.frames, 24);
+  const pole = read('assets/fx/holly/pole-piece/fx.json');
+  assert.equal(pole.file, 'pole-piece.png');
+  assert.equal(pole.black, false);
+  assert.equal(pole.aim, false);
+  assert.ok(Math.abs(pole.pivotX - 128 / 256) < 1e-6);
+  assert.ok(Math.abs(pole.pivotY - 138 / 256) < 1e-6);
+  assert.ok(Math.abs(pole.spin - 2.5 * Math.PI * 2) < 1e-3);
+  assert.equal(pole.field.loop, true);
+  assert.equal(pole.field.frames, 24);
+  assert.equal(pole.impact.scaleTo, 'radius');
+  assert.equal(pole.impact.flashRadius, 290);
+  assert.equal(pole.impact.frames, 24);
+  assert.ok(Math.abs(pole.impact.pivotX - 294 / 588) < 1e-6);
+  assert.ok(Math.abs(pole.impact.pivotY - 289 / 576) < 1e-6);
+  const scale = impactRadiusScale({ projectileRadius: 22 }, pole.impact);
+  assert.ok(Math.abs(scale - 22 / 290) < 1e-9);
+  assert.equal(pullFieldSize(110), 220);
+  for (const file of fs.readdirSync('assets/fx/holly', { recursive: true })) {
+    const name = String(file);
+    assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, name);
+  }
 });
 
 test('dizzy turbine, motor, rod wall, and spotlight match the arrived sheets', () => {

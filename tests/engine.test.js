@@ -37,7 +37,8 @@ const mockObj = {
   setVisible: function() { return this; },
   setTintFill: function() { return this; },
   clearTint: function() { return this; },
-  play: function() { return this; }
+  play: function() { return this; },
+  setFlipX: function() { return this; },
 };
 
 let velocityX = 0, velocityY = 0;
@@ -466,6 +467,49 @@ test('a full defining second freezes for three seconds and the sponge drinks che
   }, 1100, 1);
   assert.ok(nicked > 0 && nicked < 10, `partial sponge damage ${nicked}`);
   assert.ok(lana._sponge > 8);
+});
+
+test('calibration strike is the listed number through defense and buffs', () => {
+  const scene = createMockScene();
+  const rig = { animate() {}, setFlash() {}, play() {}, updateSheetFacing() {}, setAlpha() {}, setDepth() {} };
+  const holly = CHARACTERS.holly;
+  const attacker = new Fighter(scene, -80, 0, holly, 0, 0);
+  attacker.rig = rig;
+  attacker.attackPowerUntil = 9000;
+  attacker.attackPower = 1.8;
+  attacker.bonusHits = 3;
+  attacker.bonusPacket = { type: 'kinetic', damage: 6 };
+  const victim = new Fighter(scene, 40, 0, CHARACTERS.bord, 0, 0);
+  victim.rig = rig;
+  victim.kineticResistUntil = 9000;
+  victim.kineticResistMult = 0.35;
+  victim.state = 'defending';
+  victim.defenseMove = { name: 'Guard', kind: 'block', blockReduction: 0.8, onlyReduce: ['kinetic'] };
+  const dmg = victim.takeHit(attacker, holly.moves.basicDirectional, 1000, 1);
+  assert.strictEqual(dmg, 7);
+  assert.strictEqual(victim.percent, 7);
+});
+
+test('bend don\'t break keeps Holly standing and cuts kinetic hits', () => {
+  const scene = createMockScene();
+  const rig = { animate() {}, setFlash() {}, play() {}, updateSheetFacing() {}, setAlpha() {}, setDepth() {} };
+  const attacker = new Fighter(scene, -90, 0, CHARACTERS.sandy, 0, 0);
+  attacker.rig = rig;
+  const open = new Fighter(scene, 40, 0, CHARACTERS.holly, 0, 0);
+  const guarded = new Fighter(scene, 40, 0, CHARACTERS.holly, 0, 0);
+  open.rig = rig;
+  guarded.rig = rig;
+  guarded.state = 'defending';
+  guarded.defenseMove = CHARACTERS.holly.moves.specialDefense;
+  const shot = { type: 'kinetic', damage: 10, baseKnockback: 320, knockbackGrowth: 6 };
+  const raw = open.takeHit(attacker, shot, 1000, 1);
+  const cut = guarded.takeHit(attacker, shot, 1000, 1);
+  assert.ok(cut > 0 && cut < raw, `reduced kinetic ${cut} vs ${raw}`);
+  assert.strictEqual(guarded.state, 'defending');
+  assert.ok(!guarded.pendingLaunch);
+  guarded.takeHit(attacker, { type: 'heat', damage: 8, baseKnockback: 400, knockbackGrowth: 8 }, 1100, 1);
+  assert.strictEqual(guarded.state, 'defending');
+  assert.ok(!guarded.pendingLaunch);
 });
 
 test('a dive stops at the ledge and hops back if it is already past it', () => {

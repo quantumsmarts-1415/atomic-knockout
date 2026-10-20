@@ -2358,6 +2358,23 @@ export default class BattleScene extends Phaser.Scene {
           break;
         }
       }
+      if (!p.dead && p.move.pullProjectiles > 0 && !p.pinned) {
+        const reach = p.move.pullProjectiles;
+        const strength = p.move.pullStrength ?? 18;
+        for (const other of this.projectiles) {
+          if (other === p || other.dead || other.pinned || !other.gfx) continue;
+          const dx = p.gfx.x - other.gfx.x;
+          const dy = p.gfx.y - other.gfx.y;
+          const dist = Math.hypot(dx, dy);
+          if (!(dist > 0.5) || dist > reach) continue;
+          other.vx += (dx / dist) * strength;
+          other.vy += (dy / dist) * strength;
+          if (dist < (p.radius ?? 16) + (other.radius ?? 12)) {
+            other.gfx.destroy?.();
+            other.dead = true;
+          }
+        }
+      }
       if (!p.dead) {
         for (const f of this.fighters) {
           const pull = (f.state === 'attack' && f.currentMove?.attractProjectiles)

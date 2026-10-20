@@ -1,0 +1,43 @@
+{
+  "file": "pole-piece.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.48,
+  "pivotX": 0.5,
+  "pivotY": 0.5390625,
+  "hit": false,
+  "aim": false,
+  "spin": 15.708,
+  "field": {
+    "file": "pole-piece-pull-field-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  },
+  "impact": {
+    "file": "pole-piece-impact-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.501736111,
+    "hit": false,
+    "scaleTo": "radius",
+    "flashRadius": 290
+  }
+}

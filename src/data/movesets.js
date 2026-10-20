@@ -1627,20 +1627,24 @@ export const MOVESETS = {
     basicCharge: m('Stone Breaker', {
       kind: 'beam', type: H, damage: 9, chargeDamageMult: 1.4, chargeLengthMult: 1.7,
       bonusVsId: { carter: 2, bord: 2, silas: 2 },
-      maxChargeMs: 900, beamLen: 136, beamThick: 16, vfx: 'laser', vfxColor: 0xffb0c8,
+      maxChargeMs: 900, beamLen: 136, beamThick: 16, beamArtPx: 1100, beamCap: 1100,
+      vfx: 'laser', vfxColor: 0xffb0c8,
       baseKnockback: 80, knockbackGrowth: 1.5, duration: 200, cooldown: 780,
     }),
     basicDirectional: melee('Calibration Strike', {
-      type: K, damage: 7, ignoreDefense: true, rangeW: 68, vfx: 'strike', vfxColor: 0xf2c4d4,
+      type: K, damage: 7, fixed: true, breaksBlock: true, rangeW: 68, vfx: 'strike', vfxColor: 0xf2c4d4,
       baseKnockback: 80, knockbackGrowth: 1.3, duration: 190, cooldown: 440,
     }),
     specialDefense: m("Bend Don't Break", {
-      kind: 'block', onlyReduce: [K], blockReduction: 0.45, noKnockback: true,
+      kind: 'block', onlyReduce: [K], blockReduction: 0.45, noKnockback: true, noKnockdown: true,
       duration: 720, cooldown: 840, vfx: 'shield', vfxColor: 0xf0b8cc,
     }),
-    specialDirectional: melee('Pole Piece', {
-      type: K, damage: 8, attractProjectiles: 16, rangeW: 72, vfx: 'spark', vfxColor: 0xe8a0b8,
-      baseKnockback: 100, knockbackGrowth: 1.8, duration: 240, cooldown: 520,
+    specialDirectional: m('Pole Piece', {
+      kind: 'projectile', type: K, damage: 8,
+      projectileSpeed: 480, projectileRadius: 22, projectileLife: 720,
+      pullProjectiles: 110, pullStrength: 18,
+      vfx: 'spark', vfxColor: 0xe8a0b8,
+      baseKnockback: 100, knockbackGrowth: 1.8, duration: 220, cooldown: 620,
     }),
   },
 

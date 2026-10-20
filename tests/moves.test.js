@@ -1082,6 +1082,45 @@ test('terra kits follow the approved brief', () => {
   assert.strictEqual(bolt.damage, 8);
 });
 
+test('holly kits follow the approved brief', () => {
+  const moves = CHARACTERS.holly.moves;
+  const laser = moves.basicCharge;
+  assert.strictEqual(laser.name, 'Stone Breaker');
+  assert.strictEqual(laser.kind, 'beam');
+  assert.strictEqual(laser.type, 'heat');
+  assert.strictEqual(laser.damage, 9);
+  assert.strictEqual(laser.beamArtPx, 1100);
+  assert.deepStrictEqual(laser.bonusVsId, { carter: 2, bord: 2, silas: 2 });
+  const doubled = prepareMove(laser, {}, { charDef: { id: 'silas' } }, 0);
+  assert.strictEqual(doubled.damage, 18);
+  const plain = prepareMove(laser, {}, { charDef: { id: 'sandy' } }, 0);
+  assert.strictEqual(plain.damage, 9);
+  const strike = moves.basicDirectional;
+  assert.strictEqual(strike.name, 'Calibration Strike');
+  assert.strictEqual(strike.type, 'kinetic');
+  assert.strictEqual(strike.damage, 7);
+  assert.strictEqual(strike.fixed, true);
+  assert.strictEqual(strike.breaksBlock, true);
+  const bend = moves.specialDefense;
+  assert.strictEqual(bend.name, "Bend Don't Break");
+  assert.strictEqual(bend.noKnockdown, true);
+  assert.strictEqual(bend.blockReduction, 0.45);
+  assert.deepStrictEqual(bend.onlyReduce, ['kinetic']);
+  const defender = { state: 'defending', defenseMove: bend, x: 0, y: 0 };
+  const kinetic = interceptHit(defender, {}, { type: 'kinetic', damage: 10 }, 0);
+  assert.strictEqual(kinetic.result, 'partial');
+  assert.strictEqual(kinetic.noKnockback, true);
+  assert.ok(kinetic.reduction >= 0.45);
+  assert.strictEqual(interceptHit(defender, {}, { type: 'heat', damage: 6 }, 0).result, 'pass');
+  const pole = moves.specialDirectional;
+  assert.strictEqual(pole.name, 'Pole Piece');
+  assert.strictEqual(pole.kind, 'projectile');
+  assert.strictEqual(pole.type, 'kinetic');
+  assert.strictEqual(pole.damage, 8);
+  assert.ok(pole.pullProjectiles >= 90);
+  assert.ok(pole.projectileRadius > 0);
+});
+
 test('dizzy kits follow the approved brief', () => {
   const moves = CHARACTERS.dizzy.moves;
   const gust = moves.basicCharge;

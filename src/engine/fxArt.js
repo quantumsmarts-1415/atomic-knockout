@@ -241,6 +241,28 @@ export function chargeWaveAlpha(frac) {
   return 0.4 + 0.6 * t;
 }
 
+/** Beam sprite scale so an authored pixel length matches the gameplay length. */
+export function beamDrawScale(move) {
+  const charge = move?._beamScale > 0 ? move._beamScale : 1;
+  if (!(move?.beamArtPx > 0)) return charge;
+  const len = Math.min(move.beamCap ?? move.beamArtPx, (move.beamLen ?? 160) * charge);
+  return len / move.beamArtPx;
+}
+
+/** Impact scale that fits a bright flash disc to the move's hit radius. */
+export function impactRadiusScale(move, art) {
+  if (art?.scaleTo !== 'radius') return null;
+  const radius = move?.projectileRadius ?? move?.radius ?? 0;
+  const flash = art.flashRadius > 0 ? art.flashRadius : 1;
+  if (!(radius > 0)) return 1;
+  return radius / flash;
+}
+
+/** Pull-field cell spans the pull diameter, so its edge is the pull radius. */
+export function pullFieldSize(radius) {
+  return (radius > 0 ? radius : 0) * 2;
+}
+
 /** Rotor speed while Turbine Gust is charging, in turns per second. */
 export function rotorTurns(frac) {
   const t = Math.max(0, Math.min(1, Number(frac) || 0));
@@ -524,6 +546,8 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     spinTurns: extra.spinTurns > 0 ? extra.spinTurns : 0,
     hitScales: Array.isArray(extra.hitScales) ? extra.hitScales : null,
     hitRots: Array.isArray(extra.hitRots) ? extra.hitRots : null,
+    scaleTo: extra.scaleTo === 'radius' ? 'radius' : null,
+    flashRadius: extra.flashRadius > 0 ? extra.flashRadius : 0,
     maxAlpha: extra.maxAlpha > 0 && extra.maxAlpha < 1 ? extra.maxAlpha : 0,
   };
 }
@@ -950,7 +974,7 @@ const SIDE_SPECS = [
   ['gas', 'gas-'], ['fizzle', 'fizzle-'], ['linger', 'linger-'],
   ['trail', 'trail-'], ['stain', 'stain-'],
   ['warn', 'warn-'], ['glow', 'glow-'], ['hot', 'hot-'],
-  ['rotor', 'rotor-'], ['motor', 'motor-'], ['hold', 'hold-'],
+  ['rotor', 'rotor-'], ['motor', 'motor-'], ['hold', 'hold-'], ['field', 'field-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -984,6 +1008,8 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       scaleWith: merged.scaleWith || null,
       hitScales: merged.hitScales,
       hitRots: merged.hitRots,
+      scaleTo: merged.scaleTo,
+      flashRadius: merged.flashRadius,
     });
   }
   return record;
@@ -1217,11 +1243,24 @@ export function fxProjectileView(scene, owner, move, x, y) {
     hot.setAlpha(0);
     hot.setBlendMode?.(phaserBlend(hotFrame.blend || hotArt.blend));
   }
-  if (trail || hot) {
+  const fieldArt = base?.field;
+  const fieldFrame = fieldArt?.frames?.[0];
+  let field = null;
+  if (fieldFrame && scene.add?.image) {
+    field = scene.add.image(x, y, fieldFrame.key);
+    field.setOrigin(fieldArt.pivotX ?? 0.5, fieldArt.pivotY ?? 0.5);
+    const span = pullFieldSize(move?.pullProjectiles);
+    const size = span > 0 ? span : fieldFrame.displayW;
+    field.setDisplaySize(size, size * (fieldFrame.displayH / Math.max(1, fieldFrame.displayW)));
+    field.setDepth(17);
+    field.setBlendMode?.(phaserBlend(fieldFrame.blend || fieldArt.blend));
+  }
+  if (trail || hot || field) {
     const destroy = img.destroy?.bind(img);
     img.destroy = (...args) => {
       if (trail?.scene) trail.destroy();
       if (hot?.scene) hot.destroy();
+      if (field?.scene) field.destroy();
       return destroy?.(...args);
     };
   }
@@ -1244,6 +1283,8 @@ export function fxProjectileView(scene, owner, move, x, y) {
     fxAim: art.aim !== false,
     fxTrail: trail,
     fxTrailArt: art.trail || null,
+    fxField: field,
+    fxFieldArt: fieldArt || null,
     fxHot: hot,
     fxHotW: hotFrame ? hotFrame.displayW * hotScale : 0,
     fxHotH: hotFrame ? hotFrame.displayH * hotScale : 0,
@@ -1298,6 +1339,22 @@ function stepCurieOrb(p, time) {
   if (hw && hh) hot.setDisplaySize(hw * pulse, hh * pulse);
 }
 
+function stepPullField(p, time) {
+  const field = p?.fxField;
+  const art = p?.fxFieldArt;
+  if (!field?.setPosition || !art?.frames?.length || !p.gfx) return;
+  const fps = art.fps > 0 ? art.fps : 12;
+  const raw = Math.floor(Math.max(0, time - (p.born || 0)) / (1000 / fps));
+  const i = ((raw % art.frames.length) + art.frames.length) % art.frames.length;
+  const frame = art.frames[i];
+  if (field.texture?.key !== frame.key) field.setTexture?.(frame.key);
+  const size = pullFieldSize(p.move?.pullProjectiles) || frame.displayW;
+  field.setDisplaySize?.(size, size * ((frame.displayH || size) / Math.max(1, frame.displayW || size)));
+  field.setOrigin?.(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+  field.setPosition(p.gfx.x, p.gfx.y);
+  field.rotation = 0;
+}
+
 export function stepFxProjectile(p, time) {
   if (!p?.fxFrames || !p.gfx?.setTexture) return;
   const fps = p.fxFps > 0 ? p.fxFps : 8;
@@ -1318,6 +1375,7 @@ export function stepFxProjectile(p, time) {
     }
   }
   stepProjectileTrail(p);
+  stepPullField(p, time);
   if (p.move?.roll) {
     const face = (p.vx || 1) < 0 ? -1 : 1;
     p.gfx.rotation = 0;
@@ -1629,7 +1687,7 @@ export function fxAnchor(fighter, move) {
     return {
       x: posed?.x ?? fighter.x + face * bodyW * 0.2,
       y: posed?.y ?? fighter.y - bodyH * 0.62,
-      scale: move._beamScale > 0 ? move._beamScale : 1,
+      scale: beamDrawScale(move),
     };
   }
   if (art.anchor === 'ground-front' || (art.objectType === 'shield' && move.kind === 'wall' && art.anchor)) {
@@ -2823,6 +2881,8 @@ export function spawnContactFx(scene, attacker, victim, move) {
     const i = Math.min(impact.hitScales.length - 1, step);
     along = impact.hitScales[i];
     rot = impact.hitRots?.[Math.min((impact.hitRots?.length ?? 1) - 1, step)] ?? 0;
+  } else if (along == null) {
+    along = impactRadiusScale(move, impact);
   }
   if (!painted?.releaseImpact) playPacked(scene, impact, at.x, at.y, face, along, rot);
   if (painted?.cling?.frames?.length && victim && move?.onHit?.coat) {

@@ -167,6 +167,12 @@ const BAND_DAMAGE = {
 
 function dealtDamage(attacker, move, defender) {
   const now = defender.scene?.time?.now ?? 0;
+  // Fixed damage is the listed number. Buffs, defense, and the balance band stay off it.
+  if (move?.fixed) {
+    const amount = Math.max(0, move.damage ?? 0);
+    const type = canonicalType(move.type || 'kinetic');
+    return { total: amount, packets: [{ type, base: amount, dealt: amount }] };
+  }
   move = prepareMove(move, attacker, defender, now);
   const opts = combatOpts(defender);
   if (move?.chemDealtMult) opts.chemDealtMult = move.chemDealtMult;
@@ -1759,15 +1765,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const dealt = dealtDamage(attacker, incoming, this);
     let dmg = dealt.total;
     const charging = this.charDef.moves.basicCharge;
-    if (this.state === 'charging' && charging?.whileCharging) {
+    if (!incoming.fixed && this.state === 'charging' && charging?.whileCharging) {
       const except = charging.whileCharging.except ?? [];
       if (!except.includes(incoming.type) && incoming.type !== 'radiation') dmg *= charging.whileCharging.keep ?? 0.5;
     }
-    if (this.mitigateUntil > time) dmg *= this.mitigateMult ?? 0.45;
-    if (this.currentMove?.guardStrike && this.state === 'attack') dmg *= (1 - this.currentMove.guardStrike);
+    if (!incoming.fixed && this.mitigateUntil > time) dmg *= this.mitigateMult ?? 0.45;
+    if (!incoming.fixed && this.currentMove?.guardStrike && this.state === 'attack') dmg *= (1 - this.currentMove.guardStrike);
     const ownBlast = attacker === this && !move.isSelf;
     const contagious = this.poisonInherit && this.poisonUntil > time;
-    if (this.state === 'defending' && this.defenseMove?.flatHit != null && !move.isSelf && dmg > 0 && incoming.name !== 'zone') {
+    if (!incoming.fixed && this.state === 'defending' && this.defenseMove?.flatHit != null && !move.isSelf && dmg > 0 && incoming.name !== 'zone') {
       dmg = this.defenseMove.flatHit;
     }
     if (ownBlast || move.isSelf) {
@@ -1807,8 +1813,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this._shellBroken = true;
     }
     const pinned = this.state === 'defending' && this.defenseMove?.noKnockback && !incoming.isSelf;
-    if (pinned || incoming.noKnockback) kb = 0;
-    this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, !armored);
+    const bend = this.state === 'defending' && this.defenseMove?.noKnockdown && !incoming.isSelf;
+    if (pinned || bend || incoming.noKnockback) kb = 0;
+    this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, !armored && !bend);
     if (incoming.onHit?.reverse && this.pendingLaunch) {
       const back = Math.sign((attacker?.x ?? this.x) - this.x) || -(this.pendingLaunch.dir || 1);
       this.pendingLaunch.dir = back;

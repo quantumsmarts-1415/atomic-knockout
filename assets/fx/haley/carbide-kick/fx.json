@@ -1,0 +1,17 @@
+{
+  "impact": {
+    "file": "carbide-kick-impact-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.505208333,
+    "scale": 0.5,
+    "hit": false
+  }
+}

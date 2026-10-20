@@ -79,6 +79,13 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.mute) {
     victim.muteType = fx.mute;
     victim.muteUntil = time + (fx.muteMs ?? 2600);
+    if (fx.muteCling && attacker?.charDef?.id) {
+      victim.clingFrom = {
+        id: attacker.charDef.id,
+        move: move.name,
+        until: victim.muteUntil,
+      };
+    }
   }
   if (fx.muteSpecialMs) {
     victim.specialMutedUntil = Math.max(victim.specialMutedUntil ?? 0, time + fx.muteSpecialMs);

@@ -1661,6 +1661,56 @@ test('mri, palm, flex punch, and floor speaker match the arrived sheets', () => 
   assert.ok(Math.abs(floor.pivotY - (192 - 40) / 192) < 0.001);
 });
 
+test('haley cutter, kick, gate, and disc match the arrived sheets', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const cutter = read('assets/fx/haley/plasma-cutter/fx.json');
+  assert.equal(cutter.file, 'plasma-cutter-slash-anim.png');
+  assert.equal(cutter.frames, 12);
+  assert.equal(cutter.fps, 24);
+  assert.equal(cutter.loop, false);
+  assert.equal(cutter.flip, true);
+  assert.equal(cutter.oneshot, true);
+  assert.ok(Math.abs(cutter.pivotX - 220 / 512) < 1e-6);
+  assert.equal(cutter.charge.scaleWith, 'alpha');
+  assert.equal(cutter.charge.anchor, 'body');
+  assert.equal(cutter.charge.frames, 12);
+  assert.equal(cutter.charge.fps, 24);
+  const kick = read('assets/fx/haley/carbide-kick/fx.json');
+  assert.equal(kick.file, undefined);
+  assert.equal(kick.impact.frames, 24);
+  assert.equal(kick.impact.fps, 16);
+  assert.ok(kick.impact.scale >= 0.4 && kick.impact.scale <= 0.6);
+  assert.ok(Math.abs(kick.impact.pivotX - 294 / 588) < 1e-6);
+  assert.ok(Math.abs(kick.impact.pivotY - 291 / 576) < 1e-6);
+  const gate = read('assets/fx/haley/high-k-gate/fx.json');
+  assert.equal(gate.blend, 'normal');
+  assert.equal(gate.black, false);
+  assert.equal(gate.loop, true);
+  assert.equal(gate.frames, 24);
+  assert.equal(gate.fps, 12);
+  assert.equal(gate.anchor, 'ground-front');
+  assert.ok(Math.abs(gate.pivotY - 500 / 512) < 1e-6);
+  assert.equal(gate.shatter.frames, 16);
+  assert.equal(gate.shatter.fps, 24);
+  assert.equal(gate.shatter.loop, false);
+  assert.equal(gate.shatter.heightFrac, gate.heightFrac);
+  assert.ok(Math.abs(gate.shatter.pivotY - gate.pivotY) < 1e-9);
+  const disc = read('assets/fx/haley/neutron-sink/fx.json');
+  assert.equal(disc.file, 'hafnium-disc.png');
+  assert.equal(disc.black, false);
+  assert.equal(disc.aim, false);
+  assert.ok(Math.abs(disc.pivotX - 96 / 192) < 1e-6);
+  assert.ok(Math.abs(disc.pivotY - 96 / 192) < 1e-6);
+  assert.ok(disc.spin > Math.PI * 4 && disc.spin < Math.PI * 8);
+  assert.equal(disc.cling.frames, 24);
+  assert.equal(disc.cling.loop, true);
+  assert.equal(disc.cling.anchor, 'body');
+  for (const file of fs.readdirSync('assets/fx/haley', { recursive: true })) {
+    const name = String(file);
+    assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, name);
+  }
+});
+
 test('thule glow jab, far throw, aurora, and x-ray match the arrived sheets', () => {
   const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
   const ultima = read('assets/fx/thule/ultima-thule/fx.json');

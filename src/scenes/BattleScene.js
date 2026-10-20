@@ -2427,6 +2427,19 @@ export default class BattleScene extends Phaser.Scene {
         this.clearPinLock(p);
         continue;
       }
+      if (p.stuck) {
+        const host = p.stuck;
+        const gone = !host?.alive || host.state === 'ko' || host.state === 'dead';
+        if (gone || time > p.dieAt) {
+          p.gfx.destroy();
+          p.dead = true;
+          continue;
+        }
+        p.gfx.x = host.x + p.stuckOx;
+        p.gfx.y = host.y + p.stuckOy;
+        stepFxProjectile(p, time);
+        continue;
+      }
       if (!p.slowed) {
         for (const f of this.fighters) {
           if (f.state !== 'defending' || !f.defenseMove?.slowProjectiles) continue;
@@ -2624,6 +2637,15 @@ export default class BattleScene extends Phaser.Scene {
         }
         // a projectile shoves you the way it was travelling
         this.landHit(p.owner, victim, { ...shot, _projectile: true, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, Math.sign(p.vx) || p.owner.facing);
+        if (p.move.stick && n >= want) {
+          p.stuck = victim;
+          p.stuckOx = p.gfx.x - victim.x;
+          p.stuckOy = p.gfx.y - victim.y;
+          p.vx = 0;
+          p.vy = 0;
+          p.dieAt = time + (p.move.onHit?.muteMs ?? p.move.stickMs ?? 2600);
+          break;
+        }
         if (p.move.carry && victim.body && n < want) {
           victim.body.setVelocity(p.vx * 0.9, Math.min(victim.body.velocity.y, -60));
           p.carried ??= new Set();

@@ -352,6 +352,14 @@ export function interceptHit(defender, attacker, move, time) {
     }
   }
 
+  if (defense.breakOn) {
+    const boom = canonicalType(defense.breakOn);
+    if (types.includes(boom)) {
+      const stripTypes = (defense.blocks || []).filter((t) => t !== boom && types.includes(t));
+      return { result: 'pass', endDefense: true, shatter: true, stripTypes };
+    }
+  }
+
   if (defense.blocks?.length) {
     const blocked = types.filter((t) => defense.blocks.includes(t));
     if (types.length && blocked.length === types.length) return { result: 'negate' };

@@ -469,6 +469,29 @@ test('a full defining second freezes for three seconds and the sponge drinks che
   assert.ok(lana._sponge > 8);
 });
 
+test('high-k gate blocks kinetic and electrical, and heat shatters it', () => {
+  const scene = createMockScene();
+  const rig = { animate() {}, setFlash() {}, play() {}, updateSheetFacing() {}, setAlpha() {}, setDepth() {} };
+  const haley = new Fighter(scene, 40, 0, CHARACTERS.haley, 0, 0);
+  haley.rig = rig;
+  haley.state = 'defending';
+  haley.defenseMove = CHARACTERS.haley.moves.specialDefense;
+  const sandy = new Fighter(scene, -80, 0, CHARACTERS.sandy, 0, 0);
+  sandy.rig = rig;
+  const kinetic = { type: 'kinetic', damage: 10, baseKnockback: 80, knockbackGrowth: 2 };
+  const blocked = haley.takeHit(sandy, kinetic, 1000, 1);
+  assert.strictEqual(blocked, 0);
+  assert.strictEqual(haley.state, 'defending');
+  assert.strictEqual(haley.percent, 0);
+  const sparked = haley.takeHit(sandy, { type: 'electrical', damage: 8, baseKnockback: 40, knockbackGrowth: 1 }, 1100, 1);
+  assert.strictEqual(sparked, 0);
+  assert.strictEqual(haley.state, 'defending');
+  const burned = haley.takeHit(sandy, { type: 'heat', damage: 7, baseKnockback: 40, knockbackGrowth: 1 }, 1200, 1);
+  assert.ok(burned > 0, `heat breaks the gate (${burned})`);
+  assert.notStrictEqual(haley.state, 'defending');
+  assert.strictEqual(haley.defenseMove, null);
+});
+
 test('blue glow jab connects through a phase and flashes the outline', () => {
   const scene = createMockScene();
   const rig = { animate() {}, setFlash() {}, play() {}, updateSheetFacing() {}, setAlpha() {}, setDepth() {} };

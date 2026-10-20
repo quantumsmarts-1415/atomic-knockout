@@ -1364,9 +1364,9 @@ export const MOVESETS = {
   },
 
   haley: {
-    basicCharge: m('Plasma Cutter', {
-      kind: 'beam', type: H, damage: 4, type2: E, damage2: 3, chargeDamageMult: 1.45, chargeLengthMult: 1.8,
-      maxChargeMs: 850, beamLen: 132, beamThick: 16, vfx: 'laser', vfxColor: 0x7ef0ff,
+    basicCharge: melee('Plasma Cutter', {
+      type: H, damage: 4, type2: E, damage2: 3, chargeDamageMult: 1.45,
+      maxChargeMs: 850, rangeW: 92, vfx: 'slash', vfxColor: 0x7ef0ff,
       baseKnockback: 70, knockbackGrowth: 1.2, duration: 200, cooldown: 820,
     }),
     basicDirectional: melee('Carbide Kick', {
@@ -1374,12 +1374,13 @@ export const MOVESETS = {
       baseKnockback: 80, knockbackGrowth: 1.5, duration: 210, cooldown: 500,
     }),
     specialDefense: m('High-K Gate', {
-      immune: [E], duration: 640, cooldown: 800, vfx: 'shield', vfxColor: 0x9ad7ff,
+      kind: 'block', immune: [K, E], blocks: [K, E], breakOn: H,
+      duration: 640, cooldown: 800, vfx: 'shield', vfxColor: 0x9ad7ff,
     }),
     specialDirectional: m('Neutron Sink', {
-      kind: 'projectile', type: K, damage: 4, vfx: 'spark', vfxColor: 0xb8c4d4,
-      onHit: { mute: 'radiation', muteMs: 2600 },
-      projectileSpeed: 440, projectileRadius: 11, projectileLife: 560,
+      kind: 'projectile', type: K, damage: 4, stick: true, vfx: 'spark', vfxColor: 0xb8c4d4,
+      onHit: { mute: 'radiation', muteMs: 2600, muteCling: true },
+      projectileSpeed: 440, projectileRadius: 16, projectileLife: 800,
       baseKnockback: 60, knockbackGrowth: 1.2, duration: 200, cooldown: 760,
     }),
   },

@@ -1082,6 +1082,62 @@ test('terra kits follow the approved brief', () => {
   assert.strictEqual(bolt.damage, 8);
 });
 
+test('haley kits follow the approved brief', () => {
+  const moves = CHARACTERS.haley.moves;
+  const cutter = moves.basicCharge;
+  assert.strictEqual(cutter.name, 'Plasma Cutter');
+  assert.ok(cutter.kind == null || cutter.kind === 'melee');
+  assert.ok(cutter.rangeW > 0 && cutter.rangeW < 110);
+  assert.strictEqual(cutter.type, 'heat');
+  assert.strictEqual(cutter.damage, 4);
+  assert.strictEqual(cutter.type2, 'electrical');
+  assert.strictEqual(cutter.damage2, 3);
+  assert.ok(cutter.chargeDamageMult > 1);
+  const kick = moves.basicDirectional;
+  assert.strictEqual(kick.name, 'Carbide Kick');
+  assert.strictEqual(kick.type, 'kinetic');
+  assert.strictEqual(kick.damage, 4);
+  assert.strictEqual(kick.type2, 'heat');
+  assert.strictEqual(kick.damage2, 3);
+  const gate = moves.specialDefense;
+  assert.strictEqual(gate.name, 'High-K Gate');
+  assert.deepStrictEqual(gate.blocks, ['kinetic', 'electrical']);
+  assert.deepStrictEqual(gate.immune, ['kinetic', 'electrical']);
+  assert.strictEqual(gate.breakOn, 'heat');
+  const defender = { state: 'defending', defenseMove: gate, x: 0, y: 0, facing: 1 };
+  assert.strictEqual(interceptHit(defender, {}, { type: 'kinetic', damage: 8 }, 0).result, 'negate');
+  assert.strictEqual(interceptHit(defender, {}, { type: 'electrical', damage: 8 }, 0).result, 'negate');
+  const heat = interceptHit(defender, {}, { type: 'heat', damage: 6 }, 0);
+  assert.strictEqual(heat.result, 'pass');
+  assert.strictEqual(heat.endDefense, true);
+  assert.strictEqual(heat.shatter, true);
+  const mixed = interceptHit(defender, {}, { type: 'heat', damage: 6, type2: 'kinetic', damage2: 5 }, 0);
+  assert.ok(mixed.stripTypes.includes('kinetic'));
+  const sink = moves.specialDirectional;
+  assert.strictEqual(sink.name, 'Neutron Sink');
+  assert.strictEqual(sink.kind, 'projectile');
+  assert.strictEqual(sink.type, 'kinetic');
+  assert.strictEqual(sink.stick, true);
+  assert.strictEqual(sink.onHit.mute, 'radiation');
+  assert.strictEqual(sink.onHit.muteCling, true);
+  assert.ok(sink.onHit.muteMs >= 2000);
+  const foe = {};
+  applyOnHit({ charDef: { id: 'haley' } }, foe, sink, 1000);
+  assert.strictEqual(foe.muteType, 'radiation');
+  assert.strictEqual(foe.muteUntil, 3600);
+  assert.strictEqual(foe.clingFrom.id, 'haley');
+  assert.strictEqual(foe.clingFrom.move, 'Neutron Sink');
+  assert.strictEqual(foe.clingFrom.until, 3600);
+  const silenced = prepareMove(
+    { type: 'radiation', damage: 9, type2: 'kinetic', damage2: 4 },
+    { muteUntil: 9000, muteType: 'radiation' },
+    { charDef: {} },
+    1000,
+  );
+  assert.strictEqual(silenced.damage, 0);
+  assert.strictEqual(silenced.damage2, 4);
+});
+
 test('thule kits follow the approved brief', () => {
   const moves = CHARACTERS.thule.moves;
   const ultima = moves.basicCharge;

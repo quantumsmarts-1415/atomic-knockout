@@ -1120,22 +1120,28 @@ export const MOVESETS = {
   },
 
   dizzy: {
-    basicCharge: melee('Hard to Get', {
-      type: K, damage: 5, whileCharging: { keep: 0.35 }, chargeDamageMult: 1.45,
-      maxChargeMs: 800, rangeW: 72, vfx: 'strike',
-      baseKnockback: 140, knockbackGrowth: 3.4, duration: 240, cooldown: 680,
+    basicCharge: m('Turbine Gust', {
+      kind: 'beam', type: K, damage: 7,
+      chargeDamageMult: 1.6, chargeKnockbackMult: 1.7, chargeLengthMult: 1.35,
+      maxChargeMs: 800, beamLen: 340, beamThick: 52,
+      vfx: 'gust', vfxColor: 0x7ee0d0,
+      baseKnockback: 160, knockbackGrowth: 2.6, duration: 240, cooldown: 740,
     }),
-    basicDirectional: melee('Dizzy Spin', {
-      type: K, damage: 3, multiHit: 3, onHit: { drift: 360 }, rangeW: 68, vfx: 'strike',
-      baseKnockback: 70, knockbackGrowth: 2.4, duration: 320, cooldown: 420,
+    basicDirectional: melee('EV Motor Punch', {
+      type: K, damage: 3, type2: E, damage2: 2, multiHit: 3, fullWhenHot: true,
+      rangeW: 72, vfx: 'spark', vfxColor: 0x5ee0d0,
+      baseKnockback: 55, knockbackGrowth: 1.3, duration: 420, cooldown: 460,
     }),
-    specialDefense: m('Spin Deflect', {
-      reflectProjectiles: true, duration: 640, cooldown: 820, vfx: 'shield', vfxColor: 0xc48bff,
+    specialDefense: m('Control Rod Wall', {
+      blocks: [K, R], offsetX: 90,
+      duration: 1100, cooldown: 980, vfx: 'shield', vfxColor: 0x8a9aa8,
     }),
-    specialDirectional: m('Vertigo Wave', {
-      kind: 'projectile', type: K, damage: 6, onHit: { drift: 780 }, vfx: 'gust',
-      projectileSpeed: 420, projectileRadius: 14, projectileLife: 540,
-      baseKnockback: 90, knockbackGrowth: 2.4, duration: 220, cooldown: 640,
+    specialDirectional: m('Stage Light Flash', {
+      kind: 'beam', type: H, damage: 8, aimStick: true,
+      beamLen: 480, beamThick: 40, beamCap: 1100, beamArtPx: 1100,
+      onHit: { stun: 1000 },
+      vfx: 'laser', vfxColor: 0xfff2c4,
+      baseKnockback: 70, knockbackGrowth: 1.15, duration: 220, cooldown: 780,
     }),
   },
 

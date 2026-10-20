@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, curieFade, curiePulse, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeWaveAlpha, contentSpan, curieFade, curiePulse, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, stickAim, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1659,6 +1659,74 @@ test('mri, palm, flex punch, and floor speaker match the arrived sheets', () => 
   assert.equal(floor.anchor, 'ground');
   assert.equal(floor.fit, 'pixel');
   assert.ok(Math.abs(floor.pivotY - (192 - 40) / 192) < 0.001);
+});
+
+test('dizzy turbine, motor, rod wall, and spotlight match the arrived sheets', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const gust = read('assets/fx/dizzy/turbine-gust/fx.json');
+  assert.equal(gust.file, 'turbine-gust-wave-anim.png');
+  assert.equal(gust.frames, 18);
+  assert.equal(gust.fps, 15);
+  assert.equal(gust.flip, true);
+  assert.ok(Math.abs(gust.pivotX - 60 / 1024) < 1e-6);
+  assert.equal(gust.pivotY, 0.5);
+  assert.equal(gust.scaleWith, 'charge');
+  assert.equal(gust.charge.anchor, 'body');
+  assert.equal(gust.charge.scaleWith, 'alpha');
+  assert.equal(gust.rotor.file, 'turbine-rotor.png');
+  assert.equal(gust.rotor.aim, false);
+  assert.equal(gust.rotor.black, false);
+  const punch = read('assets/fx/dizzy/ev-motor-punch/fx.json');
+  assert.equal(punch.file, undefined);
+  assert.equal(punch.impact.frames, 16);
+  assert.equal(punch.impact.fps, 22);
+  const impactSec = punch.impact.frames / punch.impact.fps;
+  assert.ok(impactSec >= 0.6 && impactSec <= 0.8, `impact plays in ${impactSec}s`);
+  assert.deepEqual(punch.impact.hitScales, [0.42, 0.5, 0.58]);
+  for (const scale of punch.impact.hitScales) {
+    assert.ok(scale >= 0.4 && scale <= 0.6);
+  }
+  assert.ok(punch.impact.hitScales[2] > punch.impact.hitScales[1]);
+  assert.ok(punch.impact.hitScales[1] > punch.impact.hitScales[0]);
+  assert.equal(punch.impact.hitRots.length, 3);
+  assert.equal(punch.motor.file, 'gauntlet-motor.png');
+  assert.equal(punch.motor.spinTurns, 10);
+  assert.equal(punch.motor.aim, false);
+  assert.equal(punch.spark.loop, true);
+  const wall = read('assets/fx/dizzy/control-rod-wall/fx.json');
+  assert.equal(wall.file, 'rod-wall-rise-anim.png');
+  assert.equal(wall.frames, 12);
+  assert.equal(wall.fps, 24);
+  assert.equal(wall.loop, false);
+  assert.equal(wall.reverseOnRelease, true);
+  assert.equal(wall.anchor, 'ground');
+  assert.ok(Math.abs(wall.pivotY - (640 - 40) / 640) < 1e-6);
+  assert.equal(wall.hold.file, 'rod-wall-hold-anim.png');
+  assert.equal(wall.hold.loop, true);
+  assert.equal(wall.hold.frames, 24);
+  const flash = read('assets/fx/dizzy/stage-light-flash/fx.json');
+  assert.equal(flash.file, 'stage-light-beam-anim.png');
+  assert.equal(flash.fit, 'pixel');
+  assert.ok(Math.abs(flash.pivotX - 60 / 1280) < 1e-6);
+  assert.ok(Math.abs(flash.pivotY - 200 / 400) < 1e-6);
+  assert.equal(flash.flip, undefined);
+  assert.equal(flash.cling.anchor, 'body');
+  assert.equal(flash.cling.loop, true);
+  assert.equal(rotorTurns(0), 1);
+  assert.equal(rotorTurns(1), 6);
+  assert.equal(chargeWaveAlpha(0), 0.4);
+  assert.equal(chargeWaveAlpha(1), 1);
+  assert.equal(chargeFrac({ _chargeFrac: 0.5 }), 0.5);
+  assert.ok(Math.abs(fxGameplayScale({ _chargeFrac: 1 }, { scaleWith: 'charge' }) - 1.28) < 1e-9);
+  assert.deepEqual(reverseFrameOrder(4), [3, 2, 1, 0]);
+  const up = stickAim({ facing: 1, input: { jump: true } });
+  assert.ok(Math.abs(up.y + 1) < 1e-9);
+  const idle = stickAim({ facing: -1, input: {} });
+  assert.equal(idle.x, -1);
+  for (const file of fs.readdirSync('assets/fx/dizzy', { recursive: true })) {
+    const name = String(file);
+    assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, name);
+  }
 });
 
 test('terra sonar and phosphor bolt match the arrived sheets', () => {

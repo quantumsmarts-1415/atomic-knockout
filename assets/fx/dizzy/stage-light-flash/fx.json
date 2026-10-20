@@ -1,0 +1,30 @@
+{
+  "file": "stage-light-beam-anim.png",
+  "frames": 18,
+  "cols": 3,
+  "rows": 6,
+  "fps": 15,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "pixel",
+  "pivotX": 0.046875,
+  "pivotY": 0.5,
+  "hit": false,
+  "cling": {
+    "file": "stage-light-stun-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.05,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "body",
+    "hit": false
+  }
+}

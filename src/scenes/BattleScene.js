@@ -30,7 +30,7 @@ import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, syncFxActors, tickGeysers } from '../engine/fxArt.js';
+import { artFor, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, tickGeysers } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
@@ -46,6 +46,14 @@ const BOT_SLOT_BASE = 100;
 // palettes) from scene data so menus can configure it; falls back to a
 // default Hydra vs Helen match when launched directly.
 // ---------------------------------------------------------------------------
+function distToSegment(px, py, ax, ay, bx, by) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len2 = dx * dx + dy * dy || 1;
+  const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
 export default class BattleScene extends Phaser.Scene {
   constructor() {
     super('Battle');
@@ -1527,6 +1535,32 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   resolveBeam(owner, move) {
+    if (move.aimStick) {
+      const aim = stickAim(owner);
+      const len = Math.min(move.beamCap ?? 1100, (move.beamLen ?? 420) * (move._beamScale || 1));
+      const thick = move.beamThick ?? 36;
+      const bodyW = owner.bodyW ?? 40;
+      const bodyH = owner.bodyH ?? 80;
+      const x0 = owner.x + aim.x * bodyW * 0.35;
+      const y0 = owner.y - bodyH * 0.58 + aim.y * bodyH * 0.12;
+      const x1 = x0 + aim.x * len;
+      const y1 = y0 + aim.y * len;
+      playVfx(this, owner, move, 'release', { fired: true });
+      const dir = Math.sign(aim.x) || owner.facing || 1;
+      const struck = new Set();
+      for (const target of this.fighters) {
+        if (target === owner || !target.alive || target.state === 'ko') continue;
+        if (target.state === 'defending' && target.defenseMove?.untargetable) continue;
+        const cy = target.y - (target.bodyH ?? 80) * 0.45;
+        const reach = thick * 0.5 + (target.bodyW ?? 40) * 0.35;
+        if (distToSegment(target.x, cy, x0, y0, x1, y1) <= reach) {
+          this.landHit(owner, target, move, dir);
+          struck.add(target);
+        }
+      }
+      this.sweepMarked(owner, move, struck);
+      return;
+    }
     let len = (move.beamLen ?? 160) * (move._beamScale ?? 1);
     if (move.stageWide) {
       const worldW = this.world?.width > 0 ? this.world.width : 1280;
@@ -2251,6 +2285,7 @@ export default class BattleScene extends Phaser.Scene {
               swing = { ...swing, damage: (swing.damage ?? 0) + swing.sweetSpot };
             }
           }
+          swing = { ...swing, _hitIndex: n };
           if (swing.shatter) {
             const hb = attacker.getHitboxRect();
             const tip = hb ? (hit.dir === 1 ? hb.right : hb.left) : victim.x;

@@ -1,0 +1,47 @@
+{
+  "impact": {
+    "file": "ev-motor-punch-impact-anim.png",
+    "frames": 16,
+    "cols": 3,
+    "rows": 6,
+    "fps": 22,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "flip": true,
+    "hit": false,
+    "hitScales": [0.42, 0.5, 0.58],
+    "hitRots": [-0.18, 0.12, 0.26]
+  },
+  "motor": {
+    "file": "gauntlet-motor.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.36,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false,
+    "aim": false,
+    "spinTurns": 10
+  },
+  "spark": {
+    "file": "motor-sparks-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.42,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

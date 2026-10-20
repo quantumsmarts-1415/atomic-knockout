@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { gateStored, interceptHit } from '../src/engine/defense.js';
-import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, lightUnquenchable, markedStrikeTargets, scaledByHaste, sheetFrameAt, stripBuffs, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
+import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, lightUnquenchable, markedStrikeTargets, prepareMove, scaledByHaste, sheetFrameAt, stripBuffs, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
 import { resolvePacket } from '../src/data/balance.js';
 import { applyImmunities, rearmDefense } from '../src/engine/defense.js';
 
@@ -1080,6 +1080,54 @@ test('terra kits follow the approved brief', () => {
   assert.strictEqual(bolt.kind, 'projectile');
   assert.strictEqual(bolt.type, 'radiation');
   assert.strictEqual(bolt.damage, 8);
+});
+
+test('dizzy kits follow the approved brief', () => {
+  const moves = CHARACTERS.dizzy.moves;
+  const gust = moves.basicCharge;
+  assert.strictEqual(gust.name, 'Turbine Gust');
+  assert.strictEqual(gust.kind, 'beam');
+  assert.strictEqual(gust.type, 'kinetic');
+  assert.strictEqual(gust.damage, 7);
+  assert.ok(gust.chargeDamageMult > 1);
+  assert.ok(gust.chargeKnockbackMult > 1);
+  const punch = moves.basicDirectional;
+  assert.strictEqual(punch.name, 'EV Motor Punch');
+  assert.strictEqual(punch.type, 'kinetic');
+  assert.strictEqual(punch.damage, 3);
+  assert.strictEqual(punch.type2, 'electrical');
+  assert.strictEqual(punch.damage2, 2);
+  assert.strictEqual(punch.multiHit, 3);
+  assert.strictEqual(punch.fullWhenHot, true);
+  const fd = frameData(punch.duration, punch.cooldown, punch);
+  assert.ok(fd.active * STEP_MS >= 180, 'three hits need an active window past 180 ms');
+  const hot = { burnUntil: 9000, heatedUntil: 9000 };
+  const kept = prepareMove(punch, hot, { charDef: {} }, 1000);
+  assert.strictEqual(kept.damage, 3);
+  assert.strictEqual(kept.damage2, 2);
+  const taxed = prepareMove({ ...punch, fullWhenHot: false, hotPenalty: 0.5 }, hot, { charDef: {} }, 1000);
+  assert.strictEqual(taxed.damage, 1.5);
+  assert.strictEqual(taxed.damage2, 1);
+  const wall = moves.specialDefense;
+  assert.strictEqual(wall.name, 'Control Rod Wall');
+  assert.deepStrictEqual(wall.blocks, ['kinetic', 'radiation']);
+  const defender = { state: 'defending', defenseMove: wall, x: 0, y: 0 };
+  assert.strictEqual(interceptHit(defender, {}, { type: 'kinetic', damage: 6 }, 0).result, 'negate');
+  assert.strictEqual(interceptHit(defender, {}, { type: 'radiation', damage: 6 }, 0).result, 'negate');
+  assert.strictEqual(interceptHit(defender, {}, { type: 'heat', damage: 6 }, 0).result, 'pass');
+  const flash = moves.specialDirectional;
+  assert.strictEqual(flash.name, 'Stage Light Flash');
+  assert.strictEqual(flash.kind, 'beam');
+  assert.strictEqual(flash.type, 'heat');
+  assert.strictEqual(flash.aimStick, true);
+  assert.strictEqual(flash.beamCap, 1100);
+  assert.ok(flash.beamLen < flash.beamCap);
+  assert.strictEqual(flash.onHit.stun, 1000);
+  const stunned = {};
+  applyOnHit({ charDef: { id: 'dizzy' } }, stunned, flash, 1000);
+  assert.strictEqual(stunned.lockedUntil, 2000);
+  assert.strictEqual(stunned.clingFrom.move, 'Stage Light Flash');
+  assert.strictEqual(stunned.clingFrom.until, 2000);
 });
 
 function fake(id, x, y) {

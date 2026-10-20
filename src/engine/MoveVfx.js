@@ -2,7 +2,7 @@
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
 import { anodizeTint } from './kit.js';
-import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, spawnFxDetonate, spawnFxSprite, spawnStageSpan, wantsContactSpark } from './fxArt.js';
+import { artFor, breakFrames, drawFxOneShot, fxAnchor, fxGameplayScale, meleeContactPoint, reverseFrameOrder, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnStageSpan, wantsContactSpark } from './fxArt.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 
@@ -321,6 +321,17 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   }
   if (phase === 'letgo') {
     const art = artFor(fighter.charDef?.id, move?.name);
+    if (art?.reverseOnRelease && art.frames?.length) {
+      const face = fighter.facing || 1;
+      const x = fighter.x + face * (move?.offsetX ?? (fighter.bodyW ?? 40) * 0.9);
+      spawnFxSprite(scene, {
+        ...art,
+        order: reverseFrameOrder(art.frames.length),
+        loop: false,
+        hold: null,
+      }, x, fighter.y, 1, 1);
+      return;
+    }
     const rise = (art?.puddle || (art?.breakFrom ?? -1) >= 0) ? breakFrames(art) : null;
     if (rise?.frames?.length) {
       const fps = rise.fps > 0 ? rise.fps : 8;
@@ -357,6 +368,10 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   }
   if (phase === 'release' || phase === 'defense') {
     const art = artFor(fighter.charDef?.id, move?.name);
+    if (phase === 'release' && move?.aimStick && extra?.fired) {
+      spawnAimedBeam(scene, fighter, move);
+      return;
+    }
     if (phase === 'release' && art?.objectType === 'beam' && art.frames?.length && !extra?.fired) return;
     if (phase === 'release' && art?.releaseImpact && art.impact?.frames?.length) {
       const posed = sheetReleasePoint(fighter, 'melee') || sheetFxPoint(fighter, 'melee');
@@ -382,7 +397,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     // The lingering sheet is the zone itself. A release oneshot would stack a second copy.
     if (move?.kind === 'zone' && move.zone?.sheet && art?.frames?.length) return;
     // A looping floor sheet is held on the fighter. A one-shot ground burst still draws.
-    if (phase === 'defense' && art?.anchor === 'ground' && art.loop && art.frames?.length) return;
+    if (phase === 'defense' && art?.anchor === 'ground' && (art.loop || art.hold?.frames?.length) && art.frames?.length) return;
     // A crumble or melt is held on the feet, then the rise plays on letgo.
     if (phase === 'defense' && art?.puddle && art.frames?.length) return;
     if (art?.detonate && move?.kind === 'burst') {

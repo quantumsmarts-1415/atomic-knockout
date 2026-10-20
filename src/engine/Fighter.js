@@ -1725,7 +1725,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.percent = Math.min(999, this.percent + dmg);
       this.creditDamage(attacker, dmg, incoming.type);
       this.igniteFromGuard(incoming, time, dmg);
-      if (!gate.noKnockback && !move.isSelf && !move.dot) {
+      if (!gate.noKnockback && !incoming.noKnockback && !move.isSelf && !move.dot) {
         const kb = knockbackRaw(
           incoming.baseKnockback,
           incoming.knockbackGrowth,
@@ -1804,7 +1804,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this._shellBroken = true;
     }
     const pinned = this.state === 'defending' && this.defenseMove?.noKnockback && !incoming.isSelf;
-    if (pinned) kb = 0;
+    if (pinned || incoming.noKnockback) kb = 0;
     this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, !armored);
     if (incoming.onHit?.reverse && this.pendingLaunch) {
       const back = Math.sign((attacker?.x ?? this.x) - this.x) || -(this.pendingLaunch.dir || 1);

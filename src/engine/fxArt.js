@@ -908,7 +908,7 @@ const SIDE_SPECS = [
   ['ember', 'ember-'], ['spark', 'spark-'], ['cinder', 'cinder-'], ['mote', 'mote-'], ['puff', 'puff-'],
   ['gas', 'gas-'], ['fizzle', 'fizzle-'], ['linger', 'linger-'],
   ['trail', 'trail-'], ['stain', 'stain-'],
-  ['warn', 'warn-'], ['glow', 'glow-'],
+  ['warn', 'warn-'], ['glow', 'glow-'], ['hot', 'hot-'],
 ];
 
 async function attachSides(scene, id, slug, folder, meta, index, charH, sized, record) {
@@ -938,6 +938,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       maxAlpha: merged.maxAlpha,
       spin: merged.spin,
       aim: merged.aim !== false,
+      scaleWith: merged.scaleWith || null,
     });
   }
   return record;
@@ -1148,6 +1149,7 @@ export function fxProjectileView(scene, owner, move, x, y) {
   }
   const useMask = art.hit !== false;
   let trail = null;
+  let hot = null;
   if (art.trail?.frames?.length && scene.add?.image) {
     const tFrame = art.trail.frames[0];
     trail = scene.add.image(x, y, tFrame.key);
@@ -1155,12 +1157,27 @@ export function fxProjectileView(scene, owner, move, x, y) {
     trail.setDisplaySize(tFrame.displayW, tFrame.displayH);
     trail.setDepth(15);
     trail.setBlendMode?.(phaserBlend(tFrame.blend || art.trail.blend));
+  }
+  const hotArt = base?.hot;
+  const hotFrame = hotArt?.frames?.[0];
+  if (hotFrame && scene.add?.image) {
+    hot = scene.add.image(x, y, hotFrame.key);
+    hot.setOrigin(hotArt.pivotX ?? 0.5, hotArt.pivotY ?? 0.5);
+    const hotScale = fxGameplayScale(move, hotArt);
+    hot.setDisplaySize(hotFrame.displayW * hotScale, hotFrame.displayH * hotScale);
+    hot.setDepth(16);
+    hot.setAlpha(0);
+    hot.setBlendMode?.(phaserBlend(hotFrame.blend || hotArt.blend));
+  }
+  if (trail || hot) {
     const destroy = img.destroy?.bind(img);
     img.destroy = (...args) => {
       if (trail?.scene) trail.destroy();
+      if (hot?.scene) hot.destroy();
       return destroy?.(...args);
     };
   }
+  const hotScale = hotFrame ? fxGameplayScale(move, hotArt) : 1;
   return {
     gfx: img,
     fxMask: useMask ? (art.frames[art.hitIndex ?? 0]?.mask || frame.mask) : null,
@@ -1179,6 +1196,9 @@ export function fxProjectileView(scene, owner, move, x, y) {
     fxAim: art.aim !== false,
     fxTrail: trail,
     fxTrailArt: art.trail || null,
+    fxHot: hot,
+    fxHotW: hotFrame ? hotFrame.displayW * hotScale : 0,
+    fxHotH: hotFrame ? hotFrame.displayH * hotScale : 0,
   };
 }
 
@@ -1194,6 +1214,40 @@ function stepProjectileTrail(p) {
   trail.setOrigin?.(art.pivotX ?? 1, art.pivotY ?? 0.5);
   trail.setPosition(p.gfx.x, p.gfx.y);
   trail.rotation = Math.atan2(p.vy || 0, p.vx || 1);
+}
+
+/** Cool orb stays solid, then fades to the hot orb across the approach to the Curie point. */
+export function curieFade(along) {
+  const t = Math.max(0, Math.min(1, along || 0));
+  if (t <= 0.45) return 0;
+  return Math.min(1, (t - 0.45) / 0.55);
+}
+
+/** A small scale pulse once the orb is heating. Steady before that. */
+export function curiePulse(along, elapsedMs) {
+  const t = Math.max(0, Math.min(1, along || 0));
+  if (t <= 0.55) return 1;
+  return 1 + 0.09 * Math.sin((elapsedMs || 0) * 0.05);
+}
+
+function stepCurieOrb(p, time) {
+  const hot = p?.fxHot;
+  if (!hot?.setPosition || !p.gfx?.setAlpha) return;
+  const life = p.move?.projectileLife > 0 ? p.move.projectileLife : 1;
+  const at = p.move?.igniteAt > 0 ? p.move.igniteAt : 1;
+  const elapsed = Math.max(0, time - (p.born || 0));
+  const along = Math.min(1, elapsed / (life * at));
+  const fade = curieFade(along);
+  const pulse = curiePulse(along, elapsed);
+  p.gfx.setAlpha(1 - fade);
+  hot.setAlpha(fade);
+  hot.setPosition(p.gfx.x, p.gfx.y);
+  const w = p.fxDisplayW || 0;
+  const h = p.fxDisplayH || 0;
+  if (w && h) p.gfx.setDisplaySize(w * pulse, h * pulse);
+  const hw = p.fxHotW || w;
+  const hh = p.fxHotH || h;
+  if (hw && hh) hot.setDisplaySize(hw * pulse, hh * pulse);
 }
 
 export function stepFxProjectile(p, time) {
@@ -1222,9 +1276,7 @@ export function stepFxProjectile(p, time) {
     const sx = Math.abs(p.gfx.scaleX || 1);
     const sy = Math.abs(p.gfx.scaleY || 1);
     p.gfx.setScale(face * sx, sy);
-    return;
-  }
-  if (p.fxSpin) {
+  } else if (p.fxSpin) {
     p.gfx.rotation = ((time - (p.born || 0)) / 1000) * p.fxSpin;
     if (p.fxPulse && p.fxDisplayW) {
       const s = 1 + Math.sin((time - (p.born || 0)) / 150) * p.fxPulse;
@@ -1234,17 +1286,16 @@ export function stepFxProjectile(p, time) {
       const wave = 0.5 + 0.5 * Math.cos((time - (p.born || 0)) * Math.PI * 2 / 700);
       p.gfx.setAlpha(1 - p.fxAlphaPulse + p.fxAlphaPulse * wave);
     }
-    return;
-  }
-  if (p.fxAim === false) {
+  } else if (p.fxAim === false) {
     const face = (p.vx || 1) < 0 ? -1 : 1;
     p.gfx.rotation = 0;
     const sx = Math.abs(p.gfx.scaleX || 1);
     const sy = Math.abs(p.gfx.scaleY || 1);
     p.gfx.setScale(face * sx, sy);
-    return;
+  } else {
+    p.gfx.rotation = Math.atan2(p.vy || 0, p.vx || 1);
   }
-  p.gfx.rotation = Math.atan2(p.vy || 0, p.vx || 1);
+  stepCurieOrb(p, time);
 }
 
 /** A sprite that stays until the caller destroys it. Zones and lingering walls use this. */
@@ -2427,6 +2478,7 @@ function syncHeld(scene, fighter) {
     if (want.art.anchor === 'body') {
       live.img.setOrigin(0.5, 0.5);
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
+      if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
       if (charge?.perTravel) {
         const need = charge.perTravel * (charge.perTravelCap ?? 5);
         live.img.setAlpha(Math.min(1, Math.max(0, (fighter.travel ?? 0) / Math.max(1, need))));

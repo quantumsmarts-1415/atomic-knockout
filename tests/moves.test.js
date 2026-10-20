@@ -1000,6 +1000,58 @@ test('europa kits follow the approved brief', () => {
   assert.strictEqual(geyser.onHit.slow, 700);
   assert.ok(geyser.geyser.warnMs >= 400);
   assert.strictEqual(moves.basicCharge.name, 'Phosphor Bloom');
+  assert.strictEqual(moves.basicCharge.type, 'radiation');
+  assert.strictEqual(moves.basicCharge.damage, 9);
+});
+
+test('goldie kits follow the approved brief', () => {
+  const moves = CHARACTERS.goldie.moves;
+  const mri = moves.basicCharge;
+  assert.strictEqual(mri.name, 'MRI Contrast');
+  assert.strictEqual(mri.kind, 'burst');
+  assert.strictEqual(mri.damage, 0);
+  assert.strictEqual(mri.radius, 78);
+  assert.strictEqual(mri.noKnockback, true);
+  assert.strictEqual(mri.baseKnockback, 0);
+  assert.strictEqual(mri.knockbackGrowth, 0);
+  assert.strictEqual(mri.onHit.doublePercent, true);
+  assert.strictEqual(mri.onHit.stun, 1000);
+  const scanned = { percent: 40 };
+  applyOnHit({ charDef: { id: 'goldie' } }, scanned, mri, 1000);
+  assert.strictEqual(scanned.percent, 80);
+  assert.strictEqual(scanned.lockedUntil, 2000);
+  const warded = { percent: 25, debuffImmuneUntil: 5000 };
+  applyOnHit({ charDef: { id: 'goldie' } }, warded, mri, 1000);
+  assert.strictEqual(warded.percent, 50);
+  assert.strictEqual(warded.lockedUntil, undefined);
+  const capped = { percent: 600 };
+  applyOnHit({ charDef: { id: 'goldie' } }, capped, mri, 0);
+  assert.strictEqual(capped.percent, 999);
+  const palm = moves.basicDirectional;
+  assert.strictEqual(palm.name, 'Magnetocaloric Palm');
+  assert.strictEqual(palm.type, 'kinetic');
+  assert.strictEqual(palm.damage, 7);
+  assert.strictEqual(palm.type2, 'heat');
+  assert.strictEqual(palm.damage2, 6);
+  const chill = moves.specialDefense;
+  assert.strictEqual(chill.name, 'Magnetic Chill');
+  assert.deepStrictEqual(chill.immune, ['heat']);
+  assert.deepStrictEqual(chill.cleanse, ['burn']);
+  const burning = { burnUntil: 5000, burnSticky: false };
+  cleanse(burning, chill.cleanse);
+  assert.strictEqual(burning.burnUntil, 0);
+  const curie = moves.specialDirectional;
+  assert.strictEqual(curie.name, 'Curie Point Burst');
+  assert.strictEqual(curie.kind, 'projectile');
+  assert.strictEqual(curie.damage, 0);
+  assert.strictEqual(curie._ghost, true);
+  assert.strictEqual(curie.igniteType, 'heat');
+  assert.strictEqual(curie.igniteDamage, 8);
+  assert.strictEqual(curie.igniteRadius, 150);
+  assert.strictEqual(curie.metalsOnly, true);
+  assert.ok(curie.igniteAt > 0.4 && curie.igniteAt < 0.85);
+  assert.strictEqual(CHARACTERS.goldie.combat.metal, true);
+  assert.strictEqual(CHARACTERS.helen.combat.metal, false);
 });
 
 function fake(id, x, y) {

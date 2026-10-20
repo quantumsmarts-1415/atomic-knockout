@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, blackThreshold, breakFrames, burnVisual, contentSpan, curieFade, curiePulse, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, keyNearBlack, lumaToAlpha, pixelsPerSource, rasterAlpha, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1616,6 +1616,64 @@ test('europa sheets match the approved handoff', () => {
     if (!fs.statSync(dir).isDirectory()) continue;
     for (const file of fs.readdirSync(dir)) {
       assert.equal(file.endsWith('.gif') || file.endsWith('.jpg'), false, `${dir}/${file}`);
+    }
+  }
+});
+
+test('phosphor bloom, magnetic chill, and curie point match the arrived sheets', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const bloom = read('assets/fx/europa/phosphor-bloom/fx.json');
+  assert.equal(bloom.file, 'phosphor-bloom-burst-anim.png');
+  assert.equal(bloom.frames, 24);
+  assert.equal(bloom.cols, 4);
+  assert.equal(bloom.rows, 6);
+  assert.equal(bloom.fps, 16);
+  assert.equal(bloom.blend, 'add');
+  assert.equal(bloom.hit, false);
+  assert.equal(bloom.pivotX, 0.5);
+  assert.equal(bloom.pivotY, 0.5);
+  assert.equal(bloom.anchor, undefined);
+  assert.equal(bloom.charge.file, 'uv-soak-charge-anim.png');
+  assert.equal(bloom.charge.frames, 24);
+  assert.equal(bloom.charge.cols, 6);
+  assert.equal(bloom.charge.rows, 4);
+  assert.equal(bloom.charge.fps, 12);
+  assert.equal(bloom.charge.loop, true);
+  assert.equal(bloom.charge.anchor, 'body');
+  assert.equal(bloom.charge.scaleWith, 'alpha');
+  const chill = read('assets/fx/goldie/magnetic-chill/fx.json');
+  assert.equal(chill.file, 'magnetic-chill-status-anim.png');
+  assert.equal(chill.frames, 24);
+  assert.equal(chill.fps, 12);
+  assert.equal(chill.loop, true);
+  assert.equal(chill.anchor, 'body');
+  assert.equal(chill.blend, 'add');
+  const curie = read('assets/fx/goldie/curie-point-burst/fx.json');
+  assert.equal(curie.projectile.file, 'curie-orb-cool.png');
+  assert.equal(curie.projectile.black, false);
+  assert.equal(curie.projectile.aim, false);
+  assert.equal(curie.hot.file, 'curie-orb-hot.png');
+  assert.equal(curie.hot.black, false);
+  assert.equal(curie.burst.file, 'curie-point-burst-blast-anim.png');
+  assert.equal(curie.burst.frames, 24);
+  assert.equal(curie.burst.fps, 16);
+  assert.equal(curie.burst.blend, 'add');
+  assert.ok(curie.burst.heightFrac <= 1.6, 'the dense blast stays inside the nearby radius');
+  assert.ok(curie.burst.heightFrac >= 1.1);
+  assert.equal(curieFade(0.2), 0);
+  assert.equal(curieFade(0.45), 0);
+  assert.ok(Math.abs(curieFade(1) - 1) < 1e-9);
+  assert.ok(curieFade(0.725) > 0.4 && curieFade(0.725) < 0.6);
+  assert.equal(curiePulse(0.2, 400), 1);
+  assert.ok(curiePulse(0.8, 0) >= 1);
+  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie']) {
+    const dirs = fs.statSync(root).isDirectory() && fs.readdirSync(root).some((name) => fs.statSync(`${root}/${name}`).isDirectory())
+      ? fs.readdirSync(root).map((name) => `${root}/${name}`).filter((dir) => fs.statSync(dir).isDirectory())
+      : [root];
+    for (const dir of dirs) {
+      for (const file of fs.readdirSync(dir)) {
+        assert.equal(file.endsWith('.gif') || file.endsWith('.jpg') || file.endsWith('.py'), false, `${dir}/${file}`);
+      }
     }
   }
 });

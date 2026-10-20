@@ -1449,6 +1449,7 @@ export default class BattleScene extends Phaser.Scene {
     for (const target of this.fighters) {
       if (!move.includeSelf && target === owner) continue;
       if (!target.alive || target.state === 'ko') continue;
+      if (move.metalsOnly && !target.charDef?.combat?.metal) continue;
       if (target.state === 'defending' && target.defenseMove?.untargetable) continue;
       if (move.coneDeg > 0 && target !== owner) {
         const facing = owner.facing || 1;

@@ -10,6 +10,10 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.kinDefMultUntil = time + 2500;
   }
   if (!immune && move.stripBuffs) stripBuffs(victim);
+  if (move.onHit?.doublePercent) {
+    const mul = move.onHit.doublePercent === true ? 2 : Number(move.onHit.doublePercent);
+    if (mul > 0) victim.percent = Math.min(999, (victim.percent ?? 0) * mul);
+  }
 
   const fx = move.onHit;
   if (!fx || immune) return;

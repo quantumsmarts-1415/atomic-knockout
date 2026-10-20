@@ -1594,10 +1594,11 @@ export const MOVESETS = {
 
   goldie: {
     basicCharge: m('MRI Contrast', {
-      kind: 'burst', type: E, damage: 4, chargeRadiusMult: 1.3, maxChargeMs: 800, radius: 78,
-      onHit: { mark: 'scan', markMs: 2400, vulnerable: 1.08, vulnerableMs: 2000 },
+      kind: 'burst', damage: 0, chargeRadiusMult: 1.3, maxChargeMs: 800, radius: 78,
+      noKnockback: true,
+      onHit: { doublePercent: true, stun: 1000 },
       vfx: 'spark', vfxColor: 0xb8f0ff,
-      baseKnockback: 30, knockbackGrowth: 0.4, duration: 240, cooldown: 880,
+      baseKnockback: 0, knockbackGrowth: 0, duration: 240, cooldown: 880,
     }),
     basicDirectional: melee('Magnetocaloric Palm', {
       type: K, damage: 7, type2: H, damage2: 6, rangeW: 66, vfx: 'strike', vfxColor: 0xffd0a0,
@@ -1606,9 +1607,13 @@ export const MOVESETS = {
     specialDefense: m('Magnetic Chill', {
       immune: [H], cleanse: ['burn'], duration: 640, cooldown: 820, vfx: 'shield', vfxColor: 0xd8f4ff,
     }),
-    specialDirectional: melee('Room-Temp Magnet', {
-      type: K, damage: 7, pull: 160, rangeW: 88, vfx: 'spark', vfxColor: 0xc8e6f4,
-      baseKnockback: 100, knockbackGrowth: 2, duration: 230, cooldown: 540,
+    specialDirectional: m('Curie Point Burst', {
+      kind: 'projectile', type: H, damage: 0, _ghost: true,
+      igniteAt: 0.62, igniteType: H, igniteDamage: 8, igniteRadius: 150,
+      metalsOnly: true,
+      vfx: 'fire', vfxColor: 0xffb060,
+      projectileSpeed: 460, projectileRadius: 12, projectileLife: 820,
+      baseKnockback: 150, knockbackGrowth: 2.2, duration: 230, cooldown: 680,
     }),
   },
 

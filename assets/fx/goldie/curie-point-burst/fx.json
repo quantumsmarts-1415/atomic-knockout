@@ -1,0 +1,43 @@
+{
+  "blend": "normal",
+  "black": false,
+  "projectile": {
+    "file": "curie-orb-cool.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false,
+    "aim": false,
+    "heightFrac": 0.36
+  },
+  "hot": {
+    "file": "curie-orb-hot.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false,
+    "aim": false,
+    "heightFrac": 0.36
+  },
+  "burst": {
+    "file": "curie-point-burst-blast-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false,
+    "heightFrac": 1.35
+  }
+}

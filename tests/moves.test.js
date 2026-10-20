@@ -7,6 +7,7 @@ import { gateStored, interceptHit } from '../src/engine/defense.js';
 import { anodizeTint, applyDot, applyOnCast, applyOnHit, bankStolenPackets, bonusPackets, cleanse, fighterOnSwapLine, lightUnquenchable, markedStrikeTargets, scaledByHaste, sheetFrameAt, stripBuffs, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
 import { resolvePacket } from '../src/data/balance.js';
 import { applyImmunities, rearmDefense } from '../src/engine/defense.js';
+import { stickAim } from '../src/engine/batch3.js';
 
 const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
 const TYPES = new Set(['kinetic', 'heat', 'electrical', 'chemical', 'radiation', 'physical']);
@@ -1038,6 +1039,20 @@ test('prometheus and sam kits follow the approved brief', () => {
   assert.strictEqual(magnet.pull.metals, true);
   assert.ok(magnet.pull.radius >= 1600);
   assert.ok(magnet.chargeRadiusMult > 1);
+  assert.strictEqual(magnet.offsetX, 24);
+  assert.strictEqual(prom.basicDirectional.name, 'Torchbearer Swing');
+  const duck = CHARACTERS.sam.moves.specialDefense;
+  assert.strictEqual(duck.phase, 'overhead');
+  assert.strictEqual(duck.shrink, 0.5);
+  const toss = CHARACTERS.sam.moves.specialDirectional;
+  assert.strictEqual(toss.returns, true);
+  assert.strictEqual(toss.aimStick, true);
+  assert.deepStrictEqual(stickAim({}, 1), { x: 1, y: 0 });
+  assert.deepStrictEqual(stickAim({ left: true }, 1), { x: -1, y: 0 });
+  assert.deepStrictEqual(stickAim({ jump: true }, 1), { x: 0, y: -1 });
+  const diag = stickAim({ up: true, right: true }, -1);
+  assert.ok(Math.abs(diag.x - Math.SQRT1_2) < 1e-9);
+  assert.ok(Math.abs(diag.y + Math.SQRT1_2) < 1e-9);
 });
 
 function fake(id, x, y) {

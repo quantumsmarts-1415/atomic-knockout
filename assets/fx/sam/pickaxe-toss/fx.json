@@ -1,0 +1,13 @@
+{
+  "file": "pickaxe-prop.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "pivotX": 0.5,
+  "pivotY": 0.390625,
+  "hit": false,
+  "aim": false,
+  "spin": 15.7,
+  "heightFrac": 0.62
+}

@@ -10,6 +10,7 @@
   "fit": "height",
   "crop": "frame",
   "pivot": "center",
+  "anchor": "ground",
   "hit": false,
   "heightFrac": 1.15,
   "charge": {

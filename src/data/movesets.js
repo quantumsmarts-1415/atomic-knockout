@@ -1803,6 +1803,7 @@ export const MOVESETS = {
       chargeDamageMult: 1.3, chargeRadiusMult: 1.55,
       maxChargeMs: 800, radius: 108,
       pull: { radius: 1800, speed: 160, metals: true },
+      offsetX: 24,
       vfx: 'gust', vfxColor: 0xffb070,
       baseKnockback: 100, knockbackGrowth: 1.8, duration: 260, cooldown: 800,
     }),
@@ -1812,10 +1813,11 @@ export const MOVESETS = {
     }),
     specialDefense: m('Mine Shaft Duck', {
       phase: 'overhead', phaseRetort: { type: K, damage: 4, knockback: 80, growth: 1.4 },
+      shrink: 0.5,
       duration: 420, cooldown: 980, vfx: 'shield', vfxColor: 0x8a7048,
     }),
     specialDirectional: m('Pickaxe Toss', {
-      kind: 'projectile', type: K, damage: 6, returns: true, vfx: 'strike', vfxColor: 0xb89870,
+      kind: 'projectile', type: K, damage: 6, returns: true, aimStick: true, vfx: 'strike', vfxColor: 0xb89870,
       projectileSpeed: 440, projectileRadius: 10, projectileLife: 780,
       baseKnockback: 90, knockbackGrowth: 1.7, duration: 200, cooldown: 560,
     }),

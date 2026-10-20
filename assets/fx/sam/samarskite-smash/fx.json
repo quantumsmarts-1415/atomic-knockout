@@ -1,0 +1,28 @@
+{
+  "file": "samarskite-smash-impact-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 16,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "crop": "frame",
+  "pivot": "center",
+  "oneshot": true,
+  "anchor": "contact",
+  "hit": false,
+  "heightFrac": 1.0,
+  "prop": {
+    "file": "samarskite-ore-chunk.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "pivot": "center",
+    "anchor": "fist",
+    "hit": false,
+    "heightFrac": 0.42
+  }
+}

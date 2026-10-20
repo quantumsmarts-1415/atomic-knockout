@@ -1,0 +1,28 @@
+{
+  "file": "mine-shaft-hole-sprite.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "pivot": "bottom",
+  "anchor": "ground",
+  "loop": true,
+  "hit": false,
+  "heightFrac": 0.85,
+  "squash": 0.42,
+  "shatter": {
+    "file": "mine-shaft-popup-anim.png",
+    "frames": 24,
+    "cols": 3,
+    "rows": 8,
+    "fps": 16,
+    "loop": false,
+    "blend": "normal",
+    "black": 24,
+    "fit": "height",
+    "pivot": "bottom",
+    "anchor": "ground",
+    "hit": false,
+    "heightFrac": 1.05
+  }
+}

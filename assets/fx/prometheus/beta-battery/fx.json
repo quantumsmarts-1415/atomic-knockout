@@ -1,0 +1,41 @@
+{
+  "blend": "normal",
+  "projectile": {
+    "file": "beta-battery-prop.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "pivot": "center",
+    "hit": false,
+    "aim": false,
+    "spin": 8,
+    "heightFrac": 0.32
+  },
+  "stick": {
+    "file": "beta-battery-prop.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "pivot": "center",
+    "hit": false,
+    "heightFrac": 0.32,
+    "pulse": 1
+  },
+  "cling": {
+    "file": "beta-tick-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "pivot": "center",
+    "anchor": "body",
+    "hit": false,
+    "heightFrac": 1.05
+  }
+}

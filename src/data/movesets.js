@@ -676,21 +676,22 @@ export const MOVESETS = {
   wolf: {
     basicCharge: m('White-Hot Filament', {
       kind: 'burst', type: H, damage: 7, chargeDamageMult: 1.9, chargeRadiusMult: 1.85,
-      maxChargeMs: 1200, radius: 56, vfx: 'fire', vfxColor: 0xfff1c2,
+      maxChargeMs: 3400, radius: 56, vfx: 'fire', vfxColor: 0xfff1c2,
       baseKnockback: 160, duration: 280, cooldown: 1100,
     }),
-    basicDirectional: melee('Tin Eater', {
-      kind: 'dash', type: K, damage: 7, dashSpeed: 440, rangeW: 84, rangeH: 72,
-      bonusVsId: { sandy: 2 }, vfx: 'dash', baseKnockback: 170, knockbackGrowth: 3.8,
-      duration: 280, cooldown: 760,
+    basicDirectional: melee('Carbide Drill', {
+      type: K, damage: 3, multiHit: 5, hitRadius: 96,
+      rangeW: 96, rangeH: 48, startupF: 4, activeF: 28,
+      vfx: 'strike', vfxColor: 0xffe2a8,
+      baseKnockback: 170, knockbackGrowth: 3.8,
+      duration: 600, cooldown: 860,
     }),
     specialDefense: m('Unmeltable', {
-      immune: [H], kind: 'block', onlyReduce: [K], blockReduction: 0.22,
+      immune: [H], blocks: [H], kind: 'block', onlyReduce: [K], blockReduction: 0.22,
       duration: 780, cooldown: 760, vfx: 'shield', vfxColor: 0xffe2a8,
     }),
     specialDirectional: m('Armor Piercer', {
-      kind: 'projectile', type: K, damage: 7, breaksBlock: true, pierce: true,
-      visualShape: 'spearhead', vfx: 'strike',
+      kind: 'projectile', type: K, damage: 7, breaksBlock: true, pierce: true, vfx: 'strike',
       projectileSpeed: 580, projectileRadius: 7, projectileLife: 460,
       baseKnockback: 190, duration: 220, cooldown: 1280,
     }),

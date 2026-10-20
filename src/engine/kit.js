@@ -560,6 +560,7 @@ export function finalBlow(move) {
     launchMult: 0,
     pull: 0,
     noKnockback: true,
+    noFlinch: true,
     onHit,
   };
 }

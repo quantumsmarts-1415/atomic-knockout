@@ -227,7 +227,32 @@ export function fxGameplayScale(move, art) {
     if (base > 0 && now > 0) return extra * (now / base);
   }
   if (mode === 'charge') return extra * (0.78 + 0.5 * chargeFrac(move));
+  if (mode === 'hold') return extra * (0.42 + 0.58 * chargeFrac(move));
   return extra;
+}
+
+/** Orange toward white-hot. Phaser tint multiplies, so 0 is dim and white is the sheet. */
+export function chargeTint(from, to, frac) {
+  const t = Math.max(0, Math.min(1, Number(frac) || 0));
+  const mix = (a, b) => Math.round(a + (b - a) * t);
+  const r = mix((from >> 16) & 255, (to >> 16) & 255);
+  const g = mix((from >> 8) & 255, (to >> 8) & 255);
+  const b = mix(from & 255, to & 255);
+  return (r << 16) | (g << 8) | b;
+}
+
+/** How far behind the tip the trail's pivot sits, in display pixels. */
+export function trailBackOffset(displayW, lagFrac) {
+  if (!(displayW > 0) || !(lagFrac > 0)) return 0;
+  return displayW * lagFrac;
+}
+
+/** A multi-hit string plays its big impact on the last connection only. */
+export function playsFinalImpact(move) {
+  const multi = move?.multiHit > 1 ? move.multiHit : 0;
+  if (!(multi > 1)) return true;
+  const index = move._hitIndex != null ? move._hitIndex : multi;
+  return index >= multi;
 }
 
 /** 0–1 charge fraction stored on a released move. */
@@ -582,6 +607,9 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     flashRadius: extra.flashRadius > 0 ? extra.flashRadius : 0,
     hard: extra.hard > 0 ? extra.hard : 0,
     fillFrames: extra.fillFrames > 1 ? extra.fillFrames | 0 : 0,
+    tintFrom: typeof extra.tintFrom === 'number' ? extra.tintFrom : null,
+    tintTo: typeof extra.tintTo === 'number' ? extra.tintTo : null,
+    lagFrac: extra.lagFrac > 0 ? extra.lagFrac : 0,
     nozzleX: typeof extra.nozzleX === 'number' ? extra.nozzleX : null,
     nozzleY: typeof extra.nozzleY === 'number' ? extra.nozzleY : null,
     maxAlpha: extra.maxAlpha > 0 && extra.maxAlpha < 1 ? extra.maxAlpha : 0,
@@ -1050,6 +1078,9 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       flashRadius: merged.flashRadius,
       hard: merged.hard,
       fillFrames: merged.fillFrames,
+      tintFrom: merged.tintFrom,
+      tintTo: merged.tintTo,
+      lagFrac: merged.lagFrac,
       nozzleX: merged.nozzleX,
       nozzleY: merged.nozzleY,
     });
@@ -1346,8 +1377,10 @@ function stepProjectileTrail(p) {
     trail.setDisplaySize?.(frame.displayW, frame.displayH);
   }
   trail.setOrigin?.(art.pivotX ?? 1, art.pivotY ?? 0.5);
-  trail.setPosition(p.gfx.x, p.gfx.y);
-  trail.rotation = Math.atan2(p.vy || 0, p.vx || 1);
+  const rot = Math.atan2(p.vy || 0, p.vx || 1);
+  const lag = trailBackOffset(p.fxDisplayW, art.lagFrac);
+  trail.setPosition(p.gfx.x - Math.cos(rot) * lag, p.gfx.y - Math.sin(rot) * lag);
+  trail.rotation = rot;
 }
 
 /** Cool orb stays solid, then fades to the hot orb across the approach to the Curie point. */
@@ -2867,6 +2900,9 @@ function syncHeld(scene, fighter) {
       live.img.setOrigin(0.5, 0.5);
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
       if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
+      if (want.art.tintFrom != null && want.art.tintTo != null) {
+        live.img.setTint?.(chargeTint(want.art.tintFrom, want.art.tintTo, frac));
+      }
       if (charge?.perTravel) {
         const need = charge.perTravel * (charge.perTravelCap ?? 5);
         live.img.setAlpha(Math.min(1, Math.max(0, (fighter.travel ?? 0) / Math.max(1, need))));
@@ -2888,6 +2924,9 @@ function syncHeld(scene, fighter) {
     const fallbackY = onHand ? fighter.y - bodyH * 0.52 : fighter.y;
     live.img.setPosition(hand?.x ?? fallbackX, hand?.y ?? fallbackY);
     if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
+    if (want.art.tintFrom != null && want.art.tintTo != null) {
+      live.img.setTint?.(chargeTint(want.art.tintFrom, want.art.tintTo, frac));
+    }
     const mirror = want.art.flip ? -face : face;
     live.img.setScale(mirror * Math.abs(live.img.scaleX || 1) * shot, Math.abs(live.img.scaleY || 1) * shot);
     syncRotor(scene, live, want.rotor, fighter, frac);
@@ -3018,7 +3057,12 @@ export function spawnContactFx(scene, attacker, victim, move) {
   } else if (along == null) {
     along = impactRadiusScale(move, impact);
   }
-  if (!painted?.releaseImpact) playPacked(scene, impact, at.x, at.y, face, along, rot);
+  const multi = move?.multiHit > 1;
+  if (multi && !move?.vsHot && painted?.spark?.frames?.length) {
+    const sparkFace = painted.spark.flip ? (attacker.facing || 1) : 1;
+    playPacked(scene, painted.spark, at.x, at.y, sparkFace, impactRadiusScale(move, painted.spark));
+  }
+  if (playsFinalImpact(move) && !painted?.releaseImpact) playPacked(scene, impact, at.x, at.y, face, along, rot);
   if (move?.onHit?.heal && painted?.heal?.frames?.length) {
     const chest = attacker.y - (attacker.bodyH ?? 80) * 0.62;
     playPacked(scene, painted.heal, attacker.x, chest, 1);

@@ -452,7 +452,7 @@ test('pilot fighters use the element doc kits', () => {
     ['Tantalum', 'Tungsten', 'Rhenium', 'Osmium', 'Platinum'],
   );
   assert.strictEqual(CHARACTERS.tara.moves.basicCharge.name, 'Capacitor Dump');
-  assert.strictEqual(CHARACTERS.wolf.moves.basicDirectional.name, 'Tin Eater');
+  assert.strictEqual(CHARACTERS.wolf.moves.basicDirectional.name, 'Carbide Drill');
   assert.strictEqual(CHARACTERS.rex.moves.specialDefense.name, 'Creep Resistance');
   assert.strictEqual(CHARACTERS.oz.moves.specialDirectional.name, 'Tetroxide Puff');
   assert.strictEqual(CHARACTERS.pit.moves.specialDefense.name, 'Cisplatin Clamp');
@@ -1349,6 +1349,66 @@ test('tara and rex kits follow the approved briefs', () => {
   assert.strictEqual(hot.damage, 11);
 });
 
+test('wolf kit follows the approved brief', () => {
+  const wolf = CHARACTERS.wolf.moves;
+  const filament = wolf.basicCharge;
+  assert.strictEqual(filament.name, 'White-Hot Filament');
+  assert.strictEqual(filament.kind, 'burst');
+  assert.strictEqual(filament.type, 'heat');
+  assert.strictEqual(filament.damage, 7);
+  assert.strictEqual(filament.chargeDamageMult, 1.9);
+  assert.strictEqual(filament.chargeRadiusMult, 1.85);
+  let longest = 0;
+  let who = '';
+  for (const fighter of Object.values(CHARACTERS)) {
+    const ms = fighter.moves.basicCharge?.maxChargeMs ?? 0;
+    if (ms >= longest) {
+      longest = ms;
+      who = fighter.id;
+    }
+  }
+  assert.strictEqual(who, 'wolf');
+  assert.ok(filament.maxChargeMs > 3000);
+  const drill = wolf.basicDirectional;
+  assert.strictEqual(drill.name, 'Carbide Drill');
+  assert.notStrictEqual(drill.name, 'Tin Eater');
+  assert.strictEqual(drill.type, 'kinetic');
+  assert.strictEqual(drill.damage, 3);
+  assert.strictEqual(drill.multiHit, 5);
+  assert.strictEqual(drill.kind, undefined);
+  assert.strictEqual(drill.bonusVsId, undefined);
+  const poke = finalBlow({ ...drill, _hitIndex: 1 });
+  assert.strictEqual(poke.noKnockback, true);
+  assert.strictEqual(poke.noFlinch, true);
+  assert.strictEqual(poke.baseKnockback, 0);
+  const finisher = finalBlow({ ...drill, _hitIndex: 5 });
+  assert.strictEqual(finisher.baseKnockback, 170);
+  assert.strictEqual(finisher.noFlinch, undefined);
+  const guard = wolf.specialDefense;
+  assert.strictEqual(guard.name, 'Unmeltable');
+  assert.deepStrictEqual(guard.immune, ['heat']);
+  assert.deepStrictEqual(guard.blocks, ['heat']);
+  assert.deepStrictEqual(guard.onlyReduce, ['kinetic']);
+  assert.strictEqual(guard.blockReduction, 0.22);
+  const defender = { state: 'defending', defenseMove: guard, x: 0, y: 0, facing: 1 };
+  assert.strictEqual(interceptHit(defender, {}, { type: 'heat', damage: 9 }, 0).result, 'negate');
+  const kinetic = interceptHit(defender, {}, { type: 'kinetic', damage: 6 }, 0);
+  assert.strictEqual(kinetic.result, 'partial');
+  assert.strictEqual(kinetic.reduction, 0.22);
+  const dart = wolf.specialDirectional;
+  assert.strictEqual(dart.name, 'Armor Piercer');
+  assert.strictEqual(dart.type, 'kinetic');
+  assert.strictEqual(dart.damage, 7);
+  assert.strictEqual(dart.breaksBlock, true);
+  assert.strictEqual(dart.pierce, true);
+  const shield = {
+    state: 'defending',
+    defenseMove: { kind: 'block', blocks: ['kinetic'], blockReduction: 0.8 },
+    x: 0, y: 0, facing: 1,
+  };
+  assert.strictEqual(interceptHit(shield, {}, dart, 0).result, 'pass');
+});
+
 test('only the last hit of a string stuns or launches', () => {
   const early = finalBlow({
     multiHit: 3,
@@ -1359,6 +1419,7 @@ test('only the last hit of a string stuns or launches', () => {
     onHit: { stun: 400, poison: { dps: 1 } },
   });
   assert.strictEqual(early.noKnockback, true);
+  assert.strictEqual(early.noFlinch, true);
   assert.strictEqual(early.baseKnockback, 0);
   assert.strictEqual(early.pull, 0);
   assert.strictEqual(early.onHit.stun, 0);

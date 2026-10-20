@@ -584,6 +584,7 @@ test('an early string hit deals damage without a launch', () => {
   assert.ok(early > 0);
   assert.ok(!victim.pendingLaunch);
   assert.ok(!(victim.lockedUntil > 1000));
+  assert.strictEqual(victim.state, 'idle');
   const finisher = new Fighter(scene, 40, 0, CHARACTERS.sandy, 0, 0);
   finisher.rig = rig;
   finisher.takeHit(attacker, {
@@ -592,6 +593,7 @@ test('an early string hit deals damage without a launch', () => {
   }, 1000, 1);
   assert.ok(finisher.pendingLaunch);
   assert.ok(finisher.lockedUntil > 1000);
+  assert.strictEqual(finisher.state, 'hurt');
 });
 
 test('tantalus guard blocks chemical and a pin roots for three seconds', () => {

@@ -1866,7 +1866,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const pinned = this.state === 'defending' && this.defenseMove?.noKnockback && !incoming.isSelf;
     const bend = this.state === 'defending' && this.defenseMove?.noKnockdown && !incoming.isSelf;
     if (pinned || bend || incoming.noKnockback) kb = 0;
-    this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, !armored && !bend);
+    this.applyKnockback(attacker, incoming, time, launchDir, kb, dmg, !armored && !bend && !incoming.noFlinch);
     if (incoming.onHit?.reverse && this.pendingLaunch) {
       const back = Math.sign((attacker?.x ?? this.x) - this.x) || -(this.pendingLaunch.dir || 1);
       this.pendingLaunch.dir = back;

@@ -1,0 +1,50 @@
+{
+  "fist": {
+    "file": "carbide-drill-spin-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": true,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.1,
+    "pivotX": 0.9765625,
+    "pivotY": 0.5,
+    "flip": true,
+    "hit": false
+  },
+  "spark": {
+    "file": "drill-sparks-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.5,
+    "pivotX": 0.833333333,
+    "pivotY": 0.5,
+    "flip": true,
+    "hit": false
+  },
+  "impact": {
+    "file": "carbide-drill-final-impact-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.503472222,
+    "scaleTo": "radius",
+    "flashRadius": 290,
+    "hit": false
+  }
+}

@@ -450,7 +450,7 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       const anchor = fxAnchor(fighter, move);
       let x = anchor?.x ?? extra.x ?? fighter.x;
       let y = anchor?.y ?? extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.55);
-      if (extra?.fromSheet) {
+      if (extra?.fromSheet && art?.anchor !== 'body') {
         const kind = art?.anchor === 'ground' ? 'ground' : 'shot';
         const posed = sheetReleasePoint(fighter, kind) || sheetFxPoint(fighter, kind);
         if (posed) { x = posed.x; y = posed.y; }

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeWaveAlpha, contentSpan, curieFade, curiePulse, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, stickAim, throwGrowth, tintToward, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeTint, chargeWaveAlpha, contentSpan, curieFade, curiePulse, fadeLoopFrames, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, playsFinalImpact, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, slashArtReplacesStroke, sliceGrid, sliceHorizontal, rodOrbitPoint, stageSpanSize, stepFxProjectile, stickAim, throwGrowth, tintToward, trailBackOffset, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1969,7 +1969,7 @@ test('phosphor bloom, magnetic chill, and curie point match the arrived sheets',
   assert.ok(curieFade(0.725) > 0.4 && curieFade(0.725) < 0.6);
   assert.equal(curiePulse(0.2, 400), 1);
   assert.ok(curiePulse(0.8, 0) >= 1);
-  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie', 'assets/fx/terra', 'assets/fx/tara', 'assets/fx/rex']) {
+  for (const root of ['assets/fx/europa/phosphor-bloom', 'assets/fx/goldie', 'assets/fx/terra', 'assets/fx/tara', 'assets/fx/rex', 'assets/fx/wolf']) {
     const dirs = fs.statSync(root).isDirectory() && fs.readdirSync(root).some((name) => fs.statSync(`${root}/${name}`).isDirectory())
       ? fs.readdirSync(root).map((name) => `${root}/${name}`).filter((dir) => fs.statSync(dir).isDirectory())
       : [root];
@@ -2053,10 +2053,77 @@ test('tara and rex sheets match the arrived centres and flashes', () => {
   assert.ok(lash.hot.flashRadius < lash.spark.flashRadius);
   assert.ok(Math.abs(lash.hot.pivotX - 144 / 288) < 1e-6);
   assert.ok(Math.abs(lash.spark.pivotY - 144 / 288) < 1e-6);
-  for (const id of ['tara', 'rex']) {
+  for (const id of ['tara', 'rex', 'wolf']) {
     for (const file of fs.readdirSync(`assets/fx/${id}`, { recursive: true })) {
       const name = String(file);
       assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, name);
     }
   }
+});
+
+test('wolf sheets match the filament, drill, and penetrator', () => {
+  const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+  const filament = read('assets/fx/wolf/white-hot-filament/fx.json');
+  assert.equal(filament.file, 'filament-heat-burst-anim.png');
+  assert.equal(filament.frames, 14);
+  assert.equal(filament.fps, 24);
+  assert.equal(filament.anchor, 'body');
+  assert.equal(filament.scaleWith, 'hold');
+  assert.equal(filament.hit, false);
+  assert.equal(filament.charge.frames, 24);
+  assert.equal(filament.charge.fps, 12);
+  assert.equal(filament.charge.loop, true);
+  assert.equal(filament.charge.anchor, 'body');
+  assert.equal(filament.charge.scaleWith, 'alpha');
+  assert.equal(filament.charge.tintFrom, 0xff7820);
+  assert.equal(filament.charge.tintTo, 0xfffaf0);
+  const tap = fxGameplayScale({ _chargeFrac: 0 }, { scaleWith: 'hold' });
+  const full = fxGameplayScale({ _chargeFrac: 1 }, { scaleWith: 'hold' });
+  assert.ok(Math.abs(tap - 0.42) < 1e-9);
+  assert.ok(Math.abs(full - 1) < 1e-9);
+  assert.ok(full > tap);
+  assert.equal(chargeTint(0xff7820, 0xfffaf0, 0), 0xff7820);
+  assert.equal(chargeTint(0xff7820, 0xfffaf0, 1), 0xfffaf0);
+  assert.equal(chargeTint(0xff7820, 0xfffaf0, 0.5), 0xffb988);
+  const drill = read('assets/fx/wolf/carbide-drill/fx.json');
+  assert.equal(drill.file, undefined);
+  assert.equal(drill.fist.black, false);
+  assert.equal(drill.fist.loop, true);
+  assert.equal(drill.fist.frames, 8);
+  assert.equal(drill.fist.fps, 24);
+  assert.ok(Math.abs(drill.fist.pivotX - 500 / 512) < 1e-9);
+  assert.ok(Math.abs(drill.fist.pivotY - 64 / 128) < 1e-9);
+  assert.equal(drill.spark.loop, false);
+  assert.equal(drill.spark.frames, 12);
+  assert.ok(Math.abs(drill.spark.pivotX - 320 / 384) < 1e-9);
+  assert.ok(Math.abs(drill.spark.pivotY - 128 / 256) < 1e-9);
+  assert.equal(drill.impact.scaleTo, 'radius');
+  assert.equal(drill.impact.flashRadius, 290);
+  assert.equal(drill.impact.hard, undefined);
+  assert.equal(drill.impact.frames, 24);
+  assert.equal(drill.impact.fps, 16);
+  assert.ok(Math.abs(drill.impact.pivotX - 294 / 588) < 1e-9);
+  assert.ok(Math.abs(drill.impact.pivotY - 290 / 576) < 1e-9);
+  assert.ok(Math.abs(impactRadiusScale({ hitRadius: 96 }, drill.impact) - 96 / 290) < 1e-9);
+  assert.equal(playsFinalImpact({ multiHit: 5, _hitIndex: 1 }), false);
+  assert.equal(playsFinalImpact({ multiHit: 5, _hitIndex: 5 }), true);
+  assert.equal(playsFinalImpact({ damage: 3 }), true);
+  const guard = read('assets/fx/wolf/unmeltable/fx.json');
+  assert.equal(guard.anchor, 'body');
+  assert.equal(guard.loop, true);
+  assert.equal(guard.frames, 24);
+  const dart = read('assets/fx/wolf/armor-piercer/fx.json');
+  assert.equal(dart.black, false);
+  assert.equal(dart.aim, true);
+  assert.ok(Math.abs(dart.pivotX - 435 / 448) < 1e-9);
+  assert.ok(Math.abs(dart.pivotY - 48 / 96) < 1e-9);
+  assert.equal(dart.trail.loop, true);
+  assert.equal(dart.trail.frames, 8);
+  assert.ok(Math.abs(dart.trail.pivotX - 470 / 512) < 1e-9);
+  assert.ok(Math.abs(dart.trail.pivotY - 48 / 96) < 1e-9);
+  assert.ok(Math.abs(dart.trail.lagFrac - (435 - 40) / 448) < 1e-9);
+  assert.ok(Math.abs(trailBackOffset(448, dart.trail.lagFrac) - 395) < 1e-4);
+  assert.equal(dart.impact.frames, 10);
+  assert.equal(dart.impact.fps, 24);
+  assert.equal(dart.impact.loop, false);
 });

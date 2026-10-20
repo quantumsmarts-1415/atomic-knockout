@@ -1,0 +1,33 @@
+{
+  "spark": {
+    "file": "tiny-tap-anim.png",
+    "frames": 4,
+    "cols": 4,
+    "rows": 1,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.2,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  },
+  "impact": {
+    "file": "final-tap-hit-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.48,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "replacesSpark": true,
+    "hit": false
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "file": "periodic-column.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "pixel",
+  "scale": 0.34,
+  "pivotX": 0.5,
+  "pivotY": 1,
+  "aim": false,
+  "hit": false,
+  "impact": {
+    "file": "group-drop-impact-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.4991304347826087,
+    "pivotY": 0.5152603231597846,
+    "scale": 0.42,
+    "hit": false
+  }
+}

@@ -284,6 +284,12 @@ export function trailBackOffset(displayW, lagFrac) {
   return displayW * lagFrac;
 }
 
+/** Graphite and uranium alternate. A tap is one block; a full charge is eight. */
+export function pileCount(frac) {
+  const t = Math.max(0, Math.min(1, Number(frac) || 0));
+  return Math.min(8, 1 + Math.floor(t * 7));
+}
+
 /** A multi-hit string plays its big impact on the last connection only. */
 export function playsFinalImpact(move) {
   const multi = move?.multiHit > 1 ? move.multiHit : 0;
@@ -3045,7 +3051,53 @@ function dropHeld(fighter) {
   live?.rotor?.destroy?.();
   live?.ghost?.destroy?.();
   live?.glow?.destroy?.();
+  for (const block of live?.blocks || []) block?.destroy?.();
   if (live) liveHeld.delete(fighter);
+}
+
+/** Alternating blocks rise under the seam glow while the pile is charging. */
+function syncChargePile(scene, live, fighter, art, frac) {
+  const graphite = art?.shards?.graphite;
+  const uranium = art?.shards?.uranium;
+  if (!graphite?.frames?.length || !uranium?.frames?.length) return;
+  const count = pileCount(frac);
+  live.blocks ??= [];
+  while (live.blocks.length < count) {
+    const spec = live.blocks.length % 2 === 0 ? graphite : uranium;
+    const img = placeStill(scene, spec, fighter.x, fighter.y, 0);
+    img.setDepth(10);
+    live.blocks.push(img);
+  }
+  while (live.blocks.length > count) live.blocks.pop()?.destroy?.();
+  const step = 16;
+  for (let i = 0; i < live.blocks.length; i++) {
+    const img = live.blocks[i];
+    const spec = i % 2 === 0 ? graphite : uranium;
+    applyFrameLook(img, spec.frames[0], spec, 1);
+    img.setOrigin(spec.pivotX ?? 0.5, spec.pivotY ?? 1);
+    img.setPosition(fighter.x, fighter.y - 6 - i * step);
+  }
+}
+
+/** The blocked hit plays again, faint, with the ghost tint over the attacker. */
+export function spawnReplayGhost(scene, defender, attacker, move) {
+  if (!scene?.add?.image || scene.simFast || !attacker) return;
+  const tint = artFor(defender?.charDef?.id, defender?.defenseMove?.name)?.linger;
+  const copied = artFor(attacker?.charDef?.id, move?.name);
+  const sheet = copied?.impact?.frames?.length
+    ? copied.impact
+    : copied?.burst?.frames?.length
+      ? copied.burst
+      : (copied?.frames?.length ? copied : null);
+  const x = attacker.x;
+  const y = attacker.y - (attacker.bodyH ?? 80) * 0.5;
+  if (sheet?.frames?.length) {
+    const img = spawnFxSprite(scene, sheet, x, y, 0.45, attacker.facing || 1);
+    img?.setAlpha?.(0.38);
+  }
+  if (tint?.frames?.length) {
+    spawnFxSprite(scene, tint, attacker.x, attacker.y - (attacker.bodyH ?? 80) * 0.42, 1, 1);
+  }
 }
 
 function syncChargeGlow(scene, live, glow, x, y, frac, elapsed = 0, fighter = null) {
@@ -3218,6 +3270,7 @@ function syncHeld(scene, fighter) {
     (fighter.speedBuffUntil ?? 0) > now
     || (charge?.buff?.weight && (fighter.weightBuffUntil ?? 0) > now)
     || (charge?.tonic && (fighter.attackPowerUntil ?? 0) > now)
+    || (charge?.buff?.showBoost && (fighter.kineticResistUntil ?? 0) > now)
   )) {
     want = { art: art.boost, kind: 'boost' };
   } else if (art?.anchor === 'aura' && art.frames?.length && charge?.overclock) {
@@ -3291,6 +3344,7 @@ function syncHeld(scene, fighter) {
         const s = 0.55 + 0.7 * frac;
         live.img.setScale(Math.abs(live.img.scaleX || 1) * s, Math.abs(live.img.scaleY || 1) * s);
       }
+      syncChargePile(scene, live, fighter, art, frac);
       if (want.art.tintFrom != null && want.art.tintTo != null) {
         live.img.setTint?.(chargeTint(want.art.tintFrom, want.art.tintTo, frac));
       }
@@ -3463,6 +3517,10 @@ export function spawnContactFx(scene, attacker, victim, move) {
     rot = impact.hitRots?.[Math.min((impact.hitRots?.length ?? 1) - 1, step)] ?? 0;
   } else if (along == null) {
     along = impactRadiusScale(move, impact);
+  }
+  if (move?._slowMul > 0 && impact?.frames?.length) {
+    const base = along != null ? along : (impact.scale > 0 ? impact.scale : 1);
+    along = base * move._slowMul;
   }
   const multi = move?.multiHit > 1;
   const finisher = playsFinalImpact(move);

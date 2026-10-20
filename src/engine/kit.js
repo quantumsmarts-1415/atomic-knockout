@@ -40,13 +40,14 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.slowStacks = stacking ? Math.min(cap, (victim.slowStacks ?? 1) + 1) : 1;
     victim._slowName = move.name;
     victim.slowUntil = time + fx.slow;
-    if (fx.slowStack && attacker?.charDef?.id) {
+    if ((fx.slowStack || fx.slowCling) && attacker?.charDef?.id) {
       victim.clingFrom = {
         id: attacker.charDef.id,
         move: move.name,
         until: victim.slowUntil,
-        stacks: victim.slowStacks,
+        stacks: fx.slowStack ? victim.slowStacks : 0,
       };
+      if (fx.slowCling) victim._animPace = 0.45;
     }
   }
   if (fx.attackSlow) {
@@ -530,6 +531,19 @@ function grantBuff(fighter, buff, time) {
       dashSpeed: buff.armDash.dashSpeed ?? 560,
     };
   }
+}
+
+/** Slower travel hits harder. The floor keeps a crawl from becoming infinite. */
+export function slowHitScale(speed) {
+  return Math.min(2.2, 280 / Math.max(80, Number(speed) || 0));
+}
+
+/** Someone standing in front, at roughly the same height, is the one he can see. */
+export function fighterInView(owner, target) {
+  if (!owner || !target || owner === target) return false;
+  const ahead = (target.x - owner.x) * (owner.facing || 1);
+  const dy = Math.abs((target.y - (target.bodyH ?? 0) * 0.4) - (owner.y - (owner.bodyH ?? 0) * 0.5));
+  return ahead > 30 && dy < 90 && ahead < 340;
 }
 
 /** Position and percent from about one second ago. The oldest sample wins if the log is shorter. */

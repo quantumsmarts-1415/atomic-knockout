@@ -133,6 +133,9 @@ test('every colorway fighter is a gold-edge (updated art) fighter with 4–6 loo
   assert.ok(updated.has('uri'), 'uri lights up from his effect folder before he has colorways');
   assert.ok(updated.has('neptune'), 'neptune lights up from his effect folder before he has colorways');
   assert.ok(updated.has('pluto'), 'pluto lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('einstein'), 'einstein lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('fermi'), 'fermi lights up from his effect folder before he has colorways');
+  assert.ok(updated.has('mendel'), 'mendel lights up from his effect folder before he has colorways');
 });
 
 test('fighters without colorways keep their standard look only', () => {

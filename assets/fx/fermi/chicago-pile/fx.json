@@ -1,0 +1,55 @@
+{
+  "file": "chicago-pile-critical-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 16,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "pixel",
+  "pivotX": 0.4991304347826087,
+  "pivotY": 0.5,
+  "scale": 0.42,
+  "scaleWith": "radius",
+  "hit": false,
+  "charge": {
+    "file": "pile-seam-glow-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 24,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.95,
+    "pivotX": 0.5,
+    "pivotY": 0.62,
+    "anchor": "body",
+    "scaleWith": "alpha",
+    "hit": false
+  },
+  "shards": {
+    "graphite": {
+      "file": "graphite-block.png",
+      "frames": 1,
+      "blend": "normal",
+      "black": false,
+      "fit": "pixel",
+      "scale": 0.72,
+      "pivotX": 0.5,
+      "pivotY": 1
+    },
+    "uranium": {
+      "file": "uranium-block.png",
+      "frames": 1,
+      "blend": "normal",
+      "black": false,
+      "fit": "pixel",
+      "scale": 0.72,
+      "pivotX": 0.5,
+      "pivotY": 1
+    }
+  }
+}

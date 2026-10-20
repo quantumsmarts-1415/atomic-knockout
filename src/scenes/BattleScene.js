@@ -18,7 +18,7 @@ import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
 import { syncCoats } from '../engine/coatView.js';
 import { syncAuras } from '../engine/auraView.js';
-import { applyDot, applyOnHit, cleanse, fighterOnSwapLine, markedStrikeTargets, sheetFrameAt, withRedFrame, withShatter } from '../engine/kit.js';
+import { applyDot, applyOnHit, cleanse, fighterInView, fighterOnSwapLine, markedStrikeTargets, sheetFrameAt, slowHitScale, withRedFrame, withShatter } from '../engine/kit.js';
 import { resolvePacket } from '../data/balance.js';
 import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront } from '../engine/batch3.js';
 import { mulberry32 } from '../engine/rng.js';
@@ -30,7 +30,7 @@ import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, cloudIgnitionScale, collectFxArt, flareCover, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnJumpArc, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
+import { artFor, cloudIgnitionScale, collectFxArt, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnJumpArc, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
@@ -1088,6 +1088,114 @@ export default class BattleScene extends Phaser.Scene {
     return true;
   }
 
+  holdOutlines() {
+    for (const fighter of this.fighters) {
+      if (fighter.state !== 'defending' || !fighter.defenseMove?.outline || !fighter.alive) continue;
+      const rx = (fighter.bodyW ?? 40) * 0.8;
+      const ry = (fighter.bodyH ?? 80) * 0.46;
+      const cy = fighter.y - (fighter.bodyH ?? 80) * 0.48;
+      for (const other of this.fighters) {
+        if (other === fighter || !other.alive || other.state === 'ko' || !other.body) continue;
+        const oy = other.y - (other.bodyH ?? 80) * 0.4;
+        const dx = other.x - fighter.x;
+        const dy = oy - cy;
+        const nx = dx / Math.max(12, rx);
+        const ny = dy / Math.max(12, ry);
+        if (nx * nx + ny * ny >= 1) continue;
+        const len = Math.hypot(nx, ny) || 0.001;
+        const px = (nx / len) * rx;
+        const py = (ny / len) * ry;
+        other.body.reset(fighter.x + px, other.y + (cy + py - oy));
+        other.body.setVelocity((nx / len) * 160, Math.min(other.body.velocity.y, -20));
+      }
+    }
+  }
+
+  bounceOffOutline(p, victim) {
+    const cx = victim.x;
+    const cy = victim.y - (victim.bodyH ?? 80) * 0.48;
+    const dx = p.gfx.x - cx;
+    const dy = p.gfx.y - cy;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = dx / len;
+    const ny = dy / len;
+    const vn = p.vx * nx + p.vy * ny;
+    if (vn < 0) {
+      p.vx -= 2 * vn * nx;
+      p.vy -= 2 * vn * ny;
+    } else if (Math.hypot(p.vx, p.vy) < 40) {
+      p.vx = nx * 220;
+      p.vy = ny * 220;
+    }
+    const rx = (victim.bodyW ?? 40) * 0.9;
+    const ry = (victim.bodyH ?? 80) * 0.5;
+    p.gfx.x = cx + nx * (rx + 10);
+    p.gfx.y = cy + ny * (ry + 10);
+    const art = artFor(victim.charDef?.id, victim.defenseMove?.name)?.reflect;
+    if (art?.frames?.length) {
+      spawnFxSprite(this, { ...art, _rot: Math.atan2(ny, nx) }, p.gfx.x, p.gfx.y, 1, 1);
+    }
+  }
+
+  bounceAroundStage(p) {
+    const w = this.world?.width > 0 ? this.world.width : 1280;
+    const top = 48;
+    let bounced = false;
+    let nx = 0;
+    let ny = 0;
+    if (p.gfx.x < 28) {
+      p.gfx.x = 28;
+      p.vx = Math.abs(p.vx || 200);
+      bounced = true;
+      nx = 1;
+    } else if (p.gfx.x > w - 28) {
+      p.gfx.x = w - 28;
+      p.vx = -Math.abs(p.vx || 200);
+      bounced = true;
+      nx = -1;
+    }
+    if (p.gfx.y < top) {
+      p.gfx.y = top;
+      p.vy = Math.abs(p.vy || 200);
+      bounced = true;
+      ny = 1;
+    } else {
+      const gy = groundTop(this, p.gfx.x, p.gfx.y + 80);
+      if (p.gfx.y > gy - 16) {
+        p.gfx.y = gy - 18;
+        p.vy = -Math.abs(p.vy || 240);
+        bounced = true;
+        ny = -1;
+      }
+    }
+    if (!bounced) return;
+    p.bounces = (p.bounces ?? 0) + 1;
+    const spark = artFor(p.owner?.charDef?.id, p.move?.name)?.spark;
+    if (spark?.frames?.length) {
+      spawnFxSprite(this, { ...spark, _rot: Math.atan2(ny, nx || Math.sign(p.vx || 1)) }, p.gfx.x, p.gfx.y, 1, 1);
+    }
+    const owner = p.owner;
+    if (!owner) return;
+    let best = null;
+    let bestD = Infinity;
+    for (const other of this.fighters) {
+      if (other === owner || !other.alive || other.state === 'ko' || p.landed?.has(other)) continue;
+      if (fighterInView(owner, other)) continue;
+      const d = Math.hypot(other.x - p.gfx.x, (other.y - (other.bodyH ?? 80) * 0.45) - p.gfx.y);
+      if (d < bestD) { bestD = d; best = other; }
+    }
+    if (!best) return;
+    const speed = Math.max(180, Math.hypot(p.vx, p.vy));
+    const tx = best.x - p.gfx.x;
+    const ty = (best.y - (best.bodyH ?? 80) * 0.45) - p.gfx.y;
+    const tl = Math.hypot(tx, ty) || 1;
+    p.vx = p.vx * 0.55 + (tx / tl) * speed * 0.45;
+    p.vy = p.vy * 0.55 + (ty / tl) * speed * 0.45;
+    const keep = Math.hypot(p.vx, p.vy) || 1;
+    p.vx = (p.vx / keep) * speed;
+    p.vy = (p.vy / keep) * speed;
+  }
+
   spawnProjectile(owner, move) {
     if (move.rain > 1 && !move._rainChild) {
       const art = artFor(owner?.charDef?.id, move.name);
@@ -1137,13 +1245,13 @@ export default class BattleScene extends Phaser.Scene {
           return;
         }
         if (art?.shower?.frames?.length) {
-          const cover = flareCover(move, owner.bodyH);
-          spawnFxSprite(
+          const img = spawnFxSprite(
             this, art.shower,
-            owner.x + face0 * (move.rainSpread ?? 150) * 0.08,
-            owner.y,
-            1, 1, { w: cover.width, h: cover.height },
+            owner.x + face0 * (owner.bodyW ?? 40) * 0.8,
+            owner.y - (owner.bodyH ?? 80) * 0.15,
+            1, face0,
           );
+          if (img && art.shower.tilt) img.rotation = face0 * art.shower.tilt;
         }
         const n = move.rain | 0;
         const spread = move.rainSpread ?? 220;
@@ -1292,10 +1400,25 @@ export default class BattleScene extends Phaser.Scene {
       y = groundTop(this, x, owner.y + 4);
       vy = 0;
     }
+    let dropVx = null;
     if (move.fromAbove) {
       y -= move.skyHeight ?? 220;
       // Start behind the aim point so a diagonal dive crosses into the fight.
       if (move.skyLead) x -= face * move.skyLead;
+      if (move.dropOn) {
+        let best = null;
+        let bestD = Infinity;
+        for (const other of this.fighters) {
+          if (other === owner || !other.alive || other.state === 'ko') continue;
+          const d = Math.hypot(other.x - owner.x, other.y - owner.y);
+          if (d < bestD) { bestD = d; best = other; }
+        }
+        if (best) {
+          x = best.x;
+          y = best.y - (move.skyHeight ?? 280);
+          dropVx = 0;
+        }
+      }
     }
     if (move._rainChild && move._from == null) y -= 160;
     if (!move._orbitChild && !move._fanChild && !move._rainChild && !move._behindChild && !move._salvoChild) {
@@ -1313,7 +1436,7 @@ export default class BattleScene extends Phaser.Scene {
       });
     }
     const born = this.time.now;
-    const shotVx = move._vx != null ? move._vx : face * move.projectileSpeed;
+    const shotVx = dropVx != null ? dropVx : (move._vx != null ? move._vx : face * move.projectileSpeed);
     const shot = {
       owner, move,
       vx: shotVx,
@@ -1536,11 +1659,7 @@ export default class BattleScene extends Phaser.Scene {
         const ang = Math.abs(Math.atan2(dy, Math.max(1, dx))) * (180 / Math.PI);
         if (ang > move.coneDeg / 2) continue;
       }
-      if (move.unseen && target !== owner) {
-        const ahead = (target.x - owner.x) * (owner.facing || 1);
-        const dy = Math.abs((target.y - (target.bodyH ?? 0) * 0.4) - (owner.y - (owner.bodyH ?? 0) * 0.5));
-        if (ahead > 30 && dy < 90 && ahead < 340) continue;
-      }
+      if (move.unseen && fighterInView(owner, target)) continue;
       const fxHit = fxBurstHits(this, owner, move, cx, cy, target);
       if (fxHit === true || (fxHit == null && hurtHitsCircle(target, cx, cy, move.radius ?? 70))) {
         this.landHit(owner, target, move);
@@ -2384,6 +2503,7 @@ export default class BattleScene extends Phaser.Scene {
     this.prevPadPause = padPause;
 
     for (const f of this.fighters) f.update(time, delta);
+    this.holdOutlines();
     tickChargeOrbits(this, time);
     tickGeysers(this, time);
     const collisionStart = globalThis.performance.now();
@@ -2661,6 +2781,7 @@ export default class BattleScene extends Phaser.Scene {
         p.gfx.y += (p.vy * delta) / 1000 + Math.sin(time / 90) * 0.25;
         stepFxProjectile(p, time);
         this.leaveTracer(p, time);
+        if (p.move.stageBounce && !p.pinned) this.bounceAroundStage(p);
       }
       if (p.move.can && !p.pinned && this.stepCan(p)) continue;
       else if (p.move.ricochet && !p.pinned) {
@@ -2778,7 +2899,12 @@ export default class BattleScene extends Phaser.Scene {
         if (victim.state === 'defending' && victim.defenseMove?.untargetable) continue;
         if (victim.state === 'defending' && victim.defenseMove?.intangible) continue;
         if (p.next && time < (p.next.get(victim) ?? 0)) continue;
+        if (p.move.unseen && fighterInView(p.owner, victim)) continue;
         if (!projectileHits(p, victim)) continue;
+        if (victim.state === 'defending' && victim.defenseMove?.outline && !p.pinned) {
+          this.bounceOffOutline(p, victim);
+          continue;
+        }
         if (this.nearOwnerCleanse(p)) {
           p.gfx.destroy();
           p.dead = true;
@@ -2831,9 +2957,13 @@ export default class BattleScene extends Phaser.Scene {
           };
         }
         if (shot.slowHit) {
-          const sp = Math.hypot(p.vx, p.vy);
-          const mul = Math.min(2.2, 280 / Math.max(80, sp));
-          shot = { ...shot, damage: (shot.damage ?? 0) * mul, damage2: shot.damage2 != null ? shot.damage2 * mul : shot.damage2 };
+          const mul = slowHitScale(Math.hypot(p.vx, p.vy));
+          shot = {
+            ...shot,
+            damage: (shot.damage ?? 0) * mul,
+            damage2: shot.damage2 != null ? shot.damage2 * mul : shot.damage2,
+            _slowMul: mul,
+          };
         }
         if (victim.state === 'defending' && victim.defenseMove?.softenProjectiles) {
           const mul = victim.defenseMove.softenProjectiles;

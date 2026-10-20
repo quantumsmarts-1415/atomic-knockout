@@ -2326,12 +2326,12 @@ export const MOVESETS = {
   einstein: {
     basicCharge: m('Mass-Energy', {
       kind: 'burst', type: H, damage: 17.2, type2: R, damage2: 17.2, chargeDamageMult: 1.5, chargeRadiusMult: 1.3,
-      maxChargeMs: 850, radius: 74, vfx: 'supernova', vfxColor: 0xfff6d0,
+      maxChargeMs: 850, radius: 74, hitRadius: 74, vfx: 'supernova', vfxColor: 0xfff6d0,
       selfDamage: { type: R, damage: 2, withCharge: true, noFlinch: true },
       baseKnockback: 193.49, knockbackGrowth: 3.27, duration: 260, cooldown: 1000,
     }),
     basicDirectional: melee('Time Dilation', {
-      type: K, damage: 9.39, onHit: { slow: 520 }, rangeW: 72, vfx: 'strike', vfxColor: 0xd8e8ff,
+      type: K, damage: 9.39, onHit: { slow: 520, slowCling: true }, rangeW: 72, vfx: 'strike', vfxColor: 0xd8e8ff,
       baseKnockback: 104.19, knockbackGrowth: 1.78, duration: 190, cooldown: 420,
     }),
     specialDefense: m('Thought Experiment', {
@@ -2357,20 +2357,21 @@ export const MOVESETS = {
       baseKnockback: 81, knockbackGrowth: 1.44, duration: 220, cooldown: 460,
     }),
     specialDefense: m('Exclusion Zone', {
-      phase: true, reflectProjectiles: true,
+      phase: true, outline: true,
       phaseRetort: { type: K, damage: 1.8, knockback: 234, growth: 2.16 },
       duration: 640, cooldown: 900, vfx: 'shield', vfxColor: 0xe8e8ff,
     }),
     specialDirectional: m('Fermi Paradox', {
-      kind: 'burst', type: R, damage: 7.2, unseen: true, radius: 460, vfx: 'spark', vfxColor: 0xd0e0ff,
+      kind: 'projectile', type: R, damage: 7.2, unseen: true, stageBounce: true, vfx: 'spark', vfxColor: 0xd0e0ff,
+      projectileSpeed: 520, projectileRadius: 16, projectileLife: 1700,
       baseKnockback: 72, knockbackGrowth: 1.26, duration: 220, cooldown: 860,
     }),
   },
 
   mendel: {
     basicCharge: m('Dream of the Table', {
-      kind: 'buff', maxChargeMs: 900, vfx: 'spark', vfxColor: 0xfff6d8,
-      buff: { ms: 4000, kineticTaken: 0.7, bonus: { type: K, damage: 4.6, hits: 4, name: 'Dream of the Table' } },
+      kind: 'buff', doze: true, maxChargeMs: 900, vfx: 'spark', vfxColor: 0xfff6d8,
+      buff: { ms: 4000, kineticTaken: 0.7, showBoost: true, bonus: { type: K, damage: 4.6, hits: 4, name: 'Dream of the Table' } },
       duration: 200, cooldown: 1100,
     }),
     basicDirectional: melee('One Atom at a Time', {
@@ -2378,11 +2379,11 @@ export const MOVESETS = {
       baseKnockback: 46, knockbackGrowth: 0.8, duration: 260, cooldown: 400,
     }),
     specialDefense: m('Empty Square', {
-      phase: true, duration: 560, cooldown: 900, vfx: 'shield', vfxColor: 0xf4f0e0,
+      phase: true, swallow: true, duration: 560, cooldown: 900, vfx: 'shield', vfxColor: 0xf4f0e0,
     }),
     specialDirectional: m('Group Drop', {
-      kind: 'projectile', type: K, damage: 9.2, type2: R, damage2: 6.9, fromAbove: true, fallSpeed: 460,
-      vfx: 'strike', vfxColor: 0xe0d8c0,
+      kind: 'projectile', type: K, damage: 9.2, type2: R, damage2: 6.9, fromAbove: true, dropOn: true,
+      skyHeight: 280, fallSpeed: 460, vfx: 'strike', vfxColor: 0xe0d8c0,
       projectileSpeed: 40, projectileRadius: 16, projectileLife: 700,
       baseKnockback: 161, knockbackGrowth: 2.53, duration: 220, cooldown: 700,
     }),

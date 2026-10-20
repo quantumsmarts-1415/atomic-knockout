@@ -6,7 +6,7 @@ import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defen
 import { applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, prepareMove, rewindPoint, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
-import { armGeyser, fxAnchor, groundTop, hitAnchor, playRetortPulse, spawnMeteor, spawnMoveExtra } from './fxArt.js';
+import { armGeyser, fxAnchor, groundTop, hitAnchor, playRetortPulse, spawnMeteor, spawnMoveExtra, spawnReplayGhost } from './fxArt.js';
 import { clipNameForMove, sheetMeta } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
@@ -845,6 +845,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
     }
     this.rig.holdFrame = (this.goldUntil ?? 0) > time;
+    this.rig.animPace = this.slowUntil > time && this._animPace ? this._animPace : 1;
     this.rig.animate(dt / 1000, animState, speedFactor);
     const goldNow = (this.goldUntil ?? 0) > time;
     const revealNow = (this.revealTintUntil ?? 0) > time;
@@ -1770,6 +1771,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
           y: this.y - (this.bodyH ?? 80) * 0.42,
         });
       }
+      if (gate.result === 'negate' && this.defenseMove?.swallow) {
+        const face = this.facing || 1;
+        playVfx(this.scene, this, this.defenseMove, 'block', {
+          x: this.x + face * (this.bodyW ?? 40) * 0.9,
+          y: this.y - (this.bodyH ?? 80) * 0.5,
+        });
+      }
       if (gate.detonate && this.scene?.resolveBurst) {
         this.scene.resolveBurst(this, {
           name: this.defenseMove?.name ?? 'detonate',
@@ -1871,6 +1879,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
       return 0;
     }
     if (gate.result === 'counter') {
+      if (this.defenseMove?.replay && attacker && attacker !== this) {
+        playVfx(this.scene, this, this.defenseMove, 'block', {
+          x: this.x,
+          y: this.y - this.bodyH * 0.45,
+        });
+        spawnReplayGhost(this.scene, this, attacker, incoming);
+      }
       if (attacker && attacker !== this && this.defenseMove) {
         const aim = Math.atan2(
           (attacker.y - (attacker.bodyH ?? 80) * 0.45) - (this.y - this.bodyH * 0.5),

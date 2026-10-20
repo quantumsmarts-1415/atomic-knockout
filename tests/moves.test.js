@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CHARACTERS } from '../src/data/characters.js';
 import { computeBotInput } from '../src/engine/BotAI.js';
 import { gateStored, interceptHit } from '../src/engine/defense.js';
-import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterOnSwapLine, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, markedStrikeTargets, prepareMove, rewindPoint, scaledByHaste, sheetFrameAt, stripBuffs, takingDps, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
+import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterInView, fighterOnSwapLine, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, markedStrikeTargets, prepareMove, rewindPoint, scaledByHaste, sheetFrameAt, slowHitScale, stripBuffs, takingDps, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
 import { enGapMult, resolvePacket } from '../src/data/balance.js';
 import { applyImmunities, rearmDefense } from '../src/engine/defense.js';
 
@@ -1786,6 +1786,61 @@ test('pat, uri, neptune, and pluto keep the approved batch rules', () => {
   assert.equal(pluto.specialDirectional.landBurst, true);
   assert.equal(pluto.specialDirectional.type, 'kinetic');
   assert.equal(pluto.specialDirectional.type2, 'radiation');
+});
+
+test('einstein, fermi, and mendel keep the approved batch rules', () => {
+  const einstein = CHARACTERS.einstein.moves;
+  assert.equal(einstein.basicCharge.name, 'Mass-Energy');
+  assert.equal(einstein.basicCharge.type, 'heat');
+  assert.equal(einstein.basicCharge.type2, 'radiation');
+  assert.equal(einstein.basicCharge.hitRadius, 74);
+  assert.equal(einstein.basicCharge.selfDamage.withCharge, true);
+  assert.equal(einstein.basicDirectional.onHit.slowCling, true);
+  assert.equal(einstein.specialDefense.replay, true);
+  assert.equal(einstein.specialDirectional.rain, 5);
+  assert.equal(einstein.specialDirectional.type, 'radiation');
+  const slowed = { slowUntil: 0 };
+  applyOnHit({ charDef: { id: 'einstein' } }, slowed, einstein.basicDirectional, 1000);
+  assert.equal(slowed.clingFrom.move, 'Time Dilation');
+  assert.equal(slowed._animPace, 0.45);
+  assert.equal(slowed.slowStacks, 1);
+
+  const fermi = CHARACTERS.fermi.moves;
+  assert.equal(fermi.basicCharge.name, 'Chicago Pile');
+  assert.equal(fermi.basicCharge.type, 'radiation');
+  assert.equal(fermi.basicCharge.type2, 'heat');
+  assert.equal(fermi.basicDirectional.slowHit, true);
+  assert.ok(Math.abs(slowHitScale(150) - 280 / 150) < 1e-9);
+  assert.equal(slowHitScale(40), 2.2);
+  assert.equal(fermi.specialDefense.outline, true);
+  assert.equal(fermi.specialDefense.reflectProjectiles, undefined);
+  assert.equal(fermi.specialDefense.phase, true);
+  assert.equal(fermi.specialDirectional.name, 'Fermi Paradox');
+  assert.equal(fermi.specialDirectional.kind, 'projectile');
+  assert.equal(fermi.specialDirectional.stageBounce, true);
+  assert.equal(fermi.specialDirectional.unseen, true);
+  const owner = { x: 100, y: 200, facing: 1, bodyH: 100 };
+  const seen = { x: 220, y: 200, bodyH: 100 };
+  const hidden = { x: 40, y: 200, bodyH: 100 };
+  assert.equal(fighterInView(owner, seen), true);
+  assert.equal(fighterInView(owner, hidden), false);
+
+  const mendel = CHARACTERS.mendel.moves;
+  assert.equal(mendel.basicCharge.doze, true);
+  assert.equal(mendel.basicCharge.buff.showBoost, true);
+  assert.equal(mendel.basicCharge.buff.kineticTaken, 0.7);
+  assert.equal(mendel.basicDirectional.multiHit, 5);
+  const early = finalBlow({ ...mendel.basicDirectional, _hitIndex: 1 });
+  const last = finalBlow({ ...mendel.basicDirectional, _hitIndex: 5 });
+  assert.equal(early.noKnockback, true);
+  assert.equal(early.baseKnockback, 0);
+  assert.equal(last.noKnockback, undefined);
+  assert.equal(last.baseKnockback, mendel.basicDirectional.baseKnockback);
+  assert.equal(mendel.specialDefense.swallow, true);
+  assert.equal(mendel.specialDirectional.dropOn, true);
+  assert.equal(mendel.specialDirectional.fromAbove, true);
+  assert.equal(mendel.specialDirectional.type, 'kinetic');
+  assert.equal(mendel.specialDirectional.type2, 'radiation');
 });
 
 function fake(id, x, y) {

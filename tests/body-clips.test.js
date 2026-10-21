@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'thor', 'thule'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'uri', 'wolf'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -1082,6 +1082,27 @@ test('Thor jabs from the shortened handle, and Thule aims with an empty hand', (
   const unit = JSON.parse(readFileSync('assets/fx/thule/handheld-x-ray/fx.json', 'utf8'));
   assert.equal(unit.unit.file, 'x-ray-unit.png');
   assert.equal(unit.unit.aim, false);
+});
+
+test('Sarge, Talia, Tara, Tate, Uri, and Wolf keep their own soles and wide Wolf strips fit', () => {
+  const decay = CHARACTERS.sarge.art.sheets.clips['body-specialDirectional'];
+  assert.equal(decay.file, 'sarge_decay-mortar.png');
+  assert.equal(Math.round(decay.footY * decay.frameH) - 1, 636);
+  const poison = CHARACTERS.talia.art.sheets.clips['body-basicCharge'];
+  assert.equal(poison.file, 'talia_poisoners-poison.png');
+  assert.equal(bodySourceSlug('talia', "Poisoner's Poison"), 'poisoners-poison');
+  const cake = CHARACTERS.uri.art.sheets.clips['body-specialDirectional'];
+  assert.equal(cake.file, 'uri_yellowcake-lob.png');
+  assert.equal(Math.round(cake.footY * cake.frameH) - 1, 779);
+  const drill = CHARACTERS.wolf.art.sheets.clips['body-basicDirectional'];
+  const piercer = CHARACTERS.wolf.art.sheets.clips['body-specialDirectional'];
+  assert.equal(drill.frameW, 1225);
+  assert.equal(piercer.frameW, 1046);
+  for (const clip of [drill, piercer]) {
+    const png = PNG.sync.read(readFileSync(`${CHARACTERS.wolf.art.sheets.dir}${clip.file}`));
+    assert.ok(png.width <= 8192 && png.height <= 8192, clip.file);
+    assert.ok((png.width / clip.frameW) * (png.height / clip.frameH) >= clip.count, clip.file);
+  }
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

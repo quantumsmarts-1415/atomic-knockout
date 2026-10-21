@@ -1,0 +1,207 @@
+{
+ "name": "thor",
+ "move": "fuel-rod-jab",
+ "method": "video (Veo/Flow)",
+ "source": "fx-art/_flow/b7/clips/553b_flow.mp4 (stream 0)",
+ "frameW": 609,
+ "frameH": 708,
+ "idle_cell_w": 590,
+ "idle_cell_h": 630,
+ "pad_top": 78,
+ "pad_left": 0,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14,
+ "loop": false,
+ "foot_row": 689,
+ "footY": 0.9732,
+ "visibleH": 566,
+ "scale": 1.12525,
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_hand_xy": {
+  "3": [
+   770,
+   268
+  ],
+  "4": [
+   768,
+   270
+  ],
+  "5": [
+   768,
+   267
+  ]
+ },
+ "strike_reach_xy": {
+  "3": [
+   605,
+   272
+  ],
+  "4": [
+   605,
+   273
+  ],
+  "5": [
+   605,
+   272
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    122,
+    689,
+    12,
+    455
+   ],
+   "foot": 689,
+   "front_hand_xy": [
+    455,
+    283
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 41,
+   "bbox": [
+    80,
+    689,
+    82,
+    434
+   ],
+   "foot": 689,
+   "front_hand_xy": [
+    351,
+    246
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    3,
+    689,
+    104,
+    480
+   ],
+   "foot": 689,
+   "front_hand_xy": [
+    479,
+    311
+   ],
+   "removed_detached_px": 72,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 57,
+   "bbox": [
+    60,
+    689,
+    82,
+    605
+   ],
+   "foot": 689,
+   "front_hand_xy": [
+    770,
+    268
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    64,
+    689,
+    79,
+    605
+   ],
+   "foot": 689,
+   "front_hand_xy": [
+    768,
+    270
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    64,
+    689,
+    79,
+    605
+   ],
+   "foot": 689,
+   "front_hand_xy": [
+    768,
+    267
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 137,
+   "bbox": [
+    29,
+    689,
+    79,
+    423
+   ],
+   "foot": 689,
+   "front_hand_xy": [
+    367,
+    327
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 185,
+   "bbox": [
+    87,
+    689,
+    59,
+    428
+   ],
+   "foot": 689,
+   "front_hand_xy": [
+    428,
+    267
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   689,
+   689,
+   689,
+   689,
+   689,
+   689,
+   689,
+   689
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false
+ },
+ "paint_fix": "frames 3-5: spiked/over-long handle trimmed to idle length (60px past grip) + idle end cap; frame 2: purple tint on hammer head desaturated"
+}

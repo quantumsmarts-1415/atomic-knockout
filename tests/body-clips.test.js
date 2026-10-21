@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'thor', 'thule'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -1037,6 +1037,51 @@ test('Roger points from the sheet hand, and the hook arc covers the short punch'
   assert.equal(creepMeta.release, 3);
   assert.deepEqual(creepMeta.anchors.fist[5], [619, 445]);
   assert.ok(creepMeta.anchors.fist[5][1] < 500);
+});
+
+test('Thor jabs from the shortened handle, and Thule aims with an empty hand', () => {
+  const jab = CHARACTERS.thor.art.sheets.clips['body-basicDirectional'];
+  const jabMeta = sheetMeta('thor', 'body-basicDirectional');
+  assert.equal(jab.file, 'thor_fuel-rod-jab.png');
+  assert.equal(jab.frameW, 609);
+  assert.equal(jab.frameH, 708);
+  assert.equal(Math.round(jab.footY * jab.frameH) - 1, 689);
+  assert.equal(jabMeta.release, 3);
+  assert.deepEqual(jabMeta.active, [3, 5]);
+  assert.deepEqual(jabMeta.anchors.fist[3], [605, 272]);
+  const hammer = sheetMeta('thor', 'body-basicCharge');
+  assert.equal(CHARACTERS.thor.art.sheets.clips['body-basicCharge'].file, 'thor_thunder-hammer.png');
+  assert.deepEqual(hammer.loop, [0, 3]);
+  assert.equal(hammer.release, 4);
+  assert.deepEqual(hammer.anchors.fist[4], [602, 310]);
+  const surge = sheetMeta('thor', 'body-specialDirectional');
+  assert.equal(surge.release, 3);
+  assert.deepEqual(surge.anchors.fist[4], [665, 154]);
+  const blanket = sheetMeta('thor', 'body-specialDefense');
+  assert.deepEqual(blanket.loop, [3, 5]);
+
+  const ultima = sheetMeta('thule', 'body-basicCharge');
+  assert.equal(CHARACTERS.thule.art.sheets.clips['body-basicCharge'].file, 'thule_ultima-thule.png');
+  assert.deepEqual(ultima.loop, [0, 4]);
+  assert.equal(ultima.release, 5);
+  assert.deepEqual(ultima.anchors.fist[6], [639, 144]);
+  const glow = CHARACTERS.thule.art.sheets.clips['body-basicDirectional'];
+  const glowMeta = sheetMeta('thule', 'body-basicDirectional');
+  assert.equal(glow.file, 'thule_blue-glow-jab.png');
+  assert.equal(bodySourceSlug('thule', 'Blue Glow Jab'), 'blue-glow-jab');
+  assert.deepEqual(glowMeta.active, [2, 4]);
+  assert.deepEqual(glowMeta.anchors.fist[3], [599, 178]);
+  const veil = sheetMeta('thule', 'body-specialDefense');
+  assert.deepEqual(veil.loop, [3, 5]);
+  const aim = CHARACTERS.thule.art.sheets.clips['body-specialDirectional'];
+  const aimMeta = sheetMeta('thule', 'body-specialDirectional');
+  assert.equal(aim.file, 'thule_handheld-x-ray.png');
+  assert.equal(aimMeta.release, 3);
+  assert.deepEqual(aimMeta.anchors.fist[3], [678, 172]);
+  assert.ok(aimMeta.anchors.fist[3][0] > aim.frameW - 8);
+  const unit = JSON.parse(readFileSync('assets/fx/thule/handheld-x-ray/fx.json', 'utf8'));
+  assert.equal(unit.unit.file, 'x-ray-unit.png');
+  assert.equal(unit.unit.aim, false);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

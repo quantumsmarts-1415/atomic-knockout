@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -985,6 +985,58 @@ test('Ray drinks from a cupped hand, and the uppercut is the rising fist', () =>
   assert.equal(lashFx.oneshot, true);
   assert.deepEqual(lashFx.swing, [0, 13]);
   assert.ok(Math.abs(lashFx.pivotX - 40 / 768) < 1e-6);
+});
+
+test('Roger points from the sheet hand, and the hook arc covers the short punch', () => {
+  const vision = CHARACTERS.roger.art.sheets.clips['body-basicCharge'];
+  const visionMeta = sheetMeta('roger', 'body-basicCharge');
+  assert.equal(vision.file, 'roger_x-ray-vision.png');
+  assert.deepEqual(visionMeta.loop, [0, 4]);
+  assert.equal(visionMeta.release, 5);
+  assert.deepEqual(visionMeta.anchors.fist[5], [546, 168]);
+  const flash = CHARACTERS.roger.art.sheets.clips['body-basicDirectional'];
+  const flashMeta = sheetMeta('roger', 'body-basicDirectional');
+  assert.equal(flash.file, 'roger_skeleton-flash.png');
+  assert.deepEqual(flashMeta.active, [3, 5]);
+  assert.ok(flashMeta.anchors.fist[3][0] > flash.frameW - 12, flashMeta.anchors.fist[3][0]);
+  const tube = sheetMeta('roger', 'body-specialDefense');
+  assert.equal(CHARACTERS.roger.art.sheets.clips['body-specialDefense'].file, 'roger_crookes-tube.png');
+  assert.deepEqual(tube.loop, [2, 6]);
+  assert.deepEqual(tube.anchors.fist[2], [490, 221]);
+  const beam = CHARACTERS.roger.art.sheets.clips['body-specialDirectional'];
+  const beamMeta = sheetMeta('roger', 'body-specialDirectional');
+  assert.equal(beam.file, 'roger_penetrating-ray.png');
+  assert.equal(beamMeta.release, 3);
+  assert.deepEqual(beamMeta.anchors.fist[3], [667, 158]);
+  assert.deepEqual(beamMeta.anchors.fist[5], [445, 137]);
+
+  const seep = sheetMeta('ronan', 'body-basicCharge');
+  assert.equal(CHARACTERS.ronan.art.sheets.clips['body-basicCharge'].file, 'ronan_ground-seep.png');
+  assert.deepEqual(seep.loop, [0, 4]);
+  assert.ok(seep.anchors.fist[6][1] < 220);
+  const hook = CHARACTERS.ronan.art.sheets.clips['body-basicDirectional'];
+  const hookMeta = sheetMeta('ronan', 'body-basicDirectional');
+  assert.equal(hook.file, 'ronan_half-life-hook.png');
+  assert.deepEqual(hookMeta.active, [3, 5]);
+  assert.deepEqual(hookMeta.anchors.fist[3], [500, 346]);
+  assert.ok(hookMeta.anchors.fist[3][0] > hook.frameW - 8);
+  const hookFx = JSON.parse(readFileSync('assets/fx/ronan/half-life-hook/fx.json', 'utf8'));
+  assert.equal(hookFx.anchor, 'fist');
+  assert.equal(hookFx.heightFrac, 2.2);
+  assert.equal(hookFx.pivotX, 0.18);
+  assert.deepEqual(hookFx.swing, [0, 7]);
+  assert.equal(swingFrameIndex(0, hookFx.swing, 8), 0);
+  assert.equal(swingFrameIndex(1, hookFx.swing, 8), 7);
+  const spa = sheetMeta('ronan', 'body-specialDefense');
+  assert.equal(CHARACTERS.ronan.art.sheets.clips['body-specialDefense'].file, 'ronan_radon-spa.png');
+  assert.deepEqual(spa.loop, [2, 5]);
+  assert.ok(spa.anchors.fist[2][1] < 500);
+  const creep = CHARACTERS.ronan.art.sheets.clips['body-specialDirectional'];
+  const creepMeta = sheetMeta('ronan', 'body-specialDirectional');
+  assert.equal(creep.file, 'ronan_radon-creep.png');
+  assert.equal(creepMeta.release, 3);
+  assert.deepEqual(creepMeta.anchors.fist[5], [619, 445]);
+  assert.ok(creepMeta.anchors.fist[5][1] < 500);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

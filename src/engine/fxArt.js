@@ -2102,7 +2102,7 @@ export function fxAnchor(fighter, move) {
 const oneShots = [];
 const embers = [];
 
-function trackOneShot(scene, img, art, scale, peak, face = 1, box = null) {
+function trackOneShot(scene, img, art, scale, peak, face = 1, box = null, fighter = null) {
   const fps = art.fps > 0 ? art.fps : 8;
   const frames = art.frames?.length || 1;
   const life = art.lifeMs > 0
@@ -2111,7 +2111,15 @@ function trackOneShot(scene, img, art, scale, peak, face = 1, box = null) {
   oneShots.push({
     img, art, scale, peak, face, box, born: scene.simNow ?? 0, life,
     tag: art._shotTag || null,
+    fighter: art.swing ? fighter : null,
   });
+}
+
+/** 0 at the first active frame, 1 at the end of the hit window. */
+function attackSwingAlong(fighter) {
+  const start = fighter?.frameData?.startup ?? 0;
+  const active = Math.max(1, fighter?.frameData?.active ?? 1);
+  return Math.max(0, Math.min(1, ((fighter?.attackFrame ?? 0) - start) / active));
 }
 
 function applyFacing(img, face) {
@@ -2129,9 +2137,24 @@ function stepOneShots(scene) {
       continue;
     }
     const elapsed = now - shot.born;
-    const frame = shot.art.frames[fxFrameIndex(shot.art, elapsed)] || shot.art.frames[0];
+    // Medal Swing's body arc is a short hand travel. The oneshot keeps the
+    // crescent on that fist and plays the long frames across the hit window
+    // instead of flashing the stub at the start of the sheet.
+    const swung = shot.art.swing && shot.fighter;
+    const frame = swung
+      ? shot.art.frames[swingFrameIndex(
+        shot.fighter.state === 'attack' ? attackSwingAlong(shot.fighter) : 1,
+        shot.art.swing,
+        shot.art.frames.length,
+      )] || shot.art.frames[0]
+      : shot.art.frames[fxFrameIndex(shot.art, elapsed)] || shot.art.frames[0];
     applyFrameLook(shot.img, frame, shot.art, shot.scale, shot.box);
     applyFacing(shot.img, shot.face);
+    if (swung && shot.fighter.state === 'attack') {
+      const tip = meleeContactPoint(shot.fighter, shot.fighter.currentMove);
+      shot.img.setOrigin(shot.art.pivotX, shot.art.pivotY);
+      shot.img.setPosition(tip.x, tip.y);
+    }
     if (shot.art._rot != null) shot.img.rotation = shot.art._rot;
     const cap = shot.art._chargeAlpha != null
       ? shot.art._chargeAlpha
@@ -2191,7 +2214,14 @@ export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
   const face = art.bothSides ? 1 : (art.flip ? (fighter?.facing || 1) : 1);
   const rot = art.objectType === 'beam' && !art.flip && (fighter?.facing || 1) === -1 ? Math.PI : 0;
   const img = placeStill(scene, art, x, y, rot);
-  applyFrameLook(img, art.frames[0], art, scale);
+  const open = art.swing
+    ? art.frames[swingFrameIndex(
+      fighter?.state === 'attack' ? attackSwingAlong(fighter) : 0,
+      art.swing,
+      art.frames.length,
+    )] || art.frames[0]
+    : art.frames[0];
+  applyFrameLook(img, open, art, scale);
   applyFacing(img, face);
   let painted = art;
   if (art.scaleWith === 'charge') {
@@ -2217,7 +2247,7 @@ export function drawFxOneShot(scene, fighter, move, x, y, scale = 1) {
     peak._fxW = art.peak.displayW;
     peak._fxH = art.peak.displayH;
   }
-  trackOneShot(scene, img, painted, scale, peak, face);
+  trackOneShot(scene, img, painted, scale, peak, face, null, painted.swing ? fighter : null);
   return {
     image: img,
     placement: { mask: (art.frames[art.hitIndex ?? 0] || art.frames[0]).mask, x, y, rot, scale },

@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -691,6 +691,70 @@ test('Niko keeps his hands, and Rising Sun releases on the palm', () => {
   assert.equal(beam.file, 'niko_zinc-ion-beam.png');
   assert.equal(beamMeta.release, 4);
   assert.ok(beamMeta.anchors.fist[4][0] > beam.frameW - 30, beamMeta.anchors.fist[4][0]);
+});
+
+test('Noble and Ogden keep their hands, and the medal arc extends the swing', () => {
+  const vial = CHARACTERS.noble.art.sheets.clips['body-basicCharge'];
+  const vialMeta = sheetMeta('noble', 'body-basicCharge');
+  assert.equal(vial.file, 'noble_nitroglycerin-vial.png');
+  assert.deepEqual(vialMeta.active, [5, 6]);
+  assert.deepEqual(vialMeta.loop, [0, 4]);
+  assert.equal(vialMeta.release, 5);
+
+  const medal = CHARACTERS.noble.art.sheets.clips['body-basicDirectional'];
+  const medalMeta = sheetMeta('noble', 'body-basicDirectional');
+  assert.equal(medal.file, 'noble_medal-swing.png');
+  assert.deepEqual(medalMeta.active, [3, 5]);
+  assert.ok(medalMeta.anchors.fist[5][0] > medal.frameW - 16, medalMeta.anchors.fist[5][0]);
+
+  const prize = sheetMeta('noble', 'body-specialDefense');
+  assert.equal(CHARACTERS.noble.art.sheets.clips['body-specialDefense'].file, 'noble_peace-prize.png');
+  assert.deepEqual(prize.loop, [2, 5]);
+
+  const ions = CHARACTERS.noble.art.sheets.clips['body-specialDirectional'];
+  const ionsMeta = sheetMeta('noble', 'body-specialDirectional');
+  assert.equal(ions.file, 'noble_carbon-bombardment.png');
+  assert.equal(ionsMeta.release, 3);
+  assert.ok(ionsMeta.anchors.fist[3][0] > ions.frameW - 20, ionsMeta.anchors.fist[3][0]);
+
+  const table = CHARACTERS.ogden.art.sheets.clips['body-basicCharge'];
+  const tableMeta = sheetMeta('ogden', 'body-basicCharge');
+  assert.equal(table.file, 'ogden_end-of-the-table.png');
+  assert.deepEqual(tableMeta.active, [4, 5]);
+  assert.deepEqual(tableMeta.loop, [0, 3]);
+
+  const jab = CHARACTERS.ogden.art.sheets.clips['body-basicDirectional'];
+  const jabMeta = sheetMeta('ogden', 'body-basicDirectional');
+  assert.equal(jab.file, 'ogden_light-speed-jab.png');
+  assert.deepEqual(jabMeta.active, [2, 5]);
+  assert.ok(jabMeta.anchors.fist[5][0] > jab.frameW - 16, jabMeta.anchors.fist[5][0]);
+  const jabFx = JSON.parse(readFileSync('assets/fx/ogden/light-speed-jab/fx.json', 'utf8'));
+  assert.equal(jabFx.oneshot, true);
+  assert.equal(jabFx.anchor, 'fist');
+  assert.equal(jabFx.pivotX, 0.02);
+  assert.deepEqual(jabFx.swing, [0, 3]);
+
+  const broken = sheetMeta('ogden', 'body-specialDefense');
+  assert.equal(CHARACTERS.ogden.art.sheets.clips['body-specialDefense'].file, 'ogden_broken-noble.png');
+  assert.deepEqual(broken.loop, [5, 6]);
+
+  const beam = CHARACTERS.ogden.art.sheets.clips['body-specialDirectional'];
+  const beamMeta = sheetMeta('ogden', 'body-specialDirectional');
+  assert.equal(beam.file, 'ogden_millisecond-beam.png');
+  assert.equal(beamMeta.release, 3);
+  assert.ok(beamMeta.anchors.fist[3][0] > beam.frameW - 30, beamMeta.anchors.fist[3][0]);
+
+  const arc = JSON.parse(readFileSync('assets/fx/noble/medal-swing/fx.json', 'utf8'));
+  assert.equal(arc.oneshot, true);
+  assert.equal(arc.fist.file, 'prize-medal.png');
+  assert.ok(Math.abs(arc.fist.pivotY - 6 / 176) < 1e-9);
+  assert.equal(arc.pivotX, 0.16);
+  assert.deepEqual(arc.swing, [2, 4]);
+  assert.equal(swingFrameIndex(0, arc.swing, 8), 2);
+  assert.equal(swingFrameIndex(0.5, arc.swing, 8), 3);
+  assert.equal(swingFrameIndex(1, arc.swing, 8), 4);
+  // The body hand barely travels. The cell extends forward from the fist.
+  assert.ok(132 * arc.heightFrac * (1 - arc.pivotX) >= 280, arc.heightFrac);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

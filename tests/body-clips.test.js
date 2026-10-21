@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -865,6 +865,35 @@ test('Pat and Pit keep their hands', () => {
   assert.ok(flameMeta.anchors.fist[3][0] > flame.frameW - 30, flameMeta.anchors.fist[3][0]);
   const flameFx = JSON.parse(readFileSync('assets/fx/pit/flame-test/fx.json', 'utf8'));
   assert.ok(Math.abs(flameFx.pivotX - 292 / 320) < 1e-9);
+});
+
+test('Pluto keeps his hands, and the pit leaves the fist', () => {
+  const mass = CHARACTERS.pluto.art.sheets.clips['body-basicCharge'];
+  const massMeta = sheetMeta('pluto', 'body-basicCharge');
+  assert.equal(mass.file, 'pluto_critical-mass.png');
+  assert.deepEqual(massMeta.active, [4, 5]);
+  assert.deepEqual(massMeta.loop, [0, 3]);
+  assert.equal(massMeta.release, 4);
+  assert.ok(massMeta.anchors.fist[5][0] > mass.frameW - 40, massMeta.anchors.fist[5][0]);
+  const palm = CHARACTERS.pluto.art.sheets.clips['body-basicDirectional'];
+  const palmMeta = sheetMeta('pluto', 'body-basicDirectional');
+  assert.equal(palm.file, 'pluto_decay-heat-palm.png');
+  assert.deepEqual(palmMeta.active, [3, 5]);
+  assert.ok(palmMeta.anchors.fist[4][0] > palm.frameW - 20, palmMeta.anchors.fist[4][0]);
+  const palmFx = JSON.parse(readFileSync('assets/fx/pluto/decay-heat-palm/fx.json', 'utf8'));
+  assert.equal(palmFx.anchor, 'fist');
+  const demoted = sheetMeta('pluto', 'body-specialDefense');
+  assert.equal(CHARACTERS.pluto.art.sheets.clips['body-specialDefense'].file, 'pluto_demoted.png');
+  assert.deepEqual(demoted.loop, [2, 5]);
+  const pit = CHARACTERS.pluto.art.sheets.clips['body-specialDirectional'];
+  const pitMeta = sheetMeta('pluto', 'body-specialDirectional');
+  assert.equal(pit.file, 'pluto_plutonium-pit.png');
+  assert.equal(pitMeta.release, 3);
+  assert.deepEqual(pitMeta.active, [3, 5]);
+  assert.ok(pitMeta.anchors.fist[3][0] > pit.frameW - 16, pitMeta.anchors.fist[3][0]);
+  const pitFx = JSON.parse(readFileSync('assets/fx/pluto/plutonium-pit/fx.json', 'utf8'));
+  assert.equal(pitFx.file, 'plutonium-pit.png');
+  assert.equal(pitFx.black, false);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

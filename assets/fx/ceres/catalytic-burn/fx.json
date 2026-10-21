@@ -1,0 +1,32 @@
+{
+  "file": "catalytic-burn-impact-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 13.714,
+  "loop": false,
+  "blend": "add",
+  "black": 24,
+  "fit": "width",
+  "heightFrac": 1,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "fist",
+  "oneshot": true,
+  "flip": true,
+  "hit": false,
+  "fist": {
+    "file": "catalytic-puck-glow.png",
+    "frames": 1,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.32,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "hand",
+    "flip": true,
+    "pulse": true,
+    "hit": false
+  }
+}

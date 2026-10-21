@@ -1,0 +1,34 @@
+{
+  "blend": "normal",
+  "black": false,
+  "hit": false,
+  "projectile": {
+    "file": "dwarf-planet-rock.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.42,
+    "crop": "frame",
+    "pivot": "center",
+    "aim": false,
+    "spin": 1.8,
+    "hit": false
+  },
+  "detonate": {
+    "file": "dwarf-planet-impact-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 13.176,
+    "loop": false,
+    "blend": "normal",
+    "black": 24,
+    "fit": "width",
+    "heightFrac": 1.15,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "point",
+    "hit": false
+  }
+}

@@ -16,11 +16,19 @@ for (const id of readdirSync(root).sort()) {
   const moves = {};
   for (const file of files.sort()) {
     const json = JSON.parse(readFileSync(path.join(dir, file), 'utf8'));
+    const inCell = (xy) => Array.isArray(xy) && xy.length >= 2
+      && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
     const hands = [];
     for (let i = 0; i < json.count; i++) {
       const strike = json.strike_hand_xy?.[String(i)];
       const front = json.frames?.[i]?.front_hand_xy;
-      const xy = strike || front;
+      // A cut-off prop (Turbine Gust) leaves the old tip outside the cell.
+      // The reach point is the palm that is still in the picture.
+      let xy = strike || front;
+      if (!inCell(xy)) {
+        const reach = json.strike_reach_xy?.[String(i)];
+        if (inCell(reach)) xy = reach;
+      }
       if (!xy) throw new Error(`${id} ${file} frame ${i} has no hand`);
       hands.push([Math.round(xy[0]), Math.round(xy[1])]);
     }

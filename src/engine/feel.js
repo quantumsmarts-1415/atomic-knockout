@@ -201,6 +201,19 @@ export function stripIndex(count, fd, frame) {
   return Math.min(4, last);
 }
 
+/** 0–1 fade across endlag when the sheet holds a follow-through and never
+ *  draws a return to stance. The pose stays readable, then eases into idle. */
+export function followThroughBlend(fd, frame) {
+  if (!fd) return 0;
+  const start = (fd.startup ?? 0) + (fd.active ?? 0);
+  const rec = Math.max(1, (fd.recovery ?? 1) - 1);
+  const u = Math.max(0, Math.min(1, ((frame ?? 0) - start) / rec));
+  const hold = 0.35;
+  if (u <= hold) return 0;
+  const t = (u - hold) / (1 - hold);
+  return t * t * (3 - 2 * t);
+}
+
 /** 0–1 blend into idle over the last few recovery frames. */
 export function idleBlend(fd, frame) {
   const end = fd.startup + fd.active + fd.recovery;

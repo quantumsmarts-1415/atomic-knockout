@@ -155,6 +155,11 @@ export function installBodyClips(characters) {
           built.meta.intro = built.meta.windup;
           built.meta.blendIdle = true;
         }
+      } else if (src.blendIdle) {
+        // Atom Smasher stays in the follow-through. Endlag fades that pose
+        // into idle instead of playing a recovery the sheet does not have.
+        built.meta.blendIdle = true;
+        built.meta.recovery = null;
       }
       clips[clipKey] = built.clip;
       metaByClip.set(`${id}|${clipKey}`, built.meta);

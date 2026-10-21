@@ -6,11 +6,11 @@ import { CHARACTERS } from '../src/data/characters.js';
 import { MOVE_SHEETS } from '../src/data/moveSheets.js';
 import { artIsUpdated } from '../src/data/updatedArt.js';
 import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
-import { guardIdleBlend } from '../src/engine/feel.js';
+import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { shoulderSlashOrigin, shoulderWhipIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -510,6 +510,54 @@ test('Quicksilver Lash leaves the thrust hand, and Hoss keeps her gallop and hor
   assert.equal(shoeMeta.release, 3);
   assert.ok(shoeMeta.anchors.fist[3][0] > shoe.frameW - 12, shoeMeta.anchors.fist[3][0]);
   assert.ok(shoeMeta.anchors.fist[3][1] > 250, shoeMeta.anchors.fist[3][1]);
+});
+
+test('Atom Smasher holds the follow-through and fades it back to idle', () => {
+  const smash = CHARACTERS.lars.art.sheets.clips['body-specialDirectional'];
+  const meta = sheetMeta('lars', 'body-specialDirectional');
+  assert.equal(smash.file, 'lars_atom-smasher.png');
+  assert.equal(meta.blendIdle, true);
+  assert.equal(meta.recovery, null);
+  assert.deepEqual(meta.active, [4, 6]);
+  assert.ok(meta.anchors.fist[4][0] > smash.frameW - 20, meta.anchors.fist[4][0]);
+  const fd = { startup: 3, active: 6, recovery: 20, visible: 29 };
+  assert.equal(sheetFrameIndex(meta, { state: 'attack', fd, attackFrame: 3 }), 4);
+  assert.equal(sheetFrameIndex(meta, { state: 'attack', fd, attackFrame: 14 }), 6);
+  assert.equal(followThroughBlend(fd, 8), 0);
+  assert.equal(followThroughBlend(fd, 9), 0);
+  assert.ok(followThroughBlend(fd, 28) > 0.99);
+
+  const beam = CHARACTERS.lars.art.sheets.clips['body-basicCharge'];
+  const beamMeta = sheetMeta('lars', 'body-basicCharge');
+  assert.equal(beam.file, 'lars_cyclotron-beam.png');
+  assert.equal(beamMeta.release, 4);
+  assert.deepEqual(beamMeta.loop, [0, 3]);
+  const fighter = {
+    charDef: CHARACTERS.lars,
+    currentMoveKey: 'basicCharge',
+    facing: 1,
+    x: 0,
+    y: 0,
+    rig: { sheetClip: 'body-basicCharge', sheetFrame: 4, moveKey: 'basicCharge' },
+  };
+  const raw = frameToWorld(
+    beamMeta.anchors.fist[4], beam.frameW, beam.frameH, beam.footY, beam.displayScale, 1, 1, 0, 0,
+  );
+  const muzzle = bodySheetMuzzle(fighter);
+  assert.ok(Math.abs(raw.x - muzzle.x - 12) < 0.05, raw.x - muzzle.x);
+
+  const plates = sheetMeta('lars', 'body-specialDefense');
+  assert.equal(CHARACTERS.lars.art.sheets.clips['body-specialDefense'].file, 'lars_dee-plates.png');
+  assert.deepEqual(plates.loop, [2, 5]);
+
+  const kilo = sheetMeta('ira', 'body-specialDefense');
+  assert.equal(CHARACTERS.ira.art.sheets.clips['body-specialDefense'].file, 'ira_prototype-kilogram.png');
+  assert.deepEqual(kilo.loop, [2, 5]);
+  const iris = CHARACTERS.ira.art.sheets.clips['body-specialDirectional'];
+  const irisMeta = sheetMeta('ira', 'body-specialDirectional');
+  assert.equal(iris.file, 'ira_iris-scatter.png');
+  assert.equal(irisMeta.release, 3);
+  assert.ok(irisMeta.anchors.fist[4][0] > iris.frameW - 20, irisMeta.anchors.fist[4][0]);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

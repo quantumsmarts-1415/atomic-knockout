@@ -11,6 +11,7 @@
   "heightFrac": 0.48,
   "pivotX": 0.12,
   "pivotY": 0.55,
+  "anchor": "fist",
   "hit": false,
   "cling": {
     "file": "sediment-coat-status-anim.png",

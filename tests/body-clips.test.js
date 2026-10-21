@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -808,6 +808,63 @@ test('Oz and Pablo keep their hands, the puff carries the cloud, and the guns le
   assert.ok(shotMeta.anchors.fist[3][0] > shot.frameW - 16, shotMeta.anchors.fist[3][0]);
   assert.equal(CHARACTERS.pablo.moves.specialDirectional.recoilSelf, 200);
   assert.equal(CHARACTERS.pablo.moves.specialDirectional.recoilMs, 120);
+});
+
+test('Pat and Pit keep their hands', () => {
+  const daughter = CHARACTERS.pat.art.sheets.clips['body-basicCharge'];
+  const daughterMeta = sheetMeta('pat', 'body-basicCharge');
+  assert.equal(daughter.file, 'pat_proto-daughter.png');
+  assert.deepEqual(daughterMeta.active, [4, 5]);
+  assert.deepEqual(daughterMeta.loop, [0, 3]);
+  assert.equal(daughterMeta.release, 4);
+  assert.ok(daughterMeta.anchors.fist[5][0] > daughter.frameW - 16, daughterMeta.anchors.fist[5][0]);
+  const sediment = CHARACTERS.pat.art.sheets.clips['body-basicDirectional'];
+  const sedimentMeta = sheetMeta('pat', 'body-basicDirectional');
+  assert.equal(sediment.file, 'pat_sediment-layer.png');
+  assert.deepEqual(sedimentMeta.active, [3, 5]);
+  assert.ok(sedimentMeta.anchors.fist[3][0] > sediment.frameW - 20, sedimentMeta.anchors.fist[3][0]);
+  const sedimentFx = JSON.parse(readFileSync('assets/fx/pat/sediment-layer/fx.json', 'utf8'));
+  assert.equal(sedimentFx.anchor, 'fist');
+  assert.equal(sedimentFx.pivotX, 0.12);
+  const rewind = sheetMeta('pat', 'body-specialDefense');
+  assert.equal(CHARACTERS.pat.art.sheets.clips['body-specialDefense'].file, 'pat_deep-time-rewind.png');
+  assert.deepEqual(rewind.loop, [2, 5]);
+  const bolt = CHARACTERS.pat.art.sheets.clips['body-specialDirectional'];
+  const boltMeta = sheetMeta('pat', 'body-specialDirectional');
+  assert.equal(bolt.file, 'pat_twin-hazard-bolt.png');
+  assert.equal(boltMeta.release, 3);
+  assert.deepEqual(boltMeta.active, [3, 5]);
+  assert.ok(boltMeta.anchors.fist[3][0] > bolt.frameW - 50, boltMeta.anchors.fist[3][0]);
+
+  const lamp = CHARACTERS.pit.art.sheets.clips['body-basicCharge'];
+  const lampMeta = sheetMeta('pit', 'body-basicCharge');
+  assert.equal(lamp.file, 'pit_catalyst-ignition.png');
+  assert.deepEqual(lampMeta.active, [4, 5]);
+  assert.deepEqual(lampMeta.loop, [0, 3]);
+  const lampFx = JSON.parse(readFileSync('assets/fx/pit/catalyst-ignition/fx.json', 'utf8'));
+  assert.equal(lampFx.charge.anchor, 'hand');
+  assert.equal(lampFx.charge.black, false);
+  const scratch = CHARACTERS.pit.art.sheets.clips['body-basicDirectional'];
+  const scratchMeta = sheetMeta('pit', 'body-basicDirectional');
+  assert.equal(scratch.file, 'pit_record-scratch.png');
+  assert.deepEqual(scratchMeta.active, [3, 5]);
+  assert.ok(scratchMeta.anchors.fist[5][0] > scratch.frameW - 16, scratchMeta.anchors.fist[5][0]);
+  const scratchFx = JSON.parse(readFileSync('assets/fx/pit/record-scratch/fx.json', 'utf8'));
+  assert.equal(scratchFx.fist.spin, 12);
+  assert.equal(scratchFx.fist.black, false);
+  const clamp = sheetMeta('pit', 'body-specialDefense');
+  assert.equal(CHARACTERS.pit.art.sheets.clips['body-specialDefense'].file, 'pit_cisplatin-clamp.png');
+  assert.deepEqual(clamp.loop, [3, 5]);
+  const clampFx = JSON.parse(readFileSync('assets/fx/pit/cisplatin-clamp/fx.json', 'utf8'));
+  assert.equal(clampFx.cling.anchor, 'body');
+  assert.equal(clampFx.cling.guardAt, 8);
+  const flame = CHARACTERS.pit.art.sheets.clips['body-specialDirectional'];
+  const flameMeta = sheetMeta('pit', 'body-specialDirectional');
+  assert.equal(flame.file, 'pit_flame-test.png');
+  assert.equal(flameMeta.release, 3);
+  assert.ok(flameMeta.anchors.fist[3][0] > flame.frameW - 30, flameMeta.anchors.fist[3][0]);
+  const flameFx = JSON.parse(readFileSync('assets/fx/pit/flame-test/fx.json', 'utf8'));
+  assert.ok(Math.abs(flameFx.pivotX - 292 / 320) < 1e-9);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

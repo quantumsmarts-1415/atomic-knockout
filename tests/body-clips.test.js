@@ -8,7 +8,7 @@ import { artIsUpdated } from '../src/data/updatedArt.js';
 import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
 import { clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'cali'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali'];
 
 function worldH(art, def) {
   const body = def.bodyH ?? def.visibleH;
@@ -76,6 +76,42 @@ test('a move with no body clip keeps the generic attack sheet', () => {
   assert.equal(clipNameForMove(id, 'basicDirectional'), null);
   assert.equal(clipNameForMove(id, 'basicCharge'), null);
   assert.ok(CHARACTERS[id].art.sheets.clips.attack.count > 0);
+});
+
+test('Diamagnetic Repel and Quantum Leap keep their rise, and Shell Gore stays wide', () => {
+  const repel = CHARACTERS.bianca.art.sheets.clips['body-specialDefense'];
+  const repelMeta = sheetMeta('bianca', 'body-specialDefense');
+  const repelGround = frameToWorld(
+    [repel.frameW / 2, 741], repel.frameW, repel.frameH, repel.footY, repel.displayScale, 1, 1, 0, 0,
+  );
+  const repelAir = frameToWorld(
+    [repel.frameW / 2, 662], repel.frameW, repel.frameH, repel.footY, repel.displayScale, 1, 1, 0, 0,
+  );
+  assert.ok(Math.abs(repelGround.y) < 1, repelGround.y);
+  assert.ok(repelAir.y < repelGround.y - 10, repelAir.y);
+  assert.deepEqual(repelMeta.loop, [3, 4]);
+
+  const leap = CHARACTERS.boar.art.sheets.clips['body-basicCharge'];
+  const leapMeta = sheetMeta('boar', 'body-basicCharge');
+  const landed = frameToWorld(
+    [leap.frameW / 2, 820], leap.frameW, leap.frameH, leap.footY, leap.displayScale, 1, 1, 0, 0,
+  );
+  const airborne = frameToWorld(
+    [leap.frameW / 2, 508], leap.frameW, leap.frameH, leap.footY, leap.displayScale, 1, 1, 0, 0,
+  );
+  assert.ok(Math.abs(landed.y) < 1, landed.y);
+  assert.ok(landed.y - airborne.y > 40, airborne.y);
+  assert.deepEqual(leapMeta.windup, [0, 5]);
+  assert.deepEqual(leapMeta.loop, [0, 2]);
+  assert.equal(leapMeta.release, 6);
+
+  const gore = CHARACTERS.boar.art.sheets.clips['body-basicDirectional'];
+  const goreMeta = sheetMeta('boar', 'body-basicDirectional');
+  assert.equal(gore.frameW, 1827);
+  assert.equal(goreMeta.slide, CHARACTERS.boar.moves.basicDirectional.dashSpeed);
+  const png = PNG.sync.read(readFileSync(`${CHARACTERS.boar.art.sheets.dir}${gore.file}`));
+  assert.ok(png.width <= 8192 && png.height <= 8192);
+  assert.ok((png.width / gore.frameW) * (png.height / gore.frameH) >= gore.count);
 });
 
 test('Surf\'s Up keeps her feet on the origin and slides forward in code', () => {

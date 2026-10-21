@@ -1,0 +1,213 @@
+{
+ "name": "bianca",
+ "move": "hopper-crystal",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/388b.mp4 (stream 0)",
+ "frameW": 642,
+ "frameH": 601,
+ "idle_cell_w": 601,
+ "idle_anchor_x": 146.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 10.0,
+ "loop": false,
+ "footY": 0.9667,
+ "foot_row": 581,
+ "visibleH": 566,
+ "scale": 1.37046,
+ "offset": [
+  -413.3,
+  -294.7
+ ],
+ "strike_hand_xy": {
+  "4": [
+   576,
+   347
+  ],
+  "5": [
+   575,
+   339
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    14,
+    582,
+    11,
+    321
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    279,
+    174
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    83,
+    582,
+    17,
+    398
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    397,
+    178
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 43,
+   "bbox": [
+    130,
+    581,
+    23,
+    477
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    477,
+    262
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    130,
+    581,
+    23,
+    485
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    483,
+    271
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    214,
+    582,
+    17,
+    639
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    576,
+    347
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    247,
+    581,
+    15,
+    631
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    575,
+    339
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 127,
+   "bbox": [
+    26,
+    582,
+    9,
+    376
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    375,
+    199
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    14,
+    582,
+    9,
+    320
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    318,
+    148
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   582,
+   582,
+   581,
+   581,
+   582,
+   581,
+   582,
+   582
+  ],
+  "foot_spread_px": 1,
+  "any_out_edge": false,
+  "first_frame_start_mad": 1.87,
+  "notes": "Deep crouch to near-prone at f4-f5 (src 91-103), back up by f6. Clean.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "4": [
+   639,
+   564
+  ],
+  "5": [
+   630,
+   559
+  ]
+ }
+}

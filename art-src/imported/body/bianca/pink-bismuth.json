@@ -1,0 +1,213 @@
+{
+ "name": "bianca",
+ "move": "pink-bismuth",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/391b.mp4 (stream 0)",
+ "frameW": 717,
+ "frameH": 642,
+ "idle_cell_w": 601,
+ "idle_anchor_x": 262.5,
+ "width_mode": "cell",
+ "pad_top": 41,
+ "idle_cell_h": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9688,
+ "foot_row": 622,
+ "visibleH": 607,
+ "scale": 1.37046,
+ "offset": [
+  -297.3,
+  -294.7
+ ],
+ "strike_hand_xy": {
+  "4": [
+   486,
+   110
+  ],
+  "5": [
+   628,
+   183
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    54,
+    622,
+    127,
+    437
+   ],
+   "foot": 622,
+   "front_hand_xy": [
+    395,
+    214
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    85,
+    622,
+    86,
+    436
+   ],
+   "foot": 622,
+   "front_hand_xy": [
+    415,
+    270
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    90,
+    622,
+    2,
+    492
+   ],
+   "foot": 622,
+   "front_hand_xy": [
+    491,
+    269
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    72,
+    622,
+    133,
+    492
+   ],
+   "foot": 622,
+   "front_hand_xy": [
+    491,
+    231
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    20,
+    622,
+    130,
+    574
+   ],
+   "foot": 622,
+   "front_hand_xy": [
+    486,
+    110
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 2048,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    64,
+    622,
+    138,
+    629
+   ],
+   "foot": 622,
+   "front_hand_xy": [
+    628,
+    183
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 2190,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    72,
+    622,
+    132,
+    610
+   ],
+   "foot": 622,
+   "front_hand_xy": [
+    609,
+    219
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    52,
+    622,
+    125,
+    437
+   ],
+   "foot": 622,
+   "front_hand_xy": [
+    398,
+    215
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   622,
+   622,
+   622,
+   622,
+   622,
+   622,
+   622,
+   622
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 1.88,
+  "notes": "Bubble thrown at f4-f5; the flying ball is removed (detached) so the FX can spawn it at the hand. Video drifted 8 px, so feet are pinned (y only). Src 85-87 touch the edge only because of the flying ball.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "4": [
+   574,
+   23
+  ],
+  "5": [
+   628,
+   183
+  ]
+ }
+}

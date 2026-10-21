@@ -1,0 +1,231 @@
+{
+ "name": "bianca",
+ "move": "staircase-kick",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/389b.mp4 (stream 0)",
+ "frameW": 1754,
+ "frameH": 607,
+ "idle_cell_w": 601,
+ "idle_anchor_x": null,
+ "width_mode": "src",
+ "pad_top": 6,
+ "idle_cell_h": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9671,
+ "foot_row": 587,
+ "visibleH": 572,
+ "scale": 1.37046,
+ "offset": [
+  0.0,
+  -294.7
+ ],
+ "strike_hand_xy": {
+  "2": [
+   906,
+   134
+  ],
+  "3": [
+   898,
+   269
+  ],
+  "5": [
+   928,
+   180
+  ],
+  "6": [
+   906,
+   135
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    19,
+    587,
+    283,
+    594
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    553,
+    182
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    28,
+    587,
+    383,
+    813
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    750,
+    328
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    31,
+    587,
+    437,
+    907
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    906,
+    134
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    25,
+    587,
+    413,
+    898
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    898,
+    269
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    28,
+    587,
+    282,
+    660
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    610,
+    122
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    31,
+    587,
+    389,
+    928
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    928,
+    180
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    31,
+    587,
+    456,
+    907
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    906,
+    135
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    19,
+    587,
+    282,
+    594
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    553,
+    181
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   587,
+   587,
+   587,
+   587,
+   587,
+   587,
+   587,
+   587
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 1.87,
+  "notes": "WIDE, width from source (1280 px x scale = 1754). Two rising kicks (f2-f3, f5-f6); she steps forward between them. Video shifted 12 px up after f0, so feet are pinned (y only). Skipped src 37 and 91 (motion-blurred raised shoe takes a pink/green cast).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  2,
+  3,
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "2": [
+   906,
+   134
+  ],
+  "3": [
+   898,
+   269
+  ],
+  "5": [
+   928,
+   180
+  ],
+  "6": [
+   906,
+   126
+  ]
+ }
+}

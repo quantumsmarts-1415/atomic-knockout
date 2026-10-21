@@ -129,7 +129,9 @@ export function installBodyClips(characters) {
       // A pinned-foot dash (Surf's Up) has no travel in the cell. The move's
       // dash speed carries her forward for the whole clip.
       if (move.kind === 'dash' && move.dashSpeed > 0) built.meta.slide = move.dashSpeed;
-      if (moveKey === 'basicCharge') built.meta.loop = built.meta.windup;
+      // One foot row for the cell. A frame whose sole sits above that row
+      // (Diamagnetic Repel, Quantum Leap) keeps the rise.
+      if (moveKey === 'basicCharge') built.meta.loop = src.gather || built.meta.windup;
       if (moveKey === 'specialDefense') {
         built.meta.gather = true;
         built.meta.loop = built.meta.active;

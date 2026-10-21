@@ -1,0 +1,222 @@
+{
+ "name": "boar",
+ "move": "shell-gore",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/393b.mp4 (stream 0)",
+ "frameW": 1827,
+ "frameH": 645,
+ "idle_cell_w": 753,
+ "idle_anchor_x": null,
+ "width_mode": "src",
+ "pad_top": 0,
+ "idle_cell_h": 645,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9705,
+ "foot_row": 626,
+ "visibleH": 578,
+ "scale": 1.42716,
+ "offset": [
+  0.0,
+  -280.2
+ ],
+ "strike_hand_xy": {
+  "3": [
+   1303,
+   282
+  ],
+  "4": [
+   1278,
+   290
+  ],
+  "5": [
+   1278,
+   291
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    47,
+    626,
+    263,
+    648
+   ],
+   "foot": 626,
+   "front_hand_xy": [
+    647,
+    252
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    110,
+    626,
+    265,
+    664
+   ],
+   "foot": 626,
+   "front_hand_xy": [
+    664,
+    317
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    138,
+    626,
+    268,
+    730
+   ],
+   "foot": 626,
+   "front_hand_xy": [
+    729,
+    325
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    175,
+    626,
+    539,
+    1304
+   ],
+   "foot": 626,
+   "front_hand_xy": [
+    1303,
+    282
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    189,
+    626,
+    505,
+    1279
+   ],
+   "foot": 626,
+   "front_hand_xy": [
+    1278,
+    290
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    184,
+    626,
+    508,
+    1278
+   ],
+   "foot": 626,
+   "front_hand_xy": [
+    1278,
+    291
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    133,
+    626,
+    485,
+    995
+   ],
+   "foot": 626,
+   "front_hand_xy": [
+    915,
+    209
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    44,
+    626,
+    257,
+    648
+   ],
+   "foot": 626,
+   "front_hand_xy": [
+    647,
+    253
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   626,
+   626,
+   626,
+   626,
+   626,
+   626,
+   626,
+   626
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 2.14,
+  "notes": "WIDE, width from source (1280 x scale = 1827). Head-and-shoulders lunge (OK per Silas). Video drifted 8 px, feet pinned (y only). No tusks.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   1303,
+   282
+  ],
+  "4": [
+   1278,
+   290
+  ],
+  "5": [
+   1278,
+   291
+  ]
+ }
+}

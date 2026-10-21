@@ -1,0 +1,213 @@
+{
+ "name": "bianca",
+ "move": "diamagnetic-repel",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/390b.mp4 (stream 0)",
+ "frameW": 601,
+ "frameH": 761,
+ "idle_cell_w": 601,
+ "idle_anchor_x": 146.5,
+ "width_mode": "cell",
+ "pad_top": 160,
+ "idle_cell_h": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 10.0,
+ "loop": false,
+ "footY": 0.9737,
+ "foot_row": 741,
+ "visibleH": 726,
+ "scale": 1.18658,
+ "offset": [
+  -488.9,
+  -255.5
+ ],
+ "strike_hand_xy": {
+  "3": [
+   329,
+   324
+  ],
+  "4": [
+   329,
+   325
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    174,
+    741,
+    11,
+    320
+   ],
+   "foot": 741,
+   "front_hand_xy": [
+    279,
+    336
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    169,
+    741,
+    17,
+    322
+   ],
+   "foot": 741,
+   "front_hand_xy": [
+    322,
+    308
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    32,
+    686,
+    86,
+    355
+   ],
+   "foot": 686,
+   "front_hand_xy": [
+    355,
+    328
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    3,
+    662,
+    44,
+    329
+   ],
+   "foot": 662,
+   "front_hand_xy": [
+    329,
+    324
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 4,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    4,
+    662,
+    44,
+    329
+   ],
+   "foot": 662,
+   "front_hand_xy": [
+    329,
+    325
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 2,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    77,
+    720,
+    45,
+    383
+   ],
+   "foot": 720,
+   "front_hand_xy": [
+    383,
+    299
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    183,
+    741,
+    16,
+    327
+   ],
+   "foot": 741,
+   "front_hand_xy": [
+    288,
+    309
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    170,
+    736,
+    16,
+    336
+   ],
+   "foot": 736,
+   "front_hand_xy": [
+    291,
+    349
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   741,
+   741,
+   686,
+   662,
+   662,
+   720,
+   741,
+   736
+  ],
+  "foot_spread_px": 79,
+  "any_out_edge": false,
+  "first_frame_start_mad": 2.04,
+  "notes": "Floats: feet rise up to 79 px (f3-f4) and land again; not pinned, by design. Canvas has 160 px extra headroom. Skipped src ~103-115 (she points backwards).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4
+ ],
+ "strike_reach_xy": {
+  "3": [
+   329,
+   324
+  ],
+  "4": [
+   329,
+   325
+  ]
+ }
+}

@@ -11,6 +11,7 @@
   "heightFrac": 0.42,
   "pivotX": 0,
   "pivotY": 0.5,
+  "anchor": "fist",
   "hit": false,
   "impact": {
     "file": "trident-hit-anim.png",

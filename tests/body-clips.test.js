@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -607,6 +607,55 @@ test('Decay Cascade bursts carry the pulses, and Mac and Mae keep their hands', 
   const splitMeta = sheetMeta('mae', 'body-specialDirectional');
   assert.equal(splitMeta.release, 3);
   assert.ok(splitMeta.anchors.fist[3][0] > split.frameW - 20, splitMeta.anchors.fist[3][0]);
+});
+
+test('Mendel and Neptune keep their hands, and the trident leaves the fist', () => {
+  const dream = CHARACTERS.mendel.art.sheets.clips['body-basicCharge'];
+  const dreamMeta = sheetMeta('mendel', 'body-basicCharge');
+  assert.equal(dream.file, 'mendel_dream-of-the-table.png');
+  assert.deepEqual(dreamMeta.active, [4, 5]);
+  assert.deepEqual(dreamMeta.loop, [0, 3]);
+
+  const taps = CHARACTERS.mendel.art.sheets.clips['body-basicDirectional'];
+  const tapsMeta = sheetMeta('mendel', 'body-basicDirectional');
+  assert.equal(taps.file, 'mendel_one-atom-at-a-time.png');
+  assert.deepEqual(tapsMeta.active, [2, 5]);
+  assert.ok(tapsMeta.anchors.fist[2][0] > taps.frameW - 16, tapsMeta.anchors.fist[2][0]);
+
+  const square = sheetMeta('mendel', 'body-specialDefense');
+  assert.equal(CHARACTERS.mendel.art.sheets.clips['body-specialDefense'].file, 'mendel_empty-square.png');
+  assert.deepEqual(square.loop, [3, 5]);
+
+  const drop = CHARACTERS.mendel.art.sheets.clips['body-specialDirectional'];
+  const dropMeta = sheetMeta('mendel', 'body-specialDirectional');
+  assert.equal(drop.file, 'mendel_group-drop.png');
+  assert.equal(dropMeta.release, 4);
+
+  const flask = CHARACTERS.neptune.art.sheets.clips['body-basicCharge'];
+  const flaskMeta = sheetMeta('neptune', 'body-basicCharge');
+  assert.equal(flask.file, 'neptune_mad-science-flask.png');
+  assert.equal(flaskMeta.release, 5);
+  assert.ok(flaskMeta.anchors.fist[5][0] > flask.frameW - 16, flaskMeta.anchors.fist[5][0]);
+
+  const thrust = CHARACTERS.neptune.art.sheets.clips['body-basicDirectional'];
+  const thrustMeta = sheetMeta('neptune', 'body-basicDirectional');
+  assert.equal(thrust.file, 'neptune_trident-thrust.png');
+  assert.deepEqual(thrustMeta.active, [3, 5]);
+  assert.ok(thrustMeta.anchors.fist[3][0] > thrust.frameW - 16, thrustMeta.anchors.fist[3][0]);
+
+  const coat = sheetMeta('neptune', 'body-specialDefense');
+  assert.equal(CHARACTERS.neptune.art.sheets.clips['body-specialDefense'].file, 'neptune_lab-coat-shield.png');
+  assert.deepEqual(coat.loop, [2, 6]);
+
+  const seed = CHARACTERS.neptune.art.sheets.clips['body-specialDirectional'];
+  const seedMeta = sheetMeta('neptune', 'body-specialDirectional');
+  assert.equal(seed.file, 'neptune_breeder-seed.png');
+  assert.equal(seedMeta.release, 3);
+  assert.ok(seedMeta.anchors.fist[3][0] > seed.frameW - 20, seedMeta.anchors.fist[3][0]);
+
+  const trident = JSON.parse(readFileSync('assets/fx/neptune/trident-thrust/fx.json', 'utf8'));
+  assert.equal(trident.anchor, 'fist');
+  assert.equal(trident.pivotX, 0);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

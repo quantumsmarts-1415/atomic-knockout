@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'agatha', 'amy', 'aurelius', 'barry', 'bianca', 'boar', 'brock', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'uri', 'wolf'];
+const FIGHTERS = ['ace', 'agatha', 'amy', 'aurelius', 'barry', 'bianca', 'boar', 'brock', 'burke', 'caesar', 'cali', 'ceres', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'uri', 'wolf'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -1105,6 +1105,18 @@ test('Sarge, Talia, Tara, Tate, Uri, and Wolf keep their own soles and wide Wolf
     assert.ok(png.width <= 8192 && png.height <= 8192, clip.file);
     assert.ok((png.width / clip.frameW) * (png.height / clip.frameH) >= clip.count, clip.file);
   }
+});
+
+test('Caesar dashes from the sheet, and Ceria Polish plays the catalytic burn', () => {
+  const dash = CHARACTERS.caesar.moves.basicDirectional;
+  const clip = CHARACTERS.caesar.art.sheets.clips['body-basicDirectional'];
+  const meta = sheetMeta('caesar', 'body-basicDirectional');
+  assert.equal(clip.file, 'caesar_rubicon-dash.png');
+  assert.equal(meta.slide, dash.dashSpeed);
+  const polish = CHARACTERS.ceres.moves.basicDirectional;
+  assert.equal(polish.name, 'Ceria Polish');
+  assert.equal(moveBodySlug('ceres', polish), 'catalytic-burn');
+  assert.equal(CHARACTERS.ceres.art.sheets.clips['body-basicDirectional'].file, 'ceres_catalytic-burn.png');
 });
 
 test('Agatha, Barry, and Brock keep their soles, and the drop loops the crouch', () => {

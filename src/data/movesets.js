@@ -1100,6 +1100,8 @@ export const MOVESETS = {
       baseKnockback: 90, knockbackGrowth: 1.6, duration: 200, cooldown: 640,
     }),
     basicDirectional: melee('Ceria Polish', {
+      // The sheet is catalytic-burn. The move name and the polish numbers stay.
+      sourceSlug: 'catalytic-burn',
       type: K, damage: 3, multiHit: 4, bonusVsBlock: 0.8, popShield: true, rangeW: 64, vfx: 'strike',
       baseKnockback: 40, knockbackGrowth: 0.7, duration: 340, cooldown: 400,
     }),

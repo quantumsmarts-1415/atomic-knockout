@@ -11,6 +11,7 @@
   "heightFrac": 1.15,
   "pivotX": 0.16,
   "pivotY": 0.72,
+  "anchor": "fist",
   "hit": false,
   "burst": {
     "file": "alpha-uppercut-burst-anim.png",

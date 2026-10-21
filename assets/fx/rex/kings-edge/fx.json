@@ -13,5 +13,7 @@
   "pivotY": 0.5,
   "flip": true,
   "oneshot": true,
+  "anchor": "fist",
+  "swing": [0, 11],
   "hit": false
 }

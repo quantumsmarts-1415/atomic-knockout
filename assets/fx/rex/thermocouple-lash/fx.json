@@ -13,6 +13,8 @@
   "pivotY": 0.5,
   "flip": true,
   "oneshot": true,
+  "anchor": "fist",
+  "swing": [0, 13],
   "hit": false,
   "hot": {
     "file": "thermo-heat-hit-anim.png",

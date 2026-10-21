@@ -1,0 +1,231 @@
+{
+ "name": "curie",
+ "move": "spectrometer-scan",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/410b.mp4 (stream 0)",
+ "frameW": 581,
+ "frameH": 603,
+ "idle_cell_w": 523,
+ "idle_anchor_x": 255.0,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 603,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 10.0,
+ "loop": false,
+ "footY": 0.9668,
+ "foot_row": 583,
+ "visibleH": 568,
+ "scale": 0.97762,
+ "offset": [
+  -309.6,
+  -157.1
+ ],
+ "strike_hand_xy": {
+  "2": [
+   350,
+   205
+  ],
+  "3": [
+   350,
+   204
+  ],
+  "4": [
+   350,
+   204
+  ],
+  "5": [
+   356,
+   189
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    583,
+    69,
+    387
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    373,
+    143
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    17,
+    583,
+    86,
+    458
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    447,
+    106
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    13,
+    583,
+    36,
+    389
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    350,
+    205
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    13,
+    583,
+    36,
+    389
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    350,
+    204
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    13,
+    583,
+    36,
+    389
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    350,
+    204
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    15,
+    583,
+    2,
+    387
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    356,
+    189
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 133,
+   "bbox": [
+    13,
+    583,
+    71,
+    389
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    372,
+    185
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    13,
+    583,
+    90,
+    389
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    377,
+    140
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   583,
+   583,
+   583,
+   583,
+   583,
+   583,
+   583,
+   583
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 2.18,
+  "notes": "Palm-out stop-sign hold (f2-f5). Grok then turns her front-on and points backwards (src ~97-121), which is skipped, so the hold jumps to the recovery. Feet pinned (6 px drift).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  2,
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "2": [
+   389,
+   563
+  ],
+  "3": [
+   389,
+   563
+  ],
+  "4": [
+   389,
+   563
+  ],
+  "5": [
+   387,
+   562
+  ]
+ }
+}

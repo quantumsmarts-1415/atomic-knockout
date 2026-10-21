@@ -1,0 +1,213 @@
+{
+ "name": "curie",
+ "move": "pitchblende-toss",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/411b.mp4 (stream 0)",
+ "frameW": 617,
+ "frameH": 603,
+ "idle_cell_w": 523,
+ "idle_anchor_x": 280.0,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 603,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9668,
+ "foot_row": 583,
+ "visibleH": 568,
+ "scale": 1.13373,
+ "offset": [
+  -223.9,
+  -157.3
+ ],
+ "strike_hand_xy": {
+  "4": [
+   599,
+   204
+  ],
+  "5": [
+   541,
+   106
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    584,
+    93,
+    415
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    401,
+    142
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    17,
+    584,
+    93,
+    415
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    399,
+    139
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    24,
+    584,
+    2,
+    415
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    403,
+    183
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    37,
+    584,
+    39,
+    426
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    426,
+    174
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    31,
+    584,
+    104,
+    600
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    599,
+    204
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    22,
+    584,
+    116,
+    614
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    541,
+    106
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 984,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    26,
+    584,
+    120,
+    569
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    535,
+    109
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    15,
+    584,
+    95,
+    415
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    401,
+    143
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   584,
+   584,
+   584,
+   584,
+   584,
+   584,
+   584,
+   584
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 1.97,
+  "notes": "Arm back then upward toss (f4-f5). The rock leaves the hand and is removed (detached); src 61 touches the video top only because of the rock.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "4": [
+   599,
+   204
+  ],
+  "5": [
+   614,
+   48
+  ]
+ }
+}

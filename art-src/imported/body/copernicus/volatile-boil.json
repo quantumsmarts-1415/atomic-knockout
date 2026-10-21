@@ -1,0 +1,222 @@
+{
+ "name": "copernicus",
+ "move": "volatile-boil",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/404b.mp4 (stream 0)",
+ "frameW": 616,
+ "frameH": 636,
+ "idle_cell_w": 603,
+ "idle_anchor_x": 330.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 636,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 10.0,
+ "loop": false,
+ "footY": 0.9717,
+ "foot_row": 618,
+ "visibleH": 576,
+ "scale": 1.00524,
+ "offset": [
+  -227.9,
+  -136.9
+ ],
+ "strike_hand_xy": {
+  "4": [
+   573,
+   130
+  ],
+  "5": [
+   558,
+   130
+  ],
+  "6": [
+   573,
+   133
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    42,
+    618,
+    130,
+    521
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    519,
+    242
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    112,
+    618,
+    111,
+    548
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    545,
+    282
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    126,
+    618,
+    92,
+    552
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    551,
+    301
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    124,
+    618,
+    94,
+    542
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    539,
+    303
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    44,
+    618,
+    27,
+    577
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    573,
+    130
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    44,
+    618,
+    5,
+    572
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    558,
+    130
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 109,
+   "bbox": [
+    44,
+    618,
+    2,
+    575
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    573,
+    133
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    42,
+    618,
+    120,
+    523
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    521,
+    245
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   618,
+   618,
+   618,
+   618,
+   618,
+   618,
+   618,
+   618
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 2.69,
+  "notes": "Hunch with the glowing orb, then robe and arms thrown open (f4-f6). The orb in hand is in the idle, so it is kept. Not goopy. Clean.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  4,
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "4": [
+   575,
+   112
+  ],
+  "5": [
+   570,
+   96
+  ],
+  "6": [
+   573,
+   128
+  ]
+ }
+}

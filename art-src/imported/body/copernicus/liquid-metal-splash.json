@@ -1,0 +1,213 @@
+{
+ "name": "copernicus",
+ "move": "liquid-metal-splash",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/407b.mp4 (stream 0)",
+ "frameW": 1033,
+ "frameH": 697,
+ "idle_cell_w": 603,
+ "idle_anchor_x": 317.5,
+ "width_mode": "cell",
+ "pad_top": 61,
+ "idle_cell_h": 636,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9742,
+ "foot_row": 679,
+ "visibleH": 637,
+ "scale": 1.16364,
+ "offset": [
+  -174.1,
+  -137.2
+ ],
+ "strike_hand_xy": {
+  "5": [
+   682,
+   104
+  ],
+  "6": [
+   684,
+   221
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    103,
+    679,
+    119,
+    511
+   ],
+   "foot": 679,
+   "front_hand_xy": [
+    509,
+    303
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    103,
+    679,
+    128,
+    525
+   ],
+   "foot": 679,
+   "front_hand_xy": [
+    523,
+    289
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    105,
+    679,
+    128,
+    532
+   ],
+   "foot": 679,
+   "front_hand_xy": [
+    528,
+    281
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    108,
+    679,
+    91,
+    542
+   ],
+   "foot": 679,
+   "front_hand_xy": [
+    539,
+    289
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    107,
+    679,
+    91,
+    562
+   ],
+   "foot": 679,
+   "front_hand_xy": [
+    560,
+    360
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    3,
+    679,
+    131,
+    914
+   ],
+   "foot": 679,
+   "front_hand_xy": [
+    682,
+    104
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 5412,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    105,
+    679,
+    121,
+    1030
+   ],
+   "foot": 679,
+   "front_hand_xy": [
+    684,
+    221
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 604,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    103,
+    679,
+    126,
+    533
+   ],
+   "foot": 679,
+   "front_hand_xy": [
+    530,
+    281
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   679,
+   679,
+   679,
+   679,
+   679,
+   679,
+   679,
+   679
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 2.35,
+  "notes": "Arm swing back, fling forward and up (f5 src 67, f6 src 85). Src 55-61 had Grok-drawn teal liquid streaks attached to the hand; not used, so no liquid is on his body (FX only). Flying droplets removed as detached.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "5": [
+   682,
+   101
+  ],
+  "6": [
+   684,
+   221
+  ]
+ }
+}

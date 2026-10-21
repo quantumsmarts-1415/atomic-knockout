@@ -1,0 +1,213 @@
+{
+ "name": "copernicus",
+ "move": "evaporate",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/406b.mp4 (stream 0)",
+ "frameW": 603,
+ "frameH": 636,
+ "idle_cell_w": 603,
+ "idle_anchor_x": 317.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 636,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 10.0,
+ "loop": false,
+ "footY": 0.9717,
+ "foot_row": 618,
+ "visibleH": 576,
+ "scale": 1.00524,
+ "offset": [
+  -240.9,
+  -136.9
+ ],
+ "strike_hand_xy": {
+  "3": [
+   454,
+   270
+  ],
+  "4": [
+   453,
+   270
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    42,
+    618,
+    117,
+    508
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    506,
+    243
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    50,
+    618,
+    101,
+    504
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    502,
+    209
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    114,
+    618,
+    67,
+    468
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    464,
+    245
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    130,
+    618,
+    71,
+    456
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    454,
+    270
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    130,
+    618,
+    70,
+    456
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    453,
+    270
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    108,
+    618,
+    96,
+    478
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    476,
+    254
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 127,
+   "bbox": [
+    49,
+    618,
+    97,
+    496
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    494,
+    211
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    42,
+    618,
+    125,
+    506
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    504,
+    232
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   618,
+   618,
+   618,
+   618,
+   618,
+   618,
+   618,
+   618
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 2.68,
+  "notes": "Arms drawn in, low hunch held (f2-f5), then straightens. Grok added an arm fling near the end (src ~109-115), which is skipped.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4
+ ],
+ "strike_reach_xy": {
+  "3": [
+   454,
+   270
+  ],
+  "4": [
+   453,
+   270
+  ]
+ }
+}

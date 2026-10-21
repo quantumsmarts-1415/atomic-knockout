@@ -1,0 +1,32 @@
+{
+  "file": "stampede-gallop-anim.png",
+  "frames": 12,
+  "cols": 4,
+  "rows": 3,
+  "fps": 24,
+  "loop": true,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 0.85,
+  "anchor": "ground",
+  "flip": true,
+  "pivotX": 0.5,
+  "pivotY": 0.875,
+  "charge": {
+    "file": "hoof-paw-dust-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 12,
+    "loop": true,
+    "blend": "additive",
+    "black": true,
+    "fit": "height",
+    "heightFrac": 0.55,
+    "anchor": "feet",
+    "flip": true,
+    "pivotX": 0.5,
+    "pivotY": 0.875
+  }
+}

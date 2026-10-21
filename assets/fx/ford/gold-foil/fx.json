@@ -1,0 +1,42 @@
+{
+  "file": "gold-foil-sheet.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 1.85,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "anchor": "front",
+  "hit": false,
+  "block": {
+    "file": "foil-pass-through-anim.png",
+    "frames": 6,
+    "cols": 3,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.55,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  },
+  "reflect": {
+    "file": "foil-bounce-back-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

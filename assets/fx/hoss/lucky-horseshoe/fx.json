@@ -1,0 +1,60 @@
+{
+  "projectile": {
+    "file": "horseshoe.png",
+    "frames": 1,
+    "cols": 1,
+    "rows": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.5,
+    "aim": false,
+    "pivotX": 0.5,
+    "pivotY": 0.546875
+  },
+  "detonate": {
+    "file": "horseshoe-impact-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 16,
+    "loop": false,
+    "blend": "additive",
+    "black": true,
+    "fit": "height",
+    "heightFrac": 1.5,
+    "scale": 0.42,
+    "anchor": "center",
+    "pivotX": 0.4991304347826087,
+    "pivotY": 0.4965034965034965
+  },
+  "impact": {
+    "file": "horseshoe-drop-impact-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "additive",
+    "black": true,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "anchor": "ground",
+    "pivotX": 0.5,
+    "pivotY": 0.8571428571428571
+  },
+  "spark": {
+    "file": "lucky-glint-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "additive",
+    "black": true,
+    "fit": "height",
+    "heightFrac": 0.85,
+    "pivotX": 0.5,
+    "pivotY": 0.5
+  }
+}

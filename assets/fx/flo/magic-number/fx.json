@@ -1,0 +1,29 @@
+{
+  "file": "magic-number-orb-anim.png",
+  "frames": 12,
+  "cols": 4,
+  "rows": 3,
+  "fps": 24,
+  "loop": true,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 0.32,
+  "aim": true,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "fizzle": {
+    "file": "magic-number-fizzle-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "additive",
+    "black": true,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "pivotX": 0.5,
+    "pivotY": 0.5
+  }
+}

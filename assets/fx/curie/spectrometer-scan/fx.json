@@ -1,0 +1,32 @@
+{
+  "file": "spectrometer-scan-anim.png",
+  "frames": 12,
+  "cols": 4,
+  "rows": 3,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 2.0,
+  "pivotX": 0.5,
+  "pivotY": 0.55,
+  "anchor": "body",
+  "hit": false,
+  "boost": {
+    "file": "weakness-bonus-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.75,
+    "pivotX": 0.5,
+    "pivotY": 0.55,
+    "anchor": "body",
+    "hit": false
+  }
+}

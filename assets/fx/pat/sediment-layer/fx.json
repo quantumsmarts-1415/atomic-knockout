@@ -1,0 +1,31 @@
+{
+  "file": "sediment-strike-anim.png",
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.48,
+  "pivotX": 0.12,
+  "pivotY": 0.55,
+  "hit": false,
+  "cling": {
+    "file": "sediment-coat-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.25,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "body",
+    "hit": false
+  }
+}

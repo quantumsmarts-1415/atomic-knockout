@@ -1,0 +1,31 @@
+{
+  "file": "lab-coat-shield-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "normal",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.15,
+  "pivotX": 0.5,
+  "pivotY": 0.55,
+  "anchor": "front",
+  "hit": false,
+  "block": {
+    "file": "lab-coat-block-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.9,
+    "pivotX": 0.5,
+    "pivotY": 0.55,
+    "hit": false
+  }
+}

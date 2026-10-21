@@ -1,0 +1,29 @@
+{
+  "file": "ionizing-beam-anim.png",
+  "frames": 12,
+  "cols": 4,
+  "rows": 3,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "pixel",
+  "pivotX": 0,
+  "pivotY": 0.5,
+  "hit": false,
+  "impact": {
+    "file": "ionizing-beam-hit-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "scale": 0.7,
+    "hit": false
+  }
+}

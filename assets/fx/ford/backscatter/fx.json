@@ -1,0 +1,18 @@
+{
+  "file": "backscatter-reverse-anim.png",
+  "frames": 10,
+  "cols": 5,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.15,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "oneshot": true,
+  "flip": true,
+  "anchor": "contact",
+  "hit": false
+}

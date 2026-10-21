@@ -1,0 +1,31 @@
+{
+  "file": "ion-chamber-status-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 24,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.7,
+  "pivotX": 0.5,
+  "pivotY": 0.55,
+  "anchor": "body",
+  "hit": false,
+  "cleanse": {
+    "file": "ion-neutralize-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "scale": 0.75,
+    "hit": false
+  }
+}

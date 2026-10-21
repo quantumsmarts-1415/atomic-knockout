@@ -1,0 +1,31 @@
+{
+  "file": "medal-swing-arc-anim.png",
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 1.15,
+  "oneshot": true,
+  "flip": true,
+  "anchor": "contact",
+  "pivotX": 0.16,
+  "pivotY": 0.5,
+  "fist": {
+    "file": "prize-medal.png",
+    "frames": 1,
+    "cols": 1,
+    "rows": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.85,
+    "anchor": "hand",
+    "flip": true,
+    "pivotX": 0.5,
+    "pivotY": 0.03409090909090909
+  }
+}

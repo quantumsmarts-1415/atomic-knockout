@@ -397,6 +397,16 @@ function chargeMustFinish(bot, time) {
   return held / max < move.fizzleBelow;
 }
 
+// A scripted hold is longer than Critical Mass's grace. Release at full
+// charge so the bot uses the window instead of always detonating on itself.
+function chargeShouldRelease(bot, time) {
+  if (bot.state !== 'charging' || bot.chargeStart == null) return false;
+  const move = bot.charDef?.moves?.basicCharge;
+  if (!move?.overhold) return false;
+  const max = move.maxChargeMs ?? 0;
+  return max > 0 && time - bot.chargeStart >= max;
+}
+
 function applyScriptedSlots(time, bot, input) {
   const t = time % SLOT_CYCLE;
   const neutral = () => {
@@ -409,6 +419,12 @@ function applyScriptedSlots(time, bot, input) {
     neutral();
     input.special = false;
     input.attack = true;
+    return input;
+  }
+  if (chargeShouldRelease(bot, time)) {
+    neutral();
+    input.attack = false;
+    input.special = false;
     return input;
   }
   // A held button is not a new press. If the fighter is busy when the

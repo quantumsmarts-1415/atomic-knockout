@@ -1,0 +1,32 @@
+{
+  "file": "time-dilation-jab-anim.png",
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.34,
+  "pivotX": 0.05625,
+  "pivotY": 0.5,
+  "oneshot": true,
+  "hit": false,
+  "cling": {
+    "file": "time-slow-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.85,
+    "pivotX": 0.5,
+    "pivotY": 0.62,
+    "anchor": "body",
+    "hit": false
+  }
+}

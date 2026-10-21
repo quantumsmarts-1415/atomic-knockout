@@ -1,0 +1,27 @@
+{
+  "file": "pocket-vial.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.62,
+  "pivotX": 0.5,
+  "pivotY": 0.9090909090909091,
+  "flip": true,
+  "hit": false,
+  "impact": {
+    "file": "pocket-vial-hit-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "scale": 0.7,
+    "hit": false
+  }
+}

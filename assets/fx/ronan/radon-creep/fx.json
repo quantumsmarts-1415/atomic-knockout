@@ -1,0 +1,15 @@
+{
+  "file": "radon-creep-cloud-anim.png",
+  "frames": 32,
+  "cols": 8,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.72,
+  "pivotX": 0.5,
+  "pivotY": 0.92,
+  "hit": false
+}

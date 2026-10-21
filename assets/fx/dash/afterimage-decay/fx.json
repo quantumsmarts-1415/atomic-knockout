@@ -1,0 +1,32 @@
+{
+  "file": "afterimage-tint-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.15,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "anchor": "afterimage",
+  "hit": false,
+  "shatter": {
+    "file": "afterimage-burst-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.4991304347826087,
+    "pivotY": 0.5043936731107205,
+    "scaleTo": "radius",
+    "flashRadius": 230,
+    "hit": false
+  }
+}

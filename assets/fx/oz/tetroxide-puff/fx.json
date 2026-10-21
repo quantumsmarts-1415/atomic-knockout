@@ -1,0 +1,18 @@
+{
+  "file": "tetroxide-vapour-anim.png",
+  "frames": 32,
+  "cols": 8,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.15,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "anchor": "body",
+  "scaleIn": 300,
+  "fadeMs": 280,
+  "hit": false
+}

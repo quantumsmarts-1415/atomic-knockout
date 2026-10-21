@@ -1,0 +1,17 @@
+{
+  "impact": {
+    "file": "circuit-contact-hit-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

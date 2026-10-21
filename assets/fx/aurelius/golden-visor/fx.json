@@ -1,0 +1,42 @@
+{
+  "file": "golden-visor-status-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.25,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "anchor": "body",
+  "hit": false,
+  "visor": {
+    "file": "golden-visor.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.85,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "flip": true,
+    "hit": false
+  },
+  "reflect": {
+    "file": "visor-reflect-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.13392857142857142,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

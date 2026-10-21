@@ -1,0 +1,29 @@
+{
+  "file": "carbon-ion-stream-anim.png",
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 24,
+  "loop": true,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 0.36,
+  "aim": true,
+  "pivotX": 0.08,
+  "pivotY": 0.5,
+  "impact": {
+    "file": "carbon-ion-hit-anim.png",
+    "frames": 6,
+    "cols": 3,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "additive",
+    "black": true,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "pivotX": 0.5,
+    "pivotY": 0.5
+  }
+}

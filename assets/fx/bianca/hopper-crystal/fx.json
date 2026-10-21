@@ -1,0 +1,30 @@
+{
+  "file": "hopper-eruption-anim.png",
+  "frames": 14,
+  "cols": 7,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.9,
+  "pivotX": 0,
+  "pivotY": 1,
+  "anchor": "ground",
+  "flip": true,
+  "hit": false,
+  "charge": {
+    "file": "hopper-crystal.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.55,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "hand",
+    "flip": true,
+    "hit": false
+  }
+}

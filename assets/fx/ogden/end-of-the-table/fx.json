@@ -1,0 +1,32 @@
+{
+  "file": "end-of-table-blast-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 16,
+  "loop": false,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 1.55,
+  "scaleTo": "radius",
+  "flashRadius": 230,
+  "anchor": "center",
+  "pivotX": 0.4991304347826087,
+  "pivotY": 0.5026269702276708,
+  "charge": {
+    "file": "end-of-table-charge-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 24,
+    "loop": true,
+    "blend": "additive",
+    "black": true,
+    "fit": "height",
+    "heightFrac": 1.35,
+    "anchor": "hand",
+    "pivotX": 0.5,
+    "pivotY": 0.5
+  }
+}

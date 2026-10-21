@@ -350,11 +350,17 @@ async function main() {
             failures.push({ ids: job.ids, errors: report.consoleErrors.slice(0, 3) });
           }
         } catch (err) {
-          const msg = String(err.message || err);
+          const msg = String(err.message || err).split('\n')[0];
           if (failures.length < 8) console.log('fail', job.ids.join(','), msg);
           failures.push({ ids: job.ids, errors: [msg] });
-          try { await slot.page.close(); } catch { /* page already gone */ }
-          Object.assign(slot, await openPage(browser));
+          // A stall leaves the page usable: the next match restarts Battle.
+          // Reloading here pulls every cutout again and turns a 1s hang into
+          // the slow part of the tournament. Real page crashes still reload.
+          const stalled = /hang guard/.test(msg);
+          if (!stalled) {
+            try { await slot.page.close(); } catch { /* page already gone */ }
+            Object.assign(slot, await openPage(browser));
+          }
         }
         done += 1;
         if (done % 20 === 0 || done === queue.length) {

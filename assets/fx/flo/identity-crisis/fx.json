@@ -1,0 +1,15 @@
+{
+  "file": "identity-flicker-anim.png",
+  "frames": 12,
+  "cols": 6,
+  "rows": 2,
+  "fps": 12,
+  "loop": true,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 1.45,
+  "anchor": "body",
+  "pivotX": 0.5,
+  "pivotY": 0.55
+}

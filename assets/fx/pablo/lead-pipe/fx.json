@@ -1,0 +1,43 @@
+{
+  "file": "lead-pipe-swing-anim.png",
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.72,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "flip": true,
+  "hit": false,
+  "fist": {
+    "file": "lead-pipe.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.1,
+    "pivotX": 0.09375,
+    "pivotY": 0.5,
+    "flip": true,
+    "hit": false
+  },
+  "impact": {
+    "file": "lead-pipe-hit-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.45,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "file": "paradox-signal-anim.png",
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 24,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.16,
+  "pivotX": 0.8229166666666666,
+  "pivotY": 0.5,
+  "aim": true,
+  "hit": false,
+  "spark": {
+    "file": "paradox-bounce-spark-anim.png",
+    "frames": 6,
+    "cols": 3,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.28,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "file": "overlooked-strike-anim.png",
+  "frames": 6,
+  "cols": 3,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 0.28,
+  "oneshot": true,
+  "flip": true,
+  "anchor": "contact",
+  "pivotX": 0.06,
+  "pivotY": 0.5
+}

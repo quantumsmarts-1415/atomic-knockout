@@ -1,0 +1,42 @@
+{
+  "file": "pitchblende-ore.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "pixel",
+  "pivotX": 0.5,
+  "pivotY": 0.525,
+  "scale": 0.72,
+  "spin": 6,
+  "hit": false,
+  "burst": {
+    "file": "pitchblende-crumble-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.9,
+    "pivotX": 0.5,
+    "pivotY": 0.72,
+    "hit": false
+  },
+  "hold": {
+    "file": "pitchblende-dust-cloud-anim.png",
+    "frames": 32,
+    "cols": 8,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.95,
+    "pivotX": 0.5,
+    "pivotY": 0.82,
+    "hit": false
+  }
+}

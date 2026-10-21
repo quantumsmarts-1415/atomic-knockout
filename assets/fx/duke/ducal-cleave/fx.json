@@ -1,0 +1,18 @@
+{
+  "file": "ducal-cleave-anim.png",
+  "frames": 10,
+  "cols": 5,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.75,
+  "pivotX": 0.18,
+  "pivotY": 0.8928571428571429,
+  "oneshot": true,
+  "flip": true,
+  "anchor": "ground",
+  "hit": false
+}

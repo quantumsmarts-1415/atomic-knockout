@@ -1,0 +1,30 @@
+{
+  "file": "rapier-thrust-anim.png",
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.22,
+  "pivotX": 0,
+  "pivotY": 0.5,
+  "hit": false,
+  "impact": {
+    "file": "rapier-hit-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.42,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

@@ -460,7 +460,9 @@ export class Rig extends Phaser.GameObjects.Container {
   }
 
   animate(dt, state, speedFactor = 1) {
-    this.animT += dt;
+    if (this.holdFrame) return;
+    const pace = this.animPace > 0 ? this.animPace : 1;
+    this.animT += dt * pace;
     const t = this.animT;
     this._authoredSheet = false;
     this.sheetClip = null;
@@ -497,7 +499,7 @@ export class Rig extends Phaser.GameObjects.Container {
         const blend = (this.frameData && state === 'attack') ? idleBlend(this.frameData, this.attackFrame || 0) : 0;
         this.blendToIdle(blend);
         this.rememberMask(shown, i);
-        this.sprite.anims.timeScale = 1;
+        this.sprite.anims.timeScale = this.animPace > 0 ? this.animPace : 1;
         this.applyPose(dt, state, this._layoutScale || 1);
         return;
       }
@@ -545,9 +547,10 @@ export class Rig extends Phaser.GameObjects.Container {
 
       // Feet follow ground speed. The old 0.55 floor held every slow walk
       // on the same long pose; a very slow walk is allowed to be slow.
-      this.sprite.anims.timeScale = def === 'walk'
+      const pace = this.animPace > 0 ? this.animPace : 1;
+      this.sprite.anims.timeScale = (def === 'walk'
         ? Phaser.Math.Clamp(speedFactor, 0.2, 1.8)
-        : 1;
+        : 1) * pace;
 
       // Layout scale is the body's fitted size. Never read it back from
       // scaleX: applyPose writes the pose into that value.

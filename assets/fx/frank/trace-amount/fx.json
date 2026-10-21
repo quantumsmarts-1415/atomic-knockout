@@ -1,0 +1,30 @@
+{
+  "file": "trace-fade-anim.png",
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.85,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "hit": false,
+  "shatter": {
+    "file": "trace-counter-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.05,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

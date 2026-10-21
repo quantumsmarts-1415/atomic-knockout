@@ -1,0 +1,27 @@
+{
+  "file": "pink-bismuth-bubble.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.32,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "spin": 0.6,
+  "hit": false,
+  "impact": {
+    "file": "pink-bismuth-pop-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

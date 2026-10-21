@@ -1,0 +1,30 @@
+{
+  "file": "nesting-layers.png",
+  "frames": 3,
+  "cols": 3,
+  "rows": 1,
+  "fps": 8,
+  "loop": false,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 1.75,
+  "anchor": "body",
+  "crackFrames": true,
+  "pivotX": 0.5,
+  "pivotY": 0.55,
+  "block": {
+    "file": "layer-pop-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "additive",
+    "black": true,
+    "fit": "height",
+    "heightFrac": 1.6,
+    "pivotX": 0.5,
+    "pivotY": 0.5
+  }
+}

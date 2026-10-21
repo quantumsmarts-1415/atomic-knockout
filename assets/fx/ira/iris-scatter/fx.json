@@ -1,0 +1,59 @@
+{
+  "pivotX": 0.9479166666666666,
+  "pivotY": 0.5,
+  "fit": "height",
+  "heightFrac": 0.1,
+  "aim": true,
+  "black": false,
+  "blend": "normal",
+  "shards": {
+    "kinetic": {
+      "frames": 1,
+      "blend": "normal",
+      "black": false,
+      "fit": "height",
+      "heightFrac": 0.1,
+      "pivotX": 0.9479166666666666,
+      "pivotY": 0.5,
+      "aim": true,
+      "hit": false,
+      "file": "iris-shard-kinetic.png"
+    },
+    "heat": {
+      "frames": 1,
+      "blend": "normal",
+      "black": false,
+      "fit": "height",
+      "heightFrac": 0.1,
+      "pivotX": 0.9479166666666666,
+      "pivotY": 0.5,
+      "aim": true,
+      "hit": false,
+      "file": "iris-shard-heat.png"
+    },
+    "electrical": {
+      "frames": 1,
+      "blend": "normal",
+      "black": false,
+      "fit": "height",
+      "heightFrac": 0.1,
+      "pivotX": 0.9479166666666666,
+      "pivotY": 0.5,
+      "aim": true,
+      "hit": false,
+      "file": "iris-shard-electrical.png"
+    },
+    "chemical": {
+      "frames": 1,
+      "blend": "normal",
+      "black": false,
+      "fit": "height",
+      "heightFrac": 0.1,
+      "pivotX": 0.9479166666666666,
+      "pivotY": 0.5,
+      "aim": true,
+      "hit": false,
+      "file": "iris-shard-chemical.png"
+    }
+  }
+}

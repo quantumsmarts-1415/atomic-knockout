@@ -1,0 +1,31 @@
+{
+  "file": "alpha-flick-anim.png",
+  "frames": 8,
+  "cols": 4,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.2,
+  "pivotX": 0,
+  "pivotY": 0.5,
+  "aim": true,
+  "hit": false,
+  "impact": {
+    "file": "alpha-flick-hit-anim.png",
+    "frames": 10,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.85,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

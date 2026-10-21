@@ -1,0 +1,16 @@
+{
+  "file": "revolution-spin-anim.png",
+  "frames": 10,
+  "cols": 5,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 1.65,
+  "oneshot": true,
+  "anchor": "center",
+  "pivotX": 0.5,
+  "pivotY": 0.5
+}

@@ -16,6 +16,7 @@ export function applyOnHit(attacker, victim, move, time) {
   }
 
   const fx = move.onHit;
+  if (fx?.xray) victim._xrayUntil = time + (fx.xray === true ? 180 : fx.xray);
   if (fx?.revealMs) {
     victim.revealedUntil = time + fx.revealMs;
     victim.revealTint = fx.revealColor ?? 0x8ec8ff;
@@ -34,7 +35,22 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx?.heal && attacker) attacker.percent = Math.max(0, (attacker.percent ?? 0) - fx.heal);
   if (!fx || immune) return;
 
-  if (fx.slow) victim.slowUntil = time + fx.slow;
+  if (fx.slow) {
+    const stacking = fx.slowStack && victim.slowUntil > time && victim._slowName === move.name;
+    const cap = fx.slowCap ?? 4;
+    victim.slowStacks = stacking ? Math.min(cap, (victim.slowStacks ?? 1) + 1) : 1;
+    victim._slowName = move.name;
+    victim.slowUntil = time + fx.slow;
+    if ((fx.slowStack || fx.slowCling) && attacker?.charDef?.id) {
+      victim.clingFrom = {
+        id: attacker.charDef.id,
+        move: move.name,
+        until: victim.slowUntil,
+        stacks: fx.slowStack ? victim.slowStacks : 0,
+      };
+      if (fx.slowCling) victim._animPace = 0.45;
+    }
+  }
   if (fx.attackSlow) {
     const spec = typeof fx.attackSlow === 'number' ? { ms: fx.attackSlow } : fx.attackSlow;
     victim.attackHaste = spec.mult ?? 0.72;
@@ -49,6 +65,12 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.freeze) {
     lock(victim, time, fx.freeze, true);
     victim.frozenUntil = Math.max(victim.frozenUntil ?? 0, time + fx.freeze);
+  }
+  if (fx.gold) {
+    const ms = fx.gold === true ? 640 : fx.gold;
+    victim.goldUntil = Math.max(victim.goldUntil ?? 0, time + ms);
+    victim.weightBuff = Math.max(victim.weightBuff ?? 1, 2.7);
+    victim.weightBuffUntil = Math.max(victim.weightBuffUntil ?? 0, victim.goldUntil);
   }
   if (fx.root) victim.rootedUntil = Math.max(victim.rootedUntil ?? 0, time + fx.root);
   if (fx.blind) victim.blindUntil = time + fx.blind;
@@ -69,12 +91,21 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.poison) {
     const p = fx.poison;
     const chem = p.flat ? 1 : chemicalMult(attacker?.charDef?.combat, victim.charDef?.combat);
-    victim.poisonUntil = time + (p.ms ?? 1600);
+    const wait = p.delay > 0 ? p.delay : 0;
+    victim.poisonUntil = time + wait + (p.ms ?? 1600);
     victim.poisonDps = (p.dps ?? 1.4) * chem;
     victim.poisonRamp = (p.ramp ?? 0) * chem;
-    victim.poisonTick = time + (p.delay ?? p.every ?? 280);
+    victim.poisonTick = time + (wait || (p.every ?? 280));
     victim.poisonEvery = p.every ?? 280;
     if (p.inherit) victim.poisonInherit = true;
+    if (wait && attacker?.charDef?.id) {
+      victim.poisonFrom = { id: attacker.charDef.id, move: move.name, burstAt: victim.poisonTick };
+      victim.clingFrom = {
+        id: attacker.charDef.id,
+        move: move.name,
+        until: victim.poisonTick,
+      };
+    }
   }
   if (fx.pinFoot && attacker?.charDef?.id) {
     victim.clingFrom = {
@@ -125,7 +156,16 @@ export function applyOnHit(attacker, victim, move, time) {
       until: fx.glow ? victim.glowUntil : (fx.coat ? victim.debuffCoatUntil : victim.lockedUntil),
     };
   }
-  if (fx.scramble) victim.scrambleUntil = time + (typeof fx.scramble === 'number' ? fx.scramble : 2400);
+  if (fx.scramble) {
+    victim.scrambleUntil = time + (typeof fx.scramble === 'number' ? fx.scramble : 2400);
+    if (attacker?.charDef?.id && move?.name) {
+      victim.clingFrom = {
+        id: attacker.charDef.id,
+        move: move.name,
+        until: victim.scrambleUntil,
+      };
+    }
+  }
   if (fx.weaken) {
     victim.weakenUntil = time + (fx.weaken.ms ?? 1600);
     victim.weakenMult = fx.weaken.mult ?? 0.75;
@@ -391,7 +431,19 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     }
   }
   if (move.cleanse) cleanse(fighter, move.cleanse);
-  if (move.blinkMs) fighter.phasingUntil = time + move.blinkMs;
+  if (move.tonic) grantTonic(fighter, move, time);
+  if (move.blinkMs) {
+    fighter.phasingUntil = time + move.blinkMs;
+    fighter._blinkUntil = fighter.phasingUntil;
+    fighter._blinkMove = move;
+  }
+  if (move.selfGlowMs && fighter.charDef?.id) {
+    fighter.clingFrom = {
+      id: fighter.charDef.id,
+      move: move.name,
+      until: time + move.selfGlowMs,
+    };
+  }
   if (move.revealAll && fighter.scene?.fighters) {
     for (const other of fighter.scene.fighters) other.phasingUntil = 0;
   }
@@ -427,7 +479,16 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     }
   }
   if (move.debuffImmune) fighter.debuffImmuneUntil = time + move.duration;
-  if (move.pauseDrain) fighter.drainPauseUntil = time + move.pauseDrain;
+  if (move.pauseDrain && frac >= (move.pauseAt ?? 0)) {
+    fighter.drainPauseUntil = time + move.pauseDrain;
+    if (move.pauseAt > 0 && fighter.charDef?.id) {
+      fighter.clingFrom = {
+        id: fighter.charDef.id,
+        move: move.name,
+        until: fighter.drainPauseUntil,
+      };
+    }
+  }
 }
 
 function grantBuff(fighter, buff, time) {
@@ -489,6 +550,57 @@ function grantBuff(fighter, buff, time) {
       dashSpeed: buff.armDash.dashSpeed ?? 560,
     };
   }
+}
+
+/** Slower travel hits harder. The floor keeps a crawl from becoming infinite. */
+export function slowHitScale(speed) {
+  return Math.min(2.2, 280 / Math.max(80, Number(speed) || 0));
+}
+
+/** Someone standing in front, at roughly the same height, is the one he can see. */
+export function fighterInView(owner, target) {
+  if (!owner || !target || owner === target) return false;
+  const ahead = (target.x - owner.x) * (owner.facing || 1);
+  const dy = Math.abs((target.y - (target.bodyH ?? 0) * 0.4) - (owner.y - (owner.bodyH ?? 0) * 0.5));
+  return ahead > 30 && dy < 90 && ahead < 340;
+}
+
+/** Position and percent from about one second ago. The oldest sample wins if the log is shorter. */
+export function rewindPoint(log, time, back = 1000) {
+  if (!log?.length) return null;
+  const want = time - back;
+  let snap = log[0];
+  for (const sample of log) {
+    if (sample.t <= want) snap = sample;
+    else break;
+  }
+  return snap;
+}
+
+/** Seconds of radium tonic already drunk become attack power, then the counter clears. */
+export function grantTonic(fighter, move, time) {
+  const spec = move?.tonic;
+  if (!spec || !fighter) return 0;
+  const steps = Math.max(0, fighter._tonicSteps | 0);
+  fighter._tonicSteps = 0;
+  if (!(steps > 0)) return 0;
+  fighter.attackPower = 1 + steps * (spec.power ?? 0.16);
+  fighter.attackPowerUntil = time + (spec.linger ?? 2200);
+  return steps;
+}
+
+/** Each quick repeat of a half-life swing does half the previous damage. */
+export function halfLifeScale(fighter, move, time) {
+  const spec = move?.halfLife;
+  if (!spec || !fighter) return 1;
+  const pause = spec.pause ?? 900;
+  const floor = spec.floor ?? 0.0625;
+  const last = fighter._halfLifeAt ?? 0;
+  let gen = fighter._halfLifeGen ?? 1;
+  if (!(last > 0) || time - last > pause) gen = 1;
+  fighter._halfLifeGen = Math.max(floor, gen * 0.5);
+  fighter._halfLifeAt = time;
+  return gen;
 }
 
 /** Shorten a swing's commitment while an attack-speed buff is up. */
@@ -615,6 +727,14 @@ export function prepareMove(move, attacker, defender, now = 0) {
   const selfHot = attacker && (attacker.burnUntil > now || attacker.heatedUntil > now);
   if (move.heatEmpower && selfHot) {
     next = { ...next, damage: (next.damage ?? 0) + move.heatEmpower };
+  }
+  if (move.heatTakenBonus && attacker?.heatTaken) {
+    const mult = move.heatTakenBonus;
+    next = {
+      ...next,
+      damage: (next.damage ?? 0) * mult,
+      damage2: next.damage2 != null ? next.damage2 * mult : next.damage2,
+    };
   }
   if (move.bonusWhileDps && takingDps(attacker, now)) {
     next = { ...next, damage: (next.damage ?? 0) + move.bonusWhileDps };

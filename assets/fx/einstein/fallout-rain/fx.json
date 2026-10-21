@@ -1,0 +1,31 @@
+{
+  "launch": {
+    "file": "fallout-dust-cloud-anim.png",
+    "frames": 32,
+    "cols": 8,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.92,
+    "hit": false
+  },
+  "shower": {
+    "file": "fallout-rain-anim.png",
+    "frames": 16,
+    "cols": 4,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "tilt": 0.42,
+    "hit": false
+  }
+}

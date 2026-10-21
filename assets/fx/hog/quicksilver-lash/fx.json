@@ -1,0 +1,32 @@
+{
+  "file": "quicksilver-lash-anim.png",
+  "frames": 12,
+  "cols": 4,
+  "rows": 3,
+  "fps": 24,
+  "loop": false,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.4,
+  "pivotX": 0,
+  "pivotY": 0.5,
+  "anchor": "shoulder",
+  "flip": true,
+  "hit": false,
+  "impact": {
+    "file": "lash-hit-splash-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.4,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

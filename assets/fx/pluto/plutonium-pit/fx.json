@@ -1,0 +1,26 @@
+{
+  "file": "plutonium-pit.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.34,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "hit": false,
+  "impact": {
+    "file": "plutonium-pit-impact-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.85,
+    "pivotX": 0.5,
+    "pivotY": 0.8125,
+    "hit": false
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "file": "rising-sun-burst-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 16,
+  "loop": false,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 1.5,
+  "scale": 0.42,
+  "anchor": "center",
+  "pivotX": 0.4991304347826087,
+  "pivotY": 0.49825783972125437,
+  "charge": {
+    "file": "rising-sun-charge-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 24,
+    "loop": false,
+    "blend": "additive",
+    "black": true,
+    "fit": "height",
+    "heightFrac": 1.55,
+    "anchor": "hand",
+    "pivotX": 0.5,
+    "pivotY": 0.72
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "file": "vapor-burst-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 16,
+  "loop": false,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 1.5,
+  "scale": 0.42,
+  "anchor": "center",
+  "pivotX": 0.4991304347826087,
+  "pivotY": 0.5008726003490401,
+  "charge": {
+    "file": "volatile-boil-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 12,
+    "loop": true,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "anchor": "feet",
+    "pivotX": 0.5,
+    "pivotY": 0.92
+  }
+}

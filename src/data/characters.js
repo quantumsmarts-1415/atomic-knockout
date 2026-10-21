@@ -2471,6 +2471,15 @@ for (const def of Object.values(CHARACTERS)) {
     helen.stats.gravityScale = Math.max(helen.stats.gravityScale, 0.98);
   }
 }
+// Yttrium rings out while she is still at a low percent. A small weight
+// bump keeps the density order and lets Maglev Launch finish a stock.
+{
+  const yara = CHARACTERS.yara;
+  if (yara?.stats) {
+    yara.stats.weight = Math.max(yara.stats.weight, 1.28);
+    if (yara.combat) yara.combat.weight = yara.stats.weight;
+  }
+}
 // Hydrogen's density curve gives Hydra a ~870 jump — too floaty in play.
 // Cap him near the roster middle without touching the shared formula.
 {
@@ -2495,16 +2504,16 @@ for (const def of Object.values(CHARACTERS)) {
     bord.art.bodyH = Math.max(bord.art.bodyH ?? 0, 108);
   }
 }
-// Ghosts (Rf–Og) keep a steady percent drain and very weak movement.
-// Their attacks are the strong part. TUNING itself is unchanged.
+// Ghosts (Rf–Og) keep a steady percent drain and a slow step.
+// Their attacks are the strong part. Missing density already derives
+// weight 1; pinning that to the lightest clamp launched them like hydrogen.
+// TUNING itself is unchanged.
 for (const def of Object.values(CHARACTERS)) {
   if (!def.ghost || !def.stats) continue;
   const [speedLo] = TUNING.speedClamp;
   const [jumpLo] = TUNING.jumpClamp;
-  const [weightLo] = TUNING.weightClamp;
   def.stats.speed = Math.max(speedLo, Math.round(def.stats.speed * 0.62));
   def.stats.jumpVelocity = Math.max(jumpLo, Math.round(def.stats.jumpVelocity * 0.78));
-  def.stats.weight = weightLo;
   def.stats.gravityScale = Math.max(0.7, Math.min(def.stats.gravityScale, 0.8));
   if (def.combat) {
     def.combat.speed = def.stats.speed;

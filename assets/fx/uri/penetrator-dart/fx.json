@@ -1,0 +1,43 @@
+{
+  "file": "du-penetrator.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "pixel",
+  "pivotX": 0.4947916666666667,
+  "pivotY": 0.5,
+  "scale": 0.22,
+  "aim": true,
+  "hit": false,
+  "trail": {
+    "file": "du-spark-trail-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 1,
+    "pivotY": 0.5,
+    "scale": 0.22,
+    "lagFrac": 0.5,
+    "hit": false
+  },
+  "pierce": {
+    "file": "du-pierce-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.3125,
+    "pivotY": 0.5,
+    "scale": 0.55,
+    "hit": false
+  }
+}

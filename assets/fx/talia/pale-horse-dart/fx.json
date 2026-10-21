@@ -1,0 +1,43 @@
+{
+  "file": "pale-horse-dart.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.08,
+  "pivotX": 0.5208333333333334,
+  "pivotY": 0.5,
+  "aim": true,
+  "hit": false,
+  "cling": {
+    "file": "dart-armed-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.15,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "body",
+    "hit": false
+  },
+  "impact": {
+    "file": "pale-horse-burst-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.4991304347826087,
+    "pivotY": 0.5070671378091873,
+    "scale": 0.42,
+    "hit": false
+  }
+}

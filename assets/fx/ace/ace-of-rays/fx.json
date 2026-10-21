@@ -1,0 +1,43 @@
+{
+  "file": "card-flick-streak-anim.png",
+  "frames": 6,
+  "cols": 4,
+  "rows": 2,
+  "fps": 24,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 0.18,
+  "pivotX": 0,
+  "pivotY": 0.5,
+  "hit": false,
+  "fist": {
+    "file": "glowing-card.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.42,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "flip": true,
+    "spin": 4,
+    "hit": false
+  },
+  "impact": {
+    "file": "card-flick-hit-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.4,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

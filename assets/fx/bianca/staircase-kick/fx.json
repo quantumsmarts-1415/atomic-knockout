@@ -1,0 +1,34 @@
+{
+  "spark": {
+    "file": "step-kick-hit-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.32,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "rise": 0.22,
+    "hit": false
+  },
+  "impact": {
+    "file": "staircase-final-kick-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.4991304347826087,
+    "pivotY": 0.5026269702276708,
+    "scaleTo": "radius",
+    "flashRadius": 230,
+    "hit": false
+  }
+}

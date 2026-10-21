@@ -1,0 +1,59 @@
+{
+  "file": "double-nobel-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 16,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "pixel",
+  "pivotX": 0.4991304347826087,
+  "pivotY": 0.5035087719298246,
+  "scale": 0.42,
+  "scaleWith": "radius",
+  "hit": false,
+  "charge": {
+    "file": "double-nobel-charge-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 24,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.2,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "body",
+    "hit": false
+  },
+  "impact": {
+    "file": "nobel-chemical-hit-anim.png",
+    "frames": 10,
+    "cols": 5,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "scale": 0.8,
+    "hit": false
+  },
+  "shards": {
+    "medal": {
+      "file": "nobel-medal.png",
+      "frames": 1,
+      "blend": "normal",
+      "black": false,
+      "fit": "height",
+      "heightFrac": 0.38,
+      "pivotX": 0.5,
+      "pivotY": 0.6704545454545454
+    }
+  }
+}

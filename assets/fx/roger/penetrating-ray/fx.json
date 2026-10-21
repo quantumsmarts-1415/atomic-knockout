@@ -1,0 +1,15 @@
+{
+  "file": "penetrating-ray-anim.png",
+  "frames": 12,
+  "cols": 4,
+  "rows": 3,
+  "fps": 24,
+  "loop": false,
+  "blend": "additive",
+  "black": true,
+  "fit": "height",
+  "heightFrac": 0.42,
+  "pivotX": 0,
+  "pivotY": 0.5,
+  "flip": true
+}

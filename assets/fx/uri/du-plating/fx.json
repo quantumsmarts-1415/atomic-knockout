@@ -1,0 +1,27 @@
+{
+  "file": "du-plating.png",
+  "frames": 1,
+  "blend": "normal",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 1.05,
+  "pivotX": 0.5,
+  "pivotY": 0.5,
+  "anchor": "body",
+  "hit": false,
+  "block": {
+    "file": "du-plate-clank-anim.png",
+    "frames": 8,
+    "cols": 4,
+    "rows": 2,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.7,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
+}

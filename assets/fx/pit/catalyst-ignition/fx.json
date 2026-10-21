@@ -1,0 +1,45 @@
+{
+  "charge": {
+    "file": "platinum-sponge.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.32,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "hand",
+    "flip": true,
+    "hit": false
+  },
+  "glow": {
+    "file": "catalyst-glow-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.48,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "scaleWith": "alpha",
+    "hit": false
+  },
+  "ignite": {
+    "file": "gas-cloud-ignition-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "pixel",
+    "pivotX": 0.4991869918699187,
+    "pivotY": 0.4931740614334471,
+    "hit": false
+  }
+}

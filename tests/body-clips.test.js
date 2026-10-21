@@ -8,8 +8,9 @@ import { artIsUpdated } from '../src/data/updatedArt.js';
 import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
 import { guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
+import { shoulderSlashOrigin } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'holly'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -430,9 +431,10 @@ test('Pole Piece is a swappable sheet, and Stone Breaker leaves the aimed hand',
   const pole = CHARACTERS.holly.art.sheets.clips['body-specialDirectional'];
   const poleMeta = sheetMeta('holly', 'body-specialDirectional');
   assert.equal(pole.file, 'holly_pole-piece.png');
-  assert.equal(pole.frameW, 704);
-  assert.deepEqual(poleMeta.active, [3, 4]);
-  assert.deepEqual(poleMeta.anchors.fist[4], [700, 343]);
+  assert.equal(pole.frameW, 561);
+  assert.deepEqual(poleMeta.active, [4, 5]);
+  assert.deepEqual(poleMeta.anchors.fist[4], [556, 112]);
+  assert.deepEqual(poleMeta.anchors.fist[5], [554, 126]);
 
   const beam = CHARACTERS.holly.art.sheets.clips['body-basicCharge'];
   const beamMeta = sheetMeta('holly', 'body-basicCharge');
@@ -455,6 +457,55 @@ test('Pole Piece is a swappable sheet, and Stone Breaker leaves the aimed hand',
   const brace = sheetMeta('holly', 'body-specialDefense');
   assert.equal(CHARACTERS.holly.art.sheets.clips['body-specialDefense'].file, 'holly_bend-dont-break.png');
   assert.deepEqual(brace.loop, [2, 6]);
+});
+
+test('Quicksilver Lash leaves the thrust hand, and Hoss keeps her gallop and horseshoe', () => {
+  const lash = CHARACTERS.hog.art.sheets.clips['body-basicDirectional'];
+  const lashMeta = sheetMeta('hog', 'body-basicDirectional');
+  assert.equal(lash.file, 'hog_quicksilver-lash.png');
+  assert.deepEqual(lashMeta.active, [2, 6]);
+  assert.deepEqual(lashMeta.anchors.fist[4], [580, 114]);
+  assert.ok(lashMeta.anchors.fist[4][0] > lash.frameW - 12);
+  const fighter = {
+    charDef: CHARACTERS.hog,
+    currentMoveKey: 'basicDirectional',
+    facing: 1,
+    x: 400,
+    y: 560,
+    bodyW: 40,
+    bodyH: 80,
+    rig: { sheetClip: 'body-basicDirectional', sheetFrame: 4, moveKey: 'basicDirectional' },
+  };
+  const hand = frameToWorld(
+    lashMeta.anchors.fist[4], lash.frameW, lash.frameH, lash.footY, lash.displayScale, 1, 1, 400, 560,
+  );
+  const origin = shoulderSlashOrigin(fighter);
+  assert.ok(Math.abs(origin.x - hand.x) < 0.05, origin.x - hand.x);
+  assert.ok(Math.abs(origin.y - hand.y) < 0.05, origin.y - hand.y);
+  const shoulder = 400 + 40 * 0.25;
+  assert.ok(origin.x > shoulder + 40, origin.x - shoulder);
+
+  const bulb = sheetMeta('hog', 'body-basicCharge');
+  assert.deepEqual(bulb.loop, [0, 4]);
+  assert.deepEqual(bulb.active, [5, 6]);
+  const guard = sheetMeta('hog', 'body-specialDefense');
+  assert.equal(CHARACTERS.hog.art.sheets.clips['body-specialDefense'].file, 'hog_amalgamate.png');
+  assert.deepEqual(guard.loop, [2, 6]);
+
+  const gallop = sheetMeta('hoss', 'body-basicCharge');
+  assert.equal(CHARACTERS.hoss.art.sheets.clips['body-basicCharge'].file, 'hoss_stampede.png');
+  assert.equal(gallop.slide, 780);
+  assert.deepEqual(gallop.loop, [0, 3]);
+  assert.deepEqual(gallop.active, [4, 6]);
+  const magic = sheetMeta('hoss', 'body-specialDefense');
+  assert.equal(CHARACTERS.hoss.art.sheets.clips['body-specialDefense'].file, 'hoss_doubly-magic.png');
+  assert.deepEqual(magic.loop, [2, 5]);
+  const shoe = CHARACTERS.hoss.art.sheets.clips['body-specialDirectional'];
+  const shoeMeta = sheetMeta('hoss', 'body-specialDirectional');
+  assert.equal(shoe.file, 'hoss_lucky-horseshoe.png');
+  assert.equal(shoeMeta.release, 3);
+  assert.ok(shoeMeta.anchors.fist[3][0] > shoe.frameW - 12, shoeMeta.anchors.fist[3][0]);
+  assert.ok(shoeMeta.anchors.fist[3][1] > 250, shoeMeta.anchors.fist[3][1]);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

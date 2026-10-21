@@ -3502,8 +3502,9 @@ export function syncFxActors(scene) {
     } else {
       img.rotation = face === -1 ? Math.PI : 0;
       if (art.anchor === 'shoulder') {
-        x = fighter.x + face * (fighter.bodyW ?? 40) * 0.25;
-        y = fighter.y - (fighter.bodyH ?? 80) * 0.62;
+        const hand = shoulderSlashOrigin(fighter);
+        x = hand.x;
+        y = hand.y;
       }
     }
     img.setPosition(x, y);
@@ -4154,6 +4155,18 @@ export function spawnContactFx(scene, attacker, victim, move) {
       until: (scene.simNow ?? 0) + (move.onHit.coatMs ?? 2000),
     };
   }
+}
+
+/** Quicksilver Lash is tagged at the shoulder. The body is a straight-arm
+ *  thrust, so the whip's left edge leaves the sheet hand. */
+export function shoulderSlashOrigin(fighter) {
+  const hand = sheetFxPoint(fighter, 'shot');
+  if (hand) return hand;
+  const face = fighter?.facing || 1;
+  return {
+    x: (fighter?.x || 0) + face * (fighter?.bodyW ?? 40) * 0.25,
+    y: (fighter?.y || 0) - (fighter?.bodyH ?? 80) * 0.62,
+  };
 }
 
 function frameInActive(fighter) {

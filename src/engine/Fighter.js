@@ -1240,7 +1240,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         } else {
           // A pinned-foot body clip (Surf's Up) stores the travel on the sheet.
           // The cell stays put; this velocity is what carries her forward.
-          const speed = sheet?.slide || move.dashSpeed || 500;
+          const speed = Number.isFinite(sheet?.slide) ? sheet.slide : (move.dashSpeed || 500);
           this.dashVX = this.facing * speed;
           this.dashVY = 0;
           this._gliding = false;

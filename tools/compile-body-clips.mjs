@@ -57,6 +57,8 @@ for (const id of readdirSync(root).sort()) {
     // returns to the start stance, so the defense fades into idle.
     // Atom Smasher holds the follow-through and has no recovery pose.
     if (json.move === 'afterimage-decay' || json.move === 'atom-smasher') record.blendIdle = true;
+    // The lunge is in the cell. A code slide would skate the sole.
+    if (json.move === 'kobold-strike') record.noSlide = true;
     moves[json.move] = record;
   }
   if (Object.keys(moves).length) packs[id] = moves;

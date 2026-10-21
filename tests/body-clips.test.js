@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'uri', 'wolf'];
+const FIGHTERS = ['ace', 'agatha', 'amy', 'aurelius', 'barry', 'bianca', 'boar', 'brock', 'burke', 'caesar', 'cali', 'ceres', 'cody', 'collin', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'uri', 'wolf'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -1105,6 +1105,44 @@ test('Sarge, Talia, Tara, Tate, Uri, and Wolf keep their own soles and wide Wolf
     assert.ok(png.width <= 8192 && png.height <= 8192, clip.file);
     assert.ok((png.width / clip.frameW) * (png.height / clip.frameH) >= clip.count, clip.file);
   }
+});
+
+test('Cody and Collin keep their sheets, and Kobold Strike does not add a code slide', () => {
+  const rod = sheetMeta('cody', 'body-specialDefense');
+  assert.equal(CHARACTERS.cody.art.sheets.clips['body-specialDefense'].file, 'cody_control-rod.png');
+  assert.deepEqual(rod.loop, [3, 4]);
+  const strike = CHARACTERS.collin.moves.basicDirectional;
+  assert.equal(strike.dashSpeed, 460);
+  const meta = sheetMeta('collin', 'body-basicDirectional');
+  assert.equal(CHARACTERS.collin.art.sheets.clips['body-basicDirectional'].file, 'collin_kobold-strike.png');
+  assert.equal(meta.slide, 0);
+  const shell = sheetMeta('collin', 'body-specialDefense');
+  assert.deepEqual(shell.loop, [3, 5]);
+});
+
+test('Caesar dashes from the sheet, and Ceria Polish plays the catalytic burn', () => {
+  const dash = CHARACTERS.caesar.moves.basicDirectional;
+  const clip = CHARACTERS.caesar.art.sheets.clips['body-basicDirectional'];
+  const meta = sheetMeta('caesar', 'body-basicDirectional');
+  assert.equal(clip.file, 'caesar_rubicon-dash.png');
+  assert.equal(meta.slide, dash.dashSpeed);
+  const polish = CHARACTERS.ceres.moves.basicDirectional;
+  assert.equal(polish.name, 'Ceria Polish');
+  assert.equal(moveBodySlug('ceres', polish), 'catalytic-burn');
+  assert.equal(CHARACTERS.ceres.art.sheets.clips['body-basicDirectional'].file, 'ceres_catalytic-burn.png');
+});
+
+test('Agatha, Barry, and Brock keep their soles, and the drop loops the crouch', () => {
+  const tarnish = sheetMeta('agatha', 'body-specialDirectional');
+  assert.equal(CHARACTERS.agatha.art.sheets.clips['body-specialDirectional'].file, 'agatha_tarnish-cloud.png');
+  assert.deepEqual(tarnish.anchors.fist[3], [441, 178]);
+  const drop = sheetMeta('barry', 'body-basicCharge');
+  assert.equal(CHARACTERS.barry.art.sheets.clips['body-basicCharge'].file, 'barry_heavyweight-drop.png');
+  assert.deepEqual(drop.loop, [0, 3]);
+  assert.equal(drop.release, 5);
+  const screen = sheetMeta('brock', 'body-specialDefense');
+  assert.equal(CHARACTERS.brock.art.sheets.clips['body-specialDefense'].file, 'brock_red-fume-screen.png');
+  assert.deepEqual(screen.loop, [3, 5]);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

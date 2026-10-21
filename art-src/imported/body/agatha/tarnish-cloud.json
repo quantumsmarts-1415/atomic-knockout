@@ -1,0 +1,207 @@
+{
+ "name": "agatha",
+ "move": "tarnish-cloud",
+ "method": "video",
+ "source": "fx-art/_flow/b8/clips/603f_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
+ "frameW": 446,
+ "frameH": 625,
+ "idle_cell_w": 493,
+ "idle_cell_h": 600,
+ "pad_top": 25,
+ "pad_left": 0,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14,
+ "loop": false,
+ "foot_row": 605,
+ "footY": 0.968,
+ "visibleH": 565,
+ "scale": 1.12326,
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_hand_xy": {
+  "3": [
+   487,
+   231
+  ],
+  "4": [
+   490,
+   227
+  ],
+  "5": [
+   525,
+   233
+  ]
+ },
+ "strike_reach_xy": {
+  "3": [
+   441,
+   178
+  ],
+  "4": [
+   440,
+   176
+  ],
+  "5": [
+   442,
+   180
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    39,
+    605,
+    48,
+    335
+   ],
+   "foot": 605,
+   "front_hand_xy": [
+    306,
+    123
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    59,
+    605,
+    37,
+    362
+   ],
+   "foot": 605,
+   "front_hand_xy": [
+    362,
+    140
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 28,
+   "bbox": [
+    95,
+    605,
+    37,
+    427
+   ],
+   "foot": 605,
+   "front_hand_xy": [
+    424,
+    171
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    109,
+    605,
+    35,
+    441
+   ],
+   "foot": 605,
+   "front_hand_xy": [
+    487,
+    231
+   ],
+   "removed_detached_px": 12,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    108,
+    605,
+    35,
+    440
+   ],
+   "foot": 605,
+   "front_hand_xy": [
+    490,
+    227
+   ],
+   "removed_detached_px": 428,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 82,
+   "bbox": [
+    109,
+    605,
+    37,
+    442
+   ],
+   "foot": 605,
+   "front_hand_xy": [
+    525,
+    233
+   ],
+   "removed_detached_px": 20,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 118,
+   "bbox": [
+    98,
+    605,
+    32,
+    429
+   ],
+   "foot": 605,
+   "front_hand_xy": [
+    429,
+    174
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 136,
+   "bbox": [
+    39,
+    605,
+    46,
+    335
+   ],
+   "foot": 605,
+   "front_hand_xy": [
+    313,
+    123
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   605,
+   605,
+   605,
+   605,
+   605,
+   605,
+   605,
+   605
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false
+ },
+ "paint_fix": "Grok-drawn breath plume keyed out (version with plume in _alt/)"
+}

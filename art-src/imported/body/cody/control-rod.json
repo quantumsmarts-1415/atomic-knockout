@@ -1,0 +1,197 @@
+{
+ "name": "cody",
+ "move": "control-rod",
+ "method": "video",
+ "source": "fx-art/_flow/b8/clips/626f_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
+ "frameW": 457,
+ "frameH": 662,
+ "idle_cell_w": 555,
+ "idle_cell_h": 611,
+ "pad_top": 51,
+ "pad_left": 0,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14,
+ "loop": false,
+ "foot_row": 644,
+ "footY": 0.9728,
+ "visibleH": 569,
+ "scale": 1.13121,
+ "strike_frames": [
+  3,
+  4
+ ],
+ "strike_hand_xy": {
+  "3": [
+   431,
+   247
+  ],
+  "4": [
+   401,
+   150
+  ]
+ },
+ "strike_reach_xy": {
+  "3": [
+   431,
+   246
+  ],
+  "4": [
+   453,
+   612
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    74,
+    644,
+    13,
+    410
+   ],
+   "foot": 644,
+   "front_hand_xy": [
+    410,
+    258
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    74,
+    644,
+    13,
+    410
+   ],
+   "foot": 644,
+   "front_hand_xy": [
+    410,
+    260
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 28,
+   "bbox": [
+    76,
+    644,
+    13,
+    410
+   ],
+   "foot": 644,
+   "front_hand_xy": [
+    410,
+    262
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    50,
+    644,
+    13,
+    431
+   ],
+   "foot": 644,
+   "front_hand_xy": [
+    431,
+    247
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 64,
+   "bbox": [
+    40,
+    644,
+    19,
+    453
+   ],
+   "foot": 644,
+   "front_hand_xy": [
+    401,
+    150
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 82,
+   "bbox": [
+    40,
+    644,
+    19,
+    453
+   ],
+   "foot": 644,
+   "front_hand_xy": [
+    401,
+    147
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 109,
+   "bbox": [
+    77,
+    644,
+    13,
+    424
+   ],
+   "foot": 644,
+   "front_hand_xy": [
+    423,
+    315
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 136,
+   "bbox": [
+    74,
+    644,
+    13,
+    410
+   ],
+   "foot": 644,
+   "front_hand_xy": [
+    410,
+    258
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   644,
+   644,
+   644,
+   644,
+   644,
+   644,
+   644,
+   644
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false
+ }
+}

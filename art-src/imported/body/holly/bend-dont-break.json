@@ -1,0 +1,242 @@
+{
+ "name": "holly",
+ "move": "bend-dont-break",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/454b.mp4 (stream 0)",
+ "frameW": 425,
+ "frameH": 601,
+ "idle_cell_w": 571,
+ "idle_anchor_x": 228.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9684,
+ "foot_row": 582,
+ "visibleH": 567,
+ "scale": 0.9759,
+ "offset": [
+  -307.8,
+  -156.8
+ ],
+ "strike_hand_xy": {
+  "2": [
+   397,
+   182
+  ],
+  "3": [
+   397,
+   183
+  ],
+  "4": [
+   378,
+   166
+  ],
+  "5": [
+   306,
+   119
+  ],
+  "6": [
+   366,
+   347
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    582,
+    60,
+    400
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    399,
+    324
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    87,
+    582,
+    19,
+    413
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    374,
+    161
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    104,
+    582,
+    4,
+    421
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    397,
+    182
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    104,
+    582,
+    4,
+    421
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    397,
+    183
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    87,
+    582,
+    4,
+    411
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    378,
+    166
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    38,
+    582,
+    4,
+    402
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    306,
+    119
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    73,
+    582,
+    2,
+    402
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    366,
+    347
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    24,
+    582,
+    14,
+    402
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    283,
+    329
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   582,
+   582,
+   582,
+   582,
+   582,
+   582,
+   582,
+   582
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Sinks into a low, wide braced stance, held f2-f7. Grok added a stray arm extension (src ~91-109), which is skipped. 4:3 clip, measured scale 0.976.",
+  "redo_candidate": false,
+  "minor_issue": false,
+  "first_frame_start_mad": 2.54,
+  "src_picks": "1,13,25,37,49,61,79,145"
+ },
+ "strike_frames": [
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "2": [
+   421,
+   443
+  ],
+  "3": [
+   421,
+   443
+  ],
+  "4": [
+   411,
+   440
+  ],
+  "5": [
+   402,
+   563
+  ],
+  "6": [
+   402,
+   562
+  ]
+ }
+}

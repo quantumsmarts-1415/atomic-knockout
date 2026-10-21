@@ -1,0 +1,215 @@
+{
+ "name": "haley",
+ "move": "carbide-kick",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/445b.mp4 (stream 0)",
+ "frameW": 698,
+ "frameH": 615,
+ "idle_cell_w": 588,
+ "idle_anchor_x": 181.0,
+ "width_mode": "cell",
+ "pad_top": 17,
+ "idle_cell_h": 598,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9691,
+ "foot_row": 596,
+ "visibleH": 581,
+ "scale": 1.12127,
+ "offset": [
+  -180.6,
+  -162.2
+ ],
+ "strike_hand_xy": {
+  "3": [
+   695,
+   272
+  ],
+  "4": [
+   686,
+   255
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    32,
+    596,
+    9,
+    327
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    305,
+    229
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    23,
+    596,
+    104,
+    426
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    426,
+    230
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    30,
+    596,
+    126,
+    603
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    603,
+    315
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    45,
+    596,
+    146,
+    695
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    695,
+    272
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    43,
+    596,
+    157,
+    686
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    686,
+    255
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    29,
+    596,
+    175,
+    482
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    464,
+    331
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    32,
+    596,
+    128,
+    392
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    390,
+    203
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 121,
+   "bbox": [
+    32,
+    596,
+    11,
+    327
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    322,
+    214
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   596,
+   596,
+   596,
+   596,
+   596,
+   596,
+   596,
+   596
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Chamber, then a strong straight front kick (f4-f5), then recovery. WIDE.",
+  "redo_candidate": false,
+  "minor_issue": false,
+  "first_frame_start_mad": 2.29,
+  "src_picks": "1,31,49,67,79,91,103,121"
+ },
+ "strike_frames": [
+  3,
+  4
+ ],
+ "strike_reach_xy": {
+  "3": [
+   695,
+   271
+  ],
+  "4": [
+   686,
+   254
+  ]
+ }
+}

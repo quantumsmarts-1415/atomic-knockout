@@ -9,7 +9,7 @@ import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
 import { guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'holly'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -399,6 +399,62 @@ test('Beta Turn crouches into a spread, and Alpha Flick leaves the extended hand
   const jabMeta = sheetMeta('frank', 'body-basicDirectional');
   assert.equal(jab.file, 'frank_vanishing-jab.png');
   assert.ok(jabMeta.anchors.fist[2][0] > jab.frameW - 12, jabMeta.anchors.fist[2][0]);
+});
+
+test('Neutron Sink throws from an empty hand, and High-K Gate holds the raised arms', () => {
+  const sink = CHARACTERS.haley.art.sheets.clips['body-specialDirectional'];
+  const sinkMeta = sheetMeta('haley', 'body-specialDirectional');
+  assert.equal(sink.file, 'haley_neutron-sink.png');
+  assert.equal(sinkMeta.release, 4);
+  assert.deepEqual(sinkMeta.anchors.fist[4], [633, 244]);
+  assert.deepEqual(sinkMeta.anchors.fist[5], [683, 151]);
+  const wind = frameToWorld(
+    sinkMeta.anchors.fist[1], sink.frameW, sink.frameH, sink.footY, sink.displayScale, 1, 1, 0, 0,
+  );
+  const release = frameToWorld(
+    sinkMeta.anchors.fist[4], sink.frameW, sink.frameH, sink.footY, sink.displayScale, 1, 1, 0, 0,
+  );
+  assert.ok(release.x > wind.x + 20, release.x - wind.x);
+
+  const gate = sheetMeta('haley', 'body-specialDefense');
+  assert.equal(CHARACTERS.haley.art.sheets.clips['body-specialDefense'].file, 'haley_high-k-gate.png');
+  assert.deepEqual(gate.loop, [2, 7]);
+  assert.equal(sheetFrameIndex(gate, { state: 'defending', animT: 0, fd: null }), 2);
+
+  const cutter = sheetMeta('haley', 'body-basicCharge');
+  assert.deepEqual(cutter.loop, [0, 4]);
+  assert.deepEqual(cutter.active, [5, 6]);
+});
+
+test('Pole Piece is a swappable sheet, and Stone Breaker leaves the aimed hand', () => {
+  const pole = CHARACTERS.holly.art.sheets.clips['body-specialDirectional'];
+  const poleMeta = sheetMeta('holly', 'body-specialDirectional');
+  assert.equal(pole.file, 'holly_pole-piece.png');
+  assert.equal(pole.frameW, 704);
+  assert.deepEqual(poleMeta.active, [3, 4]);
+  assert.deepEqual(poleMeta.anchors.fist[4], [700, 343]);
+
+  const beam = CHARACTERS.holly.art.sheets.clips['body-basicCharge'];
+  const beamMeta = sheetMeta('holly', 'body-basicCharge');
+  assert.equal(beam.file, 'holly_stone-breaker.png');
+  assert.equal(beamMeta.release, 2);
+  const fighter = {
+    charDef: CHARACTERS.holly,
+    currentMoveKey: 'basicCharge',
+    facing: 1,
+    x: 0,
+    y: 0,
+    rig: { sheetClip: 'body-basicCharge', sheetFrame: 2, moveKey: 'basicCharge' },
+  };
+  const raw = frameToWorld(
+    beamMeta.anchors.fist[2], beam.frameW, beam.frameH, beam.footY, beam.displayScale, 1, 1, 0, 0,
+  );
+  const muzzle = bodySheetMuzzle(fighter);
+  assert.ok(Math.abs(raw.x - muzzle.x - 12) < 0.05, raw.x - muzzle.x);
+
+  const brace = sheetMeta('holly', 'body-specialDefense');
+  assert.equal(CHARACTERS.holly.art.sheets.clips['body-specialDefense'].file, 'holly_bend-dont-break.png');
+  assert.deepEqual(brace.loop, [2, 6]);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

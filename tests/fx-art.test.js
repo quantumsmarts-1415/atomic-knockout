@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeTint, chargeWaveAlpha, cloudIgnitionScale, contentSpan, curieFade, curiePulse, fadeLoopFrames, flameTestColor, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pileCount, playsFinalImpact, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, slashArtReplacesStroke, slashNeedsCodeFlash, sliceGrid, sliceHorizontal, rodOrbitPoint, stackPipIndex, stageSpanSize, stepFxProjectile, stickAim, survivedPipAlpha, surgeAlpha, surgeBeamScale, throwGrowth, tintToward, trailBackOffset, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeTint, chargeWaveAlpha, cloudIgnitionScale, contentSpan, curieFade, curiePulse, fadeLoopFrames, flameTestColor, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, handPropHeld, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pileCount, playsFinalImpact, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, slashArtReplacesStroke, slashNeedsCodeFlash, sliceGrid, sliceHorizontal, rodOrbitPoint, stackPipIndex, stageSpanSize, stepFxProjectile, stickAim, survivedPipAlpha, surgeAlpha, surgeBeamScale, throwGrowth, tintToward, trailBackOffset, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1707,6 +1707,17 @@ test('haley cutter, kick, gate, and disc match the arrived sheets', () => {
   assert.equal(disc.cling.frames, 24);
   assert.equal(disc.cling.loop, true);
   assert.equal(disc.cling.anchor, 'body');
+  assert.equal(disc.fist.file, 'hafnium-disc.png');
+  assert.equal(disc.fist.anchor, 'hand');
+  assert.equal(disc.fist.heightFrac, disc.heightFrac);
+  const haley = ROSTER.find((c) => c.id === 'haley');
+  const held = {
+    charDef: haley,
+    currentMoveKey: 'specialDirectional',
+    rig: { sheetClip: 'body-specialDirectional', sheetFrame: 2 },
+  };
+  assert.equal(handPropHeld(held), true);
+  assert.equal(handPropHeld({ ...held, rig: { sheetClip: 'body-specialDirectional', sheetFrame: 4 } }), false);
   for (const file of fs.readdirSync('assets/fx/haley', { recursive: true })) {
     const name = String(file);
     assert.equal(name.endsWith('.gif') || name.endsWith('.jpg') || name.endsWith('.py'), false, name);

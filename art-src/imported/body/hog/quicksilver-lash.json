@@ -1,0 +1,233 @@
+{
+ "name": "hog",
+ "move": "quicksilver-lash",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/449b.mp4 (stream 0)",
+ "frameW": 583,
+ "frameH": 602,
+ "idle_cell_w": 558,
+ "idle_anchor_x": 226.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 602,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9684,
+ "foot_row": 583,
+ "visibleH": 568,
+ "scale": 1.13373,
+ "offset": [
+  -131.2,
+  -157.3
+ ],
+ "strike_hand_xy": {
+  "2": [
+   530,
+   104
+  ],
+  "4": [
+   580,
+   114
+  ],
+  "5": [
+   580,
+   114
+  ],
+  "6": [
+   517,
+   119
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    14,
+    583,
+    116,
+    346
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    340,
+    164
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    16,
+    583,
+    116,
+    372
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    371,
+    175
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    18,
+    583,
+    116,
+    530
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    530,
+    104
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    30,
+    583,
+    116,
+    422
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    421,
+    120
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 43,
+   "bbox": [
+    32,
+    583,
+    116,
+    580
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    580,
+    114
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    32,
+    583,
+    116,
+    580
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    580,
+    114
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    30,
+    583,
+    116,
+    517
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    517,
+    119
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    14,
+    583,
+    116,
+    346
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    342,
+    165
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   583,
+   583,
+   583,
+   583,
+   583,
+   583,
+   583,
+   583
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "The arm goes straight out from the shoulder (f3, f5-f7), but Grok made it a stiff straight extension rather than a whipping lash, so it reads close to a punch. Usable; redo only if Silas wants a visible whip arc. WIDE.",
+  "redo_candidate": false,
+  "minor_issue": true,
+  "first_frame_start_mad": 2.17,
+  "src_picks": "1,13,19,31,43,55,67,145"
+ },
+ "strike_frames": [
+  2,
+  4,
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "2": [
+   530,
+   101
+  ],
+  "4": [
+   580,
+   109
+  ],
+  "5": [
+   580,
+   109
+  ],
+  "6": [
+   517,
+   118
+  ]
+ }
+}

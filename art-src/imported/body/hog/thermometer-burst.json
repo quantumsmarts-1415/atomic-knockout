@@ -1,0 +1,215 @@
+{
+ "name": "hog",
+ "move": "thermometer-burst",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/448b.mp4 (stream 0)",
+ "frameW": 612,
+ "frameH": 602,
+ "idle_cell_w": 558,
+ "idle_anchor_x": 226.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 602,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9684,
+ "foot_row": 583,
+ "visibleH": 568,
+ "scale": 1.13373,
+ "offset": [
+  -246.8,
+  -157.3
+ ],
+ "strike_hand_xy": {
+  "5": [
+   582,
+   137
+  ],
+  "6": [
+   570,
+   132
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    14,
+    583,
+    116,
+    346
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    342,
+    164
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    37,
+    583,
+    115,
+    414
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    371,
+    214
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    37,
+    583,
+    115,
+    414
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    371,
+    215
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    46,
+    583,
+    115,
+    414
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    380,
+    212
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    57,
+    583,
+    115,
+    430
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    414,
+    178
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    57,
+    583,
+    104,
+    609
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    582,
+    137
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 115,
+   "bbox": [
+    53,
+    583,
+    109,
+    571
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    570,
+    132
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    28,
+    583,
+    115,
+    405
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    378,
+    148
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   583,
+   583,
+   583,
+   583,
+   583,
+   583,
+   583,
+   583
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Hands together at the chest (f2-f5), then a two-handed forward thrust (f6-f7).",
+  "redo_candidate": false,
+  "minor_issue": false,
+  "first_frame_start_mad": 2.19,
+  "src_picks": "1,25,61,85,91,103,115,145"
+ },
+ "strike_frames": [
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "5": [
+   609,
+   121
+  ],
+  "6": [
+   571,
+   130
+  ]
+ }
+}

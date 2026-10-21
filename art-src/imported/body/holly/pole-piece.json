@@ -2,50 +2,50 @@
  "name": "holly",
  "move": "pole-piece",
  "method": "video",
- "source": "fx-art/_flow/b7/clips/455b.mp4 (stream 0)",
- "frameW": 704,
- "frameH": 714,
+ "source": "fx-art/_flow/b7/clips/455b_v2.mp4 (stream 0)",
+ "frameW": 561,
+ "frameH": 601,
  "idle_cell_w": 571,
- "idle_anchor_x": 342.5,
+ "idle_anchor_x": 249.5,
  "width_mode": "cell",
- "pad_top": 113,
+ "pad_top": 0,
  "idle_cell_h": 601,
  "count": 8,
  "cols": 8,
  "rows": 1,
  "fps": 14.0,
  "loop": false,
- "footY": 0.9734,
- "foot_row": 695,
- "visibleH": 680,
+ "footY": 0.9684,
+ "foot_row": 582,
+ "visibleH": 567,
  "scale": 1.13174,
  "offset": [
-  -133.4,
+  -226.4,
   -157.0
  ],
  "strike_hand_xy": {
-  "3": [
-   482,
-   202
-  ],
   "4": [
-   700,
-   343
+   556,
+   112
+  ],
+  "5": [
+   554,
+   126
   ]
  },
  "frames": [
   {
    "src_frame": 1,
    "bbox": [
-    127,
-    695,
-    175,
-    514
+    14,
+    582,
+    82,
+    421
    ],
-   "foot": 695,
+   "foot": 582,
    "front_hand_xy": [
-    514,
-    436
+    421,
+    323
    ],
    "src_edge_px": 0,
    "removed_detached_px": 0,
@@ -55,33 +55,15 @@
   {
    "src_frame": 13,
    "bbox": [
-    136,
-    695,
-    152,
-    462
-   ],
-   "foot": 695,
-   "front_hand_xy": [
-    391,
-    441
-   ],
-   "src_edge_px": 0,
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 25,
-   "bbox": [
-    145,
-    695,
+    14,
+    582,
     2,
-    462
+    425
    ],
-   "foot": 695,
+   "foot": 582,
    "front_hand_xy": [
-    398,
-    445
+    425,
+    322
    ],
    "src_edge_px": 0,
    "removed_detached_px": 0,
@@ -89,17 +71,17 @@
    "touches_out_edge": false
   },
   {
-   "src_frame": 43,
+   "src_frame": 31,
    "bbox": [
     14,
-    695,
-    193,
-    482
+    582,
+    88,
+    369
    ],
-   "foot": 695,
+   "foot": 582,
    "front_hand_xy": [
-    482,
-    202
+    312,
+    318
    ],
    "src_edge_px": 0,
    "removed_detached_px": 0,
@@ -107,109 +89,122 @@
    "touches_out_edge": false
   },
   {
-   "src_frame": 61,
+   "src_frame": 55,
    "bbox": [
-    168,
-    695,
-    179,
-    701
+    19,
+    582,
+    88,
+    369
    ],
-   "foot": 695,
+   "foot": 582,
    "front_hand_xy": [
-    700,
-    343
+    310,
+    137
    ],
    "src_edge_px": 0,
-   "removed_detached_px": 3701,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    21,
+    582,
+    88,
+    557
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    556,
+    112
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
    "pinned": true,
    "touches_out_edge": false
   },
   {
    "src_frame": 73,
    "bbox": [
-    168,
-    695,
-    179,
-    695
+    21,
+    582,
+    88,
+    555
    ],
-   "foot": 695,
+   "foot": 582,
    "front_hand_xy": [
-    695,
-    351
+    554,
+    126
    ],
    "src_edge_px": 0,
-   "removed_detached_px": 3869,
+   "removed_detached_px": 0,
    "pinned": true,
    "touches_out_edge": false
   },
   {
    "src_frame": 85,
    "bbox": [
-    170,
-    695,
-    177,
-    668
+    18,
+    582,
+    88,
+    403
    ],
-   "foot": 695,
+   "foot": 582,
    "front_hand_xy": [
-    668,
-    390
+    402,
+    326
    ],
    "src_edge_px": 0,
-   "removed_detached_px": 3907,
+   "removed_detached_px": 0,
    "pinned": true,
    "touches_out_edge": false
   },
   {
-   "src_frame": 97,
+   "src_frame": 145,
    "bbox": [
-    156,
-    695,
-    184,
-    559
+    14,
+    582,
+    88,
+    369
    ],
-   "foot": 695,
+   "foot": 582,
    "front_hand_xy": [
-    552,
-    450
+    298,
+    324
    ],
    "src_edge_px": 0,
-   "removed_detached_px": 3974,
+   "removed_detached_px": 0,
    "pinned": true,
    "touches_out_edge": false
   }
  ],
  "qc": {
   "foot_rows": [
-   695,
-   695,
-   695,
-   695,
-   695,
-   695,
-   695,
-   695
+   582,
+   582,
+   582,
+   582,
+   582,
+   582,
+   582,
+   582
   ],
   "foot_spread_px": 0,
-  "any_out_edge": false,
-  "notes": "Swing back, then an underhand/overhand toss (f4-f5). Grok made her throw her own handheld weight: it flies off (detached, removed) and lands on the ground, so her front hand is EMPTY from f5 to the end and the clip no longer loops into the idle (which holds the weight). Redo suggested: toss with the free hand, keeping the weight in the front hand.",
-  "redo_candidate": true,
-  "minor_issue": false,
-  "first_frame_start_mad": 2.14,
-  "src_picks": "1,13,25,43,61,73,85,97"
+  "any_out_edge": false
  },
  "strike_frames": [
-  3,
-  4
+  4,
+  5
  ],
  "strike_reach_xy": {
-  "3": [
-   482,
-   202
-  ],
   "4": [
-   701,
-   343
+   557,
+   112
+  ],
+  "5": [
+   555,
+   128
   ]
  }
 }

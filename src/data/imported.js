@@ -2403,14 +2403,14 @@ export const IMPORTED_ROSTER = {
           },
           "walk": {
             "count": 12,
-            "fps": 14.4,
+            "fps": 7.58,
             "loop": true,
-            "frameW": 134,
-            "frameH": 147,
-            "footY": 0.9388,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 620,
+            "frameH": 1028,
+            "footY": 0.9864,
+            "visibleH": 985,
+            "bodyH": 985,
+            "displayScale": 132 / 985
           },
           "attack": {
             "count": 12,
@@ -4716,12 +4716,12 @@ export const IMPORTED_ROSTER = {
             "count": 5,
             "fps": 12,
             "loop": false,
-            "frameW": 159,
-            "frameH": 167,
-            "footY": 0.9162,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 665,
+            "frameH": 620,
+            "footY": 0.9694,
+            "visibleH": 563,
+            "bodyH": 563,
+            "displayScale": 132 / 563
           }
         }
       }
@@ -10171,14 +10171,14 @@ export const IMPORTED_ROSTER = {
           },
           "walk": {
             "count": 12,
-            "fps": 12,
+            "fps": 8.73,
             "loop": true,
-            "frameW": 167,
-            "frameH": 180,
-            "footY": 0.95,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 792,
+            "frameH": 1113,
+            "footY": 0.9883,
+            "visibleH": 1064,
+            "bodyH": 1064,
+            "displayScale": 132 / 1064
           },
           "attack": {
             "count": 12,

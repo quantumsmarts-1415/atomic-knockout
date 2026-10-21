@@ -1309,6 +1309,12 @@ async function attachShards(scene, id, slug, folder, meta, index, charH, sized, 
 async function loadMoveArt(scene, char, slot, move, index) {
   const id = char.id;
   let folder = fxFolder(id, move.name).replace(/^assets\/fx\//, '');
+  // Fuel Rod Hammer keeps the fuel-rod-jab sheets. The display name changed;
+  // the painted files did not.
+  if (move.sourceSlug) {
+    const pinned = `${id}/${move.sourceSlug}`;
+    if (!index || listed(index, `${pinned}/fx.json`)) folder = pinned;
+  }
   // King's Edge lives in kings-edge. The apostrophe slug is king-s-edge,
   // and that folder was never cut. Hatter's Fume keeps hatter-s-fume.
   if (index && !listed(index, `${folder}/fx.json`)) {

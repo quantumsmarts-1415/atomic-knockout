@@ -59,6 +59,14 @@ export function bodySourceSlug(id, moveName) {
   return pack[folded] ? folded : null;
 }
 
+/** A renamed move can keep its sheet slug. Fuel Rod Hammer still reads fuel-rod-jab. */
+export function moveBodySlug(id, move) {
+  const pack = BODY_SOURCES[id];
+  const pinned = move?.sourceSlug;
+  if (pack && pinned && pack[pinned]) return pinned;
+  return bodySourceSlug(id, move?.name);
+}
+
 export function bodySheetMeta(id, clip) {
   return metaByClip.get(`${id}|${clip}`) || null;
 }
@@ -134,7 +142,7 @@ export function installBodyClips(characters) {
     for (const moveKey of BODY_SLOTS) {
       const move = moves[moveKey];
       if (!move?.name) continue;
-      const slug = bodySourceSlug(id, move.name);
+      const slug = moveBodySlug(id, move);
       const src = slug ? bySlug[slug] : null;
       if (!src) continue;
       const built = compileBodyClip(src, artHeight);

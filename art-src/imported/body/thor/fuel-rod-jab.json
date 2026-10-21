@@ -1,0 +1,198 @@
+{
+ "name": "thor",
+ "move": "fuel-rod-jab",
+ "method": "video (Veo/Flow)",
+ "source": "fx-art/_flow/b7/clips/553c_flow.mp4 (stream 0)",
+ "frameW": 741,
+ "frameH": 729,
+ "idle_cell_w": 590,
+ "idle_cell_h": 630,
+ "pad_top": 99,
+ "pad_left": 0,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14,
+ "loop": false,
+ "foot_row": 710,
+ "footY": 0.9739,
+ "visibleH": 566,
+ "scale": 1.12525,
+ "strike_frames": [
+  5,
+  6
+ ],
+ "strike_hand_xy": {
+  "5": [
+   702,
+   499
+  ],
+  "6": [
+   725,
+   482
+  ]
+ },
+ "strike_reach_xy": {
+  "5": [
+   727,
+   577
+  ],
+  "6": [
+   738,
+   538
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    143,
+    710,
+    12,
+    455
+   ],
+   "foot": 710,
+   "front_hand_xy": [
+    455,
+    303
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 17,
+   "bbox": [
+    121,
+    710,
+    57,
+    477
+   ],
+   "foot": 710,
+   "front_hand_xy": [
+    468,
+    338
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 33,
+   "bbox": [
+    148,
+    710,
+    114,
+    619
+   ],
+   "foot": 710,
+   "front_hand_xy": [
+    614,
+    232
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 57,
+   "bbox": [
+    121,
+    710,
+    26,
+    516
+   ],
+   "foot": 710,
+   "front_hand_xy": [
+    385,
+    443
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 65,
+   "bbox": [
+    123,
+    710,
+    64,
+    516
+   ],
+   "foot": 710,
+   "front_hand_xy": [
+    437,
+    219
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 81,
+   "bbox": [
+    247,
+    710,
+    104,
+    727
+   ],
+   "foot": 710,
+   "front_hand_xy": [
+    702,
+    499
+   ],
+   "removed_detached_px": 40,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    245,
+    710,
+    104,
+    738
+   ],
+   "foot": 710,
+   "front_hand_xy": [
+    725,
+    482
+   ],
+   "removed_detached_px": 36,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 137,
+   "bbox": [
+    33,
+    710,
+    206,
+    441
+   ],
+   "foot": 710,
+   "front_hand_xy": [
+    400,
+    370
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   710,
+   710,
+   710,
+   710,
+   710,
+   710,
+   710,
+   710
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false
+ },
+ "move_note": "Move changed to a short overhead hammer strike (553c_flow); file/json names kept as fuel-rod-jab"
+}

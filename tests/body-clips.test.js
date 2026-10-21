@@ -5,12 +5,12 @@ import { PNG } from 'pngjs';
 import { CHARACTERS } from '../src/data/characters.js';
 import { MOVE_SHEETS } from '../src/data/moveSheets.js';
 import { artIsUpdated } from '../src/data/updatedArt.js';
-import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
+import { bodySourceSlug, hasBodyClips, moveBodySlug } from '../src/data/bodyClips.js';
 import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'uri', 'wolf'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -43,7 +43,7 @@ test('per-move body clips keep the idle height and the json foot line', () => {
     for (const file of readdirSync(dir).filter((name) => name.endsWith('.json'))) {
       const json = JSON.parse(readFileSync(`${dir}/${file}`, 'utf8'));
       const moveKey = Object.keys(CHARACTERS[id].moves).find((key) => {
-        return bodySourceSlug(id, CHARACTERS[id].moves[key]?.name) === json.move;
+        return moveBodySlug(id, CHARACTERS[id].moves[key]) === json.move;
       });
       assert.ok(moveKey, `${id} ${json.move}`);
       const clipKey = clipNameForMove(id, moveKey);
@@ -1037,6 +1037,74 @@ test('Roger points from the sheet hand, and the hook arc covers the short punch'
   assert.equal(creepMeta.release, 3);
   assert.deepEqual(creepMeta.anchors.fist[5], [619, 445]);
   assert.ok(creepMeta.anchors.fist[5][1] < 500);
+});
+
+test('Thor hammers overhead, and Thule aims with an empty hand', () => {
+  const hammerStrike = CHARACTERS.thor.art.sheets.clips['body-basicDirectional'];
+  const hammerStrikeMeta = sheetMeta('thor', 'body-basicDirectional');
+  assert.equal(hammerStrike.file, 'thor_fuel-rod-jab.png');
+  assert.equal(moveBodySlug('thor', CHARACTERS.thor.moves.basicDirectional), 'fuel-rod-jab');
+  assert.equal(hammerStrike.frameW, 741);
+  assert.equal(hammerStrike.frameH, 729);
+  assert.equal(Math.round(hammerStrike.footY * hammerStrike.frameH) - 1, 710);
+  assert.equal(hammerStrikeMeta.release, 5);
+  assert.deepEqual(hammerStrikeMeta.active, [5, 6]);
+  assert.deepEqual(hammerStrikeMeta.anchors.fist[5], [702, 499]);
+  assert.deepEqual(hammerStrikeMeta.anchors.fist[6], [725, 482]);
+  const hammer = sheetMeta('thor', 'body-basicCharge');
+  assert.equal(CHARACTERS.thor.art.sheets.clips['body-basicCharge'].file, 'thor_thunder-hammer.png');
+  assert.deepEqual(hammer.loop, [0, 3]);
+  assert.equal(hammer.release, 4);
+  assert.deepEqual(hammer.anchors.fist[4], [602, 310]);
+  const surge = sheetMeta('thor', 'body-specialDirectional');
+  assert.equal(surge.release, 3);
+  assert.deepEqual(surge.anchors.fist[4], [665, 154]);
+  const blanket = sheetMeta('thor', 'body-specialDefense');
+  assert.deepEqual(blanket.loop, [3, 5]);
+
+  const ultima = sheetMeta('thule', 'body-basicCharge');
+  assert.equal(CHARACTERS.thule.art.sheets.clips['body-basicCharge'].file, 'thule_ultima-thule.png');
+  assert.deepEqual(ultima.loop, [0, 4]);
+  assert.equal(ultima.release, 5);
+  assert.deepEqual(ultima.anchors.fist[6], [639, 144]);
+  const glow = CHARACTERS.thule.art.sheets.clips['body-basicDirectional'];
+  const glowMeta = sheetMeta('thule', 'body-basicDirectional');
+  assert.equal(glow.file, 'thule_blue-glow-jab.png');
+  assert.equal(bodySourceSlug('thule', 'Blue Glow Jab'), 'blue-glow-jab');
+  assert.deepEqual(glowMeta.active, [2, 4]);
+  assert.deepEqual(glowMeta.anchors.fist[3], [599, 178]);
+  const veil = sheetMeta('thule', 'body-specialDefense');
+  assert.deepEqual(veil.loop, [3, 5]);
+  const aim = CHARACTERS.thule.art.sheets.clips['body-specialDirectional'];
+  const aimMeta = sheetMeta('thule', 'body-specialDirectional');
+  assert.equal(aim.file, 'thule_handheld-x-ray.png');
+  assert.equal(aimMeta.release, 3);
+  assert.deepEqual(aimMeta.anchors.fist[3], [678, 172]);
+  assert.ok(aimMeta.anchors.fist[3][0] > aim.frameW - 8);
+  const unit = JSON.parse(readFileSync('assets/fx/thule/handheld-x-ray/fx.json', 'utf8'));
+  assert.equal(unit.unit.file, 'x-ray-unit.png');
+  assert.equal(unit.unit.aim, false);
+});
+
+test('Sarge, Talia, Tara, Tate, Uri, and Wolf keep their own soles and wide Wolf strips fit', () => {
+  const decay = CHARACTERS.sarge.art.sheets.clips['body-specialDirectional'];
+  assert.equal(decay.file, 'sarge_decay-mortar.png');
+  assert.equal(Math.round(decay.footY * decay.frameH) - 1, 636);
+  const poison = CHARACTERS.talia.art.sheets.clips['body-basicCharge'];
+  assert.equal(poison.file, 'talia_poisoners-poison.png');
+  assert.equal(bodySourceSlug('talia', "Poisoner's Poison"), 'poisoners-poison');
+  const cake = CHARACTERS.uri.art.sheets.clips['body-specialDirectional'];
+  assert.equal(cake.file, 'uri_yellowcake-lob.png');
+  assert.equal(Math.round(cake.footY * cake.frameH) - 1, 779);
+  const drill = CHARACTERS.wolf.art.sheets.clips['body-basicDirectional'];
+  const piercer = CHARACTERS.wolf.art.sheets.clips['body-specialDirectional'];
+  assert.equal(drill.frameW, 1225);
+  assert.equal(piercer.frameW, 1046);
+  for (const clip of [drill, piercer]) {
+    const png = PNG.sync.read(readFileSync(`${CHARACTERS.wolf.art.sheets.dir}${clip.file}`));
+    assert.ok(png.width <= 8192 && png.height <= 8192, clip.file);
+    assert.ok((png.width / clip.frameW) * (png.height / clip.frameH) >= clip.count, clip.file);
+  }
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

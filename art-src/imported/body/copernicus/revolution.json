@@ -1,0 +1,231 @@
+{
+ "name": "copernicus",
+ "move": "revolution",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/405b.mp4 (stream 0)",
+ "frameW": 679,
+ "frameH": 636,
+ "idle_cell_w": 603,
+ "idle_anchor_x": 317.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 636,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9717,
+ "foot_row": 618,
+ "visibleH": 576,
+ "scale": 1.16364,
+ "offset": [
+  -427.8,
+  -137.2
+ ],
+ "strike_hand_xy": {
+  "2": [
+   674,
+   157
+  ],
+  "3": [
+   597,
+   180
+  ],
+  "4": [
+   588,
+   348
+  ],
+  "5": [
+   625,
+   207
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    42,
+    618,
+    119,
+    511
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    509,
+    245
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    40,
+    618,
+    56,
+    637
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    635,
+    132
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    56,
+    618,
+    84,
+    676
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    674,
+    157
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    58,
+    618,
+    84,
+    599
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    597,
+    180
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    62,
+    618,
+    130,
+    588
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    588,
+    348
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    61,
+    618,
+    51,
+    627
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    625,
+    207
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    67,
+    618,
+    23,
+    671
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    669,
+    167
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    40,
+    618,
+    140,
+    511
+   ],
+   "foot": 618,
+   "front_hand_xy": [
+    509,
+    237
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   618,
+   618,
+   618,
+   618,
+   618,
+   618,
+   618,
+   618
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 2.35,
+  "notes": "Full spin with arms out. He lifted about 16 px in the video during the spin, so feet are pinned (y only). The orb flew off at src ~79 and is removed (not in picked frames).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  2,
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "2": [
+   674,
+   157
+  ],
+  "3": [
+   597,
+   180
+  ],
+  "4": [
+   588,
+   348
+  ],
+  "5": [
+   625,
+   207
+  ]
+ }
+}

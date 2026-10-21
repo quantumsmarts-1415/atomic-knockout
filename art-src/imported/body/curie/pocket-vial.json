@@ -1,0 +1,213 @@
+{
+ "name": "curie",
+ "move": "pocket-vial",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/409b.mp4 (stream 0)",
+ "frameW": 730,
+ "frameH": 603,
+ "idle_cell_w": 523,
+ "idle_anchor_x": 209.0,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 603,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9668,
+ "foot_row": 583,
+ "visibleH": 568,
+ "scale": 1.13373,
+ "offset": [
+  -294.9,
+  -157.3
+ ],
+ "strike_hand_xy": {
+  "3": [
+   726,
+   150
+  ],
+  "4": [
+   721,
+   151
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    14,
+    583,
+    22,
+    344
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    330,
+    141
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    31,
+    583,
+    2,
+    453
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    452,
+    134
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    36,
+    583,
+    52,
+    620
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    620,
+    137
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    51,
+    583,
+    149,
+    727
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    726,
+    150
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 4,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    50,
+    583,
+    151,
+    722
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    721,
+    151
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    41,
+    583,
+    147,
+    625
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    624,
+    152
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 121,
+   "bbox": [
+    12,
+    583,
+    49,
+    360
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    359,
+    128
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    12,
+    583,
+    52,
+    357
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    357,
+    125
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   583,
+   583,
+   583,
+   583,
+   583,
+   583,
+   583,
+   583
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 1.98,
+  "notes": "Long forward lunge punch. Video drifted 8 px, so feet are pinned (y only).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4
+ ],
+ "strike_reach_xy": {
+  "3": [
+   726,
+   150
+  ],
+  "4": [
+   721,
+   151
+  ]
+ }
+}

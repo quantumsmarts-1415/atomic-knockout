@@ -1,14 +1,15 @@
 {
-  "file": "pocket-vial.png",
-  "frames": 1,
-  "blend": "normal",
-  "black": false,
-  "fit": "height",
-  "heightFrac": 0.62,
-  "pivotX": 0.5,
-  "pivotY": 0.9090909090909091,
-  "flip": true,
-  "hit": false,
+  "fist": {
+    "file": "pocket-vial.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.62,
+    "pivotX": 0.5,
+    "pivotY": 0.9090909090909091,
+    "flip": true
+  },
   "impact": {
     "file": "pocket-vial-hit-anim.png",
     "frames": 8,

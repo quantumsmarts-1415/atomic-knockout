@@ -8,7 +8,7 @@ import { artIsUpdated } from '../src/data/updatedArt.js';
 import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
 import { clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie'];
 
 function worldH(art, def) {
   const body = def.bodyH ?? def.visibleH;
@@ -127,6 +127,35 @@ test('Surf\'s Up keeps her feet on the origin and slides forward in code', () =>
   assert.ok(Math.abs(sole.x) < 0.01, sole.x);
   assert.ok(Math.abs(sole.y) < 1, sole.y);
   assert.ok(meta.slide > 0);
+});
+
+test('Liquid Metal Splash stays wide and under the texture limit, and the vial rides the fist', () => {
+  const splash = CHARACTERS.copernicus.art.sheets.clips['body-specialDirectional'];
+  const splashMeta = sheetMeta('copernicus', 'body-specialDirectional');
+  assert.equal(splash.frameW, 1033);
+  assert.equal(splashMeta.release, 5);
+  const png = PNG.sync.read(readFileSync(`${CHARACTERS.copernicus.art.sheets.dir}${splash.file}`));
+  assert.ok(png.width <= 8192 && png.height <= 8192);
+  assert.equal(Math.floor(png.width / splash.frameW) * Math.floor(png.height / splash.frameH) >= splash.count, true);
+  const flung = frameToWorld(
+    splashMeta.anchors.fist[5], splash.frameW, splash.frameH, splash.footY, splash.displayScale, 1, 1, 0, 0,
+  );
+  assert.ok(flung.y < -40, flung.y);
+
+  const vial = JSON.parse(readFileSync('assets/fx/curie/pocket-vial/fx.json', 'utf8'));
+  assert.equal(vial.file, undefined);
+  assert.equal(vial.fist.file, 'pocket-vial.png');
+  assert.ok(vial.fist.pivotY > 0.8);
+  const punch = CHARACTERS.curie.art.sheets.clips['body-basicDirectional'];
+  const punchMeta = sheetMeta('curie', 'body-basicDirectional');
+  assert.equal(punch.frameW, 730);
+  assert.equal(punchMeta.anchors.fist.length, punch.count);
+  const reach = punchMeta.anchors.fist[3][0] - punch.frameW / 2;
+  assert.ok(reach > 300, reach);
+
+  const toss = sheetMeta('curie', 'body-specialDirectional');
+  assert.equal(toss.release, 4);
+  assert.ok(toss.anchors.fist[5][1] < toss.anchors.fist[4][1]);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

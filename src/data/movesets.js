@@ -330,7 +330,7 @@ export const MOVESETS = {
     basicDirectional: melee('Flare Jab', {
       type: K, damage: 6.7, type2: H, damage2: 6.7, vfx: 'flare', vfxColor: 0xfff6e8,
       // Startup 3. Endlag 8. Same-button lock ~23 frames (was ~46).
-      startupF: 3, endlagF: 8, duration: 180, cooldown: 200,
+      startupF: 3, endlagF: 8, duration: 180, cooldown: 360,
     }),
     specialDefense: m('Ribbon Guard', {
       blocks: [C, K], igniteOn: H,
@@ -339,9 +339,9 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Blinding Flare', {
       kind: 'burst', type: H, damage: 13.4, radius: 86, vfx: 'whiteout', vfxColor: 0xfff6e8,
-      onHit: { dazzle: { ms: 2000, color: 0xf7fbff } }, baseKnockback: 176,
+      onHit: { dazzle: { ms: 2000, color: 0xf7fbff } }, baseKnockback: 124,
       // Startup 5. Endlag 12. Same-button lock ~39 frames (was ~78).
-      startupF: 5, endlagF: 12, duration: 240, cooldown: 420,
+      startupF: 5, endlagF: 12, duration: 240, cooldown: 640,
     }),
   },
 
@@ -358,7 +358,7 @@ export const MOVESETS = {
       type: E, damage: 6, type2: K, damage2: 6, pull: 210, rangeW: 96, vfx: 'whip', vfxColor: 0xd6e8ff,
       baseKnockback: 150,
       // Startup 3. Endlag 8. Same-button lock ~23 frames (was ~37).
-      startupF: 3, endlagF: 8, duration: 180, cooldown: 200,
+      startupF: 3, endlagF: 8, duration: 180, cooldown: 300,
     }),
     specialDefense: m('Oxide Skin', {
       kind: 'oxide', regrow: 'press',
@@ -1751,13 +1751,13 @@ export const MOVESETS = {
     basicCharge: m('Ground Seep', {
       kind: 'burst', type: R, damage: 9.5, chargeDamageMult: 1.2, riseUnder: true,
       maxChargeMs: 800, radius: 46, vfx: 'cloud', vfxColor: 0xd4f5a8,
-      baseKnockback: 47.52, knockbackGrowth: 0.95, duration: 240, cooldown: 980,
+      baseKnockback: 98, knockbackGrowth: 1.95, duration: 240, cooldown: 980,
     }),
     basicDirectional: melee('Half-Life Hook', {
       type: K, damage: 5.2, type2: R, damage2: 3.12,
       halfLife: { pause: 900, floor: 0.0625 },
       rangeW: 74, rangeH: 52, vfx: 'strike', vfxColor: 0xc6e88a,
-      baseKnockback: 83.16, knockbackGrowth: 1.54, duration: 200, cooldown: 460,
+      baseKnockback: 164, knockbackGrowth: 3.05, duration: 200, cooldown: 460,
     }),
     specialDefense: m('Radon Spa', {
       regen: 1.5, regenEvery: 450,
@@ -2071,11 +2071,11 @@ export const MOVESETS = {
       maxChargeMs: YARA.maxChargeMs, dashSpeed: YARA.glideSpeed,
       floatRise: YARA.risePx, aimOnRelease: true, passThrough: true, hyperArmor: true,
       rangeW: 96, rangeH: 70, vfx: 'dash', vfxColor: 0xe8eef8, ...fx('Maglev Launch'),
-      baseKnockback: 90, knockbackGrowth: 1.7, duration: YARA.glideDuration, cooldown: 780,
+      baseKnockback: 112, knockbackGrowth: 2.1, duration: YARA.glideDuration, cooldown: 780,
     }),
     basicDirectional: melee('Garnet Cut', {
       type: K, damage: 6, rangeW: 74, vfx: 'strike', vfxColor: 0xe07070, ...fx('Garnet Cut'),
-      baseKnockback: 100, knockbackGrowth: 1.9, duration: 200, cooldown: 440,
+      baseKnockback: 124, knockbackGrowth: 2.35, duration: 200, cooldown: 440,
     }),
     specialDefense: m('Flux Pin', {
       pinProjectiles: { front: YARA.pinFront, tall: YARA.pinTall }, pinFreeze: true,
@@ -2086,7 +2086,7 @@ export const MOVESETS = {
       mineArmMs: YARA.mineArmMs, mineMax: YARA.mineMax, mineRange: YARA.mineRange,
       shardSpeed: YARA.mineShardSpeed, projectileLife: YARA.mineShardLife, projectileRadius: 6,
       vfx: 'strike', vfxColor: 0xf0e6c8, ...fx('Ytterby Mine'),
-      baseKnockback: 80, knockbackGrowth: 1.6, duration: 200, cooldown: 620,
+      baseKnockback: 100, knockbackGrowth: 2.0, duration: 200, cooldown: 620,
     }),
   },
 

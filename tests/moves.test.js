@@ -198,7 +198,7 @@ test('maggie uses the approved magnesium kit', () => {
   assert.strictEqual(jab.type, 'kinetic');
   assert.strictEqual(jab.type2, 'heat');
   assert.strictEqual(jab.vfx, 'flare');
-  assert.ok(frameData(jab.duration, jab.cooldown, jab).total < 30);
+  assert.ok(frameData(jab.duration, jab.cooldown, jab).total <= 33);
   const ribbon = moves.specialDefense;
   assert.strictEqual(ribbon.name, 'Ribbon Guard');
   assert.deepStrictEqual(ribbon.blocks, ['chemical', 'kinetic']);

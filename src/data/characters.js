@@ -2471,6 +2471,15 @@ for (const def of Object.values(CHARACTERS)) {
     helen.stats.gravityScale = Math.max(helen.stats.gravityScale, 0.98);
   }
 }
+// Yttrium rings out while she is still at a low percent. A small weight
+// bump keeps the density order and lets Maglev Launch finish a stock.
+{
+  const yara = CHARACTERS.yara;
+  if (yara?.stats) {
+    yara.stats.weight = Math.max(yara.stats.weight, 1.28);
+    if (yara.combat) yara.combat.weight = yara.stats.weight;
+  }
+}
 // Hydrogen's density curve gives Hydra a ~870 jump — too floaty in play.
 // Cap him near the roster middle without touching the shared formula.
 {

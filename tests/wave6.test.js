@@ -6,8 +6,6 @@ import { CHARACTERS } from '../src/data/characters.js';
 import { buildSelectSlots, COMING_SOON } from '../src/data/periodic.js';
 import { interceptHit } from '../src/engine/defense.js';
 import { measureFrames } from '../tools/import-lib.js';
-import { TUNING } from '../src/data/balance.js';
-
 const WAVE6 = ['sarge', 'mac', 'mae', 'liv', 'tess'];
 const FEMALE = new Set(['mae', 'liv', 'tess']);
 const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
@@ -63,7 +61,7 @@ test('wave 6 ghosts are playable with the doc moves and pronouns', () => {
   for (const id of WAVE6) {
     const c = CHARACTERS[id];
     assert.strictEqual(c.ghost, true, id);
-    assert.strictEqual(c.stats.weight, TUNING.weightClamp[0], id);
+    assert.ok(Math.abs(c.stats.weight - 1) < 1e-9, id);
     const names = SLOTS.map((slot) => c.moves[slot].name);
     assert.deepStrictEqual(names, NAMES[id], id);
     const teach = c.teach || '';

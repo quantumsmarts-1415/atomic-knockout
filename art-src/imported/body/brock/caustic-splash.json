@@ -1,0 +1,198 @@
+{
+ "name": "brock",
+ "move": "caustic-splash",
+ "method": "video",
+ "source": "fx-art/_flow/b8/clips/613f_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
+ "frameW": 523,
+ "frameH": 751,
+ "idle_cell_w": 625,
+ "idle_cell_h": 607,
+ "pad_top": 144,
+ "pad_left": 0,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14,
+ "loop": false,
+ "foot_row": 732,
+ "footY": 0.9747,
+ "visibleH": 571,
+ "scale": 1.13519,
+ "strike_frames": [
+  3,
+  4
+ ],
+ "strike_hand_xy": {
+  "3": [
+   504,
+   143
+  ],
+  "4": [
+   459,
+   162
+  ]
+ },
+ "strike_reach_xy": {
+  "3": [
+   519,
+   116
+  ],
+  "4": [
+   460,
+   163
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    161,
+    732,
+    40,
+    399
+   ],
+   "foot": 732,
+   "front_hand_xy": [
+    358,
+    452
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    175,
+    731,
+    22,
+    403
+   ],
+   "foot": 732,
+   "front_hand_xy": [
+    403,
+    443
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 28,
+   "bbox": [
+    186,
+    731,
+    24,
+    412
+   ],
+   "foot": 732,
+   "front_hand_xy": [
+    412,
+    422
+   ],
+   "removed_detached_px": 24,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    97,
+    732,
+    59,
+    519
+   ],
+   "foot": 732,
+   "front_hand_xy": [
+    504,
+    143
+   ],
+   "removed_detached_px": 3665,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    127,
+    732,
+    74,
+    460
+   ],
+   "foot": 732,
+   "front_hand_xy": [
+    459,
+    162
+   ],
+   "removed_detached_px": 52,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 82,
+   "bbox": [
+    151,
+    731,
+    38,
+    446
+   ],
+   "foot": 732,
+   "front_hand_xy": [
+    446,
+    327
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 118,
+   "bbox": [
+    159,
+    730,
+    40,
+    399
+   ],
+   "foot": 732,
+   "front_hand_xy": [
+    360,
+    451
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 136,
+   "bbox": [
+    161,
+    730,
+    40,
+    399
+   ],
+   "foot": 732,
+   "front_hand_xy": [
+    358,
+    452
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   732,
+   732,
+   732,
+   732,
+   732,
+   732,
+   732,
+   732
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false
+ },
+ "paint_fix": "Grok-drawn liquid droplets/streaks painted out"
+}

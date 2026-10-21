@@ -1,0 +1,198 @@
+{
+ "name": "barry",
+ "move": "barium-meal",
+ "method": "video",
+ "source": "fx-art/_flow/b8/clips/610r_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
+ "frameW": 535,
+ "frameH": 716,
+ "idle_cell_w": 690,
+ "idle_cell_h": 621,
+ "pad_top": 95,
+ "pad_left": 0,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14,
+ "loop": false,
+ "foot_row": 696,
+ "footY": 0.9721,
+ "visibleH": 584,
+ "scale": 1.16103,
+ "strike_frames": [
+  2,
+  3
+ ],
+ "strike_hand_xy": {
+  "2": [
+   527,
+   312
+  ],
+  "3": [
+   531,
+   304
+  ]
+ },
+ "strike_reach_xy": {
+  "2": [
+   527,
+   312
+  ],
+  "3": [
+   531,
+   304
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    111,
+    696,
+    97,
+    446
+   ],
+   "foot": 696,
+   "front_hand_xy": [
+    441,
+    412
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 10,
+   "bbox": [
+    129,
+    696,
+    97,
+    448
+   ],
+   "foot": 696,
+   "front_hand_xy": [
+    447,
+    420
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    41,
+    696,
+    98,
+    527
+   ],
+   "foot": 696,
+   "front_hand_xy": [
+    527,
+    312
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 28,
+   "bbox": [
+    39,
+    696,
+    98,
+    531
+   ],
+   "foot": 696,
+   "front_hand_xy": [
+    531,
+    304
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 46,
+   "bbox": [
+    108,
+    696,
+    98,
+    446
+   ],
+   "foot": 696,
+   "front_hand_xy": [
+    436,
+    413
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 64,
+   "bbox": [
+    106,
+    696,
+    98,
+    446
+   ],
+   "foot": 696,
+   "front_hand_xy": [
+    438,
+    409
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    111,
+    696,
+    98,
+    446
+   ],
+   "foot": 696,
+   "front_hand_xy": [
+    433,
+    414
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 136,
+   "bbox": [
+    111,
+    696,
+    98,
+    446
+   ],
+   "foot": 696,
+   "front_hand_xy": [
+    443,
+    411
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   696,
+   696,
+   696,
+   696,
+   696,
+   696,
+   696,
+   696
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false
+ },
+ "paint_fix": "small Grok-drawn cyan drink at the mouth painted out"
+}

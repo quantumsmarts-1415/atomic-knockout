@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { sheetKey, use3dSheets, clipDisplayLayout, positiveFinite } from '../scenes/BootScene.js';
 import { clipPose, moveClipFor, moveTextureKey } from './moveClip.js';
-import { stripIndex, idleBlend, guardIdleBlend, attackPhase, poseTarget, FEEL } from './feel.js';
+import { stripIndex, idleBlend, followThroughBlend, guardIdleBlend, attackPhase, poseTarget, FEEL } from './feel.js';
 import { authoredClipName, sheetFrameIndex, sheetMeta } from './moveSheet.js';
 import { applyColorway } from './colorwayPipeline.js';
 
@@ -507,7 +507,9 @@ export class Rig extends Phaser.GameObjects.Container {
         this.sheetFrame = i;
         this._authoredSheet = true;
         const blend = (this.frameData && state === 'attack')
-          ? idleBlend(this.frameData, this.attackFrame || 0)
+          ? (meta.blendIdle
+            ? followThroughBlend(this.frameData, this.attackFrame || 0)
+            : idleBlend(this.frameData, this.attackFrame || 0))
           : (state === 'defending' && meta.blendIdle ? guardIdleBlend(this.poseT) : 0);
         this.blendToIdle(blend);
         this.rememberMask(shown, i);

@@ -1858,6 +1858,7 @@ test('amy, curie, burke, and cali keep the approved batch rules', () => {
   assert.equal(amy.specialDirectional.type, 'radiation');
   assert.equal(amy.specialDirectional.beamCap, 440);
   assert.equal(amy.specialDirectional.beamArtPx, 440);
+  assert.equal(amy.specialDirectional.pierce, undefined);
   assert.equal(amy.specialDirectional.zone, undefined);
 
   const curie = CHARACTERS.curie.moves;
@@ -2039,6 +2040,7 @@ test('noble, roger, niko, and flo keep the approved batch rules', () => {
   assert.equal(roger.basicDirectional.onHit.reveal, true);
   assert.equal(roger.specialDefense.retort.type, 'radiation');
   assert.equal(roger.specialDirectional.passBands, true);
+  assert.equal(roger.specialDirectional.pierce, true);
   assert.equal(roger.specialDirectional.beamArtPx, 640);
   assert.equal(roger.specialDirectional.beamCap, 600);
   assert.equal(roger.specialDirectional.breaksBlock, true);
@@ -2118,6 +2120,7 @@ test('mac and ogden keep the approved batch rules', () => {
   assert.equal(ogden.specialDirectional.name, 'Millisecond Beam');
   assert.equal(ogden.specialDirectional.spanStage, true);
   assert.equal(ogden.specialDirectional.beamArtPx, 1024);
+  assert.equal(ogden.specialDirectional.pierce, undefined);
   assert.equal(ogden.specialDirectional.beamThick, 10);
   assert.equal(ogden.specialDirectional.igniteAt, undefined);
   for (const move of [...Object.values(mac), ...Object.values(ogden)]) {

@@ -2751,7 +2751,8 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Penetrating Ray', {
       kind: 'beam', type: R, damage: 16, breaksBlock: true, popShield: true, breakPhase: true,
-      passBands: true, beamLen: 340, beamThick: 14, beamArtPx: 640, beamCap: 600,
+      // Approved concept: the X-ray passes through walls, blocks, and shields.
+      pierce: true, passBands: true, beamLen: 340, beamThick: 14, beamArtPx: 640, beamCap: 600,
       vfx: 'laser', vfxColor: 0xf4fbff,
       baseKnockback: 170, knockbackGrowth: 3.6, duration: 160, cooldown: 980,
     }),

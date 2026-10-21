@@ -26,11 +26,12 @@ import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 import { Juice } from '../engine/juice.js';
 import { FEEL, cameraFrame, containFrame, openingZoom, percentColor } from '../engine/feel.js';
 import { clockEndsRound } from '../engine/matchRules.js';
+import { clipBeam, segmentHitsSolid, stageSolids } from '../engine/beamClip.js';
 import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { artFor, cloudIgnitionScale, collectFxArt, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxHits, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnJumpArc, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
+import { artFor, beamDrawScale, cloudIgnitionScale, collectFxArt, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnJumpArc, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
 import { sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
@@ -46,14 +47,6 @@ const BOT_SLOT_BASE = 100;
 // palettes) from scene data so menus can configure it; falls back to a
 // default Hydra vs Helen match when launched directly.
 // ---------------------------------------------------------------------------
-function distToSegment(px, py, ax, ay, bx, by) {
-  const dx = bx - ax;
-  const dy = by - ay;
-  const len2 = dx * dx + dy * dy || 1;
-  const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
-  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
-}
-
 export default class BattleScene extends Phaser.Scene {
   constructor() {
     super('Battle');
@@ -125,6 +118,7 @@ export default class BattleScene extends Phaser.Scene {
     this.bindKeyboard();
 
     this.projectiles = [];
+    this.beams = [];
     this.lingeringWalls = [];
     this.zones = [];
     this.matchReport = {
@@ -1850,97 +1844,253 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   resolveBeam(owner, move) {
+    if (!owner || !move) return;
+    const spec = this.beamSpec(owner, move);
+    if (!spec) return;
+    const now = this.time?.now ?? 0;
+    const stepMs = this.stepMs || (1000 / 60);
+    const activeMs = Math.max(stepMs, (owner.frameData?.active || 1) * stepMs);
+    playVfx(this, owner, { ...move, _suppressBeamArt: true }, 'release', { fired: true });
+    if (move.pierce && Math.abs(spec.dy) <= 0.2) {
+      const left = spec.dx >= 0 ? spec.x : spec.x - spec.maxLen;
+      this.placePassBands(owner, move, left, spec.y, spec.maxLen, spec.thick);
+    }
+    this.beams ??= [];
+    this.beams.push({
+      owner,
+      move,
+      hitUntil: now + activeMs,
+      until: owner.stateUntil > now ? owner.stateUntil : now + activeMs,
+      born: now,
+      landed: new Set(),
+      wallFlashed: false,
+      swept: false,
+      steps: 0,
+      gfx: null,
+      streaks: null,
+    });
+  }
+
+  /** Muzzle, direction, and full reach before anything is in the way. */
+  beamSpec(owner, move) {
+    const bodyW = owner.bodyW ?? 40;
+    const bodyH = owner.bodyH ?? 80;
+    const worldW = this.world?.width > 0 ? this.world.width : 1280;
     if (move.aimStick) {
       const aim = stickAim(owner);
-      const len = Math.min(move.beamCap ?? 1100, (move.beamLen ?? 420) * (move._beamScale || 1));
-      const thick = move.beamThick ?? 36;
-      const bodyW = owner.bodyW ?? 40;
-      const bodyH = owner.bodyH ?? 80;
-      const x0 = owner.x + aim.x * bodyW * 0.35;
-      const y0 = owner.y - bodyH * 0.58 + aim.y * bodyH * 0.12;
-      const x1 = x0 + aim.x * len;
-      const y1 = y0 + aim.y * len;
-      playVfx(this, owner, move, 'release', { fired: true });
-      const dir = Math.sign(aim.x) || owner.facing || 1;
-      const struck = new Set();
-      for (const target of this.fighters) {
-        if (target === owner || !target.alive || target.state === 'ko') continue;
-        if (target.state === 'defending' && target.defenseMove?.untargetable) continue;
-        const cy = target.y - (target.bodyH ?? 80) * 0.45;
-        const reach = thick * 0.5 + (target.bodyW ?? 40) * 0.35;
-        if (distToSegment(target.x, cy, x0, y0, x1, y1) <= reach) {
-          this.landHit(owner, target, move, dir);
-          struck.add(target);
-        }
-      }
-      this.sweepMarked(owner, move, struck);
-      return;
+      return {
+        x: owner.x + aim.x * bodyW * 0.35,
+        y: owner.y - bodyH * 0.58 + aim.y * bodyH * 0.12,
+        dx: aim.x,
+        dy: aim.y,
+        maxLen: Math.min(move.beamCap ?? 1100, (move.beamLen ?? 420) * (move._beamScale || 1)),
+        thick: move.beamThick ?? 36,
+      };
     }
     const nozzleArt = artFor(owner.charDef?.id, move.name);
     if (nozzleArt?.unit?.frames?.length) {
-      const len = (move.beamLen ?? 520) * (move._beamScale ?? 1);
-      const thick = move.beamThick ?? 160;
       const held = handheldUnit(owner, nozzleArt.unit);
       const face = owner.facing === 1 ? 1 : -1;
-      const x = face === 1 ? held.nozzle.x : held.nozzle.x - len;
-      const rect = new Phaser.Geom.Rectangle(x, held.nozzle.y - thick / 2, len, thick);
-      playVfx(this, owner, move, 'release', { fired: true });
-      const struck = new Set();
-      for (const target of this.fighters) {
-        if (target === owner || !target.alive || target.state === 'ko') continue;
-        if (target.state === 'defending' && target.defenseMove?.untargetable) continue;
-        if (Phaser.Geom.Intersects.RectangleToRectangle(rect, target.getHurtboxRect())) {
-          this.landHit(owner, target, move, face);
-          struck.add(target);
-        }
-      }
-      this.sweepMarked(owner, move, struck);
-      return;
+      return {
+        x: held.nozzle.x,
+        y: held.nozzle.y,
+        dx: face,
+        dy: 0,
+        maxLen: (move.beamLen ?? 520) * (move._beamScale ?? 1),
+        thick: move.beamThick ?? 160,
+      };
     }
+    const face = owner.facing === 1 ? 1 : -1;
     const rawLen = (move.beamLen ?? 160) * (move._beamScale ?? 1);
-    let len = move.beamCap > 0 ? Math.min(move.beamCap, rawLen) : rawLen;
-    if (move.stageWide) {
-      const worldW = this.world?.width > 0 ? this.world.width : 1280;
-      const face = owner.facing === 1 ? 1 : -1;
-      const startX = owner.x + face * owner.bodyW * 0.2;
-      len = face > 0 ? Math.max(48, worldW - startX) : Math.max(48, startX);
+    let maxLen = move.beamCap > 0 ? Math.min(move.beamCap, rawLen) : rawLen;
+    const muzzleX = owner.x + face * bodyW * 0.2;
+    if (move.stageWide || move.spanStage) {
+      maxLen = face > 0 ? Math.max(48, worldW - muzzleX) : Math.max(48, muzzleX);
     }
     const thick = move.beamThick ?? 20;
-    let x = owner.facing === 1 ? owner.x + owner.bodyW * 0.2 : owner.x - owner.bodyW * 0.2 - len;
-    if (move.spanStage) {
-      const worldW = this.world?.width > 0 ? this.world.width : 1280;
-      x = 0;
-      len = worldW;
-    }
-    const y = move.ground ? owner.y - thick * 0.5 : owner.y - owner.bodyH * 0.62;
-    const rect = new Phaser.Geom.Rectangle(x, y - thick / 2, len, thick);
-    const art = artFor(owner.charDef?.id, move.name);
-    const anchor = fxAnchor(owner, move);
-    playVfx(this, owner, move, 'release', { fired: true });
-    this.placePassBands(owner, move, x, y, len, thick);
-    if (anchor && art?.hit !== false) {
-      const struck = new Set();
+    return {
+      x: muzzleX,
+      y: move.ground ? owner.y - thick * 0.5 : owner.y - bodyH * 0.62,
+      dx: face,
+      dy: 0,
+      maxLen,
+      thick,
+    };
+  }
+
+  stepBeams(time) {
+    if (!this.beams?.length) return;
+    const solids = stageSolids(this.stage, this.stage?.groundY ?? 560);
+    this._clipSolids = solids;
+    const keep = [];
+    for (const beam of this.beams) {
+      const owner = beam.owner;
+      const ended = !owner?.alive || owner.state === 'ko' || time > beam.until
+        || (beam.steps > 0 && (owner.state !== 'attack' || owner.currentMove !== beam.move));
+      if (ended) {
+        this.dropBeamGfx(beam);
+        continue;
+      }
+      beam.steps += 1;
+      const spec = this.beamSpec(owner, beam.move);
+      const blockers = [];
+      for (const solid of solids) blockers.push({ kind: 'solid', ground: solid.ground, box: solid });
       for (const target of this.fighters) {
         if (target === owner || !target.alive || target.state === 'ko') continue;
         if (target.state === 'defending' && target.defenseMove?.untargetable) continue;
-        if (fxHits(owner, move, anchor.x, anchor.y, target, anchor.scale)) {
-          this.landHit(owner, target, move, owner.facing);
-          struck.add(target);
+        const hb = target.getHurtboxRect?.();
+        if (!hb || !(hb.width > 0) || !(hb.height > 0)) continue;
+        blockers.push({
+          kind: 'fighter',
+          target,
+          box: { left: hb.x, right: hb.x + hb.width, top: hb.y, bottom: hb.y + hb.height },
+        });
+      }
+      const clip = clipBeam(spec, blockers, { pierce: !!beam.move.pierce });
+      this.paintBeam(beam, spec, clip);
+      const dir = Math.sign(spec.dx) || owner.facing || 1;
+      if (time <= beam.hitUntil) {
+        if (beam.move.pierce) {
+          for (const hit of clip.hits) {
+            if (beam.landed.has(hit.target)) continue;
+            beam.landed.add(hit.target);
+            this.landHit(owner, hit.target, { ...beam.move, _hitAt: hit.point }, dir);
+          }
+        } else if (clip.hit?.kind === 'fighter' && !beam.landed.has(clip.hit.target)) {
+          beam.landed.add(clip.hit.target);
+          this.landHit(owner, clip.hit.target, { ...beam.move, _hitAt: clip.point }, dir);
+        } else if (clip.hit?.kind === 'solid' && !beam.wallFlashed) {
+          beam.wallFlashed = true;
+          spawnContactFx(this, owner, null, { ...beam.move, _hitAt: clip.point });
         }
       }
-      this.sweepMarked(owner, move, struck);
+      if (!beam.swept) {
+        beam.swept = true;
+        this.sweepMarked(owner, beam.move, beam.landed);
+      }
+      keep.push(beam);
+    }
+    this.beams = keep;
+  }
+
+  paintBeam(beam, spec, clip) {
+    if (this.simFast || !this.add) return;
+    const reach = Math.max(0, clip?.length ?? 0);
+    const art = artFor(beam.owner?.charDef?.id, beam.move?.name);
+    const frame = art?.frames?.length
+      ? (art.frames[fxFrameIndex(art, (this.time?.now ?? 0) - (beam.born ?? 0))] || art.frames[0])
+      : null;
+    if (frame?.key && this.add.image) {
+      this.dropBeamStreaks(beam);
+      if (!beam.gfx?.scene) {
+        beam.gfx = this.add.image(spec.x, spec.y, frame.key);
+        beam.gfx.setDepth?.(16);
+        beam.gfx.setOrigin?.(0, 0.5);
+      }
+      const srcW = beam.gfx.width || frame.displayW || 1;
+      const srcH = beam.gfx.height || frame.displayH || 1;
+      const fullW = frame.displayW > 0 ? frame.displayW : srcW;
+      const fullH = frame.displayH > 0 ? frame.displayH : srcH;
+      const maxLen = spec.maxLen > 0 ? spec.maxLen : fullW;
+      const frac = Math.max(0, Math.min(1, reach / maxLen));
+      const scale = beamDrawScale(beam.move);
+      const height = art.stageFit ? Math.max(4, maxLen * (fullH / fullW)) : Math.max(4, fullH * scale);
+      beam.gfx.setTexture?.(frame.key);
+      beam.gfx.setOrigin?.(0, 0.5);
+      beam.gfx.setCrop?.(0, 0, Math.max(1, (beam.gfx.width || srcW) * frac), beam.gfx.height || srcH);
+      beam.gfx.setDisplaySize?.(Math.max(4, reach), height);
+      beam.gfx.setPosition?.(spec.x, spec.y);
+      beam.gfx.rotation = Math.atan2(spec.dy || 0, spec.dx || 1);
+      beam.gfx.setVisible?.(reach > 1);
+      const blend = art.blend === 'add' || art.blend === 'additive' || frame.blend === 'add' || frame.blend === 'additive';
+      if (blend) beam.gfx.setBlendMode?.('ADD');
       return;
     }
-    const struck = new Set();
-    for (const target of this.fighters) {
-      if (target === owner || !target.alive || target.state === 'ko') continue;
-      if (target.state === 'defending' && target.defenseMove?.untargetable) continue;
-      if (hurtHitsRect(target, rect)) {
-        this.landHit(owner, target, move, owner.facing);
-        struck.add(target);
+    if (beam.move?.vfx === 'thermite' && this.add.rectangle) {
+      beam.gfx?.destroy?.();
+      beam.gfx = null;
+      this.paintThermite(beam, spec, reach);
+      return;
+    }
+    this.dropBeamStreaks(beam);
+    if (!this.add.rectangle) return;
+    if (!beam.gfx?.scene) {
+      beam.gfx = this.add.rectangle(spec.x, spec.y, 8, spec.thick || 14, beam.move?.vfxColor ?? 0xfff6e8, 0.85);
+      beam.gfx.setOrigin?.(0, 0.5);
+      beam.gfx.setBlendMode?.('ADD');
+      beam.gfx.setDepth?.(16);
+    }
+    beam.gfx.setPosition?.(spec.x, spec.y);
+    beam.gfx.setSize?.(Math.max(4, reach), spec.thick || 14);
+    beam.gfx.rotation = Math.atan2(spec.dy || 0, spec.dx || 1);
+    beam.gfx.setVisible?.(reach > 1);
+  }
+
+  paintThermite(beam, spec, reach) {
+    const n = 7;
+    if (!beam.streaks) {
+      beam.streaks = [];
+      for (let i = 0; i < n; i++) {
+        const streak = this.add.rectangle(spec.x, spec.y, 8, i % 2 ? 4 : 2, i % 2 ? 0xfff4e0 : 0xff6a1a, 0.8);
+        streak.setOrigin?.(0, 0.5);
+        streak.setBlendMode?.('ADD');
+        streak.setDepth?.(16);
+        beam.streaks.push(streak);
       }
     }
-    this.sweepMarked(owner, move, struck);
+    const ang0 = Math.atan2(spec.dy || 0, spec.dx || 1);
+    for (let i = 0; i < n; i++) {
+      const turn = (i - 3) * 0.14;
+      const streak = beam.streaks[i];
+      streak.setPosition?.(spec.x, spec.y);
+      streak.setSize?.(Math.max(4, reach * 0.72), i % 2 ? 4 : 2);
+      streak.rotation = ang0 + turn;
+      streak.setVisible?.(reach > 1);
+    }
+  }
+
+  dropBeamStreaks(beam) {
+    if (!beam?.streaks) return;
+    for (const streak of beam.streaks) streak.destroy?.();
+    beam.streaks = null;
+  }
+
+  dropBeamGfx(beam) {
+    beam?.gfx?.destroy?.();
+    if (beam) beam.gfx = null;
+    this.dropBeamStreaks(beam);
+  }
+
+  /** Stop a live shot on a wall unless a fighter is already under it this frame. */
+  projectileHitsWall(p, prevX, prevY, time) {
+    if (!p || p.dead || p.pinned || p.stuck || !p.gfx) return false;
+    if (p.move?.pierce || p.move?.ricochet || p.move?.stageBounce || p.move?._ghost) return false;
+    if (p.armAt && time < p.armAt) return false;
+    const solids = this._clipSolids || [];
+    if (!solids.length) return false;
+    const radius = p.radius ?? p.move?.projectileRadius ?? 12;
+    const wall = segmentHitsSolid(prevX, prevY, p.gfx.x, p.gfx.y, radius, solids, {
+      ignoreGround: !!(p.move?.roll || p.move?.floor),
+    });
+    if (!wall) return false;
+    for (const victim of this.fighters) {
+      if (victim === p.owner || !victim.alive || victim.state === 'ko' || !victim.visible) continue;
+      if (victim.state === 'defending' && (victim.defenseMove?.untargetable || victim.defenseMove?.intangible)) continue;
+      if (p.landed?.has?.(victim)) continue;
+      if (projectileHits(p, victim)) return false;
+    }
+    p.gfx.x = wall.x;
+    p.gfx.y = wall.y;
+    if (p.move.explodeOnly) {
+      this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: wall.x, y: wall.y });
+    } else {
+      this.detonateProjectile(p);
+      spawnContactFx(this, p.owner, null, { ...p.move, _hitAt: { x: wall.x, y: wall.y } });
+    }
+    this.dropProjectileZone(p);
+    p.gfx.destroy?.();
+    p.dead = true;
+    return true;
   }
 
   /** Faint pass-through marks where a penetrating beam crosses a wall or a block. */
@@ -2637,6 +2787,7 @@ export default class BattleScene extends Phaser.Scene {
     this.pushBlockers ??= pushSolids(this.stage, this.stage?.groundY);
     resolvePush(this.fighters, this.pushBlockers);
     resolveGrab(this.fighters, time, FEEL);
+    this.stepBeams(time);
     this.updateZones(time);
     this.updateMines(time);
 
@@ -2718,7 +2869,10 @@ export default class BattleScene extends Phaser.Scene {
     }
 
     // projectiles
+    this._clipSolids = stageSolids(this.stage, this.stage?.groundY ?? 560);
     for (const p of this.projectiles) {
+      const prevX = p.gfx?.x ?? 0;
+      const prevY = p.gfx?.y ?? 0;
       if (p.slowFx?.scene && p.gfx) {
         stepPlacedFx(p.slowFx, p.slowArt, time - (p.slowBorn || time), 1);
         p.slowFx.setPosition(p.gfx.x, p.gfx.y);
@@ -2976,6 +3130,7 @@ export default class BattleScene extends Phaser.Scene {
           }
         }
       }
+      if (this.projectileHitsWall(p, prevX, prevY, time)) continue;
       const off = p.gfx.x < -80 || p.gfx.x > this.world.width + 80 || p.gfx.y > this.world.height + 80;
       if (time > p.dieAt || off) {
         if (!off && this.nearOwnerCleanse(p)) {

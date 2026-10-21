@@ -8,7 +8,7 @@ import { artIsUpdated } from '../src/data/updatedArt.js';
 import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
 import { guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
-import { shoulderSlashOrigin } from '../src/engine/fxArt.js';
+import { shoulderSlashOrigin, shoulderWhipIndex } from '../src/engine/fxArt.js';
 
 const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss'];
 
@@ -484,6 +484,10 @@ test('Quicksilver Lash leaves the thrust hand, and Hoss keeps her gallop and hor
   assert.ok(Math.abs(origin.y - hand.y) < 0.05, origin.y - hand.y);
   const shoulder = 400 + 40 * 0.25;
   assert.ok(origin.x > shoulder + 40, origin.x - shoulder);
+  assert.equal(shoulderWhipIndex(2, lashMeta.active, 12), 4);
+  assert.equal(shoulderWhipIndex(4, lashMeta.active, 12), 6);
+  assert.equal(shoulderWhipIndex(5, lashMeta.active, 12), 7);
+  assert.equal(shoulderWhipIndex(6, lashMeta.active, 12), 8);
 
   const bulb = sheetMeta('hog', 'body-basicCharge');
   assert.deepEqual(bulb.loop, [0, 4]);

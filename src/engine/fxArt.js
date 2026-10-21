@@ -3518,6 +3518,10 @@ export function syncFxActors(scene) {
         const active = Math.max(1, fighter.frameData?.active ?? 1);
         const along = Math.max(0, (fighter.attackFrame ?? 0) - start) / active;
         frame = frames[Math.min(frames.length - 1, Math.floor(along * frames.length))];
+      } else if (art.anchor === 'shoulder') {
+        const meta = sheetMeta(fighter?.charDef?.id, fighter?.rig?.sheetClip);
+        const index = shoulderWhipIndex(fighter?.rig?.sheetFrame, meta?.active, frames.length);
+        frame = frames[index];
       } else {
         const t = art.timed && art.fps > 0 && scene.simNow != null
           ? Math.floor(scene.simNow / (1000 / art.fps))
@@ -4155,6 +4159,20 @@ export function spawnContactFx(scene, attacker, victim, move) {
       until: (scene.simNow ?? 0) + (move.onHit.coatMs ?? 2000),
     };
   }
+}
+
+/** The lash sheet opens as a stub and the crack is out by frame 4.
+ *  A straight-arm thrust should show that crack, not the wrapped stub. */
+export function shoulderWhipIndex(sheetFrame, active, frameCount) {
+  const n = Math.max(1, frameCount | 0);
+  if (!active || !(active[1] > active[0]) || n < 2) {
+    const t = sheetFrame || 0;
+    return ((t % n) + n) % n;
+  }
+  const along = Math.max(0, Math.min(1, ((sheetFrame ?? 0) - active[0]) / (active[1] - active[0])));
+  const start = Math.min(4, n - 1);
+  const end = Math.min(8, n - 1);
+  return start + Math.round(along * (end - start));
 }
 
 /** Quicksilver Lash is tagged at the shoulder. The body is a straight-arm

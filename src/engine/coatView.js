@@ -44,7 +44,7 @@ function ensureSlot(scene, rig, spr) {
   return slot;
 }
 
-function paintCoat(tex, base, face, spec, sweep, bucket) {
+function paintCoat(tex, base, face, spec, sweep, bucket, sheenAt) {
   const w = tex.width;
   const h = tex.height;
   const ctx = tex.getContext();
@@ -58,7 +58,7 @@ function paintCoat(tex, base, face, spec, sweep, bucket) {
       if (a < 8) continue;
       const cover = coatCoverage(x + 0.5, y + 0.5, face, sweep, !!spec.full);
       if (cover < 0.012) continue;
-      let sheen = coatSheen(x + 0.5, y + 0.5, face, sweep, spec.gloss || 0, !!spec.full);
+      let sheen = coatSheen(x + 0.5, y + 0.5, face, sweep, spec.gloss || 0, !!spec.full, sheenAt);
       if (spec.sparkle && cover > 0.82 && sparkleAt(x, y, bucket)) sheen = Math.max(sheen, 0.92);
       const [r, g, b] = tintChannels(base[i], base[i + 1], base[i + 2], spec, sheen);
       out[i] = r;
@@ -113,9 +113,10 @@ function syncSprite(scene, rig, spr, visual, now) {
     slot.stamp = '';
   }
   const bucket = visual.spec.sparkle ? Math.floor(now / 90) : 0;
-  const stamp = `${Math.round(visual.sweep * 24)}|${bucket}|${visual.spec.color}`;
+  const sheenAt = visual.sheen ?? visual.sweep;
+  const stamp = `${Math.round(visual.sweep * 24)}|${Math.round(sheenAt * 24)}|${bucket}|${visual.spec.color}`;
   if (slot.stamp !== stamp) {
-    paintCoat(tex, slot.base, slot.face, visual.spec, visual.sweep, bucket);
+    paintCoat(tex, slot.base, slot.face, visual.spec, visual.sweep, bucket, sheenAt);
     slot.stamp = stamp;
   }
   img.setTexture(slot.key);
@@ -212,7 +213,7 @@ function stepFlakes(scene) {
 function visualFor(fighter, now) {
   const live = coatWindow(fighter, now);
   if (live) {
-    const visual = { spec: live.spec, sweep: live.sweep, alpha: 1 };
+    const visual = { spec: live.spec, sweep: live.sweep, sheen: live.sheen ?? live.sweep, alpha: live.alpha ?? 1 };
     fighter._coatVis = visual;
     fighter._coatFadeAt = 0;
     return visual;

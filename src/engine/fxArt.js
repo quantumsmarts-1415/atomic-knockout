@@ -1308,7 +1308,13 @@ async function attachShards(scene, id, slug, folder, meta, index, charH, sized, 
 
 async function loadMoveArt(scene, char, slot, move, index) {
   const id = char.id;
-  const folder = fxFolder(id, move.name).replace(/^assets\/fx\//, '');
+  let folder = fxFolder(id, move.name).replace(/^assets\/fx\//, '');
+  // King's Edge lives in kings-edge. The apostrophe slug is king-s-edge,
+  // and that folder was never cut. Hatter's Fume keeps hatter-s-fume.
+  if (index && !listed(index, `${folder}/fx.json`)) {
+    const folded = folder.replace(/-s-/g, 's-');
+    if (folded !== folder && listed(index, `${folded}/fx.json`)) folder = folded;
+  }
   const objectType = objectTypeOf(move, slot);
   const sized = effectBox(char, move, objectType);
   const pivot = objectType === 'slash arc' || objectType === 'extend' || objectType === 'beam'
@@ -3900,7 +3906,12 @@ function syncHeld(scene, fighter) {
     if (phase) want = { art, kind: 'lance', phase };
   } else if (art?.anchor === 'feet' && art.frames?.length && fighter.state === 'charging') {
     want = { art, kind: 'feet' };
-  } else if ((art?.charge?.frames?.length || art?.heated?.frames?.length) && fighter.state === 'charging') {
+  } else if ((art?.charge?.frames?.length || art?.heated?.frames?.length) && (
+    fighter.state === 'charging'
+    // Radium Tonic's bottle is the charge prop. The sip is the attack, and
+    // the art has no bottle, so the prop stays in the cupped hand.
+    || (charge?.tonic && art.charge?.anchor === 'hand' && fighter.state === 'attack' && fighter.currentMove?.name === charge.name)
+  )) {
     const prop = fighter.heatTaken && art.heated?.frames?.length ? art.heated : art.charge;
     if (prop?.frames?.length) {
       const anchor = prop.anchor;
@@ -3979,7 +3990,10 @@ function syncHeld(scene, fighter) {
   if (want.kind === 'grow') {
     const frames = want.art.frames;
     const max = charge.maxChargeMs || 1;
-    const frac = Math.min(1, Math.max(0, (now - (fighter.chargeStart ?? now)) / max));
+    const drinking = charge?.tonic && fighter.state === 'attack' && want.art.anchor === 'hand';
+    const frac = drinking
+      ? 1
+      : Math.min(1, Math.max(0, (now - (fighter.chargeStart ?? now)) / max));
     const elapsed = now - (fighter.chargeStart ?? now);
     const fill = want.art.fillFrames > 1 ? want.art.fillFrames : 0;
     const frame = fill

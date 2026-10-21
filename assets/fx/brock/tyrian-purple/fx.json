@@ -7,7 +7,7 @@
   "loop": false,
   "once": true,
   "blend": "screen",
-  "black": 16,
+  "black": false,
   "fit": "height",
   "heightFrac": 0.75,
   "crop": "frame",

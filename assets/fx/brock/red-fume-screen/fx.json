@@ -6,11 +6,12 @@
   "fps": 9.763,
   "loop": true,
   "blend": "screen",
-  "black": 16,
+  "black": false,
   "fit": "height",
   "heightFrac": 1.7,
   "crop": "frame",
   "pivot": "center",
   "anchor": "front",
+  "grade": { "red": 0.8, "desat": 0.2 },
   "hit": false
 }

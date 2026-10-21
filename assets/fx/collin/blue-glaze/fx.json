@@ -1,24 +1,26 @@
 {
   "blend": "normal",
-  "black": 16,
+  "black": false,
   "hit": false,
   "projectile": {
-    "file": "blue-glaze-glob.jpg",
+    "file": "blue-glaze-glob.png",
     "blend": "normal",
-    "black": 16,
+    "black": false,
     "fit": "height",
     "heightFrac": 0.3,
     "crop": "frame",
-    "pivot": "center"
+    "pivot": "center",
+    "hit": false
   },
   "detonate": {
-    "file": "blue-glaze-splash.jpg",
-    "blend": "add",
-    "black": 16,
+    "file": "blue-glaze-splash.png",
+    "blend": "normal",
+    "black": false,
     "fit": "width",
     "heightFrac": 1.05,
     "crop": "frame",
     "pivot": "center",
-    "anchor": "point"
+    "anchor": "point",
+    "hit": false
   }
 }

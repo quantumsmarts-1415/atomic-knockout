@@ -122,6 +122,30 @@ function parseTint(value) {
   return 0;
 }
 
+/** Pull a fiery sheet toward red-brown: scale the red channel, then desaturate. */
+export function gradePixels(data, width, height, grade) {
+  if (!data || !grade) return data;
+  const redMul = typeof grade.red === 'number' ? grade.red : 1;
+  const desat = typeof grade.desat === 'number' ? Math.max(0, Math.min(1, grade.desat)) : 0;
+  const n = Math.min(data.length, (width || 0) * (height || 0) * 4);
+  for (let i = 0; i < n; i += 4) {
+    if (data[i + 3] < 8) continue;
+    let r = data[i] * redMul;
+    let g = data[i + 1];
+    let b = data[i + 2];
+    if (desat > 0) {
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      r = r * (1 - desat) + lum * desat;
+      g = g * (1 - desat) + lum * desat;
+      b = b * (1 - desat) + lum * desat;
+    }
+    data[i] = Math.max(0, Math.min(255, Math.round(r)));
+    data[i + 1] = Math.max(0, Math.min(255, Math.round(g)));
+    data[i + 2] = Math.max(0, Math.min(255, Math.round(b)));
+  }
+  return data;
+}
+
 function tintPixels(data, width, height, color, amount) {
   const n = Math.min(data.length, (width || 0) * (height || 0) * 4);
   for (let i = 0; i < n; i += 4) {
@@ -706,7 +730,9 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     spriteAura: !!extra.spriteAura,
     squash: extra.squash > 0 ? extra.squash : 0,
     holdAt: typeof extra.holdAt === 'number' ? extra.holdAt | 0 : -1,
+    loopFrom: typeof extra.loopFrom === 'number' ? extra.loopFrom | 0 : -1,
     breakFrom: typeof extra.breakFrom === 'number' ? extra.breakFrom | 0 : -1,
+    poisonStatus: !!extra.poisonStatus,
     overCoat: !!extra.overCoat,
     heatAt: typeof extra.heatAt === 'number' ? extra.heatAt | 0 : -1,
     lifeMs: extra.lifeMs > 0 ? extra.lifeMs | 0 : 0,
@@ -1117,6 +1143,9 @@ async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH
     const amount = spec.tintAmount > 0 ? spec.tintAmount : 0.55;
     for (const slice of slices) tintPixels(slice.keyed, slice.width, slice.height, tint, amount);
   }
+  if (spec?.grade) {
+    for (const slice of slices) gradePixels(slice.keyed, slice.width, slice.height, spec.grade);
+  }
   const bounds = slices.map((slice) => contentBounds(slice.keyed, slice.width, slice.height));
   const fitMode = spec?.fit || null;
   const px = fitMode ? pixelsPerSource(charH, spec?.heightFrac, refSpan(bounds, spec, slices)) : 0;
@@ -1241,6 +1270,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       fillHold: !!merged.fillHold,
       tremble: !!merged.tremble,
       rampAlpha: merged.rampAlpha,
+      poisonStatus: !!merged.poisonStatus,
       randomRot: merged.randomRot,
       randomFlip: merged.randomFlip,
       tilt: merged.tilt,
@@ -1459,7 +1489,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
         ...look, reach: loaded.reach, peak, peakAnim, peakFrame: meta.peakFrame ?? -1, beam: null,
         holdLast: !!meta.holdLast, flip: !!meta.flip, bothSides: !!meta.bothSides, releaseFlash: !!meta.releaseFlash, comboFrames: !!meta.comboFrames, crackFrames: !!meta.crackFrames,
         order: meta.order, fadeAfter: !!meta.fadeAfter, fadeMs: meta.fadeMs, paceCharge: !!meta.paceCharge,
-        holdAt: meta.holdAt, breakFrom: meta.breakFrom, overCoat: meta.overCoat, heatAt: meta.heatAt,
+        holdAt: meta.holdAt, loopFrom: meta.loopFrom, breakFrom: meta.breakFrom, overCoat: meta.overCoat, heatAt: meta.heatAt,
         lifeMs: meta.lifeMs, puddle: !!meta.puddle, ghost: meta.ghost, scaleIn: meta.scaleIn,
       });
       await attachSides(scene, id, slug, folder, meta, index, charH, sized, record);
@@ -1944,12 +1974,18 @@ export function sheetPlayOrder() {
   return null;
 }
 
-/** Frame while a shell is held. holdAt keeps the form from playing into the break. */
+/** Frame while a shell is held. holdAt keeps the form from playing into the break.
+ *  loopFrom repeats frames loopFrom..holdAt after the opening frame has played. */
 export function shellFrame(art, elapsed) {
   const n = art?.frames?.length || 1;
   const cap = typeof art?.holdAt === 'number' && art.holdAt >= 0 ? art.holdAt : n - 1;
   const fps = art?.fps > 0 ? art.fps : 8;
   const i = Math.floor(Math.max(0, elapsed || 0) / (1000 / fps));
+  const loopFrom = art?.loopFrom;
+  if (typeof loopFrom === 'number' && loopFrom >= 0 && loopFrom <= cap && i >= loopFrom) {
+    const span = Math.max(1, cap - loopFrom + 1);
+    return loopFrom + ((i - loopFrom) % span);
+  }
   return Math.max(0, Math.min(cap, i, n - 1));
 }
 
@@ -3003,6 +3039,18 @@ function dropPoison(fighter) {
   if (live) livePoison.delete(fighter);
 }
 
+/** Arsenio's two poisons share the feet sheet on Paris Green Slash.
+ *  Other poisons keep the global status fumes. A delayed burst (Pale Horse
+ *  Dart) still owns its cling until burstAt, so it is not this sheet. */
+export function poisonStatusArt(from) {
+  if (!from?.id || from.burstAt != null) return null;
+  if (from.id !== 'arsenio') return null;
+  if (from.move !== 'Paris Green Slash' && from.move !== 'Inheritance Powder') return null;
+  const sheet = artFor('arsenio', 'Paris Green Slash')?.cling;
+  if (sheet?.poisonStatus && sheet.frames?.length) return sheet;
+  return null;
+}
+
 /** Toxic fumes follow anyone whose poison timer is still running. */
 function syncPoison(scene, fighter) {
   const now = scene.simNow ?? 0;
@@ -3010,17 +3058,18 @@ function syncPoison(scene, fighter) {
     dropPoison(fighter);
     return;
   }
-  const art = fxNamed('status/poison');
+  const art = poisonStatusArt(fighter.poisonFrom) || fxNamed('status/poison');
   if (!art?.frames?.length) return;
   let live = livePoison.get(fighter);
-  if (!live?.img?.scene) {
+  if (!live?.img?.scene || live.art !== art) {
     dropPoison(fighter);
-    live = { img: placeStill(scene, art, fighter.x, fighter.y, 0), born: now };
+    live = { img: placeStill(scene, art, fighter.x, fighter.y, 0), born: now, art };
     live.img.setDepth(12);
     livePoison.set(fighter, live);
   }
   const frame = art.frames[fxFrameIndex(art, now - live.born)] || art.frames[0];
   applyFrameLook(live.img, frame, art, 1);
+  if (art.anchor === 'feet') live.img.setOrigin(art.pivotX ?? 0.5, art.pivotY ?? 1);
   live.img.setPosition(fighter.x, fighter.y);
 }
 

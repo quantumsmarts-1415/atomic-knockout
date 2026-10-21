@@ -1,27 +1,30 @@
 {
-  "file": "sublimate-vapor-sheet.jpg",
+  "file": "sublimate-vapor-anim.png",
   "frames": 4,
+  "cols": 4,
+  "rows": 1,
   "fps": 8,
   "loop": false,
-  "blend": "screen",
-  "luma": true,
-  "black": 16,
+  "blend": "normal",
+  "black": false,
   "fit": "height",
-  "heightFrac": 1.5,
+  "heightFrac": 1.2,
   "crop": "frame",
   "pivot": "center",
   "anchor": "body",
   "holdAt": 2,
+  "loopFrom": 1,
   "breakFrom": 3,
   "ghost": 0.18,
   "hit": false,
   "burst": {
-    "file": "sublimate-counter-burst.jpg",
+    "file": "sublimate-counter-burst.png",
     "blend": "normal",
-    "black": 16,
+    "black": false,
     "fit": "width",
     "heightFrac": 1.2,
     "crop": "frame",
-    "pivot": "center"
+    "pivot": "center",
+    "hit": false
   }
 }

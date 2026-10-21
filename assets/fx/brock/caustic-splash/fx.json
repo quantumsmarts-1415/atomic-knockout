@@ -1,0 +1,15 @@
+{
+  "blend": "normal",
+  "black": false,
+  "hit": false,
+  "projectile": {
+    "file": "caustic-splash.png",
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.5,
+    "crop": "frame",
+    "pivot": "center",
+    "hit": false
+  }
+}

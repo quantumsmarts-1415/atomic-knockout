@@ -6,20 +6,21 @@
   "fps": 10.776,
   "loop": false,
   "blend": "add",
-  "black": 16,
+  "black": false,
   "fit": "length",
   "stretch": "length",
   "crop": "frame",
   "pivot": "left",
   "hit": false,
   "charge": {
-    "file": "gamma-charge-glow.jpg",
-    "blend": "add",
-    "black": 16,
+    "file": "gamma-charge-glow.png",
+    "blend": "normal",
+    "black": false,
     "fit": "height",
-    "heightFrac": 0.4,
+    "heightFrac": 0.36,
     "crop": "frame",
     "pivot": "center",
-    "anchor": "body"
+    "anchor": "hand",
+    "hit": false
   }
 }

@@ -6,12 +6,10 @@
   "fps": 11.478,
   "loop": false,
   "blend": "screen",
-  "black": 16,
+  "black": false,
   "fit": "width",
   "heightFrac": 1.45,
   "crop": "frame",
   "pivot": "center",
-  "hit": false,
-  "peak": "stench-fume-burst.jpg",
-  "peakFrame": 18
+  "hit": false
 }

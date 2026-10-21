@@ -63,6 +63,28 @@ test('coating defenses share one tint list and leave panes alone', () => {
   assert.equal(coatSpec({ name: 'Mirror Chrome' }).sparkle, true);
   assert.equal(coatSpec({ name: 'Four-State Guard' }).cycle.length, 4);
   assert.equal(coatSpec({ name: 'Blue Glaze' }).gloss > 0.4, true);
+  assert.equal(coatSpec({ name: 'Blue Glaze' }).color, 0x1e46c8);
+  assert.equal(coatSpec({ name: 'Blue Glaze' }).settle, true);
+  assert.equal(coatSpec({ name: 'Blue Glaze' }).settleMs, 1600);
+  const shell = coatSpec({ name: 'Superalloy Shell' });
+  assert.equal(shell.color, 0x465268);
+  assert.equal(shell.amount, 0.45);
+  assert.ok(shell.gloss > 0.3);
+  assert.ok(shell.sweepMs >= 1500);
+  assert.ok(shell.sheenMs >= 2000);
+  assert.equal(shell.full, undefined);
+  const coated = {
+    state: 'defending',
+    defenseMove: { name: 'Superalloy Shell' },
+    defenseStart: 0,
+  };
+  const rising = coatWindow(coated, 900);
+  assert.equal(rising.spec.color, 0x465268);
+  assert.ok(rising.sweep > 0.3 && rising.sweep < 0.8, rising.sweep);
+  assert.ok(rising.sheen > 0 && rising.sheen < 0.5, rising.sheen);
+  const glaze = { debuffCoat: 'Blue Glaze', debuffCoatUntil: 2600, state: 'idle' };
+  assert.ok(coatWindow(glaze, 1000).alpha > 0.95);
+  assert.ok(Math.abs(coatWindow(glaze, 1800).alpha - 0.5) < 0.02);
   assert.equal(coatSpec({ name: 'Melt Down' }).full, true);
   assert.ok(coatSpec({ name: 'Melt Down' }).gloss > 0.6);
   assert.equal(coatSpec({ name: 'Silica Pane' }), null);

@@ -1,11 +1,28 @@
 {
-  "file": "paris-green-slash.jpg",
-  "blend": "add",
-  "black": 16,
+  "file": "paris-green-slash.png",
+  "blend": "normal",
+  "black": false,
   "fit": "width",
   "heightFrac": 0.95,
   "crop": "frame",
   "pivot": "left",
   "anchor": "fist",
-  "hit": false
+  "hit": false,
+  "cling": {
+    "file": "poison-status-anim.png",
+    "frames": 4,
+    "cols": 4,
+    "rows": 1,
+    "fps": 8,
+    "loop": true,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.85,
+    "crop": "frame",
+    "pivot": "bottom",
+    "anchor": "feet",
+    "poisonStatus": true,
+    "hit": false
+  }
 }

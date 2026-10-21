@@ -553,6 +553,11 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
           && (move?.name === 'Nitroglycerin Vial' || move?.name === 'End of the Table');
         if (!onHand) y = fighter.y - (fighter.bodyH ?? 80) * 0.5;
       }
+      if ((art.anchor === 'fist' || art.anchor === 'contact') && extra?.x == null) {
+        const tip = meleeContactPoint(fighter, move);
+        x = tip.x;
+        y = tip.y;
+      }
       if (move?.riseUnder && art.anchor === 'ground') {
         x = fighter.x;
         y = groundTop(scene, fighter.x, fighter.y);

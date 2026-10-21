@@ -19,8 +19,8 @@ export const COATS = {
   'Aerospace Plating': { color: 0x9eb4c8, mode: 'multiply', amount: 0.55, gloss: 0.3, sweepMs: 260 },
   'Mirror Chrome': { color: 0xd8dee6, mode: 'lighten', amount: 0.42, gloss: 0.62, sweepMs: 240, sparkle: true },
   'Work Hardening': { color: 0x8a9098, mode: 'multiply', amount: 0.38, gloss: 0.1, sweepMs: 260, deepen: 0.08 },
-  'Superalloy Shell': { color: 0x3e4c5c, mode: 'multiply', amount: 0.72, gloss: 0.08, sweepMs: 280 },
-  'Blue Glaze': { color: 0x1d4ed8, mode: 'multiply', amount: 0.64, gloss: 0.55, sweepMs: 240 },
+  'Superalloy Shell': { color: 0x465268, mode: 'multiply', amount: 0.45, gloss: 0.48, sweepMs: 1800, sheenMs: 2800 },
+  'Blue Glaze': { color: 0x1e46c8, mode: 'multiply', amount: 0.55, gloss: 0.66, sweepMs: 240, settle: true, settleMs: 1600 },
   'Electroplate': { color: 0xc5ccd4, mode: 'lighten', amount: 0.42, gloss: 0.36, sweepMs: 250 },
   'Hot-Dip Galvanize': { color: 0xb7c4d4, mode: 'lighten', amount: 0.4, gloss: 0.24, sweepMs: 260, sparkle: true },
   'Sacrificial Anode': { color: 0xd5d3ce, mode: 'lighten', amount: 0.5, gloss: 0, sweepMs: 260, matte: true },
@@ -188,11 +188,11 @@ export function coatCoverage(x, y, region, sweep, full = false) {
   return rise * face;
 }
 
-export function coatSheen(x, y, region, sweep, gloss, full = false) {
+export function coatSheen(x, y, region, sweep, gloss, full = false, bandSweep = null) {
   if (!gloss || !region) return 0;
   const cover = coatCoverage(x, y, region, sweep, full);
   if (cover <= 0) return 0;
-  const { edge, span } = sweepEdge(region, sweep);
+  const { edge, span } = sweepEdge(region, bandSweep == null ? sweep : bandSweep);
   const band = Math.max(0, 1 - Math.abs(y - edge) / Math.max(6, span * 0.055));
   const streak = Math.max(0, 1 - Math.abs(x - region.cx) / Math.max(1, region.rx * 2.4));
   return gloss * cover * Math.min(1, band * 0.85 + streak * 0.28);
@@ -259,7 +259,8 @@ function moveCoat(fighter, move, now, phase) {
     const ms = spec.paceCharge && move?.chargeMs ? move.chargeMs : (spec.sweepMs ?? 260);
     sweep = clamp01(elapsed / ms);
   }
-  return { spec: paintedSpec(spec, fighter, elapsed), move, sweep, phase };
+  const sheen = spec.sheenMs > 0 ? (elapsed % spec.sheenMs) / spec.sheenMs : sweep;
+  return { spec: paintedSpec(spec, fighter, elapsed), move, sweep, sheen, phase, alpha: 1 };
 }
 
 /** The coat that should be on the sprite right now, or null. */
@@ -281,7 +282,13 @@ export function coatWindow(fighter, now) {
   }
   if (fighter.debuffCoatUntil > now && fighter.debuffCoat) {
     const mark = heldCoat(fighter.debuffCoat, fighter, now);
-    if (mark) return mark;
+    if (mark) {
+      if (mark.spec.settle) {
+        const ms = mark.spec.settleMs > 0 ? mark.spec.settleMs : 1600;
+        mark.alpha = clamp01((fighter.debuffCoatUntil - now) / ms);
+      }
+      return mark;
+    }
   }
   if (fighter.buffCoatUntil > now && fighter.buffCoat) {
     const buff = heldCoat(fighter.buffCoat, fighter, now);

@@ -413,7 +413,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.defenseMove = null;
     }
     tickKit(this, time);
-    if (this.poisonFrom && !this.poisonFrom.played && time >= (this.poisonFrom.burstAt ?? 0)) {
+    if (this.poisonFrom && !this.poisonFrom.played && this.poisonFrom.burstAt != null && time >= this.poisonFrom.burstAt) {
       this.poisonFrom.played = true;
       const owner = (this.scene?.fighters || []).find((f) => f.charDef?.id === this.poisonFrom.id) || this;
       const move = { name: this.poisonFrom.move };

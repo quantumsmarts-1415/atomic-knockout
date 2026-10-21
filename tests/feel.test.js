@@ -2,10 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert';
 import {
   FEEL, hitlagFrames, frameData, smashUnits, hitstunFrames, knockbackRaw, decayLaunch,
-  launchVelocity, applyDI, leavesBlast, stripIndex, takeBuffered,
+  launchVelocity, grabLaunchX, applyDI, leavesBlast, stripIndex, takeBuffered,
   poseTarget, launchWeight, hitlagShake, frameZoom, cameraFrame, containFrame, openingZoom, easeOutBack,
   traumaOffset,
 } from '../src/engine/feel.js';
+
+test('a magnet pull object does not become a NaN grab', () => {
+  assert.strictEqual(grabLaunchX(1, { radius: 240, speed: 160, metals: true }, 0), null);
+  assert.strictEqual(grabLaunchX(1, 210, 0), 210);
+  assert.strictEqual(grabLaunchX(-1, 0, 640), -640);
+  const vel = launchVelocity(2.79, 0, 1);
+  assert.ok(Number.isFinite(vel.x) && Number.isFinite(vel.y));
+});
 
 test('hitlag matches the Ultimate table', () => {
   assert.strictEqual(hitlagFrames(8), 11);

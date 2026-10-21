@@ -22,8 +22,23 @@ export function bodyClipKey(moveKey) {
 /** Sole fraction whose engine foot row is footRow. */
 export function footYForRow(footRow, frameH) {
   if (!(frameH > 0) || !Number.isFinite(footRow)) return null;
-  const footY = Number(((footRow + 1) / frameH).toFixed(4));
-  return footY > 0 && footY <= 1 ? footY : null;
+  const lands = (y) => y > 0 && y <= 1 && Math.round(y * frameH) - 1 === footRow;
+  const naive = Number(((footRow + 1) / frameH).toFixed(4));
+  if (lands(naive)) return naive;
+  // Four decimals can round the sole onto the next row. Magic Number is 593 of 658.
+  const center = (footRow + 1) / frameH;
+  let best = null;
+  let bestDist = Infinity;
+  for (let i = -30; i <= 30; i++) {
+    const y = Number((center + i * 0.0001).toFixed(4));
+    if (!lands(y)) continue;
+    const dist = Math.abs(y * frameH - (footRow + 1));
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = y;
+    }
+  }
+  return best;
 }
 
 export function hasBodyClips(id) {

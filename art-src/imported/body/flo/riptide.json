@@ -1,0 +1,223 @@
+{
+ "name": "flo",
+ "move": "riptide",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/433b.mp4 (stream 0)",
+ "frameW": 924,
+ "frameH": 656,
+ "idle_cell_w": 815,
+ "idle_anchor_x": 259.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 656,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9009,
+ "foot_row": 591,
+ "visibleH": 574,
+ "scale": 1.1643,
+ "offset": [
+  -161.4,
+  -171.6
+ ],
+ "strike_hand_xy": {
+  "3": [
+   921,
+   196
+  ],
+  "4": [
+   916,
+   193
+  ],
+  "5": [
+   916,
+   192
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    16,
+    591,
+    20,
+    399
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    399,
+    175
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    93,
+    591,
+    2,
+    481
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    480,
+    249
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    121,
+    591,
+    58,
+    560
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    560,
+    249
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    97,
+    591,
+    276,
+    921
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    921,
+    196
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    97,
+    591,
+    269,
+    916
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    916,
+    193
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    93,
+    591,
+    269,
+    916
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    916,
+    192
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    51,
+    591,
+    181,
+    516
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    513,
+    134
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    16,
+    591,
+    11,
+    399
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    397,
+    182
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   591,
+   591,
+   591,
+   591,
+   591,
+   591,
+   591,
+   591
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Low lunge forward with both hands sweeping, held f4-f6, then she draws back. WIDE. Magenta key.",
+  "redo_candidate": false,
+  "first_frame_start_mad": 1.54,
+  "src_picks": "1,19,31,49,61,79,97,145"
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   921,
+   196
+  ],
+  "4": [
+   916,
+   194
+  ],
+  "5": [
+   916,
+   192
+  ]
+ }
+}

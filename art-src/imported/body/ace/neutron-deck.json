@@ -1,0 +1,213 @@
+{
+ "name": "ace",
+ "move": "neutron-deck",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/379b_v2.mp4 (stream 0)",
+ "frameW": 611,
+ "frameH": 634,
+ "idle_cell_w": 569,
+ "idle_anchor_x": 271.5,
+ "width_mode": "cell",
+ "pad_top": 30,
+ "idle_cell_h": 604,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.97,
+ "foot_row": 615,
+ "visibleH": 600,
+ "scale": 1.38686,
+ "offset": [
+  -361.6,
+  -301.2
+ ],
+ "strike_hand_xy": {
+  "4": [
+   588,
+   116
+  ],
+  "5": [
+   608,
+   208
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    45,
+    616,
+    37,
+    408
+   ],
+   "foot": 616,
+   "front_hand_xy": [
+    408,
+    166
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    36,
+    616,
+    37,
+    414
+   ],
+   "foot": 616,
+   "front_hand_xy": [
+    411,
+    207
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    17,
+    616,
+    37,
+    456
+   ],
+   "foot": 616,
+   "front_hand_xy": [
+    455,
+    169
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    20,
+    615,
+    34,
+    403
+   ],
+   "foot": 615,
+   "front_hand_xy": [
+    403,
+    155
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    25,
+    616,
+    34,
+    600
+   ],
+   "foot": 616,
+   "front_hand_xy": [
+    588,
+    116
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 900,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    29,
+    616,
+    40,
+    608
+   ],
+   "foot": 616,
+   "front_hand_xy": [
+    608,
+    208
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 412,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    34,
+    615,
+    42,
+    444
+   ],
+   "foot": 615,
+   "front_hand_xy": [
+    444,
+    331
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    3,
+    616,
+    56,
+    381
+   ],
+   "foot": 616,
+   "front_hand_xy": [
+    380,
+    111
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   616,
+   616,
+   616,
+   615,
+   616,
+   616,
+   615,
+   616
+  ],
+  "foot_spread_px": 1,
+  "any_out_edge": false,
+  "first_frame_start_mad": 1.62,
+  "notes": "v2 (padded start). Release visible at f4-f5; the flying cards are removed (detached), the FX draws the deck. No edge contact. Ends in a more upright stance than the idle.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "4": [
+   600,
+   96
+  ],
+  "5": [
+   608,
+   208
+  ]
+ }
+}

@@ -1,0 +1,190 @@
+{
+ "name": "aurelius",
+ "move": "midas-touch",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/384b.mp4 (stream 0)",
+ "frameW": 1068,
+ "frameH": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9634,
+ "foot_row": 579,
+ "visibleH": 564,
+ "scale": 0.83309,
+ "offset": [
+  5.7,
+  0.0
+ ],
+ "strike_hand_xy": {
+  "3": [
+   876,
+   188
+  ],
+  "4": [
+   876,
+   200
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    579,
+    49,
+    437
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    435,
+    239
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    40,
+    579,
+    49,
+    447
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    447,
+    262
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 43,
+   "bbox": [
+    65,
+    578,
+    56,
+    577
+   ],
+   "foot": 578,
+   "front_hand_xy": [
+    553,
+    243
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    85,
+    576,
+    114,
+    877
+   ],
+   "foot": 576,
+   "front_hand_xy": [
+    876,
+    188
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    85,
+    576,
+    114,
+    877
+   ],
+   "foot": 576,
+   "front_hand_xy": [
+    876,
+    200
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    85,
+    576,
+    114,
+    833
+   ],
+   "foot": 576,
+   "front_hand_xy": [
+    833,
+    226
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    94,
+    576,
+    107,
+    657
+   ],
+   "foot": 576,
+   "front_hand_xy": [
+    657,
+    287
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    14,
+    579,
+    49,
+    437
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    436,
+    240
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "first_frame_start_mad": 5.76,
+  "foot_rows": [
+   579,
+   579,
+   578,
+   576,
+   576,
+   576,
+   576,
+   579
+  ],
+  "foot_spread_px": 3,
+  "any_out_edge": false,
+  "notes": "WIDE 1068x601. Ingot switches to the back hand during the reach (Grok). Lunge lifts feet up to 3 px.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4
+ ]
+}

@@ -1,0 +1,195 @@
+{
+ "name": "ace",
+ "move": "smoke-detector",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/378b.mp4 (stream 0)",
+ "frameW": 569,
+ "frameH": 604,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 10.0,
+ "loop": false,
+ "footY": 0.9685,
+ "foot_row": 585,
+ "visibleH": 570,
+ "scale": 0.61093,
+ "offset": [
+  1.2,
+  2.8
+ ],
+ "strike_hand_xy": {
+  "3": [
+   445,
+   117
+  ],
+  "4": [
+   441,
+   143
+  ],
+  "5": [
+   441,
+   143
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    585,
+    38,
+    409
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    408,
+    137
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    4,
+    582,
+    100,
+    429
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    429,
+    158
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    3,
+    584,
+    88,
+    460
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    410,
+    90
+   ],
+   "src_edge_px": 12,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    14,
+    584,
+    108,
+    446
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    445,
+    117
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    14,
+    584,
+    108,
+    446
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    441,
+    143
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    14,
+    584,
+    108,
+    446
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    441,
+    143
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 133,
+   "bbox": [
+    5,
+    585,
+    108,
+    446
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    427,
+    127
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    5,
+    584,
+    108,
+    446
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    431,
+    130
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "first_frame_start_mad": 3.69,
+  "foot_rows": [
+   585,
+   582,
+   584,
+   584,
+   584,
+   584,
+   585,
+   584
+  ],
+  "foot_spread_px": 3,
+  "any_out_edge": false,
+  "notes": "Grok added an off-brief forward punch at src 97-121; skipped, so guard hold (f5) jumps to recovery (f6).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ]
+}

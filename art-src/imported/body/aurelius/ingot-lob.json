@@ -1,0 +1,213 @@
+{
+ "name": "aurelius",
+ "move": "ingot-lob",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/387b.mp4 (stream 0)",
+ "frameW": 583,
+ "frameH": 601,
+ "idle_cell_w": 563,
+ "idle_anchor_x": 229.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9634,
+ "foot_row": 579,
+ "visibleH": 564,
+ "scale": 1.37226,
+ "offset": [
+  -359.9,
+  -297.9
+ ],
+ "strike_hand_xy": {
+  "4": [
+   482,
+   98
+  ],
+  "5": [
+   467,
+   97
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    14,
+    580,
+    24,
+    413
+   ],
+   "foot": 580,
+   "front_hand_xy": [
+    413,
+    238
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    67,
+    580,
+    2,
+    386
+   ],
+   "foot": 580,
+   "front_hand_xy": [
+    385,
+    153
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    77,
+    580,
+    15,
+    391
+   ],
+   "foot": 580,
+   "front_hand_xy": [
+    391,
+    161
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    25,
+    579,
+    26,
+    580
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    580,
+    131
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    14,
+    579,
+    32,
+    537
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    482,
+    98
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 2181,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    12,
+    579,
+    30,
+    531
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    467,
+    97
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 2211,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    17,
+    579,
+    24,
+    517
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    517,
+    107
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 2005,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    4,
+    580,
+    35,
+    389
+   ],
+   "foot": 580,
+   "front_hand_xy": [
+    388,
+    218
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   580,
+   580,
+   580,
+   579,
+   579,
+   579,
+   579,
+   580
+  ],
+  "foot_spread_px": 1,
+  "any_out_edge": false,
+  "first_frame_start_mad": 2.57,
+  "notes": "Ingot leaves the hand at f4-f5 and is removed (detached) so the FX can draw the lob. Src frames 97-99 touch the right edge only because of the flying ingot.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "4": [
+   536,
+   33
+  ],
+  "5": [
+   528,
+   28
+  ]
+ }
+}

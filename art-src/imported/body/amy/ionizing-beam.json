@@ -1,0 +1,203 @@
+{
+ "name": "amy",
+ "move": "ionizing-beam",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/383b.mp4 (stream 0)",
+ "frameW": 657,
+ "frameH": 602,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9684,
+ "foot_row": 583,
+ "visibleH": 567,
+ "scale": 0.65549,
+ "offset": [
+  4.5,
+  1.6
+ ],
+ "strike_hand_xy": {
+  "3": [
+   624,
+   115
+  ],
+  "4": [
+   623,
+   115
+  ],
+  "5": [
+   623,
+   115
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    583,
+    21,
+    446
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    410,
+    326
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    11,
+    583,
+    110,
+    462
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    417,
+    321
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    7,
+    583,
+    126,
+    555
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    555,
+    280
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    33,
+    583,
+    136,
+    640
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    624,
+    115
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    33,
+    583,
+    135,
+    639
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    623,
+    115
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    33,
+    583,
+    135,
+    639
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    623,
+    115
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 121,
+   "bbox": [
+    25,
+    583,
+    135,
+    614
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    614,
+    251
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    9,
+    583,
+    116,
+    498
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    464,
+    323
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "first_frame_start_mad": 3.88,
+  "foot_rows": [
+   583,
+   583,
+   583,
+   583,
+   583,
+   583,
+   583,
+   583
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Helmet top cut at video top src 47-59 (skipped). Feet sank 7 px mid-clip, so frames are foot-pinned vertically (y only). Beam origin = helmet held forward at (624,115).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ]
+}

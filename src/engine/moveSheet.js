@@ -3,6 +3,7 @@
 // do not move the body onto the floor.
 
 import { MOVE_SHEETS } from '../data/moveSheets.js';
+import { bodyClipName, bodySheetMeta } from '../data/bodyClips.js';
 
 const ORDERS = {
   melee: ['fist', 'tip'],
@@ -12,10 +13,14 @@ const ORDERS = {
 };
 
 export function sheetMeta(id, clip) {
-  return MOVE_SHEETS[id]?.[clip] || null;
+  return bodySheetMeta(id, clip) || MOVE_SHEETS[id]?.[clip] || null;
 }
 
 export function clipNameForMove(id, moveKey) {
+  // A shipped per-move body clip wins. Anything else keeps the older
+  // attack/charge/defense/special sheets, or no sheet at all.
+  const body = bodyClipName(id, moveKey);
+  if (body) return body;
   const row = MOVE_SHEETS[id];
   if (!row || !moveKey) return null;
   const name = moveKey === 'basicCharge' ? 'charge'

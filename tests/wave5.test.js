@@ -6,7 +6,6 @@ import { CHARACTERS } from '../src/data/characters.js';
 import { buildSelectSlots, COMING_SOON } from '../src/data/periodic.js';
 import { prepareMove, tickGhostDrain, weakestType } from '../src/engine/kit.js';
 import { interceptHit } from '../src/engine/defense.js';
-import { TUNING } from '../src/data/balance.js';
 
 const PART1 = [
   'curie', 'pat', 'uri', 'neptune', 'pluto', 'amy', 'burke', 'cali', 'einstein',
@@ -30,11 +29,11 @@ test('wave 5 part 1 is on the roster with the doc genders', () => {
   }
 });
 
-test('ghosts drain, stay light, and keep translucent sheets', () => {
+test('ghosts drain, keep a slow step, and keep translucent sheets', () => {
   for (const id of GHOSTS) {
     const c = CHARACTERS[id];
     assert.strictEqual(c.ghost, true, id);
-    assert.strictEqual(c.stats.weight, TUNING.weightClamp[0], id);
+    assert.ok(Math.abs(c.stats.weight - 1) < 1e-9, `${id} weight stays on the missing-density curve`);
     assert.ok(c.stats.speed < 220, id);
     const png = PNG.sync.read(readFileSync(`art-src/imported/sheets/${id}_idle.png`));
     let ink = 0;

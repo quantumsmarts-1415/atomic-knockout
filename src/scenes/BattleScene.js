@@ -27,6 +27,7 @@ import { Juice } from '../engine/juice.js';
 import { FEEL, cameraFrame, containFrame, openingZoom, percentColor } from '../engine/feel.js';
 import { clockEndsRound } from '../engine/matchRules.js';
 import { clipBeam, segmentHitsSolid, stageSolids } from '../engine/beamClip.js';
+import { shotIgnoresGround, shotRemovedOnFighter, shotStoppedBySolid } from '../engine/shotEnd.js';
 import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
@@ -943,6 +944,7 @@ export default class BattleScene extends Phaser.Scene {
       this.spawnProjectile(m.owner, {
         ...m.move,
         kind: 'projectile',
+        shotEnd: 'despawn',
         damage: m.move.damage,
         projectileSpeed: speed,
         projectileLife: m.move.projectileLife ?? 420,
@@ -2061,16 +2063,16 @@ export default class BattleScene extends Phaser.Scene {
     this.dropBeamStreaks(beam);
   }
 
-  /** Stop a live shot on a wall unless a fighter is already under it this frame. */
+  /** Stop a free-flying shot on a wall. Stick, linger, and pierce keep going. */
   projectileHitsWall(p, prevX, prevY, time) {
     if (!p || p.dead || p.pinned || p.stuck || !p.gfx) return false;
-    if (p.move?.pierce || p.move?.ricochet || p.move?.stageBounce || p.move?._ghost) return false;
+    if (!shotStoppedBySolid(p.move)) return false;
     if (p.armAt && time < p.armAt) return false;
     const solids = this._clipSolids || [];
     if (!solids.length) return false;
     const radius = p.radius ?? p.move?.projectileRadius ?? 12;
     const wall = segmentHitsSolid(prevX, prevY, p.gfx.x, p.gfx.y, radius, solids, {
-      ignoreGround: !!(p.move?.roll || p.move?.floor),
+      ignoreGround: shotIgnoresGround(p.move),
     });
     if (!wall) return false;
     for (const victim of this.fighters) {
@@ -3321,7 +3323,7 @@ export default class BattleScene extends Phaser.Scene {
           }
           p._splitChild = true;
         }
-        if (!p.move.pierce && n >= want) {
+        if (shotRemovedOnFighter(p.move) && n >= want) {
           this.detonateProjectile(p);
           p.gfx.destroy();
           p.dead = true;

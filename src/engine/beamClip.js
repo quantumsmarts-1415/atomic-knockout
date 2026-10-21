@@ -1,5 +1,6 @@
-// Beams and projectiles stop at the first fighter hurtbox or solid.
-// `pierce` (default off) is the only flag that keeps traveling through both.
+// Beams stop at the first fighter hurtbox or solid. A beam `pierce` flag
+// (default off) keeps the full length. Projectile fate is `shotEnd`
+// (despawn, stick, linger, pierce): only despawn pops on a wall.
 // Horizontal beams ignore ground slabs so a chest shot over an island is not
 // cut to nothing. Pillars (solids with a height) always block. A downward
 // aim also stops on the ground volume.

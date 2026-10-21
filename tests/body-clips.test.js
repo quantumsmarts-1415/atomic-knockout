@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -661,6 +661,33 @@ test('Mendel and Neptune keep their hands, and the trident leaves the fist', () 
   assert.equal(swingFrameIndex(0.375, trident.swing, 8), 3);
   assert.equal(swingFrameIndex(0.75, trident.swing, 8), 4);
   assert.equal(swingFrameIndex(1, trident.swing, 8), 5);
+});
+
+test('Niko keeps his hands, and Rising Sun releases on the palm', () => {
+  const sun = CHARACTERS.niko.art.sheets.clips['body-basicCharge'];
+  const sunMeta = sheetMeta('niko', 'body-basicCharge');
+  assert.equal(sun.file, 'niko_rising-sun.png');
+  assert.deepEqual(sunMeta.active, [5, 6]);
+  assert.deepEqual(sunMeta.loop, [0, 4]);
+  assert.equal(sunMeta.release, 5);
+
+  const combo = CHARACTERS.niko.art.sheets.clips['body-basicDirectional'];
+  const comboMeta = sheetMeta('niko', 'body-basicDirectional');
+  assert.equal(combo.file, 'niko_three-atom-combo.png');
+  assert.deepEqual(comboMeta.active, [1, 6]);
+  assert.ok(comboMeta.anchors.fist[1][0] > combo.frameW - 70, comboMeta.anchors.fist[1][0]);
+  assert.ok(comboMeta.anchors.fist[6][0] > combo.frameW - 16, comboMeta.anchors.fist[6][0]);
+
+  const wait = sheetMeta('niko', 'body-specialDefense');
+  assert.equal(CHARACTERS.niko.art.sheets.clips['body-specialDefense'].file, 'niko_nine-year-wait.png');
+  assert.deepEqual(wait.loop, [4, 5]);
+  assert.ok(wait.anchors.fist[4][0] > CHARACTERS.niko.art.sheets.clips['body-specialDefense'].frameW - 30);
+
+  const beam = CHARACTERS.niko.art.sheets.clips['body-specialDirectional'];
+  const beamMeta = sheetMeta('niko', 'body-specialDirectional');
+  assert.equal(beam.file, 'niko_zinc-ion-beam.png');
+  assert.equal(beamMeta.release, 4);
+  assert.ok(beamMeta.anchors.fist[4][0] > beam.frameW - 30, beamMeta.anchors.fist[4][0]);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

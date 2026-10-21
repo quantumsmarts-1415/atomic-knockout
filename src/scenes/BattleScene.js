@@ -2589,8 +2589,8 @@ export default class BattleScene extends Phaser.Scene {
         f.input.left = ai.left;
         f.input.right = ai.right;
         f.input.jump = ai.jump;
-        // Nav bots hold down briefly to drop through a platform. The scripted
-        // offense in BotAI clears it again while a charge or defense is held.
+        // Down is held for the whole drop, including the scripted charge, so a
+        // one-way platform cannot catch the bot on the next frame.
         f.input.down = !!ai.down;
         f.input.attack = ai.attack;
         f.input.special = ai.special;

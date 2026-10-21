@@ -75,7 +75,11 @@ export function computeBotInput(time, bot, fighters, bounds, nav = null) {
   // Side platforms are one-way. If the opponent is on the floor below,
   // drop back down instead of camping where short moves cannot reach.
   // Down does not fall through the solid stage, so this is a no-op there.
-  if (grounded && target.y > bot.y + 100) {
+  // The platform only stays open while down is held. Releasing it the frame
+  // the feet leave the surface lets the platform catch the bot again, so a
+  // heavy who cannot jump the gap never gets a knockout.
+  if (grounded && target.y > bot.y + 100) ai.dropUntil = time + DROP_HOLD_MS;
+  if (time < (ai.dropUntil ?? 0)) {
     input.down = true;
     input.jump = false;
   }
@@ -88,6 +92,9 @@ export function computeBotInput(time, bot, fighters, bounds, nav = null) {
 const ATTACK_DY = 90;   // only swing when the target is about level with you
 const STUCK_MS = 3500;  // same edge this long without progress -> ban it
 const BAN_MS = 6000;
+// Long enough for the lightest fall to clear an 18px platform. Shorter, and
+// the one-way surface reseats the bot before the feet are through.
+const DROP_HOLD_MS = 360;
 
 function navBotInput(time, bot, targets, nav) {
   const input = { left: false, right: false, jump: false, attack: false, special: false, down: false };
@@ -409,11 +416,12 @@ function chargeShouldRelease(bot, time) {
 
 function applyScriptedSlots(time, bot, input) {
   const t = time % SLOT_CYCLE;
+  const dropping = time < (bot._ai?.dropUntil ?? 0);
   const neutral = () => {
     input.left = false;
     input.right = false;
     input.jump = false;
-    input.down = false;
+    if (!dropping) input.down = false;
   };
   if (chargeMustFinish(bot, time)) {
     neutral();
@@ -450,6 +458,12 @@ function applyScriptedSlots(time, bot, input) {
     neutral();
     input.attack = false;
     input.special = false;
+  }
+  // A charge or a block used to release down and put the bot back on the
+  // platform. Keep the drop until the feet are through.
+  if (dropping) {
+    input.down = true;
+    input.jump = false;
   }
   return input;
 }

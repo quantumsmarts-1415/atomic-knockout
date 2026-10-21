@@ -316,6 +316,34 @@ function fakeFighter(charId, x, y, { grounded = true, vy = 0 } = {}) {
   };
 }
 
+test('a bot above an opponent keeps dropping after their feet leave the platform', () => {
+  const foe = fakeFighter('ruth', 700, 560);
+  const bounds = { minX: 145, maxX: 1135 };
+  const bot = fakeFighter('maggie', 640, 370);
+  bot.scene = { rng: () => 0.5 };
+  const grounded = computeBotInput(1000, bot, [bot, foe], bounds);
+  assert.strictEqual(grounded.down, true);
+  assert.strictEqual(grounded.jump, false);
+  // One grounded frame used to sink a fraction of a pixel. The next frame
+  // was airborne, so down released and the platform caught them again.
+  bot.body.blocked.down = false;
+  bot.y = 372;
+  const falling = computeBotInput(1016, bot, [bot, foe], bounds);
+  assert.strictEqual(falling.down, true);
+  assert.strictEqual(falling.jump, false);
+  const camper = fakeFighter('maggie', 640, 370);
+  camper.scene = { rng: () => 0.5 };
+  const started = computeBotInput(2800, camper, [camper, foe], bounds);
+  assert.strictEqual(started.down, true);
+  camper.body.blocked.down = false;
+  camper.y = 372;
+  const throughCharge = computeBotInput(3000, camper, [camper, foe], bounds);
+  assert.strictEqual(throughCharge.down, true, 'scripted charge must not reseat the drop');
+  camper._ai.dropUntil = 1000;
+  const done = computeBotInput(4000, camper, [camper, foe], bounds);
+  assert.strictEqual(!!done.down, false);
+});
+
 test('big-stage CPU: a tank heads for the lift to reach the summit; nobody walks into the void', () => {
   const st = STAGES.find((s) => s.id === 'carbon-skyhook');
   const nav = buildNavGraph(st);

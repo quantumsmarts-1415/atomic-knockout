@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'agatha', 'amy', 'aurelius', 'barry', 'bianca', 'boar', 'brock', 'burke', 'caesar', 'cali', 'ceres', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'uri', 'wolf'];
+const FIGHTERS = ['ace', 'agatha', 'amy', 'aurelius', 'barry', 'bianca', 'boar', 'brock', 'burke', 'caesar', 'cali', 'ceres', 'cody', 'collin', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'uri', 'wolf'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -1105,6 +1105,19 @@ test('Sarge, Talia, Tara, Tate, Uri, and Wolf keep their own soles and wide Wolf
     assert.ok(png.width <= 8192 && png.height <= 8192, clip.file);
     assert.ok((png.width / clip.frameW) * (png.height / clip.frameH) >= clip.count, clip.file);
   }
+});
+
+test('Cody and Collin keep their sheets, and Kobold Strike does not add a code slide', () => {
+  const rod = sheetMeta('cody', 'body-specialDefense');
+  assert.equal(CHARACTERS.cody.art.sheets.clips['body-specialDefense'].file, 'cody_control-rod.png');
+  assert.deepEqual(rod.loop, [3, 4]);
+  const strike = CHARACTERS.collin.moves.basicDirectional;
+  assert.equal(strike.dashSpeed, 460);
+  const meta = sheetMeta('collin', 'body-basicDirectional');
+  assert.equal(CHARACTERS.collin.art.sheets.clips['body-basicDirectional'].file, 'collin_kobold-strike.png');
+  assert.equal(meta.slide, 0);
+  const shell = sheetMeta('collin', 'body-specialDefense');
+  assert.deepEqual(shell.loop, [3, 5]);
 });
 
 test('Caesar dashes from the sheet, and Ceria Polish plays the catalytic burn', () => {

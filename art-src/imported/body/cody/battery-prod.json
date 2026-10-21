@@ -1,0 +1,197 @@
+{
+ "name": "cody",
+ "move": "battery-prod",
+ "method": "video",
+ "source": "fx-art/_flow/b8/clips/625f_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
+ "frameW": 592,
+ "frameH": 628,
+ "idle_cell_w": 555,
+ "idle_cell_h": 611,
+ "pad_top": 17,
+ "pad_left": 0,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14,
+ "loop": false,
+ "foot_row": 610,
+ "footY": 0.9713,
+ "visibleH": 569,
+ "scale": 1.13121,
+ "strike_frames": [
+  4,
+  5
+ ],
+ "strike_hand_xy": {
+  "4": [
+   587,
+   164
+  ],
+  "5": [
+   585,
+   166
+  ]
+ },
+ "strike_reach_xy": {
+  "4": [
+   589,
+   164
+  ],
+  "5": [
+   585,
+   165
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    40,
+    610,
+    13,
+    411
+   ],
+   "foot": 610,
+   "front_hand_xy": [
+    411,
+    225
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    40,
+    610,
+    13,
+    388
+   ],
+   "foot": 610,
+   "front_hand_xy": [
+    365,
+    238
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 28,
+   "bbox": [
+    40,
+    610,
+    13,
+    406
+   ],
+   "foot": 610,
+   "front_hand_xy": [
+    406,
+    225
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    59,
+    610,
+    13,
+    547
+   ],
+   "foot": 610,
+   "front_hand_xy": [
+    546,
+    169
+   ],
+   "removed_detached_px": 3584,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 46,
+   "bbox": [
+    63,
+    610,
+    13,
+    589
+   ],
+   "foot": 610,
+   "front_hand_xy": [
+    587,
+    164
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    61,
+    610,
+    13,
+    585
+   ],
+   "foot": 610,
+   "front_hand_xy": [
+    585,
+    166
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 82,
+   "bbox": [
+    49,
+    610,
+    11,
+    436
+   ],
+   "foot": 610,
+   "front_hand_xy": [
+    436,
+    227
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 136,
+   "bbox": [
+    40,
+    610,
+    13,
+    411
+   ],
+   "foot": 610,
+   "front_hand_xy": [
+    411,
+    228
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   610,
+   610,
+   610,
+   610,
+   610,
+   610,
+   610,
+   610
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false
+ }
+}

@@ -1265,13 +1265,10 @@ test('dizzy kits follow the approved brief', () => {
   assert.strictEqual(flash.beamCap, 1100);
   assert.ok(flash.beamLen < flash.beamCap);
   assert.strictEqual(flash.onHit.stun, 1000);
-  assert.strictEqual(flash.stunChance, 0.5);
+  assert.strictEqual(flash.stunChance, 1);
   const stunned = {};
-  applyOnHit({ charDef: { id: 'dizzy' }, scene: { rng: () => 0 } }, stunned, flash, 1000);
+  applyOnHit({ charDef: { id: 'dizzy' }, scene: { rng: () => 0.99 } }, stunned, flash, 1000);
   assert.strictEqual(stunned.lockedUntil, 2000);
-  const whiff = {};
-  applyOnHit({ charDef: { id: 'dizzy' }, scene: { rng: () => 0.9 } }, whiff, flash, 1000);
-  assert.strictEqual(whiff.lockedUntil, undefined);
   assert.strictEqual(stunned.clingFrom.move, 'Stage Light Flash');
   assert.strictEqual(stunned.clingFrom.until, 2000);
 });

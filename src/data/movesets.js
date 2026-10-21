@@ -1164,7 +1164,7 @@ export const MOVESETS = {
     specialDirectional: m('Stage Light Flash', {
       kind: 'beam', type: H, damage: 8, aimStick: true,
       beamLen: 480, beamThick: 40, beamCap: 1100, beamArtPx: 1100,
-      onHit: { stun: 1000 }, stunChance: 0.5,
+      onHit: { stun: 1000 }, stunChance: 1,
       vfx: 'laser', vfxColor: 0xfff2c4,
       baseKnockback: 70, knockbackGrowth: 1.15, duration: 220, cooldown: 780,
     }),

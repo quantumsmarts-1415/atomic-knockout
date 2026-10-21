@@ -675,6 +675,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     scale: extra.scale > 0 ? extra.scale : 1,
     scaleWith: extra.scaleWith || null,
     anchor: extra.anchor || null,
+    swing: Array.isArray(extra.swing) && extra.swing.length >= 2 ? [extra.swing[0] | 0, extra.swing[1] | 0] : null,
     loop: !!extra.loop,
     hit: extra.hit !== false,
     flicker: !!extra.flicker,
@@ -1324,6 +1325,7 @@ async function loadMoveArt(scene, char, slot, move, index) {
     scale: meta.scale,
     scaleWith: meta.scaleWith || null,
     anchor: meta.anchor || null,
+    swing: Array.isArray(meta.swing) ? meta.swing : null,
     loop: !!meta.loop,
     hit: meta.hit !== false,
     aim: meta.aim !== false,
@@ -3542,11 +3544,14 @@ export function syncFxActors(scene) {
       let frame;
       if (art.comboFrames && fighter._comboStep) {
         frame = frames[Math.min(frames.length - 1, Math.max(0, (fighter._comboStep | 0) - 1))];
-      } else if (art.anchor === 'contact' || (art.anchor === 'fist' && !art.timed)) {
+      } else if (art.swing || art.anchor === 'contact' || (art.anchor === 'fist' && !art.timed)) {
         const start = fighter.frameData?.startup ?? 0;
         const active = Math.max(1, fighter.frameData?.active ?? 1);
-        const along = Math.max(0, (fighter.attackFrame ?? 0) - start) / active;
-        frame = frames[Math.min(frames.length - 1, Math.floor(along * frames.length))];
+        const along = Math.max(0, ((fighter.attackFrame ?? 0) - start) / active);
+        const index = art.swing
+          ? swingFrameIndex(along, art.swing, frames.length)
+          : Math.min(frames.length - 1, Math.floor(Math.max(0, along) * frames.length));
+        frame = frames[index];
       } else if (art.anchor === 'shoulder') {
         const meta = sheetMeta(fighter?.charDef?.id, fighter?.rig?.sheetClip);
         const index = shoulderWhipIndex(fighter?.rig?.sheetFrame, meta?.active, frames.length);
@@ -4192,6 +4197,16 @@ export function spawnContactFx(scene, attacker, victim, move) {
 
 /** The lash sheet opens as a stub and the crack is out by frame 4.
  *  A straight-arm thrust should show that crack, not the wrapped stub. */
+/** Play a slice of a thrust sheet across the active window.
+ *  The early stub and the empty tail stay off the strike. */
+export function swingFrameIndex(along, swing, frameCount) {
+  const n = Math.max(1, frameCount | 0);
+  const t = Math.max(0, Math.min(1, Number(along) || 0));
+  const from = Math.max(0, Math.min(n - 1, swing?.[0] | 0));
+  const to = Math.max(0, Math.min(n - 1, swing?.[1] ?? (n - 1)));
+  return from + Math.round(t * (to - from));
+}
+
 export function shoulderWhipIndex(sheetFrame, active, frameCount) {
   const n = Math.max(1, frameCount | 0);
   if (!active || !(active[1] > active[0]) || n < 2) {

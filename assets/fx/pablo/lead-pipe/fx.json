@@ -11,6 +11,7 @@
   "heightFrac": 0.72,
   "pivotX": 0.5,
   "pivotY": 0.5,
+  "anchor": "fist",
   "flip": true,
   "hit": false,
   "fist": {

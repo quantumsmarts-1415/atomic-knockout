@@ -7,7 +7,7 @@ import { applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, f
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
 import { armGeyser, artFor, fxAnchor, groundTop, hitAnchor, playRetortPulse, reverseFrameOrder, spawnFxSprite, spawnMeteor, spawnMoveExtra, spawnReplayGhost, surgeBeamScale } from './fxArt.js';
-import { clipNameForMove, sheetMeta } from './moveSheet.js';
+import { clipNameForMove, sheetMeta, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
 
@@ -510,6 +510,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (inp.right) vx += speed;
       if (this.rootedUntil > time) vx = 0;
       if (this.state === 'attack' && onGround) vx *= 0.25; // plant feet on ground attacks
+      // Shotgun's clip has no jolt, so a short backward slide sells the kick.
+      if ((this._recoilUntil ?? 0) > time && this._recoilVX != null) vx = this._recoilVX;
       if (this.dashUntil && time < this.dashUntil) {
         const weave = this.currentMove?.weaveEvery;
         if (weave && this.attackFrame && this.attackFrame % weave === 0 && this._weavedAt !== this.attackFrame) {
@@ -1263,9 +1265,21 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
     }
     if (move.zone && move.kind !== 'zone') {
-      const zx = this.x + this.facing * (move.offsetX ?? 0);
-      const zy = this.y - this.bodyH * (move.zone.low ? 0.2 : 0.45);
-      this.scene.spawnZone?.(this, move.zone, zx, zy);
+      const placeZone = () => {
+        // The blow is two frames. The vapour is the cloud, and it leaves the mouth.
+        const mouth = move.name === 'Tetroxide Puff' ? sheetReleasePoint(this, 'shot') : null;
+        const zx = mouth?.x ?? (this.x + this.facing * (move.offsetX ?? 0));
+        const zy = mouth?.y ?? (this.y - this.bodyH * (move.zone.low ? 0.2 : 0.45));
+        this.scene.spawnZone?.(this, move.zone, zx, zy);
+      };
+      if (move.name === 'Tetroxide Puff' && this.scene?.time?.delayedCall) {
+        const delay = (this.frameData?.startup ?? 1) * (this.scene.stepMs || 16);
+        this.scene.time.delayedCall(delay, () => {
+          if (this.state === 'attack' && this.alive) placeZone();
+        });
+      } else {
+        placeZone();
+      }
     }
     if (move.also && move.kind !== 'projectile') {
       const extra = { ...move.also, name: move.also.name ?? move.name, delayMs: 0 };

@@ -1222,8 +1222,12 @@ export const MOVESETS = {
       maxChargeMs: 900, radius: 58, vfx: 'spark', vfxColor: 0xf0d24a,
       baseKnockback: 120, knockbackGrowth: 1.7, duration: 280, cooldown: 1000,
     }),
-    basicDirectional: melee('Fuel Rod Jab', {
-      type: K, damage: 6, type2: R, damage2: 4, rangeW: 80, vfx: 'spark',
+    basicDirectional: melee('Fuel Rod Hammer', {
+      // The sheet file stays fuel-rod-jab. The swing raises the hammer, then
+      // the short hit is the downward strike.
+      sourceSlug: 'fuel-rod-jab',
+      type: K, damage: 6, type2: R, damage2: 4, rangeW: 62, rangeH: 64,
+      startupF: 7, activeF: 3, vfx: 'spark',
       baseKnockback: 100, knockbackGrowth: 1.5, duration: 200, cooldown: 480,
     }),
     specialDefense: m('Breeder Blanket', {

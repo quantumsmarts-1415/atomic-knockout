@@ -5,7 +5,7 @@ import { PNG } from 'pngjs';
 import { CHARACTERS } from '../src/data/characters.js';
 import { MOVE_SHEETS } from '../src/data/moveSheets.js';
 import { artIsUpdated } from '../src/data/updatedArt.js';
-import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
+import { bodySourceSlug, hasBodyClips, moveBodySlug } from '../src/data/bodyClips.js';
 import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
@@ -43,7 +43,7 @@ test('per-move body clips keep the idle height and the json foot line', () => {
     for (const file of readdirSync(dir).filter((name) => name.endsWith('.json'))) {
       const json = JSON.parse(readFileSync(`${dir}/${file}`, 'utf8'));
       const moveKey = Object.keys(CHARACTERS[id].moves).find((key) => {
-        return bodySourceSlug(id, CHARACTERS[id].moves[key]?.name) === json.move;
+        return moveBodySlug(id, CHARACTERS[id].moves[key]) === json.move;
       });
       assert.ok(moveKey, `${id} ${json.move}`);
       const clipKey = clipNameForMove(id, moveKey);
@@ -1039,16 +1039,18 @@ test('Roger points from the sheet hand, and the hook arc covers the short punch'
   assert.ok(creepMeta.anchors.fist[5][1] < 500);
 });
 
-test('Thor jabs from the shortened handle, and Thule aims with an empty hand', () => {
-  const jab = CHARACTERS.thor.art.sheets.clips['body-basicDirectional'];
-  const jabMeta = sheetMeta('thor', 'body-basicDirectional');
-  assert.equal(jab.file, 'thor_fuel-rod-jab.png');
-  assert.equal(jab.frameW, 609);
-  assert.equal(jab.frameH, 708);
-  assert.equal(Math.round(jab.footY * jab.frameH) - 1, 689);
-  assert.equal(jabMeta.release, 3);
-  assert.deepEqual(jabMeta.active, [3, 5]);
-  assert.deepEqual(jabMeta.anchors.fist[3], [605, 272]);
+test('Thor hammers overhead, and Thule aims with an empty hand', () => {
+  const hammerStrike = CHARACTERS.thor.art.sheets.clips['body-basicDirectional'];
+  const hammerStrikeMeta = sheetMeta('thor', 'body-basicDirectional');
+  assert.equal(hammerStrike.file, 'thor_fuel-rod-jab.png');
+  assert.equal(moveBodySlug('thor', CHARACTERS.thor.moves.basicDirectional), 'fuel-rod-jab');
+  assert.equal(hammerStrike.frameW, 741);
+  assert.equal(hammerStrike.frameH, 729);
+  assert.equal(Math.round(hammerStrike.footY * hammerStrike.frameH) - 1, 710);
+  assert.equal(hammerStrikeMeta.release, 5);
+  assert.deepEqual(hammerStrikeMeta.active, [5, 6]);
+  assert.deepEqual(hammerStrikeMeta.anchors.fist[5], [702, 499]);
+  assert.deepEqual(hammerStrikeMeta.anchors.fist[6], [725, 482]);
   const hammer = sheetMeta('thor', 'body-basicCharge');
   assert.equal(CHARACTERS.thor.art.sheets.clips['body-basicCharge'].file, 'thor_thunder-hammer.png');
   assert.deepEqual(hammer.loop, [0, 3]);

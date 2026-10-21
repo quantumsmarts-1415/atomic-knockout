@@ -1971,11 +1971,16 @@ test('thor, boar, and dash keep the approved batch rules', () => {
   assert.equal(thor.basicCharge.type, 'kinetic');
   assert.equal(thor.basicCharge.type2, 'electrical');
   assert.equal(thor.basicCharge.radius, 58);
-  assert.equal(thor.basicDirectional.name, 'Fuel Rod Jab');
+  assert.equal(thor.basicDirectional.name, 'Fuel Rod Hammer');
+  assert.equal(thor.basicDirectional.sourceSlug, 'fuel-rod-jab');
   assert.equal(thor.basicDirectional.type, 'kinetic');
   assert.equal(thor.basicDirectional.type2, 'radiation');
   assert.equal(thor.basicDirectional.damage, 6);
   assert.equal(thor.basicDirectional.damage2, 4);
+  assert.equal(thor.basicDirectional.startupF, 7);
+  assert.equal(thor.basicDirectional.activeF, 3);
+  assert.equal(thor.basicDirectional.rangeW, 62);
+  assert.equal(thor.basicDirectional.rangeH, 64);
   assert.equal(thor.basicDirectional.onHit, undefined);
   assert.equal(thor.specialDefense.immune[0], 'radiation');
   assert.equal(thor.specialDefense.surgeFrom, 'radiation');

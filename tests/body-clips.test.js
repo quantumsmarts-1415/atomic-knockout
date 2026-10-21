@@ -9,7 +9,7 @@ import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
 import { guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -264,6 +264,45 @@ test('Heavy Ion Bolt leaves the braced palm, and Half-Life Sprint stays under th
   assert.equal(png.height, 1222);
   const kick = sheetMeta('dash', 'body-basicDirectional');
   assert.equal(kick.slide, CHARACTERS.dash.moves.basicDirectional.dashSpeed);
+});
+
+test('Chicago Pile is a swappable sheet, and Fermi\'s other moves keep their hands', () => {
+  const pile = CHARACTERS.fermi.art.sheets.clips['body-basicCharge'];
+  const pileMeta = sheetMeta('fermi', 'body-basicCharge');
+  assert.equal(pile.file, 'fermi_chicago-pile.png');
+  assert.deepEqual(pileMeta.loop, [0, 1]);
+  assert.deepEqual(pileMeta.active, [2, 5]);
+  assert.deepEqual(pileMeta.anchors.fist[2], [441, 403]);
+  assert.deepEqual(pileMeta.anchors.fist[5], [512, 292]);
+  const stack = frameToWorld(
+    pileMeta.anchors.fist[3], pile.frameW, pile.frameH, pile.footY, pile.displayScale, 1, 1, 0, 0,
+  );
+  assert.ok(stack.x > 40, stack.x);
+  assert.ok(stack.y < -40 && stack.y > -80, stack.y);
+
+  const punch = CHARACTERS.fermi.art.sheets.clips['body-basicDirectional'];
+  const punchMeta = sheetMeta('fermi', 'body-basicDirectional');
+  assert.equal(punch.file, 'fermi_slow-neutron-punch.png');
+  assert.ok(punchMeta.anchors.fist[3][0] > punch.frameW - 12, punchMeta.anchors.fist[3][0]);
+  const fist = frameToWorld(
+    punchMeta.anchors.fist[3], punch.frameW, punch.frameH, punch.footY, punch.displayScale, 1, 1, 0, 0,
+  );
+  assert.ok(fist.x > 70, fist.x);
+  assert.ok(fist.y < -80, fist.y);
+
+  const zone = sheetMeta('fermi', 'body-specialDefense');
+  assert.equal(CHARACTERS.fermi.art.sheets.clips['body-specialDefense'].file, 'fermi_exclusion-zone.png');
+  assert.deepEqual(zone.loop, [2, 5]);
+  assert.equal(zone.blendIdle, undefined);
+  assert.equal(sheetFrameIndex(zone, { state: 'defending', animT: 0, fd: null }), zone.active[0]);
+
+  const signal = CHARACTERS.fermi.art.sheets.clips['body-specialDirectional'];
+  const signalMeta = sheetMeta('fermi', 'body-specialDirectional');
+  assert.equal(signal.file, 'fermi_fermi-paradox.png');
+  const raised = frameToWorld(
+    signalMeta.anchors.fist[3], signal.frameW, signal.frameH, signal.footY, signal.displayScale, 1, 1, 0, 0,
+  );
+  assert.ok(raised.y < fist.y, raised.y);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

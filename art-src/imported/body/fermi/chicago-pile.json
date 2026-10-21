@@ -1,0 +1,232 @@
+{
+ "name": "fermi",
+ "move": "chicago-pile",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/428b.mp4 (stream 0)",
+ "frameW": 521,
+ "frameH": 634,
+ "idle_cell_w": 605,
+ "idle_anchor_x": 262.5,
+ "width_mode": "cell",
+ "pad_top": 23,
+ "idle_cell_h": 611,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9685,
+ "foot_row": 614,
+ "visibleH": 599,
+ "scale": 1.1497,
+ "offset": [
+  -269.2,
+  -159.8
+ ],
+ "strike_hand_xy": {
+  "2": [
+   441,
+   403
+  ],
+  "3": [
+   515,
+   362
+  ],
+  "4": [
+   510,
+   347
+  ],
+  "5": [
+   512,
+   292
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    37,
+    614,
+    37,
+    395
+   ],
+   "foot": 614,
+   "front_hand_xy": [
+    370,
+    301
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 7,
+   "bbox": [
+    102,
+    614,
+    37,
+    446
+   ],
+   "foot": 614,
+   "front_hand_xy": [
+    445,
+    380
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 3966,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    150,
+    614,
+    39,
+    490
+   ],
+   "foot": 614,
+   "front_hand_xy": [
+    441,
+    403
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    143,
+    614,
+    39,
+    517
+   ],
+   "foot": 614,
+   "front_hand_xy": [
+    515,
+    362
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    127,
+    614,
+    39,
+    494
+   ],
+   "foot": 614,
+   "front_hand_xy": [
+    510,
+    347
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    111,
+    614,
+    39,
+    500
+   ],
+   "foot": 614,
+   "front_hand_xy": [
+    512,
+    292
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    5,
+    614,
+    16,
+    423
+   ],
+   "foot": 614,
+   "front_hand_xy": [
+    369,
+    193
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 15418,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    5,
+    614,
+    18,
+    434
+   ],
+   "foot": 614,
+   "front_hand_xy": [
+    362,
+    275
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 18159,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   614,
+   614,
+   614,
+   614,
+   614,
+   614,
+   614,
+   614
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Crouched stacking motions (f3-f6). Grok invented a stack of grey blocks that grows under his hands and stays to the end, plus a stray punch at src ~115-121 (skipped). The stack is removed by hand (detached at the ends; cut under the hands in f3-f6), but faint wisps may remain at the fingertips, and his hands rest on nothing. Redo suggested: stacking motions in empty air, no blocks or objects appear.",
+  "redo_candidate": true,
+  "first_frame_start_mad": 2.0,
+  "src_picks": "1,7,19,37,61,79,97,145"
+ },
+ "strike_frames": [
+  2,
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "2": [
+   490,
+   426
+  ],
+  "3": [
+   517,
+   362
+  ],
+  "4": [
+   494,
+   290
+  ],
+  "5": [
+   500,
+   257
+  ]
+ }
+}

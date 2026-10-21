@@ -4,7 +4,7 @@
 // loaded image, packed on the same 5 px grid as body masks.
 
 import { effectBox, fxFolder, moveSlug, objectTypeOf } from '../data/attackFx.js';
-import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
+import { sheetDrawsWeapon, sheetFxPoint, sheetMeta, sheetReleasePoint } from './moveSheet.js';
 import { clampToBody, fxPlacementHits } from './boxes.js';
 import { coatSpec } from './coat.js';
 
@@ -2507,6 +2507,16 @@ function cropTrailHead(img, frac) {
   img.setCrop(tw - w, 0, w, th);
 }
 
+/** The hafnium disc is painted out of Neutron Sink, so the FX copy stays in
+ *  the hand until the release frame, then the projectile is the disc. */
+export function handPropHeld(fighter) {
+  if (fighter?.charDef?.id !== 'haley') return true;
+  if ((fighter.currentMoveKey || fighter.rig?.moveKey) !== 'specialDirectional') return true;
+  const meta = sheetMeta('haley', fighter.rig?.sheetClip || 'body-specialDirectional');
+  if (meta?.release == null) return true;
+  return (fighter.rig?.sheetFrame ?? 0) < meta.release;
+}
+
 function attachedWant(scene, fighter) {
   const now = scene.simNow ?? 0;
   if (fighter.state === 'defending' && fighter.defenseMove) {
@@ -2531,7 +2541,7 @@ function attachedWant(scene, fighter) {
     if (swinging?.motor?.frames?.length) {
       return { art: swinging.motor, sparks: swinging.spark, kind: 'motor', elapsed: now };
     }
-    if (swinging?.fist?.frames?.length) {
+    if (swinging?.fist?.frames?.length && handPropHeld(fighter)) {
       return { art: swinging.fist, kind: 'fist', elapsed: now };
     }
     if (swinging?.unit?.frames?.length) {

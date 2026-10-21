@@ -1,0 +1,215 @@
+{
+ "name": "holly",
+ "move": "calibration-strike",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/453b.mp4 (stream 0)",
+ "frameW": 679,
+ "frameH": 678,
+ "idle_cell_w": 571,
+ "idle_anchor_x": 251.5,
+ "width_mode": "cell",
+ "pad_top": 77,
+ "idle_cell_h": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.972,
+ "foot_row": 659,
+ "visibleH": 644,
+ "scale": 1.13174,
+ "offset": [
+  -224.4,
+  -157.0
+ ],
+ "strike_hand_xy": {
+  "5": [
+   675,
+   241
+  ],
+  "6": [
+   676,
+   229
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    91,
+    659,
+    84,
+    423
+   ],
+   "foot": 659,
+   "front_hand_xy": [
+    423,
+    400
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    89,
+    659,
+    2,
+    371
+   ],
+   "foot": 659,
+   "front_hand_xy": [
+    339,
+    396
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    11,
+    659,
+    88,
+    371
+   ],
+   "foot": 659,
+   "front_hand_xy": [
+    353,
+    358
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    109,
+    659,
+    27,
+    418
+   ],
+   "foot": 659,
+   "front_hand_xy": [
+    418,
+    388
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    118,
+    659,
+    99,
+    452
+   ],
+   "foot": 659,
+   "front_hand_xy": [
+    420,
+    200
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    116,
+    659,
+    111,
+    676
+   ],
+   "foot": 659,
+   "front_hand_xy": [
+    675,
+    241
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    114,
+    659,
+    111,
+    676
+   ],
+   "foot": 659,
+   "front_hand_xy": [
+    676,
+    229
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    84,
+    659,
+    90,
+    371
+   ],
+   "foot": 659,
+   "front_hand_xy": [
+    296,
+    310
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   659,
+   659,
+   659,
+   659,
+   659,
+   659,
+   659,
+   659
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Grok made a swing instead of a precise straight strike: the weight goes back, up overhead (f3), then forward to full extension (f6-f7). It reads like a strike but is bigger and less controlled than the brief. Usable.",
+  "redo_candidate": false,
+  "minor_issue": true,
+  "first_frame_start_mad": 2.15,
+  "src_picks": "1,19,31,55,61,73,85,145"
+ },
+ "strike_frames": [
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "5": [
+   676,
+   241
+  ],
+  "6": [
+   676,
+   228
+  ]
+ }
+}

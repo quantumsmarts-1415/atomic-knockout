@@ -10,6 +10,18 @@
   "aim": false,
   "spin": 18.8496,
   "hit": false,
+  "fist": {
+    "file": "hafnium-disc.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.42,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "anchor": "hand",
+    "hit": false
+  },
   "cling": {
     "file": "neutron-sink-suppressed-status-anim.png",
     "frames": 24,

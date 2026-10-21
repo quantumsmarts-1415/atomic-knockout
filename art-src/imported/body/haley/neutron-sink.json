@@ -1,0 +1,215 @@
+{
+ "name": "haley",
+ "move": "neutron-sink",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/447b.mp4 (stream 0)",
+ "frameW": 703,
+ "frameH": 598,
+ "idle_cell_w": 588,
+ "idle_anchor_x": 283.0,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 598,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9682,
+ "foot_row": 579,
+ "visibleH": 564,
+ "scale": 1.12127,
+ "offset": [
+  -190.7,
+  -162.2
+ ],
+ "strike_hand_xy": {
+  "4": [
+   633,
+   244
+  ],
+  "5": [
+   683,
+   151
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    579,
+    114,
+    432
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    409,
+    211
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    17,
+    579,
+    78,
+    432
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    391,
+    223
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    21,
+    579,
+    40,
+    432
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    400,
+    219
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    35,
+    579,
+    93,
+    432
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    411,
+    221
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    44,
+    579,
+    102,
+    633
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    699,
+    262
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    33,
+    579,
+    114,
+    683
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    682,
+    151
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 2553,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    31,
+    579,
+    111,
+    629
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    628,
+    154
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 52,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    15,
+    579,
+    114,
+    432
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    411,
+    210
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   579,
+   579,
+   579,
+   579,
+   579,
+   579,
+   579,
+   579
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Sidearm throw: wind across the body (f2-f4), release (f5), then follow-through (f6). Grok drew a pale disc in her hand; it is painted out of f2-f5 per Silas, so her hand is empty throughout (~17k px removed). The FX layer supplies the disc. The original with the disc is in moves/_old/neutron-sink_withdisc.*",
+  "redo_candidate": false,
+  "minor_issue": false,
+  "first_frame_start_mad": 1.95,
+  "src_picks": "1,13,19,31,49,61,79,145"
+ },
+ "strike_frames": [
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "4": [
+   633,
+   244
+  ],
+  "5": [
+   683,
+   151
+  ]
+ }
+}

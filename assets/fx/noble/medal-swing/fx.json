@@ -8,10 +8,11 @@
   "blend": "additive",
   "black": true,
   "fit": "height",
-  "heightFrac": 1.15,
+  "heightFrac": 2.8,
   "oneshot": true,
   "flip": true,
   "anchor": "contact",
+  "swing": [2, 4],
   "pivotX": 0.16,
   "pivotY": 0.5,
   "fist": {

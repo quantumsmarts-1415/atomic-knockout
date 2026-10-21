@@ -1,0 +1,222 @@
+{
+ "name": "cali",
+ "move": "neutron-kickstart",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/400b.mp4 (stream 0)",
+ "frameW": 665,
+ "frameH": 600,
+ "idle_cell_w": 540,
+ "idle_anchor_x": 348.0,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 600,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 10.0,
+ "loop": false,
+ "footY": 0.9667,
+ "foot_row": 580,
+ "visibleH": 565,
+ "scale": 1.18449,
+ "offset": [
+  -332.5,
+  -295.3
+ ],
+ "strike_hand_xy": {
+  "4": [
+   459,
+   142
+  ],
+  "5": [
+   518,
+   130
+  ],
+  "6": [
+   399,
+   198
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    581,
+    144,
+    499
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    463,
+    219
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    67,
+    581,
+    146,
+    499
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    480,
+    211
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    98,
+    583,
+    149,
+    499
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    480,
+    226
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    44,
+    581,
+    153,
+    622
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    622,
+    127
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    46,
+    581,
+    33,
+    508
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    459,
+    142
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    51,
+    581,
+    2,
+    520
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    518,
+    130
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 115,
+   "bbox": [
+    39,
+    581,
+    144,
+    499
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    399,
+    198
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    15,
+    583,
+    144,
+    499
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    463,
+    221
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   581,
+   581,
+   583,
+   581,
+   581,
+   581,
+   581,
+   583
+  ],
+  "foot_spread_px": 2,
+  "any_out_edge": false,
+  "first_frame_start_mad": 2.0,
+  "notes": "Fists to chest, crouch, then arms out to the sides (f4-f6). She turns towards the camera during the burst (frontal at f4-f6), then back to profile. Feet 581-583.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  4,
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "4": [
+   508,
+   520
+  ],
+  "5": [
+   520,
+   123
+  ],
+  "6": [
+   499,
+   558
+  ]
+ }
+}

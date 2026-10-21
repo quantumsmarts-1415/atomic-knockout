@@ -1,0 +1,222 @@
+{
+ "name": "cali",
+ "move": "stunt-double",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/402b.mp4 (stream 0)",
+ "frameW": 540,
+ "frameH": 600,
+ "idle_cell_w": 540,
+ "idle_anchor_x": 223.0,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 600,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 10.0,
+ "loop": false,
+ "footY": 0.9667,
+ "foot_row": 580,
+ "visibleH": 565,
+ "scale": 0.97246,
+ "offset": [
+  -340.5,
+  -156.2
+ ],
+ "strike_hand_xy": {
+  "1": [
+   397,
+   215
+  ],
+  "2": [
+   396,
+   214
+  ],
+  "3": [
+   396,
+   214
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    581,
+    18,
+    372
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    337,
+    218
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    95,
+    581,
+    28,
+    403
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    397,
+    215
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    91,
+    581,
+    30,
+    396
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    396,
+    214
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    91,
+    581,
+    30,
+    396
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    396,
+    214
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    17,
+    581,
+    17,
+    372
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    325,
+    212
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    11,
+    581,
+    40,
+    357
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    339,
+    202
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 133,
+   "bbox": [
+    9,
+    583,
+    28,
+    368
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    304,
+    209
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    11,
+    581,
+    17,
+    372
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    320,
+    217
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   581,
+   581,
+   581,
+   581,
+   581,
+   581,
+   583,
+   581
+  ],
+  "foot_spread_px": 2,
+  "any_out_edge": false,
+  "first_frame_start_mad": 2.44,
+  "notes": "Duck with arms over head (f1-f3). Grok added a forward punch (src ~97-121), which is skipped. Clean otherwise.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  1,
+  2,
+  3
+ ],
+ "strike_reach_xy": {
+  "1": [
+   403,
+   98
+  ],
+  "2": [
+   396,
+   214
+  ],
+  "3": [
+   396,
+   214
+  ]
+ }
+}

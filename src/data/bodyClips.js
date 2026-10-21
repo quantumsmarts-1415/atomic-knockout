@@ -34,6 +34,16 @@ export function bodyClipName(id, moveKey) {
   return clipByMove.get(`${id}|${moveKey}`) || null;
 }
 
+/** Handoff slugs drop apostrophes. Surf's Up is surfs-up, not surf-s-up. */
+export function bodySourceSlug(id, moveName) {
+  const pack = BODY_SOURCES[id];
+  if (!pack || !moveName) return null;
+  const slug = moveSlug(moveName);
+  if (pack[slug]) return slug;
+  const folded = moveSlug(String(moveName).replace(/['’]/g, ''));
+  return pack[folded] ? folded : null;
+}
+
 export function bodySheetMeta(id, clip) {
   return metaByClip.get(`${id}|${clip}`) || null;
 }
@@ -109,12 +119,16 @@ export function installBodyClips(characters) {
     for (const moveKey of BODY_SLOTS) {
       const move = moves[moveKey];
       if (!move?.name) continue;
-      const src = bySlug[moveSlug(move.name)];
+      const slug = bodySourceSlug(id, move.name);
+      const src = slug ? bySlug[slug] : null;
       if (!src) continue;
       const built = compileBodyClip(src, artHeight);
       if (!built) continue;
       const clipKey = bodyClipKey(moveKey);
-      built.clip.file = `${id}_${moveSlug(move.name)}.png`;
+      built.clip.file = `${id}_${slug}.png`;
+      // A pinned-foot dash (Surf's Up) has no travel in the cell. The move's
+      // dash speed carries her forward for the whole clip.
+      if (move.kind === 'dash' && move.dashSpeed > 0) built.meta.slide = move.dashSpeed;
       if (moveKey === 'basicCharge') built.meta.loop = built.meta.windup;
       if (moveKey === 'specialDefense') {
         built.meta.gather = true;

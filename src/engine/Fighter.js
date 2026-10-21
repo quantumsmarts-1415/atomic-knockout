@@ -1237,7 +1237,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
           this._gliding = true;
           if (this.body) this.body.allowGravity = false;
         } else {
-          this.dashVX = this.facing * (move.dashSpeed ?? 500);
+          // A pinned-foot body clip (Surf's Up) stores the travel on the sheet.
+          // The cell stays put; this velocity is what carries her forward.
+          const speed = sheet?.slide || move.dashSpeed || 500;
+          this.dashVX = this.facing * speed;
           this.dashVY = 0;
           this._gliding = false;
         }

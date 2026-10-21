@@ -5,10 +5,10 @@ import { PNG } from 'pngjs';
 import { CHARACTERS } from '../src/data/characters.js';
 import { MOVE_SHEETS } from '../src/data/moveSheets.js';
 import { artIsUpdated } from '../src/data/updatedArt.js';
-import { hasBodyClips } from '../src/data/bodyClips.js';
+import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
 import { clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'cali'];
 
 function worldH(art, def) {
   const body = def.bodyH ?? def.visibleH;
@@ -28,8 +28,7 @@ test('per-move body clips keep the idle height and the json foot line', () => {
     for (const file of readdirSync(dir).filter((name) => name.endsWith('.json'))) {
       const json = JSON.parse(readFileSync(`${dir}/${file}`, 'utf8'));
       const moveKey = Object.keys(CHARACTERS[id].moves).find((key) => {
-        const name = CHARACTERS[id].moves[key]?.name || '';
-        return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') === json.move;
+        return bodySourceSlug(id, CHARACTERS[id].moves[key]?.name) === json.move;
       });
       assert.ok(moveKey, `${id} ${json.move}`);
       const clipKey = clipNameForMove(id, moveKey);
@@ -77,6 +76,21 @@ test('a move with no body clip keeps the generic attack sheet', () => {
   assert.equal(clipNameForMove(id, 'basicDirectional'), null);
   assert.equal(clipNameForMove(id, 'basicCharge'), null);
   assert.ok(CHARACTERS[id].art.sheets.clips.attack.count > 0);
+});
+
+test('Surf\'s Up keeps her feet on the origin and slides forward in code', () => {
+  const move = CHARACTERS.cali.moves.basicDirectional;
+  const clip = CHARACTERS.cali.art.sheets.clips['body-basicDirectional'];
+  const meta = sheetMeta('cali', 'body-basicDirectional');
+  assert.equal(clip.file, 'cali_surfs-up.png');
+  assert.equal(meta.slide, move.dashSpeed);
+  assert.equal(move.kind, 'dash');
+  const sole = frameToWorld(
+    [clip.frameW / 2, 580], clip.frameW, clip.frameH, clip.footY, clip.displayScale, 1, 1, 0, 0,
+  );
+  assert.ok(Math.abs(sole.x) < 0.01, sole.x);
+  assert.ok(Math.abs(sole.y) < 1, sole.y);
+  assert.ok(meta.slide > 0);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

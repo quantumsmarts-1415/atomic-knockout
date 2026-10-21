@@ -210,6 +210,16 @@ export function idleBlend(fd, frame) {
   return t * t * (3 - 2 * t);
 }
 
+/** 0–1 fade from a guard that never returns to its start pose. `poseT` is
+ *  0 at the start of the defense and 1 when the duration runs out. */
+export function guardIdleBlend(poseT) {
+  const u = Math.max(0, Math.min(1, Number(poseT) || 0));
+  const start = 0.78;
+  if (u <= start) return 0;
+  const t = (u - start) / (1 - start);
+  return t * t * (3 - 2 * t);
+}
+
 export function knockbackRaw(base, growth, percent, weight, scale) {
   const p = Math.max(0, percent || 0);
   const shaped = (base ?? 0) * FEEL.kbBaseMul

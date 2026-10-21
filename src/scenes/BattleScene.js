@@ -1270,6 +1270,9 @@ export default class BattleScene extends Phaser.Scene {
         const launchH = art?.launch?.frames?.[0]?.displayH;
         const len = launchH > 0 ? launchH : (owner.bodyH || 118) * 2;
         toss = overhandToss(fromX, fromY, face0, len);
+      } else {
+        const hand = sheetReleasePoint(owner, 'shot');
+        if (hand) { fromX = hand.x; fromY = hand.y; }
       }
       if (art?.launch?.frames?.length) {
         const img = spawnFxSprite(this, art.launch, fromX, fromY, 1, face0);
@@ -1305,8 +1308,8 @@ export default class BattleScene extends Phaser.Scene {
         if (art?.shower?.frames?.length) {
           const img = spawnFxSprite(
             this, art.shower,
-            owner.x + face0 * (owner.bodyW ?? 40) * 0.8,
-            owner.y - (owner.bodyH ?? 80) * 0.15,
+            fromX,
+            fromY,
             1, face0,
           );
           if (img && art.shower.tilt) img.rotation = face0 * art.shower.tilt;
@@ -1463,6 +1466,12 @@ export default class BattleScene extends Phaser.Scene {
     const posed = move._from ? null : sheetReleasePoint(owner, move.roll ? 'roll' : 'shot');
     let x = move._from?.x ?? posed?.x ?? (owner.x + face * (owner.bodyW / 2 + r + 4));
     let y = move._from?.y ?? posed?.y ?? (move.roll ? owner.y : owner.y - owner.bodyH * 0.65);
+    if (posed && owner?.charDef?.id === 'duke' && move?.name === 'Heavy Ion Bolt') {
+      // The bolt is centered on its cell and the bright core starts behind
+      // that center. Step it forward so the tail leaves the braced palm.
+      const bolt = artFor(owner.charDef.id, move.name)?.frames?.[0];
+      if (bolt?.displayW > 0) x += face * bolt.displayW * (0.5 - 70 / 256);
+    }
     if (move.floor) {
       y = groundTop(this, x, owner.y + 4);
       vy = 0;

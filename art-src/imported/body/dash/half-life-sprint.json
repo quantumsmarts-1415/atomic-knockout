@@ -1,0 +1,227 @@
+{
+ "name": "dash",
+ "move": "half-life-sprint",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/412b.mp4 (stream 0)",
+ "frameW": 1464,
+ "frameH": 611,
+ "idle_cell_w": 761,
+ "idle_anchor_x": null,
+ "width_mode": "src",
+ "pad_top": 0,
+ "idle_cell_h": 611,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9656,
+ "foot_row": 590,
+ "visibleH": 571,
+ "scale": 1.15822,
+ "offset": [
+  0.0,
+  -168.6
+ ],
+ "strike_hand_xy": {
+  "3": [
+   1020,
+   223
+  ],
+  "4": [
+   1020,
+   225
+  ],
+  "5": [
+   1020,
+   226
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    19,
+    590,
+    187,
+    537
+   ],
+   "foot": 590,
+   "front_hand_xy": [
+    530,
+    175
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    121,
+    590,
+    195,
+    604
+   ],
+   "foot": 590,
+   "front_hand_xy": [
+    603,
+    263
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 44,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 43,
+   "bbox": [
+    122,
+    590,
+    283,
+    1028
+   ],
+   "foot": 590,
+   "front_hand_xy": [
+    1027,
+    222
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    123,
+    590,
+    276,
+    1021
+   ],
+   "foot": 590,
+   "front_hand_xy": [
+    1020,
+    223
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 4,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    123,
+    590,
+    276,
+    1021
+   ],
+   "foot": 590,
+   "front_hand_xy": [
+    1020,
+    225
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 24,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    123,
+    590,
+    276,
+    1021
+   ],
+   "foot": 590,
+   "front_hand_xy": [
+    1020,
+    226
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    97,
+    590,
+    271,
+    840
+   ],
+   "foot": 590,
+   "front_hand_xy": [
+    782,
+    279
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    21,
+    590,
+    183,
+    586
+   ],
+   "foot": 590,
+   "front_hand_xy": [
+    557,
+    188
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   590,
+   590,
+   590,
+   590,
+   590,
+   590,
+   590,
+   590
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "colour_match_gain": [
+   1.033,
+   1.121,
+   1.022
+  ],
+  "first_frame_start_mad": 2.57,
+  "notes": "WIDE, width from source (1264 x 1.158 = 1464). Sprinter crouch then long lunge strike (f3-f5). Feet pinned (14 px drift). His green ghost glow was partly eaten by the green key; colour-matched to the idle (gain R1.03 G1.12 B1.02), so the hue matches, but the outer soft glow is thinner than the idle (13% vs 20% soft-edge pixels). Unmatched version kept in moves/_raw/.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   1020,
+   223
+  ],
+  "4": [
+   1020,
+   225
+  ],
+  "5": [
+   1020,
+   226
+  ]
+ }
+}

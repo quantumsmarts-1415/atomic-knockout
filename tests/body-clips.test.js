@@ -6,9 +6,10 @@ import { CHARACTERS } from '../src/data/characters.js';
 import { MOVE_SHEETS } from '../src/data/moveSheets.js';
 import { artIsUpdated } from '../src/data/updatedArt.js';
 import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
+import { guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dizzy'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -218,6 +219,51 @@ test('Turbine Gust covers the fingertip where the painted beam was cut off', () 
   );
   assert.ok(Math.abs(planted.y) < 24, planted.y);
   assert.ok(planted.x > 0);
+});
+
+test('Afterimage Decay hops back into a guard and fades to idle', () => {
+  const clip = CHARACTERS.dash.art.sheets.clips['body-specialDefense'];
+  const meta = sheetMeta('dash', 'body-specialDefense');
+  assert.equal(clip.file, 'dash_afterimage-decay.png');
+  assert.deepEqual(meta.intro, [0, 3]);
+  assert.deepEqual(meta.loop, [4, 7]);
+  assert.equal(meta.blendIdle, true);
+  assert.equal(sheetFrameIndex(meta, { state: 'defending', held: 0 }), 0);
+  const introSec = 4 / meta.fps;
+  assert.equal(sheetFrameIndex(meta, { state: 'defending', held: introSec * 0.7 }), 2);
+  assert.equal(sheetFrameIndex(meta, { state: 'defending', held: introSec + 0.01 }), 4);
+  const ground = frameToWorld(
+    [clip.frameW / 2, 591], clip.frameW, clip.frameH, clip.footY, clip.displayScale, 1, 1, 0, 0,
+  );
+  const air = frameToWorld(
+    [clip.frameW / 2, 570], clip.frameW, clip.frameH, clip.footY, clip.displayScale, 1, 1, 0, 0,
+  );
+  assert.ok(Math.abs(ground.y) < 1, ground.y);
+  assert.ok(air.y < ground.y - 4, air.y);
+  assert.equal(guardIdleBlend(0.5), 0);
+  assert.ok(guardIdleBlend(1) > 0.99);
+});
+
+test('Heavy Ion Bolt leaves the braced palm, and Half-Life Sprint stays under the texture limit', () => {
+  const bolt = CHARACTERS.duke.art.sheets.clips['body-specialDirectional'];
+  const boltMeta = sheetMeta('duke', 'body-specialDirectional');
+  assert.equal(bolt.file, 'duke_heavy-ion-bolt.png');
+  assert.ok(boltMeta.anchors.fist[5][0] > bolt.frameW - 12, boltMeta.anchors.fist[5][0]);
+  const palm = frameToWorld(
+    boltMeta.anchors.fist[5], bolt.frameW, bolt.frameH, bolt.footY, bolt.displayScale, 1, 1, 0, 0,
+  );
+  assert.ok(palm.x > 70, palm.x);
+  assert.ok(palm.y < -70, palm.y);
+
+  const sprint = CHARACTERS.dash.art.sheets.clips['body-basicCharge'];
+  const sprintMeta = sheetMeta('dash', 'body-basicCharge');
+  assert.equal(sprintMeta.slide, CHARACTERS.dash.moves.basicCharge.dashSpeed);
+  const png = PNG.sync.read(readFileSync(`${CHARACTERS.dash.art.sheets.dir}${sprint.file}`));
+  assert.ok(png.width <= 8192 && png.height <= 8192);
+  assert.equal(png.width, 7320);
+  assert.equal(png.height, 1222);
+  const kick = sheetMeta('dash', 'body-basicDirectional');
+  assert.equal(kick.slide, CHARACTERS.dash.moves.basicDirectional.dashSpeed);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

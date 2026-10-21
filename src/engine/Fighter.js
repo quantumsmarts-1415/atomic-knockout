@@ -801,6 +801,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.rig.moveKey = 'specialDefense';
       const dur = this.defenseMove?.duration || 400;
       this.rig.poseT = ((time - (this.defenseStart ?? time)) % dur) / dur;
+      this.rig.defenseT = Math.max(0, (time - (this.defenseStart ?? time)) / 1000);
     } else if (this.state === 'attack') {
       this.rig.moveKey = this.currentMoveKey || this.rig.moveKey;
       this.rig.poseT = this.rig.attackSwing;

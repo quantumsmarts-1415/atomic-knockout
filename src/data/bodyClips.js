@@ -135,6 +135,11 @@ export function installBodyClips(characters) {
       if (moveKey === 'specialDefense') {
         built.meta.gather = true;
         built.meta.loop = built.meta.active;
+        // Play the hop once, hold the guard, then fade that pose into idle.
+        if (src.blendIdle) {
+          built.meta.intro = built.meta.windup;
+          built.meta.blendIdle = true;
+        }
       }
       clips[clipKey] = built.clip;
       metaByClip.set(`${id}|${clipKey}`, built.meta);

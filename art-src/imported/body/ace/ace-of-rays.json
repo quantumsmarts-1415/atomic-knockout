@@ -1,0 +1,185 @@
+{
+ "name": "ace",
+ "move": "ace-of-rays",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/377b.mp4 (stream 0)",
+ "frameW": 569,
+ "frameH": 604,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9685,
+ "foot_row": 585,
+ "visibleH": 570,
+ "scale": 0.61093,
+ "offset": [
+  1.2,
+  2.8
+ ],
+ "strike_hand_xy": {
+  "4": [
+   551,
+   220
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    585,
+    38,
+    408
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    408,
+    137
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    39,
+    585,
+    38,
+    428
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    428,
+    158
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    43,
+    585,
+    39,
+    454
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    453,
+    255
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    44,
+    585,
+    39,
+    524
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    524,
+    226
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 83,
+   "bbox": [
+    44,
+    585,
+    39,
+    551
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    551,
+    220
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    41,
+    585,
+    39,
+    483
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    483,
+    230
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 115,
+   "bbox": [
+    27,
+    585,
+    38,
+    424
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    424,
+    153
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    13,
+    585,
+    38,
+    407
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    406,
+    136
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "first_frame_start_mad": 3.69,
+  "foot_rows": [
+   585,
+   585,
+   585,
+   585,
+   585,
+   585,
+   585,
+   585
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Flicked card leaves hand at f4; src f85-89 touched video edge so f4=src 83 (hand x 551).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  4
+ ]
+}

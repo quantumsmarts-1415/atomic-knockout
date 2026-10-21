@@ -1,0 +1,222 @@
+{
+ "name": "aurelius",
+ "move": "golden-visor",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/386b.mp4 (stream 0)",
+ "frameW": 563,
+ "frameH": 601,
+ "idle_cell_w": 563,
+ "idle_anchor_x": 215.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 10.0,
+ "loop": false,
+ "footY": 0.9634,
+ "foot_row": 579,
+ "visibleH": 564,
+ "scale": 1.18737,
+ "offset": [
+  -450.0,
+  -298.5
+ ],
+ "strike_hand_xy": {
+  "3": [
+   483,
+   129
+  ],
+  "4": [
+   494,
+   124
+  ],
+  "5": [
+   494,
+   124
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    580,
+    10,
+    400
+   ],
+   "foot": 580,
+   "front_hand_xy": [
+    399,
+    240
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    25,
+    580,
+    10,
+    419
+   ],
+   "foot": 580,
+   "front_hand_xy": [
+    418,
+    186
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    23,
+    582,
+    10,
+    430
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    414,
+    197
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 43,
+   "bbox": [
+    22,
+    582,
+    10,
+    490
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    483,
+    129
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    22,
+    582,
+    10,
+    495
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    494,
+    124
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    22,
+    582,
+    10,
+    495
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    494,
+    124
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 121,
+   "bbox": [
+    15,
+    582,
+    10,
+    407
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    407,
+    185
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    13,
+    582,
+    10,
+    400
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    399,
+    222
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   580,
+   580,
+   582,
+   582,
+   582,
+   582,
+   582,
+   582
+  ],
+  "foot_spread_px": 2,
+  "any_out_edge": false,
+  "first_frame_start_mad": 2.97,
+  "notes": "Forearm guard raised in front of the visor; clean. Feet 580-582.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   490,
+   58
+  ],
+  "4": [
+   494,
+   124
+  ],
+  "5": [
+   494,
+   124
+  ]
+ }
+}

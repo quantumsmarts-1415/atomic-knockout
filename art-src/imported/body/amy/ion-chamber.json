@@ -1,0 +1,195 @@
+{
+ "name": "amy",
+ "move": "ion-chamber",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/382b.mp4 (stream 0)",
+ "frameW": 657,
+ "frameH": 602,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 10.0,
+ "loop": false,
+ "footY": 0.9684,
+ "foot_row": 583,
+ "visibleH": 567,
+ "scale": 0.65549,
+ "offset": [
+  3.8,
+  1.6
+ ],
+ "strike_hand_xy": {
+  "3": [
+   458,
+   166
+  ],
+  "4": [
+   458,
+   166
+  ],
+  "5": [
+   458,
+   217
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    16,
+    584,
+    21,
+    446
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    410,
+    327
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    23,
+    584,
+    127,
+    478
+   ],
+   "foot": 584,
+   "front_hand_xy": [
+    465,
+    330
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 2,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    36,
+    586,
+    137,
+    490
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    471,
+    178
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 43,
+   "bbox": [
+    39,
+    586,
+    126,
+    480
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    458,
+    166
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    39,
+    586,
+    126,
+    480
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    458,
+    166
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    42,
+    586,
+    127,
+    480
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    458,
+    217
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 127,
+   "bbox": [
+    16,
+    586,
+    114,
+    500
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    473,
+    327
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    11,
+    586,
+    118,
+    491
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    445,
+    325
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "first_frame_start_mad": 3.88,
+  "foot_rows": [
+   584,
+   584,
+   586,
+   586,
+   586,
+   586,
+   586,
+   586
+  ],
+  "foot_spread_px": 2,
+  "any_out_edge": false,
+  "notes": "Helmet not visible during the fists-up guard (src ~19-91, tucked/hidden), back in hand on recovery. Grok added a forward punch at src ~97-121; skipped, so f5->f6 jumps. Feet 584-586 (2 px).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ]
+}

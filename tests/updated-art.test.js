@@ -4,6 +4,7 @@ import { readdirSync, statSync } from 'node:fs';
 import { CHARACTERS } from '../src/data/characters.js';
 import { MOVE_SHEETS } from '../src/data/moveSheets.js';
 import { artIsUpdated, fighterIdsFromFxIndex, REVIEWED_THROUGH } from '../src/data/updatedArt.js';
+import { hasBodyClips } from '../src/data/bodyClips.js';
 
 function fxIdsOnDisk() {
   return new Set(
@@ -25,6 +26,7 @@ test('gold marks the reviewed roster plus later sheet or effect fighters', () =>
   for (const fighter of Object.values(CHARACTERS)) {
     const expect = fighter.atomicNumber <= REVIEWED_THROUGH
       || !!MOVE_SHEETS[fighter.id]
+      || hasBodyClips(fighter.id)
       || fxIds.has(fighter.id);
     assert.equal(artIsUpdated(fighter, fxIds), expect, fighter.id);
   }

@@ -1,0 +1,190 @@
+{
+ "name": "aurelius",
+ "move": "circuit-contact",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/385b.mp4 (stream 0)",
+ "frameW": 563,
+ "frameH": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9634,
+ "foot_row": 579,
+ "visibleH": 564,
+ "scale": 0.6058,
+ "offset": [
+  -0.5,
+  4.1
+ ],
+ "strike_hand_xy": {
+  "3": [
+   552,
+   169
+  ],
+  "4": [
+   552,
+   169
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    579,
+    12,
+    399
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    399,
+    240
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    22,
+    579,
+    12,
+    410
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    410,
+    256
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    41,
+    579,
+    11,
+    418
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    418,
+    268
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    50,
+    579,
+    11,
+    552
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    552,
+    169
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    50,
+    579,
+    11,
+    552
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    552,
+    169
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    47,
+    579,
+    11,
+    514
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    514,
+    197
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    27,
+    579,
+    12,
+    408
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    407,
+    253
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    15,
+    579,
+    12,
+    399
+   ],
+   "foot": 579,
+   "front_hand_xy": [
+    399,
+    241
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "first_frame_start_mad": 6.89,
+  "foot_rows": [
+   579,
+   579,
+   579,
+   579,
+   579,
+   579,
+   579,
+   579
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Clean; ingot stays in hand. Open-palm reach at (552,169).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4
+ ]
+}

@@ -1,0 +1,195 @@
+{
+ "name": "ace",
+ "move": "actinic-ray",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/376b.mp4 (stream 0)",
+ "frameW": 569,
+ "frameH": 604,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9685,
+ "foot_row": 585,
+ "visibleH": 570,
+ "scale": 0.61093,
+ "offset": [
+  1.2,
+  2.8
+ ],
+ "strike_hand_xy": {
+  "3": [
+   508,
+   119
+  ],
+  "4": [
+   548,
+   121
+  ],
+  "5": [
+   544,
+   120
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    585,
+    38,
+    409
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    408,
+    137
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    14,
+    585,
+    38,
+    378
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    377,
+    135
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    14,
+    585,
+    38,
+    372
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    372,
+    166
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    37,
+    585,
+    37,
+    512
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    508,
+    119
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    40,
+    585,
+    37,
+    550
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    548,
+    121
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 121,
+   "bbox": [
+    39,
+    585,
+    37,
+    544
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    544,
+    120
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 133,
+   "bbox": [
+    21,
+    585,
+    37,
+    429
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    428,
+    138
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    14,
+    585,
+    37,
+    429
+   ],
+   "foot": 585,
+   "front_hand_xy": [
+    429,
+    151
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "first_frame_start_mad": 3.7,
+  "foot_rows": [
+   585,
+   585,
+   585,
+   585,
+   585,
+   585,
+   585,
+   585
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Cards vanish from the hand during the two-palm push (f3-f5) and reappear on return (Grok).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ]
+}

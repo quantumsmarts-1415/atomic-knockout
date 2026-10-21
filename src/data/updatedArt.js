@@ -5,6 +5,7 @@
 // is a shared overlay, not a fighter.
 
 import { MOVE_SHEETS } from './moveSheets.js';
+import { hasBodyClips } from './bodyClips.js';
 
 export const REVIEWED_THROUGH = 37;
 
@@ -24,6 +25,7 @@ export function artIsUpdated(fighter, fxIds, moveSheets = MOVE_SHEETS) {
   const z = fighter.atomicNumber | 0;
   if (z >= 1 && z <= REVIEWED_THROUGH) return true;
   if (moveSheets?.[fighter.id]) return true;
+  if (hasBodyClips(fighter.id)) return true;
   if (fxIds?.has?.(fighter.id)) return true;
   return false;
 }

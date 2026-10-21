@@ -2,6 +2,7 @@ import { deriveProfile, TUNING } from './balance.js';
 import { ELEMENTS } from './elements.js';
 import { MOVESETS } from './movesets.js';
 import { IMPORTED_ROSTER, characterFromImport } from './imported.js';
+import { installBodyClips } from './bodyClips.js';
 import { COLORWAYS, chipHex } from './colorways.js';
 import { resolveColorway } from '../engine/colorway.js';
 
@@ -2462,6 +2463,9 @@ for (const def of Object.values(CHARACTERS)) {
   };
   if (MOVESETS[def.id]) def.moves = MOVESETS[def.id];
 }
+// Per-move body sheets (Ace and later batches). A move with no sheet
+// keeps the generic attack.png already on the fighter.
+installBodyClips(CHARACTERS);
 // Helium's derived weight and gravity let the new launch carry her out at
 // low percent. Keep the float, but not enough to stock her for free.
 {

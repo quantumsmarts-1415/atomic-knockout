@@ -122,6 +122,30 @@ function parseTint(value) {
   return 0;
 }
 
+/** Pull a fiery sheet toward red-brown: scale the red channel, then desaturate. */
+export function gradePixels(data, width, height, grade) {
+  if (!data || !grade) return data;
+  const redMul = typeof grade.red === 'number' ? grade.red : 1;
+  const desat = typeof grade.desat === 'number' ? Math.max(0, Math.min(1, grade.desat)) : 0;
+  const n = Math.min(data.length, (width || 0) * (height || 0) * 4);
+  for (let i = 0; i < n; i += 4) {
+    if (data[i + 3] < 8) continue;
+    let r = data[i] * redMul;
+    let g = data[i + 1];
+    let b = data[i + 2];
+    if (desat > 0) {
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      r = r * (1 - desat) + lum * desat;
+      g = g * (1 - desat) + lum * desat;
+      b = b * (1 - desat) + lum * desat;
+    }
+    data[i] = Math.max(0, Math.min(255, Math.round(r)));
+    data[i + 1] = Math.max(0, Math.min(255, Math.round(g)));
+    data[i + 2] = Math.max(0, Math.min(255, Math.round(b)));
+  }
+  return data;
+}
+
 function tintPixels(data, width, height, color, amount) {
   const n = Math.min(data.length, (width || 0) * (height || 0) * 4);
   for (let i = 0; i < n; i += 4) {
@@ -1118,6 +1142,9 @@ async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH
   if (tint > 0) {
     const amount = spec.tintAmount > 0 ? spec.tintAmount : 0.55;
     for (const slice of slices) tintPixels(slice.keyed, slice.width, slice.height, tint, amount);
+  }
+  if (spec?.grade) {
+    for (const slice of slices) gradePixels(slice.keyed, slice.width, slice.height, spec.grade);
   }
   const bounds = slices.map((slice) => contentBounds(slice.keyed, slice.width, slice.height));
   const fitMode = spec?.fit || null;

@@ -278,7 +278,10 @@ test('call 6 wires Smoky Haze, Brock fumes, and the Tess peak stills', () => {
   assert.equal(screen.rows, 4);
   assert.equal(screen.loop, true);
   assert.equal(screen.blend, 'screen');
+  assert.equal(screen.black, false);
   assert.equal(screen.anchor, 'front');
+  assert.equal(screen.grade.red, 0.8);
+  assert.equal(screen.grade.desat, 0.2);
   assert.equal(screen.peak, undefined);
   assert.equal(fs.existsSync('assets/fx/brock/red-fume-screen/fume-screen-anim.png'), true);
 
@@ -288,16 +291,21 @@ test('call 6 wires Smoky Haze, Brock fumes, and the Tess peak stills', () => {
   assert.equal(dye.loop, false);
   assert.equal(dye.once, true);
   assert.equal(dye.blend, 'screen');
+  assert.equal(dye.black, false);
   assert.equal(dye.pivot, 'left');
   assert.equal(dye.peak, undefined);
   assert.equal(fs.existsSync('assets/fx/brock/tyrian-purple/tyrian-splash-anim.png'), true);
 
   const stench = read('assets/fx/brock/bromos-stench/fx.json');
-  assert.equal(stench.peak, 'stench-fume-burst.jpg');
-  assert.equal(stench.peakFrame, 18);
-  assert.equal(fs.existsSync('assets/fx/brock/bromos-stench/stench-fume-burst.jpg'), true);
+  assert.equal(stench.file, 'stench-fume-burst-anim.png');
+  assert.equal(stench.black, false);
+  assert.equal(stench.peak, undefined);
+  assert.equal(fs.existsSync('assets/fx/brock/bromos-stench/stench-fume-burst-anim.png'), true);
+  assert.equal(fs.existsSync('assets/fx/brock/bromos-stench/stench-fume-burst.jpg'), false);
 
-  assert.equal(fs.existsSync('assets/fx/brock/caustic-splash/fx.json'), false);
+  const splash = read('assets/fx/brock/caustic-splash/fx.json');
+  assert.equal(splash.projectile.file, 'caustic-splash.png');
+  assert.equal(fs.existsSync('assets/fx/brock/caustic-splash/caustic-splash.png'), true);
 });
 
 test('call 7 wires Krypto and Ruben Condensate Collapse', () => {

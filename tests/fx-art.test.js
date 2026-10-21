@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeTint, chargeWaveAlpha, cloudIgnitionScale, contentSpan, curieFade, curiePulse, fadeLoopFrames, flameTestColor, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, handPropHeld, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pileCount, playsFinalImpact, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, poisonStatusArt, slashArtReplacesStroke, slashNeedsCodeFlash, sliceGrid, sliceHorizontal, rodOrbitPoint, stackPipIndex, stageSpanSize, stepFxProjectile, stickAim, survivedPipAlpha, surgeAlpha, surgeBeamScale, throwGrowth, tintToward, trailBackOffset, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeTint, chargeWaveAlpha, cloudIgnitionScale, contentSpan, curieFade, curiePulse, fadeLoopFrames, flameTestColor, flareCover, gradePixels, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, handPropHeld, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pileCount, playsFinalImpact, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, poisonStatusArt, slashArtReplacesStroke, slashNeedsCodeFlash, sliceGrid, sliceHorizontal, rodOrbitPoint, stackPipIndex, stageSpanSize, stepFxProjectile, stickAim, survivedPipAlpha, surgeAlpha, surgeBeamScale, throwGrowth, tintToward, trailBackOffset, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1156,10 +1156,28 @@ test('gemini fx wires arsenio and selena', () => {
   assert.equal(stench.frames, 24);
   assert.equal(stench.loop, false);
   assert.equal(stench.blend, 'screen');
+  assert.equal(stench.black, false);
   assert.equal(stench.fit, 'width');
   assert.equal(stench.heightFrac, 1.45);
   assert.equal(stench.pivot, 'center');
+  assert.equal(stench.peak, undefined);
   assert.equal(stench.hit, false);
+  const screen = read('assets/fx/brock/red-fume-screen/fx.json');
+  assert.equal(screen.blend, 'screen');
+  assert.equal(screen.black, false);
+  assert.equal(screen.anchor, 'front');
+  assert.equal(screen.grade.red, 0.8);
+  assert.equal(screen.grade.desat, 0.2);
+  const orange = new Uint8ClampedArray([255, 140, 40, 255, 0, 0, 0, 0]);
+  gradePixels(orange, 1, 2, screen.grade);
+  assert.ok(orange[0] < 255 && orange[0] > orange[2], 'red stays ahead of blue');
+  assert.ok(orange[0] - orange[1] < 255 - 140, 'orange gap closes toward brown');
+  assert.equal(orange[7], 0);
+  const splash = read('assets/fx/brock/caustic-splash/fx.json');
+  assert.equal(splash.projectile.file, 'caustic-splash.png');
+  assert.equal(splash.projectile.blend, 'normal');
+  assert.equal(splash.projectile.black, false);
+  assert.ok(splash.projectile.heightFrac <= 0.6);
   const files = [
     [powder.projectile.file, 'assets/fx/arsenio/inheritance-powder/'],
     [slash.file, 'assets/fx/arsenio/paris-green-slash/'],

@@ -670,6 +670,9 @@ test('Niko keeps his hands, and Rising Sun releases on the palm', () => {
   assert.deepEqual(sunMeta.active, [5, 6]);
   assert.deepEqual(sunMeta.loop, [0, 4]);
   assert.equal(sunMeta.release, 5);
+  const sunFx = JSON.parse(readFileSync('assets/fx/niko/rising-sun/fx.json', 'utf8'));
+  assert.equal(sunFx.scale, 0.42);
+  assert.ok(sunFx.heightFrac * sunFx.scale * 132 >= 150, sunFx.heightFrac);
 
   const combo = CHARACTERS.niko.art.sheets.clips['body-basicDirectional'];
   const comboMeta = sheetMeta('niko', 'body-basicDirectional');

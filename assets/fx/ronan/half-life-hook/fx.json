@@ -8,9 +8,11 @@
   "blend": "add",
   "black": 16,
   "fit": "height",
-  "heightFrac": 1.05,
+  "heightFrac": 2.2,
   "pivotX": 0.18,
   "pivotY": 0.55,
+  "anchor": "fist",
+  "swing": [0, 7],
   "hit": false,
   "impact": {
     "file": "half-life-hook-hit-anim.png",

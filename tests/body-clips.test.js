@@ -9,7 +9,7 @@ import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
 import { guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -270,15 +270,16 @@ test('Chicago Pile is a swappable sheet, and Fermi\'s other moves keep their han
   const pile = CHARACTERS.fermi.art.sheets.clips['body-basicCharge'];
   const pileMeta = sheetMeta('fermi', 'body-basicCharge');
   assert.equal(pile.file, 'fermi_chicago-pile.png');
+  assert.equal(pile.frameW, 477);
   assert.deepEqual(pileMeta.loop, [0, 1]);
-  assert.deepEqual(pileMeta.active, [2, 5]);
-  assert.deepEqual(pileMeta.anchors.fist[2], [441, 403]);
-  assert.deepEqual(pileMeta.anchors.fist[5], [512, 292]);
+  assert.deepEqual(pileMeta.active, [2, 6]);
+  assert.deepEqual(pileMeta.anchors.fist[2], [429, 202]);
+  assert.deepEqual(pileMeta.anchors.fist[5], [473, 245]);
   const stack = frameToWorld(
     pileMeta.anchors.fist[3], pile.frameW, pile.frameH, pile.footY, pile.displayScale, 1, 1, 0, 0,
   );
   assert.ok(stack.x > 40, stack.x);
-  assert.ok(stack.y < -40 && stack.y > -80, stack.y);
+  assert.ok(stack.y < -70, stack.y);
 
   const punch = CHARACTERS.fermi.art.sheets.clips['body-basicDirectional'];
   const punchMeta = sheetMeta('fermi', 'body-basicDirectional');
@@ -303,6 +304,41 @@ test('Chicago Pile is a swappable sheet, and Fermi\'s other moves keep their han
     signalMeta.anchors.fist[3], signal.frameW, signal.frameH, signal.footY, signal.displayScale, 1, 1, 0, 0,
   );
   assert.ok(raised.y < fist.y, raised.y);
+});
+
+test('Riptide slides from a wide lunge, and Magic Number keeps the json foot row', () => {
+  const tide = CHARACTERS.flo.art.sheets.clips['body-basicDirectional'];
+  const tideMeta = sheetMeta('flo', 'body-basicDirectional');
+  assert.equal(tide.file, 'flo_riptide.png');
+  assert.equal(tide.frameW, 924);
+  assert.equal(tideMeta.slide, CHARACTERS.flo.moves.basicDirectional.dashSpeed);
+  assert.ok(tideMeta.anchors.fist[3][0] > tide.frameW - 8, tideMeta.anchors.fist[3][0]);
+  const png = PNG.sync.read(readFileSync(`${CHARACTERS.flo.art.sheets.dir}${tide.file}`));
+  assert.equal(png.width, 7392);
+  assert.ok(png.width <= 8192 && png.height <= 8192);
+
+  const isle = sheetMeta('flo', 'body-basicCharge');
+  assert.equal(CHARACTERS.flo.art.sheets.clips['body-basicCharge'].file, 'flo_island-of-stability.png');
+  assert.deepEqual(isle.loop, [0, 2]);
+  assert.deepEqual(isle.active, [3, 5]);
+
+  const crisis = sheetMeta('flo', 'body-specialDefense');
+  assert.equal(CHARACTERS.flo.art.sheets.clips['body-specialDefense'].file, 'flo_identity-crisis.png');
+  assert.deepEqual(crisis.loop, [2, 5]);
+  assert.equal(crisis.blendIdle, undefined);
+
+  const magic = CHARACTERS.flo.art.sheets.clips['body-specialDirectional'];
+  const magicMeta = sheetMeta('flo', 'body-specialDirectional');
+  assert.equal(magic.file, 'flo_magic-number.png');
+  assert.equal(Math.round(magic.footY * magic.frameH) - 1, 593);
+  const cup = frameToWorld(
+    magicMeta.anchors.fist[3], magic.frameW, magic.frameH, magic.footY, magic.displayScale, 1, 1, 0, 0,
+  );
+  const push = frameToWorld(
+    magicMeta.anchors.fist[4], magic.frameW, magic.frameH, magic.footY, magic.displayScale, 1, 1, 0, 0,
+  );
+  assert.ok(push.x > cup.x + 15, push.x - cup.x);
+  assert.ok(push.y < cup.y, push.y);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

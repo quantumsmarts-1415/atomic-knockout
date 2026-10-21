@@ -1,0 +1,224 @@
+{
+ "name": "flo",
+ "move": "island-of-stability",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/432b.mp4 (stream 0)",
+ "frameW": 634,
+ "frameH": 661,
+ "idle_cell_w": 815,
+ "idle_anchor_x": 416.5,
+ "width_mode": "cell",
+ "pad_top": 5,
+ "idle_cell_h": 656,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9017,
+ "foot_row": 596,
+ "visibleH": 579,
+ "scale": 1.1643,
+ "offset": [
+  -377.0,
+  -171.6
+ ],
+ "strike_hand_xy": {
+  "3": [
+   630,
+   185
+  ],
+  "4": [
+   609,
+   143
+  ],
+  "5": [
+   605,
+   140
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    21,
+    596,
+    177,
+    556
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    555,
+    178
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    19,
+    596,
+    170,
+    556
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    547,
+    215
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    19,
+    596,
+    181,
+    570
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    570,
+    208
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    17,
+    596,
+    167,
+    630
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    630,
+    185
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    14,
+    596,
+    160,
+    609
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    609,
+    143
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 535,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    12,
+    596,
+    144,
+    607
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    605,
+    140
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 181,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 109,
+   "bbox": [
+    14,
+    596,
+    127,
+    630
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    630,
+    148
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 906,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    21,
+    596,
+    151,
+    556
+   ],
+   "foot": 596,
+   "front_hand_xy": [
+    551,
+    181
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   596,
+   596,
+   596,
+   596,
+   596,
+   596,
+   596,
+   596
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Hands to the chest, then arms spread wide, held f4-f6. Grok drew white swirl rings behind her (f5-f7); those are cut left of her body. A faint trace may remain at the edge of her hair/coat. Magenta key.",
+  "redo_candidate": false,
+  "first_frame_start_mad": 1.52,
+  "src_picks": "1,31,49,55,67,85,109,145",
+  "minor_issue": true
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   630,
+   185
+  ],
+  "4": [
+   609,
+   144
+  ],
+  "5": [
+   607,
+   139
+  ]
+ }
+}

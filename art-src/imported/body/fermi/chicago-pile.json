@@ -2,22 +2,22 @@
  "name": "fermi",
  "move": "chicago-pile",
  "method": "video",
- "source": "fx-art/_flow/b7/clips/428b.mp4 (stream 0)",
- "frameW": 521,
- "frameH": 634,
+ "source": "fx-art/_flow/b7/clips/428b_v2.mp4 (stream 0)",
+ "frameW": 477,
+ "frameH": 611,
  "idle_cell_w": 605,
  "idle_anchor_x": 262.5,
  "width_mode": "cell",
- "pad_top": 23,
+ "pad_top": 0,
  "idle_cell_h": 611,
  "count": 8,
  "cols": 8,
  "rows": 1,
  "fps": 14.0,
  "loop": false,
- "footY": 0.9685,
- "foot_row": 614,
- "visibleH": 599,
+ "footY": 0.9673,
+ "foot_row": 591,
+ "visibleH": 576,
  "scale": 1.1497,
  "offset": [
   -269.2,
@@ -25,35 +25,39 @@
  ],
  "strike_hand_xy": {
   "2": [
-   441,
-   403
+   429,
+   202
   ],
   "3": [
-   515,
-   362
+   472,
+   243
   ],
   "4": [
-   510,
-   347
+   471,
+   246
   ],
   "5": [
-   512,
-   292
+   473,
+   245
+  ],
+  "6": [
+   471,
+   244
   ]
  },
  "frames": [
   {
    "src_frame": 1,
    "bbox": [
-    37,
-    614,
+    14,
+    591,
     37,
     395
    ],
-   "foot": 614,
+   "foot": 591,
    "front_hand_xy": [
     370,
-    301
+    278
    ],
    "src_edge_px": 0,
    "removed_detached_px": 0,
@@ -63,33 +67,15 @@
   {
    "src_frame": 7,
    "bbox": [
-    102,
-    614,
+    21,
+    591,
     37,
-    446
+    395
    ],
-   "foot": 614,
+   "foot": 591,
    "front_hand_xy": [
-    445,
-    380
-   ],
-   "src_edge_px": 0,
-   "removed_detached_px": 3966,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 19,
-   "bbox": [
-    150,
-    614,
-    39,
-    490
-   ],
-   "foot": 614,
-   "front_hand_xy": [
-    441,
-    403
+    379,
+    270
    ],
    "src_edge_px": 0,
    "removed_detached_px": 0,
@@ -97,17 +83,17 @@
    "touches_out_edge": false
   },
   {
-   "src_frame": 37,
+   "src_frame": 13,
    "bbox": [
-    143,
-    614,
-    39,
-    517
+    49,
+    591,
+    37,
+    430
    ],
-   "foot": 614,
+   "foot": 591,
    "front_hand_xy": [
-    515,
-    362
+    429,
+    202
    ],
    "src_edge_px": 0,
    "removed_detached_px": 0,
@@ -115,17 +101,17 @@
    "touches_out_edge": false
   },
   {
-   "src_frame": 61,
+   "src_frame": 25,
    "bbox": [
-    127,
-    614,
-    39,
-    494
+    53,
+    591,
+    37,
+    473
    ],
-   "foot": 614,
+   "foot": 591,
    "front_hand_xy": [
-    510,
-    347
+    472,
+    243
    ],
    "src_edge_px": 0,
    "removed_detached_px": 0,
@@ -133,17 +119,53 @@
    "touches_out_edge": false
   },
   {
-   "src_frame": 79,
+   "src_frame": 43,
    "bbox": [
-    111,
-    614,
-    39,
-    500
+    51,
+    591,
+    37,
+    473
    ],
-   "foot": 614,
+   "foot": 591,
    "front_hand_xy": [
-    512,
-    292
+    471,
+    246
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    51,
+    591,
+    37,
+    473
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    473,
+    245
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    51,
+    591,
+    37,
+    471
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    471,
+    244
    ],
    "src_edge_px": 0,
    "removed_detached_px": 0,
@@ -153,80 +175,68 @@
   {
    "src_frame": 97,
    "bbox": [
-    5,
-    614,
-    16,
-    423
+    51,
+    591,
+    37,
+    473
    ],
-   "foot": 614,
+   "foot": 591,
    "front_hand_xy": [
-    369,
-    193
+    472,
+    245
    ],
    "src_edge_px": 0,
-   "removed_detached_px": 15418,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 145,
-   "bbox": [
-    5,
-    614,
-    18,
-    434
-   ],
-   "foot": 614,
-   "front_hand_xy": [
-    362,
-    275
-   ],
-   "src_edge_px": 0,
-   "removed_detached_px": 18159,
+   "removed_detached_px": 0,
    "pinned": true,
    "touches_out_edge": false
   }
  ],
  "qc": {
   "foot_rows": [
-   614,
-   614,
-   614,
-   614,
-   614,
-   614,
-   614,
-   614
+   591,
+   591,
+   591,
+   591,
+   591,
+   591,
+   591,
+   591
   ],
   "foot_spread_px": 0,
   "any_out_edge": false,
-  "notes": "Crouched stacking motions (f3-f6). Grok invented a stack of grey blocks that grows under his hands and stays to the end, plus a stray punch at src ~115-121 (skipped). The stack is removed by hand (detached at the ends; cut under the hands in f3-f6), but faint wisps may remain at the fingertips, and his hands rest on nothing. Redo suggested: stacking motions in empty air, no blocks or objects appear.",
-  "redo_candidate": true,
-  "first_frame_start_mad": 2.0,
-  "src_picks": "1,7,19,37,61,79,97,145"
+  "notes": "REDO v2, clean: no blocks or props. Open hands raised in front of the chest in stacking gestures, held f3-f7. Grok kept the motion small (hands barely rise between placements), so it reads more as a held guard than as building. Grok also turned him front-on, then threw a stray punch (src ~103-127); both skipped, so the clip ends on the hold. v1 is in moves/_old/.",
+  "redo_candidate": false,
+  "minor_issue": false,
+  "first_frame_start_mad": 1.99,
+  "src_picks": "1,7,13,25,43,67,85,97"
  },
  "strike_frames": [
   2,
   3,
   4,
-  5
+  5,
+  6
  ],
  "strike_reach_xy": {
   "2": [
-   490,
-   426
+   430,
+   203
   ],
   "3": [
-   517,
-   362
+   473,
+   243
   ],
   "4": [
-   494,
-   290
+   473,
+   247
   ],
   "5": [
-   500,
-   257
+   473,
+   245
+  ],
+  "6": [
+   471,
+   245
   ]
  }
 }

@@ -1,0 +1,224 @@
+{
+ "name": "flo",
+ "move": "magic-number",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/435b.mp4 (stream 0)",
+ "frameW": 688,
+ "frameH": 658,
+ "idle_cell_w": 815,
+ "idle_anchor_x": 265.5,
+ "width_mode": "cell",
+ "pad_top": 2,
+ "idle_cell_h": 656,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9012,
+ "foot_row": 593,
+ "visibleH": 576,
+ "scale": 1.1643,
+ "offset": [
+  -275.3,
+  -171.6
+ ],
+ "strike_hand_xy": {
+  "3": [
+   578,
+   267
+  ],
+  "4": [
+   681,
+   195
+  ],
+  "5": [
+   683,
+   193
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    18,
+    593,
+    27,
+    406
+   ],
+   "foot": 593,
+   "front_hand_xy": [
+    404,
+    182
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    46,
+    593,
+    2,
+    425
+   ],
+   "foot": 593,
+   "front_hand_xy": [
+    425,
+    131
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    56,
+    593,
+    6,
+    451
+   ],
+   "foot": 593,
+   "front_hand_xy": [
+    450,
+    142
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    62,
+    593,
+    32,
+    579
+   ],
+   "foot": 593,
+   "front_hand_xy": [
+    578,
+    267
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    58,
+    593,
+    32,
+    681
+   ],
+   "foot": 593,
+   "front_hand_xy": [
+    681,
+    195
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    67,
+    593,
+    27,
+    684
+   ],
+   "foot": 593,
+   "front_hand_xy": [
+    683,
+    193
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    53,
+    593,
+    6,
+    593
+   ],
+   "foot": 593,
+   "front_hand_xy": [
+    592,
+    193
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    12,
+    593,
+    39,
+    406
+   ],
+   "foot": 593,
+   "front_hand_xy": [
+    345,
+    330
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   593,
+   593,
+   593,
+   593,
+   593,
+   593,
+   593,
+   593
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Hands cupped at the hip, then pushed forward together, held f4-f6, then recovery. Magenta key.",
+  "redo_candidate": false,
+  "minor_issue": false,
+  "first_frame_start_mad": 1.52,
+  "src_picks": "1,25,49,61,73,85,97,145"
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   579,
+   267
+  ],
+  "4": [
+   681,
+   195
+  ],
+  "5": [
+   684,
+   193
+  ]
+ }
+}

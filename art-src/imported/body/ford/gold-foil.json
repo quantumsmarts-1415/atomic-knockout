@@ -1,0 +1,242 @@
+{
+ "name": "ford",
+ "move": "gold-foil",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/438b.mp4 (stream 0)",
+ "frameW": 512,
+ "frameH": 620,
+ "idle_cell_w": 678,
+ "idle_anchor_x": 340.0,
+ "width_mode": "cell",
+ "pad_top": 6,
+ "idle_cell_h": 614,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9694,
+ "foot_row": 601,
+ "visibleH": 584,
+ "scale": 1.01582,
+ "offset": [
+  -297.4,
+  -165.8
+ ],
+ "strike_hand_xy": {
+  "2": [
+   508,
+   155
+  ],
+  "3": [
+   488,
+   111
+  ],
+  "4": [
+   484,
+   109
+  ],
+  "5": [
+   486,
+   111
+  ],
+  "6": [
+   474,
+   124
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    23,
+    601,
+    54,
+    472
+   ],
+   "foot": 601,
+   "front_hand_xy": [
+    427,
+    318
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 5,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 7,
+   "bbox": [
+    27,
+    601,
+    30,
+    498
+   ],
+   "foot": 601,
+   "front_hand_xy": [
+    498,
+    253
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 21,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    19,
+    601,
+    5,
+    508
+   ],
+   "foot": 601,
+   "front_hand_xy": [
+    508,
+    155
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 8,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    14,
+    601,
+    20,
+    488
+   ],
+   "foot": 601,
+   "front_hand_xy": [
+    488,
+    111
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    14,
+    601,
+    64,
+    484
+   ],
+   "foot": 601,
+   "front_hand_xy": [
+    484,
+    109
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 12,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    14,
+    601,
+    72,
+    486
+   ],
+   "foot": 601,
+   "front_hand_xy": [
+    486,
+    111
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    19,
+    601,
+    64,
+    474
+   ],
+   "foot": 601,
+   "front_hand_xy": [
+    474,
+    124
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    30,
+    601,
+    105,
+    464
+   ],
+   "foot": 601,
+   "front_hand_xy": [
+    417,
+    333
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 16,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   601,
+   601,
+   601,
+   601,
+   601,
+   601,
+   601,
+   601
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Both open hands raised in front of the chest, held f3-f7. Grok then threw a stray arm extension (src ~97-127), which is skipped. A small blue glint sits on the front hand in f2. 4:3 clip, measured scale. Glint painted out (f2: 1408 px recoloured to the surrounding sleeve/hand tone); original in _old/gold-foil_preglint.*",
+  "redo_candidate": false,
+  "minor_issue": false,
+  "first_frame_start_mad": 3.86,
+  "src_picks": "1,7,13,31,49,67,85,145"
+ },
+ "strike_frames": [
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "2": [
+   508,
+   159
+  ],
+  "3": [
+   488,
+   111
+  ],
+  "4": [
+   484,
+   108
+  ],
+  "5": [
+   486,
+   110
+  ],
+  "6": [
+   474,
+   124
+  ]
+ }
+}

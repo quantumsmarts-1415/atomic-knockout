@@ -1,0 +1,242 @@
+{
+ "name": "frank",
+ "move": "alpha-flick",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/443b.mp4 (stream 0)",
+ "frameW": 719,
+ "frameH": 602,
+ "idle_cell_w": 529,
+ "idle_anchor_x": 265.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 602,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9668,
+ "foot_row": 582,
+ "visibleH": 567,
+ "scale": 1.13174,
+ "offset": [
+  -268.1,
+  -157.0
+ ],
+ "strike_hand_xy": {
+  "2": [
+   628,
+   106
+  ],
+  "3": [
+   628,
+   106
+  ],
+  "4": [
+   632,
+   106
+  ],
+  "5": [
+   696,
+   135
+  ],
+  "6": [
+   555,
+   138
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    14,
+    582,
+    10,
+    408
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    379,
+    189
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 7,
+   "bbox": [
+    21,
+    582,
+    10,
+    485
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    485,
+    112
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    21,
+    582,
+    10,
+    642
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    628,
+    106
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    21,
+    582,
+    10,
+    642
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    628,
+    106
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    23,
+    582,
+    10,
+    641
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    632,
+    106
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    41,
+    582,
+    10,
+    716
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    696,
+    135
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    28,
+    582,
+    10,
+    555
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    555,
+    138
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 121,
+   "bbox": [
+    11,
+    582,
+    10,
+    408
+   ],
+   "foot": 582,
+   "front_hand_xy": [
+    374,
+    180
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   582,
+   582,
+   582,
+   582,
+   582,
+   582,
+   582,
+   582
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Front hand snapped forward with the arm held extended f3-f7 (Grok lunges a bit further at f6). A small white flick spark at src ~91 is not in the picks.",
+  "redo_candidate": false,
+  "minor_issue": false,
+  "first_frame_start_mad": 2.1,
+  "src_picks": "1,7,13,25,49,67,85,121"
+ },
+ "strike_frames": [
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "2": [
+   642,
+   92
+  ],
+  "3": [
+   642,
+   94
+  ],
+  "4": [
+   641,
+   97
+  ],
+  "5": [
+   716,
+   89
+  ],
+  "6": [
+   555,
+   138
+  ]
+ }
+}

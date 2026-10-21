@@ -1,0 +1,233 @@
+{
+ "name": "ford",
+ "move": "transmute-ray",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/439b.mp4 (stream 0)",
+ "frameW": 649,
+ "frameH": 614,
+ "idle_cell_w": 678,
+ "idle_anchor_x": 342.0,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 614,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9691,
+ "foot_row": 595,
+ "visibleH": 578,
+ "scale": 1.17241,
+ "offset": [
+  -230.6,
+  -163.6
+ ],
+ "strike_hand_xy": {
+  "2": [
+   627,
+   118
+  ],
+  "3": [
+   627,
+   118
+  ],
+  "4": [
+   627,
+   115
+  ],
+  "5": [
+   627,
+   115
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    16,
+    595,
+    55,
+    472
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    427,
+    312
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 1,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    25,
+    595,
+    14,
+    472
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    467,
+    276
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    26,
+    595,
+    2,
+    645
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    627,
+    118
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 12,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    26,
+    595,
+    8,
+    645
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    627,
+    118
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    26,
+    595,
+    13,
+    645
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    627,
+    115
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    28,
+    595,
+    20,
+    645
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    627,
+    115
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    23,
+    595,
+    18,
+    521
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    521,
+    190
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    16,
+    595,
+    91,
+    472
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    429,
+    310
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   595,
+   595,
+   595,
+   595,
+   595,
+   595,
+   595,
+   595
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Arm straight out with the palm open, held f3-f6, then lowered. A detached ray streak Grok drew in src ~19-25 is not in the picks.",
+  "redo_candidate": false,
+  "minor_issue": false,
+  "first_frame_start_mad": 3.29,
+  "src_picks": "1,13,31,49,67,85,103,145"
+ },
+ "strike_frames": [
+  2,
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "2": [
+   645,
+   82
+  ],
+  "3": [
+   645,
+   80
+  ],
+  "4": [
+   645,
+   81
+  ],
+  "5": [
+   645,
+   82
+  ]
+ }
+}

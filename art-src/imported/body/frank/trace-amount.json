@@ -1,0 +1,233 @@
+{
+ "name": "frank",
+ "move": "trace-amount",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/442b.mp4 (stream 0)",
+ "frameW": 434,
+ "frameH": 619,
+ "idle_cell_w": 529,
+ "idle_anchor_x": 265.5,
+ "width_mode": "cell",
+ "pad_top": 17,
+ "idle_cell_h": 602,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9677,
+ "foot_row": 599,
+ "visibleH": 584,
+ "scale": 0.9759,
+ "offset": [
+  -328.3,
+  -156.8
+ ],
+ "strike_hand_xy": {
+  "2": [
+   420,
+   255
+  ],
+  "3": [
+   430,
+   290
+  ],
+  "4": [
+   430,
+   288
+  ],
+  "5": [
+   393,
+   358
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    33,
+    599,
+    11,
+    409
+   ],
+   "foot": 599,
+   "front_hand_xy": [
+    379,
+    206
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 7,
+   "bbox": [
+    71,
+    599,
+    11,
+    409
+   ],
+   "foot": 599,
+   "front_hand_xy": [
+    399,
+    245
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    195,
+    599,
+    11,
+    420
+   ],
+   "foot": 599,
+   "front_hand_xy": [
+    420,
+    255
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    236,
+    599,
+    11,
+    430
+   ],
+   "foot": 599,
+   "front_hand_xy": [
+    430,
+    290
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    233,
+    599,
+    11,
+    430
+   ],
+   "foot": 599,
+   "front_hand_xy": [
+    430,
+    288
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    135,
+    599,
+    13,
+    409
+   ],
+   "foot": 599,
+   "front_hand_xy": [
+    393,
+    358
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    15,
+    599,
+    17,
+    409
+   ],
+   "foot": 599,
+   "front_hand_xy": [
+    348,
+    201
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    12,
+    599,
+    17,
+    409
+   ],
+   "foot": 599,
+   "front_hand_xy": [
+    352,
+    187
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   599,
+   599,
+   599,
+   599,
+   599,
+   599,
+   599,
+   599
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Quick sway back into a deep duck, held f3-f6, then he pops up. Grok then threw a stray jab (src ~91-115), which is skipped. 4:3 clip, measured scale.",
+  "redo_candidate": false,
+  "minor_issue": false,
+  "first_frame_start_mad": 2.38,
+  "src_picks": "1,7,13,19,25,37,49,73"
+ },
+ "strike_frames": [
+  2,
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "2": [
+   420,
+   249
+  ],
+  "3": [
+   430,
+   290
+  ],
+  "4": [
+   430,
+   287
+  ],
+  "5": [
+   409,
+   572
+  ]
+ }
+}

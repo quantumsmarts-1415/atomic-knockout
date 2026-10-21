@@ -117,6 +117,7 @@ export function interceptHit(defender, attacker, move, time) {
         baseKnockback: defense.counterKnockback ?? 120,
         knockbackGrowth: defense.counterKnockbackGrowth ?? 1.6,
         isCounterAttack: true,
+        stunChance: defense.stunChance,
         onHit: counterHitFx(defense),
       },
     };
@@ -179,6 +180,7 @@ export function interceptHit(defender, attacker, move, time) {
           baseKnockback: ret.knockback ?? 70,
           knockbackGrowth: ret.growth ?? 1.2,
           isCounterAttack: true,
+          stunChance: defense.stunChance,
           onHit: counterHitFx(defense, ret),
         },
       };
@@ -231,6 +233,7 @@ export function interceptHit(defender, attacker, move, time) {
           baseKnockback: defense.counterKnockback ?? 180,
           knockbackGrowth: defense.counterKnockbackGrowth ?? 4,
           isCounterAttack: true,
+          stunChance: defense.stunChance,
           rootMs: rooted,
           onHit: counterHitFx(defense, null, {
             root: rooted || undefined,
@@ -266,6 +269,7 @@ export function interceptHit(defender, attacker, move, time) {
           baseKnockback: ret.knockback ?? 210,
           knockbackGrowth: ret.growth ?? 4,
           isCounterAttack: true,
+          stunChance: defense.stunChance,
           onHit: counterHitFx(defense, ret),
         },
       };

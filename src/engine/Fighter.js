@@ -476,11 +476,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       inp.left = inp.right;
       inp.right = left;
     }
-    if (this.dazzleUntil > time) {
-      const left = inp.left;
-      inp.left = inp.right;
-      inp.right = left;
-    }
+    // Dazzle is glare only. It does not reverse controls or blank the next hit.
     let pressedJump = inp.jump && !this._prev.jump && !((this.goldUntil ?? 0) > time);
     let pressedAttack = inp.attack && !this._prev.attack;
     let pressedSpecial = inp.special && !this._prev.special;
@@ -2802,6 +2798,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       baseKnockback: ret.knockback ?? 40,
       knockbackGrowth: ret.growth ?? 0.4,
       isCounterAttack: true,
+      stunChance: this.defenseMove.stunChance,
       onHit: ret.blind || ret.stun ? { blind: ret.blind, stun: ret.stun } : undefined,
     }, time, this.facing);
     if (cdmg > 0) this.scene?.noteHit?.(this, attacker, { name: this.defenseMove.name, type: ret.type });

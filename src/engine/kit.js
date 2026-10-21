@@ -61,8 +61,9 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.elecTakenMult = spec.mult ?? 1.35;
     victim.elecTakenUntil = time + (spec.ms ?? 5000);
   }
-  if (fx.stun) lock(victim, time, fx.stun, true);
-  if (fx.freeze) {
+  const proc = (fx.stun || fx.freeze) && stunProc(attacker, victim, move);
+  if (fx.stun && proc) lock(victim, time, fx.stun, true);
+  if (fx.freeze && proc) {
     lock(victim, time, fx.freeze, true);
     victim.frozenUntil = Math.max(victim.frozenUntil ?? 0, time + fx.freeze);
   }
@@ -149,7 +150,7 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.debuffCoat = fx.coat;
     victim.debuffCoatUntil = time + (fx.coatMs ?? fx.markMs ?? 2000);
   }
-  if (attacker?.charDef?.id && (fx.glow || fx.coat || fx.stun)) {
+  if (attacker?.charDef?.id && (fx.glow || fx.coat || (fx.stun && proc))) {
     victim.clingFrom = {
       id: attacker.charDef.id,
       move: move.name,
@@ -216,6 +217,25 @@ export function markedStrikeTargets(owner, move, fighters, now, already) {
 export function visibleAlpha(fighter, time, faded) {
   if ((fighter?.revealedUntil ?? 0) > time) return 1;
   return faded;
+}
+
+function hitDealsDamage(move) {
+  return (move?.damage ?? 0) > 0 || (move?.damage2 ?? 0) > 0 || (move?.damage3 ?? 0) > 0;
+}
+
+/**
+ * A damaging stun or freeze lands on stunChance (default one half).
+ * A hit that deals no damage, such as Defining Second, always lands.
+ * The tournament's seeded rng makes the roll repeatable. Live play uses Math.random.
+ */
+function stunProc(attacker, victim, move) {
+  if (!hitDealsDamage(move)) return true;
+  const chance = Number.isFinite(move?.stunChance) ? move.stunChance : 0.5;
+  if (chance >= 1) return true;
+  if (chance <= 0) return false;
+  const rng = attacker?.scene?.rng || victim?.scene?.rng;
+  const roll = typeof rng === 'function' ? rng() : Math.random();
+  return roll < chance;
 }
 
 function lock(victim, time, ms, cancelAttack) {

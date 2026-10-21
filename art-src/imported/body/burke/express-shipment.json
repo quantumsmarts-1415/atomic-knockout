@@ -1,0 +1,213 @@
+{
+ "name": "burke",
+ "move": "express-shipment",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/399b.mp4 (stream 0)",
+ "frameW": 809,
+ "frameH": 607,
+ "idle_cell_w": 597,
+ "idle_anchor_x": 278.0,
+ "width_mode": "cell",
+ "pad_top": 6,
+ "idle_cell_h": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9671,
+ "foot_row": 587,
+ "visibleH": 572,
+ "scale": 1.37046,
+ "offset": [
+  -328.4,
+  -294.7
+ ],
+ "strike_hand_xy": {
+  "4": [
+   688,
+   138
+  ],
+  "5": [
+   800,
+   158
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    19,
+    587,
+    85,
+    414
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    373,
+    325
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    47,
+    587,
+    135,
+    562
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    515,
+    222
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    61,
+    587,
+    184,
+    562
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    529,
+    233
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    71,
+    587,
+    192,
+    743
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    713,
+    166
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    59,
+    587,
+    124,
+    696
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    688,
+    138
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    82,
+    587,
+    129,
+    806
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    800,
+    158
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 121,
+   "bbox": [
+    25,
+    587,
+    179,
+    565
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    565,
+    214
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    9,
+    587,
+    176,
+    557
+   ],
+   "foot": 587,
+   "front_hand_xy": [
+    419,
+    322
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   587,
+   587,
+   587,
+   587,
+   587,
+   587,
+   587,
+   587
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 1.73,
+  "notes": "Forward shove with mostly one hand leading (not clearly two-handed). Feet pinned (video drift up to 16 px).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "4": [
+   696,
+   121
+  ],
+  "5": [
+   806,
+   146
+  ]
+ }
+}

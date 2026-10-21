@@ -1,0 +1,222 @@
+{
+ "name": "burke",
+ "move": "hot-cell",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/398b.mp4 (stream 0)",
+ "frameW": 597,
+ "frameH": 601,
+ "idle_cell_w": 597,
+ "idle_anchor_x": 278.0,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 10.0,
+ "loop": false,
+ "footY": 0.9667,
+ "foot_row": 581,
+ "visibleH": 566,
+ "scale": 1.18658,
+ "offset": [
+  -406.7,
+  -295.9
+ ],
+ "strike_hand_xy": {
+  "3": [
+   458,
+   251
+  ],
+  "4": [
+   458,
+   254
+  ],
+  "5": [
+   456,
+   244
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    581,
+    84,
+    413
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    371,
+    321
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    48,
+    581,
+    115,
+    461
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    461,
+    238
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    66,
+    581,
+    110,
+    478
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    460,
+    253
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    66,
+    581,
+    112,
+    478
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    458,
+    251
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    66,
+    581,
+    112,
+    478
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    458,
+    254
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    65,
+    581,
+    100,
+    473
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    456,
+    244
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 127,
+   "bbox": [
+    55,
+    581,
+    105,
+    475
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    447,
+    241
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    67,
+    581,
+    110,
+    478
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    458,
+    255
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   581,
+   581,
+   581,
+   581,
+   581,
+   581,
+   581,
+   581
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 1.9,
+  "notes": "Compact forearm guard, crouched. Grok added a forward punch (src ~103-115), which is skipped. Feet pinned (video drifted 10 px when he crouched).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   477,
+   568
+  ],
+  "4": [
+   477,
+   567
+  ],
+  "5": [
+   472,
+   565
+  ]
+ }
+}

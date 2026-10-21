@@ -1,0 +1,213 @@
+{
+ "name": "burke",
+ "move": "golden-bear-swipe",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/397b.mp4 (stream 0)",
+ "frameW": 1754,
+ "frameH": 617,
+ "idle_cell_w": 597,
+ "idle_anchor_x": null,
+ "width_mode": "src",
+ "pad_top": 16,
+ "idle_cell_h": 601,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9676,
+ "foot_row": 597,
+ "visibleH": 582,
+ "scale": 1.37046,
+ "offset": [
+  0.0,
+  -294.7
+ ],
+ "strike_hand_xy": {
+  "4": [
+   1076,
+   169
+  ],
+  "5": [
+   1097,
+   250
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    30,
+    597,
+    274,
+    602
+   ],
+   "foot": 597,
+   "front_hand_xy": [
+    561,
+    335
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    37,
+    597,
+    337,
+    761
+   ],
+   "foot": 597,
+   "front_hand_xy": [
+    761,
+    236
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    84,
+    597,
+    345,
+    750
+   ],
+   "foot": 597,
+   "front_hand_xy": [
+    701,
+    364
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    62,
+    597,
+    339,
+    1005
+   ],
+   "foot": 597,
+   "front_hand_xy": [
+    1000,
+    146
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    90,
+    597,
+    348,
+    1076
+   ],
+   "foot": 597,
+   "front_hand_xy": [
+    1076,
+    169
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    109,
+    597,
+    353,
+    1098
+   ],
+   "foot": 597,
+   "front_hand_xy": [
+    1097,
+    250
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    146,
+    597,
+    359,
+    986
+   ],
+   "foot": 597,
+   "front_hand_xy": [
+    882,
+    392
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    11,
+    597,
+    386,
+    742
+   ],
+   "foot": 597,
+   "front_hand_xy": [
+    659,
+    331
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   597,
+   597,
+   597,
+   597,
+   597,
+   597,
+   597,
+   597
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 1.74,
+  "notes": "WIDE, width from source (1280 x 1.37 = 1754). Forward lunge with an extended claw hand, then a downward rake (f5-f6). It reads more as a reaching rake than a big diagonal claw swipe. Feet pinned (video drift 8 px).",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "4": [
+   1076,
+   169
+  ],
+  "5": [
+   1097,
+   250
+  ]
+ }
+}

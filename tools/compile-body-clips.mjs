@@ -24,7 +24,7 @@ for (const id of readdirSync(root).sort()) {
       if (!xy) throw new Error(`${id} ${file} frame ${i} has no hand`);
       hands.push([Math.round(xy[0]), Math.round(xy[1])]);
     }
-    moves[json.move] = {
+    const record = {
       frameW: json.frameW,
       frameH: json.frameH,
       count: json.count,
@@ -34,6 +34,18 @@ for (const id of readdirSync(root).sort()) {
       strikes: [...json.strike_frames],
       hands,
     };
+    // A charge loops its gather. A hop inside that range (Quantum Leap)
+    // plays once on release instead of bouncing for the whole hold.
+    const first = Math.min(...json.strike_frames);
+    const ground = json.foot_row;
+    let end = 0;
+    for (let i = 0; i < first; i++) {
+      const foot = json.frames?.[i]?.foot;
+      if (foot == null || ground - foot > 40) break;
+      end = i;
+    }
+    if (first > 0 && end < first - 1) record.gather = [0, end];
+    moves[json.move] = record;
   }
   if (Object.keys(moves).length) packs[id] = moves;
 }

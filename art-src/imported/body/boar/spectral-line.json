@@ -1,0 +1,222 @@
+{
+ "name": "boar",
+ "move": "spectral-line",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/395b.mp4 (stream 0)",
+ "frameW": 787,
+ "frameH": 645,
+ "idle_cell_w": 753,
+ "idle_anchor_x": 263.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 645,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9705,
+ "foot_row": 626,
+ "visibleH": 578,
+ "scale": 1.42716,
+ "offset": [
+  -333.8,
+  -280.2
+ ],
+ "strike_hand_xy": {
+  "3": [
+   781,
+   167
+  ],
+  "4": [
+   776,
+   167
+  ],
+  "5": [
+   776,
+   166
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    48,
+    627,
+    77,
+    459
+   ],
+   "foot": 627,
+   "front_hand_xy": [
+    459,
+    255
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    71,
+    627,
+    222,
+    653
+   ],
+   "foot": 627,
+   "front_hand_xy": [
+    599,
+    259
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 348,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    65,
+    627,
+    197,
+    784
+   ],
+   "foot": 627,
+   "front_hand_xy": [
+    784,
+    172
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 676,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    60,
+    627,
+    177,
+    782
+   ],
+   "foot": 627,
+   "front_hand_xy": [
+    781,
+    167
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 7032,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    62,
+    627,
+    174,
+    776
+   ],
+   "foot": 627,
+   "front_hand_xy": [
+    776,
+    167
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 8328,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    60,
+    627,
+    177,
+    776
+   ],
+   "foot": 627,
+   "front_hand_xy": [
+    776,
+    166
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 7568,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 115,
+   "bbox": [
+    63,
+    627,
+    174,
+    687
+   ],
+   "foot": 627,
+   "front_hand_xy": [
+    687,
+    205
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 452,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    48,
+    627,
+    168,
+    596
+   ],
+   "foot": 627,
+   "front_hand_xy": [
+    561,
+    249
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 372,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   627,
+   627,
+   627,
+   627,
+   627,
+   627,
+   627,
+   627
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "first_frame_start_mad": 2.15,
+  "notes": "Grok drew its own thin beam from the hands (src 53-105, ran to the video edge). Removed locally (columns past the arm cut), so the FX draws the beam. Check the fingertips/glow at f3-f5 for a hard cut.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   781,
+   164
+  ],
+  "4": [
+   776,
+   164
+  ],
+  "5": [
+   776,
+   163
+  ]
+ }
+}

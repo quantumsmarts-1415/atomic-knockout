@@ -278,7 +278,11 @@ test('BootScene.preload queues portraits up front and sheets only for a playtest
   assert.ok(listeners.complete, 'should bind this.load.on("complete")');
   const images = loads.filter((l) => l.type === 'image');
   const sheets = loads.filter((l) => l.type === 'spritesheet');
-  assert.ok(images.length >= 1, 'portraits should still queue');
+  assert.ok(images.some((l) => l.key === 'char-hydra'), 'title portrait queues');
+  assert.ok(images.some((l) => l.key === 'char-natalie'), 'title partner portrait queues');
+  assert.ok(!images.some((l) => l.key === 'char-silas'), 'the rest of the roster waits until it is picked');
+  assert.ok(images.some((l) => l.key.endsWith('-thumb')), 'stage thumbnails queue');
+  assert.ok(!images.some((l) => /-layer\d+$/.test(l.key)), 'full stage layers wait for the match');
   assert.equal(sheets.length, 0, 'fighter sheets wait until select or the match');
 
   loads.length = 0;

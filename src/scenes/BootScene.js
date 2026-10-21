@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { showScene } from '../ui/flow.js';
-import { loadStageArt } from '../data/stages.js';
+import { loadStageThumbs } from '../data/stages.js';
+import { TITLE_PARTNER_ID } from '../ui/portraits.js';
 import { CHARACTERS, ROSTER } from '../data/characters.js';
 import { MATCH_STOCKS } from '../engine/matchRules.js';
 import { collectMoveStrips } from '../engine/moveClip.js';
@@ -155,6 +156,14 @@ export function repackOversizedSheets(scene, roster, maxSize = scene.game?.rende
     }
   }
   return packed;
+}
+
+/** Title screen cuts. The rest of the roster loads when a cursor lands on it. */
+export function queueTitlePortraits(loader, exists = () => false) {
+  for (const id of ['hydra', TITLE_PARTNER_ID]) {
+    const c = CHARACTERS[id];
+    if (c?.art && !exists(c.art.key)) loader.image(c.art.key, c.art.file);
+  }
 }
 
 export function loadRosterArt(loader, roster, exists = () => false) {
@@ -327,13 +336,11 @@ export default class BootScene extends Phaser.Scene {
       // can be checked without pulling the rest of the roster.
       loadRosterArt(this.load, spec.ids.map((id) => CHARACTERS[id]).filter(Boolean));
     } else {
-      // Portraits and stage art only. Each fighter's sheets load when that
-      // fighter is highlighted on the select screen, and again for the two
-      // (or more) fighters who actually enter the match.
-      for (const c of ROSTER) {
-        if (c.art) this.load.image(c.art.key, c.art.file);
-      }
-      loadStageArt(this.load);
+      // Title cuts and stage thumbnails only. A portrait and that fighter's
+      // sheets load when the select cursor lands on them. The match loads
+      // the chosen stage's full layers, not every arena.
+      queueTitlePortraits(this.load);
+      loadStageThumbs(this.load);
     }
   }
 

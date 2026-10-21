@@ -4,7 +4,7 @@ import {
   FONT_DISPLAY, FONT_MONO, GRID, MOTION, PLAYER_COLORS, THEME,
   drawFooterHints, drawHeader, drawMenuBackground, drawPanel, drawPortraitDisc, textStyle,
 } from '../ui/theme.js';
-import { STAGES, stageKey } from '../data/stages.js';
+import { STAGES, stageKey, stagePreviewFile } from '../data/stages.js';
 import { CHARACTERS } from '../data/characters.js';
 import { menuPortraitKey } from '../ui/portraits.js';
 import { play as sfx } from '../engine/sfx.js';
@@ -53,6 +53,9 @@ export default class StageSelectScene extends Phaser.Scene {
   create() {
     // Scene instances are reused between visits -- reset per-visit state.
     this.leaving = false;
+    this.previewBusy = false;
+    this.previewWant = null;
+    this.previewGen = (this.previewGen || 0) + 1;
     this.entries = [...STAGES.map((s) => s.id), RANDOM];
     const last = this.registry.get('lastStageId');
     this.cursor = Math.max(0, this.entries.indexOf(last));
@@ -96,6 +99,7 @@ export default class StageSelectScene extends Phaser.Scene {
     frame.lineStyle(1, THEME.mist, 0.14);
     frame.strokeRoundedRect(-TILE_W / 2 - 3, -TILE_H / 2 - 3, TILE_W + 6, TILE_H + 6, 10);
     c.add(frame);
+    const baseY = c.y;
     if (id === RANDOM) {
       const g = this.add.graphics();
       g.fillGradientStyle(0x463878, 0x463878, 0x1b1533, 0x1b1533, 1);
@@ -123,7 +127,7 @@ export default class StageSelectScene extends Phaser.Scene {
     const zone = this.add.zone(x, y, TILE_W, TILE_H).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(5);
     zone.on('pointerover', () => { if (this.cursor !== i && !this.leaving) { this.cursor = i; sfx('menuMove'); this.refresh(); } });
     zone.on('pointerdown', () => { if (this.leaving) return; this.cursor = i; this.confirm(); });
-    return { id, container: c, label };
+    return { id, container: c, label, baseY };
   }
 
   buildPreview() {
@@ -182,8 +186,10 @@ export default class StageSelectScene extends Phaser.Scene {
     const id = this.entries[this.cursor];
     this.tiles.forEach((t, i) => {
       const on = i === this.cursor;
-      if (instant) t.container.setScale(on ? 1.05 : 1);
-      else this.tweens.add({ targets: t.container, scale: on ? 1.05 : 1, duration: MOTION.quick, ease: MOTION.easeOut });
+      const scale = on ? 1.06 : 1;
+      const y = t.baseY + (on ? -6 : 0);
+      if (instant) t.container.setScale(scale).setY(y);
+      else this.tweens.add({ targets: t.container, scale, y, duration: MOTION.quick, ease: MOTION.easeOut });
       t.label.setColor(on ? THEME.mistCss : THEME.dimCss);
     });
     const { x, y } = this.tileXY(this.cursor);
@@ -207,7 +213,10 @@ export default class StageSelectScene extends Phaser.Scene {
       this.randomCard.setVisible(false);
       const key = stageKey(st, 'preview');
       if (this.textures.exists(key)) this.previewImg.setTexture(key).setDisplaySize(PREVIEW.w, PREVIEW.h).setVisible(true);
-      else this.previewImg.setVisible(false);
+      else {
+        this.previewImg.setVisible(false);
+        this.queueStagePreview(st);
+      }
       name = st.name;
       tag = st.layout ?? 'Classic';
       desc = prose(st.desc);
@@ -222,10 +231,42 @@ export default class StageSelectScene extends Phaser.Scene {
     g.fillRoundedRect(this.previewTag.x - tw + 10, this.previewTag.y - 11, tw, 22, 11);
     g.lineStyle(1, THEME.gold, 0.5);
     g.strokeRoundedRect(this.previewTag.x - tw + 10, this.previewTag.y - 11, tw, 22, 11);
-    if (!instant) {
-      this.previewImg.setAlpha(0.6);
+    if (!instant && this.previewImg.visible) {
+      this.previewImg.setAlpha(0);
       this.tweens.add({ targets: this.previewImg, alpha: 1, duration: MOTION.base, ease: MOTION.easeOut });
     }
+  }
+
+  // The highlighted arena's preview, and only that one, while the cursor moves.
+  queueStagePreview(st) {
+    if (!st) return;
+    const key = stageKey(st, 'preview');
+    if (this.textures.exists(key)) return;
+    this.previewWant = { key, file: stagePreviewFile(st), id: st.id };
+    this.pumpStagePreview();
+  }
+
+  pumpStagePreview() {
+    if (this.previewBusy || !this.previewWant) return;
+    const job = this.previewWant;
+    this.previewWant = null;
+    if (this.textures.exists(job.key)) {
+      this.pumpStagePreview();
+      return;
+    }
+    this.previewBusy = true;
+    const gen = this.previewGen;
+    this.load.image(job.key, job.file);
+    this.load.once('complete', () => {
+      if (gen !== this.previewGen) return;
+      this.previewBusy = false;
+      if (this.entries[this.cursor] === job.id && this.textures.exists(job.key)) {
+        this.previewImg.setTexture(job.key).setDisplaySize(PREVIEW.w, PREVIEW.h).setVisible(true).setAlpha(0);
+        this.tweens.add({ targets: this.previewImg, alpha: 1, duration: MOTION.base, ease: MOTION.easeOut });
+      }
+      this.pumpStagePreview();
+    });
+    this.load.start();
   }
 
   // -------------------------------------------------------------- input

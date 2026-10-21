@@ -70,6 +70,9 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     this.fxIds = new Set();
     this.tiles = this.slots.map((slot, i) => this.drawTile(slot, i));
+    for (const tile of this.tiles) {
+      if (tile.slot.charId) this.attachTilePhoto(CHARACTERS[tile.slot.charId]);
+    }
     this.gold = this.add.graphics();
     this.grid.add(this.gold);
     this.goldPhase = 0;
@@ -150,25 +153,17 @@ export default class CharacterSelectScene extends Phaser.Scene {
     g.fillRect(x, y + 6, 3, TILE_H - 12);
     this.grid.add(g);
 
-    const charDef = unlocked ? CHARACTERS[slot.charId] : null;
-    const hasPhoto = unlocked && charDef.art && this.textures.exists(charDef.art.key);
-    if (hasPhoto) {
-      const photo = this.add.image(x + TILE_W / 2 + 2, y + TILE_H / 2, charDef.art.key);
-      const pad = 8;
-      const scale = Math.min((TILE_W - pad) / photo.width, (TILE_H - pad) / photo.height);
-      photo.setScale(scale);
-      this.grid.add(photo);
-    }
-
     const numColor = unlocked ? THEME.goldCss : (slot.soon ? THEME.mistCss : THEME.disabledCss);
     const symColor = unlocked ? THEME.mistCss : (slot.soon ? THEME.mistCss : THEME.dimCss);
-    this.grid.add(this.add.text(x + 8, y + 2, String(slot.n), {
+    const num = this.add.text(x + 8, y + 2, String(slot.n), {
       fontFamily: FONT_MONO, fontSize: '10px', color: numColor,
-    }));
-    this.grid.add(this.add.text(x + TILE_W / 2 + 1, y + (hasPhoto ? TILE_H - 11 : TILE_H / 2 + (slot.soon ? 1 : 4)), slot.sym, {
-      fontFamily: FONT_DISPLAY, fontSize: hasPhoto ? '11px' : (slot.soon ? '12px' : '14px'),
+    });
+    const sym = this.add.text(x + TILE_W / 2 + 1, y + TILE_H / 2 + (slot.soon ? 1 : 4), slot.sym, {
+      fontFamily: FONT_DISPLAY, fontSize: slot.soon ? '12px' : '14px',
       color: symColor,
-    }).setOrigin(0.5));
+    }).setOrigin(0.5);
+    this.grid.add(num);
+    this.grid.add(sym);
     if (slot.soon) {
       this.grid.add(this.add.text(x + TILE_W / 2, y + TILE_H - 8, 'soon', {
         fontFamily: FONT_MONO, fontSize: '8px', color: THEME.tealCss,
@@ -179,6 +174,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     zone.on('pointerover', () => {
       const human = this.players?.find((p) => p.isKeyboard && p.phase === 'picking');
       if (!human || human.cursor === i) return;
+      sfx('menuMove');
       human.cursor = i;
       this.scrollTo(i);
       this.buildPreview(human);
@@ -186,7 +182,27 @@ export default class CharacterSelectScene extends Phaser.Scene {
     });
     zone.on('pointerdown', () => this.pickWithPointer(i));
     this.grid.add(zone);
-    return { slot, x, y, unlocked };
+    return { slot, x, y, unlocked, sym, num, photo: null };
+  }
+
+  // The boot download only has the title cuts. A tile grows its portrait
+  // once that fighter's file has actually arrived.
+  attachTilePhoto(def) {
+    if (!def?.art?.key || !this.textures.exists(def.art.key)) return;
+    for (const tile of this.tiles || []) {
+      if (tile.photo || tile.slot.charId !== def.id) continue;
+      const { x, y } = tile;
+      const photo = this.add.image(x + TILE_W / 2 + 2, y + TILE_H / 2, def.art.key);
+      const pad = 8;
+      const scale = Math.min((TILE_W - pad) / photo.width, (TILE_H - pad) / photo.height);
+      photo.setScale(scale);
+      const at = tile.sym ? this.grid.getIndex(tile.sym) : -1;
+      if (at >= 0) this.grid.addAt(photo, at);
+      else this.grid.add(photo);
+      tile.photo = photo;
+      tile.sym?.setPosition(x + TILE_W / 2 + 1, y + TILE_H - 11);
+      tile.sym?.setFontSize?.('11px');
+    }
   }
 
   pickWithPointer(index) {
@@ -264,7 +280,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
     if (y < this.scrollY) this.scrollY = y;
     else if (y + TILE_H > this.scrollY + VIEW_H) this.scrollY = y + TILE_H - VIEW_H;
     this.scrollY = Phaser.Math.Clamp(this.scrollY, 0, this.maxScroll);
-    this.tweens.add({ targets: this.grid, y: VIEW_Y - this.scrollY, duration: MOTION.base, ease: MOTION.easeOut });
+    this.scrollTween?.stop();
+    this.scrollTween = this.tweens.add({
+      targets: this.grid, y: VIEW_Y - this.scrollY, duration: MOTION.base + 40, ease: MOTION.easeInOut,
+    });
     this.drawScrollbar();
   }
 
@@ -334,15 +353,19 @@ export default class CharacterSelectScene extends Phaser.Scene {
     const slot = this.slots[p.cursor];
     if (p.phase === 'picking' && slot.charId) {
       sfx('menuConfirm');
+      this.cameras.main.flash(120, 240, 193, 74, false);
       const def = CHARACTERS[slot.charId];
       p.palette = this.defaultPalette(p, def);
       // fighters with a single look skip straight to locked
       p.phase = def.palettes.length > 1 ? 'palette' : 'locked';
       this.buildPreview(p);
+      this.popPreview(p);
       if (p.phase === 'locked') this.checkAllLocked();
     } else if (p.phase === 'palette') {
       sfx('menuConfirm');
+      this.cameras.main.flash(120, 240, 193, 74, false);
       p.phase = 'locked';
+      this.popPreview(p);
       this.pulsePlate(p);
       this.checkAllLocked();
     }
@@ -484,12 +507,24 @@ export default class CharacterSelectScene extends Phaser.Scene {
     const maxScale = (feet - PREVIEW_TOP) / visualHeight;
     p.previewRig.baseScale = Math.min(desiredScale, Math.max(0.4, maxScale));
     this.add.existing(p.previewRig);
+    const rise = 14;
+    p.previewRig.y = feet + rise;
     p.previewRig.setAlpha(0);
-    this.tweens.add({ targets: p.previewRig, alpha: 1, duration: MOTION.quick, ease: MOTION.easeOut });
+    this.tweens.add({
+      targets: p.previewRig, alpha: 1, y: feet, duration: MOTION.base, ease: MOTION.easeOut,
+    });
+  }
+
+  popPreview(p) {
+    const rig = p?.previewRig;
+    if (!rig) return;
+    const target = rig.baseScale || 1;
+    rig.baseScale = target * 0.9;
+    this.tweens.add({ targets: rig, baseScale: target, duration: MOTION.base, ease: MOTION.pop });
   }
 
   queuePreviewSheets(def) {
-    if (!def?.id || !def.art?.sheets) return;
+    if (!def?.id) return;
     this.sheetTried ??= new Set();
     if (this.sheetTried.has(def.id)) return;
     this.sheetWant ??= new Set();
@@ -497,14 +532,18 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.pumpPreviewSheets();
   }
 
+  fighterArtMissing(c) {
+    if (!c?.art) return false;
+    if (c.art.key && !this.textures.exists(c.art.key)) return true;
+    if (!c.art.sheets) return false;
+    return !this.textures.exists(`${c.art.key}-idle`);
+  }
+
   pumpPreviewSheets() {
     if (this.sheetBusy || !this.sheetWant?.size) return;
     const roster = [...this.sheetWant].map((id) => CHARACTERS[id]).filter(Boolean);
     this.sheetWant.clear();
-    const missing = roster.filter((c) => {
-      const idle = `${c.art.key}-idle`;
-      return !this.textures.exists(idle);
-    });
+    const missing = roster.filter((c) => this.fighterArtMissing(c));
     if (!missing.length) return;
     for (const c of missing) this.sheetTried.add(c.id);
     this.sheetBusy = true;
@@ -512,6 +551,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.load.once('complete', () => {
       this.sheetBusy = false;
       registerSheetAnims(this, missing);
+      for (const c of missing) this.attachTilePhoto(c);
       for (const p of this.players) {
         const id = this.slots[p.cursor]?.charId;
         if (missing.some((c) => c.id === id)) this.buildPreview(p);

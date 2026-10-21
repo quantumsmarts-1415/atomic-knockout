@@ -1,0 +1,223 @@
+{
+ "name": "fermi",
+ "move": "fermi-paradox",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/431b.mp4 (stream 0)",
+ "frameW": 572,
+ "frameH": 618,
+ "idle_cell_w": 605,
+ "idle_anchor_x": 262.5,
+ "width_mode": "cell",
+ "pad_top": 7,
+ "idle_cell_h": 611,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9676,
+ "foot_row": 598,
+ "visibleH": 583,
+ "scale": 1.1497,
+ "offset": [
+  -269.2,
+  -159.8
+ ],
+ "strike_hand_xy": {
+  "3": [
+   462,
+   98
+  ],
+  "4": [
+   468,
+   98
+  ],
+  "5": [
+   563,
+   110
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    21,
+    598,
+    37,
+    395
+   ],
+   "foot": 598,
+   "front_hand_xy": [
+    370,
+    285
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    12,
+    598,
+    37,
+    395
+   ],
+   "foot": 598,
+   "front_hand_xy": [
+    395,
+    147
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    10,
+    598,
+    32,
+    469
+   ],
+   "foot": 598,
+   "front_hand_xy": [
+    466,
+    100
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    10,
+    598,
+    32,
+    512
+   ],
+   "foot": 598,
+   "front_hand_xy": [
+    462,
+    98
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    10,
+    598,
+    32,
+    515
+   ],
+   "foot": 598,
+   "front_hand_xy": [
+    468,
+    98
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    24,
+    598,
+    32,
+    568
+   ],
+   "foot": 598,
+   "front_hand_xy": [
+    563,
+    110
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    19,
+    598,
+    32,
+    429
+   ],
+   "foot": 598,
+   "front_hand_xy": [
+    427,
+    176
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    21,
+    598,
+    37,
+    395
+   ],
+   "foot": 598,
+   "front_hand_xy": [
+    370,
+    286
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   598,
+   598,
+   598,
+   598,
+   598,
+   598,
+   598,
+   598
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Front hand raised forward and up with the fingers snapped open, held f4-f6.",
+  "redo_candidate": false,
+  "first_frame_start_mad": 1.99,
+  "src_picks": "1,13,19,31,49,67,91,145"
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   512,
+   75
+  ],
+  "4": [
+   515,
+   88
+  ],
+  "5": [
+   568,
+   75
+  ]
+ }
+}

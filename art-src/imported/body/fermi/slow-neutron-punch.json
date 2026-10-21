@@ -1,0 +1,223 @@
+{
+ "name": "fermi",
+ "move": "slow-neutron-punch",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/429b.mp4 (stream 0)",
+ "frameW": 690,
+ "frameH": 611,
+ "idle_cell_w": 605,
+ "idle_anchor_x": 262.5,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 611,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9673,
+ "foot_row": 591,
+ "visibleH": 576,
+ "scale": 1.1497,
+ "offset": [
+  -269.2,
+  -159.8
+ ],
+ "strike_hand_xy": {
+  "3": [
+   682,
+   157
+  ],
+  "4": [
+   687,
+   156
+  ],
+  "5": [
+   673,
+   157
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    14,
+    591,
+    37,
+    395
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    370,
+    278
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    21,
+    591,
+    37,
+    395
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    372,
+    252
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    30,
+    591,
+    37,
+    402
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    402,
+    236
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    33,
+    591,
+    41,
+    682
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    682,
+    157
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    33,
+    591,
+    41,
+    687
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    687,
+    156
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    31,
+    591,
+    41,
+    673
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    673,
+    157
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 109,
+   "bbox": [
+    12,
+    591,
+    39,
+    524
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    408,
+    213
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    19,
+    591,
+    37,
+    395
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    372,
+    250
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   591,
+   591,
+   591,
+   591,
+   591,
+   591,
+   591,
+   591
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Slow heavy straight punch, held f4-f6, then recovery.",
+  "redo_candidate": false,
+  "first_frame_start_mad": 1.99,
+  "src_picks": "1,31,61,73,85,97,109,145"
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   682,
+   157
+  ],
+  "4": [
+   687,
+   156
+  ],
+  "5": [
+   673,
+   157
+  ]
+ }
+}

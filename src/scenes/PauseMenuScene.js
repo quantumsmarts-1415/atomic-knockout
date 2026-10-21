@@ -2,11 +2,10 @@ import * as Phaser from 'phaser';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { showScene } from '../ui/flow.js';
 import { play as sfx } from '../engine/sfx.js';
-import { MOTION, THEME, drawFooterHints, drawPanel, makeButton, textStyle } from '../ui/theme.js';
+import { FONT_DISPLAY, MOTION, PLAYER_COLORS, THEME, drawFooterHints, drawPanel, makeButton, textStyle } from '../ui/theme.js';
+import { percentColor } from '../engine/feel.js';
 import { openSettings } from '../ui/settings.js';
 import { pollGamepads } from '../engine/gamepad.js';
-
-const PANEL = { w: 440, h: 340 };
 
 export default class PauseMenuScene extends Phaser.Scene {
   constructor() {
@@ -15,22 +14,32 @@ export default class PauseMenuScene extends Phaser.Scene {
 
   init(data) {
     this.resumeKey = data.resumeKey ?? 'Battle';
+    this.stageName = data.stageName || '';
+    this.fighters = Array.isArray(data.fighters) ? data.fighters.slice(0, 6) : [];
   }
 
   create() {
     this.overlay = null;
     this.closing = false;
-    const px = (W - PANEL.w) / 2;
-    const py = (H - PANEL.h) / 2;
+    const rows = this.fighters.length;
+    const listH = rows * 32;
+    const panelW = 500;
+    const buttonTop = 118 + listH + (rows ? 16 : 0);
+    const hintAt = buttonTop + 3 * 54 + 10;
+    const panelH = hintAt + 36;
+    const px = (W - panelW) / 2;
+    const py = (H - panelH) / 2;
     const veil = this.add.rectangle(W / 2, H / 2, W, H, THEME.void, 0).setDepth(0);
     this.tweens.add({ targets: veil, fillAlpha: 0.72, duration: MOTION.base });
-    const panel = drawPanel(this, px, py, PANEL.w, PANEL.h, 18).setDepth(1);
-    const kicker = this.add.text(W / 2, py + 30, 'MATCH PAUSED', textStyle('kicker')).setOrigin(0.5).setDepth(2);
-    const title = this.add.text(W / 2, py + 54, 'PAUSED', textStyle('h1')).setOrigin(0.5, 0).setDepth(2);
+    const panel = drawPanel(this, px, py, panelW, panelH, 18).setDepth(1);
+    const kicker = this.add.text(W / 2, py + 26, 'MATCH PAUSED', textStyle('kicker')).setOrigin(0.5).setDepth(2);
+    const title = this.add.text(W / 2, py + 46, 'PAUSED', textStyle('h1')).setOrigin(0.5, 0).setDepth(2);
+    const stage = this.add.text(W / 2, py + 96, this.stageName ? this.stageName.toUpperCase() : '', textStyle('label', { color: THEME.tealCss })).setOrigin(0.5).setDepth(2);
+    const rosterBits = this.drawRoster(px, py + 114, panelW);
 
     const bw = 300;
     const bx = (W - bw) / 2;
-    const by = py + 118;
+    const by = py + buttonTop;
     const entries = [
       { label: 'Resume', keyHint: 'ESC', onPress: () => this.resumeMatch() },
       { label: 'Settings', onPress: () => this.openSettings() },
@@ -47,9 +56,9 @@ export default class PauseMenuScene extends Phaser.Scene {
     this.hints = drawFooterHints(this, [
       { keys: ['W', 'S'], label: 'Choose' },
       { key: 'ENTER', label: 'Select' },
-    ], { y: py + PANEL.h - 30, depth: 2 });
+    ], { y: py + hintAt, depth: 2 });
 
-    const group = [panel, kicker, title, ...this.buttons.map((b) => b.container)];
+    const group = [panel, kicker, title, stage, ...rosterBits, ...this.buttons.map((b) => b.container)];
     this.group = group;
     group.forEach((o) => { o.setAlpha(0); });
     this.tweens.add({ targets: group, alpha: 1, duration: MOTION.base, ease: MOTION.easeOut });
@@ -64,6 +73,32 @@ export default class PauseMenuScene extends Phaser.Scene {
     for (const k of ['DOWN', 'S']) kb.on(`keydown-${k}`, guard(() => this.move(1)));
     for (const k of ['ENTER', 'SPACE', 'F', 'K']) kb.on(`keydown-${k}`, guard(() => this.buttons[this.selected].press()));
     kb.on('keydown-Q', guard(() => this.quit()));
+  }
+
+  drawRoster(px, top, panelW) {
+    const bits = [];
+    const left = px + 36;
+    const right = px + panelW - 36;
+    this.fighters.forEach((f, i) => {
+      const y = top + i * 32;
+      const pip = this.add.circle(left, y, 5, PLAYER_COLORS[i % PLAYER_COLORS.length]).setDepth(2);
+      const name = this.add.text(left + 16, y, `${f.name || 'Fighter'}${f.symbol ? `  ${f.symbol}` : ''}`, {
+        fontFamily: FONT_DISPLAY, fontSize: '15px', color: THEME.mistCss,
+      }).setOrigin(0, 0.5).setDepth(2);
+      const percent = this.add.text(right - 78, y, `${Math.round(f.percent || 0)}%`, {
+        fontFamily: FONT_DISPLAY, fontSize: '16px', color: percentColor(f.percent || 0),
+      }).setOrigin(1, 0.5).setDepth(2);
+      const stocks = this.add.graphics().setDepth(2);
+      const max = Math.max(1, f.stocksMax || 3);
+      const have = Math.max(0, f.stocks || 0);
+      for (let s = 0; s < max; s++) {
+        const cx = right - (max - 1 - s) * 14;
+        stocks.fillStyle(s < have ? PLAYER_COLORS[i % PLAYER_COLORS.length] : 0x2a2440, 1);
+        stocks.fillCircle(cx, y, 4);
+      }
+      bits.push(pip, name, percent, stocks);
+    });
+    return bits;
   }
 
   select(i, sound = true) {

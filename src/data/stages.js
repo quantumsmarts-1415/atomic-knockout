@@ -492,16 +492,29 @@ export function getStageBounds(stage) {
   };
 }
 
-// Queue every stage image on a Phaser loader (BootScene).
-export function loadStageArt(loader, stages = STAGES) {
+function queueStageImage(loader, exists, key, file) {
+  if (exists(key)) return;
+  loader.image(key, file);
+}
+
+// Select-grid thumbnails only. Full layers stay off the boot download.
+export function loadStageThumbs(loader, stages = STAGES, exists = () => false) {
+  for (const st of stages) queueStageImage(loader, exists, stageKey(st, 'thumb'), stageThumbFile(st));
+}
+
+// Queue stage images on a Phaser loader. Pass one stage from Battle so a
+// match fetches that arena only. `exists` skips textures already on screen.
+export function loadStageArt(loader, stages = STAGES, exists = () => false) {
   for (const st of stages) {
-    loader.image(stageKey(st, 'thumb'), stageThumbFile(st));
-    loader.image(stageKey(st, 'preview'), stagePreviewFile(st));
+    queueStageImage(loader, exists, stageKey(st, 'thumb'), stageThumbFile(st));
+    queueStageImage(loader, exists, stageKey(st, 'preview'), stagePreviewFile(st));
     const art = st.art;
     if (!art) continue;
-    art.layers.forEach((l, i) => loader.image(stageKey(st, `layer${i}`), art.dir + l.file));
-    if (art.terrain) loader.image(stageKey(st, 'terrain'), art.dir + art.terrain);
-    if (art.movingPlatform) loader.image(stageKey(st, 'moving'), art.dir + art.movingPlatform);
-    for (const [name, file] of Object.entries(st.intro?.art ?? {})) loader.image(stageKey(st, `intro-${name}`), art.dir + file);
+    art.layers.forEach((l, i) => queueStageImage(loader, exists, stageKey(st, `layer${i}`), art.dir + l.file));
+    if (art.terrain) queueStageImage(loader, exists, stageKey(st, 'terrain'), art.dir + art.terrain);
+    if (art.movingPlatform) queueStageImage(loader, exists, stageKey(st, 'moving'), art.dir + art.movingPlatform);
+    for (const [name, file] of Object.entries(st.intro?.art ?? {})) {
+      queueStageImage(loader, exists, stageKey(st, `intro-${name}`), art.dir + file);
+    }
   }
 }

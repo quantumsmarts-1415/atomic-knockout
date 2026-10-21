@@ -62,6 +62,19 @@ export default class ResultsScene extends Phaser.Scene {
       this.winnerRig.baseScale = Math.min(1.2, (FEET_Y - 112) / visual);
       this.winnerRig.setDepth(2);
       this.add.existing(this.winnerRig);
+      this.winScale = this.winnerRig.baseScale;
+      this.winnerRig.baseScale = this.winScale * 0.86;
+      this.winnerRig.y = FEET_Y + 18;
+      this.tweens.add({
+        targets: this.winnerRig,
+        baseScale: this.winScale,
+        y: FEET_Y,
+        duration: MOTION.slow,
+        ease: MOTION.pop,
+      });
+      this.spawnVictory();
+      this.victoryHold = true;
+      this.time.delayedCall(MOTION.slow, () => { this.victoryHold = false; });
 
       const fg = this.add.graphics().setDepth(3);
       const fx = (W - FACT.w) / 2;
@@ -151,6 +164,25 @@ export default class ResultsScene extends Phaser.Scene {
     });
   }
 
+  spawnVictory() {
+    sfx('gameEnd');
+    const originY = FEET_Y - 120;
+    for (let i = 0; i < 16; i++) {
+      const g = this.add.circle(W / 2, originY, i % 3 === 0 ? 4 : 2.5, i % 2 ? THEME.gold : THEME.teal, 1).setDepth(5);
+      const ang = (Math.PI * 2 * i) / 16 - Math.PI / 2;
+      const reach = 70 + (i % 4) * 26;
+      this.tweens.add({
+        targets: g,
+        x: W / 2 + Math.cos(ang) * reach,
+        y: originY + Math.sin(ang) * (reach * 0.55) - 10,
+        alpha: 0,
+        duration: 640 + (i % 5) * 40,
+        ease: MOTION.easeOut,
+        onComplete: () => g.destroy(),
+      });
+    }
+  }
+
   select(i, sound = true) {
     if (i === this.selected) return;
     this.buttons[this.selected].setSelected(false);
@@ -172,7 +204,10 @@ export default class ResultsScene extends Phaser.Scene {
     // victory bounce
     if (this.winnerRig) {
       this.winnerRig.animate(delta / 1000, 'idle', 0);
-      this.winnerRig.y = FEET_Y + Math.sin(time / 260) * 6 - 6;
+      if (this.victoryHold) return;
+      const bob = Math.sin(time / 280);
+      this.winnerRig.baseScale = (this.winScale || this.winnerRig.baseScale) * (1 + bob * 0.012);
+      this.winnerRig.y = FEET_Y + bob * 7 - 4;
     }
   }
 }

@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import Fighter from '../engine/Fighter.js';
 import { CHARACTERS } from '../data/characters.js';
-import { STAGES, stageKey, getStageBlast, getStageSpawns, getStageBounds, getStageWorld, moverPosition } from '../data/stages.js';
+import { STAGES, stageKey, getStageBlast, getStageSpawns, getStageBounds, getStageWorld, loadStageArt, moverPosition } from '../data/stages.js';
 import { play as sfx, preload as preloadSfx } from '../engine/sfx.js';
 import { beginMatchWarmup } from '../engine/matchWarmup.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
@@ -78,6 +78,9 @@ export default class BattleScene extends Phaser.Scene {
       .map((p) => CHARACTERS[p.charId])
       .filter(Boolean);
     loadRosterArt(this.load, roster, (key) => this.textures.exists(key));
+    // One arena. Boot only fetched thumbnails, so the painted layers, the
+    // terrain, and the intro doors arrive with this match.
+    loadStageArt(this.load, [this.stage], (key) => this.textures.exists(key));
     // Decode hits and effects while the loader is still on the sheets, so
     // the match card is not the first thing to touch them.
     preloadSfx();
@@ -2538,7 +2541,18 @@ export default class BattleScene extends Phaser.Scene {
     if (this.intro?.active) return;
     if (this.scene.isPaused('Battle')) return; // handled by pause scene resume
     this.scene.pause();
-    this.scene.launch('PauseMenu', { resumeKey: 'Battle' });
+    const stocksMax = this.setup.stocks ?? 3;
+    this.scene.launch('PauseMenu', {
+      resumeKey: 'Battle',
+      stageName: this.stage?.name || '',
+      fighters: (this.fighters || []).map((f) => ({
+        name: f.charDef?.name || 'Fighter',
+        symbol: f.charDef?.symbol || '',
+        percent: Math.round(f.percent || 0),
+        stocks: f.stocks ?? 0,
+        stocksMax,
+      })),
+    });
   }
 
   // ----------------------------------------------------------------- update

@@ -71,7 +71,7 @@ export const MOTION = {
   quick: 110,
   base: 190,
   slow: 320,
-  sceneFade: 170,
+  sceneFade: 240,
   easeOut: 'Cubic.easeOut',
   easeIn: 'Cubic.easeIn',
   easeInOut: 'Sine.easeInOut',

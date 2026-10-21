@@ -589,7 +589,7 @@ test('an early string hit deals damage without a launch', () => {
   finisher.rig = rig;
   finisher.takeHit(attacker, {
     type: 'kinetic', damage: 4, baseKnockback: 240, knockbackGrowth: 6,
-    multiHit: 3, _hitIndex: 3, onHit: { stun: 500 },
+    multiHit: 3, _hitIndex: 3, onHit: { stun: 500 }, stunChance: 1,
   }, 1000, 1);
   assert.ok(finisher.pendingLaunch);
   assert.ok(finisher.lockedUntil > 1000);

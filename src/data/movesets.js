@@ -220,7 +220,7 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Cryo Splash', {
       kind: 'burst', type: H, damage: 6, radius: 78, offsetX: 70,
-      onHit: { freeze: 3000 }, vfx: 'cryo',
+      onHit: { freeze: 3000 }, stunChance: 0.5, vfx: 'cryo',
       baseKnockback: 90, knockbackGrowth: 1.2,
       startupF: 5, endlagF: 14, duration: 260, cooldown: 400,
     }),
@@ -526,7 +526,7 @@ export const MOVESETS = {
   kyle: {
     basicCharge: m('Action Potential', {
       kind: 'projectile', shotEnd: 'despawn', type: E, damage: 12, slam: true, fizzleBelow: 1, roll: true,
-      maxChargeMs: 1500, onHit: { stun: 450 }, vfx: 'spark', vfxColor: 0xd2b6ff,
+      maxChargeMs: 1500, onHit: { stun: 450 }, stunChance: 0.5, vfx: 'spark', vfxColor: 0xd2b6ff,
       projectileSpeed: 620, projectileRadius: 14, projectileLife: 480,
       baseKnockback: 120, duration: 200, cooldown: 760,
     }),
@@ -780,7 +780,7 @@ export const MOVESETS = {
     basicCharge: m('Defining Second', {
       kind: 'burst', type: K, damage: 0, radius: 72, chargeRadiusMult: 1.45,
       maxChargeMs: 1000,
-      onHit: { freeze: 1000, coat: 'Defining Second', coatMs: 1000 },
+      onHit: { freeze: 1000, coat: 'Defining Second', coatMs: 1000 }, stunChance: 1,
       chargeControlMult: 3,
       baseKnockback: 0, knockbackGrowth: 0, duration: 220, cooldown: 1180, vfx: 'spark',
     }),
@@ -955,7 +955,7 @@ export const MOVESETS = {
   aurelius: {
     basicCharge: m('Midas Touch', {
       type: K, damage: 7.5, pull: 140,
-      onHit: { freeze: 640, gold: 640, coat: 'Midas Touch', coatMs: 640 },
+      onHit: { freeze: 640, gold: 640, coat: 'Midas Touch', coatMs: 640 }, stunChance: 0.5,
       rangeW: 56, rangeH: 48,
       maxChargeMs: 700, chargeDamageMult: 1.25, vfx: 'spark', vfxColor: 0xf0c84a,
       baseKnockback: 16.9, knockbackGrowth: 0.23, duration: 240, cooldown: 960,
@@ -1164,7 +1164,7 @@ export const MOVESETS = {
     specialDirectional: m('Stage Light Flash', {
       kind: 'beam', type: H, damage: 8, aimStick: true,
       beamLen: 480, beamThick: 40, beamCap: 1100, beamArtPx: 1100,
-      onHit: { stun: 1000 },
+      onHit: { stun: 1000 }, stunChance: 0.5,
       vfx: 'laser', vfxColor: 0xfff2c4,
       baseKnockback: 70, knockbackGrowth: 1.15, duration: 220, cooldown: 780,
     }),
@@ -1599,7 +1599,7 @@ export const MOVESETS = {
     }),
     specialDefense: m('Flash Tube Counter', {
       kind: 'counter', counterType: E, counterDamage: 7, counterKnockback: 70, counterKnockbackGrowth: 1.4,
-      counterStun: 280, counterBlind: 220,
+      counterStun: 280, counterBlind: 220, stunChance: 0.5,
       duration: 460, cooldown: 820, vfx: 'spark', vfxColor: 0xf4e8ff,
     }),
     specialDirectional: m('Meter Line', {
@@ -1637,7 +1637,7 @@ export const MOVESETS = {
     basicCharge: m('MRI Contrast', {
       kind: 'burst', damage: 0, chargeRadiusMult: 1.3, maxChargeMs: 800, radius: 78,
       noKnockback: true,
-      onHit: { doublePercent: true, stun: 1000 },
+      onHit: { doublePercent: true, stun: 1000 }, stunChance: 1,
       vfx: 'spark', vfxColor: 0xb8f0ff,
       baseKnockback: 0, knockbackGrowth: 0, duration: 240, cooldown: 880,
     }),
@@ -1694,7 +1694,7 @@ export const MOVESETS = {
       baseKnockback: 140, knockbackGrowth: 2.6, duration: 200, cooldown: 380,
     }),
     specialDefense: m('Scintillator', {
-      immune: [R], retort: { when: R, type: R, damage: 2, knockback: 40, growth: 0.4, stun: 440 },
+      immune: [R], stunChance: 0.5, retort: { when: R, type: R, damage: 2, knockback: 40, growth: 0.4, stun: 440 },
       duration: 620, cooldown: 840, vfx: 'shield', vfxColor: 0xfff8d8,
     }),
     specialDirectional: m('Annihilation Pair', {
@@ -1786,7 +1786,7 @@ export const MOVESETS = {
   ruben: {
     basicCharge: m('Condensate Collapse', {
       kind: 'projectile', shotEnd: 'despawn', type: H, damage: 10, slam: true, chargeDamageMult: 1.25, roll: true,
-      maxChargeMs: 800, onHit: { freeze: 240 }, vfx: 'tide', vfxColor: 0x9ad7ff,
+      maxChargeMs: 800, onHit: { freeze: 240 }, stunChance: 0.5, vfx: 'tide', vfxColor: 0x9ad7ff,
       projectileSpeed: 360, projectileRadius: 28, projectileLife: 700,
       baseKnockback: 80, knockbackGrowth: 1.5, duration: 260, cooldown: 760,
     }),
@@ -2062,7 +2062,7 @@ export const MOVESETS = {
       baseKnockback: 63.6, knockbackGrowth: 1.27, duration: 180, cooldown: 420,
     }),
     specialDefense: m('Anesthesia', {
-      retort: { type: C, damage: 3.2, knockback: 21.2, growth: 0.32, stun: 420 },
+      stunChance: 0.5, retort: { type: C, damage: 3.2, knockback: 21.2, growth: 0.32, stun: 420 },
       duration: 620, cooldown: 860, vfx: 'shield', vfxColor: 0xd8e8ff,
     }),
     specialDirectional: m('Xenon Strobe', {
@@ -2245,7 +2245,7 @@ export const MOVESETS = {
 
   amy: {
     basicCharge: m('Alarm Blare', {
-      kind: 'burst', type: K, damage: 10.6, onHit: { stun: 280 }, chargeDamageMult: 1.35, chargeRadiusMult: 1.3,
+      kind: 'burst', type: K, damage: 10.6, onHit: { stun: 280 }, stunChance: 0.5, chargeDamageMult: 1.35, chargeRadiusMult: 1.3,
       maxChargeMs: 750, radius: 86, vfx: 'gust', vfxColor: 0xfff2a8,
       baseKnockback: 111.6, knockbackGrowth: 1.86, duration: 240, cooldown: 860,
     }),

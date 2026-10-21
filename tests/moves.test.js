@@ -212,6 +212,10 @@ test('maggie uses the approved magnesium kit', () => {
   const flare = moves.specialDirectional;
   assert.strictEqual(flare.name, 'Blinding Flare');
   assert.strictEqual(flare.onHit.dazzle.ms, 2000);
+  const glared = {};
+  applyOnHit({ charDef: { id: 'maggie' } }, glared, flare, 0);
+  assert.ok(glared.dazzleUntil > 0);
+  assert.strictEqual(glared.missNext, undefined);
   assert.ok(frameData(flare.duration, flare.cooldown, flare).recovery <= 12);
 });
 
@@ -937,6 +941,10 @@ test('batch 11 kits follow the approved briefs', () => {
   const caesar = CHARACTERS.caesar.moves;
   assert.strictEqual(caesar.basicCharge.damage, 0);
   assert.strictEqual(caesar.basicCharge.onHit.freeze, 1000);
+  assert.strictEqual(caesar.basicCharge.stunChance, 1);
+  const timed = {};
+  applyOnHit({ charDef: { id: 'caesar' }, scene: { rng: () => 0.99 } }, timed, caesar.basicCharge, 1000);
+  assert.strictEqual(timed.lockedUntil, 2000);
   assert.strictEqual(caesar.basicCharge.chargeControlMult, 3);
   assert.strictEqual(caesar.basicDirectional.hyperArmor, true);
   assert.ok(caesar.basicDirectional.dashSpeed < 400);
@@ -1257,9 +1265,13 @@ test('dizzy kits follow the approved brief', () => {
   assert.strictEqual(flash.beamCap, 1100);
   assert.ok(flash.beamLen < flash.beamCap);
   assert.strictEqual(flash.onHit.stun, 1000);
+  assert.strictEqual(flash.stunChance, 0.5);
   const stunned = {};
-  applyOnHit({ charDef: { id: 'dizzy' } }, stunned, flash, 1000);
+  applyOnHit({ charDef: { id: 'dizzy' }, scene: { rng: () => 0 } }, stunned, flash, 1000);
   assert.strictEqual(stunned.lockedUntil, 2000);
+  const whiff = {};
+  applyOnHit({ charDef: { id: 'dizzy' }, scene: { rng: () => 0.9 } }, whiff, flash, 1000);
+  assert.strictEqual(whiff.lockedUntil, undefined);
   assert.strictEqual(stunned.clingFrom.move, 'Stage Light Flash');
   assert.strictEqual(stunned.clingFrom.until, 2000);
 });
@@ -1511,12 +1523,17 @@ test('oz, ira, and aurelius keep the approved move rules', () => {
   assert.equal(gold.specialDirectional.lob, 620);
   assert.equal(gold.specialDirectional.angleable, undefined);
   assert.equal(gold.specialDirectional.baseKnockback, 200);
+  assert.equal(gold.basicCharge.stunChance, 0.5);
   const caught = { charDef: { combat: { state: 'metal' } } };
-  applyOnHit({ charDef: { id: 'aurelius' } }, caught, gold.basicCharge, 1000);
+  applyOnHit({ charDef: { id: 'aurelius' }, scene: { rng: () => 0 } }, caught, gold.basicCharge, 1000);
   assert.ok(caught.goldUntil > 1000);
   assert.equal(caught.weightBuff, 2.7);
   assert.ok(caught.weightBuffUntil >= caught.goldUntil);
   assert.ok(caught.frozenUntil > 1000);
+  const gilded = { charDef: { combat: { state: 'metal' } } };
+  applyOnHit({ charDef: { id: 'aurelius' }, scene: { rng: () => 0.9 } }, gilded, gold.basicCharge, 1000);
+  assert.ok(gilded.goldUntil > 1000);
+  assert.strictEqual(gilded.frozenUntil, undefined);
 });
 
 test('pit ignites gas clouds and flame-tests by electronegativity', () => {

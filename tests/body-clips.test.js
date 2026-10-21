@@ -6,9 +6,22 @@ import { CHARACTERS } from '../src/data/characters.js';
 import { MOVE_SHEETS } from '../src/data/moveSheets.js';
 import { artIsUpdated } from '../src/data/updatedArt.js';
 import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
-import { clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
+import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dizzy'];
+
+function inCell(json, xy) {
+  return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
+}
+
+/** The compiler keeps an in-cell hand. A tip past the cell uses the reach. */
+function placedHand(json, index) {
+  const strike = json.strike_hand_xy?.[String(index)];
+  const front = json.frames?.[index]?.front_hand_xy;
+  const reach = json.strike_reach_xy?.[String(index)];
+  const xy = inCell(json, strike) ? strike : inCell(json, reach) ? reach : (strike || front);
+  return [Math.round(xy[0]), Math.round(xy[1])];
+}
 
 function worldH(art, def) {
   const body = def.bodyH ?? def.visibleH;
@@ -48,9 +61,9 @@ test('per-move body clips keep the idle height and the json foot line', () => {
       );
       assert.ok(Math.abs(sole.y - 200) < 1, `${json.move} sole ${sole.y}`);
       for (const index of json.strike_frames) {
-        const want = json.strike_hand_xy[String(index)];
-        assert.deepEqual(meta.anchors.fist[index], [want[0], want[1]], `${json.move} f${index}`);
-        assert.deepEqual(meta.anchors.tip[index], [want[0], want[1]], `${json.move} tip f${index}`);
+        const want = placedHand(json, index);
+        assert.deepEqual(meta.anchors.fist[index], want, `${json.move} f${index}`);
+        assert.deepEqual(meta.anchors.tip[index], want, `${json.move} tip f${index}`);
       }
       assert.equal(meta.release, json.strike_frames[0], json.move);
       const fd = { startup: 4, active: 3, recovery: 4, visible: 11 };
@@ -156,6 +169,55 @@ test('Liquid Metal Splash stays wide and under the texture limit, and the vial r
   const toss = sheetMeta('curie', 'body-specialDirectional');
   assert.equal(toss.release, 4);
   assert.ok(toss.anchors.fist[5][1] < toss.anchors.fist[4][1]);
+});
+
+test('Turbine Gust covers the fingertip where the painted beam was cut off', () => {
+  const clip = CHARACTERS.dizzy.art.sheets.clips['body-basicCharge'];
+  const meta = sheetMeta('dizzy', 'body-basicCharge');
+  assert.deepEqual(meta.anchors.fist[5], [572, 252]);
+  assert.ok(meta.anchors.fist[5][0] < clip.frameW);
+  const fighter = {
+    charDef: CHARACTERS.dizzy,
+    currentMoveKey: 'basicCharge',
+    facing: 1,
+    x: 0,
+    y: 0,
+    rig: { sheetClip: 'body-basicCharge', sheetFrame: 5, moveKey: 'basicCharge' },
+  };
+  const raw = frameToWorld(
+    meta.anchors.fist[5], clip.frameW, clip.frameH, clip.footY, clip.displayScale, 1, 1, 0, 0,
+  );
+  const muzzle = bodySheetMuzzle(fighter);
+  // The wave's black lead starts the visible gust ahead of the sprite origin,
+  // so the origin has to sit well back on the hand.
+  assert.ok(raw.x - muzzle.x >= 36, raw.x - muzzle.x);
+  assert.ok(Math.abs(muzzle.y - raw.y) < 0.01);
+  const lampClip = CHARACTERS.dizzy.art.sheets.clips['body-specialDirectional'];
+  const lampMeta = sheetMeta('dizzy', 'body-specialDirectional');
+  const lamp = {
+    charDef: CHARACTERS.dizzy,
+    currentMoveKey: 'specialDirectional',
+    facing: 1,
+    x: 0,
+    y: 0,
+    rig: { sheetClip: 'body-specialDirectional', sheetFrame: 2, moveKey: 'specialDirectional' },
+  };
+  const lampRaw = frameToWorld(
+    lampMeta.anchors.fist[2], lampClip.frameW, lampClip.frameH, lampClip.footY, lampClip.displayScale, 1, 1, 0, 0,
+  );
+  const lampMuzzle = bodySheetMuzzle(lamp);
+  assert.ok(Math.abs(lampRaw.x - lampMuzzle.x - 12) < 0.05, lampRaw.x - lampMuzzle.x);
+
+  const wall = sheetMeta('dizzy', 'body-specialDefense');
+  const planted = frameToWorld(
+    wall.anchors.tip[3], CHARACTERS.dizzy.art.sheets.clips['body-specialDefense'].frameW,
+    CHARACTERS.dizzy.art.sheets.clips['body-specialDefense'].frameH,
+    CHARACTERS.dizzy.art.sheets.clips['body-specialDefense'].footY,
+    CHARACTERS.dizzy.art.sheets.clips['body-specialDefense'].displayScale,
+    1, 1, 0, 0,
+  );
+  assert.ok(Math.abs(planted.y) < 24, planted.y);
+  assert.ok(planted.x > 0);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

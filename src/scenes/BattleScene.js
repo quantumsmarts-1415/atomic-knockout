@@ -33,7 +33,7 @@ import {
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
 import { artFor, beamDrawScale, cloudIgnitionScale, collectFxArt, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnJumpArc, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
-import { sheetReleasePoint } from '../engine/moveSheet.js';
+import { bodySheetMuzzle, sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
 const GRAVITY = 1500;
@@ -1881,11 +1881,12 @@ export default class BattleScene extends Phaser.Scene {
     const bodyW = owner.bodyW ?? 40;
     const bodyH = owner.bodyH ?? 80;
     const worldW = this.world?.width > 0 ? this.world.width : 1280;
+    const muzzle = bodySheetMuzzle(owner);
     if (move.aimStick) {
       const aim = stickAim(owner);
       return {
-        x: owner.x + aim.x * bodyW * 0.35,
-        y: owner.y - bodyH * 0.58 + aim.y * bodyH * 0.12,
+        x: muzzle?.x ?? owner.x + aim.x * bodyW * 0.35,
+        y: muzzle?.y ?? owner.y - bodyH * 0.58 + aim.y * bodyH * 0.12,
         dx: aim.x,
         dy: aim.y,
         maxLen: Math.min(move.beamCap ?? 1100, (move.beamLen ?? 420) * (move._beamScale || 1)),
@@ -1914,8 +1915,8 @@ export default class BattleScene extends Phaser.Scene {
     }
     const thick = move.beamThick ?? 20;
     return {
-      x: muzzleX,
-      y: move.ground ? owner.y - thick * 0.5 : owner.y - bodyH * 0.62,
+      x: muzzle?.x ?? muzzleX,
+      y: muzzle?.y ?? (move.ground ? owner.y - thick * 0.5 : owner.y - bodyH * 0.62),
       dx: face,
       dy: 0,
       maxLen,

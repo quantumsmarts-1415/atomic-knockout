@@ -2814,8 +2814,10 @@ function syncAttached(scene, fighter) {
     }
     if (art.hold?.frames?.length) {
       const anchor = fxAnchor(fighter, fighter.defenseMove);
+      const planted = sheetFxPoint(fighter, 'ground') || sheetReleasePoint(fighter, 'ground');
+      const onHand = planted && Math.abs(planted.y - fighter.y) < 24;
       live.img.setOrigin(paint.pivotX ?? art.pivotX, paint.pivotY ?? art.pivotY);
-      live.img.setPosition(anchor?.x ?? fighter.x, anchor?.y ?? fighter.y);
+      live.img.setPosition(onHand ? planted.x : (anchor?.x ?? fighter.x), onHand ? fighter.y : (anchor?.y ?? fighter.y));
       live.img.setScale(Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
       return;
     }
@@ -3736,8 +3738,12 @@ function syncRotor(scene, live, rotor, fighter, frac) {
   const face = fighter.facing || 1;
   const bodyW = fighter.bodyW ?? 40;
   const bodyH = fighter.bodyH ?? 80;
+  const posed = sheetFxPoint(fighter, 'shot');
   live.rotor.setOrigin(rotor.pivotX ?? 0.5, rotor.pivotY ?? 0.5);
-  live.rotor.setPosition(fighter.x + face * bodyW * 0.85, fighter.y - bodyH * 0.52);
+  live.rotor.setPosition(
+    posed?.x ?? fighter.x + face * bodyW * 0.85,
+    posed?.y ?? fighter.y - bodyH * 0.52,
+  );
   live.rotor.rotation = live.rotorAngle;
   live.rotor.setAlpha(frac > 0.72 ? 0.84 : 1);
   if (frac >= 0.55) {

@@ -163,6 +163,27 @@ export function sheetDrawsWeapon(fighter) {
     && fighter?.rig?.sheetClip === 'attack';
 }
 
+/**
+ * Where a body-clip beam should start.
+ * Turbine Gust's wave is keyed off black, so the visible gust begins about
+ * twenty pixels ahead of the sprite origin. That origin sits back on the
+ * hand and the wave covers the fingertip sliver left when the painted beam
+ * was cut off. Other beams only overlap the fingers.
+ */
+const GUST_OVERLAP = 40;
+
+export function bodySheetMuzzle(fighter, inset = 12) {
+  const id = fighter?.charDef?.id;
+  const moveKey = fighter?.currentMoveKey || fighter?.rig?.moveKey;
+  const clip = clipNameForMove(id, moveKey);
+  if (!clip?.startsWith('body-')) return null;
+  const posed = sheetFxPoint(fighter, 'shot') || sheetReleasePoint(fighter, 'shot');
+  if (!posed) return null;
+  const face = (fighter.facing || 1) >= 0 ? 1 : -1;
+  const pull = id === 'dizzy' && moveKey === 'basicCharge' ? GUST_OVERLAP : inset;
+  return { x: posed.x - face * pull, y: posed.y };
+}
+
 /** Tip or foot of the sheet's release frame, for a shot that leaves the hand. */
 export function sheetReleasePoint(fighter, kind = 'shot') {
   const id = fighter?.charDef?.id;

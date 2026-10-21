@@ -728,6 +728,11 @@ test('Noble and Ogden keep their hands, and the medal arc extends the swing', ()
   assert.equal(jab.file, 'ogden_light-speed-jab.png');
   assert.deepEqual(jabMeta.active, [2, 5]);
   assert.ok(jabMeta.anchors.fist[5][0] > jab.frameW - 16, jabMeta.anchors.fist[5][0]);
+  const jabFx = JSON.parse(readFileSync('assets/fx/ogden/light-speed-jab/fx.json', 'utf8'));
+  assert.equal(jabFx.oneshot, true);
+  assert.equal(jabFx.anchor, 'fist');
+  assert.equal(jabFx.pivotX, 0.02);
+  assert.deepEqual(jabFx.swing, [0, 3]);
 
   const broken = sheetMeta('ogden', 'body-specialDefense');
   assert.equal(CHARACTERS.ogden.art.sheets.clips['body-specialDefense'].file, 'ogden_broken-noble.png');

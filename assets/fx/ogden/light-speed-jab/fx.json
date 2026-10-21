@@ -11,6 +11,8 @@
   "heightFrac": 0.32,
   "oneshot": true,
   "flip": true,
+  "anchor": "fist",
+  "swing": [0, 3],
   "pivotX": 0.02,
   "pivotY": 0.5
 }

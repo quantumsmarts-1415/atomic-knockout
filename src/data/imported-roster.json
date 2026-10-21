@@ -2399,14 +2399,14 @@
           },
           "walk": {
             "count": 12,
-            "fps": 14.4,
+            "fps": 7.58,
             "loop": true,
-            "frameW": 134,
-            "frameH": 147,
-            "footY": 0.9388,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 620,
+            "frameH": 1028,
+            "footY": 0.9864,
+            "visibleH": 985,
+            "bodyH": 985,
+            "displayScale": 0.13401015228426397
           },
           "attack": {
             "count": 5,
@@ -4624,12 +4624,12 @@
             "count": 5,
             "fps": 12,
             "loop": false,
-            "frameW": 160,
-            "frameH": 169,
-            "footY": 0.9112,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 665,
+            "frameH": 620,
+            "footY": 0.9694,
+            "visibleH": 563,
+            "bodyH": 563,
+            "displayScale": 0.2344582593250444
           }
         }
       }
@@ -7143,14 +7143,14 @@
           },
           "walk": {
             "count": 12,
-            "fps": 8,
+            "fps": 9,
             "loop": true,
-            "frameW": 117,
-            "frameH": 146,
-            "footY": 0.9384,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 854,
+            "frameH": 1041,
+            "footY": 0.9866,
+            "visibleH": 997,
+            "bodyH": 997,
+            "displayScale": 0.13239719157472418
           },
           "attack": {
             "count": 5,
@@ -9878,14 +9878,14 @@
           },
           "walk": {
             "count": 12,
-            "fps": 12,
+            "fps": 8.73,
             "loop": true,
-            "frameW": 167,
-            "frameH": 180,
-            "footY": 0.95,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 792,
+            "frameH": 1113,
+            "footY": 0.9883,
+            "visibleH": 1064,
+            "bodyH": 1064,
+            "displayScale": 0.12406015037593984
           },
           "attack": {
             "count": 5,

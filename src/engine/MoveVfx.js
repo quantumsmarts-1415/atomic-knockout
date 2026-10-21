@@ -2,7 +2,7 @@
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
 import { anodizeTint, takingDps } from './kit.js';
-import { artFor, breakFrames, chargeFrac, drawFxOneShot, fxAnchor, fxGameplayScale, groundTop, impactRadiusScale, meleeContactPoint, reverseFrameOrder, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnNozzleCone, spawnSeepPath, spawnStageSpan, wantsContactSpark } from './fxArt.js';
+import { artFor, breakFrames, chargeFrac, drawFxOneShot, fxAnchor, fxGameplayScale, groundTop, impactRadiusScale, meleeContactPoint, reverseFrameOrder, slashNeedsCodeFlash, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnNozzleCone, spawnSeepPath, spawnStageSpan, wantsContactSpark } from './fxArt.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 
@@ -580,7 +580,17 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
         return;
       }
     }
-    if (art?.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) return;
+    if (art?.frames?.length && (art.objectType === 'slash arc' || art.objectType === 'extend')) {
+      // The slash sheet replaces the generic spark. A wheel with no baked
+      // strike (keepSlash) still gets the code hit flash at the fist.
+      if (slashNeedsCodeFlash(art)) {
+        const color = extra.color ?? colorOf(move);
+        const tip = meleeContactPoint(fighter, move);
+        burst(scene, tip.x, tip.y, color, 8, 56);
+        burst(scene, tip.x, tip.y, 0xfff8e8, 4, 20);
+      }
+      return;
+    }
   }
   const color = extra.color ?? colorOf(move);
   let x = extra.x ?? fighter.x;

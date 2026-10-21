@@ -441,6 +441,13 @@ export function slashArtReplacesStroke(art) {
   return art.objectType === 'slash arc' || art.objectType === 'extend';
 }
 
+/** A slash sheet stands in for the strike spark unless the body art has none.
+ *  Lucy's copper wheel keeps the code hit flash on top of the blade stroke. */
+export function slashNeedsCodeFlash(art) {
+  if (!art?.frames?.length || !art.keepSlash) return false;
+  return art.objectType === 'slash arc' || art.objectType === 'extend';
+}
+
 export function fxReplacesSlash(fighter, move) {
   return slashArtReplacesStroke(artFor(fighter?.charDef?.id, move?.name));
 }

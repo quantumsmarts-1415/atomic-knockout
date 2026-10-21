@@ -9,7 +9,7 @@ import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
 import { guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -339,6 +339,66 @@ test('Riptide slides from a wide lunge, and Magic Number keeps the json foot row
   );
   assert.ok(push.x > cup.x + 15, push.x - cup.x);
   assert.ok(push.y < cup.y, push.y);
+});
+
+test('Transmute Ray leaves the open palm, and Gold Foil holds the raised hands', () => {
+  const ray = CHARACTERS.ford.art.sheets.clips['body-specialDirectional'];
+  const rayMeta = sheetMeta('ford', 'body-specialDirectional');
+  assert.equal(ray.file, 'ford_transmute-ray.png');
+  assert.ok(rayMeta.anchors.fist[2][0] > ray.frameW - 30, rayMeta.anchors.fist[2][0]);
+  const fighter = {
+    charDef: CHARACTERS.ford,
+    currentMoveKey: 'specialDirectional',
+    facing: 1,
+    x: 0,
+    y: 0,
+    rig: { sheetClip: 'body-specialDirectional', sheetFrame: 2, moveKey: 'specialDirectional' },
+  };
+  const raw = frameToWorld(
+    rayMeta.anchors.fist[2], ray.frameW, ray.frameH, ray.footY, ray.displayScale, 1, 1, 0, 0,
+  );
+  const muzzle = bodySheetMuzzle(fighter);
+  assert.ok(Math.abs(raw.x - muzzle.x - 12) < 0.05, raw.x - muzzle.x);
+  assert.ok(Math.abs(raw.y - muzzle.y) < 0.01);
+
+  const dense = sheetMeta('ford', 'body-basicCharge');
+  const denseClip = CHARACTERS.ford.art.sheets.clips['body-basicCharge'];
+  assert.equal(denseClip.file, 'ford_dense-nucleus.png');
+  assert.deepEqual(dense.loop, [0, 2]);
+  assert.deepEqual(dense.active, [3, 6]);
+  assert.ok(dense.anchors.fist[3][0] > denseClip.frameW - 12, dense.anchors.fist[3][0]);
+
+  const foil = sheetMeta('ford', 'body-specialDefense');
+  assert.equal(CHARACTERS.ford.art.sheets.clips['body-specialDefense'].file, 'ford_gold-foil.png');
+  assert.deepEqual(foil.loop, [2, 6]);
+  assert.equal(sheetFrameIndex(foil, { state: 'defending', animT: 0, fd: null }), 2);
+});
+
+test('Beta Turn crouches into a spread, and Alpha Flick leaves the extended hand', () => {
+  const turn = sheetMeta('frank', 'body-basicCharge');
+  assert.equal(CHARACTERS.frank.art.sheets.clips['body-basicCharge'].file, 'frank_beta-turn.png');
+  assert.deepEqual(turn.loop, [0, 3]);
+  assert.deepEqual(turn.active, [4, 5]);
+
+  const duck = sheetMeta('frank', 'body-specialDefense');
+  assert.equal(CHARACTERS.frank.art.sheets.clips['body-specialDefense'].file, 'frank_trace-amount.png');
+  assert.deepEqual(duck.loop, [2, 5]);
+  assert.ok(duck.anchors.fist[5][1] > duck.anchors.fist[2][1]);
+
+  const flick = CHARACTERS.frank.art.sheets.clips['body-specialDirectional'];
+  const flickMeta = sheetMeta('frank', 'body-specialDirectional');
+  assert.equal(flick.file, 'frank_alpha-flick.png');
+  assert.equal(flickMeta.release, 2);
+  const hand = frameToWorld(
+    flickMeta.anchors.fist[2], flick.frameW, flick.frameH, flick.footY, flick.displayScale, 1, 1, 0, 0,
+  );
+  assert.ok(hand.x > 40, hand.x);
+  assert.ok(hand.y < -80, hand.y);
+
+  const jab = CHARACTERS.frank.art.sheets.clips['body-basicDirectional'];
+  const jabMeta = sheetMeta('frank', 'body-basicDirectional');
+  assert.equal(jab.file, 'frank_vanishing-jab.png');
+  assert.ok(jabMeta.anchors.fist[2][0] > jab.frameW - 12, jabMeta.anchors.fist[2][0]);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

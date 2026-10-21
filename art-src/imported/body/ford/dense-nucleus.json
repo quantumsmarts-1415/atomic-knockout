@@ -1,0 +1,233 @@
+{
+ "name": "ford",
+ "move": "dense-nucleus",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/436b.mp4 (stream 0)",
+ "frameW": 671,
+ "frameH": 614,
+ "idle_cell_w": 678,
+ "idle_anchor_x": 340.0,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 614,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9691,
+ "foot_row": 595,
+ "visibleH": 578,
+ "scale": 1.17241,
+ "offset": [
+  -232.7,
+  -163.6
+ ],
+ "strike_hand_xy": {
+  "3": [
+   664,
+   130
+  ],
+  "4": [
+   665,
+   128
+  ],
+  "5": [
+   665,
+   128
+  ],
+  "6": [
+   665,
+   128
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    16,
+    595,
+    53,
+    470
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    425,
+    313
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 25,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    21,
+    595,
+    8,
+    470
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    465,
+    267
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 4,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    33,
+    595,
+    3,
+    484
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    484,
+    192
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    44,
+    595,
+    15,
+    665
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    664,
+    130
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    44,
+    595,
+    12,
+    667
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    665,
+    128
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    44,
+    595,
+    17,
+    667
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    665,
+    128
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 12,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    44,
+    595,
+    27,
+    667
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    665,
+    128
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 9,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    18,
+    595,
+    55,
+    486
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    425,
+    312
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 16,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   595,
+   595,
+   595,
+   595,
+   595,
+   595,
+   595,
+   595
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Fist squeezed at the hip, then a straight punch held f4-f7. Magenta key.",
+  "redo_candidate": false,
+  "minor_issue": false,
+  "first_frame_start_mad": 3.29,
+  "src_picks": "1,25,55,67,79,91,103,145"
+ },
+ "strike_frames": [
+  3,
+  4,
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "3": [
+   665,
+   127
+  ],
+  "4": [
+   667,
+   127
+  ],
+  "5": [
+   667,
+   128
+  ],
+  "6": [
+   667,
+   128
+  ]
+ }
+}

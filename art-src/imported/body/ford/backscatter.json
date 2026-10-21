@@ -1,0 +1,233 @@
+{
+ "name": "ford",
+ "move": "backscatter",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/437b.mp4 (stream 0)",
+ "frameW": 725,
+ "frameH": 614,
+ "idle_cell_w": 678,
+ "idle_anchor_x": 341.0,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 614,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9691,
+ "foot_row": 595,
+ "visibleH": 578,
+ "scale": 1.17241,
+ "offset": [
+  -231.6,
+  -163.6
+ ],
+ "strike_hand_xy": {
+  "2": [
+   693,
+   131
+  ],
+  "3": [
+   694,
+   137
+  ],
+  "4": [
+   677,
+   136
+  ],
+  "5": [
+   698,
+   130
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    16,
+    595,
+    54,
+    471
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    426,
+    312
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 25,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    40,
+    595,
+    47,
+    605
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    546,
+    204
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 4,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    50,
+    595,
+    80,
+    705
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    693,
+    131
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 16,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    57,
+    595,
+    58,
+    722
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    694,
+    137
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 12,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    56,
+    595,
+    57,
+    717
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    677,
+    136
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    49,
+    595,
+    48,
+    712
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    698,
+    130
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 109,
+   "bbox": [
+    30,
+    595,
+    2,
+    539
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    484,
+    265
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 12,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    16,
+    595,
+    44,
+    537
+   ],
+   "foot": 595,
+   "front_hand_xy": [
+    440,
+    332
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 4,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   595,
+   595,
+   595,
+   595,
+   595,
+   595,
+   595,
+   595
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Open-palm shove held f3-f6. A small blue-cyan glint sits on the palm in f3 (a Grok highlight left after the magenta despill). Paint it out or let the FX cover it. Glint painted out (f3: 2421 px recoloured to the surrounding sleeve/hand tone); original in _old/backscatter_preglint.*",
+  "redo_candidate": false,
+  "minor_issue": false,
+  "first_frame_start_mad": 3.29,
+  "src_picks": "1,13,19,31,61,91,109,145"
+ },
+ "strike_frames": [
+  2,
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "2": [
+   705,
+   120
+  ],
+  "3": [
+   722,
+   112
+  ],
+  "4": [
+   717,
+   108
+  ],
+  "5": [
+   712,
+   120
+  ]
+ }
+}

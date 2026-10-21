@@ -520,10 +520,15 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
       // A burst is drawn once, at the blast, when resolveBurst supplies a point.
       // A leap vanishes at the old spot; the landing flash is spawned after the teleport.
       if ((move.kind === 'burst' || move.kind === 'dive') && extra?.x == null) {
-        if (move.leap && art?.frames?.length) {
-          drawFxOneShot(scene, fighter, move, fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.5, 1);
+        // Rising Sun's palm thrust is a soft pose. Draw the burst on that
+        // hand when the sheet releases, instead of waiting for the blast tick.
+        const onPalm = extra?.fromSheet && move?.name === 'Rising Sun' && art?.frames?.length;
+        if (!onPalm) {
+          if (move.leap && art?.frames?.length) {
+            drawFxOneShot(scene, fighter, move, fighter.x, fighter.y - (fighter.bodyH ?? 80) * 0.5, 1);
+          }
+          return;
         }
-        return;
       }
       if (phase === 'release' && move?.leap && extra?.x != null) return;
       const anchor = fxAnchor(fighter, move);

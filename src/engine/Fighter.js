@@ -1196,6 +1196,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (move.meteor) spawnMeteor(this.scene, this, move, landing, burstAt);
       const pulses = move.pulses?.length ? move.pulses : [{ damage: move.damage, delay: 0 }];
       const pulseCount = pulses.length;
+      // The sheet release already draws Rising Sun. The blast tick still hits.
+      const sheetBurst = move.name === 'Rising Sun' && this._sheetFxFrame;
       for (let i = 0; i < pulseCount; i++) {
         const pulse = pulses[i];
         const shot = move.pulses?.length
@@ -1208,7 +1210,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
             _hitIndex: i + 1,
             _pulseStep: i,
           }
-          : move;
+          : (sheetBurst ? { ...move, _noVfx: true } : move);
         this.scene.time.delayedCall(burstAt + (pulse.delay ?? 0), () => {
           if (this.state !== 'attack' && !commitBurst) return;
           this.scene.resolveBurst(this, shot, landing || undefined);

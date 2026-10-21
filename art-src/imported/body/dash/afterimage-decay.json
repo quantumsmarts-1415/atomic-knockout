@@ -1,0 +1,239 @@
+{
+ "name": "dash",
+ "move": "afterimage-decay",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/414b_v2.mp4 (stream 0)",
+ "frameW": 495,
+ "frameH": 612,
+ "idle_cell_w": 761,
+ "idle_anchor_x": 291.5,
+ "width_mode": "cell",
+ "pad_top": 1,
+ "idle_cell_h": 611,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9657,
+ "foot_row": 591,
+ "visibleH": 572,
+ "scale": 1.0,
+ "offset": [
+  -302.0,
+  -161.0
+ ],
+ "strike_hand_xy": {
+  "4": [
+   341,
+   304
+  ],
+  "5": [
+   361,
+   308
+  ],
+  "6": [
+   357,
+   319
+  ],
+  "7": [
+   355,
+   323
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    20,
+    591,
+    76,
+    423
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    417,
+    175
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 7,
+   "bbox": [
+    50,
+    591,
+    84,
+    453
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    451,
+    170
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 100,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    47,
+    570,
+    254,
+    491
+   ],
+   "foot": 570,
+   "front_hand_xy": [
+    491,
+    202
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false,
+   "note": "airborne hop, kept 21px above foot line"
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    22,
+    577,
+    2,
+    361
+   ],
+   "foot": 577,
+   "front_hand_xy": [
+    317,
+    247
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false,
+   "note": "airborne hop, kept 14px above foot line"
+  },
+  {
+   "src_frame": 31,
+   "bbox": [
+    42,
+    591,
+    60,
+    431
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    341,
+    304
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    44,
+    591,
+    74,
+    447
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    361,
+    308
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    42,
+    591,
+    74,
+    447
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    357,
+    319
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 115,
+   "bbox": [
+    44,
+    591,
+    74,
+    447
+   ],
+   "foot": 591,
+   "front_hand_xy": [
+    355,
+    323
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   591,
+   591,
+   570,
+   577,
+   591,
+   591,
+   591,
+   591
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "colour_match_gain": [
+   1.025,
+   1.113,
+   1.016
+  ],
+  "notes": "REDO v2. A quick hop back (f3-f4 airborne, kept 21/14 px above the foot line on purpose, not pinned), then a tight forearm guard held f5-f8, no punch. Grok then turned him front-on (src ~121+), which is skipped, so the clip ends in the guard, not the start stance; blend back to the idle. Colour-matched. v1 is in moves/_old/.",
+  "redo_candidate": false,
+  "first_frame_start_mad": 2.42,
+  "src_picks": "1,7,13,19,31,61,91,115"
+ },
+ "strike_frames": [
+  4,
+  5,
+  6,
+  7
+ ],
+ "strike_reach_xy": {
+  "4": [
+   431,
+   553
+  ],
+  "5": [
+   447,
+   554
+  ],
+  "6": [
+   447,
+   554
+  ],
+  "7": [
+   447,
+   556
+  ]
+ }
+}

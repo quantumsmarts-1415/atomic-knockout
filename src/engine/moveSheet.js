@@ -86,6 +86,14 @@ export function sheetFrameIndex(meta, opts = {}) {
   if (!meta) return 0;
   const count = meta.count || 12;
   const state = opts.state;
+  if (state === 'defending' && meta.intro) {
+    const fps = meta.fps > 0 ? meta.fps : 14;
+    const introN = Math.max(1, (meta.intro[1] | 0) - (meta.intro[0] | 0) + 1);
+    const introSec = introN / fps;
+    const held = Math.max(0, opts.held || 0);
+    if (held < introSec) return sample(meta.intro, held / introSec);
+    return loopIndex(meta.loop || meta.active || meta.intro, held - introSec, fps, !!meta.pingPong);
+  }
   if (state === 'charging' || (state === 'defending' && meta.gather)) {
     return loopIndex(meta.loop || meta.windup || [0, count - 1], opts.animT, meta.fps, !!meta.pingPong);
   }

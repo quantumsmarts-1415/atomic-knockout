@@ -1,0 +1,213 @@
+{
+ "name": "duke",
+ "move": "ducal-cleave",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/421b.mp4 (stream 0)",
+ "frameW": 803,
+ "frameH": 775,
+ "idle_cell_w": 643,
+ "idle_anchor_x": 370.5,
+ "width_mode": "cell",
+ "pad_top": 158,
+ "idle_cell_h": 617,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9716,
+ "foot_row": 753,
+ "visibleH": 735,
+ "scale": 1.1848,
+ "offset": [
+  -48.3,
+  -169.2
+ ],
+ "strike_hand_xy": {
+  "5": [
+   799,
+   681
+  ],
+  "6": [
+   716,
+   665
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    176,
+    753,
+    103,
+    560
+   ],
+   "foot": 753,
+   "front_hand_xy": [
+    542,
+    491
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    145,
+    753,
+    103,
+    638
+   ],
+   "foot": 753,
+   "front_hand_xy": [
+    579,
+    257
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 43,
+   "bbox": [
+    24,
+    753,
+    101,
+    492
+   ],
+   "foot": 753,
+   "front_hand_xy": [
+    434,
+    134
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    14,
+    753,
+    106,
+    563
+   ],
+   "foot": 753,
+   "front_hand_xy": [
+    560,
+    124
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    164,
+    753,
+    103,
+    745
+   ],
+   "foot": 753,
+   "front_hand_xy": [
+    686,
+    351
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    294,
+    753,
+    103,
+    800
+   ],
+   "foot": 753,
+   "front_hand_xy": [
+    610,
+    362
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    255,
+    753,
+    103,
+    717
+   ],
+   "foot": 753,
+   "front_hand_xy": [
+    567,
+    329
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 121,
+   "bbox": [
+    177,
+    753,
+    103,
+    558
+   ],
+   "foot": 753,
+   "front_hand_xy": [
+    541,
+    491
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   753,
+   753,
+   753,
+   753,
+   753,
+   753,
+   753,
+   753
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Hammer raised overhead (f2-f4), then a two-handed cleave to the ground (f5-f6), then recovery. strike_hand_xy = hammer head at the ground. WIDE.",
+  "redo_candidate": false,
+  "first_frame_start_mad": 2.78
+ },
+ "strike_frames": [
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "5": [
+   799,
+   681
+  ],
+  "6": [
+   716,
+   665
+  ]
+ }
+}

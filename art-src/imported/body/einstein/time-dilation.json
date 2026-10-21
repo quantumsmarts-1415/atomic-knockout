@@ -1,0 +1,231 @@
+{
+ "name": "einstein",
+ "move": "time-dilation",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/425b.mp4 (stream 0)",
+ "frameW": 615,
+ "frameH": 605,
+ "idle_cell_w": 568,
+ "idle_anchor_x": 277.0,
+ "width_mode": "cell",
+ "pad_top": 2,
+ "idle_cell_h": 603,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9686,
+ "foot_row": 586,
+ "visibleH": 571,
+ "scale": 1.13121,
+ "offset": [
+  -260.9,
+  -154.7
+ ],
+ "strike_hand_xy": {
+  "2": [
+   557,
+   135
+  ],
+  "3": [
+   611,
+   124
+  ],
+  "4": [
+   602,
+   124
+  ],
+  "5": [
+   593,
+   126
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    17,
+    586,
+    46,
+    385
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    385,
+    162
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 7,
+   "bbox": [
+    28,
+    586,
+    56,
+    379
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    368,
+    173
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    30,
+    586,
+    65,
+    557
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    557,
+    135
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    25,
+    586,
+    37,
+    612
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    611,
+    124
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    25,
+    586,
+    29,
+    603
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    602,
+    124
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    25,
+    586,
+    31,
+    594
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    593,
+    126
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    14,
+    586,
+    51,
+    431
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    403,
+    166
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    12,
+    586,
+    51,
+    431
+   ],
+   "foot": 586,
+   "front_hand_xy": [
+    408,
+    161
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   586,
+   586,
+   586,
+   586,
+   586,
+   586,
+   586,
+   586
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Quick straight jab, held f2-f5, then recovery.",
+  "redo_candidate": false,
+  "first_frame_start_mad": 1.87
+ },
+ "strike_frames": [
+  2,
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "2": [
+   557,
+   134
+  ],
+  "3": [
+   612,
+   124
+  ],
+  "4": [
+   603,
+   125
+  ],
+  "5": [
+   594,
+   126
+  ]
+ }
+}

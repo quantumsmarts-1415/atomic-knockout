@@ -53,6 +53,9 @@ for (const id of readdirSync(root).sort()) {
       end = i;
     }
     if (first > 0 && end < first - 1) record.gather = [0, end];
+    // Afterimage Decay hops back and finishes in the guard. The sheet never
+    // returns to the start stance, so the defense fades into idle.
+    if (json.move === 'afterimage-decay') record.blendIdle = true;
     moves[json.move] = record;
   }
   if (Object.keys(moves).length) packs[id] = moves;

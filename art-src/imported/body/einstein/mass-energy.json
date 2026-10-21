@@ -1,0 +1,222 @@
+{
+ "name": "einstein",
+ "move": "mass-energy",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/424b.mp4 (stream 0)",
+ "frameW": 579,
+ "frameH": 644,
+ "idle_cell_w": 568,
+ "idle_anchor_x": 377.0,
+ "width_mode": "cell",
+ "pad_top": 41,
+ "idle_cell_h": 603,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9705,
+ "foot_row": 625,
+ "visibleH": 610,
+ "scale": 1.13121,
+ "offset": [
+  -408.6,
+  -154.7
+ ],
+ "strike_hand_xy": {
+  "3": [
+   452,
+   316
+  ],
+  "4": [
+   574,
+   192
+  ],
+  "5": [
+   525,
+   123
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    56,
+    625,
+    145,
+    484
+   ],
+   "foot": 625,
+   "front_hand_xy": [
+    484,
+    201
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    130,
+    625,
+    165,
+    475
+   ],
+   "foot": 625,
+   "front_hand_xy": [
+    441,
+    302
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 55,
+   "bbox": [
+    132,
+    625,
+    164,
+    477
+   ],
+   "foot": 625,
+   "front_hand_xy": [
+    443,
+    402
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    132,
+    625,
+    165,
+    477
+   ],
+   "foot": 625,
+   "front_hand_xy": [
+    452,
+    316
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 79,
+   "bbox": [
+    12,
+    625,
+    61,
+    575
+   ],
+   "foot": 625,
+   "front_hand_xy": [
+    574,
+    192
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 91,
+   "bbox": [
+    23,
+    625,
+    2,
+    525
+   ],
+   "foot": 625,
+   "front_hand_xy": [
+    525,
+    123
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 109,
+   "bbox": [
+    19,
+    625,
+    3,
+    538
+   ],
+   "foot": 625,
+   "front_hand_xy": [
+    538,
+    117
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    13,
+    625,
+    163,
+    477
+   ],
+   "foot": 625,
+   "front_hand_xy": [
+    468,
+    171
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   625,
+   625,
+   625,
+   625,
+   625,
+   625,
+   625,
+   625
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Hunch with fists to the chest, then arms flung wide (f4-f6). He turns front-on during the burst (accepted). His end stance is slightly more open than his start.",
+  "redo_candidate": false,
+  "first_frame_start_mad": 1.85
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   477,
+   592
+  ],
+  "4": [
+   575,
+   192
+  ],
+  "5": [
+   525,
+   123
+  ]
+ }
+}

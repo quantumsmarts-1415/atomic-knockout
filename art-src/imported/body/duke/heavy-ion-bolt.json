@@ -1,0 +1,223 @@
+{
+ "name": "duke",
+ "move": "heavy-ion-bolt",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/423b_v2.mp4 (stream 0)",
+ "frameW": 838,
+ "frameH": 626,
+ "idle_cell_w": 643,
+ "idle_anchor_x": 370.5,
+ "width_mode": "cell",
+ "pad_top": 9,
+ "idle_cell_h": 617,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9649,
+ "foot_row": 604,
+ "visibleH": 586,
+ "scale": 1.18969,
+ "offset": [
+  -171.4,
+  -170.0
+ ],
+ "strike_hand_xy": {
+  "4": [
+   799,
+   134
+  ],
+  "5": [
+   835,
+   145
+  ],
+  "6": [
+   835,
+   145
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    24,
+    604,
+    100,
+    561
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    542,
+    339
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 19,
+   "bbox": [
+    45,
+    604,
+    69,
+    549
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    549,
+    261
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 43,
+   "bbox": [
+    11,
+    604,
+    65,
+    532
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    516,
+    219
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    19,
+    604,
+    86,
+    575
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    575,
+    192
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    50,
+    604,
+    98,
+    799
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    799,
+    134
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    52,
+    604,
+    98,
+    835
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    835,
+    145
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 103,
+   "bbox": [
+    52,
+    604,
+    98,
+    835
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    835,
+    145
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    23,
+    604,
+    100,
+    573
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    559,
+    341
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   604,
+   604,
+   604,
+   604,
+   604,
+   604,
+   604,
+   604
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "REDO v2. Braced shoulder-out cannon: free hand drawn back to the chest, then an open palm shot out at chest height (f5-f7). The hammer stays low in the rear hand, with no overhead motion and nothing on the ground. Now distinct from long-reign. v1 is in moves/_old/.",
+  "redo_candidate": false,
+  "first_frame_start_mad": 2.78,
+  "src_picks": "1,19,43,61,73,85,103,145"
+ },
+ "strike_frames": [
+  4,
+  5,
+  6
+ ],
+ "strike_reach_xy": {
+  "4": [
+   799,
+   122
+  ],
+  "5": [
+   835,
+   148
+  ],
+  "6": [
+   835,
+   148
+  ]
+ }
+}

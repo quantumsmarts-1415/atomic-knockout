@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { sheetKey, use3dSheets, clipDisplayLayout, positiveFinite } from '../scenes/BootScene.js';
 import { clipPose, moveClipFor, moveTextureKey } from './moveClip.js';
-import { stripIndex, idleBlend, attackPhase, poseTarget, FEEL } from './feel.js';
+import { stripIndex, idleBlend, guardIdleBlend, attackPhase, poseTarget, FEEL } from './feel.js';
 import { authoredClipName, sheetFrameIndex, sheetMeta } from './moveSheet.js';
 import { applyColorway } from './colorwayPipeline.js';
 
@@ -382,7 +382,7 @@ export class Rig extends Phaser.GameObjects.Container {
   }
 
   applyPose(dt, state, layout) {
-    if (state !== 'attack') this.blendToIdle(0);
+    if (state !== 'attack' && state !== 'defending') this.blendToIdle(0);
     const fd = this.frameData;
     const frame = this.attackFrame || 0;
     const phase = fd ? attackPhase(fd, frame) : 'idle';
@@ -436,7 +436,16 @@ export class Rig extends Phaser.GameObjects.Container {
       paint(this.clipB, null);
     } else {
       paint(this.sprite, this.sheets?.clips?.[this.currentClip]);
-      if (this.fadeSprite?.visible) paint(this.fadeSprite, this.sheets?.clips?.idle);
+      if (this.fadeSprite?.visible) {
+        const idle = this.sheets?.clips?.idle;
+        const idleScale = idle?.displayScale > 0 ? idle.displayScale : base;
+        this.fadeSprite.x = 0;
+        this.fadeSprite.y = 0;
+        this.fadeSprite.rotation = 0;
+        this.fadeSprite.setScale(idleScale, idleScale);
+        const native = idle?.sheetFacing ?? this.art?.facing ?? this.charDef?.art?.facing ?? 1;
+        this.fadeSprite.setFlipX(native === -1);
+      }
     }
     if (state === 'hurt' && (this.hurtUnits || 0) > FEEL.tumbleAt) {
       this._spin = (this._spin || 0) + (dt || 0.016) * 9 * (this.hurtSign || 1);
@@ -488,6 +497,7 @@ export class Rig extends Phaser.GameObjects.Container {
           attackFrame: this.attackFrame || 0,
           comboStep: this.comboStep || 0,
           animT: this.animT,
+          held: this.defenseT,
         });
         this.sprite.anims.stop();
         this.sprite.setTexture(sheetKey(this.art, shown), i);
@@ -496,7 +506,9 @@ export class Rig extends Phaser.GameObjects.Container {
         this.sheetClip = shown;
         this.sheetFrame = i;
         this._authoredSheet = true;
-        const blend = (this.frameData && state === 'attack') ? idleBlend(this.frameData, this.attackFrame || 0) : 0;
+        const blend = (this.frameData && state === 'attack')
+          ? idleBlend(this.frameData, this.attackFrame || 0)
+          : (state === 'defending' && meta.blendIdle ? guardIdleBlend(this.poseT) : 0);
         this.blendToIdle(blend);
         this.rememberMask(shown, i);
         this.sprite.anims.timeScale = this.animPace > 0 ? this.animPace : 1;

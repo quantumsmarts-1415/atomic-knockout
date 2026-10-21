@@ -1,0 +1,223 @@
+{
+ "name": "einstein",
+ "move": "fallout-rain",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/427b.mp4 (stream 0)",
+ "frameW": 702,
+ "frameH": 623,
+ "idle_cell_w": 568,
+ "idle_anchor_x": 310.0,
+ "width_mode": "cell",
+ "pad_top": 20,
+ "idle_cell_h": 603,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9695,
+ "foot_row": 604,
+ "visibleH": 589,
+ "scale": 1.13121,
+ "offset": [
+  -227.9,
+  -154.7
+ ],
+ "strike_hand_xy": {
+  "3": [
+   583,
+   102
+  ],
+  "4": [
+   588,
+   104
+  ],
+  "5": [
+   581,
+   107
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    35,
+    604,
+    79,
+    418
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    418,
+    180
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    57,
+    604,
+    14,
+    480
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    479,
+    253
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    80,
+    604,
+    2,
+    461
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    461,
+    274
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    14,
+    604,
+    125,
+    697
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    583,
+    102
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 67,
+   "bbox": [
+    16,
+    604,
+    125,
+    699
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    588,
+    104
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 73,
+   "bbox": [
+    20,
+    604,
+    122,
+    697
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    581,
+    107
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    25,
+    604,
+    104,
+    663
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    663,
+    121
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    23,
+    604,
+    97,
+    409
+   ],
+   "foot": 604,
+   "front_hand_xy": [
+    345,
+    319
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   604,
+   604,
+   604,
+   604,
+   604,
+   604,
+   604,
+   604
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Arm swung back low, then flung forward and up, held f4-f6. Grok painted a pale swoosh arc during the swing (src ~31-55); those frames are skipped, so f3 to f4 is a jump. He ends front-on (the end stance differs slightly from the start).",
+  "redo_candidate": false,
+  "first_frame_start_mad": 1.87,
+  "src_picks": "1,13,25,61,67,73,85,145"
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   697,
+   33
+  ],
+  "4": [
+   699,
+   35
+  ],
+  "5": [
+   697,
+   30
+  ]
+ }
+}

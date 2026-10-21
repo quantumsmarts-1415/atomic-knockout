@@ -357,6 +357,34 @@ export function surgeAlpha(move) {
   return 0.35 + 0.65 * (n / cap);
 }
 
+/** Decay Cascade's painted body barely changes between hits. Each step sheet
+ *  is one pulse. Rings before the last play out inside the 120ms gap, and
+ *  the next pulse replaces them, so the shrink reads as five hits. The
+ *  sheet scales stay as authored. */
+export function cascadePulseArt(step, index, count, gapMs = 120) {
+  if (!step) return step;
+  const frames = step.frames?.length || 1;
+  const last = !(count > 1) || index >= count - 1;
+  const gap = gapMs > 0 ? gapMs : 120;
+  const fps = last
+    ? (step.fps > 0 ? step.fps : 16)
+    : Math.max(step.fps > 0 ? step.fps : 24, Math.ceil((frames * 1000) / Math.max(1, gap - 16)));
+  const played = { ...step, fps, _shotTag: 'cascade-pulse' };
+  if (!last) played.lifeMs = gap + 8;
+  return played;
+}
+
+/** Drop one-shots spawned for a tag, so the next pulse is the only ring. */
+export function retireShots(tag) {
+  if (!tag) return;
+  for (let i = oneShots.length - 1; i >= 0; i--) {
+    if (oneShots[i].tag !== tag) continue;
+    oneShots[i].img?.destroy?.();
+    oneShots[i].peak?.destroy?.();
+    oneShots.splice(i, 1);
+  }
+}
+
 /** Impact scale that fits a bright flash disc to the move's hit radius. */
 export function impactRadiusScale(move, art) {
   if (art?.scaleTo !== 'radius') return null;
@@ -2080,6 +2108,7 @@ function trackOneShot(scene, img, art, scale, peak, face = 1, box = null) {
     : frames > 1 ? (frames / fps) * 1000 + 40 : (art.objectType === 'shield' ? 500 : art.objectType === 'beam' ? 110 : 180);
   oneShots.push({
     img, art, scale, peak, face, box, born: scene.simNow ?? 0, life,
+    tag: art._shotTag || null,
   });
 }
 

@@ -308,6 +308,8 @@ function shieldBubble(scene, fighter, color) {
 
 export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (!scene?.add || !fighter || scene.simFast || move?._noVfx) return;
+  // The battle scene owns a beam's sprite and recrops it to the hit each frame.
+  if (move?._suppressBeamArt && phase === 'release') return;
   if (phase === 'recoil' || phase === 'reflect') {
     const painted = artFor(fighter.charDef?.id, move?.name);
     const side = phase === 'recoil' ? painted?.recoil : painted?.reflect;

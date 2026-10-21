@@ -244,6 +244,14 @@ export function launchAngle(move, grounded, units) {
 }
 
 /** px/s launch velocity. angle is the screen-space angle; dir is ±1. */
+/** A grab or a drag stores a speed. Magnet pull stores a radius object and must not become NaN. */
+export function grabLaunchX(dir, pull, drag) {
+  const sign = dir || 1;
+  if (typeof drag === 'number' && Number.isFinite(drag) && drag !== 0) return sign * drag;
+  if (typeof pull === 'number' && Number.isFinite(pull) && pull !== 0) return sign * pull;
+  return null;
+}
+
 export function launchVelocity(units, angle, dir = 1) {
   const perFrame = units * FEEL.launchPerUnit * FEEL.pxPerUnit;
   const speed = perFrame * (1000 / STEP_MS);

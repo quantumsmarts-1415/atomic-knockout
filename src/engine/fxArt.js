@@ -315,11 +315,13 @@ export function chargeWaveAlpha(frac) {
   return 0.4 + 0.6 * t;
 }
 
-/** Beam sprite scale so an authored pixel length matches the gameplay length. */
+/** Beam sprite scale so an authored pixel length matches the gameplay length.
+ *  `_beamReach` is the clipped distance to the first body or wall. */
 export function beamDrawScale(move) {
   const charge = move?._beamScale > 0 ? move._beamScale : 1;
   if (!(move?.beamArtPx > 0)) return charge;
-  const len = Math.min(move.beamCap ?? move.beamArtPx, (move.beamLen ?? 160) * charge);
+  let len = Math.min(move.beamCap ?? move.beamArtPx, (move.beamLen ?? 160) * charge);
+  if (move._beamReach > 0) len = Math.min(len, move._beamReach);
   return len / move.beamArtPx;
 }
 

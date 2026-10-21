@@ -1525,6 +1525,7 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Shotgun', {
       kind: 'projectile', shotEnd: 'despawn', type: K, damage: 1.5, fan: 6, fanDeg: 22, barrelFlash: true,
+      recoilSelf: 200, recoilMs: 120,
       vfx: 'strike', vfxColor: 0xb7bdc4,
       projectileSpeed: 640, projectileRadius: 7, projectileLife: 280,
       baseKnockback: 50, knockbackGrowth: 0.9, duration: 200, cooldown: 860,

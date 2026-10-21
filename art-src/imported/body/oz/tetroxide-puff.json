@@ -1,0 +1,211 @@
+{
+ "name": "oz",
+ "move": "tetroxide-puff",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/499b.mp4 (stream 0)",
+ "frameW": 637,
+ "frameH": 632,
+ "idle_cell_w": 631,
+ "idle_anchor_x": 378.9,
+ "width_mode": "cell",
+ "pad_top": 23,
+ "idle_cell_h": 609,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14.0,
+ "loop": false,
+ "footY": 0.9684,
+ "foot_row": 612,
+ "visibleH": 595,
+ "scale": 1.14629,
+ "offset": [
+  -117.2,
+  -166.4
+ ],
+ "strike_hand_xy": {
+  "4": [
+   632,
+   175
+  ],
+  "5": [
+   570,
+   159
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    40,
+    612,
+    188,
+    543
+   ],
+   "foot": 612,
+   "front_hand_xy": [
+    529,
+    125
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    39,
+    612,
+    188,
+    543
+   ],
+   "foot": 612,
+   "front_hand_xy": [
+    528,
+    124
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    39,
+    612,
+    188,
+    544
+   ],
+   "foot": 612,
+   "front_hand_xy": [
+    528,
+    124
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    48,
+    612,
+    190,
+    570
+   ],
+   "foot": 612,
+   "front_hand_xy": [
+    549,
+    144
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 43,
+   "bbox": [
+    60,
+    612,
+    194,
+    634
+   ],
+   "foot": 612,
+   "front_hand_xy": [
+    632,
+    175
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 8,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 49,
+   "bbox": [
+    64,
+    612,
+    194,
+    591
+   ],
+   "foot": 612,
+   "front_hand_xy": [
+    570,
+    159
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 133,
+   "bbox": [
+    60,
+    612,
+    89,
+    542
+   ],
+   "foot": 612,
+   "front_hand_xy": [
+    542,
+    358
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    41,
+    612,
+    142,
+    483
+   ],
+   "foot": 612,
+   "front_hand_xy": [
+    471,
+    353
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   612,
+   612,
+   612,
+   612,
+   612,
+   612,
+   612,
+   612
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false,
+  "notes": "Grok breath puff painted out of f4; original in _old/tetroxide-puff_prepuff.*"
+ },
+ "strike_frames": [
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "4": [
+   634,
+   175
+  ],
+  "5": [
+   591,
+   76
+  ]
+ }
+}

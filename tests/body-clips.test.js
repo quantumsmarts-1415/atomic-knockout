@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -755,6 +755,59 @@ test('Noble and Ogden keep their hands, and the medal arc extends the swing', ()
   assert.equal(swingFrameIndex(1, arc.swing, 8), 4);
   // The body hand barely travels. The cell extends forward from the fist.
   assert.ok(132 * arc.heightFrac * (1 - arc.pivotX) >= 280, arc.heightFrac);
+});
+
+test('Oz and Pablo keep their hands, the puff carries the cloud, and the guns leave the fist', () => {
+  const slam = CHARACTERS.oz.art.sheets.clips['body-basicCharge'];
+  const slamMeta = sheetMeta('oz', 'body-basicCharge');
+  assert.equal(slam.file, 'oz_densest-slam.png');
+  assert.deepEqual(slamMeta.active, [5, 6]);
+  assert.deepEqual(slamMeta.loop, [0, 4]);
+  const nib = CHARACTERS.oz.art.sheets.clips['body-basicDirectional'];
+  const nibMeta = sheetMeta('oz', 'body-basicDirectional');
+  assert.equal(nib.file, 'oz_nib-stab.png');
+  assert.deepEqual(nibMeta.active, [3, 5]);
+  assert.ok(nibMeta.anchors.fist[5][0] > nib.frameW - 16, nibMeta.anchors.fist[5][0]);
+  const nibPng = PNG.sync.read(readFileSync(`${CHARACTERS.oz.art.sheets.dir}${nib.file}`));
+  assert.ok(nibPng.width <= 8192 && nibPng.height <= 8192);
+  assert.equal(nibPng.width % nib.frameW, 0);
+  const rooted = sheetMeta('oz', 'body-specialDefense');
+  assert.equal(CHARACTERS.oz.art.sheets.clips['body-specialDefense'].file, 'oz_immovable-object.png');
+  assert.deepEqual(rooted.loop, [2, 5]);
+  const puff = CHARACTERS.oz.art.sheets.clips['body-specialDirectional'];
+  const puffMeta = sheetMeta('oz', 'body-specialDirectional');
+  assert.equal(puff.file, 'oz_tetroxide-puff.png');
+  assert.equal(puffMeta.release, 4);
+  assert.deepEqual(puffMeta.active, [4, 5]);
+  assert.ok(puffMeta.anchors.fist[4][0] > puff.frameW - 16, puffMeta.anchors.fist[4][0]);
+  const vapour = JSON.parse(readFileSync('assets/fx/oz/tetroxide-puff/fx.json', 'utf8'));
+  assert.equal(vapour.anchor, 'body');
+  assert.equal(vapour.loop, true);
+  assert.equal(vapour.scaleIn, 300);
+  assert.ok(vapour.heightFrac >= 2, vapour.heightFrac);
+
+  const gun = CHARACTERS.pablo.art.sheets.clips['body-basicCharge'];
+  const gunMeta = sheetMeta('pablo', 'body-basicCharge');
+  assert.equal(gun.file, 'pablo_machine-gun.png');
+  assert.deepEqual(gunMeta.active, [2, 6]);
+  assert.ok(gunMeta.anchors.fist[2][0] > gun.frameW - 30, gunMeta.anchors.fist[2][0]);
+  const pipe = CHARACTERS.pablo.art.sheets.clips['body-basicDirectional'];
+  const pipeMeta = sheetMeta('pablo', 'body-basicDirectional');
+  assert.equal(pipe.file, 'pablo_lead-pipe.png');
+  assert.deepEqual(pipeMeta.active, [4, 5]);
+  const pipeFx = JSON.parse(readFileSync('assets/fx/pablo/lead-pipe/fx.json', 'utf8'));
+  assert.equal(pipeFx.anchor, 'fist');
+  assert.equal(pipeFx.fist.file, 'lead-pipe.png');
+  const apron = sheetMeta('pablo', 'body-specialDefense');
+  assert.equal(CHARACTERS.pablo.art.sheets.clips['body-specialDefense'].file, 'pablo_lead-apron.png');
+  assert.deepEqual(apron.loop, [2, 6]);
+  const shot = CHARACTERS.pablo.art.sheets.clips['body-specialDirectional'];
+  const shotMeta = sheetMeta('pablo', 'body-specialDirectional');
+  assert.equal(shot.file, 'pablo_shotgun.png');
+  assert.deepEqual(shotMeta.active, [3, 5]);
+  assert.ok(shotMeta.anchors.fist[3][0] > shot.frameW - 16, shotMeta.anchors.fist[3][0]);
+  assert.equal(CHARACTERS.pablo.moves.specialDirectional.recoilSelf, 200);
+  assert.equal(CHARACTERS.pablo.moves.specialDirectional.recoilMs, 120);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

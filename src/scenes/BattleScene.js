@@ -33,7 +33,7 @@ import {
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
 import { artFor, beamDrawScale, cloudIgnitionScale, collectFxArt, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnJumpArc, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
-import { bodySheetMuzzle, sheetReleasePoint } from '../engine/moveSheet.js';
+import { bodySheetMuzzle, sheetFxPoint, sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
 
 const GRAVITY = 1500;
@@ -1068,11 +1068,25 @@ export default class BattleScene extends Phaser.Scene {
     const art = artFor(owner?.charDef?.id, move?.name)?.muzzle;
     if (!art?.frames?.length || this.simFast) return;
     const face = owner.facing || 1;
-    const x = owner.x + face * (owner.bodyW ?? 40) * 0.85;
-    const y = owner.y - (owner.bodyH ?? 80) * 0.48;
+    // Machine Gun and Shotgun are empty-hand gestures. The flash is the weapon.
+    const posed = sheetFxPoint(owner, 'shot') || sheetReleasePoint(owner, 'shot');
+    const x = posed?.x ?? owner.x + face * (owner.bodyW ?? 40) * 0.85;
+    const y = posed?.y ?? owner.y - (owner.bodyH ?? 80) * 0.48;
     const rot = art.randomRot ? (Math.random() - 0.5) * 0.8 : 0;
     const flip = art.randomFlip && Math.random() < 0.5 ? -face : face;
     spawnFxSprite(this, { ...art, _rot: rot }, x, y, 1, flip);
+  }
+
+  /** A one-frame shove, or a short slide when the move asks for recoilMs. */
+  kickRecoil(owner, move) {
+    if (!move?.recoilSelf || !owner?.body?.setVelocityX) return;
+    if (move._fanChild || move._ghost || move._salvoChild) return;
+    const vx = -(owner.facing || 1) * move.recoilSelf;
+    owner.body.setVelocityX(vx);
+    if (move.recoilMs > 0) {
+      owner._recoilUntil = (this.simNow ?? this.time?.now ?? 0) + move.recoilMs;
+      owner._recoilVX = vx;
+    }
   }
 
   nearOwnerCleanse(p) {
@@ -1417,6 +1431,7 @@ export default class BattleScene extends Phaser.Scene {
     }
     if (move.fan > 1 && !move._fanChild) {
       if (move.barrelFlash) this.spawnBarrelFlash(owner, move);
+      this.kickRecoil(owner, move);
       const n = move.fan | 0;
       const spread = move.fanSpread ?? 220;
       const speed = move.projectileSpeed ?? 400;
@@ -1447,9 +1462,7 @@ export default class BattleScene extends Phaser.Scene {
       return;
     }
     if (move._salvoChild) this.spawnBarrelFlash(owner, move);
-    if (move.recoilSelf && owner?.body?.setVelocityX && !move._fanChild && !move._ghost && !move._salvoChild) {
-      owner.body.setVelocityX(-(owner.facing || 1) * move.recoilSelf);
-    }
+    this.kickRecoil(owner, move);
     const style = projectileStyle(move);
     const r = style.radius;
     let vy = move._vy ?? 0;

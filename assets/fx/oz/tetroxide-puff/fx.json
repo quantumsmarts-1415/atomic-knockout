@@ -8,7 +8,7 @@
   "blend": "add",
   "black": 16,
   "fit": "height",
-  "heightFrac": 1.15,
+  "heightFrac": 2.2,
   "pivotX": 0.5,
   "pivotY": 0.5,
   "anchor": "body",

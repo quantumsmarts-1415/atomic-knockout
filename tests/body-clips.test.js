@@ -8,9 +8,9 @@ import { artIsUpdated } from '../src/data/updatedArt.js';
 import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
 import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
-import { shoulderSlashOrigin, shoulderWhipIndex } from '../src/engine/fxArt.js';
+import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -558,6 +558,55 @@ test('Atom Smasher holds the follow-through and fades it back to idle', () => {
   assert.equal(iris.file, 'ira_iris-scatter.png');
   assert.equal(irisMeta.release, 3);
   assert.ok(irisMeta.anchors.fist[4][0] > iris.frameW - 20, irisMeta.anchors.fist[4][0]);
+});
+
+test('Decay Cascade bursts carry the pulses, and Mac and Mae keep their hands', () => {
+  const cascade = CHARACTERS.mac.art.sheets.clips['body-basicCharge'];
+  const cascadeMeta = sheetMeta('mac', 'body-basicCharge');
+  assert.equal(cascade.file, 'mac_decay-cascade.png');
+  assert.deepEqual(cascadeMeta.active, [1, 5]);
+  assert.deepEqual(cascadeMeta.loop, [0, 0]);
+  for (const i of [1, 2, 3, 4, 5]) {
+    const hand = cascadeMeta.anchors.fist[i];
+    assert.ok(hand[0] > 0 && hand[0] < cascade.frameW, hand[0]);
+    assert.ok(hand[1] > 0 && hand[1] < cascade.frameH, hand[1]);
+  }
+  const first = cascadePulseArt({ frames: Array(8), fps: 24, scale: 1 }, 0, 5);
+  assert.equal(first.scale, 1);
+  assert.ok(first.fps >= 72, first.fps);
+  assert.ok((first.frames.length / first.fps) * 1000 < 120);
+  assert.equal(first.lifeMs, 128);
+  const mid = cascadePulseArt({ frames: Array(8), fps: 24, scale: 0.64 }, 2, 5);
+  assert.equal(mid.scale, 0.64);
+  const last = cascadePulseArt({ frames: Array(24), fps: 16, scale: 0.42 }, 4, 5);
+  assert.equal(last.fps, 16);
+  assert.equal(last.scale, 0.42);
+  assert.equal(last.lifeMs, undefined);
+
+  const hammer = CHARACTERS.mac.art.sheets.clips['body-basicDirectional'];
+  const hammerPng = PNG.sync.read(readFileSync('art-src/imported/sheets/mac_red-hammer.png'));
+  assert.equal(hammer.file, 'mac_red-hammer.png');
+  assert.ok(hammerPng.width <= 8192 && hammerPng.height <= 8192);
+  assert.equal(hammerPng.width % hammer.frameW, 0);
+  assert.ok(Math.round(hammerPng.width / hammer.frameW) * Math.round(hammerPng.height / hammer.frameH) >= hammer.count);
+
+  const doll = sheetMeta('mac', 'body-specialDefense');
+  assert.deepEqual(doll.loop, [2, 5]);
+  const fuse = CHARACTERS.mac.art.sheets.clips['body-specialDirectional'];
+  const fuseMeta = sheetMeta('mac', 'body-specialDirectional');
+  assert.equal(fuseMeta.release, 3);
+  assert.ok(fuseMeta.anchors.fist[3][0] > fuse.frameW - 16, fuseMeta.anchors.fist[3][0]);
+
+  const drop = sheetMeta('mae', 'body-basicCharge');
+  assert.equal(CHARACTERS.mae.art.sheets.clips['body-basicCharge'].file, 'mae_liquid-drop-split.png');
+  assert.equal(drop.release, 5);
+  const slip = sheetMeta('mae', 'body-specialDefense');
+  assert.deepEqual(slip.active, [4, 6]);
+  assert.deepEqual(slip.loop, [4, 6]);
+  const split = CHARACTERS.mae.art.sheets.clips['body-specialDirectional'];
+  const splitMeta = sheetMeta('mae', 'body-specialDirectional');
+  assert.equal(splitMeta.release, 3);
+  assert.ok(splitMeta.anchors.fist[3][0] > split.frameW - 20, splitMeta.anchors.fist[3][0]);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

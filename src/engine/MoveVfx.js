@@ -2,7 +2,7 @@
 // attack sheet exists; these read the move from across the stage.
 import { canonicalType } from '../data/balance.js';
 import { anodizeTint, takingDps } from './kit.js';
-import { artFor, breakFrames, chargeFrac, drawFxOneShot, fxAnchor, fxGameplayScale, groundTop, impactRadiusScale, meleeContactPoint, reverseFrameOrder, slashNeedsCodeFlash, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnNozzleCone, spawnSeepPath, spawnStageSpan, wantsContactSpark } from './fxArt.js';
+import { artFor, breakFrames, cascadePulseArt, chargeFrac, drawFxOneShot, fxAnchor, fxGameplayScale, groundTop, impactRadiusScale, meleeContactPoint, retireShots, reverseFrameOrder, slashNeedsCodeFlash, spawnAimedBeam, spawnFxDetonate, spawnFxSprite, spawnNozzleCone, spawnSeepPath, spawnStageSpan, wantsContactSpark } from './fxArt.js';
 import { sheetDrawsWeapon, sheetFxPoint, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 
@@ -420,13 +420,19 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
     const art = artFor(fighter.charDef?.id, move?.name);
     if (phase === 'release' && move?.hideProjectile && !art?.frames?.length && art?.splash?.frames?.length) return;
     if (phase === 'release' && art?.steps?.length) {
-      const step = art.steps[move?._pulseStep];
-      if (move?._pulseStep == null || !step?.frames?.length) return;
+      const idx = move?._pulseStep;
+      const step = art.steps[idx];
+      if (idx == null || !step?.frames?.length) return;
       const fitted = impactRadiusScale(move, step);
       const s = fitted != null ? fitted : (step.scale > 0 ? step.scale : 1);
+      // The body pulses are a few pixels. The step sheet is the hit, played
+      // out before the next one and then replaced so the shrink stays readable.
+      const played = cascadePulseArt(step, idx, art.steps.length);
+      played._shotTag = `cascade-pulse:${fighter?.id ?? fighter?.charDef?.id ?? 'mac'}`;
+      retireShots(played._shotTag);
       spawnFxSprite(
         scene,
-        step,
+        played,
         extra.x ?? fighter.x,
         extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5),
         s,

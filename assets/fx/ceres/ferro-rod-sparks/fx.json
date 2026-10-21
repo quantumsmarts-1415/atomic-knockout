@@ -1,0 +1,15 @@
+{
+  "file": "ferro-rod-sparks-shower-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 14.609,
+  "loop": false,
+  "blend": "add",
+  "black": 24,
+  "fit": "length",
+  "stretch": "length",
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false
+}

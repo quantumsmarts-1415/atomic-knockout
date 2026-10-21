@@ -2885,6 +2885,11 @@ function syncAttached(scene, fighter) {
         live.img.rotation = ((scene.simNow ?? 0) / 1000) * art.spin * face;
       }
     }
+    if (want.kind === 'fist' && art.pulse) {
+      // The catalyst puck is a still. Pulse its alpha while it sits in the palm.
+      const wave = 0.68 + 0.32 * Math.sin((scene.simNow || 0) * 0.012);
+      live.img.setAlpha(wave);
+    }
     live.img.setDepth(14);
     return;
   }

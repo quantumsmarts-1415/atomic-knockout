@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { ROSTER } from '../src/data/characters.js';
-import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
+import { CHARACTERS, ROSTER } from '../src/data/characters.js';
+import { classifyRoster, fxFolder, moveSlug, objectTypeOf } from '../src/data/attackFx.js';
 import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeTint, chargeWaveAlpha, cloudIgnitionScale, contentSpan, curieFade, curiePulse, fadeLoopFrames, flameTestColor, flareCover, gradePixels, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, handPropHeld, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pileCount, playsFinalImpact, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, poisonStatusArt, slashArtReplacesStroke, slashNeedsCodeFlash, sliceGrid, sliceHorizontal, rodOrbitPoint, stackPipIndex, stageSpanSize, stepFxProjectile, stickAim, survivedPipAlpha, surgeAlpha, surgeBeamScale, throwGrowth, tintToward, trailBackOffset, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
@@ -2852,4 +2852,117 @@ test('hoss, mae, and copernicus keep the fixed blasts, the 17-frame split, and t
   assert.equal(glob.projectile.black, false);
   assert.equal(glob.detonate.blend, 'normal');
   assert.equal(glob.detonate.frames, 12);
+});
+
+test('Ceres move FX keeps the shower, the puck, the oven glow, and the rolling rock', () => {
+  const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
+  const png = (rel) => {
+    const buf = fs.readFileSync(rel);
+    return { bytes: buf.length, w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+  };
+  const moves = CHARACTERS.ceres.moves;
+  assert.equal(moves.basicCharge.damage, 8);
+  assert.equal(moves.basicCharge.beamLen, 128);
+  assert.equal(moves.basicCharge.beamThick, 26);
+  assert.equal(objectTypeOf(moves.basicCharge, 'basicCharge'), 'beam');
+  assert.equal(moves.basicDirectional.name, 'Ceria Polish');
+  assert.equal(moves.basicDirectional.damage, 3);
+  assert.equal(moves.basicDirectional.multiHit, 4);
+  assert.equal(moves.basicDirectional.sourceSlug, 'catalytic-burn');
+  assert.equal(objectTypeOf(moves.basicDirectional, 'basicDirectional'), 'slash arc');
+  assert.equal(moves.specialDefense.duration, 740);
+  assert.equal(objectTypeOf(moves.specialDefense, 'specialDefense'), 'shield');
+  assert.equal(moves.specialDirectional.damage, 6);
+  assert.equal(moves.specialDirectional.projectileSpeed, 300);
+  assert.equal(moves.specialDirectional.ground, true);
+  assert.equal(objectTypeOf(moves.specialDirectional, 'specialDirectional'), 'thrown');
+
+  const shower = read('assets/fx/ceres/ferro-rod-sparks/fx.json');
+  assert.equal(shower.file, 'ferro-rod-sparks-shower-anim.png');
+  assert.equal(shower.frames, 24);
+  assert.equal(shower.cols, 4);
+  assert.equal(shower.rows, 6);
+  assert.equal(shower.fps, 14.609);
+  assert.equal(shower.loop, false);
+  assert.equal(shower.blend, 'add');
+  assert.equal(shower.black, 24);
+  assert.equal(shower.fit, 'length');
+  assert.equal(shower.stretch, 'length');
+  assert.equal(shower.pivot, 'left');
+  assert.equal(shower.scale, undefined);
+  assert.equal(shower.beamArtPx, undefined);
+  assert.equal(shower.hit, false);
+  assert.equal(blackThreshold(shower), 24);
+
+  const burn = read('assets/fx/ceres/catalytic-burn/fx.json');
+  assert.equal(burn.file, 'catalytic-burn-impact-anim.png');
+  assert.equal(burn.frames, 24);
+  assert.equal(burn.fps, 13.714);
+  assert.equal(burn.blend, 'add');
+  assert.equal(burn.black, 24);
+  assert.equal(burn.anchor, 'fist');
+  assert.equal(burn.oneshot, true);
+  assert.equal(burn.flip, true);
+  assert.equal(burn.scale, undefined);
+  assert.equal(burn.hit, false);
+  assert.equal(burn.fist.file, 'catalytic-puck-glow.png');
+  assert.equal(burn.fist.anchor, 'hand');
+  assert.equal(burn.fist.pulse, true);
+  assert.equal(burn.fist.black, 16);
+  assert.equal(burn.fist.heightFrac, 0.32);
+  assert.equal(fs.existsSync('assets/fx/ceres/ceria-polish/fx.json'), false);
+  assert.equal(slashArtReplacesStroke({ frames: [0], objectType: 'slash arc', oneshot: true }), true);
+
+  const oven = read('assets/fx/ceres/self-cleaning/fx.json');
+  assert.equal(oven.file, 'self-cleaning-status-anim.png');
+  assert.equal(oven.frames, 24);
+  assert.equal(oven.cols, 6);
+  assert.equal(oven.rows, 4);
+  assert.equal(oven.fps, 12);
+  assert.equal(oven.loop, true);
+  assert.equal(oven.blend, 'add');
+  assert.equal(oven.black, 16);
+  assert.equal(oven.anchor, 'body');
+  assert.equal(oven.heightFrac, 1.15);
+  assert.equal(oven.hit, false);
+
+  const rock = read('assets/fx/ceres/dwarf-planet/fx.json');
+  assert.equal(rock.projectile.file, 'dwarf-planet-rock.png');
+  assert.equal(rock.projectile.blend, 'normal');
+  assert.equal(rock.projectile.black, false);
+  assert.equal(rock.projectile.aim, false);
+  assert.ok(rock.projectile.spin > 1 && rock.projectile.spin < 3);
+  assert.equal(rock.projectile.spin, 1.8);
+  assert.equal(blackThreshold(rock.projectile), 0);
+  assert.equal(rock.detonate.file, 'dwarf-planet-impact-anim.png');
+  assert.equal(rock.detonate.frames, 24);
+  assert.equal(rock.detonate.fps, 13.176);
+  assert.equal(rock.detonate.blend, 'normal');
+  assert.equal(rock.detonate.black, 24);
+  assert.equal(rock.detonate.anchor, 'point');
+  assert.equal(blackThreshold(rock.detonate), 24);
+  assert.equal(moves.specialDirectional.roll, undefined);
+
+  const sheets = {
+    'assets/fx/ceres/ferro-rod-sparks/ferro-rod-sparks-shower-anim.png': [16578960, 3768, 4092],
+    'assets/fx/ceres/catalytic-burn/catalytic-burn-impact-anim.png': [12670591, 4096, 3456],
+    'assets/fx/ceres/catalytic-burn/catalytic-puck-glow.png': [29028, 384, 384],
+    'assets/fx/ceres/self-cleaning/self-cleaning-status-anim.png': [1420402, 1920, 1920],
+    'assets/fx/ceres/dwarf-planet/dwarf-planet-rock.png': [428318, 768, 768],
+    'assets/fx/ceres/dwarf-planet/dwarf-planet-impact-anim.png': [8395796, 4096, 3138],
+  };
+  for (const [rel, [bytes, w, h]] of Object.entries(sheets)) {
+    const got = png(rel);
+    assert.equal(got.bytes, bytes, rel);
+    assert.equal(got.w, w, rel);
+    assert.equal(got.h, h, rel);
+    assert.ok(w <= 8192 && h <= 8192, rel);
+  }
+  for (const dir of ['ferro-rod-sparks', 'catalytic-burn', 'self-cleaning', 'dwarf-planet']) {
+    const names = fs.readdirSync(`assets/fx/ceres/${dir}`);
+    assert.equal(names.some((name) => /\.(jpg|gif)$/i.test(name)), false, dir);
+    assert.equal(names.includes('fx.json'), true, dir);
+  }
+  const src = fs.readFileSync('src/engine/fxArt.js', 'utf8');
+  assert.match(src, /want\.kind === 'fist' && art\.pulse/);
 });

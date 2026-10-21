@@ -12,6 +12,7 @@
   "pivotX": 0,
   "pivotY": 0.5,
   "anchor": "fist",
+  "swing": [2, 5],
   "hit": false,
   "impact": {
     "file": "trident-hit-anim.png",

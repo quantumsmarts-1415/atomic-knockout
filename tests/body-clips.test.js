@@ -8,7 +8,7 @@ import { artIsUpdated } from '../src/data/updatedArt.js';
 import { bodySourceSlug, hasBodyClips } from '../src/data/bodyClips.js';
 import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
-import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex } from '../src/engine/fxArt.js';
+import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
 const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune'];
 
@@ -656,6 +656,11 @@ test('Mendel and Neptune keep their hands, and the trident leaves the fist', () 
   const trident = JSON.parse(readFileSync('assets/fx/neptune/trident-thrust/fx.json', 'utf8'));
   assert.equal(trident.anchor, 'fist');
   assert.equal(trident.pivotX, 0);
+  assert.deepEqual(trident.swing, [2, 5]);
+  assert.equal(swingFrameIndex(0, trident.swing, 8), 2);
+  assert.equal(swingFrameIndex(0.375, trident.swing, 8), 3);
+  assert.equal(swingFrameIndex(0.75, trident.swing, 8), 4);
+  assert.equal(swingFrameIndex(1, trident.swing, 8), 5);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

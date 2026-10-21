@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto'];
+const FIGHTERS = ['ace', 'amy', 'aurelius', 'bianca', 'boar', 'burke', 'cali', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -71,10 +71,16 @@ test('per-move body clips keep the idle height and the json foot line', () => {
       const fd = { startup: 4, active: 3, recovery: 4, visible: 11 };
       const shown = sheetFrameIndex(meta, { state: 'attack', fd, attackFrame: fd.startup });
       assert.equal(shown, json.strike_frames[0], `${json.move} opens on the strike`);
-      const hand = frameToWorld(
-        meta.anchors.fist[shown], clip.frameW, clip.frameH, clip.footY, clip.displayScale, 1, 1, 0, 0,
-      );
-      assert.ok(hand.x > 0, `${json.move} hand is in front`);
+      // The opening strike can still be chambered (King's Edge). A later
+      // strike of the same move has to reach in front of the body.
+      let ahead = -Infinity;
+      for (const index of json.strike_frames) {
+        const placed = frameToWorld(
+          meta.anchors.fist[index], clip.frameW, clip.frameH, clip.footY, clip.displayScale, 1, 1, 0, 0,
+        );
+        if (placed.x > ahead) ahead = placed.x;
+      }
+      assert.ok(ahead > 0, `${json.move} hand is in front`);
       const png = PNG.sync.read(readFileSync(`${art.sheets.dir}${clip.file}`));
       assert.equal(png.width % clip.frameW, 0, json.move);
       assert.equal(png.height % clip.frameH, 0, json.move);
@@ -894,6 +900,91 @@ test('Pluto keeps his hands, and the pit leaves the fist', () => {
   const pitFx = JSON.parse(readFileSync('assets/fx/pluto/plutonium-pit/fx.json', 'utf8'));
   assert.equal(pitFx.file, 'plutonium-pit.png');
   assert.equal(pitFx.black, false);
+});
+
+test('Ray drinks from a cupped hand, and the uppercut is the rising fist', () => {
+  const tonic = CHARACTERS.ray.art.sheets.clips['body-basicCharge'];
+  const tonicMeta = sheetMeta('ray', 'body-basicCharge');
+  assert.equal(tonic.file, 'ray_radium-tonic.png');
+  assert.deepEqual(tonicMeta.loop, [0, 2]);
+  assert.equal(tonicMeta.release, 3);
+  for (const index of [0, 1, 2, 3, 4, 5]) {
+    assert.ok(tonicMeta.anchors.fist[index][1] < 250, tonicMeta.anchors.fist[index][1]);
+  }
+  assert.deepEqual(tonicMeta.anchors.fist[3], [354, 157]);
+  const tonicFx = JSON.parse(readFileSync('assets/fx/ray/radium-tonic/fx.json', 'utf8'));
+  assert.equal(tonicFx.charge.anchor, 'hand');
+  assert.equal(tonicFx.charge.black, false);
+  assert.equal(tonicFx.charge.tilt, 0.85);
+
+  const upper = CHARACTERS.ray.art.sheets.clips['body-basicDirectional'];
+  const upperMeta = sheetMeta('ray', 'body-basicDirectional');
+  assert.equal(upper.file, 'ray_alpha-uppercut.png');
+  assert.deepEqual(upperMeta.active, [3, 5]);
+  assert.deepEqual(upperMeta.anchors.fist[3], [337, 188]);
+  assert.deepEqual(upperMeta.anchors.fist[4], [347, 296]);
+  assert.deepEqual(upperMeta.anchors.fist[5], [401, 137]);
+  assert.ok(upperMeta.anchors.fist[5][1] < upperMeta.anchors.fist[2][1] - 200);
+  const upperFx = JSON.parse(readFileSync('assets/fx/ray/alpha-uppercut/fx.json', 'utf8'));
+  assert.equal(upperFx.anchor, 'fist');
+  assert.equal(upperFx.burst.scale, 0.4);
+
+  const halo = sheetMeta('ray', 'body-specialDefense');
+  assert.equal(CHARACTERS.ray.art.sheets.clips['body-specialDefense'].file, 'ray_decay-halo.png');
+  assert.deepEqual(halo.loop, [2, 5]);
+  const splash = CHARACTERS.ray.art.sheets.clips['body-specialDirectional'];
+  const splashMeta = sheetMeta('ray', 'body-specialDirectional');
+  assert.equal(splash.file, 'ray_luminous-splash.png');
+  assert.equal(splashMeta.release, 3);
+  assert.deepEqual(splashMeta.anchors.fist[3], [660, 158]);
+  assert.ok(splashMeta.anchors.fist[3][0] > splash.frameW - 20);
+
+  const glow = sheetMeta('polonius', 'body-basicCharge');
+  assert.equal(CHARACTERS.polonius.art.sheets.clips['body-basicCharge'].file, 'polonius_blue-glow-burst.png');
+  assert.deepEqual(glow.loop, [0, 4]);
+  assert.ok(glow.anchors.fist[5][1] < 200);
+  const rapier = CHARACTERS.polonius.art.sheets.clips['body-basicDirectional'];
+  const rapierMeta = sheetMeta('polonius', 'body-basicDirectional');
+  assert.equal(rapier.file, 'polonius_rapier-thrust.png');
+  assert.deepEqual(rapierMeta.anchors.fist[4], [1368, 217]);
+  assert.ok(rapierMeta.anchors.fist[4][0] > rapier.frameW - 8);
+  const rapierFx = JSON.parse(readFileSync('assets/fx/polonius/rapier-thrust/fx.json', 'utf8'));
+  assert.equal(rapierFx.anchor, 'fist');
+  assert.equal(rapierFx.pivotX, 0);
+  const arras = sheetMeta('polonius', 'body-specialDefense');
+  assert.equal(CHARACTERS.polonius.art.sheets.clips['body-specialDefense'].file, 'polonius_behind-the-arras.png');
+  assert.deepEqual(arras.loop, [2, 5]);
+  const sweep = sheetMeta('polonius', 'body-specialDirectional');
+  assert.equal(CHARACTERS.polonius.art.sheets.clips['body-specialDirectional'].file, 'polonius_static-eliminator.png');
+  assert.deepEqual(sweep.anchors.fist[4], [663, 126]);
+  const sweepFx = JSON.parse(readFileSync('assets/fx/polonius/static-eliminator/fx.json', 'utf8'));
+  assert.equal(sweepFx.anchor, 'fist');
+  assert.equal(sweepFx.heightFrac, 1.15);
+
+  const octane = sheetMeta('rex', 'body-basicCharge');
+  assert.equal(CHARACTERS.rex.art.sheets.clips['body-basicCharge'].file, 'rex_high-octane.png');
+  assert.deepEqual(octane.loop, [0, 3]);
+  assert.deepEqual(octane.anchors.fist[6], [584, 309]);
+  const edge = CHARACTERS.rex.art.sheets.clips['body-basicDirectional'];
+  const edgeMeta = sheetMeta('rex', 'body-basicDirectional');
+  assert.equal(edge.file, 'rex_kings-edge.png');
+  assert.deepEqual(edgeMeta.anchors.fist[4], [962, 299]);
+  assert.deepEqual(edgeMeta.anchors.fist[5], [1181, 345]);
+  const edgeFx = JSON.parse(readFileSync('assets/fx/rex/kings-edge/fx.json', 'utf8'));
+  assert.equal(edgeFx.oneshot, true);
+  assert.deepEqual(edgeFx.swing, [0, 11]);
+  const creep = sheetMeta('rex', 'body-specialDefense');
+  assert.equal(CHARACTERS.rex.art.sheets.clips['body-specialDefense'].file, 'rex_creep-resistance.png');
+  assert.deepEqual(creep.loop, [3, 5]);
+  const lash = CHARACTERS.rex.art.sheets.clips['body-specialDirectional'];
+  const lashMeta = sheetMeta('rex', 'body-specialDirectional');
+  assert.equal(lash.file, 'rex_thermocouple-lash.png');
+  assert.deepEqual(lashMeta.anchors.fist[3], [695, 164]);
+  assert.ok(lashMeta.anchors.fist[3][0] > lash.frameW - 8);
+  const lashFx = JSON.parse(readFileSync('assets/fx/rex/thermocouple-lash/fx.json', 'utf8'));
+  assert.equal(lashFx.oneshot, true);
+  assert.deepEqual(lashFx.swing, [0, 13]);
+  assert.ok(Math.abs(lashFx.pivotX - 40 / 768) < 1e-6);
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

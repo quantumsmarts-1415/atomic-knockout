@@ -3606,11 +3606,14 @@ export function syncFxActors(scene) {
       if (along >= 0.7) {
         fighter._liftBurst = true;
         const pop = art.burst.scale > 0 ? art.burst.scale : 1;
+        // Alpha Uppercut's arc is the rising fist. The pop sits on that
+        // hand. Other lift bursts keep the high chest point.
+        const tip = art.anchor === 'fist' ? meleeContactPoint(fighter, move) : null;
         spawnFxSprite(
           scene,
           art.burst,
-          fighter.x + face * (fighter.bodyW ?? 40) * 0.28,
-          fighter.y - (fighter.bodyH ?? 80) * 0.92,
+          tip ? tip.x : fighter.x + face * (fighter.bodyW ?? 40) * 0.28,
+          tip ? tip.y : fighter.y - (fighter.bodyH ?? 80) * 0.92,
           pop,
           face,
         );

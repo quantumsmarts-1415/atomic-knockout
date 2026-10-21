@@ -3459,7 +3459,10 @@ export function syncFxActors(scene) {
     syncFreeze(scene, fighter);
     const move = fighter.currentMove;
     const art = artFor(fighter?.charDef?.id, move?.name);
-    const swinging = art && art.anchor !== 'lance' && !art.oneshot
+    // Impact-only moves still carry the slash type, with the hit art on a
+    // side record and no frames of their own. Drawing that empty sheet
+    // throws and stops the match.
+    const swinging = art?.frames?.length && art.anchor !== 'lance' && !art.oneshot
       && (art.objectType === 'slash arc' || art.objectType === 'extend')
       && fighter.state === 'attack' && frameInActive(fighter)
       && !sheetDrawsWeapon(fighter);

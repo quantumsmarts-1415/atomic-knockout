@@ -1,0 +1,222 @@
+{
+ "name": "cali",
+ "move": "surfs-up",
+ "method": "video",
+ "source": "fx-art/_flow/b7/clips/401b.mp4 (stream 0)",
+ "frameW": 714,
+ "frameH": 600,
+ "idle_cell_w": 540,
+ "idle_anchor_x": 223.0,
+ "width_mode": "cell",
+ "pad_top": 0,
+ "idle_cell_h": 600,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 12.0,
+ "loop": false,
+ "footY": 0.9667,
+ "foot_row": 580,
+ "visibleH": 565,
+ "scale": 1.12774,
+ "offset": [
+  -279.4,
+  -165.4
+ ],
+ "strike_hand_xy": {
+  "3": [
+   693,
+   191
+  ],
+  "4": [
+   552,
+   260
+  ],
+  "5": [
+   711,
+   213
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    15,
+    581,
+    18,
+    375
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    341,
+    211
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 13,
+   "bbox": [
+    49,
+    581,
+    21,
+    454
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    404,
+    151
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    99,
+    581,
+    28,
+    690
+   ],
+   "foot": 581,
+   "front_hand_xy": [
+    688,
+    194
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 600,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 37,
+   "bbox": [
+    99,
+    583,
+    28,
+    693
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    693,
+    191
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 948,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 61,
+   "bbox": [
+    103,
+    583,
+    32,
+    553
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    552,
+    260
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 568,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    101,
+    583,
+    39,
+    711
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    711,
+    213
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 876,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 121,
+   "bbox": [
+    35,
+    583,
+    39,
+    481
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    402,
+    199
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    11,
+    583,
+    39,
+    431
+   ],
+   "foot": 583,
+   "front_hand_xy": [
+    368,
+    136
+   ],
+   "src_edge_px": 0,
+   "removed_detached_px": 0,
+   "pinned": false,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   581,
+   581,
+   581,
+   583,
+   583,
+   583,
+   583,
+   583
+  ],
+  "foot_spread_px": 2,
+  "any_out_edge": false,
+  "first_frame_start_mad": 1.35,
+  "notes": "Low surfer stance, arms out, leaning forward. Faint ground shadow blobs removed. Clean.",
+  "redo_candidate": false
+ },
+ "strike_frames": [
+  3,
+  4,
+  5
+ ],
+ "strike_reach_xy": {
+  "3": [
+   693,
+   191
+  ],
+  "4": [
+   552,
+   260
+  ],
+  "5": [
+   711,
+   213
+  ]
+ }
+}

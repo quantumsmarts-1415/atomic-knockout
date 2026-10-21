@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug } from '../src/data/attackFx.js';
-import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeTint, chargeWaveAlpha, cloudIgnitionScale, contentSpan, curieFade, curiePulse, fadeLoopFrames, flameTestColor, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, handPropHeld, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pileCount, playsFinalImpact, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, slashArtReplacesStroke, slashNeedsCodeFlash, sliceGrid, sliceHorizontal, rodOrbitPoint, stackPipIndex, stageSpanSize, stepFxProjectile, stickAim, survivedPipAlpha, surgeAlpha, surgeBeamScale, throwGrowth, tintToward, trailBackOffset, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeTint, chargeWaveAlpha, cloudIgnitionScale, contentSpan, curieFade, curiePulse, fadeLoopFrames, flameTestColor, flareCover, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, handPropHeld, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pileCount, playsFinalImpact, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, poisonStatusArt, slashArtReplacesStroke, slashNeedsCodeFlash, sliceGrid, sliceHorizontal, rodOrbitPoint, stackPipIndex, stageSpanSize, stepFxProjectile, stickAim, survivedPipAlpha, surgeAlpha, surgeBeamScale, throwGrowth, tintToward, trailBackOffset, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -1039,35 +1039,57 @@ test('gemini fx wires arsenio and selena', () => {
   assert.equal(moveSlug('Gray Arsenic Shards'), 'gray-arsenic-shards');
   assert.equal(moveSlug('Paris Green Slash'), 'paris-green-slash');
   const powder = read('assets/fx/arsenio/inheritance-powder/fx.json');
-  assert.equal(powder.projectile.file, 'inheritance-powder-puff.jpg');
-  assert.equal(powder.projectile.blend, 'screen');
-  assert.equal(powder.projectile.luma, true);
+  assert.equal(powder.projectile.file, 'inheritance-powder-puff.png');
+  assert.equal(powder.projectile.blend, 'normal');
+  assert.equal(powder.projectile.black, false);
+  assert.equal(powder.projectile.luma, undefined);
   assert.equal(powder.projectile.aim, false);
+  assert.equal(powder.projectile.heightFrac, 0.45);
   assert.equal(powder.hit, false);
   const slash = read('assets/fx/arsenio/paris-green-slash/fx.json');
-  assert.equal(slash.file, 'paris-green-slash.jpg');
-  assert.equal(slash.blend, 'add');
+  assert.equal(slash.file, 'paris-green-slash.png');
+  assert.equal(slash.blend, 'normal');
+  assert.equal(slash.black, false);
   assert.equal(slash.anchor, 'fist');
   assert.equal(slash.hit, false);
+  assert.equal(slash.cling.file, 'poison-status-anim.png');
+  assert.equal(slash.cling.frames, 4);
+  assert.equal(slash.cling.cols, 4);
+  assert.equal(slash.cling.fps, 8);
+  assert.equal(slash.cling.loop, true);
+  assert.equal(slash.cling.blend, 'normal');
+  assert.equal(slash.cling.black, false);
+  assert.equal(slash.cling.anchor, 'feet');
+  assert.equal(slash.cling.pivot, 'bottom');
+  assert.equal(slash.cling.poisonStatus, true);
+  assert.ok(slash.cling.heightFrac <= 1);
   const vapor = read('assets/fx/arsenio/sublimate/fx.json');
-  assert.equal(vapor.file, 'sublimate-vapor-sheet.jpg');
+  assert.equal(vapor.file, 'sublimate-vapor-anim.png');
   assert.equal(vapor.frames, 4);
-  assert.equal(vapor.blend, 'screen');
-  assert.equal(vapor.luma, true);
+  assert.equal(vapor.cols, 4);
+  assert.equal(vapor.blend, 'normal');
+  assert.equal(vapor.black, false);
   assert.equal(vapor.anchor, 'body');
   assert.equal(vapor.holdAt, 2);
+  assert.equal(vapor.loopFrom, 1);
   assert.equal(vapor.breakFrom, 3);
   assert.equal(vapor.ghost, 0.18);
+  assert.equal(vapor.heightFrac, 1.2);
+  assert.ok(132 * vapor.heightFrac < 200, 'vapor cells are 1354px; code scales them to the body');
   assert.equal(vapor.hit, false);
-  assert.equal(vapor.burst.file, 'sublimate-counter-burst.jpg');
+  assert.equal(vapor.burst.file, 'sublimate-counter-burst.png');
   assert.equal(vapor.burst.blend, 'normal');
+  assert.equal(vapor.burst.black, false);
   const shards = read('assets/fx/arsenio/gray-arsenic-shards/fx.json');
-  assert.equal(shards.projectile.file, 'arsenic-shard.jpg');
+  assert.equal(shards.projectile.file, 'arsenic-shard.png');
   assert.equal(shards.projectile.blend, 'normal');
+  assert.equal(shards.projectile.black, false);
   assert.equal(shards.projectile.aim, undefined);
+  assert.equal(shards.projectile.spin, 2.2);
   assert.equal(shards.hit, false);
-  assert.equal(shards.detonate.file, 'arsenic-shatter.jpg');
+  assert.equal(shards.detonate.file, 'arsenic-shatter.png');
   assert.equal(shards.detonate.blend, 'normal');
+  assert.equal(shards.detonate.black, false);
   assert.equal(shards.detonate.anchor, 'point');
   const poison = read('assets/fx/status/poison/fx.json');
   assert.equal(poison.file, 'poison-status-sheet.jpg');
@@ -1132,6 +1154,7 @@ test('gemini fx wires arsenio and selena', () => {
   const files = [
     [powder.projectile.file, 'assets/fx/arsenio/inheritance-powder/'],
     [slash.file, 'assets/fx/arsenio/paris-green-slash/'],
+    [slash.cling.file, 'assets/fx/arsenio/paris-green-slash/'],
     [vapor.file, 'assets/fx/arsenio/sublimate/'],
     [vapor.burst.file, 'assets/fx/arsenio/sublimate/'],
     [shards.projectile.file, 'assets/fx/arsenio/gray-arsenic-shards/'],
@@ -1146,8 +1169,22 @@ test('gemini fx wires arsenio and selena', () => {
   ];
   for (const [name, dir] of files) assert.equal(fs.existsSync(dir + name), true, name);
   assert.equal(shellFrame({ frames: [0, 1, 2, 3], holdAt: 2, fps: 8 }, 500), 2);
+  const vaporLoop = { frames: [0, 1, 2, 3], holdAt: 2, loopFrom: 1, fps: 8 };
+  assert.equal(shellFrame(vaporLoop, 0), 0);
+  assert.equal(shellFrame(vaporLoop, 125), 1);
+  assert.equal(shellFrame(vaporLoop, 250), 2);
+  assert.equal(shellFrame(vaporLoop, 375), 1);
+  assert.equal(shellFrame(vaporLoop, 500), 2);
   const cond = breakFrames({ frames: [0, 1, 2, 3], breakFrom: 3, fps: 8, blend: 'screen' });
   assert.deepEqual(cond.frames, [3]);
+  const vaporPng = fs.readFileSync('assets/fx/arsenio/sublimate/sublimate-vapor-anim.png');
+  assert.equal(vaporPng.readUInt32BE(16), 2816);
+  assert.equal(vaporPng.readUInt32BE(20), 1354);
+  assert.equal(fs.existsSync('assets/fx/arsenio/sublimate/sublimate-vapor-sheet.jpg'), false);
+  assert.equal(fs.existsSync('assets/fx/arsenio/inheritance-powder/inheritance-powder-puff.jpg'), false);
+  assert.equal(poisonStatusArt({ id: 'arsenio', move: 'Paris Green Slash', burstAt: 10 }), null);
+  assert.equal(poisonStatusArt({ id: 'talia', move: 'Pale Horse Dart' }), null);
+  assert.equal(poisonStatusArt({ id: 'arsenio', move: 'Gray Arsenic Shards' }), null);
 });
 
 test('batch 2 wave 1 keeps the sheets the later flow art did not replace', () => {

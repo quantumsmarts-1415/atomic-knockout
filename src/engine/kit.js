@@ -106,6 +106,10 @@ export function applyOnHit(attacker, victim, move, time) {
         move: move.name,
         until: victim.poisonTick,
       };
+    } else if (!wait && attacker?.charDef?.id === 'arsenio') {
+      // Immediate poison. No burstAt, or the hit flash would fire at once.
+      // The feet sheet is drawn from this source; clingFrom would stack a second copy.
+      victim.poisonFrom = { id: attacker.charDef.id, move: move.name };
     }
   }
   if (fx.pinFoot && attacker?.charDef?.id) {

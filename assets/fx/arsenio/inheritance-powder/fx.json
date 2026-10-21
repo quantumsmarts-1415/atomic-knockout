@@ -1,17 +1,16 @@
 {
-  "blend": "screen",
-  "luma": true,
-  "black": 16,
+  "blend": "normal",
+  "black": false,
   "hit": false,
   "projectile": {
-    "file": "inheritance-powder-puff.jpg",
-    "blend": "screen",
-    "luma": true,
-    "black": 16,
+    "file": "inheritance-powder-puff.png",
+    "blend": "normal",
+    "black": false,
     "fit": "height",
     "heightFrac": 0.45,
     "crop": "frame",
     "pivot": "center",
-    "aim": false
+    "aim": false,
+    "hit": false
   }
 }

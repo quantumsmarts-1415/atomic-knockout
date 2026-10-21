@@ -503,6 +503,18 @@ test('batch 2 kits match the edited move doc', () => {
   assert.strictEqual(shards.type, 'kinetic');
   assert.strictEqual(shards.type2, 'chemical');
   assert.strictEqual(shards.explodeOnly, true);
+  const slashPoison = { charDef: {} };
+  applyOnHit({ charDef: { id: 'arsenio' } }, slashPoison, CHARACTERS.arsenio.moves.basicDirectional, 1000);
+  assert.equal(slashPoison.poisonDps, 2);
+  assert.equal(slashPoison.poisonFrom.id, 'arsenio');
+  assert.equal(slashPoison.poisonFrom.move, 'Paris Green Slash');
+  assert.equal(slashPoison.poisonFrom.burstAt, undefined);
+  assert.equal(slashPoison.clingFrom, undefined);
+  const powderPoison = { charDef: {} };
+  applyOnHit({ charDef: { id: 'arsenio' } }, powderPoison, CHARACTERS.arsenio.moves.basicCharge, 1000);
+  assert.equal(powderPoison.poisonDps, 1.6);
+  assert.equal(powderPoison.poisonFrom.move, 'Inheritance Powder');
+  assert.equal(powderPoison.poisonFrom.burstAt, undefined);
   const gate = CHARACTERS.gertrude.moves.specialDefense;
   assert.strictEqual(gate.name, 'Transistor Gate');
   assert.strictEqual(gate.storeType, 'electrical');

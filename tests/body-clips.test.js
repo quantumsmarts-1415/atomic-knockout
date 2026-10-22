@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'agatha', 'amy', 'arsenio', 'aurelius', 'barry', 'ben', 'bianca', 'boar', 'bord', 'brock', 'burke', 'caesar', 'cali', 'carter', 'ceres', 'cody', 'collin', 'cooper', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'europa', 'fermi', 'fey', 'flo', 'ford', 'frank', 'gertrude', 'goldie', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'titan', 'uri', 'wolf'];
+const FIGHTERS = ['aaron', 'ace', 'agatha', 'allen', 'amy', 'arsenio', 'aurelius', 'barry', 'ben', 'bianca', 'boar', 'bord', 'brock', 'burke', 'caesar', 'cal', 'cali', 'carter', 'ceres', 'chloe', 'chroma', 'cody', 'collin', 'cooper', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'erin', 'europa', 'fermi', 'fey', 'flo', 'flora', 'ford', 'frank', 'gail', 'gertrude', 'goldie', 'haley', 'helen', 'hog', 'holly', 'hoss', 'hydra', 'indy', 'iona', 'ira', 'krypto', 'kyle', 'lana', 'lars', 'lillie', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'titan', 'uri', 'wolf'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -21,8 +21,27 @@ function placedHand(json, index) {
   const strike = json.strike_hand_xy?.[String(index)];
   const front = json.frames?.[index]?.front_hand_xy;
   const reach = json.strike_reach_xy?.[String(index)];
-  const xy = inCell(json, strike) ? strike : inCell(json, reach) ? reach : (strike || front);
+  const fist = json.anchors?.fist?.[index];
+  const xy = inCell(json, strike) ? strike : inCell(json, reach) ? reach : (strike || front || fist);
   return [Math.round(xy[0]), Math.round(xy[1])];
+}
+
+function footRowOf(json) {
+  if (Number.isFinite(json.foot_row)) return json.foot_row;
+  if (Number.isFinite(json.footY) && json.frameH > 0) return Math.round(json.footY * json.frameH) - 1;
+  return null;
+}
+
+function strikesOf(json) {
+  if (Array.isArray(json.strike_frames) && json.strike_frames.length) return [...json.strike_frames];
+  const active = json.phases?.active;
+  if (Array.isArray(active) && active.length >= 2 && active[1] >= active[0]) {
+    const frames = [];
+    for (let i = active[0]; i <= active[1]; i++) frames.push(i);
+    return frames;
+  }
+  if (Number.isFinite(json.releaseFrame)) return [json.releaseFrame];
+  return [];
 }
 
 function worldH(art, def) {
@@ -59,28 +78,32 @@ test('per-move body clips keep the idle height and the json foot line', () => {
       assert.equal(clip.count, json.count, json.move);
       assert.equal(clip.visibleH, json.visibleH, json.move);
       assert.equal(clip.file, `${id}_${json.move}.png`, json.move);
+      const strikes = strikesOf(json);
+      const footRow = footRowOf(json);
       const foot = Math.round(clip.footY * clip.frameH) - 1;
-      assert.equal(foot, json.foot_row, `${json.move} foot`);
+      assert.equal(foot, footRow, `${json.move} foot`);
       assert.ok(Math.abs(worldH(art, clip) - worldH(art, idle)) < 1, `${json.move} height`);
       const sole = frameToWorld(
-        [clip.frameW / 2, json.foot_row], clip.frameW, clip.frameH, clip.footY, clip.displayScale, 1, 1, 100, 200,
+        [clip.frameW / 2, footRow], clip.frameW, clip.frameH, clip.footY, clip.displayScale, 1, 1, 100, 200,
       );
       assert.ok(Math.abs(sole.y - 200) < 1, `${json.move} sole ${sole.y}`);
-      for (const index of json.strike_frames) {
+      for (const index of strikes) {
         const want = placedHand(json, index);
         assert.deepEqual(meta.anchors.fist[index], want, `${json.move} f${index}`);
         assert.deepEqual(meta.anchors.tip[index], want, `${json.move} tip f${index}`);
       }
-      assert.equal(meta.release, json.strike_frames[0], json.move);
+      assert.equal(meta.release, strikes[0], json.move);
       const fd = { startup: 4, active: 3, recovery: 4, visible: 11 };
       const shown = sheetFrameIndex(meta, { state: 'attack', fd, attackFrame: fd.startup });
-      assert.equal(shown, json.strike_frames[0], `${json.move} opens on the strike`);
+      assert.equal(shown, strikes[0], `${json.move} opens on the strike`);
       // The opening strike can still be chambered (King's Edge). A later
       // strike of the same move has to reach in front of the body.
+      // Allen's sheets face left, so the palm sits on the left of the cell.
       let ahead = -Infinity;
-      for (const index of json.strike_frames) {
+      const native = clip.sheetFacing ?? 1;
+      for (const index of strikes) {
         const placed = frameToWorld(
-          meta.anchors.fist[index], clip.frameW, clip.frameH, clip.footY, clip.displayScale, 1, 1, 0, 0,
+          meta.anchors.fist[index], clip.frameW, clip.frameH, clip.footY, clip.displayScale, native, 1, 0, 0,
         );
         if (placed.x > ahead) ahead = placed.x;
       }
@@ -1171,6 +1194,7 @@ test('Ben through Fey play their own sheets, and the left-facing idles do not fl
   for (const key of ['body-basicCharge', 'body-basicDirectional', 'body-specialDefense', 'body-specialDirectional']) {
     assert.equal(CHARACTERS.bord.art.sheets.clips[key].sheetFacing, 1, key);
     assert.equal(CHARACTERS.titan.art.sheets.clips[key].sheetFacing, 1, key);
+    assert.equal(CHARACTERS.allen.art.sheets.clips[key].sheetFacing, -1, key);
     assert.equal(CHARACTERS.ben.art.sheets.clips[key].sheetFacing, undefined, key);
     assert.equal(CHARACTERS.carter.art.sheets.clips[key].sheetFacing, undefined, key);
   }

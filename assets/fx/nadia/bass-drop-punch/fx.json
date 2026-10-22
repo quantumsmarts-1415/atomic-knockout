@@ -1,0 +1,32 @@
+{
+  "file": "bass-drop-blast-anim.png",
+  "frames": 16,
+  "cols": 4,
+  "rows": 4,
+  "fps": 15,
+  "loop": false,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.15,
+  "crop": "frame",
+  "pivotX": 0.0625,
+  "pivotY": 0.5,
+  "anchor": "contact",
+  "flip": true,
+  "oneshot": true,
+  "hit": false,
+  "fist": {
+    "file": "bass-speaker-prop.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.9,
+    "pivotX": 0.5,
+    "pivotY": 0.611979,
+    "flip": true,
+    "thump": true,
+    "hit": false
+  }
+}

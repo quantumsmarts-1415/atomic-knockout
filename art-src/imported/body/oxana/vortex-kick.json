@@ -1,0 +1,445 @@
+{
+ "name": "oxana",
+ "method": "video",
+ "sheet": "vortex-kick",
+ "frameW": 918,
+ "frameH": 1012,
+ "count": 12,
+ "grid": [
+  4,
+  3
+ ],
+ "cols": 4,
+ "rows": 3,
+ "fps": 18,
+ "duration_s": 0.667,
+ "loop": false,
+ "footY": 0.9881,
+ "visibleH": 976,
+ "facing_in_sheet": "right",
+ "mirrored_from_clip": false,
+ "idle": {
+  "frameW": 548,
+  "frameH": 1012,
+  "footY": 0.9881,
+  "visibleH": 976
+ },
+ "repo_clip_entry": {
+  "vortex-kick": {
+   "count": 12,
+   "fps": 18,
+   "loop": false,
+   "frameW": 918,
+   "frameH": 1012,
+   "footY": 0.9881,
+   "visibleH": 976,
+   "cols": 4,
+   "rows": 3
+  }
+ },
+ "move": "vortex-kick",
+ "qc": {
+  "source": "redraws/video/oxana/vortex-kick-v1A.mp4",
+  "keyed_dir": "redraws/video/oxana/keyed-vortex-kick-v1A",
+  "key": {
+   "nominal": "green",
+   "sampled": [
+    12,
+    218,
+    23
+   ],
+   "hue_off": 3.2,
+   "used": "nominal",
+   "mode": "green-safe"
+  },
+  "detint": "no mod-4 class tint (residual < 0.3); motion-limb tint fixed by hue-limited clamp 'green' (px per frame [149, 506, 408, 457, 584, 290, 461, 370, 373, 468, 412, 163])",
+  "window": [
+   3,
+   118
+  ],
+  "peak": 81,
+  "energy_base": 0.0036,
+  "arc": 14.306,
+  "frames": [
+   3,
+   22,
+   32,
+   44,
+   51,
+   63,
+   76,
+   84,
+   88,
+   93,
+   100,
+   119
+  ],
+  "head_scores": [
+   0.915,
+   0.655,
+   0.561,
+   0.34,
+   0.399,
+   0.386,
+   0.526,
+   0.582,
+   0.605,
+   0.624,
+   0.356,
+   0.459
+  ],
+  "head_template": "idle frame 0",
+  "forward_reach_px": [
+   103.2,
+   293.9,
+   327.5,
+   225.1,
+   244.5,
+   255.3,
+   439.3,
+   478.5,
+   293.5,
+   255.7,
+   258.7,
+   144.3
+  ],
+  "mirrored": false,
+  "scale": 1.4954,
+  "scale_from": "idle_core_h 981.0 / ready frame 3 core_h 656",
+  "translation": [
+   -313,
+   -154
+  ],
+  "foot_rows": [
+   998,
+   988,
+   1000,
+   988,
+   985,
+   988,
+   994,
+   994,
+   994,
+   994,
+   1000,
+   1000
+  ],
+  "foot_row_target": 999,
+  "foot_x": [
+   462.5,
+   528.0,
+   708.0,
+   482.0,
+   443.0,
+   424.0,
+   422.0,
+   422.0,
+   423.0,
+   446.0,
+   440.0,
+   438.5
+  ],
+  "widened_px": 370,
+  "top_extra": 0,
+  "bot_extra": 0,
+  "edge_px": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "detached": {},
+  "pose_change_iou_dist": [
+   0.544,
+   0.585,
+   0.549,
+   0.524,
+   0.734,
+   0.451,
+   0.339,
+   0.334,
+   0.375,
+   0.582,
+   0.316
+  ],
+  "torso_x_out": 459.0,
+  "recut": "hybrid (Oct 11): clip starts/ends facing right (= idle/sheet) but kicks LEFT/behind while looking left, so a whole-clip mirror would face her wrong at start/end. Original src 0-53, mirrored src 54-95 (about standing-foot x 503.5, splice hidden in back-to-camera frame), original 96-144. keyed-vortex-kick-v1A. Braid swaps sides between sheet frames 9-10. Old back-kick build in vortex-kick_backkick/."
+ },
+ "phases": {
+  "windup": [
+   0,
+   5
+  ],
+  "active": [
+   6,
+   7
+  ],
+  "recovery": [
+   8,
+   11
+  ]
+ },
+ "phases_source": "auto (tip reach >= 85% of range)",
+ "releaseFrame": 6,
+ "anchors": {
+  "fist": [
+   [
+    544,
+    520
+   ],
+   [
+    772,
+    416
+   ],
+   [
+    843,
+    352
+   ],
+   [
+    718,
+    261
+   ],
+   [
+    745,
+    549
+   ],
+   [
+    643,
+    558
+   ],
+   [
+    909,
+    303
+   ],
+   [
+    780,
+    556
+   ],
+   [
+    643,
+    544
+   ],
+   [
+    631,
+    498
+   ],
+   [
+    724,
+    309
+   ],
+   [
+    547,
+    224
+   ]
+  ],
+  "tip": [
+   [
+    562,
+    716
+   ],
+   [
+    772,
+    416
+   ],
+   [
+    843,
+    352
+   ],
+   [
+    751,
+    612
+   ],
+   [
+    748,
+    566
+   ],
+   [
+    667,
+    572
+   ],
+   [
+    909,
+    303
+   ],
+   [
+    894,
+    592
+   ],
+   [
+    700,
+    862
+   ],
+   [
+    658,
+    690
+   ],
+   [
+    724,
+    309
+   ],
+   [
+    589,
+    728
+   ]
+  ],
+  "feet": [
+   [
+    [
+     396,
+     999
+    ],
+    [
+     529,
+     999
+    ]
+   ],
+   [
+    [
+     405,
+     999
+    ],
+    [
+     709,
+     999
+    ]
+   ],
+   [
+    [
+     434,
+     999
+    ],
+    [
+     837,
+     999
+    ]
+   ],
+   [
+    [
+     426,
+     999
+    ],
+    [
+     529,
+     999
+    ]
+   ],
+   [
+    [
+     405,
+     999
+    ],
+    [
+     502,
+     999
+    ]
+   ],
+   [
+    [
+     384,
+     999
+    ],
+    [
+     467,
+     999
+    ]
+   ],
+   [
+    [
+     378,
+     999
+    ],
+    [
+     469,
+     999
+    ]
+   ],
+   [
+    [
+     378,
+     999
+    ],
+    [
+     469,
+     999
+    ]
+   ],
+   [
+    [
+     378,
+     999
+    ],
+    [
+     469,
+     999
+    ]
+   ],
+   [
+    [
+     375,
+     999
+    ],
+    [
+     517,
+     999
+    ]
+   ],
+   [
+    [
+     369,
+     999
+    ],
+    [
+     511,
+     999
+    ]
+   ],
+   [
+    [
+     369,
+     999
+    ],
+    [
+     508,
+     999
+    ]
+   ]
+  ],
+  "hand2": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ]
+ },
+ "anchors_note": "output-frame px, x right / y down; see attack_video/phases.py",
+ "reach_px": [
+  103,
+  313,
+  384,
+  292,
+  289,
+  208,
+  450,
+  435,
+  241,
+  199,
+  265,
+  130
+ ]
+}

@@ -84,6 +84,8 @@ const SHEET_SLUGS = {
     specialDefense: 'melt-point',
   },
   kyle: { specialDirectional: 'nerve-shock' },
+  natalie: { specialDirectional: 'salt-spikes' },
+  nitra: { basicCharge: 'tornado-shove' },
 };
 
 export function moveBodySlug(id, move) {

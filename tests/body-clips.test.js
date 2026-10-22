@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['aaron', 'ace', 'agatha', 'allen', 'amy', 'arsenio', 'aurelius', 'barry', 'ben', 'bianca', 'boar', 'bord', 'brock', 'burke', 'caesar', 'cal', 'cali', 'carter', 'ceres', 'chloe', 'chroma', 'cody', 'collin', 'cooper', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'erin', 'europa', 'fermi', 'fey', 'flo', 'flora', 'ford', 'frank', 'gail', 'gertrude', 'goldie', 'haley', 'helen', 'hog', 'holly', 'hoss', 'hydra', 'indy', 'iona', 'ira', 'krypto', 'kyle', 'lana', 'lars', 'lillie', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'titan', 'uri', 'wolf'];
+const FIGHTERS = ['aaron', 'ace', 'agatha', 'allen', 'amy', 'arsenio', 'aurelius', 'barry', 'ben', 'bianca', 'boar', 'bord', 'brock', 'burke', 'caesar', 'cal', 'cali', 'carter', 'ceres', 'chloe', 'chroma', 'cody', 'collin', 'cooper', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'erin', 'europa', 'fermi', 'fey', 'flo', 'flora', 'ford', 'frank', 'gail', 'gertrude', 'goldie', 'haley', 'helen', 'hog', 'holly', 'hoss', 'hydra', 'indy', 'iona', 'ira', 'krypto', 'kyle', 'lana', 'lars', 'lillie', 'liv', 'lucy', 'mac', 'mae', 'maggie', 'manny', 'mendel', 'molly', 'nadia', 'natalie', 'neo', 'neptune', 'nick', 'niobe', 'niko', 'nitra', 'noble', 'ogden', 'oxana', 'oz', 'pablo', 'pat', 'paula', 'percy', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'titan', 'uri', 'wolf'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -1195,6 +1195,8 @@ test('Ben through Fey play their own sheets, and the left-facing idles do not fl
     assert.equal(CHARACTERS.bord.art.sheets.clips[key].sheetFacing, 1, key);
     assert.equal(CHARACTERS.titan.art.sheets.clips[key].sheetFacing, 1, key);
     assert.equal(CHARACTERS.allen.art.sheets.clips[key].sheetFacing, -1, key);
+    assert.equal(CHARACTERS.natalie.art.sheets.clips[key].sheetFacing, 1, key);
+    assert.equal(CHARACTERS.nitra.art.sheets.clips[key].sheetFacing, key === 'body-basicDirectional' ? 1 : -1, key);
     assert.equal(CHARACTERS.ben.art.sheets.clips[key].sheetFacing, undefined, key);
     assert.equal(CHARACTERS.carter.art.sheets.clips[key].sheetFacing, undefined, key);
   }

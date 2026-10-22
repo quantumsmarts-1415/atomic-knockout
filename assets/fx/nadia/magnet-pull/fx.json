@@ -1,0 +1,33 @@
+{
+  "file": "magnet-pull-slam-anim.png",
+  "frames": 24,
+  "cols": 4,
+  "rows": 6,
+  "fps": 16,
+  "loop": false,
+  "blend": "add",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 1.8,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false,
+  "charge": {
+    "file": "magnet-charge-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.25,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "body",
+    "scaleWith": "alpha",
+    "hit": false
+  }
+}

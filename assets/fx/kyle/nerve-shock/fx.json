@@ -1,0 +1,16 @@
+{
+  "file": "nerve-shock-anim.png",
+  "frames": 4,
+  "cols": 4,
+  "rows": 1,
+  "fps": 12,
+  "loop": false,
+  "blend": "add",
+  "black": false,
+  "fit": "height",
+  "heightFrac": 0.55,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "contact",
+  "hit": false
+}

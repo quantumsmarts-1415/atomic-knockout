@@ -9,6 +9,7 @@
 
 import { moveSlug } from './attackFx.js';
 import { BODY_SOURCES } from './bodyClipSources.js';
+import { SIDE_IDLES } from './sideIdles.js';
 
 export const BODY_SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
 
@@ -60,6 +61,31 @@ export function bodySourceSlug(id, moveName) {
 }
 
 /** A renamed move can keep its sheet slug. Fuel Rod Hammer still reads fuel-rod-jab. */
+/** Sheet slugs that do not match the move name. A redo swaps the slug here. */
+const SHEET_SLUGS = {
+  allen: {
+    basicCharge: 'thermite-spray',
+    basicDirectional: 'whip-yank',
+    specialDefense: 'oxide-skin',
+    specialDirectional: 'turbine-spin',
+  },
+  aaron: {
+    basicCharge: 'lazy-lounge',
+    basicDirectional: 'guard-strike',
+  },
+  // Cement Pour is the approved sheet for Calcify. Bone Crush stays on attack.png.
+  cal: { basicCharge: 'cement-pour' },
+  flora: {
+    basicCharge: 'burning-jet',
+    basicDirectional: 'acid-jab',
+  },
+  gail: {
+    basicDirectional: 'embrittle-grab',
+    specialDefense: 'melt-point',
+  },
+  kyle: { specialDirectional: 'nerve-shock' },
+};
+
 export function moveBodySlug(id, move) {
   const pack = BODY_SOURCES[id];
   const pinned = move?.sourceSlug;
@@ -142,6 +168,8 @@ export function installBodyClips(characters) {
     for (const moveKey of BODY_SLOTS) {
       const move = moves[moveKey];
       if (!move?.name) continue;
+      const forced = SHEET_SLUGS[id]?.[moveKey];
+      if (forced && bySlug[forced]) move.sourceSlug = forced;
       const slug = moveBodySlug(id, move);
       const src = slug ? bySlug[slug] : null;
       if (!src) continue;
@@ -173,6 +201,20 @@ export function installBodyClips(characters) {
       clips[clipKey] = built.clip;
       metaByClip.set(`${id}|${clipKey}`, built.meta);
       clipByMove.set(`${id}|${moveKey}`, clipKey);
+    }
+    const idle = SIDE_IDLES[id];
+    const idleClip = clips.idle;
+    if (idle && idleClip && idle.frameW > 0 && idle.frameH > 0 && idle.count > 0 && idle.visibleH > 0) {
+      idleClip.count = idle.count;
+      idleClip.fps = idle.fps > 0 ? idle.fps : idleClip.fps;
+      idleClip.loop = true;
+      idleClip.frameW = idle.frameW;
+      idleClip.frameH = idle.frameH;
+      idleClip.footY = idle.footY;
+      idleClip.visibleH = idle.visibleH;
+      idleClip.bodyH = idle.visibleH;
+      idleClip.displayScale = artHeight / idle.visibleH;
+      idleClip.file = `${id}_idle.png`;
     }
   }
 }

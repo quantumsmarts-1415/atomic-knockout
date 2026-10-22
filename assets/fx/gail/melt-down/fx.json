@@ -1,17 +1,14 @@
 {
-  "file": "melt-puddle-sheet.jpg",
-  "frames": 6,
-  "fps": 8,
-  "loop": false,
+  "file": "melt-puddle-shimmer-anim.png",
+  "frames": 8,
+  "fps": 11,
+  "loop": true,
   "blend": "normal",
-  "black": 16,
+  "black": false,
   "fit": "height",
-  "heightFrac": 1.05,
+  "heightFrac": 0.42,
   "crop": "frame",
   "pivot": "bottom",
   "anchor": "ground",
-  "puddle": true,
-  "holdAt": 3,
-  "breakFrom": 4,
   "hit": false
 }

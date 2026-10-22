@@ -1,0 +1,198 @@
+{
+ "name": "helen",
+ "move": "air-wave",
+ "method": "video",
+ "source": "fx-art/_flow/b10/clips/800f_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
+ "frameW": 441,
+ "frameH": 787,
+ "idle_cell_w": 462,
+ "idle_cell_h": 733,
+ "pad_top": 54,
+ "pad_left": 0,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14,
+ "loop": false,
+ "foot_row": 773,
+ "footY": 0.9822,
+ "visibleH": 699,
+ "scale": 1.41785,
+ "strike_frames": [
+  4,
+  5
+ ],
+ "strike_hand_xy": {
+  "4": [
+   536,
+   329
+  ],
+  "5": [
+   805,
+   352
+  ]
+ },
+ "strike_reach_xy": {
+  "4": [
+   429,
+   478
+  ],
+  "5": [
+   437,
+   475
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    73,
+    773,
+    40,
+    381
+   ],
+   "foot": 773,
+   "front_hand_xy": [
+    397,
+    330
+   ],
+   "removed_detached_px": 296,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 8,
+   "bbox": [
+    67,
+    773,
+    40,
+    389
+   ],
+   "foot": 773,
+   "front_hand_xy": [
+    397,
+    337
+   ],
+   "removed_detached_px": 312,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 34,
+   "bbox": [
+    41,
+    773,
+    35,
+    389
+   ],
+   "foot": 773,
+   "front_hand_xy": [
+    389,
+    379
+   ],
+   "removed_detached_px": 264,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 60,
+   "bbox": [
+    33,
+    773,
+    35,
+    383
+   ],
+   "foot": 773,
+   "front_hand_xy": [
+    383,
+    302
+   ],
+   "removed_detached_px": 320,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 85,
+   "bbox": [
+    87,
+    773,
+    49,
+    429
+   ],
+   "foot": 773,
+   "front_hand_xy": [
+    536,
+    329
+   ],
+   "removed_detached_px": 312,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 111,
+   "bbox": [
+    101,
+    773,
+    52,
+    437
+   ],
+   "foot": 773,
+   "front_hand_xy": [
+    805,
+    352
+   ],
+   "removed_detached_px": 384,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 137,
+   "bbox": [
+    59,
+    773,
+    40,
+    392
+   ],
+   "foot": 773,
+   "front_hand_xy": [
+    397,
+    342
+   ],
+   "removed_detached_px": 300,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    73,
+    773,
+    40,
+    381
+   ],
+   "foot": 773,
+   "front_hand_xy": [
+    397,
+    329
+   ],
+   "removed_detached_px": 308,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   773,
+   773,
+   773,
+   773,
+   773,
+   773,
+   773,
+   773
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false
+ },
+ "paint_fix": "Grok-drawn gust trail painted out; with-gust copy in _alt/"
+}

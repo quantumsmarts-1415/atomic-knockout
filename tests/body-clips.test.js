@@ -10,7 +10,7 @@ import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['ace', 'agatha', 'amy', 'aurelius', 'barry', 'bianca', 'boar', 'brock', 'burke', 'caesar', 'cali', 'ceres', 'cody', 'collin', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'fermi', 'flo', 'ford', 'frank', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'uri', 'wolf'];
+const FIGHTERS = ['ace', 'agatha', 'amy', 'arsenio', 'aurelius', 'barry', 'ben', 'bianca', 'boar', 'bord', 'brock', 'burke', 'caesar', 'cali', 'carter', 'ceres', 'cody', 'collin', 'cooper', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'europa', 'fermi', 'fey', 'flo', 'ford', 'frank', 'gertrude', 'goldie', 'haley', 'hog', 'holly', 'hoss', 'ira', 'lars', 'mac', 'mae', 'mendel', 'neptune', 'niko', 'noble', 'ogden', 'oz', 'pablo', 'pat', 'pit', 'pluto', 'polonius', 'ray', 'rex', 'roger', 'ronan', 'sarge', 'talia', 'tara', 'tate', 'thor', 'thule', 'titan', 'uri', 'wolf'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -26,8 +26,10 @@ function placedHand(json, index) {
 }
 
 function worldH(art, def) {
-  const body = def.bodyH ?? def.visibleH;
-  const scale = def.displayScale ?? (art.height / body);
+  const sheets = art.sheets;
+  // Idle layout for the original sheets lives on the sheet, not the clip.
+  const body = def.bodyH ?? def.visibleH ?? sheets.bodyH ?? sheets.visibleH;
+  const scale = def.displayScale ?? sheets.displayScale ?? (art.height / body);
   return scale * body;
 }
 
@@ -36,8 +38,10 @@ test('per-move body clips keep the idle height and the json foot line', () => {
     const art = CHARACTERS[id].art;
     const idle = art.sheets.clips.idle;
     const attack = art.sheets.clips.attack;
-    assert.equal(attack.file, undefined, `${id} generic attack.png stays the fallback`);
-    assert.equal(sheetMeta(id, 'attack'), null, id);
+    // Ben, Bord, and Carter have no generic attack sheet. Titan's old
+    // attack sheet stays as the legacy fallback beside the body clips.
+    if (attack) assert.equal(attack.file, undefined, `${id} generic attack.png stays the fallback`);
+    if (!MOVE_SHEETS[id]) assert.equal(sheetMeta(id, 'attack'), null, id);
     assert.equal(artIsUpdated(CHARACTERS[id], new Set()), true, id);
     const dir = `art-src/imported/body/${id}`;
     for (const file of readdirSync(dir).filter((name) => name.endsWith('.json'))) {
@@ -1143,6 +1147,56 @@ test('Agatha, Barry, and Brock keep their soles, and the drop loops the crouch',
   const screen = sheetMeta('brock', 'body-specialDefense');
   assert.equal(CHARACTERS.brock.art.sheets.clips['body-specialDefense'].file, 'brock_red-fume-screen.png');
   assert.deepEqual(screen.loop, [3, 5]);
+});
+
+test('Ben through Fey play their own sheets, and the left-facing idles do not flip them', () => {
+  const expect = {
+    ben: ['emerald-lance', 'precision-strike', 'beryllium-mirror', 'gyro-disc'],
+    bord: ['heavy-ram', 'crystal-smash', 'boron-carbide-wall', 'ground-shatter'],
+    carter: ['diamond-storm', 'diamond-cross', 'diamond-plating', 'graphene-wave'],
+    arsenio: ['inheritance-powder', 'paris-green-slash', 'sublimate', 'gray-arsenic-shards'],
+    europa: ['phosphor-bloom', 'counterfeit-check', 'neutron-sponge', 'icy-geyser'],
+    gertrude: ['mendeleevs-prediction', 'point-contact', 'transistor-gate', 'crystal-radio-wave'],
+    goldie: ['mri-contrast', 'magnetocaloric-palm', 'magnetic-chill', 'curie-point-burst'],
+    cooper: ['tesla-coil', 'live-wire', 'grounding-rod', 'bronze-sword'],
+    fey: ['forge-hammer', 'cold-iron-cut', 'lodestone-guard', 'thermite'],
+    titan: ['titanium-ram', 'lance-jab', 'aerospace-plating', 'aero-lance'],
+  };
+  for (const [id, slugs] of Object.entries(expect)) {
+    for (const slug of slugs) {
+      const moveKey = Object.keys(CHARACTERS[id].moves).find((key) => moveBodySlug(id, CHARACTERS[id].moves[key]) === slug);
+      assert.equal(clipNameForMove(id, moveKey), `body-${moveKey}`, `${id} ${slug}`);
+    }
+  }
+  for (const key of ['body-basicCharge', 'body-basicDirectional', 'body-specialDefense', 'body-specialDirectional']) {
+    assert.equal(CHARACTERS.bord.art.sheets.clips[key].sheetFacing, 1, key);
+    assert.equal(CHARACTERS.titan.art.sheets.clips[key].sheetFacing, 1, key);
+    assert.equal(CHARACTERS.ben.art.sheets.clips[key].sheetFacing, undefined, key);
+    assert.equal(CHARACTERS.carter.art.sheets.clips[key].sheetFacing, undefined, key);
+  }
+  assert.equal(CHARACTERS.titan.moves.specialDefense.chalkTint, 0xaab9cd);
+  assert.equal(CHARACTERS.titan.moves.specialDefense.vfx, 'pane');
+  const ram = sheetMeta('titan', 'body-basicCharge');
+  assert.equal(ram.slide, CHARACTERS.titan.moves.basicCharge.dashSpeed);
+  const heavy = sheetMeta('bord', 'body-basicCharge');
+  assert.equal(heavy.slide, CHARACTERS.bord.moves.basicCharge.dashSpeed);
+  for (const [id, file] of [
+    ['ben', 'ben_emerald-lance.png'],
+    ['ben', 'ben_precision-strike.png'],
+    ['ben', 'ben_gyro-disc.png'],
+    ['bord', 'bord_heavy-ram.png'],
+    ['carter', 'carter_graphene-wave.png'],
+    ['fey', 'fey_cold-iron-cut.png'],
+    ['titan', 'titan_lance-jab.png'],
+  ]) {
+    const clip = Object.values(CHARACTERS[id].art.sheets.clips).find((row) => row.file === file);
+    const png = PNG.sync.read(readFileSync(`${CHARACTERS[id].art.sheets.dir}${file}`));
+    assert.ok(png.width <= 8192 && png.height <= 8192, file);
+    assert.ok((png.width / clip.frameW) * (png.height / clip.frameH) >= clip.count, file);
+  }
+  assert.equal(moveBodySlug('carter', CHARACTERS.carter.moves.basicDirectional), 'diamond-cross');
+  assert.equal(moveBodySlug('cooper', CHARACTERS.cooper.moves.basicDirectional), 'live-wire');
+  assert.equal(moveBodySlug('fey', CHARACTERS.fey.moves.specialDefense), 'lodestone-guard');
 });
 
 test('charge loops the windup and a guard holds the strike frames', () => {

@@ -149,6 +149,7 @@ export function installBodyClips(characters) {
       if (!built) continue;
       const clipKey = bodyClipKey(moveKey);
       built.clip.file = `${id}_${slug}.png`;
+      if (src.sheetFacing === 1 || src.sheetFacing === -1) built.clip.sheetFacing = src.sheetFacing;
       // A pinned-foot dash (Surf's Up) has no travel in the cell. The move's
       // dash speed carries her forward for the whole clip.
       if (move.kind === 'dash' && move.dashSpeed > 0) built.meta.slide = src.noSlide ? 0 : move.dashSpeed;

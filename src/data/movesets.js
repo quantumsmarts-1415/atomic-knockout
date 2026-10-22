@@ -186,6 +186,8 @@ export const MOVESETS = {
       baseKnockback: 200, vfx: 'spark',
       startupF: 2, endlagF: 12, duration: 220, cooldown: 360,
     }),
+    // Stopgap body 709f. Redo 709r replaces carter_diamond-cross.png and
+    // art-src/imported/body/carter/diamond-cross.json, then recompile.
     basicDirectional: melee('Diamond Cross', {
       type: K, damage: 6, baseKnockback: 200, rangeW: 70, vfx: 'strike',
       startupF: 4, endlagF: 12, duration: 220, cooldown: 330,
@@ -607,7 +609,9 @@ export const MOVESETS = {
     }),
     specialDefense: m('Aerospace Plating', {
       kind: 'block', onlyReduce: [K], blockReduction: 0.62, blocks: [C], noKnockback: true,
-      duration: 4000, cooldown: 700, vfx: 'shield', vfxColor: 0xb9c6d6,
+      // Brushed titanium wash (about 170, 185, 205). No bubble, so the face stays open.
+      chalkTint: 0xaab9cd,
+      duration: 4000, cooldown: 700, vfx: 'pane',
     }),
     specialDirectional: m('Aero Lance', {
       kind: 'projectile', shotEnd: 'pierce', type: K, damage: 9, pierce: true, angleable: true, visualShape: 'spearhead', vfx: 'strike',
@@ -881,6 +885,8 @@ export const MOVESETS = {
       maxChargeMs: 800, radius: 78, vfx: 'spark', vfxColor: 0x7ec8ff,
       baseKnockback: 90, knockbackGrowth: 1.8, duration: 260, cooldown: 860,
     }),
+    // Stopgap body 713f. Redo 713r replaces cooper_live-wire.png and
+    // art-src/imported/body/cooper/live-wire.json, then recompile.
     basicDirectional: melee('Live Wire', {
       type: K, damage: 4.8, type2: E, damage2: 2.9, pull: 200, rangeW: 116, rangeH: 28, vfx: 'spark',
       baseKnockback: 124.8, knockbackGrowth: 2.88, duration: 220, cooldown: 540,
@@ -1298,6 +1304,8 @@ export const MOVESETS = {
       type: K, damage: 7, stripBuffs: true, rangeW: 78, vfx: 'strike', vfxColor: 0xc8d0d8,
       baseKnockback: 90, knockbackGrowth: 1.8, duration: 200, cooldown: 460,
     }),
+    // Stopgap body 722f. Redo 722r replaces fey_lodestone-guard.png and
+    // art-src/imported/body/fey/lodestone-guard.json, then recompile.
     specialDefense: m('Lodestone Guard', {
       catchMetals: true, duration: 640, cooldown: 820, vfx: 'shield', vfxColor: 0xd85a4a,
     }),

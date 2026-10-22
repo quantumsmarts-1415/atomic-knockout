@@ -424,6 +424,16 @@ test('the whip sheet hides the separate cable', () => {
     rig: { _authoredSheet: true, sheetClip: 'attack' },
   }), false);
   assert.equal(sheetDrawsWeapon({
+    charDef: { id: 'titan' },
+    currentMoveKey: 'basicDirectional',
+    rig: { _authoredSheet: true, sheetClip: 'body-basicDirectional' },
+  }), true);
+  assert.equal(sheetDrawsWeapon({
+    charDef: { id: 'titan' },
+    currentMoveKey: 'specialDirectional',
+    rig: { _authoredSheet: true, sheetClip: 'body-specialDirectional' },
+  }), false);
+  assert.equal(sheetDrawsWeapon({
     charDef: { id: 'allen' },
     rig: { _authoredSheet: false, sheetClip: 'attack' },
   }), false);

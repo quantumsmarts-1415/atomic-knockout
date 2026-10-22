@@ -59,6 +59,9 @@ for (const id of readdirSync(root).sort()) {
     if (json.move === 'afterimage-decay' || json.move === 'atom-smasher') record.blendIdle = true;
     // The lunge is in the cell. A code slide would skate the sole.
     if (json.move === 'kobold-strike') record.noSlide = true;
+    // Idle faces left. These sheets strike to the right, same as Bord's walk,
+    // so the clip must not inherit that flip. A redo that faces left drops this.
+    if (id === 'bord' || id === 'titan') record.sheetFacing = 1;
     moves[json.move] = record;
   }
   if (Object.keys(moves).length) packs[id] = moves;

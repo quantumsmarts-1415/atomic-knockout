@@ -164,11 +164,16 @@ export function sheetFxPoint(fighter, kind = 'melee') {
   return worldAt(fighter, clip, meta, fighter.rig?.sheetFrame || 0, kind);
 }
 
-/** Allen's whip sheet already draws the cable, so the separate whip art stays off. */
+/** Allen's whip sheet already draws the cable, so the separate whip art stays off.
+ *  Titan's lance-jab sheet already holds the spear. Aero Lance keeps its projectile. */
 export function sheetDrawsWeapon(fighter) {
-  return fighter?.charDef?.id === 'allen'
-    && !!fighter?.rig?._authoredSheet
-    && fighter?.rig?.sheetClip === 'attack';
+  const id = fighter?.charDef?.id;
+  const authored = !!fighter?.rig?._authoredSheet;
+  const clip = fighter?.rig?.sheetClip;
+  if (id === 'allen' && authored && clip === 'attack') return true;
+  if (id === 'titan' && authored && fighter?.currentMoveKey === 'basicDirectional'
+    && String(clip || '').startsWith('body-')) return true;
+  return false;
 }
 
 /**

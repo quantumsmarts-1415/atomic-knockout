@@ -1,0 +1,198 @@
+{
+ "name": "fey",
+ "move": "thermite",
+ "method": "video",
+ "source": "fx-art/_flow/b9/clips/723f_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
+ "frameW": 585,
+ "frameH": 743,
+ "idle_cell_w": 644,
+ "idle_cell_h": 681,
+ "pad_top": 62,
+ "pad_left": 0,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14,
+ "loop": false,
+ "foot_row": 725,
+ "footY": 0.9758,
+ "visibleH": 568,
+ "scale": 1.12922,
+ "strike_frames": [
+  3,
+  4
+ ],
+ "strike_hand_xy": {
+  "3": [
+   748,
+   190
+  ],
+  "4": [
+   714,
+   193
+  ]
+ },
+ "strike_reach_xy": {
+  "3": [
+   502,
+   205
+  ],
+  "4": [
+   502,
+   205
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    156,
+    725,
+    13,
+    579
+   ],
+   "foot": 725,
+   "front_hand_xy": [
+    580,
+    307
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 12,
+   "bbox": [
+    132,
+    725,
+    15,
+    581
+   ],
+   "foot": 725,
+   "front_hand_xy": [
+    581,
+    277
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 35,
+   "bbox": [
+    52,
+    725,
+    56,
+    489
+   ],
+   "foot": 725,
+   "front_hand_xy": [
+    705,
+    192
+   ],
+   "removed_detached_px": 32,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 58,
+   "bbox": [
+    52,
+    725,
+    56,
+    502
+   ],
+   "foot": 725,
+   "front_hand_xy": [
+    748,
+    190
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 82,
+   "bbox": [
+    52,
+    725,
+    56,
+    502
+   ],
+   "foot": 725,
+   "front_hand_xy": [
+    714,
+    193
+   ],
+   "removed_detached_px": 100,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 105,
+   "bbox": [
+    39,
+    725,
+    56,
+    502
+   ],
+   "foot": 725,
+   "front_hand_xy": [
+    502,
+    404
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 128,
+   "bbox": [
+    140,
+    725,
+    13,
+    579
+   ],
+   "foot": 725,
+   "front_hand_xy": [
+    581,
+    288
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    156,
+    725,
+    13,
+    579
+   ],
+   "foot": 725,
+   "front_hand_xy": [
+    581,
+    307
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   725,
+   725,
+   725,
+   725,
+   725,
+   725,
+   725,
+   725
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false
+ },
+ "paint_fix": "Grok-drawn white palm spray removed; with-spray copy in _alt/"
+}

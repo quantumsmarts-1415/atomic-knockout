@@ -1726,6 +1726,7 @@ export const MOVESETS = {
     }),
     basicDirectional: melee('Green Twin Strike', {
       type: K, damage: 6, multiHit: 2, rangeW: 76, vfx: 'strike', vfxColor: 0x8fdb4a,
+      echoTint: 0x6eff82, echoAlpha: 0.45,
       baseKnockback: 70, knockbackGrowth: 1.4, duration: 240, cooldown: 400,
     }),
     specialDefense: m("Welder's Goggles", {

@@ -1,0 +1,198 @@
+{
+ "name": "nadia",
+ "move": "bass-drop-punch",
+ "method": "video",
+ "source": "fx-art/_flow/b11/clips/905f_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
+ "frameW": 539,
+ "frameH": 627,
+ "idle_cell_w": 732,
+ "idle_cell_h": 601,
+ "pad_top": 26,
+ "pad_left": 9,
+ "count": 8,
+ "cols": 8,
+ "rows": 1,
+ "fps": 14,
+ "loop": false,
+ "foot_row": 607,
+ "footY": 0.9681,
+ "visibleH": 566,
+ "scale": 1.12525,
+ "strike_frames": [
+  2,
+  3
+ ],
+ "strike_hand_xy": {
+  "2": [
+   533,
+   166
+  ],
+  "3": [
+   532,
+   169
+  ]
+ },
+ "strike_reach_xy": {
+  "2": [
+   535,
+   166
+  ],
+  "3": [
+   533,
+   169
+  ]
+ },
+ "frames": [
+  {
+   "src_frame": 1,
+   "bbox": [
+    40,
+    607,
+    20,
+    388
+   ],
+   "foot": 607,
+   "front_hand_xy": [
+    388,
+    227
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 3,
+   "bbox": [
+    40,
+    607,
+    20,
+    389
+   ],
+   "foot": 607,
+   "front_hand_xy": [
+    388,
+    222
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 25,
+   "bbox": [
+    69,
+    607,
+    9,
+    535
+   ],
+   "foot": 607,
+   "front_hand_xy": [
+    533,
+    166
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 47,
+   "bbox": [
+    69,
+    607,
+    9,
+    533
+   ],
+   "foot": 607,
+   "front_hand_xy": [
+    532,
+    169
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 70,
+   "bbox": [
+    63,
+    607,
+    2,
+    445
+   ],
+   "foot": 607,
+   "front_hand_xy": [
+    445,
+    176
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 92,
+   "bbox": [
+    47,
+    607,
+    16,
+    375
+   ],
+   "foot": 607,
+   "front_hand_xy": [
+    375,
+    223
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 114,
+   "bbox": [
+    40,
+    607,
+    20,
+    386
+   ],
+   "foot": 607,
+   "front_hand_xy": [
+    386,
+    222
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 145,
+   "bbox": [
+    40,
+    607,
+    20,
+    389
+   ],
+   "foot": 607,
+   "front_hand_xy": [
+    388,
+    223
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  }
+ ],
+ "qc": {
+  "foot_rows": [
+   607,
+   607,
+   607,
+   607,
+   607,
+   607,
+   607,
+   607
+  ],
+  "foot_spread_px": 0,
+  "any_out_edge": false
+ },
+ "notes": "Magnet painted back into frames 2-4 at the punching fist (copied from frame 0); original in _old/."
+}

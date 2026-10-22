@@ -93,6 +93,10 @@ for (const id of readdirSync(root).sort()) {
     // Allen's idle and these sheets both face left. Pin it so a right-facing
     // redo is the thing that removes the flag.
     if (id === 'allen') record.sheetFacing = -1;
+    // Natalie's idle faces left. Every approved sheet strikes to the right.
+    if (id === 'natalie') record.sheetFacing = 1;
+    // Nitra's idle faces left, and the redrawn trio does too. Gust strikes right.
+    if (id === 'nitra') record.sheetFacing = json.move === 'gust' ? 1 : -1;
     moves[json.move] = record;
   }
   if (Object.keys(moves).length) packs[id] = moves;

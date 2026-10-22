@@ -2892,6 +2892,7 @@ export default class BattleScene extends Phaser.Scene {
             }
           }
           swing = { ...swing, _hitIndex: n };
+          if (n >= 2 && hit.move.echoTint) this.juice?.afterimage?.(attacker, hit.move.echoAlpha || 0.45);
           if (swing.shatter) {
             const hb = attacker.getHitboxRect();
             const tip = hb ? (hit.dir === 1 ? hb.right : hb.left) : victim.x;

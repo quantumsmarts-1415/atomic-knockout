@@ -1242,6 +1242,7 @@ async function attachSides(scene, id, slug, folder, meta, index, charH, sized, r
       maxAlpha: merged.maxAlpha,
       spin: merged.spin,
       spinTurns: merged.spinTurns,
+      thump: !!merged.thump,
       aim: merged.aim !== false,
       scaleWith: merged.scaleWith || null,
       hitScales: merged.hitScales,
@@ -2879,6 +2880,12 @@ function syncAttached(scene, fighter) {
       const sx = Math.abs(live.img.scaleX || 1);
       const sy = Math.abs(live.img.scaleY || 1);
       live.img.setScale(art.flip ? face * sx : sx, sy);
+      if (art.thump) {
+        const t = Math.max(0, (fighter.rig?.animT || 0) * 1000);
+        const u = Math.max(0, Math.min(1, t / 150));
+        const bump = u < 0.5 ? 1 + 0.06 * (u / 0.5) : 1.06 - 0.06 * ((u - 0.5) / 0.5);
+        live.img.setScale(live.img.scaleX * bump, live.img.scaleY * bump);
+      }
       if (art.spin) {
         const half = (frame?.displayW || 0) / 2;
         live.img.setPosition(tip.x - face * half * 0.92, tip.y);

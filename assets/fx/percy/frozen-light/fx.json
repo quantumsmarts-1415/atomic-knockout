@@ -1,0 +1,31 @@
+{
+  "file": "frozen-light-beam-anim.png",
+  "frames": 24,
+  "cols": 3,
+  "rows": 8,
+  "fps": 16,
+  "loop": false,
+  "blend": "add",
+  "black": 24,
+  "fit": "height",
+  "heightFrac": 0.55,
+  "crop": "frame",
+  "pivot": "left",
+  "hit": false,
+  "charge": {
+    "file": "frozen-light-crystal-anim.png",
+    "frames": 24,
+    "cols": 4,
+    "rows": 6,
+    "fps": 16,
+    "loop": true,
+    "blend": "add",
+    "black": 24,
+    "fit": "height",
+    "heightFrac": 1.15,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "body",
+    "hit": false
+  }
+}

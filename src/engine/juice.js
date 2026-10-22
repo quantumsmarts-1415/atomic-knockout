@@ -461,12 +461,14 @@ export class Juice {
     if (!img) return;
     const frame = spr.frame?.name;
     if (frame != null && img.setFrame) img.setFrame(frame);
-    img.setPosition(fighter.x + (fighter.rig?.x || 0), fighter.y + (fighter.rig?.y || 0));
-    img.setOrigin?.(spr.originX ?? 0.5, spr.originY ?? 1);
     const face = fighter.facing || 1;
+    const echo = fighter.currentMove?.echoTint;
+    const back = echo ? -face * 18 : 0;
+    img.setPosition(fighter.x + (fighter.rig?.x || 0) + back, fighter.y + (fighter.rig?.y || 0));
+    img.setOrigin?.(spr.originX ?? 0.5, spr.originY ?? 1);
     img.setScale(Math.abs(spr.scaleX || 1) * face, spr.scaleY || 1);
     img.setRotation(spr.rotation || 0);
-    const tint = GHOST[fighter.currentMove?.type] ?? 0xfff1c4;
+    const tint = echo ?? GHOST[fighter.currentMove?.type] ?? 0xfff1c4;
     // A ghost's sheet is already translucent. Multiply by white so the
     // RGBA art stays, and let the fade alpha sit on top of that.
     img.setTint(fighter.charDef?.ghost ? 0xffffff : tint);

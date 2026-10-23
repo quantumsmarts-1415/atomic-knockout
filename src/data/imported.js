@@ -9789,14 +9789,14 @@ export const IMPORTED_ROSTER = {
           },
           "walk": {
             "count": 12,
-            "fps": 7.8,
+            "fps": 10,
             "loop": true,
-            "frameW": 115,
-            "frameH": 148,
-            "footY": 0.9392,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 504,
+            "frameH": 909,
+            "footY": 0.9835,
+            "visibleH": 876,
+            "bodyH": 876,
+            "displayScale": 0.1506849315068493
           },
           "attack": {
             "count": 12,

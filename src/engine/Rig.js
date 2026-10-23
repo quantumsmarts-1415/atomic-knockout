@@ -4,6 +4,7 @@ import { clipPose, moveClipFor, moveTextureKey } from './moveClip.js';
 import { stripIndex, idleBlend, followThroughBlend, guardIdleBlend, attackPhase, poseTarget, FEEL } from './feel.js';
 import { authoredClipName, sheetFrameIndex, sheetMeta } from './moveSheet.js';
 import { applyColorway } from './colorwayPipeline.js';
+import { bodyCenterBias } from './masks.js';
 
 // ---------------------------------------------------------------------------
 // Rig — the code-drawn vector cartoon character.
@@ -420,9 +421,14 @@ export class Rig extends Phaser.GameObjects.Container {
       };
     }
     const base = layout || this._layoutScale || 1;
+    // Sheet art only. The flat cutout is a different drawing and stays put.
+    // Bias is in the same local space as the mask, so the pose scale has to
+    // multiply it or a crouch slides the pixels off the cells.
+    const bias = (this.sheetMode || this._posingClips) ? bodyCenterBias(this.charDef?.id) : 0;
+    const poseSx = this._pose.sx || 1;
     const paint = (spr, def) => {
       if (!spr?.setScale) return;
-      spr.x = this._pose.x;
+      spr.x = this._pose.x + bias * poseSx;
       spr.y = this._pose.y;
       spr.rotation = this._pose.rot;
       spr.setScale(base * this._pose.sx, base * this._pose.sy);
@@ -439,7 +445,7 @@ export class Rig extends Phaser.GameObjects.Container {
       if (this.fadeSprite?.visible) {
         const idle = this.sheets?.clips?.idle;
         const idleScale = idle?.displayScale > 0 ? idle.displayScale : base;
-        this.fadeSprite.x = 0;
+        this.fadeSprite.x = bias * poseSx;
         this.fadeSprite.y = 0;
         this.fadeSprite.rotation = 0;
         this.fadeSprite.setScale(idleScale, idleScale);

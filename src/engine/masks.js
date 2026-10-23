@@ -78,6 +78,97 @@ for (const [id, book] of Object.entries(MASK_RAW)) {
   };
 }
 
+// Wide stances sit mostly on one side of the feet. The same center-to-center
+// spacing then connects from the wide side and whiffs from the narrow side.
+// Slide every mask (and the push box) so the idle body's left and right edges
+// are the same distance from the origin. The rig applies the same slide to
+// the sprite, so the pixels and the mask stay together.
+export const BODY_BIAS = {};
+// Strikes authored behind the body. Mirrored so the swing reaches forward.
+export const STRIKE_MIRRORS = [];
+// Hooks painted above the skull. Dropped so the swing crosses a head.
+export const HIGH_STRIKES = [];
+
+function shiftMask(mask, dx) {
+  if (!mask || !dx) return;
+  mask.ox += dx;
+  mask.minX += dx;
+  mask.maxX += dx;
+  mask.cx += dx;
+}
+
+function shiftMaskY(mask, dy) {
+  if (!mask || !dy) return;
+  mask.oy += dy;
+  mask.minY += dy;
+  mask.maxY += dy;
+  mask.cy += dy;
+}
+
+function mirrorMaskX(mask) {
+  const cols = mask.cols;
+  const rows = mask.rows;
+  const bits = new Uint8Array(mask.bits.length);
+  const col = new Uint8Array(mask.n);
+  for (let i = 0; i < mask.n; i++) {
+    const c2 = cols - 1 - mask.col[i];
+    col[i] = c2;
+    const bit = mask.row[i] * cols + c2;
+    bits[bit >> 3] |= 1 << (bit & 7);
+  }
+  return {
+    ...mask,
+    ox: -(mask.ox + cols * CELL),
+    bits,
+    col,
+    minX: -mask.maxX,
+    maxX: -mask.minX,
+    cx: -mask.cx,
+    rows,
+  };
+}
+
+for (const [id, book] of Object.entries(BOOKS)) {
+  const idle = book.clips?.idle?.[0];
+  const mid = idle?.n ? (idle.minX + idle.maxX) / 2 : 0;
+  const dx = Math.abs(mid) >= 1 ? -mid : 0;
+  if (dx) {
+    BODY_BIAS[id] = dx;
+    for (const frames of Object.values(book.clips)) for (const frame of frames) shiftMask(frame, dx);
+    for (const frames of Object.values(book.strike)) for (const frame of frames) shiftMask(frame, dx);
+    if (book.push) book.push.x += dx;
+  }
+  for (const [clip, frames] of Object.entries(book.strike)) {
+    frames.forEach((mask, frame) => {
+      if (!mask?.n || mask.n < 3) return;
+      const strikeMid = (mask.minX + mask.maxX) / 2;
+      if (strikeMid >= -8) return;
+      frames[frame] = mirrorMaskX(mask);
+      STRIKE_MIRRORS.push({
+        id, clip, frame,
+        wasMinX: Math.round(mask.minX),
+        wasMaxX: Math.round(mask.maxX),
+      });
+    });
+  }
+  const head = idle?.n ? idle.minY : null;
+  if (head == null) continue;
+  for (const frames of Object.values(book.strike)) {
+    for (const mask of frames) {
+      if (!mask?.n || mask.n < 3) continue;
+      if (mask.maxY > head + 12) continue;
+      const drop = (head + 28) - mask.maxY;
+      if (drop < 6) continue;
+      shiftMaskY(mask, drop);
+      HIGH_STRIKES.push({ id, drop: Math.round(drop) });
+    }
+  }
+}
+
+export function bodyCenterBias(id) {
+  return BODY_BIAS[id] || 0;
+}
+
 export function maskBook(id) {
   return BOOKS[id] || null;
 }
@@ -447,9 +538,21 @@ export function strikeHits(attacker, victim) {
   }
   if (!activeMelee(attacker)) return false;
   const strike = strikeMask(attacker);
-  if (strike?.n >= 3) return masksOverlap(attacker, strike, victim, vmask);
+  if (strike?.n >= 3) {
+    if (masksOverlap(attacker, strike, victim, vmask)) return true;
+    // A handful of imported swings are a few cells on the torso. They never
+    // leave the idle silhouette, so a real jab was whiffing. Those fall
+    // through to the authored arc. A swing that actually reaches keeps its mask.
+    if (strikeLeavesBody(attacker, strike)) return false;
+  }
   const arc = parametricArc(attacker);
   return arc ? arcHitsMask(attacker, victim, vmask, arc) : false;
+}
+
+function strikeLeavesBody(attacker, strike) {
+  const idle = BOOKS[attacker?.charDef?.id]?.clips?.idle?.[0];
+  if (!idle?.n || !strike) return true;
+  return strike.maxX > idle.maxX + 4 || strike.minX < idle.minX - 4;
 }
 
 function pointInEllipse(lx, ly, rx, ry) {

@@ -7,14 +7,11 @@
 // worst-case character who can still reach it (see the per-stage comments),
 // using the same physics BattleScene actually runs (GRAVITY=1500,
 // effective gravity = GRAVITY * gravityScale, single-jump max height =
-// jumpVelocity^2 / (2 * effectiveGravity)). The 4 characters with zero air
-// jumps -- Bord, Sully, Cal, Van -- cap out at a 91-109px standing jump; per
-// Benjamin, it's fine if they can't reach a stage's bonus platforms (they
-// already can't reach Elemental Isle's platform either), but a full ground-
-// level BLOCKING obstacle (The Core's pillar) is held to a stricter bar:
-// short enough that literally every character can hop it, since being
-// walled off from half the stage is a much bigger problem than missing a
-// bonus platform.
+// jumpVelocity^2 / (2 * effectiveGravity)). Every fighter shares that hop
+// (see src/data/jumps.js). Heavy fighters have no air jump, so a bonus
+// platform can stay out of their reach, but a full ground-level BLOCKING
+// obstacle (The Core's pillar) stays short enough that every character
+// can hop it.
 //
 // Optional per-stage fields (added with the painted stages, 2026-10-07; the
 // original four stages leave them out and get the old defaults):
@@ -234,6 +231,10 @@ export const STAGES = [
     desc: 'A basalt slab over a sulfur volcano. One wide, flat floor and nowhere to hide.',
     layout: 'Flat',
     music: 'bgm-brimstone-caldera',
+    // Screen-sized paintings. Zooming into the blast zone slid the crater
+    // rim up off the slab (an invisible landing) and showed black past the
+    // 1440px layers. artLock keeps the view inside the painted frame.
+    artLock: true,
     theme: { skyTop: 0x1c0c08, skyBottom: 0x5a2410, hills: [0x2a120a, 0x200e08] },
     art: {
       dir: 'art-src/stages/brimstone-caldera/',

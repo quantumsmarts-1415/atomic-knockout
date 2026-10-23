@@ -234,9 +234,13 @@ export const MOVESETS = {
       projectileSpeed: 380, projectileRadius: 32, projectileLife: 1100,
       startupF: 4, endlagF: 12, duration: 240, cooldown: 320,
     }),
-    basicDirectional: melee('Vortex Kick', {
-      type: K, damage: 8, rangeW: 88, vfx: 'spin',
-      baseKnockback: 170, startupF: 4, endlagF: 12, duration: 230, cooldown: 160,
+    basicDirectional: m('Vortex Kick', {
+      // A ring of air that flies forward, catches, and ticks before it pops.
+      kind: 'projectile', shotEnd: 'pierce', type: K, damage: 2.2, visualShape: 'ring',
+      pierce: true, carry: true, multiHit: 4, hitGap: 150, popKnockback: 210,
+      projectileSpeed: 300, projectileRadius: 34, projectileLife: 920,
+      baseKnockback: 36, knockbackGrowth: 0.35, vfx: 'gust',
+      startupF: 4, endlagF: 12, duration: 240, cooldown: 420,
     }),
     specialDefense: m('Ozone Layer', {
       blocks: [R], hold: false, lingerImmune: { types: [R], ms: 15000 },

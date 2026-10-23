@@ -107,12 +107,10 @@ test('painted stages: platforms within reach of every air-jumper; solid steps ho
     const air = (c.stats.airJumps ?? 0) > 0 ? (c.stats.jumpVelocity * 0.92) ** 2 / (2 * g) : 0;
     return { id: c.id, single, total: single + air, airJumps: c.stats.airJumps ?? 0 };
   });
-  // Stages were drawn for the launch roster, whose shortest hop (vanadium,
-  // about 105px) still clears a 70px step. Osmium-dense imports jump shorter
-  // than that on purpose and are tanks (no extra air jump), same as Van.
+  // Every fighter shares one hop height. Heavy fighters have no air jump.
   const hop = reach.filter((r) => r.single >= 90);
-  assert.ok(hop.length >= 24, 'launch roster still clears the stage floor');
-  assert.ok(reach.some((r) => r.single < 90), 'denser imports keep the short hop');
+  assert.strictEqual(hop.length, reach.length, 'the shared hop clears the stage floor');
+  assert.ok(reach.some((r) => r.airJumps === 0), 'heavy fighters keep a single jump');
   const air = hop.filter((r) => r.airJumps > 0);
   // The painted spare (40px) is the launch roster's, whose shortest hop is
   // about 105px. Later air-jumpers between 90 and 100px still have to clear
@@ -347,14 +345,13 @@ test('a bot above an opponent keeps dropping after their feet leave the platform
 test('big-stage CPU: a tank heads for the lift to reach the summit; nobody walks into the void', () => {
   const st = STAGES.find((s) => s.id === 'carbon-skyhook');
   const nav = buildNavGraph(st);
-  // Densest grounded fighter on the lower deck, target up on the summit.
-  // Density now sets jump height, so the old hand-tuned tanks (Bord) can
-  // hop the first gap. Van still cannot, and should walk to the lift.
+  // Every heavy fighter shares the 140px hop, which clears the first gap.
+  // Van takes that jump instead of walking around to the lift.
   const van = fakeFighter('van', 800, st.groundY);
   const foe = fakeFighter('hydra', 1065, 560);
   const inp = computeBotInput(1000, van, [van, foe], getStageBounds(st), nav);
-  assert.ok(inp.right && !inp.left, 'heavy should walk right toward the lift');
-  assert.match(van._ai.lastEdge, /^board/);
+  assert.ok(inp.left !== inp.right, 'heavy still paths toward the summit');
+  assert.match(van._ai.lastEdge, /^jump/);
   // on the outer dock, target hanging off-stage to the left: hold the ledge
   const dockX = 280 + 24;
   const guard = fakeFighter('natalie', dockX, 1120);

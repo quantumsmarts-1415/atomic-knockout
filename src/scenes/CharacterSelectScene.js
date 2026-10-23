@@ -7,7 +7,9 @@ import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { isGamepadSlot, menuInputForSlot, padBySlot, pollGamepads } from '../engine/gamepad.js';
-import { loadRosterArt, registerSheetAnims } from './BootScene.js';
+import { loadRosterArt, registerSheetAnims, attachBootLoadUi } from './BootScene.js';
+import { missingSelectPortraits, queueSelectPortraits } from '../engine/selectArt.js';
+import { artGaveUp, runSafeLoad } from '../engine/safeLoad.js';
 import {
   FONT_DISPLAY, FONT_MONO, GRID, MOTION, PLAYER_COLORS, PLAYER_COLORS_CSS, THEME,
   drawFooterHints, drawHeader, drawMenuBackground, textStyle,
@@ -50,6 +52,23 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   create() {
+    const exists = (key) => this.textures.exists(key) || artGaveUp(key);
+    const missing = missingSelectPortraits(exists);
+    if (!this.goldOnly && missing.length) {
+      drawMenuBackground(this, W, H);
+      const ui = attachBootLoadUi(this, { status: 'Loading fighters…' });
+      runSafeLoad(this, (loader) => queueSelectPortraits(loader, exists)).then(() => {
+        if (!this.sys?.isActive?.()) return;
+        ui.destroy();
+        this.children.removeAll(true);
+        this.buildSelect();
+      });
+      return;
+    }
+    this.buildSelect();
+  }
+
+  buildSelect() {
     this.starting = false;
     this.slots = buildSelectSlots(CHARACTERS);
     this.playable = this.slots.map((s, i) => (s.charId ? i : null)).filter((i) => i !== null);
@@ -334,15 +353,17 @@ export default class CharacterSelectScene extends Phaser.Scene {
       this.scrollTo(p.cursor);
       this.buildPreview(p);
     } else if (p.phase === 'palette' && dx !== 0) {
-      const def = CHARACTERS[this.slots[p.cursor].charId];
-      const n = def.palettes.length;
-      if (n > 1) {
-        sfx('menuMove');
-        p.palette = (p.palette + dx + n) % n;
-        this.buildPreview(p);
-      }
+      this.stepPalette(p, dx);
     }
     this.refreshAll();
+  }
+
+  stepPalette(p, dx) {
+    if (p.phase !== 'palette' || !dx) return;
+    const def = CHARACTERS[this.slots[p.cursor].charId];
+    const n = def?.palettes?.length || 1;
+    if (n <= 1) return;
+    this.setPalette(p, (p.palette + dx + n) % n);
   }
 
   setPalette(p, i) {
@@ -468,7 +489,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
     }
     // swatch row: filled chips, the current one ringed in the player color
     const rowY = r.h - 14;
-    const rowX = r.w - 14 - (pals.length * (SWATCH_D + SWATCH_GAP) - SWATCH_GAP);
+    const rowW = pals.length * (SWATCH_D + SWATCH_GAP) - SWATCH_GAP;
+    // Leave room for an arrow on each side of the chips.
+    const arrow = 16;
+    const rowX = r.w - 20 - arrow - rowW;
     const rowTop = locked || inColor;
     p.plateColor.setText(rowTop ? pals[p.palette]?.name?.toUpperCase() ?? '' : 'COLORS')
       .setColor(inColor ? THEME.mistCss : THEME.dimCss)
@@ -484,15 +508,25 @@ export default class CharacterSelectScene extends Phaser.Scene {
         p.swatchG.lineStyle(2, locked ? THEME.gold : p.color, 1);
         p.swatchG.strokeCircle(cx, rowY, SWATCH_D / 2 + 3);
       }
-      if (p.isKeyboard) {
+      if (!p.isBot) {
         const z = this.add.zone(r.x + cx, r.y + rowY, SWATCH_D + 6, SWATCH_D + 6).setInteractive({ useHandCursor: true }).setDepth(7);
         z.on('pointerdown', () => this.setPalette(p, i));
         p.swatchZones.push(z);
       }
     });
     if (inColor) {
-      p.swatchG.fillStyle(THEME.mist, 0.5);
-      p.swatchG.fillTriangle(rowX - 14, rowY, rowX - 8, rowY - 5, rowX - 8, rowY + 5);
+      const leftX = rowX - arrow;
+      const rightX = rowX + rowW + arrow;
+      p.swatchG.fillStyle(THEME.mist, 0.85);
+      p.swatchG.fillTriangle(leftX, rowY, leftX + 8, rowY - 6, leftX + 8, rowY + 6);
+      p.swatchG.fillTriangle(rightX, rowY, rightX - 8, rowY - 6, rightX - 8, rowY + 6);
+      if (!p.isBot) {
+        const left = this.add.zone(r.x + leftX + 2, r.y + rowY, 28, 28).setInteractive({ useHandCursor: true }).setDepth(7);
+        const right = this.add.zone(r.x + rightX - 2, r.y + rowY, 28, 28).setInteractive({ useHandCursor: true }).setDepth(7);
+        left.on('pointerdown', () => this.stepPalette(p, -1));
+        right.on('pointerdown', () => this.stepPalette(p, 1));
+        p.swatchZones.push(left, right);
+      }
     }
   }
 
@@ -503,7 +537,6 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.updatePlate(p);
     if (!slot?.charId) return;
     const def = CHARACTERS[slot.charId];
-    this.queuePreviewSheets(def);
     p.previewRig = new Rig(this, def, p.palette % def.palettes.length);
     const feet = p.sideways ? FEET_SIDE : FEET_UNDER;
     p.previewRig.setPosition(p.previewX, feet);
@@ -649,6 +682,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    // create() can be waiting on the select-art loader, before `players`
+    // exists. Throwing here aborts the rest of the scene UPDATE listeners,
+    // including Phaser's loader, so the first parallel batch never hands
+    // off and the screen stays on the void.
+    if (!this.players) return;
     this.goldPhase = (this.goldPhase || 0) + delta * 0.0035;
     this.paintGold(this.goldPhase);
     if (this.goldOnly) return;

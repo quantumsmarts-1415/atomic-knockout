@@ -35,6 +35,7 @@ import {
 import { artFor, beamDrawScale, cloudIgnitionScale, collectFxArt, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnJumpArc, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
 import { bodySheetMuzzle, sheetFxPoint, sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
+import { artGaveUp } from '../engine/safeLoad.js';
 
 const GRAVITY = 1500;
 const HUD_DEPTH = 950; // under the match cards (1000), over everything in the arena
@@ -77,10 +78,11 @@ export default class BattleScene extends Phaser.Scene {
     const roster = (this.setup?.players || [])
       .map((p) => CHARACTERS[p.charId])
       .filter(Boolean);
-    loadRosterArt(this.load, roster, (key) => this.textures.exists(key));
+    const have = (key) => this.textures.exists(key) || artGaveUp(key);
+    loadRosterArt(this.load, roster, have);
     // One arena. Boot only fetched thumbnails, so the painted layers, the
     // terrain, and the intro doors arrive with this match.
-    loadStageArt(this.load, [this.stage], (key) => this.textures.exists(key));
+    loadStageArt(this.load, [this.stage], have);
     // Decode hits and effects while the loader is still on the sheets, so
     // the match card is not the first thing to touch them.
     preloadSfx();
@@ -233,9 +235,18 @@ export default class BattleScene extends Phaser.Scene {
         bottom: Math.max(WH, blast.bottom),
       };
     const blastFit = Math.min(W / (bounds.right - bounds.left), H / (bounds.bottom - bounds.top));
-    const minZoom = this.stage.camera
+    let minZoom = this.stage.camera
       ? Math.min(1, Math.max(whole, stageCam.minZoom ?? 0))
       : Math.min(whole, Math.max(blastFit, 0.5));
+    if (this.stage.artLock) {
+      // Screen-sized art has no room to follow a fighter into the blast
+      // zone. That zoom is what slid the crater rim off the slab.
+      minZoom = 1;
+      bounds.left = 0;
+      bounds.top = 0;
+      bounds.right = WW;
+      bounds.bottom = WH;
+    }
     const maxZoom = Math.max(minZoom, cap);
     const startZoom = openingZoom(minZoom, maxZoom);
     this.camRig = {
@@ -363,6 +374,19 @@ export default class BattleScene extends Phaser.Scene {
     // wide so they can slide up to +-80px as the fighters move without
     // showing an edge. See updateParallax().
     const art = this.stage.art;
+    if (art && this.stage.artLock && this.textures.exists(stageKey(this.stage, 'layer0'))) {
+      // Stay glued to the terrain. A little extra scale covers camera shake
+      // so the frame never opens onto black.
+      const cover = 1.06;
+      art.layers.forEach((l, i) => {
+        this.add.image(W / 2, H / 2, stageKey(this.stage, `layer${i}`))
+          .setScale(cover)
+          .setScrollFactor(1);
+      });
+      this.parallax = null;
+      this.buildAmbient(art.ambient);
+      return;
+    }
     if (art && this.camRig && this.textures.exists(stageKey(this.stage, 'layer0'))) {
       // camera stages: world-sized layers on a scrollFactor (par). Offset by
       // (1-par) x the half-view overshoot at full zoom-out, each layer covers

@@ -440,10 +440,10 @@ export function drawPortraitDisc(scene, x, y, d, { textureKey, n, sym, ring = TH
   back.fillCircle(0, d * 0.1, d / 2);
   c.add(back);
   if (textureKey && scene.textures.exists(textureKey)) {
-    const img = scene.add.image(0, 0, textureKey).setOrigin(0.5, 0);
+    const img = scene.add.image(0, 0, textureKey);
     const src = img.texture.getSourceImage();
     const scale = (d * 5.2) / src.height;
-    img.setScale(scale);
+    img.setOrigin(0.5, 0).setScale(scale);
     img.y = -d / 2 - src.height * scale * headBias;
     const mask = scene.make.graphics({ x: 0, y: 0, add: false });
     mask.fillStyle(0xffffff, 1);

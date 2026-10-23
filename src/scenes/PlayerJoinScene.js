@@ -9,6 +9,9 @@ import {
 import { enterScene, isLeaving, showScene } from '../ui/flow.js';
 import { attachPhoneJoin } from '../ui/phoneJoin.js';
 import { drawPadIcon, pollGamepads, syncPadSeats } from '../engine/gamepad.js';
+import { missingSelectPortraits, queueSelectPortraits } from '../engine/selectArt.js';
+import { artGaveUp, runSafeLoad } from '../engine/safeLoad.js';
+import { attachBootLoadUi } from './BootScene.js';
 
 // Layout is fixed in 1280x720 game pixels. Scale.FIT letterboxes other
 // aspect ratios, so these rectangles never slide over each other.
@@ -297,7 +300,7 @@ export default class PlayerJoinScene extends Phaser.Scene {
   }
 
   tryStart() {
-    if (isLeaving(this)) return;
+    if (isLeaving(this) || this.loadingArt) return;
     const ready = this.readiness();
     if (!ready.ok) {
       sfx('menuMove');
@@ -313,6 +316,23 @@ export default class PlayerJoinScene extends Phaser.Scene {
         if (seat.type === 'bot') return { slot: BOT_SLOT_BASE + index };
         return { slot: seat.boundSlot };
       });
-    showScene(this, 'CharacterSelect', { playerSeeds });
+    const exists = (key) => this.textures.exists(key) || artGaveUp(key);
+    const go = () => {
+      if (!this.sys?.isActive?.()) return;
+      showScene(this, 'CharacterSelect', { playerSeeds });
+    };
+    if (!missingSelectPortraits(exists).length) {
+      go();
+      return;
+    }
+    // One load, on this scene, after the seats are chosen. Starting it
+    // earlier and then stopping the scene left those requests in flight,
+    // and the select screen's own load never finished.
+    this.loadingArt = true;
+    const ui = attachBootLoadUi(this, { status: 'Loading fighters…' });
+    runSafeLoad(this, (loader) => queueSelectPortraits(loader, exists)).then(() => {
+      ui.destroy();
+      go();
+    });
   }
 }

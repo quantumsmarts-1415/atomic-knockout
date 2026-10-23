@@ -1,4 +1,5 @@
 import { deriveProfile, TUNING } from './balance.js';
+import { applyJumpProfile } from './jumps.js';
 import { ELEMENTS } from './elements.js';
 import { MOVESETS } from './movesets.js';
 import { IMPORTED_ROSTER, characterFromImport } from './imported.js';
@@ -2445,9 +2446,10 @@ for (const rec of Object.values(IMPORTED_ROSTER)) {
 }
 
 // Derived combat profiles overwrite the hand-tuned speed / jump / weight /
-// gravity. airJumps stays a per-character choice (the design doc doesn't
-// assign extra jumps). `defense` below is the old 0–10 table and is no
-// longer consulted once `combat` exists — see src/data/balance.js.
+// gravity. Jump count is applied again at the bottom of this file: heavy
+// fighters keep one jump, light fighters keep one air jump. `defense` below
+// is the old 0–10 table and is no longer consulted once `combat` exists —
+// see src/data/balance.js.
 for (const def of Object.values(CHARACTERS)) {
   const el = ELEMENTS[def.id];
   if (!el) continue;
@@ -2484,8 +2486,8 @@ installBodyClips(CHARACTERS);
     if (yara.combat) yara.combat.weight = yara.stats.weight;
   }
 }
-// Hydrogen's density curve gives Hydra a ~870 jump — too floaty in play.
-// Cap him near the roster middle without touching the shared formula.
+// Hydrogen's density curve gives Hydra a ~870 jump. The shared hop at the
+// bottom of this file replaces that old 720 cap.
 {
   const hydra = CHARACTERS.hydra;
   if (hydra?.stats) {
@@ -2545,6 +2547,10 @@ for (const [id, spec] of Object.entries(COLORWAYS)) {
     colorway: resolveColorway(spec, alt),
   }))];
 }
+
+// Same apex and same held-direction distance for every fighter. Heavy bodies
+// and slow walkers get one jump; everyone else gets one air jump on top.
+for (const def of Object.values(CHARACTERS)) applyJumpProfile(def);
 
 export const ROSTER = Object.values(CHARACTERS);
 

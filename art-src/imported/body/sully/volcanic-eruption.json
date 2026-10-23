@@ -1,0 +1,511 @@
+{
+ "name": "sully",
+ "method": "video",
+ "sheet": "volcanic-eruption",
+ "frameW": 603,
+ "frameH": 790,
+ "count": 12,
+ "grid": [
+  6,
+  2
+ ],
+ "cols": 6,
+ "rows": 2,
+ "fps": 18,
+ "duration_s": 0.667,
+ "loop": false,
+ "footY": 0.9443,
+ "visibleH": 669,
+ "facing_in_sheet": "right",
+ "mirrored_from_clip": false,
+ "idle": {
+  "frameW": 603,
+  "frameH": 720,
+  "footY": 0.9722,
+  "visibleH": 669
+ },
+ "repo_clip_entry": {
+  "volcanic-eruption": {
+   "count": 12,
+   "fps": 18,
+   "loop": false,
+   "frameW": 603,
+   "frameH": 790,
+   "footY": 0.9443,
+   "visibleH": 669,
+   "cols": 6,
+   "rows": 2
+  }
+ },
+ "move": "volcanic-eruption",
+ "qc": {
+  "source": "orig13/video/sully/volcanic-eruption-v1.mp4",
+  "keyed_dir": "orig13/video/sully/keyed-volcanic-eruption-v1",
+  "key": {
+   "nominal": "magenta",
+   "sampled": [
+    206,
+    0,
+    127
+   ],
+   "hue_off": 23.0,
+   "used": "sampled",
+   "mode": "default"
+  },
+  "detint": "no mod-4 class tint (residual < 0.3); motion-limb tint fixed by hue-limited clamp 'green' (px per frame [79, 696, 259, 753, 833, 943, 575, 512, 1638, 804, 436, 127])",
+  "window": [
+   0,
+   121
+  ],
+  "peak": 98,
+  "energy_base": 0.0149,
+  "arc": 10.121,
+  "frames": [
+   0,
+   22,
+   45,
+   57,
+   60,
+   79,
+   84,
+   90,
+   96,
+   101,
+   107,
+   121
+  ],
+  "head_scores": [
+   0.842,
+   0.527,
+   0.476,
+   0.453,
+   0.478,
+   0.448,
+   0.453,
+   0.45,
+   0.61,
+   0.731,
+   0.644,
+   0.894
+  ],
+  "head_template": "clip frame 0 (479, 66, 659, 165)",
+  "forward_reach_px": [
+   125.5,
+   169.1,
+   161.8,
+   157.1,
+   156.3,
+   194.1,
+   201.7,
+   196.4,
+   225.4,
+   237.4,
+   154.4,
+   116.9
+  ],
+  "mirrored": false,
+  "scale": 1.0435,
+  "scale_from": "idle_core_h 647.0 / ready frame 0 core_h 620",
+  "translation": [
+   -277,
+   -19
+  ],
+  "foot_rows": [
+   708,
+   708,
+   708,
+   708,
+   708,
+   748,
+   748,
+   748,
+   743,
+   733,
+   710,
+   706
+  ],
+  "foot_row_target": 708,
+  "foot_x": [
+   324.5,
+   324.5,
+   324.5,
+   324.5,
+   324.0,
+   359.0,
+   359.5,
+   360.0,
+   359.0,
+   355.0,
+   331.0,
+   330.0
+  ],
+  "widened_px": 0,
+  "top_extra": 10,
+  "bot_extra": 23,
+  "edge_px": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "detached": {
+   "1": [
+    {
+     "px": 453,
+     "box": [
+      195,
+      347,
+      217,
+      398
+     ]
+    }
+   ],
+   "2": [
+    {
+     "px": 615,
+     "box": [
+      324,
+      166,
+      367,
+      210
+     ]
+    }
+   ],
+   "9": [
+    {
+     "px": 297,
+     "box": [
+      244,
+      43,
+      271,
+      76
+     ]
+    }
+   ]
+  },
+  "pose_change_iou_dist": [
+   0.466,
+   0.351,
+   0.159,
+   0.323,
+   0.658,
+   0.112,
+   0.067,
+   0.383,
+   0.445,
+   0.479,
+   0.15
+  ],
+  "torso_x_out": 311.5,
+  "note": "src 61-78 skipped (green hand FX 61-69, hands cut by the top edge 68-78). Feet leave the ground ~40 px in the erupt frames 5-8 (he hops; kept, one offset)."
+ },
+ "phases": {
+  "windup": [
+   0,
+   7
+  ],
+  "active": [
+   8,
+   9
+  ],
+  "recovery": [
+   10,
+   11
+  ]
+ },
+ "phases_source": "auto (tip reach >= 85% of range)",
+ "releaseFrame": 8,
+ "anchors": {
+  "fist": [
+   [
+    415,
+    438
+   ],
+   [
+    477,
+    312
+   ],
+   [
+    490,
+    384
+   ],
+   [
+    498,
+    418
+   ],
+   [
+    488,
+    343
+   ],
+   [
+    532,
+    75
+   ],
+   [
+    541,
+    86
+   ],
+   [
+    536,
+    81
+   ],
+   [
+    576,
+    163
+   ],
+   [
+    585,
+    326
+   ],
+   [
+    446,
+    434
+   ],
+   [
+    413,
+    318
+   ]
+  ],
+  "tip": [
+   [
+    437,
+    485
+   ],
+   [
+    508,
+    519
+   ],
+   [
+    515,
+    562
+   ],
+   [
+    521,
+    572
+   ],
+   [
+    507,
+    514
+   ],
+   [
+    532,
+    75
+   ],
+   [
+    541,
+    86
+   ],
+   [
+    536,
+    81
+   ],
+   [
+    576,
+    163
+   ],
+   [
+    585,
+    326
+   ],
+   [
+    469,
+    483
+   ],
+   [
+    432,
+    493
+   ]
+  ],
+  "feet": [
+   [
+    [
+     238,
+     745
+    ],
+    [
+     369,
+     745
+    ]
+   ],
+   [
+    [
+     238,
+     745
+    ],
+    [
+     369,
+     745
+    ]
+   ],
+   [
+    [
+     238,
+     745
+    ],
+    [
+     369,
+     745
+    ]
+   ],
+   [
+    [
+     238,
+     745
+    ],
+    [
+     369,
+     745
+    ]
+   ],
+   [
+    [
+     237,
+     745
+    ],
+    [
+     367,
+     745
+    ]
+   ],
+   [
+    [
+     190,
+     705
+    ],
+    [
+     465,
+     705
+    ]
+   ],
+   [
+    [
+     190,
+     705
+    ],
+    [
+     466,
+     705
+    ]
+   ],
+   [
+    [
+     190,
+     705
+    ],
+    [
+     467,
+     705
+    ]
+   ],
+   [
+    [
+     190,
+     710
+    ],
+    [
+     465,
+     710
+    ]
+   ],
+   [
+    [
+     196,
+     720
+    ],
+    [
+     463,
+     720
+    ]
+   ],
+   [
+    [
+     224,
+     742
+    ],
+    [
+     346,
+     742
+    ]
+   ],
+   [
+    [
+     228,
+     747
+    ],
+    [
+     354,
+     747
+    ]
+   ]
+  ],
+  "hand2": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ]
+ },
+ "anchors_note": "output-frame px, x right / y down; see attack_video/phases.py",
+ "reach_px": [
+  125,
+  196,
+  203,
+  209,
+  195,
+  220,
+  229,
+  224,
+  264,
+  273,
+  157,
+  120
+ ],
+ "grounding": {
+  "dy_per_frame": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   -40,
+   -40,
+   -40,
+   -35,
+   -25,
+   -3,
+   2
+  ],
+  "top_pad": 37,
+  "sole_rows": [
+   745,
+   745,
+   745,
+   745,
+   745,
+   745,
+   745,
+   745,
+   745,
+   745,
+   745,
+   745
+  ],
+  "note": "per-frame grounding to the idle foot line (coding-agent rank list)"
+ }
+}

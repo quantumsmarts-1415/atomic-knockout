@@ -101,6 +101,10 @@ for (const id of readdirSync(root).sort()) {
     if (id === 'scarlett') record.sheetFacing = 1;
     // Saab faces right. Toxic Dust Cloud is the one sheet drawn facing left.
     if (id === 'saab' && json.move === 'toxic-dust-cloud') record.sheetFacing = -1;
+    // Tex faces right. Tracer Lasso is the one sheet drawn facing left.
+    if (id === 'tex' && json.move === 'tracer-lasso') record.sheetFacing = -1;
+    // Van's idle faces left. Prism Surge does too. The other three strike right.
+    if (id === 'van') record.sheetFacing = json.move === 'prism-surge' ? -1 : 1;
     moves[json.move] = record;
   }
   if (Object.keys(moves).length) packs[id] = moves;

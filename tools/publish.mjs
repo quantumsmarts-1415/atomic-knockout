@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
 import { ROSTER } from '../src/data/characters.js';
 import { STAGES } from '../src/data/stages.js';
+import { portraitCropIds, portraitFile } from '../src/data/portraitCrops.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'dist');
@@ -44,6 +45,8 @@ function referenced() {
       addFile(set, `${sheets.dir}${def.file || `${c.id}_${clip}.png`}`);
     }
   }
+  for (const id of portraitCropIds()) addFile(set, portraitFile(id));
+  addFile(set, 'assets/portraits/portrait-crops.json');
   for (const stage of STAGES) {
     addFile(set, `art-src/stages/${stage.id}/thumb.jpg`);
     addFile(set, `art-src/stages/${stage.id}/preview.jpg`);

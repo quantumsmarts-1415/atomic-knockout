@@ -1,144 +1,29 @@
-// Face window for the damage-box portrait. cx/cy are fractions of the cut
-// (0–1). zoom is how many disc-diameters tall the full image is drawn
-// (higher = tighter on the face). Measured from each cutout's head.
+// Face squares for the damage-box portraits.
 //
-// Replace any entry, or add it to PORTRAIT_CROP_OVERRIDES, when a new crop
-// arrives. Overrides win.
+// assets/portraits/<id>.png is already cropped and centered on the face.
+// portrait-crops.json records how that square was taken from the idle
+// (source sheet, center, size, method). Draw the PNG so it fills the disc.
+// Do not apply a second zoom on top of it.
+import crops from '../../assets/portraits/portrait-crops.json' with { type: 'json' };
 
-// Checked against the cuts. Lillie and Oxana sit on the right of a wide
-// frame, so a centered crop was showing shoulder and empty canvas.
-export const PORTRAIT_CROP_OVERRIDES = {
-  lillie: { cx: 0.688, cy: 0.22, zoom: 4.8 },
-  oxana: { cx: 0.62, cy: 0.16, zoom: 5.1 },
-};
-
-const MEASURED = {
-  hydra: { cx: 0.607, cy: 0.192, zoom: 4.57 },
-  helen: { cx: 0.667, cy: 0.245, zoom: 4.97 },
-  titan: { cx: 0.707, cy: 0.187, zoom: 4.56 },
-  lillie: { cx: 0.688, cy: 0.193, zoom: 4.56 },
-  ben: { cx: 0.601, cy: 0.191, zoom: 4.57 },
-  bord: { cx: 0.63, cy: 0.202, zoom: 4.56 },
-  carter: { cx: 0.487, cy: 0.194, zoom: 4.55 },
-  nitra: { cx: 0.448, cy: 0.193, zoom: 4.55 },
-  oxana: { cx: 0.683, cy: 0.189, zoom: 4.58 },
-  flora: { cx: 0.523, cy: 0.2, zoom: 4.57 },
-  neo: { cx: 0.53, cy: 0.213, zoom: 4.69 },
-  natalie: { cx: 0.603, cy: 0.202, zoom: 4.55 },
-  maggie: { cx: 0.668, cy: 0.205, zoom: 4.65 },
-  allen: { cx: 0.523, cy: 0.206, zoom: 4.64 },
-  silas: { cx: 0.67, cy: 0.202, zoom: 4.64 },
-  phillip: { cx: 0.525, cy: 0.208, zoom: 4.64 },
-  sully: { cx: 0.472, cy: 0.205, zoom: 4.64 },
-  chloe: { cx: 0.577, cy: 0.191, zoom: 4.55 },
-  aaron: { cx: 0.547, cy: 0.204, zoom: 4.58 },
-  kyle: { cx: 0.586, cy: 0.24, zoom: 4.82 },
-  cal: { cx: 0.61, cy: 0.205, zoom: 4.63 },
-  scarlett: { cx: 0.52, cy: 0.228, zoom: 4.93 },
-  van: { cx: 0.622, cy: 0.198, zoom: 4.65 },
-  chroma: { cx: 0.545, cy: 0.197, zoom: 4.55 },
-  ace: { cx: 0.536, cy: 0.188, zoom: 4.57 },
-  agatha: { cx: 0.567, cy: 0.176, zoom: 4.57 },
-  amy: { cx: 0.676, cy: 0.171, zoom: 4.57 },
-  arsenio: { cx: 0.555, cy: 0.195, zoom: 4.57 },
-  aurelius: { cx: 0.649, cy: 0.192, zoom: 4.57 },
-  barry: { cx: 0.643, cy: 0.2, zoom: 4.57 },
-  bianca: { cx: 0.515, cy: 0.191, zoom: 4.57 },
-  boar: { cx: 0.484, cy: 0.195, zoom: 4.57 },
-  brock: { cx: 0.49, cy: 0.191, zoom: 4.57 },
-  burke: { cx: 0.505, cy: 0.205, zoom: 4.57 },
-  caesar: { cx: 0.6, cy: 0.186, zoom: 4.57 },
-  cali: { cx: 0.534, cy: 0.186, zoom: 4.57 },
-  ceres: { cx: 0.431, cy: 0.194, zoom: 4.57 },
-  cody: { cx: 0.4, cy: 0.195, zoom: 4.57 },
-  collin: { cx: 0.576, cy: 0.17, zoom: 4.57 },
-  cooper: { cx: 0.551, cy: 0.191, zoom: 4.57 },
-  copernicus: { cx: 0.543, cy: 0.187, zoom: 4.57 },
-  curie: { cx: 0.517, cy: 0.182, zoom: 4.57 },
-  dash: { cx: 0.597, cy: 0.199, zoom: 4.58 },
-  dizzy: { cx: 0.579, cy: 0.195, zoom: 4.57 },
-  duke: { cx: 0.621, cy: 0.182, zoom: 4.57 },
-  einstein: { cx: 0.52, cy: 0.187, zoom: 4.57 },
-  erin: { cx: 0.461, cy: 0.191, zoom: 4.57 },
-  europa: { cx: 0.495, cy: 0.187, zoom: 4.57 },
-  fermi: { cx: 0.527, cy: 0.19, zoom: 4.57 },
-  fey: { cx: 0.576, cy: 0.188, zoom: 4.57 },
-  flo: { cx: 0.545, cy: 0.181, zoom: 4.57 },
-  ford: { cx: 0.638, cy: 0.202, zoom: 4.56 },
-  frank: { cx: 0.604, cy: 0.188, zoom: 4.57 },
-  gail: { cx: 0.505, cy: 0.183, zoom: 4.57 },
-  gertrude: { cx: 0.526, cy: 0.189, zoom: 4.57 },
-  goldie: { cx: 0.574, cy: 0.182, zoom: 4.57 },
-  haley: { cx: 0.503, cy: 0.19, zoom: 4.57 },
-  hog: { cx: 0.558, cy: 0.194, zoom: 4.57 },
-  holly: { cx: 0.526, cy: 0.196, zoom: 4.57 },
-  hoss: { cx: 0.518, cy: 0.194, zoom: 4.58 },
-  indy: { cx: 0.571, cy: 0.174, zoom: 4.57 },
-  iona: { cx: 0.661, cy: 0.192, zoom: 4.57 },
-  ira: { cx: 0.464, cy: 0.19, zoom: 4.57 },
-  krypto: { cx: 0.562, cy: 0.195, zoom: 4.57 },
-  lana: { cx: 0.448, cy: 0.187, zoom: 4.57 },
-  lars: { cx: 0.594, cy: 0.183, zoom: 4.58 },
-  liv: { cx: 0.478, cy: 0.189, zoom: 4.68 },
-  lucy: { cx: 0.574, cy: 0.187, zoom: 4.57 },
-  mac: { cx: 0.427, cy: 0.186, zoom: 4.57 },
-  mae: { cx: 0.529, cy: 0.179, zoom: 4.57 },
-  manny: { cx: 0.577, cy: 0.194, zoom: 4.57 },
-  mendel: { cx: 0.518, cy: 0.197, zoom: 4.57 },
-  molly: { cx: 0.351, cy: 0.184, zoom: 4.57 },
-  nadia: { cx: 0.433, cy: 0.187, zoom: 4.57 },
-  neptune: { cx: 0.647, cy: 0.197, zoom: 4.57 },
-  nick: { cx: 0.584, cy: 0.179, zoom: 4.57 },
-  niko: { cx: 0.508, cy: 0.195, zoom: 4.58 },
-  niobe: { cx: 0.443, cy: 0.19, zoom: 4.57 },
-  noble: { cx: 0.575, cy: 0.179, zoom: 4.57 },
-  ogden: { cx: 0.357, cy: 0.2, zoom: 4.58 },
-  oz: { cx: 0.27, cy: 0.182, zoom: 4.57 },
-  pablo: { cx: 0.376, cy: 0.205, zoom: 4.57 },
-  pat: { cx: 0.589, cy: 0.177, zoom: 4.57 },
-  paula: { cx: 0.452, cy: 0.185, zoom: 4.57 },
-  percy: { cx: 0.593, cy: 0.184, zoom: 4.57 },
-  pit: { cx: 0.522, cy: 0.194, zoom: 4.57 },
-  pluto: { cx: 0.623, cy: 0.198, zoom: 4.57 },
-  polonius: { cx: 0.396, cy: 0.187, zoom: 4.57 },
-  prometheus: { cx: 0.38, cy: 0.199, zoom: 4.57 },
-  ray: { cx: 0.533, cy: 0.181, zoom: 4.57 },
-  rex: { cx: 0.495, cy: 0.196, zoom: 4.57 },
-  rhoda: { cx: 0.564, cy: 0.191, zoom: 4.57 },
-  roger: { cx: 0.589, cy: 0.195, zoom: 4.57 },
-  ronan: { cx: 0.406, cy: 0.191, zoom: 4.57 },
-  ruben: { cx: 0.642, cy: 0.191, zoom: 4.57 },
-  ruth: { cx: 0.502, cy: 0.197, zoom: 4.57 },
-  saab: { cx: 0.574, cy: 0.203, zoom: 4.57 },
-  sam: { cx: 0.463, cy: 0.186, zoom: 4.57 },
-  sandy: { cx: 0.411, cy: 0.177, zoom: 4.68 },
-  sarge: { cx: 0.476, cy: 0.19, zoom: 4.57 },
-  selena: { cx: 0.497, cy: 0.186, zoom: 4.66 },
-  sterling: { cx: 0.548, cy: 0.183, zoom: 4.57 },
-  talia: { cx: 0.567, cy: 0.187, zoom: 4.57 },
-  tara: { cx: 0.726, cy: 0.189, zoom: 4.57 },
-  tate: { cx: 0.555, cy: 0.198, zoom: 4.57 },
-  terra: { cx: 0.505, cy: 0.194, zoom: 4.57 },
-  tess: { cx: 0.528, cy: 0.179, zoom: 4.7 },
-  tessa: { cx: 0.552, cy: 0.183, zoom: 4.57 },
-  tex: { cx: 0.511, cy: 0.18, zoom: 4.57 },
-  thor: { cx: 0.424, cy: 0.188, zoom: 4.57 },
-  thule: { cx: 0.599, cy: 0.194, zoom: 4.57 },
-  uri: { cx: 0.463, cy: 0.197, zoom: 4.57 },
-  wolf: { cx: 0.557, cy: 0.192, zoom: 4.57 },
-  xander: { cx: 0.639, cy: 0.19, zoom: 4.57 },
-  yara: { cx: 0.673, cy: 0.182, zoom: 4.57 },
-  yvette: { cx: 0.423, cy: 0.179, zoom: 4.66 },
-  zane: { cx: 0.401, cy: 0.182, zoom: 4.57 },
-  zora: { cx: 0.578, cy: 0.19, zoom: 4.57 },
-};
-
-const DEFAULT_CROP = { cx: 0.5, cy: 0.14, zoom: 5.2 };
+export const PORTRAIT_CROP_OVERRIDES = crops;
 
 export function portraitCrop(id) {
-  return PORTRAIT_CROP_OVERRIDES[id] || MEASURED[id] || DEFAULT_CROP;
+  return PORTRAIT_CROP_OVERRIDES[id] || null;
 }
 
 export function portraitCropIds() {
-  return Object.keys(MEASURED);
+  return Object.keys(PORTRAIT_CROP_OVERRIDES);
+}
+
+export function portraitFile(id) {
+  return `assets/portraits/${id}.png`;
+}
+
+export function portraitTextureKey(id) {
+  return `portrait-${id}`;
+}
+
+export function hasFacePortrait(id) {
+  return !!PORTRAIT_CROP_OVERRIDES[id];
 }

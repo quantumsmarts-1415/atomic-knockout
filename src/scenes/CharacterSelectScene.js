@@ -8,7 +8,7 @@ import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { isGamepadSlot, menuInputForSlot, padBySlot, pollGamepads } from '../engine/gamepad.js';
 import { loadRosterArt, registerSheetAnims, attachBootLoadUi } from './BootScene.js';
-import { missingSelectPortraits, queueSelectPortraits } from '../engine/selectArt.js';
+import { missingFacePortraits, missingSelectPortraits, queueSelectPortraits } from '../engine/selectArt.js';
 import {
   FONT_DISPLAY, FONT_MONO, GRID, MOTION, PLAYER_COLORS, PLAYER_COLORS_CSS, THEME,
   drawFooterHints, drawHeader, drawMenuBackground, textStyle,
@@ -51,8 +51,9 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   create() {
-    const missing = missingSelectPortraits((key) => this.textures.exists(key));
-    if (!this.goldOnly && missing.length) {
+    const exists = (key) => this.textures.exists(key);
+    const missing = missingSelectPortraits(exists).length + missingFacePortraits(exists).length;
+    if (!this.goldOnly && missing) {
       drawMenuBackground(this, W, H);
       attachBootLoadUi(this, { status: 'Loading fighters…' });
       queueSelectPortraits(this.load, (key) => this.textures.exists(key));

@@ -428,8 +428,9 @@ export function symbolTile(scene, x, y, size, { n, sym, color = THEME.shellOn, d
 }
 
 /**
- * Round portrait: a circle-cropped head shot from the fighter's cut, or the
- * symbol tile when no cut is safe for menus. `ring` is the accent color.
+ * Round portrait. A face square (`portrait-<id>`) fills the disc. A full
+ * cut still uses its head crop. Missing art falls back to the symbol tile.
+ * `ring` is the accent color.
  */
 export function drawPortraitDisc(scene, x, y, d, { textureKey, n, sym, ring = THEME.teal, fill = THEME.shellOn, depth = 6, headBias = 0.03, crop = null } = {}) {
   const c = scene.add.container(x, y).setDepth(depth);
@@ -442,7 +443,12 @@ export function drawPortraitDisc(scene, x, y, d, { textureKey, n, sym, ring = TH
   if (textureKey && scene.textures.exists(textureKey)) {
     const img = scene.add.image(0, 0, textureKey);
     const src = img.texture.getSourceImage();
-    if (crop) {
+    // The face PNG is already centered. Filling the disc with the old
+    // cut crop would punch past the face.
+    if (textureKey.startsWith('portrait-')) {
+      img.setOrigin(0.5, 0.5);
+      img.setDisplaySize(d, d);
+    } else if (crop?.zoom) {
       const zoom = crop.zoom > 0 ? crop.zoom : 5.2;
       const scale = (d * zoom) / Math.max(1, src.height);
       const cx = crop.cx ?? 0.5;

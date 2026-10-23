@@ -2,6 +2,8 @@ import * as Phaser from 'phaser';
 import { showScene } from '../ui/flow.js';
 import { loadStageThumbs } from '../data/stages.js';
 import { TITLE_PARTNER_ID } from '../ui/portraits.js';
+import { hasFacePortrait, portraitFile, portraitTextureKey } from '../data/portraitCrops.js';
+import { queueFacePortraits } from '../engine/selectArt.js';
 import { CHARACTERS, ROSTER } from '../data/characters.js';
 import { MATCH_STOCKS } from '../engine/matchRules.js';
 import { collectMoveStrips } from '../engine/moveClip.js';
@@ -170,6 +172,9 @@ export function queueTitlePortraits(loader, exists = () => false) {
 export function loadRosterArt(loader, roster, exists = () => false) {
   for (const c of roster) {
     if (c.art && !exists(c.art.key)) loader.image(c.art.key, c.art.file);
+    if (hasFacePortrait(c.id) && !exists(portraitTextureKey(c.id))) {
+      loader.image(portraitTextureKey(c.id), portraitFile(c.id));
+    }
     if (!use3dSheets(c)) continue;
     const s = c.art.sheets;
     for (const [clip, def] of Object.entries(s.clips)) {
@@ -326,12 +331,14 @@ export default class BootScene extends Phaser.Scene {
       for (const c of ROSTER) {
         if (c.art) this.load.image(c.art.key, c.art.file);
       }
+      queueFacePortraits(this.load);
     } else if (spec?.select) {
-      // Portraits only. The table is the thing under test; full sheets are
-      // hundreds of megabytes and the preview falls back to the cutout.
+      // Cutouts and face squares. The table is the thing under test; full
+      // sheets are hundreds of megabytes and the preview falls back to the cutout.
       for (const c of ROSTER) {
         if (c.art) this.load.image(c.art.key, c.art.file);
       }
+      queueFacePortraits(this.load);
     } else if (spec) {
       // Just the fighters in this match, sheets included, so idle/walk/attack
       // can be checked without pulling the rest of the roster.

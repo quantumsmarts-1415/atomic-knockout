@@ -487,7 +487,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
     }
     // swatch row: filled chips, the current one ringed in the player color
     const rowY = r.h - 14;
-    const rowX = r.w - 14 - (pals.length * (SWATCH_D + SWATCH_GAP) - SWATCH_GAP);
+    const rowW = pals.length * (SWATCH_D + SWATCH_GAP) - SWATCH_GAP;
+    // Leave room for an arrow on each side of the chips.
+    const arrow = 16;
+    const rowX = r.w - 20 - arrow - rowW;
     const rowTop = locked || inColor;
     p.plateColor.setText(rowTop ? pals[p.palette]?.name?.toUpperCase() ?? '' : 'COLORS')
       .setColor(inColor ? THEME.mistCss : THEME.dimCss)
@@ -510,9 +513,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
       }
     });
     if (inColor) {
-      const rowW = pals.length * (SWATCH_D + SWATCH_GAP) - SWATCH_GAP;
-      const leftX = rowX - 16;
-      const rightX = rowX + rowW + 16;
+      const leftX = rowX - arrow;
+      const rightX = rowX + rowW + arrow;
       p.swatchG.fillStyle(THEME.mist, 0.85);
       p.swatchG.fillTriangle(leftX, rowY, leftX + 8, rowY - 6, leftX + 8, rowY + 6);
       p.swatchG.fillTriangle(rightX, rowY, rightX - 8, rowY - 6, rightX - 8, rowY + 6);

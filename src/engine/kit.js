@@ -391,7 +391,6 @@ export function applyDot(fighter, amount, type = 'heat') {
   if (!(amount > 0) || fighter?.percent == null) return 0;
   fighter.percent = Math.min(999, fighter.percent + amount);
   fighter.scene?.noteDot?.(fighter, type, amount);
-  if (type === 'heat') bankStolenHeat(fighter, amount);
   return amount;
 }
 
@@ -536,6 +535,7 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     }
   }
   if (move.debuffImmune) fighter.debuffImmuneUntil = time + move.duration;
+  if (move.blindImmune) fighter.blindImmuneUntil = time + move.duration;
   if (move.pauseDrain && frac >= (move.pauseAt ?? 0)) {
     fighter.drainPauseUntil = time + move.pauseDrain;
     if (move.pauseAt > 0 && fighter.charDef?.id) {

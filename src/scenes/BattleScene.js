@@ -20,7 +20,7 @@ import { syncCoats } from '../engine/coatView.js';
 import { syncAuras } from '../engine/auraView.js';
 import { applyDot, applyOnHit, cleanse, fighterInView, fighterOnSwapLine, markedStrikeTargets, sheetFrameAt, slowHitScale, withRedFrame, withShatter } from '../engine/kit.js';
 import { resolvePacket } from '../data/balance.js';
-import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront, stickAim } from '../engine/batch3.js';
+import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront } from '../engine/batch3.js';
 import { mulberry32 } from '../engine/rng.js';
 import { hudLayout, fitLabelSize } from '../ui/hudLayout.js';
 import { Juice } from '../engine/juice.js';

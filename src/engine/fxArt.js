@@ -3667,7 +3667,6 @@ export function syncFxActors(scene) {
     syncSurgePips(scene, fighter);
     syncFissionHalves(scene, fighter);
     syncFreeze(scene, fighter);
-    syncProp(scene, fighter);
     const move = fighter.currentMove;
     const art = artFor(fighter?.charDef?.id, move?.name);
     // Impact-only moves still carry the slash type, with the hit art on a
@@ -4046,6 +4045,11 @@ export function swingOrigin(fighter) {
   };
 }
 
+function storedHeatVisual(held, cap) {
+  const t = Math.min(1, Math.max(0, (held || 0) / Math.max(1, cap || 1)));
+  return { scale: 0.7 + 0.9 * t, alpha: 0.6 + 0.4 * t };
+}
+
 function heatPunch(fighter, charge, art) {
   return fighter?.state === 'attack'
     && fighter.currentMove?.name === charge?.name
@@ -4160,7 +4164,7 @@ function syncHeld(scene, fighter) {
         ? (frames[fxFrameIndex(want.art, elapsed)] || frames[0])
         : frames[Math.min(frames.length - 1, Math.round(frac * (frames.length - 1)))];
     applyFrameLook(live.img, frame, want.art, 1);
-    if (want.art.scaleWith === 'storedHeat' || want.art.anchor === 'fist' || want.art.atX > 0) {
+    if (want.art.scaleWith === 'storedHeat' || want.art.atX > 0) {
       const held = fighter.state === 'charging' ? (fighter._storedHeat ?? 0) : (fighter._spentHeat ?? 0);
       const look = want.art.scaleWith === 'storedHeat'
         ? storedHeatVisual(held, charge?.stealHeat?.cap ?? 14)
@@ -4194,7 +4198,6 @@ function syncHeld(scene, fighter) {
       live.img.setAlpha(pulse * (0.42 + 0.58 * frac));
     }
     if (want.art.anchor === 'body' || want.art.anchor === 'hands') {
-      const hands = want.art.anchor === 'hands';
       live.img.setOrigin(0.5, 0.5);
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
       if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
@@ -4221,16 +4224,9 @@ function syncHeld(scene, fighter) {
         const need = charge.perTravel * (charge.perTravelCap ?? 5);
         live.img.setAlpha(Math.min(1, Math.max(0, (fighter.travel ?? 0) / Math.max(1, need))));
       }
-      const grow = want.art.scaleWith === 'charge'
-        ? 1 + ((charge?.chargeRadiusMult ?? 1) - 1) * frac
-        : 1;
-      const sx = Math.abs(live.img.scaleX || 1) * grow;
-      const sy = Math.abs(live.img.scaleY || 1) * grow;
       if (want.art.flip) {
         const dir = -(fighter.facing || 1);
-        live.img.setScale(dir * sx, sy);
-      } else if (grow !== 1) {
-        live.img.setScale(sx, sy);
+        live.img.setScale(dir * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
       }
       syncRotor(scene, live, want.rotor, fighter, frac);
       return;

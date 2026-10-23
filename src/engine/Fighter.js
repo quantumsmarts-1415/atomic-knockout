@@ -2841,7 +2841,6 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.heatedUntil = Math.max(this.heatedUntil ?? 0, time + 2200);
       this.heatTaken = true;
     }
-    bankStolenPackets(this);
     const defense = this.defenseMove;
     if (this.state !== 'defending' || !defense?.recoil || !attacker || attacker === this) return;
     if (incoming.isCounterAttack || incoming.isSelf) return;

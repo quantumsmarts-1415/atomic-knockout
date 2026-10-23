@@ -5,12 +5,12 @@ import { PNG } from 'pngjs';
 import { CHARACTERS } from '../src/data/characters.js';
 import { MOVE_SHEETS } from '../src/data/moveSheets.js';
 import { artIsUpdated } from '../src/data/updatedArt.js';
-import { bodySourceSlug, hasBodyClips, moveBodySlug } from '../src/data/bodyClips.js';
+import { bodySourceSlug, moveBodySlug } from '../src/data/bodyClips.js';
 import { followThroughBlend, guardIdleBlend } from '../src/engine/feel.js';
 import { bodySheetMuzzle, clipNameForMove, frameToWorld, sheetFrameIndex, sheetMeta } from '../src/engine/moveSheet.js';
 import { cascadePulseArt, shoulderSlashOrigin, shoulderWhipIndex, swingFrameIndex } from '../src/engine/fxArt.js';
 
-const FIGHTERS = ['aaron', 'ace', 'agatha', 'allen', 'amy', 'arsenio', 'aurelius', 'barry', 'ben', 'bianca', 'boar', 'bord', 'brock', 'burke', 'caesar', 'cal', 'cali', 'carter', 'ceres', 'chloe', 'chroma', 'cody', 'collin', 'cooper', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'erin', 'europa', 'fermi', 'fey', 'flo', 'flora', 'ford', 'frank', 'gail', 'gertrude', 'goldie', 'haley', 'helen', 'hog', 'holly', 'hoss', 'hydra', 'indy', 'iona', 'ira', 'krypto', 'kyle', 'lana', 'lars', 'lillie', 'liv', 'lucy', 'mac', 'mae', 'maggie', 'manny', 'mendel', 'molly', 'nadia', 'natalie', 'neo', 'neptune', 'nick', 'niobe', 'niko', 'nitra', 'noble', 'ogden', 'oxana', 'oz', 'pablo', 'pat', 'paula', 'percy', 'phillip', 'pit', 'pluto', 'polonius', 'prometheus', 'ray', 'rex', 'rhoda', 'roger', 'ronan', 'ruben', 'ruth', 'saab', 'sam', 'sandy', 'scarlett', 'selena', 'silas', 'sarge', 'sterling', 'talia', 'tara', 'tate', 'thor', 'thule', 'titan', 'uri', 'wolf'];
+const FIGHTERS = ['aaron', 'ace', 'agatha', 'allen', 'amy', 'arsenio', 'aurelius', 'barry', 'ben', 'bianca', 'boar', 'bord', 'brock', 'burke', 'caesar', 'cal', 'cali', 'carter', 'ceres', 'chloe', 'chroma', 'cody', 'collin', 'cooper', 'copernicus', 'curie', 'dash', 'dizzy', 'duke', 'einstein', 'erin', 'europa', 'fermi', 'fey', 'flo', 'flora', 'ford', 'frank', 'gail', 'gertrude', 'goldie', 'haley', 'helen', 'hog', 'holly', 'hoss', 'hydra', 'indy', 'iona', 'ira', 'krypto', 'kyle', 'lana', 'lars', 'lillie', 'liv', 'lucy', 'mac', 'mae', 'maggie', 'manny', 'mendel', 'molly', 'nadia', 'natalie', 'neo', 'neptune', 'nick', 'niobe', 'niko', 'nitra', 'noble', 'ogden', 'oxana', 'oz', 'pablo', 'pat', 'paula', 'percy', 'phillip', 'pit', 'pluto', 'polonius', 'prometheus', 'ray', 'rex', 'rhoda', 'roger', 'ronan', 'ruben', 'ruth', 'saab', 'sam', 'sandy', 'scarlett', 'selena', 'silas', 'sarge', 'sterling', 'sully', 'talia', 'tara', 'tate', 'terra', 'tess', 'tessa', 'tex', 'thor', 'thule', 'titan', 'uri', 'van', 'wolf', 'xander', 'yara', 'yvette', 'zane', 'zora'];
 
 function inCell(json, xy) {
   return Array.isArray(xy) && xy[0] >= 0 && xy[0] < json.frameW && xy[1] >= 0 && xy[1] < json.frameH;
@@ -119,11 +119,15 @@ test('per-move body clips keep the idle height and the json foot line', () => {
 });
 
 test('a move with no body clip keeps the generic attack sheet', () => {
-  const id = Object.keys(CHARACTERS).find((key) => !hasBodyClips(key) && !MOVE_SHEETS[key] && CHARACTERS[key].art?.sheets?.clips?.attack);
-  assert.ok(id);
-  assert.equal(clipNameForMove(id, 'basicDirectional'), null);
-  assert.equal(clipNameForMove(id, 'basicCharge'), null);
-  assert.ok(CHARACTERS[id].art.sheets.clips.attack.count > 0);
+  // Smoky Haze has no sheet. Tess still has an authored attack entry, so
+  // the guard stays unnamed and the rig holds idle instead of borrowing it.
+  // Bone Crush was never redrawn, so it still plays Cal's attack sheet.
+  assert.equal(clipNameForMove('tess', 'specialDefense'), null);
+  assert.equal(clipNameForMove('cal', 'basicDirectional'), 'attack');
+  assert.equal(clipNameForMove('tess', 'basicDirectional'), 'body-basicDirectional');
+  assert.ok(sheetMeta('tess', 'attack'));
+  assert.ok(CHARACTERS.tess.art.sheets.clips.attack.count > 0);
+  assert.ok(CHARACTERS.cal.art.sheets.clips.attack.count > 0);
 });
 
 test('Diamagnetic Repel and Quantum Leap keep their rise, and Shell Gore stays wide', () => {
@@ -1202,6 +1206,10 @@ test('Ben through Fey play their own sheets, and the left-facing idles do not fl
     assert.equal(CHARACTERS.carter.art.sheets.clips[key].sheetFacing, undefined, key);
   }
   assert.equal(CHARACTERS.saab.art.sheets.clips['body-basicDirectional'].sheetFacing, -1);
+  assert.equal(CHARACTERS.tex.art.sheets.clips['body-basicDirectional'].sheetFacing, -1);
+  assert.equal(CHARACTERS.tex.art.sheets.clips['body-basicCharge'].sheetFacing, undefined);
+  assert.equal(CHARACTERS.van.art.sheets.clips['body-specialDirectional'].sheetFacing, -1);
+  assert.equal(CHARACTERS.van.art.sheets.clips['body-basicCharge'].sheetFacing, 1);
   assert.equal(CHARACTERS.saab.art.sheets.clips['body-basicCharge'].sheetFacing, undefined);
   assert.equal(CHARACTERS.titan.moves.specialDefense.chalkTint, 0xaab9cd);
   assert.equal(CHARACTERS.titan.moves.specialDefense.vfx, 'pane');

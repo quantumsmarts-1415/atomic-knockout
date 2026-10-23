@@ -1,0 +1,439 @@
+{
+ "name": "tess",
+ "method": "video",
+ "sheet": "electron-hunger",
+ "frameW": 1026,
+ "frameH": 1042,
+ "count": 12,
+ "grid": [
+  3,
+  4
+ ],
+ "cols": 3,
+ "rows": 4,
+ "fps": 18,
+ "duration_s": 0.667,
+ "loop": false,
+ "footY": 0.9818,
+ "visibleH": 1012,
+ "facing_in_sheet": "right",
+ "mirrored_from_clip": true,
+ "idle": {
+  "frameW": 550,
+  "frameH": 1042,
+  "footY": 0.9818,
+  "visibleH": 1012
+ },
+ "repo_clip_entry": {
+  "electron-hunger": {
+   "count": 12,
+   "fps": 18,
+   "loop": false,
+   "frameW": 1026,
+   "frameH": 1042,
+   "footY": 0.9818,
+   "visibleH": 1012,
+   "cols": 3,
+   "rows": 4
+  }
+ },
+ "move": "electron-hunger",
+ "qc": {
+  "source": "redraws/video/tess/electron-hunger-v1.mp4",
+  "keyed_dir": "redraws/video/tess/keyed-electron-hunger-v1",
+  "key": {
+   "used": "ghost_key",
+   "cfg": {
+    "core_floor": 0.97
+   }
+  },
+  "detint": "no mod-4 class tint (residual < 0.3); motion-limb tint fixed by hue-limited clamp 'green' (px per frame [0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0])",
+  "window": [
+   0,
+   124
+  ],
+  "peak": 94,
+  "energy_base": 0.0045,
+  "arc": 4.46,
+  "frames": [
+   0,
+   11,
+   17,
+   74,
+   86,
+   90,
+   94,
+   100,
+   106,
+   109,
+   113,
+   124
+  ],
+  "head_scores": [
+   0.963,
+   0.411,
+   0.382,
+   0.4,
+   0.364,
+   0.382,
+   0.507,
+   0.369,
+   0.363,
+   0.367,
+   0.4,
+   0.511
+  ],
+  "head_template": "idle frame 0",
+  "forward_reach_px": [
+   134.2,
+   197.9,
+   142.5,
+   161.2,
+   143.9,
+   233.1,
+   303.7,
+   299.6,
+   291.3,
+   267.7,
+   250.4,
+   181.3
+  ],
+  "mirrored": true,
+  "scale": 1.3837,
+  "scale_from": "idle_core_h 999.0 / ready frame 0 core_h 722",
+  "translation": [
+   -193,
+   -80
+  ],
+  "foot_rows": [
+   1022,
+   1024,
+   1021,
+   1015,
+   1007,
+   1008,
+   1013,
+   1013,
+   1010,
+   1010,
+   1018,
+   1024
+  ],
+  "foot_row_target": 1022,
+  "foot_x": [
+   515.5,
+   502.5,
+   475.5,
+   455.0,
+   437.5,
+   445.0,
+   461.0,
+   361.5,
+   382.0,
+   429.0,
+   476.5,
+   497.5
+  ],
+  "widened_px": 476,
+  "top_extra": 0,
+  "bot_extra": 0,
+  "edge_px": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "detached": {},
+  "pose_change_iou_dist": [
+   0.336,
+   0.347,
+   0.321,
+   0.324,
+   0.256,
+   0.348,
+   0.255,
+   0.285,
+   0.256,
+   0.318,
+   0.279
+  ],
+  "torso_x_out": 512.5
+ },
+ "phases": {
+  "windup": [
+   0,
+   2
+  ],
+  "active": [
+   3,
+   3
+  ],
+  "recovery": [
+   4,
+   11
+  ]
+ },
+ "phases_source": "auto (tip reach >= 85% of range)",
+ "releaseFrame": 3,
+ "anchors": {
+  "fist": [
+   [
+    625,
+    537
+   ],
+   [
+    765,
+    514
+   ],
+   [
+    918,
+    440
+   ],
+   [
+    1013,
+    271
+   ],
+   [
+    862,
+    545
+   ],
+   [
+    794,
+    500
+   ],
+   [
+    703,
+    477
+   ],
+   [
+    621,
+    563
+   ],
+   [
+    559,
+    150
+   ],
+   [
+    566,
+    116
+   ],
+   [
+    594,
+    519
+   ],
+   [
+    626,
+    538
+   ]
+  ],
+  "tip": [
+   [
+    672,
+    850
+   ],
+   [
+    765,
+    514
+   ],
+   [
+    918,
+    440
+   ],
+   [
+    1013,
+    271
+   ],
+   [
+    862,
+    545
+   ],
+   [
+    794,
+    500
+   ],
+   [
+    703,
+    477
+   ],
+   [
+    625,
+    577
+   ],
+   [
+    559,
+    150
+   ],
+   [
+    567,
+    775
+   ],
+   [
+    606,
+    770
+   ],
+   [
+    660,
+    837
+   ]
+  ],
+  "feet": [
+   [
+    [
+     429,
+     1022
+    ],
+    [
+     578,
+     1022
+    ]
+   ],
+   [
+    [
+     455,
+     1022
+    ],
+    [
+     537,
+     1022
+    ]
+   ],
+   [
+    [
+     413,
+     1022
+    ],
+    [
+     559,
+     1022
+    ]
+   ],
+   [
+    [
+     389,
+     1022
+    ],
+    [
+     564,
+     1022
+    ]
+   ],
+   [
+    [
+     386,
+     1022
+    ],
+    [
+     567,
+     1022
+    ]
+   ],
+   [
+    [
+     441,
+     1022
+    ],
+    [
+     579,
+     1022
+    ]
+   ],
+   [
+    [
+     110,
+     1022
+    ],
+    [
+     595,
+     1022
+    ]
+   ],
+   [
+    [
+     120,
+     1022
+    ],
+    [
+     601,
+     1022
+    ]
+   ],
+   [
+    [
+     197,
+     1022
+    ],
+    [
+     601,
+     1022
+    ]
+   ],
+   [
+    [
+     465,
+     1022
+    ],
+    [
+     601,
+     1022
+    ]
+   ],
+   [
+    [
+     427,
+     1022
+    ],
+    [
+     601,
+     1022
+    ]
+   ],
+   [
+    [
+     452,
+     1022
+    ],
+    [
+     601,
+     1022
+    ]
+   ]
+  ],
+  "hand2": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ]
+ },
+ "anchors_note": "output-frame px, x right / y down; see attack_video/phases.py",
+ "reach_px": [
+  159,
+  252,
+  405,
+  500,
+  349,
+  281,
+  190,
+  112,
+  46,
+  54,
+  93,
+  147
+ ]
+}

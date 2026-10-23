@@ -1,0 +1,504 @@
+{
+ "name": "van",
+ "method": "video",
+ "sheet": "prism-surge",
+ "frameW": 1222,
+ "frameH": 733,
+ "count": 12,
+ "grid": [
+  3,
+  4
+ ],
+ "cols": 3,
+ "rows": 4,
+ "fps": 18,
+ "duration_s": 0.667,
+ "loop": false,
+ "footY": 0.9727,
+ "visibleH": 684,
+ "facing_in_sheet": "left",
+ "mirrored_from_clip": true,
+ "idle": {
+  "frameW": 1222,
+  "frameH": 720,
+  "footY": 0.9899,
+  "visibleH": 684
+ },
+ "repo_clip_entry": {
+  "prism-surge": {
+   "count": 12,
+   "fps": 18,
+   "loop": false,
+   "frameW": 1222,
+   "frameH": 733,
+   "footY": 0.9727,
+   "visibleH": 684,
+   "cols": 3,
+   "rows": 4
+  }
+ },
+ "move": "prism-surge",
+ "qc": {
+  "source": "redraws/video/van/prism-surge-v2.mp4",
+  "keyed_dir": "redraws/video/van/keyed-prism-surge-v2",
+  "key": {
+   "nominal": "green",
+   "sampled": [
+    0,
+    254,
+    0
+   ],
+   "hue_off": 0.0,
+   "used": "nominal",
+   "mode": "green-safe"
+  },
+  "detint": "no mod-4 class tint (residual < 0.3); motion-limb tint fixed by hue-limited clamp 'green' (px per frame [981, 746, 915, 878, 705, 562, 1623, 1771, 1791, 1646, 829, 866])",
+  "window": [
+   4,
+   140
+  ],
+  "peak": 110,
+  "energy_base": 0.021,
+  "arc": 6.576,
+  "frames": [
+   20,
+   36,
+   60,
+   84,
+   99,
+   104,
+   120,
+   122,
+   126,
+   130,
+   138,
+   144
+  ],
+  "head_scores": [
+   0.393,
+   0.374,
+   0.39,
+   0.407,
+   0.389,
+   0.457,
+   0.458,
+   0.473,
+   0.487,
+   0.517,
+   0.401,
+   0.385
+  ],
+  "head_template": "clip frame 0 (540, 124, 755, 206)",
+  "forward_reach_px": [
+   172.7,
+   198.3,
+   206.4,
+   212.3,
+   235.1,
+   262.5,
+   375.4,
+   372.9,
+   373.5,
+   315.5,
+   199.5,
+   202.7
+  ],
+  "mirrored": true,
+  "scale": 1.2472,
+  "scale_from": "idle_core_h 661.0 / ready frame 36 core_h 530",
+  "translation": [
+   -199,
+   -118
+  ],
+  "foot_rows": [
+   712,
+   712,
+   714,
+   714,
+   714,
+   699,
+   699,
+   699,
+   699,
+   699,
+   709,
+   709
+  ],
+  "foot_row_target": 712,
+  "foot_x": [
+   509.0,
+   520.5,
+   509.0,
+   509.0,
+   507.5,
+   500.0,
+   473.5,
+   473.5,
+   474.0,
+   491.5,
+   531.5,
+   531.5
+  ],
+  "widened_px": 0,
+  "top_extra": 0,
+  "bot_extra": 0,
+  "edge_px": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "detached": {},
+  "pose_change_iou_dist": [
+   0.228,
+   0.333,
+   0.035,
+   0.251,
+   0.447,
+   0.47,
+   0.032,
+   0.149,
+   0.364,
+   0.473,
+   0.038
+  ],
+  "torso_x_out": 592.8
+ },
+ "phases": {
+  "windup": [
+   0,
+   4
+  ],
+  "active": [
+   5,
+   6
+  ],
+  "recovery": [
+   7,
+   11
+  ],
+  "loop": [
+   2,
+   4
+  ]
+ },
+ "phases_source": "manual",
+ "releaseFrame": 5,
+ "anchors": {
+  "fist": [
+   [
+    394,
+    393
+   ],
+   [
+    452,
+    391
+   ],
+   [
+    382,
+    311
+   ],
+   [
+    377,
+    319
+   ],
+   [
+    327,
+    357
+   ],
+   [
+    320,
+    277
+   ],
+   [
+    212,
+    162
+   ],
+   [
+    215,
+    164
+   ],
+   [
+    217,
+    195
+   ],
+   [
+    272,
+    301
+   ],
+   [
+    457,
+    394
+   ],
+   [
+    457,
+    394
+   ]
+  ],
+  "tip": [
+   [
+    392,
+    404
+   ],
+   [
+    397,
+    632
+   ],
+   [
+    382,
+    324
+   ],
+   [
+    377,
+    319
+   ],
+   [
+    327,
+    357
+   ],
+   [
+    320,
+    277
+   ],
+   [
+    212,
+    162
+   ],
+   [
+    215,
+    164
+   ],
+   [
+    217,
+    195
+   ],
+   [
+    272,
+    301
+   ],
+   [
+    412,
+    630
+   ],
+   [
+    409,
+    631
+   ]
+  ],
+  "feet": [
+   [
+    [
+     733,
+     711
+    ],
+    [
+     626,
+     711
+    ]
+   ],
+   [
+    [
+     735,
+     711
+    ],
+    [
+     626,
+     711
+    ]
+   ],
+   [
+    [
+     733,
+     711
+    ],
+    [
+     649,
+     711
+    ]
+   ],
+   [
+    [
+     730,
+     711
+    ],
+    [
+     649,
+     711
+    ]
+   ],
+   [
+    [
+     735,
+     711
+    ],
+    [
+     654,
+     711
+    ]
+   ],
+   [
+    [
+     785,
+     725
+    ],
+    [
+     711,
+     725
+    ]
+   ],
+   [
+    [
+     785,
+     725
+    ],
+    [
+     711,
+     725
+    ]
+   ],
+   [
+    [
+     785,
+     725
+    ],
+    [
+     711,
+     725
+    ]
+   ],
+   [
+    [
+     785,
+     725
+    ],
+    [
+     711,
+     725
+    ]
+   ],
+   [
+    [
+     785,
+     725
+    ],
+    [
+     711,
+     725
+    ]
+   ],
+   [
+    [
+     760,
+     711
+    ],
+    [
+     664,
+     711
+    ]
+   ],
+   [
+    [
+     760,
+     711
+    ],
+    [
+     664,
+     711
+    ]
+   ]
+  ],
+  "hand2": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ]
+ },
+ "anchors_note": "output-frame px, x right / y down; see attack_video/phases.py",
+ "reach_px": [
+  200,
+  195,
+  210,
+  215,
+  265,
+  272,
+  380,
+  377,
+  375,
+  320,
+  180,
+  183
+ ],
+ "splice": {
+  "offset_groups": {
+   "A_gather_recovery": {
+    "frames": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     10,
+     11
+    ],
+    "dy": -1
+   },
+   "B_burst": {
+    "frames": [
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "dy": 13
+   }
+  },
+  "sole_rows": [
+   710,
+   712,
+   713,
+   713,
+   713,
+   712,
+   712,
+   712,
+   712,
+   712,
+   708,
+   708
+  ],
+  "src_frames": [
+   20,
+   36,
+   60,
+   84,
+   99,
+   104,
+   120,
+   122,
+   126,
+   130,
+   138,
+   144
+  ],
+  "note": "burst-onset src 106-116 skipped (baked glow/magenta); Redox Flow gather loop = frames 2-4 (ping-pong)"
+ },
+ "video": "redraws/video/van/prism-surge-v2.mp4"
+}

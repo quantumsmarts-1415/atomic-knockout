@@ -40,5 +40,21 @@ export const SIDE_IDLES = {
     "fps": 8,
     "footY": 0.997,
     "visibleH": 1271
+  },
+  "sully": {
+    "frameW": 726,
+    "frameH": 720,
+    "count": 8,
+    "fps": 8,
+    "footY": 0.9681,
+    "visibleH": 654
+  },
+  "van": {
+    "frameW": 810,
+    "frameH": 733,
+    "count": 8,
+    "fps": 8,
+    "footY": 0.97,
+    "visibleH": 670
   }
 };

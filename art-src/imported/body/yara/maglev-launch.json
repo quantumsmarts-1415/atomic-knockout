@@ -1,0 +1,402 @@
+{
+ "name": "yara",
+ "method": "video",
+ "sheet": "maglev-launch",
+ "frameW": 504,
+ "frameH": 909,
+ "count": 12,
+ "grid": [
+  6,
+  2
+ ],
+ "cols": 6,
+ "rows": 2,
+ "fps": 18,
+ "duration_s": 0.667,
+ "loop": false,
+ "footY": 0.9835,
+ "visibleH": 876,
+ "facing_in_sheet": "right",
+ "mirrored_from_clip": false,
+ "idle": {
+  "frameW": 504,
+  "frameH": 909,
+  "footY": 0.9835,
+  "visibleH": 876
+ },
+ "repo_clip_entry": {
+  "maglev-launch": {
+   "count": 12,
+   "fps": 18,
+   "loop": false,
+   "frameW": 504,
+   "frameH": 909,
+   "footY": 0.9835,
+   "visibleH": 876,
+   "cols": 6,
+   "rows": 2
+  }
+ },
+ "move": "maglev-launch",
+ "qc": {
+  "source": "redraws/video/yara/maglev-launch-v1.mp4",
+  "keyed_dir": "redraws/video/yara/keyed-maglev-launch-v1",
+  "key": {
+   "nominal": "green",
+   "sampled": [
+    24,
+    215,
+    29
+   ],
+   "hue_off": 1.6,
+   "used": "nominal",
+   "mode": "green-safe"
+  },
+  "detint": "no mod-4 class tint (residual < 0.3); motion-limb tint fixed by hue-limited clamp 'green' (px per frame [289, 402, 527, 869, 1749, 483, 221, 1121, 654, 150, 264, 337])",
+  "window": [
+   0,
+   137
+  ],
+  "peak": 39,
+  "energy_base": 0.054,
+  "arc": 9.87,
+  "frames": [
+   0,
+   9,
+   14,
+   18,
+   21,
+   26,
+   39,
+   77,
+   86,
+   106,
+   123,
+   137
+  ],
+  "head_scores": [
+   0.983,
+   0.78,
+   0.765,
+   0.769,
+   0.756,
+   0.745,
+   0.858,
+   0.776,
+   0.793,
+   0.867,
+   0.748,
+   0.711
+  ],
+  "head_template": "idle frame 0",
+  "forward_reach_px": [
+   115.4,
+   146.8,
+   187.2,
+   155.2,
+   165.2,
+   188.5,
+   220.1,
+   186.8,
+   174.2,
+   164.7,
+   165.8,
+   201.9
+  ],
+  "mirrored": false,
+  "scale": 0.8647,
+  "scale_from": "idle_core_h 878.5 / ready frame 0 core_h 1016",
+  "translation": [
+   -119,
+   -23
+  ],
+  "foot_rows": [
+   893,
+   893,
+   891,
+   883,
+   875,
+   885,
+   885,
+   851,
+   715,
+   617,
+   663,
+   748
+  ],
+  "foot_row_target": 893,
+  "foot_x": [
+   250.5,
+   254.5,
+   247.5,
+   255.0,
+   274.0,
+   291.5,
+   267.0,
+   289.5,
+   279.5,
+   264.0,
+   233.0,
+   220.0
+  ],
+  "widened_px": 0,
+  "top_extra": 0,
+  "bot_extra": 0,
+  "edge_px": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "detached": {},
+  "pose_change_iou_dist": [
+   0.392,
+   0.41,
+   0.472,
+   0.402,
+   0.376,
+   0.381,
+   0.445,
+   0.579,
+   0.478,
+   0.567,
+   0.538
+  ],
+  "torso_x_out": 252.0
+ },
+ "phases": {
+  "windup": [
+   0,
+   10
+  ],
+  "active": [
+   11,
+   11
+  ],
+  "recovery": null
+ },
+ "phases_source": "auto (tip reach >= 85% of range)",
+ "releaseFrame": 11,
+ "anchors": {
+  "fist": [
+   [
+    348,
+    477
+   ],
+   [
+    383,
+    120
+   ],
+   [
+    416,
+    199
+   ],
+   [
+    421,
+    290
+   ],
+   [
+    409,
+    340
+   ],
+   [
+    374,
+    398
+   ],
+   [
+    297,
+    402
+   ],
+   [
+    319,
+    329
+   ],
+   [
+    354,
+    493
+   ],
+   [
+    402,
+    482
+   ],
+   [
+    428,
+    157
+   ],
+   [
+    461,
+    259
+   ]
+  ],
+  "tip": [
+   [
+    348,
+    479
+   ],
+   [
+    383,
+    120
+   ],
+   [
+    416,
+    199
+   ],
+   [
+    421,
+    637
+   ],
+   [
+    430,
+    682
+   ],
+   [
+    433,
+    722
+   ],
+   [
+    433,
+    748
+   ],
+   [
+    426,
+    697
+   ],
+   [
+    418,
+    583
+   ],
+   [
+    402,
+    495
+   ],
+   [
+    428,
+    157
+   ],
+   [
+    461,
+    259
+   ]
+  ],
+  "feet": [
+   [
+    [
+     133,
+     893
+    ],
+    [
+     236,
+     893
+    ]
+   ],
+   [
+    [
+     149,
+     893
+    ],
+    [
+     236,
+     893
+    ]
+   ],
+   [
+    [
+     170,
+     893
+    ],
+    [
+     244,
+     893
+    ]
+   ],
+   [
+    [
+     244,
+     893
+    ],
+    [
+     307,
+     893
+    ]
+   ],
+   [
+    [
+     211,
+     893
+    ],
+    [
+     242,
+     893
+    ]
+   ],
+   [
+    [
+     203,
+     893
+    ],
+    [
+     253,
+     893
+    ]
+   ],
+   [
+    [
+     203,
+     893
+    ],
+    [
+     316,
+     893
+    ]
+   ],
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "hand2": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ]
+ },
+ "anchors_note": "output-frame px, x right / y down; see attack_video/phases.py",
+ "reach_px": [
+  96,
+  131,
+  164,
+  169,
+  178,
+  181,
+  181,
+  174,
+  166,
+  150,
+  176,
+  209
+ ],
+ "blade_recolour": {
+  "script": "attack_video/yara_garnet.py",
+  "px_per_frame": {},
+  "note": "silver blade -> crimson garnet; hilt/hands/wraps untouched",
+  "backup": "attack_prev_v2silver/"
+ }
+}

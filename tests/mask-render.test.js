@@ -161,7 +161,8 @@ async function boot(browser, id) {
 }
 
 async function measure(page, spec) {
-  await page.evaluate((spec) => {
+  await page.evaluate(async (spec) => {
+    const { bodyCenterBias } = await import('/src/engine/masks.js');
     const scene = window.__akBattle;
     const f = scene.fighters[0];
     const facing = spec.facing || 1;
@@ -208,7 +209,9 @@ async function measure(page, spec) {
       f.rig.sprite.setTexture(`${f.charDef.art.key}-idle`, 0);
       f.rig.rememberMask('idle', 0);
       f.rig._pose = { rot: 0, sx: 1, sy: 1, x: 0, y: 0 };
-      f.rig.sprite.x = 0;
+      // The idle body is centered on the feet. The sprite has to sit on that
+      // same slide or the overlay reads the wide side as a miss.
+      f.rig.sprite.x = f.rig.sheetMode ? bodyCenterBias(f.charDef.id) : 0;
       f.rig.sprite.y = 0;
       f.rig.sprite.rotation = 0;
       f.rig.sprite.setScale(f.rig._layoutScale, f.rig._layoutScale);

@@ -24,5 +24,21 @@ export const SIDE_IDLES = {
     "fps": 8,
     "footY": 0.9708,
     "visibleH": 658
+  },
+  "phillip": {
+    "frameW": 414,
+    "frameH": 775,
+    "count": 8,
+    "fps": 8,
+    "footY": 0.9742,
+    "visibleH": 669
+  },
+  "silas": {
+    "frameW": 794,
+    "frameH": 1322,
+    "count": 8,
+    "fps": 8,
+    "footY": 0.997,
+    "visibleH": 1271
   }
 };

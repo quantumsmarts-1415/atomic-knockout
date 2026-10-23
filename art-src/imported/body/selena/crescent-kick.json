@@ -1,0 +1,381 @@
+{
+ "name": "selena",
+ "method": "video",
+ "sheet": "crescent-kick",
+ "frameW": 1086,
+ "frameH": 1015,
+ "count": 12,
+ "grid": [
+  3,
+  4
+ ],
+ "cols": 3,
+ "rows": 4,
+ "fps": 18,
+ "duration_s": 0.667,
+ "loop": false,
+ "footY": 0.9872,
+ "visibleH": 947,
+ "facing_in_sheet": "right",
+ "mirrored_from_clip": false,
+ "idle": {
+  "frameW": 614,
+  "frameH": 980,
+  "footY": 0.9867,
+  "visibleH": 947
+ },
+ "repo_clip_entry": {
+  "crescent-kick": {
+   "count": 12,
+   "fps": 18,
+   "loop": false,
+   "frameW": 1086,
+   "frameH": 1015,
+   "footY": 0.9872,
+   "visibleH": 947,
+   "cols": 3,
+   "rows": 4
+  }
+ },
+ "move": "crescent-kick",
+ "qc": {
+  "source": "redraws/video/selena/crescent-kick-v1.mp4",
+  "keyed_dir": "redraws/video/selena/keyed-crescent-kick-v1",
+  "key": {
+   "nominal": "magenta",
+   "sampled": [
+    214,
+    0,
+    123
+   ],
+   "hue_off": 25.5,
+   "used": "sampled",
+   "mode": "default"
+  },
+  "detint": "no mod-4 class tint (residual < 0.3); motion-limb tint fixed by hue-limited clamp 'green' (px per frame [55, 44, 69, 32, 9, 0, 63, 8, 8, 33, 6, 10])",
+  "window": [
+   0,
+   98
+  ],
+  "peak": 47,
+  "energy_base": 0.0006,
+  "arc": 9.119,
+  "frames": [
+   0,
+   18,
+   23,
+   28,
+   33,
+   39,
+   47,
+   51,
+   61,
+   72,
+   80,
+   98
+  ],
+  "head_scores": [
+   0.97,
+   0.842,
+   0.786,
+   0.721,
+   0.693,
+   0.687,
+   0.708,
+   0.719,
+   0.718,
+   0.814,
+   0.893,
+   0.965
+  ],
+  "head_template": "idle frame 0",
+  "forward_reach_px": [
+   262.5,
+   317.6,
+   515.9,
+   335.5,
+   440.1,
+   335.5,
+   671.7,
+   566.7,
+   518.7,
+   327.4,
+   266.4,
+   256.9
+  ],
+  "mirrored": false,
+  "scale": 1.4037,
+  "scale_from": "idle_core_h 947.5 / ready frame 0 core_h 675",
+  "translation": [
+   -145,
+   -91
+  ],
+  "foot_rows": [
+   1001,
+   977,
+   955,
+   963,
+   963,
+   963,
+   965,
+   966,
+   965,
+   997,
+   1000,
+   1001
+  ],
+  "foot_row_target": 1001,
+  "foot_x": [
+   693.0,
+   681.0,
+   693.5,
+   675.5,
+   650.0,
+   626.0,
+   602.5,
+   597.0,
+   557.0,
+   551.5,
+   665.5,
+   694.0
+  ],
+  "widened_px": 472,
+  "top_extra": 35,
+  "bot_extra": 0,
+  "edge_px": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "detached": {},
+  "pose_change_iou_dist": [
+   0.511,
+   0.49,
+   0.523,
+   0.454,
+   0.392,
+   0.398,
+   0.322,
+   0.363,
+   0.4,
+   0.44,
+   0.338
+  ],
+  "torso_x_out": 543.0
+ },
+ "phases": {
+  "windup": [
+   0,
+   3
+  ],
+  "active": [
+   4,
+   4
+  ],
+  "recovery": [
+   5,
+   11
+  ]
+ },
+ "phases_source": "auto (tip reach >= 85% of range)",
+ "releaseFrame": 4,
+ "anchors": {
+  "fist": [
+   [
+    769,
+    384
+   ],
+   [
+    791,
+    225
+   ],
+   [
+    898,
+    182
+   ],
+   [
+    968,
+    162
+   ],
+   [
+    1078,
+    254
+   ],
+   [
+    963,
+    115
+   ],
+   [
+    1058,
+    332
+   ],
+   [
+    883,
+    131
+   ],
+   [
+    848,
+    133
+   ],
+   [
+    765,
+    216
+   ],
+   [
+    758,
+    293
+   ],
+   [
+    752,
+    388
+   ]
+  ],
+  "tip": [
+   [
+    769,
+    384
+   ],
+   [
+    791,
+    225
+   ],
+   [
+    898,
+    182
+   ],
+   [
+    968,
+    162
+   ],
+   [
+    1078,
+    254
+   ],
+   [
+    963,
+    115
+   ],
+   [
+    1058,
+    332
+   ],
+   [
+    892,
+    705
+   ],
+   [
+    848,
+    133
+   ],
+   [
+    765,
+    216
+   ],
+   [
+    758,
+    293
+   ],
+   [
+    760,
+    902
+   ]
+  ],
+  "feet": [
+   [
+    [
+     405,
+     1001
+    ],
+    [
+     488,
+     1001
+    ]
+   ],
+   [
+    [
+     459,
+     1001
+    ],
+    [
+     488,
+     1001
+    ]
+   ],
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   [
+    [
+     413,
+     1001
+    ],
+    [
+     491,
+     1001
+    ]
+   ],
+   [
+    [
+     405,
+     1001
+    ],
+    [
+     487,
+     1001
+    ]
+   ],
+   [
+    [
+     405,
+     1001
+    ],
+    [
+     486,
+     1001
+    ]
+   ]
+  ],
+  "hand2": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ]
+ },
+ "anchors_note": "output-frame px, x right / y down; see attack_video/phases.py",
+ "reach_px": [
+  226,
+  248,
+  355,
+  425,
+  535,
+  420,
+  515,
+  349,
+  305,
+  222,
+  215,
+  217
+ ]
+}

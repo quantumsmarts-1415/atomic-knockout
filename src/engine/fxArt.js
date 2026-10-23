@@ -2959,6 +2959,9 @@ function syncAttached(scene, fighter) {
       const sy = Math.abs(live.img.scaleY || 1);
       live.img.setScale(face * sx, sy);
     }
+    if (art.squash > 0 && art.squash < 1) {
+      live.img.setScale(live.img.scaleX || 1, (live.img.scaleY || 1) * art.squash);
+    }
     if (art.puddle) {
       fighter.rig?.setVisible?.(false);
       fighter._puddleHid = true;
@@ -4129,6 +4132,13 @@ function syncHeld(scene, fighter) {
     }
     live.img.setPosition(heldX + jx, heldY + jy);
     if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
+    if (want.art.scaleWith === 'heat') {
+      const cap = Math.max(1, charge?.stealHeat?.cap ?? 14);
+      const t = Math.min(1, Math.max(0, (fighter._storedHeat ?? 0) / cap));
+      shot = 0.7 + 0.9 * t;
+      live.img.setAlpha(0.6 + 0.4 * t);
+      live.img.setTint?.(chargeTint(0xff7040, 0xfff2c0, Math.max(0, (t - 0.55) / 0.45)));
+    }
     if (want.art.tintFrom != null && want.art.tintTo != null) {
       live.img.setTint?.(chargeTint(want.art.tintFrom, want.art.tintTo, frac));
     }

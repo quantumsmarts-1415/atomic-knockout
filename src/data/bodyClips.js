@@ -86,6 +86,7 @@ const SHEET_SLUGS = {
   kyle: { specialDirectional: 'nerve-shock' },
   natalie: { specialDirectional: 'salt-spikes' },
   nitra: { basicCharge: 'tornado-shove' },
+  phillip: { specialDefense: 'red-phosphorus' },
 };
 
 export function moveBodySlug(id, move) {

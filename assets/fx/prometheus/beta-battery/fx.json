@@ -1,0 +1,34 @@
+{
+  "blend": "normal",
+  "black": false,
+  "hit": false,
+  "projectile": {
+    "file": "beta-battery-prop.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.28,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "spin": 8,
+    "aim": false,
+    "hit": false
+  },
+  "detonate": {
+    "file": "beta-tick-status-anim.png",
+    "frames": 24,
+    "cols": 6,
+    "rows": 4,
+    "fps": 12,
+    "loop": true,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 0.9,
+    "crop": "frame",
+    "pivot": "center",
+    "anchor": "point",
+    "hit": false
+  }
+}

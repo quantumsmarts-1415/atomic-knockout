@@ -33,7 +33,7 @@ test('every projectile has an explicit shotEnd and keeps its old contact rule', 
       assert.equal(shotStoppedBySolid(move), false);
     }
   });
-  assert.deepEqual(counts, { despawn: 87, stick: 2, linger: 7, pierce: 5 });
+  assert.deepEqual(counts, { despawn: 86, stick: 3, linger: 7, pierce: 5 });
 });
 
 test('stick, pierce, and placed hazards are not popped by a wall', () => {

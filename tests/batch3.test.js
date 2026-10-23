@@ -132,7 +132,17 @@ test('gas and seismic tags are on the moves those kits read', () => {
   assert.equal(kit('nick').specialDirectional.slam, true);
   assert.equal(kit('cal').basicDirectional.slam, true);
   assert.equal(kit('ruben').basicCharge.slam, true);
-  assert.equal(kit('tessa').specialDirectional.ground, true);
+  // Tellus Tremor rides the floor. The old `ground` tag meant a shot that
+  // drops onto the floor; Seismic Read treats a floor rider as the slam.
+  assert.equal(kit('tessa').specialDirectional.floor, true);
+  assert.equal(kit('tessa').specialDirectional.ground, undefined);
+  const read = interceptHit(
+    { state: 'defending', x: 0, y: 0, defenseMove: kit('yvette').specialDefense },
+    { x: 40, y: 0 },
+    kit('tessa').specialDirectional,
+    0,
+  );
+  assert.equal(read.result, 'counter');
 });
 
 test('lattice clock ticks from the start of the charge', () => {

@@ -186,8 +186,6 @@ export const MOVESETS = {
       baseKnockback: 200, vfx: 'spark',
       startupF: 2, endlagF: 12, duration: 220, cooldown: 360,
     }),
-    // Stopgap body 709f. Redo 709r replaces carter_diamond-cross.png and
-    // art-src/imported/body/carter/diamond-cross.json, then recompile.
     basicDirectional: melee('Diamond Cross', {
       type: K, damage: 6, baseKnockback: 200, rangeW: 70, vfx: 'strike',
       startupF: 4, endlagF: 12, duration: 220, cooldown: 330,
@@ -885,8 +883,6 @@ export const MOVESETS = {
       maxChargeMs: 800, radius: 78, vfx: 'spark', vfxColor: 0x7ec8ff,
       baseKnockback: 90, knockbackGrowth: 1.8, duration: 260, cooldown: 860,
     }),
-    // Stopgap body 713f. Redo 713r replaces cooper_live-wire.png and
-    // art-src/imported/body/cooper/live-wire.json, then recompile.
     basicDirectional: melee('Live Wire', {
       type: K, damage: 4.8, type2: E, damage2: 2.9, pull: 200, rangeW: 116, rangeH: 28, vfx: 'spark',
       baseKnockback: 124.8, knockbackGrowth: 2.88, duration: 220, cooldown: 540,
@@ -1304,8 +1300,6 @@ export const MOVESETS = {
       type: K, damage: 7, stripBuffs: true, rangeW: 78, vfx: 'strike', vfxColor: 0xc8d0d8,
       baseKnockback: 90, knockbackGrowth: 1.8, duration: 200, cooldown: 460,
     }),
-    // Stopgap body 722f. Redo 722r replaces fey_lodestone-guard.png and
-    // art-src/imported/body/fey/lodestone-guard.json, then recompile.
     specialDefense: m('Lodestone Guard', {
       catchMetals: true, duration: 640, cooldown: 820, vfx: 'shield', vfxColor: 0xd85a4a,
     }),
@@ -2709,10 +2703,16 @@ export const MOVESETS = {
       duration: 900, cooldown: 1000, vfx: 'shield', vfxColor: 0xc8b090,
     }),
     specialDirectional: m('Beta Battery', {
-      kind: 'projectile', shotEnd: 'despawn', type: R, damage: 4, vfx: 'spark', vfxColor: 0xd0ffb0,
-      zone: { type: R, damage: 1.8, ms: 2200, radius: 40, tick: 360, color: 0xd0ffb0 },
+      // Sticks to the fighter or wall it hits and stays there for 10s.
+      // The status sheet is a 2s pulse (24 frames at 12 fps) and plays 5 times.
+      kind: 'projectile', shotEnd: 'stick', stick: true, stickMs: 10000,
+      type: R, damage: 0, noFlinch: true, vfx: 'spark', vfxColor: 0xd0ffb0,
+      zone: {
+        name: 'Beta Battery', type: R, damage: 1, ms: 10000, radius: 40, tick: 1000,
+        knockback: 0, growth: 0, fixed: true, onStick: true, color: 0xd0ffb0,
+      },
       projectileSpeed: 380, projectileRadius: 8, projectileLife: 520,
-      baseKnockback: 50, knockbackGrowth: 0.8, duration: 200, cooldown: 780,
+      baseKnockback: 0, knockbackGrowth: 0, duration: 200, cooldown: 780,
     }),
   },
 

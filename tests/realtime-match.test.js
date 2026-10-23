@@ -178,7 +178,21 @@ test('a connected phone controller does not freeze the real-time match', async (
     const before = await page.evaluate(() => window.game.scene.getScene('Battle').fighters.map((f) => ({
       id: f.charDef.id, bot: !!f.isBot, slot: f.controlSlot, x: f.x,
     })));
-    await page.waitForTimeout(3000);
+    // Net x can come back under 24px: the bot walks in, gets hit, and the
+    // launch puts him near where he started while he plants for the next
+    // swing. Travel is the farthest point he reached, which stays large
+    // when the round is actually running.
+    const oz0 = before.find((f) => f.id === 'oz').x;
+    let ozTravel = 0;
+    const started = Date.now();
+    while (Date.now() - started < 3000) {
+      await page.waitForTimeout(200);
+      const x = await page.evaluate(() => {
+        const b = window.game?.scene?.getScene?.('Battle');
+        return b?.fighters?.find((f) => f.charDef.id === 'oz')?.x ?? null;
+      });
+      if (x != null) ozTravel = Math.max(ozTravel, Math.abs(x - oz0));
+    }
     const after = await page.evaluate(() => {
       const b = window.game.scene.getScene('Battle');
       return {
@@ -195,7 +209,7 @@ test('a connected phone controller does not freeze the real-time match', async (
       const b = after.fighters.find((f) => f.id === id);
       return Math.abs(b.x - a.x) > 24;
     };
-    assert.ok(moved('oz'), `bot did not move ${JSON.stringify(before)} -> ${JSON.stringify(after.fighters)} lock ${Math.round(after.introLockUntil)}`);
+    assert.ok(ozTravel > 24, `bot did not move travel ${Math.round(ozTravel)} ${JSON.stringify(before)} -> ${JSON.stringify(after.fighters)} lock ${Math.round(after.introLockUntil)}`);
     assert.ok(moved('hydra'), `phone fighter did not move ${JSON.stringify(before)} -> ${JSON.stringify(after.fighters)}`);
   } finally {
     phone.close();

@@ -9,6 +9,7 @@
 //   SIM_LIMIT=2 SIM_TAG=smoke npm run sim
 //   SIM_PAIR=1 SIM_ONLY=helen,tara npm run sim   # just those matchups, with a pair log
 //   SIM_EACH=3 npm run sim                      # each fighter vs 3 random others, one full KO each
+//   SIM_GOLD=1 npm run sim                      # paint the select-screen gold edge, then run the rounds
 //
 // Writes an aggregate JSON (win rate, damage, KO time, damage by type)
 // to SIM_OUT (default /tmp/ak-sim/<tag>.json). Duels and 3-player FFAs
@@ -29,6 +30,7 @@ const REPS = Number(process.env.SIM_REPS || 3);
 const PAGES = Math.max(1, Number(process.env.SIM_PAGES || 4));
 const LIMIT = Number(process.env.SIM_LIMIT || 0);
 const STAGE = process.env.SIM_STAGE || 'elemental-isle';
+const GOLD = process.env.SIM_GOLD === '1';
 const CHROME = process.env.PLAYWRIGHT_CHROME
   || (fs.existsSync('/usr/bin/google-chrome') ? '/usr/bin/google-chrome' : '/usr/local/bin/google-chrome');
 
@@ -290,10 +292,20 @@ async function openPage(browser) {
   page.setDefaultTimeout(300000);
   const errors = [];
   page.on('pageerror', (err) => errors.push(String(err)));
-  await page.goto(`http://127.0.0.1:${PORT}/?sim=1&stage=${STAGE}&stocks=${STOCKS}&speed=8`, {
+  const gold = GOLD ? '&gold=1' : '';
+  await page.goto(`http://127.0.0.1:${PORT}/?sim=1${gold}&stage=${STAGE}&stocks=${STOCKS}&speed=8`, {
     waitUntil: 'domcontentloaded',
   });
   await page.waitForFunction(() => window.__akReady === true);
+  if (GOLD) {
+    await page.waitForFunction(() => (window.__akGold || 0) > 0 && window.__akSelect?.gold);
+    const painted = await page.evaluate(() => {
+      const scene = window.__akSelect;
+      scene.paintGold(0);
+      return scene.tiles.filter((tile) => scene.tileUpdated(tile.slot)).length;
+    });
+    if (!(painted > 0)) throw new Error('select gold painted no reviewed fighters');
+  }
   return { page, errors };
 }
 
@@ -381,6 +393,7 @@ async function main() {
   const outside = duelRows.filter((r) => r.matches >= 6 && (r.winRate < 0.4 || r.winRate > 0.6));
   const payload = {
     tag: TAG,
+    selectGold: GOLD,
     stage: STAGE,
     rule: 'full round until one fighter remains',
     stocks: STOCKS,

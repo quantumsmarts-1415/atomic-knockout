@@ -46,6 +46,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   init(data) {
     this.playerSeeds = data?.playerSeeds?.length ? data.playerSeeds : [{ slot: 0 }, { slot: 1 }];
+    this.goldOnly = !!data?.goldOnly;
   }
 
   create() {
@@ -77,9 +78,14 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.grid.add(this.gold);
     this.goldPhase = 0;
     this.paintGold(0);
+    window.__akSelect = this;
+    window.__akGold = this.tiles.filter((t) => this.tileUpdated(t.slot)).length;
+    if (this.goldOnly) {
+      void this.loadFxIds();
+      return;
+    }
     this.drawRowLabels();
     void this.loadFxIds();
-    window.__akSelect = this;
 
     this.scrollTrack = this.add.graphics();
     this.scrollThumb = this.add.graphics();
@@ -645,6 +651,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
   update(time, delta) {
     this.goldPhase = (this.goldPhase || 0) + delta * 0.0035;
     this.paintGold(this.goldPhase);
+    if (this.goldOnly) return;
     pollGamepads();
     for (const p of this.players) {
       const connected = p.isGamepad ? !!padBySlot(p.slot) : phoneNet.hasSlot(p.slot);

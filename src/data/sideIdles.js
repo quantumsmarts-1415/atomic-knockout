@@ -25,6 +25,14 @@ export const SIDE_IDLES = {
     "footY": 0.9708,
     "visibleH": 658
   },
+  "maggie": {
+    "frameW": 594,
+    "frameH": 1058,
+    "count": 6,
+    "fps": 6,
+    "footY": 0.9849,
+    "visibleH": 1013
+  },
   "phillip": {
     "frameW": 414,
     "frameH": 775,

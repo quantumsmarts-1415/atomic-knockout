@@ -74,8 +74,9 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.weightBuffUntil = Math.max(victim.weightBuffUntil ?? 0, victim.goldUntil);
   }
   if (fx.root) victim.rootedUntil = Math.max(victim.rootedUntil ?? 0, time + fx.root);
-  if (fx.blind) victim.blindUntil = time + fx.blind;
-  if (fx.dazzle) {
+  const eyes = victim.blindImmuneUntil && time < victim.blindImmuneUntil;
+  if (!eyes && fx.blind) victim.blindUntil = time + fx.blind;
+  if (!eyes && fx.dazzle) {
     const spec = typeof fx.dazzle === 'object' ? fx.dazzle : null;
     const ms = spec ? (spec.ms ?? 800) : (typeof fx.dazzle === 'number' ? fx.dazzle : (fx.blind ?? 800));
     victim.dazzleUntil = time + ms;

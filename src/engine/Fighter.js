@@ -776,6 +776,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
           sfx('whoosh');
           this.scene.juice?.swing?.(this, this.currentMove);
           this.scene.juice?.afterimage?.(this);
+          if (this.currentMove?.twin) this.armTwinEcho();
         }
       }
       // Dashes leave a short trail of ghosts, still capped per fighter.
@@ -938,6 +939,33 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
     const ready = rearmDefense(coat, time);
     if (ready != null) this.specialCooldownUntil = ready;
+  }
+
+  /** Green twin: snapshot the strike, then a beat later show the tinted copy and the shimmer. */
+  armTwinEcho() {
+    const move = this.currentMove;
+    const spec = move?.twin;
+    if (!spec || !this.scene?.time?.delayedCall) return;
+    const step = this.scene.stepMs || FEEL.stepMs;
+    const gap = move.hitGap ?? spec.delay ?? 250;
+    this.scene.time.delayedCall(step, () => {
+      this._twinSnap = this.scene.juice?.snapTwin?.(this) || this._twinSnap;
+    });
+    this.scene.time.delayedCall(gap, () => {
+      if (!this.alive || this.scene?.simFast) return;
+      const face = Math.sign(this._twinSnap?.scaleX) || this.facing || 1;
+      const behind = spec.behind ?? 18;
+      this.scene.juice?.showTwin?.(this, this._twinSnap, spec);
+      spawnMoveExtra(
+        this.scene,
+        this,
+        move,
+        'echo',
+        this.x - face * behind,
+        this.y - (this.bodyH ?? 80) * 0.55,
+        face,
+      );
+    });
   }
 
   startMove(time, move, slot, moveKey = null) {

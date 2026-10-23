@@ -755,9 +755,10 @@ export default class BattleScene extends Phaser.Scene {
     this.spawnZone(p.owner, p.move.dropZone, p.gfx.x, y, p.move);
   }
 
-  /** Painted blast for a shot that is not already an explode-only burst. */
+  /** Painted blast. An explode-only shot stays on its burst unless it splinters. */
   detonateProjectile(p) {
-    if (!p || p._detonated || p.pinned || p.move?.explodeOnly) return;
+    if (!p || p._detonated || p.pinned) return;
+    if (p.move?.explodeOnly && !p.move.splinter) return;
     const art = artFor(p.owner?.charDef?.id, p.move?.name);
     if (!art?.detonate?.frames?.length) return;
     p._detonated = true;
@@ -2877,7 +2878,7 @@ export default class BattleScene extends Phaser.Scene {
           if (n >= cap) hit.landed.add(victim);
           else {
             hit.next ??= new Map();
-            hit.next.set(victim, time + 90);
+            hit.next.set(victim, time + (hit.move.hitGap ?? 90));
           }
           let swing = hit.move;
           if (swing.combo) {
@@ -3302,6 +3303,7 @@ export default class BattleScene extends Phaser.Scene {
         if (shot.redFrames) shot = withRedFrame(shot, sheetFrameAt(shot, p.born, time, p._fxFrame));
         if (p.move.explodeOnly) {
           this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: p.gfx.x, y: p.gfx.y });
+          if (p.move.splinter) this.detonateProjectile(p);
           p.gfx.destroy();
           p.dead = true;
           break;

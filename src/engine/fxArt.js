@@ -1569,6 +1569,15 @@ export function fxProjectileView(scene, owner, move, x, y) {
     if (face < 0) img.setScale(-Math.abs(img.scaleX || 1), Math.abs(img.scaleY || 1));
   }
   const useMask = art.hit !== false;
+  let arcs = null;
+  if (art.arcs?.frames?.length && scene.add?.image) {
+    const aFrame = art.arcs.frames[0];
+    arcs = scene.add.image(x, y, aFrame.key);
+    arcs.setOrigin(art.arcs.pivotX ?? 0.5, art.arcs.pivotY ?? 0.5);
+    arcs.setDisplaySize(aFrame.displayW, aFrame.displayH);
+    arcs.setDepth(17);
+    arcs.setBlendMode?.(phaserBlend(aFrame.blend || art.arcs.blend));
+  }
   let trail = null;
   let hot = null;
   const ghosts = [];
@@ -1732,6 +1741,23 @@ function stepPullField(p, time) {
   field.setOrigin?.(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
   field.setPosition(p.gfx.x, p.gfx.y);
   field.rotation = 0;
+}
+
+function stepProjectileArcs(p, time) {
+  const img = p.fxArcs;
+  const art = p.fxArcsArt;
+  if (!img?.setPosition || !art?.frames?.length || !p.gfx) return;
+  const fps = art.fps > 0 ? art.fps : 16;
+  const raw = Math.floor(Math.max(0, time - (p.born || 0)) / (1000 / fps));
+  const i = ((raw % art.frames.length) + art.frames.length) % art.frames.length;
+  const frame = art.frames[i] || art.frames[0];
+  if (img.texture?.key !== frame.key) {
+    img.setTexture?.(frame.key);
+    img.setDisplaySize?.(frame.displayW, frame.displayH);
+  }
+  img.setOrigin?.(art.pivotX ?? 0.5, art.pivotY ?? 0.5);
+  img.setPosition(p.gfx.x, p.gfx.y);
+  img.rotation = 0;
 }
 
 export function stepFxProjectile(p, time) {
@@ -3606,6 +3632,7 @@ export function syncFxActors(scene) {
     syncSurgePips(scene, fighter);
     syncFissionHalves(scene, fighter);
     syncFreeze(scene, fighter);
+    syncProp(scene, fighter);
     const move = fighter.currentMove;
     const art = artFor(fighter?.charDef?.id, move?.name);
     // Impact-only moves still carry the slash type, with the hit art on a

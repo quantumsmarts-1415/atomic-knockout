@@ -746,6 +746,32 @@ test('a falling meteorite keeps its painted orientation', () => {
   assert.equal(p.gfx.scaleY, 3);
 });
 
+test('a floor rock tumbles with its travel and keeps a moderate spin', () => {
+  const rolling = (vx) => ({
+    born: 0,
+    fxFrames: ['rock'],
+    fxFps: 1,
+    fxSpin: 3,
+    vx,
+    move: { floor: true },
+    gfx: {
+      key: 'rock',
+      rotation: 0,
+      scaleX: 1,
+      scaleY: 1,
+      setTexture() {},
+      setDisplaySize() {},
+      setScale() {},
+    },
+  });
+  const right = rolling(300);
+  const left = rolling(-300);
+  stepFxProjectile(right, 1000);
+  stepFxProjectile(left, 1000);
+  assert.equal(right.gfx.rotation, 3);
+  assert.equal(left.gfx.rotation, -3);
+});
+
 test('gemini fx call 1 wires fey, collin, and nick', () => {
   const read = (rel) => JSON.parse(fs.readFileSync(rel, 'utf8'));
   const same = (a, b) => fs.readFileSync(a).equals(fs.readFileSync(b));
@@ -1626,7 +1652,7 @@ test('batch 11 sheets match the approved handoffs', () => {
   assert.equal(putty.loop, true);
   assert.equal(putty.fps, 19.2);
   assert.equal(putty.anchor, 'body');
-  for (const id of ['tessa', 'iona', 'xander', 'caesar', 'barry', 'lana']) {
+  for (const id of ['tessa', 'iona', 'xander', 'caesar', 'barry', 'lana', 'ceres']) {
     const root = `assets/fx/${id}`;
     for (const name of fs.readdirSync(root)) {
       const dir = `${root}/${name}`;

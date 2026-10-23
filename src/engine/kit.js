@@ -74,8 +74,9 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.weightBuffUntil = Math.max(victim.weightBuffUntil ?? 0, victim.goldUntil);
   }
   if (fx.root) victim.rootedUntil = Math.max(victim.rootedUntil ?? 0, time + fx.root);
-  if (fx.blind) victim.blindUntil = time + fx.blind;
-  if (fx.dazzle) {
+  const eyes = victim.blindImmuneUntil && time < victim.blindImmuneUntil;
+  if (!eyes && fx.blind) victim.blindUntil = time + fx.blind;
+  if (!eyes && fx.dazzle) {
     const spec = typeof fx.dazzle === 'object' ? fx.dazzle : null;
     const ms = spec ? (spec.ms ?? 800) : (typeof fx.dazzle === 'number' ? fx.dazzle : (fx.blind ?? 800));
     victim.dazzleUntil = time + ms;
@@ -148,7 +149,19 @@ export function applyOnHit(attacker, victim, move, time) {
     victim.glowUntil = time + (g.ms ?? 4000);
     victim.glowDps = g.dps ?? 1;
     victim.glowEvery = g.every ?? 1000;
-    victim.glowTick = time + victim.glowEvery;
+    // An immediate tick lines the status loop's baked pulse (frame 0) up with damage.
+    victim.glowTick = g.immediate ? time : time + victim.glowEvery;
+    if (g.immediate && attacker?.charDef?.id) {
+      const at = move._hitAt;
+      victim.stuckFrom = {
+        id: attacker.charDef.id,
+        move: move.name,
+        until: victim.glowUntil,
+        born: time,
+        ox: at ? at.x - victim.x : 0,
+        oy: at ? at.y - victim.y : -(victim.bodyH ?? 80) * 0.4,
+      };
+    }
   }
   if (fx.coat) {
     victim.debuffCoat = fx.coat;
@@ -256,6 +269,7 @@ export function cleanse(fighter, kinds) {
   const list = kinds ?? [];
   if (list.includes('poison')) fighter.poisonUntil = 0;
   if (list.includes('burn') && !fighter.burnSticky) fighter.burnUntil = 0;
+  if (list.includes('glow')) fighter.glowUntil = 0;
   if (list.includes('blind')) {
     fighter.blindUntil = 0;
     fighter.dazzleUntil = 0;
@@ -352,6 +366,24 @@ export function stripBuffs(fighter) {
   fighter.buffCoatUntil = 0;
   // Unquenchable stays lit. White phosphorus (burnSticky) stays lit.
   // Water, cold, and heat do not clear either one.
+}
+
+/** Heat Prometheus has taken since his last Stolen Fire, kept for the next punch. */
+export function bankStolenHeat(fighter, heat) {
+  const steal = fighter?.charDef?.moves?.basicCharge?.stealHeat;
+  if (!steal || !(heat > 0)) return;
+  const keep = steal.keep ?? 0.85;
+  fighter._storedHeat = Math.min(steal.cap ?? 16, (fighter._storedHeat ?? 0) + heat * keep);
+}
+
+export function bankStolenPackets(fighter) {
+  const packets = fighter?.lastPackets;
+  if (!packets?.length) return;
+  let heat = 0;
+  for (const packet of packets) {
+    if (packet?.type === 'heat' && packet.dealt > 0) heat += packet.dealt;
+  }
+  bankStolenHeat(fighter, heat);
 }
 
 /** Damage over time only raises percent. No hitstun, flinch, knockback, flash, or hitstop. */
@@ -503,6 +535,7 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     }
   }
   if (move.debuffImmune) fighter.debuffImmuneUntil = time + move.duration;
+  if (move.blindImmune) fighter.blindImmuneUntil = time + move.duration;
   if (move.pauseDrain && frac >= (move.pauseAt ?? 0)) {
     fighter.drainPauseUntil = time + move.pauseDrain;
     if (move.pauseAt > 0 && fighter.charDef?.id) {

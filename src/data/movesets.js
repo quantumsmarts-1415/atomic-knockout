@@ -1730,7 +1730,7 @@ export const MOVESETS = {
       baseKnockback: 70, knockbackGrowth: 1.4, duration: 240, cooldown: 400,
     }),
     specialDefense: m("Welder's Goggles", {
-      frontOnly: true, blocks: [H], debuffImmune: true, cleanse: ['blind'],
+      frontOnly: true, blocks: [H], debuffImmune: true, blindImmune: true, cleanse: ['blind'],
       duration: 640, cooldown: 840, vfx: 'shield', vfxColor: 0xc6e85a,
     }),
     specialDirectional: m('Green Glass Shard', {
@@ -1887,6 +1887,7 @@ export const MOVESETS = {
     }),
     specialDefense: m('Mine Shaft Duck', {
       phase: 'overhead', phaseRetort: { type: K, damage: 4, knockback: 80, growth: 1.4 },
+      shrink: 0.5,
       duration: 420, cooldown: 980, vfx: 'shield', vfxColor: 0x8a7048,
     }),
     specialDirectional: m('Pickaxe Toss', {
@@ -2704,7 +2705,7 @@ export const MOVESETS = {
       baseKnockback: 100, knockbackGrowth: 1.8, duration: 210, cooldown: 420,
     }),
     specialDefense: m('Chained to the Rock', {
-      noKnockback: true, regen: 3, regenEvery: 420,
+      noKnockback: true, rooted: true, regen: 3, regenEvery: 420,
       duration: 900, cooldown: 1000, vfx: 'shield', vfxColor: 0xc8b090,
     }),
     specialDirectional: m('Beta Battery', {

@@ -401,7 +401,10 @@ export default class BootScene extends Phaser.Scene {
         }
       });
       if (spec.gold) {
-        game.scene.launch('CharacterSelect', {
+        // ScenePlugin queues this for the next step. The manager itself has
+        // start/stop, not launch, so game.scene.launch throws and the page
+        // never becomes ready.
+        this.scene.launch('CharacterSelect', {
           playerSeeds: [{ slot: 0 }, { slot: 1 }],
           goldOnly: true,
         });

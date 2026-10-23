@@ -217,12 +217,29 @@ async function measure(page, spec) {
     f.setVisible(true);
     f.rig.sprite?.setVisible?.(true);
   }, spec);
-  await page.waitForTimeout(180);
+  // The snapshot reads the canvas. A throttled headless frame can still be
+  // showing the previous pose, which is a mirror of this one and fails the
+  // edge check by a hair. Wait until the browser has actually painted.
   const shot = await page.evaluate(async () => {
     const masks = await import('/src/engine/masks.js');
     const scene = window.__akBattle;
     const f = scene.fighters[0];
     const cam = scene.cameras.main;
+    // Phaser advances the spritesheet on its own clock. One extra idle frame
+    // against the mask we just pinned fails the edge check, and only on some
+    // paints. Stop the clip and show that exact frame, then let it draw.
+    const lock = () => {
+      const spr = f.rig?.sprite;
+      if (!spr) return;
+      spr.anims?.stop();
+      if (spr.anims) spr.anims.timeScale = 0;
+      const key = `${f.charDef.art.key}-${f.rig.maskClip || 'idle'}`;
+      if (scene.textures.exists(key)) spr.setTexture(key, f.rig.maskFrame || 0);
+    };
+    lock();
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    lock();
+    await new Promise((resolve) => requestAnimationFrame(resolve));
     return new Promise((resolve) => {
       scene.game.renderer.snapshot((img) => {
         resolve({
@@ -248,7 +265,7 @@ test('drawn sprites overlap their mask cells', async () => {
   assert.ok(await serverUp(), `dev server not reachable at ${BASE}`);
   const browser = await chromium.launch({
     executablePath: process.env.CHROME || '/usr/bin/google-chrome',
-    args: ['--no-sandbox', '--disable-dev-shm-usage', '--use-gl=angle', '--use-angle=swiftshader'],
+    args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--use-gl=angle', '--use-angle=swiftshader'],
   });
   const rows = [];
   try {
@@ -279,7 +296,7 @@ test('a hidden fighter contributes no overlay cells', async () => {
   assert.ok(await serverUp(), `dev server not reachable at ${BASE}`);
   const browser = await chromium.launch({
     executablePath: process.env.CHROME || '/usr/bin/google-chrome',
-    args: ['--no-sandbox', '--disable-dev-shm-usage', '--use-gl=angle', '--use-angle=swiftshader'],
+    args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--use-gl=angle', '--use-angle=swiftshader'],
   });
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   try {

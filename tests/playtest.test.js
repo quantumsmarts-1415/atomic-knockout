@@ -1,9 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { PNG } from 'pngjs';
 import { CHARACTERS } from '../src/data/characters.js';
-import { portraitCrop, portraitCropIds, portraitFile } from '../src/data/portraitCrops.js';
 import { STAGES } from '../src/data/stages.js';
 import { queueSelectPortraits } from '../src/engine/selectArt.js';
 import { menuPortraitKey, FRINGE_PORTRAIT_IDS } from '../src/ui/portraits.js';
@@ -29,91 +26,33 @@ test('brimstone caldera has no floating platform and locks the painted frame', (
   assert.equal(st.groundY, 539);
 });
 
-test('every fighter has a face-centered portrait square', () => {
-  const ids = Object.keys(CHARACTERS);
-  assert.deepEqual(portraitCropIds().slice().sort(), ids.slice().sort());
-  for (const id of ids) {
-    const crop = portraitCrop(id);
-    assert.ok(crop.frameW > 0 && crop.frameH > 0, id);
-    assert.ok(crop.size > 0, id);
-    assert.ok(crop.centerX > 0 && crop.centerX < crop.frameW, id);
-    assert.ok(crop.centerY > 0 && crop.centerY < crop.frameH * 0.45, `${id} face sits high`);
-    const png = PNG.sync.read(readFileSync(portraitFile(id)));
-    assert.equal(png.width, png.height, id);
-    assert.ok(png.width >= 64, id);
-  }
-  const lillie = portraitCrop('lillie');
-  assert.equal(lillie.method, 'manual');
-  assert.equal(lillie.size, 150);
-  assert.ok(portraitCrop('oxana').centerY < portraitCrop('oxana').frameH * 0.3);
-});
-
-test('lillie walk is the 12-frame modesty redraw', () => {
-  const walk = CHARACTERS.lillie.art.sheets.clips.walk;
-  assert.deepEqual(walk, {
-    count: 12,
-    fps: 9.93,
-    loop: true,
-    frameW: 482,
-    frameH: 715,
-    footY: 0.9818,
-    visibleH: 678,
-    bodyH: 678,
-    displayScale: 118 / 678,
-  });
-  const png = PNG.sync.read(readFileSync('art-src/gemini-test/sheets/lillie_walk.png'));
-  assert.equal(png.width, 482 * 4);
-  assert.equal(png.height, 715 * 3);
-});
-
-test('select preload queues face portraits, including the old checker cuts', () => {
+test('damage discs use the cut, and checker cuts stay on the symbol', () => {
+  assert.equal(menuPortraitKey(CHARACTERS.hydra), 'char-hydra');
+  assert.equal(menuPortraitKey(CHARACTERS.lillie), 'char-lillie');
+  for (const id of FRINGE_PORTRAIT_IDS) assert.equal(menuPortraitKey(CHARACTERS[id]), null, id);
   const queued = [];
   const n = queueSelectPortraits({
     image(key, file) { queued.push({ key, file }); },
   }, () => false);
-  assert.ok(n >= Object.keys(CHARACTERS).length * 2);
-  for (const id of FRINGE_PORTRAIT_IDS) {
-    assert.equal(menuPortraitKey(CHARACTERS[id]), `portrait-${id}`);
-    assert.ok(queued.some((q) => q.key === `portrait-${id}` && q.file === portraitFile(id)), id);
-  }
-  assert.ok(queued.every((q) => !q.file.includes('fey_idle')));
+  assert.equal(n, Object.keys(CHARACTERS).length);
+  assert.ok(queued.some((q) => q.key === 'char-helen' && q.file === CHARACTERS.helen.art.file));
+  assert.ok(queued.every((q) => !String(q.key).startsWith('portrait-')));
+  assert.ok(queued.every((q) => !String(q.file).includes('assets/portraits/')));
 });
 
-test('fringe face squares have no baked transparency checker', () => {
-  for (const id of FRINGE_PORTRAIT_IDS) {
-    const png = PNG.sync.read(readFileSync(portraitFile(id)));
-    let hidden = 0;
-    for (let i = 0; i < png.data.length; i += 4) {
-      if (png.data[i + 3] === 0 && (png.data[i] || png.data[i + 1] || png.data[i + 2])) hidden += 1;
-    }
-    assert.equal(hidden, 0, `${id} stores checker RGB in transparent pixels`);
-    let differ = 0;
-    let match = 0;
-    const period = 8;
-    for (let y = 0; y < png.height - period * 2; y += 3) {
-      for (let x = 0; x < png.width - period * 2; x += 3) {
-        const at = (px) => {
-          const o = (y * png.width + px) * 4;
-          return [png.data[o], png.data[o + 1], png.data[o + 2], png.data[o + 3]];
-        };
-        const a = at(x);
-        const b = at(x + period);
-        const c = at(x + period * 2);
-        if (a[3] < 40 || b[3] < 40) continue;
-        const close = (p, q) => Math.max(Math.abs(p[0] - q[0]), Math.abs(p[1] - q[1]), Math.abs(p[2] - q[2])) < 18;
-        if (!close(a, b) && close(a, c) && Math.abs(a[0] + a[1] + a[2] - (b[0] + b[1] + b[2])) > 50) differ += 1;
-        else if (close(a, b)) match += 1;
-      }
-    }
-    assert.ok(differ < match, `${id} reads as an ${period}px checker (${differ} vs ${match})`);
-  }
-  const cut = PNG.sync.read(readFileSync('art-src/helen-cut.png'));
-  let cutHidden = 0;
-  for (let i = 0; i < cut.data.length; i += 4) {
-    const a = cut.data[i + 3];
-    if (a === 0 && cut.data[i] > 160 && Math.abs(cut.data[i] - cut.data[i + 1]) < 8) cutHidden += 1;
-  }
-  assert.ok(cutHidden > 100000, 'helen cut still carries the checker the discs must not use');
+test('lillie walk is the 33-frame sheet that matches her masks', () => {
+  const walk = CHARACTERS.lillie.art.sheets.clips.walk;
+  assert.deepEqual(walk, {
+    count: 33,
+    fps: 10,
+    loop: true,
+    frameW: 692,
+    frameH: 706,
+    footY: 0.9929,
+    visibleH: 634,
+    bodyH: 634,
+    displayScale: 0.18612,
+  });
 });
 
 test('hurtboxes are symmetric and Aaron hits Titan from both sides', () => {

@@ -676,8 +676,9 @@ export function playVfx(scene, fighter, move, phase = 'release', extra = {}) {
   if (phase === 'break') {
     const burst = breakFrames(artFor(fighter.charDef?.id, move?.name));
     if (!burst?.frames?.length) return;
-    const y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
-    const x = extra.x ?? fighter.x;
+    let y = extra.y ?? (fighter.y - (fighter.bodyH ?? 80) * 0.5);
+    let x = extra.x ?? fighter.x;
+    if (burst.anchor === 'ground') y = fighter.y;
     const aimed = (burst.pivotX ?? 0.5) < 0.05;
     const face = aimed ? (fighter.facing || 1) : 1;
     const scale = impactRadiusScale(move, burst) ?? 1;

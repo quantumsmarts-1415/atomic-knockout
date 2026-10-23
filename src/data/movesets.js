@@ -1877,8 +1877,12 @@ export const MOVESETS = {
 
   sam: {
     basicCharge: m('Heatproof Magnet', {
-      kind: 'dash', type: K, damage: 5, type2: H, damage2: 4, chargeDamageMult: 1.3, chargeDashMult: 1.15,
-      maxChargeMs: 800, dashSpeed: 500, rangeW: 88, rangeH: 70, vfx: 'dash', vfxColor: 0xffb070,
+      kind: 'burst', type: K, damage: 5, type2: H, damage2: 4,
+      chargeDamageMult: 1.3, chargeRadiusMult: 1.55,
+      maxChargeMs: 800, radius: 108,
+      pull: { radius: 1800, speed: 160, metals: true },
+      offsetX: 24,
+      vfx: 'gust', vfxColor: 0xffb070,
       baseKnockback: 100, knockbackGrowth: 1.8, duration: 260, cooldown: 800,
     }),
     basicDirectional: melee('Samarskite Smash', {
@@ -1887,6 +1891,7 @@ export const MOVESETS = {
     }),
     specialDefense: m('Mine Shaft Duck', {
       phase: 'overhead', phaseRetort: { type: K, damage: 4, knockback: 80, growth: 1.4 },
+      shrink: 0.5,
       duration: 420, cooldown: 980, vfx: 'shield', vfxColor: 0x8a7048,
     }),
     specialDirectional: m('Pickaxe Toss', {
@@ -2696,7 +2701,8 @@ export const MOVESETS = {
 
   prometheus: {
     basicCharge: melee('Stolen Fire', {
-      type: H, damage: 8, stealHeat: { cap: 14, keep: 0.85 }, chargeDamageMult: 1.35,
+      type: K, damage: 4, type2: H, damage2: 4, stealHeat: { cap: 14, keep: 0.85 },
+      chargeDamageMult: 1.35,
       maxChargeMs: 800, rangeW: 72, vfx: 'fire', vfxColor: 0xff7040,
       baseKnockback: 110, knockbackGrowth: 2.0, duration: 200, cooldown: 760,
     }),
@@ -2705,7 +2711,7 @@ export const MOVESETS = {
       baseKnockback: 100, knockbackGrowth: 1.8, duration: 210, cooldown: 420,
     }),
     specialDefense: m('Chained to the Rock', {
-      noKnockback: true, regen: 3, regenEvery: 420,
+      noKnockback: true, rooted: true, regen: 3, regenEvery: 420,
       duration: 900, cooldown: 1000, vfx: 'shield', vfxColor: 0xc8b090,
     }),
     specialDirectional: m('Beta Battery', {

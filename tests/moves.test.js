@@ -7,6 +7,7 @@ import { gateStored, interceptHit } from '../src/engine/defense.js';
 import { anodizeTint, applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, fighterInView, fighterOnSwapLine, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, markedStrikeTargets, prepareMove, rewindPoint, scaledByHaste, sheetFrameAt, slowHitScale, stripBuffs, takingDps, tickKit, visibleAlpha, withRedFrame, withShatter } from '../src/engine/kit.js';
 import { enGapMult, resolvePacket } from '../src/data/balance.js';
 import { applyImmunities, rearmDefense } from '../src/engine/defense.js';
+import { stickAim } from '../src/engine/batch3.js';
 
 const SLOTS = ['basicCharge', 'basicDirectional', 'specialDefense', 'specialDirectional'];
 const TYPES = new Set(['kinetic', 'heat', 'electrical', 'chemical', 'radiation', 'physical']);

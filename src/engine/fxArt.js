@@ -698,6 +698,8 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     timed: extra.fps > 0,
     scale: extra.scale > 0 ? extra.scale : 1,
     scaleWith: extra.scaleWith || null,
+    atX: extra.atX > 0 ? extra.atX : 0,
+    atY: extra.atY > 0 ? extra.atY : 0,
     anchor: extra.anchor || null,
     swing: Array.isArray(extra.swing) && extra.swing.length >= 2 ? [extra.swing[0] | 0, extra.swing[1] | 0] : null,
     loop: !!extra.loop,
@@ -729,6 +731,7 @@ function artRecord(objectType, sized, pivot, frames, extra) {
     guardAt: extra.guardAt > 0 ? extra.guardAt | 0 : 0,
     spriteAura: !!extra.spriteAura,
     squash: extra.squash > 0 ? extra.squash : 0,
+    heads: Array.isArray(extra.heads) && extra.heads.length ? extra.heads : null,
     holdAt: typeof extra.holdAt === 'number' ? extra.holdAt | 0 : -1,
     loopFrom: typeof extra.loopFrom === 'number' ? extra.loopFrom | 0 : -1,
     breakFrom: typeof extra.breakFrom === 'number' ? extra.breakFrom | 0 : -1,
@@ -1094,10 +1097,21 @@ function refSpan(bounds, spec, slices) {
   return best || 1;
 }
 
+function resolveFxRel(folder, file) {
+  const parts = `${folder}/${file}`.split('/');
+  const out = [];
+  for (const part of parts) {
+    if (!part || part === '.') continue;
+    if (part === '..') out.pop();
+    else out.push(part);
+  }
+  return out.join('/');
+}
+
 async function loadSpecFrames(scene, id, slug, folder, spec, index, pivot, charH, box, prefix) {
   const count = spec?.frames | 0;
   const file = spec?.file || (count > 1 ? 'sheet.png' : 'object.png');
-  const rel = `${folder}/${file}`;
+  const rel = resolveFxRel(folder, file);
   if (!listed(index, rel)) return null;
   const img = await loadBitmap(fxUrl(rel));
   if (!img) return null;
@@ -2208,6 +2222,7 @@ function stepOneShots(scene) {
     const shot = oneShots[i];
     if (!shot.img?.scene) {
       shot.peak?.destroy?.();
+      shot.rider?.destroy?.();
       oneShots.splice(i, 1);
       continue;
     }
@@ -2251,9 +2266,29 @@ function stepOneShots(scene) {
         shot.peakSpawned = true;
       }
     }
+    const flame = shot.art.flame;
+    if (shot.rider?.scene && flame?.heads?.length) {
+      const idx = fxFrameIndex(shot.art, elapsed);
+      const head = flame.heads[Math.min(flame.heads.length - 1, idx)] || flame.heads[0];
+      const f = flame.frames[fxFrameIndex(flame, elapsed)] || flame.frames[0];
+      applyFrameLook(shot.rider, f, flame, shot.scale || 1);
+      const dw = (frame.displayW || 0) * (shot.scale || 1);
+      const dh = (frame.displayH || 0) * (shot.scale || 1);
+      const face = shot.face || 1;
+      shot.rider.setOrigin(flame.pivotX ?? 0.5, flame.pivotY ?? 0.8333);
+      shot.rider.setPosition(
+        shot.img.x + face * (((head[0] ?? 0) - (shot.art.pivotX ?? 0)) * dw),
+        shot.img.y + (((head[1] ?? 0) - (shot.art.pivotY ?? 0.5)) * dh),
+      );
+      const tail = Math.max(0, (shot.art.frames?.length || 1) - 6);
+      const fade = idx >= tail ? Math.max(0, 1 - (idx - tail + 1) / 6) : 1;
+      shot.rider.setAlpha(fade);
+      if (face < 0) shot.rider.setScale(-Math.abs(shot.rider.scaleX || 1), Math.abs(shot.rider.scaleY || 1));
+    }
     if (elapsed >= shot.life) {
       shot.img.destroy?.();
       shot.peak?.destroy?.();
+      shot.rider?.destroy?.();
       oneShots.splice(i, 1);
     }
   }
@@ -3993,10 +4028,35 @@ function predictSpot(scene, fighter, lead) {
   };
 }
 
+function swingFlame(fighter) {
+  if (fighter?.state !== 'attack') return null;
+  const flame = artFor(fighter.charDef?.id, fighter.currentMove?.name)?.flame;
+  // A headed flame rides the swing oneshot for the whole arc, not just the attack state.
+  if (!flame?.frames?.length || flame.heads?.length) return null;
+  return flame;
+}
+
+/** Where a right-facing swing's left edge sits. A flipped arc mirrors around this point. */
+export function swingOrigin(fighter) {
+  const face = fighter?.facing || 1;
+  return {
+    x: (fighter?.x ?? 0) + face * (fighter?.bodyW ?? 40) * 0.2,
+    y: (fighter?.y ?? 0) - (fighter?.bodyH ?? 80) * 0.55,
+    face,
+  };
+}
+
+function heatPunch(fighter, charge, art) {
+  return fighter?.state === 'attack'
+    && fighter.currentMove?.name === charge?.name
+    && art?.charge?.scaleWith === 'storedHeat';
+}
+
 function syncHeld(scene, fighter) {
   const now = scene.simNow ?? 0;
   const charge = fighter.charDef?.moves?.basicCharge;
   const art = charge && artFor(fighter.charDef?.id, charge.name);
+  const torch = swingFlame(fighter);
   let want = null;
   if (art?.orbit?.frames?.length && orbitVisible(fighter)) want = { art: art.orbit, kind: 'orbit' };
   else if (art?.anchor === 'lance' && art.frames?.length) {
@@ -4045,7 +4105,7 @@ function syncHeld(scene, fighter) {
   }
   if (!live?.img?.scene || live.kind !== want.kind) {
     dropHeld(fighter);
-    live = { img: placeStill(scene, want.art, fighter.x, fighter.y, 0), kind: want.kind };
+    live = { img: placeStill(scene, want.art, fighter.x, fighter.y, 0), kind: want.kind, born: now };
     live.img.setDepth(want.kind === 'feet' ? 3 : want.kind === 'grow' ? 11 : want.kind === 'orbit' ? 8 : want.kind === 'aura' ? 9 : 12);
     liveHeld.set(fighter, live);
   }
@@ -4100,11 +4160,41 @@ function syncHeld(scene, fighter) {
         ? (frames[fxFrameIndex(want.art, elapsed)] || frames[0])
         : frames[Math.min(frames.length - 1, Math.round(frac * (frames.length - 1)))];
     applyFrameLook(live.img, frame, want.art, 1);
+    if (want.art.scaleWith === 'storedHeat' || want.art.anchor === 'fist' || want.art.atX > 0) {
+      const held = fighter.state === 'charging' ? (fighter._storedHeat ?? 0) : (fighter._spentHeat ?? 0);
+      const look = want.art.scaleWith === 'storedHeat'
+        ? storedHeatVisual(held, charge?.stealHeat?.cap ?? 14)
+        : { scale: 1, alpha: 1 };
+      let x;
+      let y;
+      if (want.art.atX > 0) {
+        const parent = artFor(fighter.charDef?.id, fighter.currentMove?.name);
+        const frame = parent?.frames?.[0];
+        const origin = swingOrigin(fighter);
+        const dw = frame?.displayW || 0;
+        const dh = frame?.displayH || 0;
+        x = origin.x + origin.face * ((want.art.atX - (parent?.pivotX ?? 0)) * dw);
+        y = origin.y + ((want.art.atY - (parent?.pivotY ?? 0.5)) * dh);
+      } else {
+        const tip = meleeContactPoint(fighter, fighter.currentMove || charge);
+        x = tip.x;
+        y = tip.y;
+      }
+      live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? 0.833);
+      live.img.setPosition(x, y);
+      live.img.rotation = 0;
+      const sx = Math.abs(live.img.scaleX || 1) * look.scale;
+      const sy = Math.abs(live.img.scaleY || 1) * look.scale;
+      live.img.setScale(face * sx, sy);
+      live.img.setAlpha(look.alpha);
+      return;
+    }
     if (want.art.pulse) {
       const pulse = 0.8 + 0.2 * Math.sin((scene.simNow || 0) * 0.012);
       live.img.setAlpha(pulse * (0.42 + 0.58 * frac));
     }
-    if (want.art.anchor === 'body') {
+    if (want.art.anchor === 'body' || want.art.anchor === 'hands') {
+      const hands = want.art.anchor === 'hands';
       live.img.setOrigin(0.5, 0.5);
       live.img.setPosition(fighter.x, fighter.y - bodyH * 0.5);
       if (want.art.scaleWith === 'alpha') live.img.setAlpha(0.28 + 0.72 * frac);
@@ -4131,9 +4221,16 @@ function syncHeld(scene, fighter) {
         const need = charge.perTravel * (charge.perTravelCap ?? 5);
         live.img.setAlpha(Math.min(1, Math.max(0, (fighter.travel ?? 0) / Math.max(1, need))));
       }
+      const grow = want.art.scaleWith === 'charge'
+        ? 1 + ((charge?.chargeRadiusMult ?? 1) - 1) * frac
+        : 1;
+      const sx = Math.abs(live.img.scaleX || 1) * grow;
+      const sy = Math.abs(live.img.scaleY || 1) * grow;
       if (want.art.flip) {
         const dir = -(fighter.facing || 1);
-        live.img.setScale(dir * Math.abs(live.img.scaleX || 1), Math.abs(live.img.scaleY || 1));
+        live.img.setScale(dir * sx, sy);
+      } else if (grow !== 1) {
+        live.img.setScale(sx, sy);
       }
       syncRotor(scene, live, want.rotor, fighter, frac);
       return;

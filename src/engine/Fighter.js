@@ -1426,10 +1426,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
       scaled.damage = (scaled.damage ?? 0) + this._storedCharge;
       this._storedCharge = 0;
     }
-    if (move.stealHeat && this._storedHeat) {
-      scaled.type2 = scaled.type2 ?? 'heat';
-      scaled.damage2 = (scaled.damage2 ?? 0) + this._storedHeat;
-      this._storedHeat = 0;
+    if (move.stealHeat) {
+      const stored = this._storedHeat || 0;
+      this._spentHeat = stored;
+      if (stored) {
+        scaled.type2 = scaled.type2 ?? 'heat';
+        scaled.damage2 = (scaled.damage2 ?? 0) + stored;
+        this._storedHeat = 0;
+      }
     }
     if (gambleScale !== 1) {
       if (scaled.damage != null) scaled.damage *= gambleScale;
@@ -2837,6 +2841,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.heatedUntil = Math.max(this.heatedUntil ?? 0, time + 2200);
       this.heatTaken = true;
     }
+    bankStolenPackets(this);
     const defense = this.defenseMove;
     if (this.state !== 'defending' || !defense?.recoil || !attacker || attacker === this) return;
     if (incoming.isCounterAttack || incoming.isSelf) return;

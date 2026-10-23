@@ -3673,6 +3673,7 @@ export function syncFxActors(scene) {
     }
     if (art.anchor === 'contact' || art.anchor === 'fist') {
       img.setScale(face * Math.abs(img.scaleX || 1), Math.abs(img.scaleY || 1));
+      if (art.pulse) img.setAlpha(0.72 + 0.28 * Math.sin((scene.simNow || 0) * 0.016));
     }
     if (move?.halfLife) img.setAlpha(move._halfLife ?? 1);
     if (art.burst?.frames?.length && move?.lift && !fighter._liftBurst) {

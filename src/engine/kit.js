@@ -256,6 +256,7 @@ export function cleanse(fighter, kinds) {
   const list = kinds ?? [];
   if (list.includes('poison')) fighter.poisonUntil = 0;
   if (list.includes('burn') && !fighter.burnSticky) fighter.burnUntil = 0;
+  if (list.includes('glow')) fighter.glowUntil = 0;
   if (list.includes('blind')) {
     fighter.blindUntil = 0;
     fighter.dazzleUntil = 0;

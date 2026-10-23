@@ -989,6 +989,38 @@ test('batch 11 kits follow the approved briefs', () => {
   const soft = resolvePacket(10, 'chemical', null, {}, { chemTakenMult: 1.4 });
   assert.ok(Math.abs(soft - open * 1.4) < 1e-6);
 
+  const ceres = CHARACTERS.ceres.moves;
+  assert.strictEqual(ceres.basicCharge.name, 'Ferro Rod Sparks');
+  assert.strictEqual(ceres.basicCharge.kind, 'beam');
+  assert.strictEqual(ceres.basicCharge.type, 'heat');
+  assert.strictEqual(ceres.basicDirectional.name, 'Catalytic Burn');
+  assert.strictEqual(ceres.basicDirectional.type, 'heat');
+  assert.strictEqual(ceres.basicDirectional.damage, 8);
+  assert.strictEqual(ceres.basicDirectional.multiHit, undefined);
+  assert.deepStrictEqual(ceres.basicDirectional.cleanse, ['poison', 'burn', 'glow']);
+  assert.strictEqual(ceres.basicDirectional.cleanseCling.ms, 500);
+  assert.strictEqual(ceres.basicDirectional.cleanseCling.move, 'Self-Cleaning');
+  assert.deepStrictEqual(ceres.specialDefense.immune, ['heat']);
+  assert.ok(ceres.specialDefense.cleanse.includes('burn'));
+  assert.strictEqual(ceres.specialDirectional.name, 'Dwarf Planet');
+  assert.strictEqual(ceres.specialDirectional.damage, 6);
+  assert.strictEqual(ceres.specialDirectional.ground, true);
+  assert.strictEqual(ceres.specialDirectional.floor, true);
+  assert.strictEqual(ceres.specialDirectional.floorLift, 0.5);
+  const sooty = {
+    charDef: { id: 'ceres' },
+    poisonUntil: 9000,
+    burnUntil: 9000,
+    glowUntil: 9000,
+    burnSticky: false,
+  };
+  applyOnCast(sooty, ceres.basicDirectional, 1000, 1);
+  assert.strictEqual(sooty.poisonUntil, 0);
+  assert.strictEqual(sooty.burnUntil, 0);
+  assert.strictEqual(sooty.glowUntil, 0);
+  assert.strictEqual(sooty.clingFrom.move, 'Self-Cleaning');
+  assert.strictEqual(sooty.clingFrom.until, 1500);
+
   const indy = CHARACTERS.indy.moves.specialDefense;
   assert.strictEqual(indy.name, 'Putty Guard');
   assert.strictEqual(indy.blockReduction, 0.5);

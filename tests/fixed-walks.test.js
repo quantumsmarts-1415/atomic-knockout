@@ -12,6 +12,7 @@ const WALKS = {
   zora: { frameW: 792, frameH: 1113, footY: 0.9883, visibleH: 1064, fps: 8.73 },
   rhoda: { frameW: 854, frameH: 1041, footY: 0.9866, visibleH: 997, fps: 9 },
   erin: { frameW: 620, frameH: 1028, footY: 0.9864, visibleH: 985, fps: 7.58 },
+  yara: { frameW: 504, frameH: 909, footY: 0.9835, visibleH: 876, fps: 10 },
 };
 
 function worldH(art, def) {

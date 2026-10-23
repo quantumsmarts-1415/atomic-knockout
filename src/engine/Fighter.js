@@ -498,6 +498,11 @@ export default class Fighter extends Phaser.GameObjects.Container {
     if (locked) this.body.setVelocityX(0);
     if (!locked && this.state !== 'hurt' && this.state !== 'ko' && this.state !== 'charging' && this.state !== 'defending') {
       let speed = stats.speed;
+      // Air control uses the shared jump speed so a hop covers the same
+      // ground for a heavy tank and a light gas. Ground speed is unchanged.
+      if (!onGround && (this.state === 'jump' || this.state === 'fall')) {
+        speed = stats.jumpSpeed ?? speed;
+      }
       if (this.speedBuffUntil > time) speed *= this.speedBuff ?? 1;
       if (this.slowUntil > time) {
         const stacks = this.slowStacks ?? 1;

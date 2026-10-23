@@ -431,7 +431,7 @@ export function symbolTile(scene, x, y, size, { n, sym, color = THEME.shellOn, d
  * Round portrait: a circle-cropped head shot from the fighter's cut, or the
  * symbol tile when no cut is safe for menus. `ring` is the accent color.
  */
-export function drawPortraitDisc(scene, x, y, d, { textureKey, n, sym, ring = THEME.teal, fill = THEME.shellOn, depth = 6, headBias = 0.03 } = {}) {
+export function drawPortraitDisc(scene, x, y, d, { textureKey, n, sym, ring = THEME.teal, fill = THEME.shellOn, depth = 6, headBias = 0.03, crop = null } = {}) {
   const c = scene.add.container(x, y).setDepth(depth);
   const back = scene.add.graphics();
   back.fillStyle(fill, 1);
@@ -440,11 +440,21 @@ export function drawPortraitDisc(scene, x, y, d, { textureKey, n, sym, ring = TH
   back.fillCircle(0, d * 0.1, d / 2);
   c.add(back);
   if (textureKey && scene.textures.exists(textureKey)) {
-    const img = scene.add.image(0, 0, textureKey).setOrigin(0.5, 0);
+    const img = scene.add.image(0, 0, textureKey);
     const src = img.texture.getSourceImage();
-    const scale = (d * 5.2) / src.height;
-    img.setScale(scale);
-    img.y = -d / 2 - src.height * scale * headBias;
+    if (crop) {
+      const zoom = crop.zoom > 0 ? crop.zoom : 5.2;
+      const scale = (d * zoom) / Math.max(1, src.height);
+      const cx = crop.cx ?? 0.5;
+      const cy = crop.cy ?? 0.14;
+      img.setOrigin(0.5, 0.5).setScale(scale);
+      img.x = -(cx - 0.5) * src.width * scale;
+      img.y = -(cy - 0.5) * src.height * scale;
+    } else {
+      const scale = (d * 5.2) / src.height;
+      img.setOrigin(0.5, 0).setScale(scale);
+      img.y = -d / 2 - src.height * scale * headBias;
+    }
     const mask = scene.make.graphics({ x: 0, y: 0, add: false });
     mask.fillStyle(0xffffff, 1);
     mask.fillCircle(x, y, d / 2 - 1);

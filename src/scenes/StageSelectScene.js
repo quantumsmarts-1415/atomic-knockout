@@ -7,11 +7,13 @@ import {
 import { STAGES, stageKey, stagePreviewFile } from '../data/stages.js';
 import { CHARACTERS } from '../data/characters.js';
 import { menuPortraitKey } from '../ui/portraits.js';
+import { portraitCrop } from '../data/portraitCrops.js';
 import { play as sfx } from '../engine/sfx.js';
 import { enterScene, showScene } from '../ui/flow.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { isGamepadSlot, menuInputForSlot, pollGamepads } from '../engine/gamepad.js';
 import { primeMatchArt } from '../engine/matchWarmup.js';
+import { attachBootLoadUi } from './BootScene.js';
 
 const BOT_SLOT_BASE = 100;
 
@@ -78,9 +80,12 @@ export default class StageSelectScene extends Phaser.Scene {
     this.buildInputs();
     this.refresh(true);
     enterScene(this);
-    // Sheets, hit sounds, and painted FX start decoding while the stage is
-    // still on screen. The match card finishes whatever is left before GO.
-    void primeMatchArt(this, this.setup.players);
+    // Sheets and painted FX for the two locked fighters only. The match
+    // waits if the player confirms before that download finishes.
+    this.matchArtDone = false;
+    this.matchArt = primeMatchArt(this, this.setup.players)
+      .then(() => { this.matchArtDone = true; })
+      .catch(() => { this.matchArtDone = true; });
   }
 
   // ------------------------------------------------------------- layout
@@ -171,7 +176,10 @@ export default class StageSelectScene extends Phaser.Scene {
       if (!def) return;
       const cx = x + 4 + i * cellW;
       const ring = PLAYER_COLORS[i % PLAYER_COLORS.length];
-      drawPortraitDisc(this, cx + D / 2, top + 22, D, { textureKey: menuPortraitKey(def), n: def.atomicNumber, sym: def.symbol, ring, depth: 4 });
+      drawPortraitDisc(this, cx + D / 2, top + 22, D, {
+        textureKey: menuPortraitKey(def), n: def.atomicNumber, sym: def.symbol, ring, depth: 4,
+        crop: portraitCrop(def.id),
+      });
       const pal = def.palettes?.[p.palette ?? 0];
       this.add.text(cx + D + 10, top + 14, def.name, textStyle('bodyStrong', { fontSize: '14px' })).setOrigin(0, 0.5).setDepth(4);
       const sub = pal && (def.palettes?.length ?? 0) > 1 ? `P${i + 1}  ·  ${pal.name}` : `P${i + 1}`;
@@ -366,7 +374,23 @@ export default class StageSelectScene extends Phaser.Scene {
     this.cursorBox.lineStyle(2, THEME.gold, 1);
     this.cursorBox.strokeRoundedRect(x - 7, y - 7, TILE_W + 14, TILE_H + 14, 12);
     this.cameras.main.flash(160, 240, 193, 74, false);
-    this.time.delayedCall(600, () => showScene(this, 'Battle', { ...this.setup, stageId: id }, { fade: true }));
+    this.time.delayedCall(600, () => this.enterBattle(id));
+  }
+
+  enterBattle(id) {
+    const go = () => {
+      if (!this.sys?.isActive?.()) return;
+      showScene(this, 'Battle', { ...this.setup, stageId: id }, { fade: true });
+    };
+    if (this.matchArtDone) {
+      go();
+      return;
+    }
+    const ui = attachBootLoadUi(this, { status: 'Loading match…' });
+    Promise.resolve(this.matchArt).then(() => {
+      ui.destroy();
+      go();
+    });
   }
 
   back() {

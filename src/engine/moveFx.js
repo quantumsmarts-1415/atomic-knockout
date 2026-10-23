@@ -499,5 +499,12 @@ export function paintShot(gfx, move, r) {
     gfx.strokeTriangle(-r * 0.2, -r * 0.35, -r * 0.2, r * 0.35, r * 1.8, 0);
     return true;
   }
+  if (shape === 'ring') {
+    gfx.lineStyle(5, 0xd7f4ff, 0.95);
+    gfx.strokeCircle(0, 0, r);
+    gfx.lineStyle(2, 0xffffff, 0.55);
+    gfx.strokeCircle(0, 0, r * 0.62);
+    return true;
+  }
   return false;
 }

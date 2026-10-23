@@ -8,6 +8,7 @@ import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { showScene } from '../ui/flow.js';
 import { FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME, drawCard, drawPortraitDisc } from '../ui/theme.js';
 import { menuPortraitKey } from '../ui/portraits.js';
+import { portraitCrop } from '../data/portraitCrops.js';
 import { showGameBanner } from '../ui/banners.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { fighterInputForSlot, isGamepadSlot, padBySlot, pollGamepads, rumbleSlot } from '../engine/gamepad.js';
@@ -233,9 +234,18 @@ export default class BattleScene extends Phaser.Scene {
         bottom: Math.max(WH, blast.bottom),
       };
     const blastFit = Math.min(W / (bounds.right - bounds.left), H / (bounds.bottom - bounds.top));
-    const minZoom = this.stage.camera
+    let minZoom = this.stage.camera
       ? Math.min(1, Math.max(whole, stageCam.minZoom ?? 0))
       : Math.min(whole, Math.max(blastFit, 0.5));
+    if (this.stage.artLock) {
+      // Screen-sized art has no room to follow a fighter into the blast
+      // zone. That zoom is what slid the crater rim off the slab.
+      minZoom = 1;
+      bounds.left = 0;
+      bounds.top = 0;
+      bounds.right = WW;
+      bounds.bottom = WH;
+    }
     const maxZoom = Math.max(minZoom, cap);
     const startZoom = openingZoom(minZoom, maxZoom);
     this.camRig = {
@@ -363,6 +373,19 @@ export default class BattleScene extends Phaser.Scene {
     // wide so they can slide up to +-80px as the fighters move without
     // showing an edge. See updateParallax().
     const art = this.stage.art;
+    if (art && this.stage.artLock && this.textures.exists(stageKey(this.stage, 'layer0'))) {
+      // Stay glued to the terrain. A little extra scale covers camera shake
+      // so the frame never opens onto black.
+      const cover = 1.06;
+      art.layers.forEach((l, i) => {
+        this.add.image(W / 2, H / 2, stageKey(this.stage, `layer${i}`))
+          .setScale(cover)
+          .setScrollFactor(1);
+      });
+      this.parallax = null;
+      this.buildAmbient(art.ambient);
+      return;
+    }
     if (art && this.camRig && this.textures.exists(stageKey(this.stage, 'layer0'))) {
       // camera stages: world-sized layers on a scrollFactor (par). Offset by
       // (1-par) x the half-view overshoot at full zoom-out, each layer covers
@@ -662,6 +685,7 @@ export default class BattleScene extends Phaser.Scene {
       const d = compact ? 44 : 56;
       const disc = drawPortraitDisc(this, px + 10 + d / 2, py + ph / 2, d, {
         textureKey: menuPortraitKey(def), n: def.atomicNumber, sym: def.symbol, ring: pip, depth: HUD_DEPTH + 1,
+        crop: portraitCrop(def.id),
       });
       const textX = px + 20 + d;
       const percentSize = Math.max(20, Math.round(30 * scale));

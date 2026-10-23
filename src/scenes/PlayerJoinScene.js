@@ -9,6 +9,8 @@ import {
 import { enterScene, isLeaving, showScene } from '../ui/flow.js';
 import { attachPhoneJoin } from '../ui/phoneJoin.js';
 import { drawPadIcon, pollGamepads, syncPadSeats } from '../engine/gamepad.js';
+import { queueSelectPortraits } from '../engine/selectArt.js';
+import { formatLoadPercent } from './BootScene.js';
 
 // Layout is fixed in 1280x720 game pixels. Scale.FIT letterboxes other
 // aspect ratios, so these rectangles never slide over each other.
@@ -48,6 +50,7 @@ export default class PlayerJoinScene extends Phaser.Scene {
 
   create() {
     drawMenuBackground(this, W, H);
+    this.pumpSelectArt();
     drawHeader(this, { kicker: 'Shell assignment', title: 'Player setup', align: 'left' });
 
     this.add.text(QR_X, LINK_TOP, 'CONTROLLER LINK', {
@@ -294,6 +297,17 @@ export default class PlayerJoinScene extends Phaser.Scene {
     });
     const names = waiting.map((pad) => pad.label).join(', ');
     this.padLine.setText(`${names} connected — press a button to claim a seat`).setX(SEAT_LEFT + 14 + waiting.length * 34);
+  }
+
+  pumpSelectArt() {
+    const queued = queueSelectPortraits(this.load, (key) => this.textures.exists(key));
+    if (!queued) return;
+    const note = this.add.text(SEAT_LEFT, H - 28, 'Loading fighters…', textStyle('label')).setDepth(8);
+    this.load.on('progress', (value) => {
+      if (note.active) note.setText(`Loading fighters ${formatLoadPercent(value)}`);
+    });
+    this.load.once('complete', () => { if (note.active) note.destroy(); });
+    this.load.start();
   }
 
   tryStart() {

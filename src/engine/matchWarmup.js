@@ -87,15 +87,23 @@ export function primeMatchArt(scene, players = []) {
     if (!clips || !scene.textures?.exists) return false;
     return Object.keys(clips).some((clip) => !scene.textures.exists(sheetKey(c.art, clip)));
   });
+  let sheets = Promise.resolve();
   if (missing.length && scene.load?.spritesheet) {
     loadRosterArt(scene.load, missing, (key) => scene.textures.exists(key));
     const queued = scene.load.list?.size || 0;
     if (queued > 0) {
-      scene.load.once('complete', () => registerSheetAnims(scene, missing));
-      scene.load.start();
+      sheets = new Promise((resolve) => {
+        scene.load.once('complete', () => {
+          registerSheetAnims(scene, missing);
+          resolve();
+        });
+        scene.load.start();
+      });
+    } else {
+      registerSheetAnims(scene, missing);
     }
   }
-  return Promise.all([audio, collectFxArt(scene, roster)]);
+  return Promise.all([audio, collectFxArt(scene, roster), sheets]);
 }
 
 /** Finish decode, upload anything still on the CPU, and compile the colorway

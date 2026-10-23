@@ -93,10 +93,18 @@ test('density orders speed and weight, and every roster fighter stays in clamp',
   assert.ok(CHARACTERS.chroma.combat.radDef > CHARACTERS.hydra.combat.radDef);
 });
 
-test('air jumps are preserved from the character while movement comes from density', () => {
-  assert.strictEqual(CHARACTERS.helen.stats.airJumps, 2);
+test('jumps are one shared hop, with a second jump only for light fighters', () => {
+  assert.strictEqual(CHARACTERS.helen.stats.airJumps, 1);
+  assert.strictEqual(CHARACTERS.helen.stats.jumps, 2);
   assert.strictEqual(CHARACTERS.sully.stats.airJumps, 0);
+  assert.strictEqual(CHARACTERS.sully.stats.jumps, 1);
   assert.strictEqual(CHARACTERS.helen.stats.speed, CHARACTERS.helen.combat.speed);
+  for (const c of Object.values(CHARACTERS)) {
+    assert.ok(c.stats.airJumps === 0 || c.stats.airJumps === 1, c.id);
+    const g = 1500 * c.stats.gravityScale;
+    const apex = c.stats.jumpVelocity ** 2 / (2 * g);
+    assert.ok(Math.abs(apex - 140) < 0.5, `${c.id} apex ${apex}`);
+  }
 });
 
 test('cold gases take more heat damage than refractory metals', () => {

@@ -1,0 +1,27 @@
+{
+  "file": "chained-regen-status-anim.png",
+  "frames": 24,
+  "cols": 6,
+  "rows": 4,
+  "fps": 12,
+  "loop": true,
+  "blend": "add",
+  "black": 16,
+  "fit": "height",
+  "heightFrac": 1.15,
+  "crop": "frame",
+  "pivot": "center",
+  "anchor": "body",
+  "hit": false,
+  "visor": {
+    "file": "rock-chains-sprite.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 1.05,
+    "pivot": "top",
+    "anchor": "body",
+    "hit": false
+  }
+}

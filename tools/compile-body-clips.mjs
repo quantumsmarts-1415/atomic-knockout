@@ -97,6 +97,10 @@ for (const id of readdirSync(root).sort()) {
     if (id === 'natalie') record.sheetFacing = 1;
     // Nitra's idle faces left, and the redrawn trio does too. Gust strikes right.
     if (id === 'nitra') record.sheetFacing = json.move === 'gust' ? 1 : -1;
+    // Scarlett's idle faces left. These sheets strike to the right.
+    if (id === 'scarlett') record.sheetFacing = 1;
+    // Saab faces right. Toxic Dust Cloud is the one sheet drawn facing left.
+    if (id === 'saab' && json.move === 'toxic-dust-cloud') record.sheetFacing = -1;
     moves[json.move] = record;
   }
   if (Object.keys(moves).length) packs[id] = moves;

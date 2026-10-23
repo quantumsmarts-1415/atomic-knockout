@@ -1,0 +1,18 @@
+{
+  "blend": "normal",
+  "black": false,
+  "hit": false,
+  "projectile": {
+    "file": "pickaxe-prop.png",
+    "frames": 1,
+    "blend": "normal",
+    "black": false,
+    "fit": "height",
+    "heightFrac": 0.45,
+    "pivotX": 0.5,
+    "pivotY": 0.390625,
+    "spin": 15.7,
+    "aim": false,
+    "hit": false
+  }
+}

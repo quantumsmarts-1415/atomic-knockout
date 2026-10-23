@@ -35,6 +35,7 @@ import {
 import { artFor, beamDrawScale, cloudIgnitionScale, collectFxArt, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnJumpArc, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
 import { bodySheetMuzzle, sheetFxPoint, sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
+import { artGaveUp } from '../engine/safeLoad.js';
 
 const GRAVITY = 1500;
 const HUD_DEPTH = 950; // under the match cards (1000), over everything in the arena
@@ -77,10 +78,11 @@ export default class BattleScene extends Phaser.Scene {
     const roster = (this.setup?.players || [])
       .map((p) => CHARACTERS[p.charId])
       .filter(Boolean);
-    loadRosterArt(this.load, roster, (key) => this.textures.exists(key));
+    const have = (key) => this.textures.exists(key) || artGaveUp(key);
+    loadRosterArt(this.load, roster, have);
     // One arena. Boot only fetched thumbnails, so the painted layers, the
     // terrain, and the intro doors arrive with this match.
-    loadStageArt(this.load, [this.stage], (key) => this.textures.exists(key));
+    loadStageArt(this.load, [this.stage], have);
     // Decode hits and effects while the loader is still on the sheets, so
     // the match card is not the first thing to touch them.
     preloadSfx();

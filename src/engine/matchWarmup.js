@@ -7,6 +7,7 @@ import { collectFxArt, fxLoadState, fxTextureKeys } from './fxArt.js';
 import { applyColorway, ensureColorwayPipeline } from './colorwayPipeline.js';
 import { preload as preloadSfx } from './sfx.js';
 import { loadRosterArt, registerSheetAnims, sheetKey } from '../scenes/BootScene.js';
+import { artGaveUp, runSafeLoad } from './safeLoad.js';
 
 export { fxLoadState };
 
@@ -79,7 +80,14 @@ function warmColorway(scene, roster, players) {
  * picking a stage. Textures land on the game, so they survive the scene change.
  */
 export function primeMatchArt(scene, players = []) {
-  const roster = players.map((p) => CHARACTERS[p.charId]).filter((c) => c?.id);
+  const seen = new Set();
+  const roster = [];
+  for (const p of players) {
+    const c = CHARACTERS[p.charId];
+    if (!c?.id || seen.has(c.id)) continue;
+    seen.add(c.id);
+    roster.push(c);
+  }
   if (!roster.length) return Promise.resolve();
   const audio = preloadSfx();
   const missing = roster.filter((c) => {
@@ -88,20 +96,10 @@ export function primeMatchArt(scene, players = []) {
     return Object.keys(clips).some((clip) => !scene.textures.exists(sheetKey(c.art, clip)));
   });
   let sheets = Promise.resolve();
+  const have = (key) => scene.textures.exists(key) || artGaveUp(key);
   if (missing.length && scene.load?.spritesheet) {
-    loadRosterArt(scene.load, missing, (key) => scene.textures.exists(key));
-    const queued = scene.load.list?.size || 0;
-    if (queued > 0) {
-      sheets = new Promise((resolve) => {
-        scene.load.once('complete', () => {
-          registerSheetAnims(scene, missing);
-          resolve();
-        });
-        scene.load.start();
-      });
-    } else {
-      registerSheetAnims(scene, missing);
-    }
+    sheets = runSafeLoad(scene, (loader) => loadRosterArt(loader, missing, have))
+      .then(() => registerSheetAnims(scene, missing));
   }
   return Promise.all([audio, collectFxArt(scene, roster), sheets]);
 }

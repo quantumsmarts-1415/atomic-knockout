@@ -6,6 +6,7 @@ import { queueSelectPortraits } from '../src/engine/selectArt.js';
 import { menuPortraitKey, FRINGE_PORTRAIT_IDS } from '../src/ui/portraits.js';
 import { idleHalfWidth, connectsAt, sweepHitReach } from '../src/engine/hitReach.js';
 import { STRIKE_MIRRORS } from '../src/engine/masks.js';
+import { advanceSafeLoad } from '../src/engine/safeLoad.js';
 
 test('oxana normal kick is a carrying air ring', () => {
   const kick = CHARACTERS.oxana.moves.basicDirectional;
@@ -38,6 +39,52 @@ test('damage discs use the cut, and checker cuts stay on the symbol', () => {
   assert.ok(queued.some((q) => q.key === 'char-helen' && q.file === CHARACTERS.helen.art.file));
   assert.ok(queued.every((q) => !String(q.key).startsWith('portrait-')));
   assert.ok(queued.every((q) => !String(q.file).includes('assets/portraits/')));
+});
+
+test('a stalled art load skips the hung file and keeps pulling the queue', () => {
+  const skipped = [];
+  const warnings = [];
+  const prev = console.warn;
+  console.warn = (...args) => warnings.push(args.join(' '));
+  const hung = {
+    key: 'char-hung',
+    url: 'hung.png',
+    state: 11,
+    __akSeen: 0,
+    xhrLoader: {
+      abort() { this.aborted = true; },
+    },
+  };
+  const inflight = {
+    size: 1,
+    getArray() { return [hung]; },
+    contains(file) { return file === hung && this.size > 0; },
+  };
+  const list = { size: 2, getArray() { return []; } };
+  const queue = { size: 0, getArray() { return []; } };
+  let nudged = 0;
+  const loader = {
+    state: 1,
+    maxParallelDownloads: 4,
+    list,
+    inflight,
+    queue,
+    checkLoadQueue() { nudged += 1; },
+    nextFile(file, ok) {
+      assert.equal(file, hung);
+      assert.equal(ok, false);
+      inflight.size = 0;
+    },
+  };
+  try {
+    advanceSafeLoad(loader, 50000, 20000, skipped);
+  } finally {
+    console.warn = prev;
+  }
+  assert.equal(hung.xhrLoader.aborted, true);
+  assert.deepEqual(skipped, ['char-hung']);
+  assert.equal(nudged, 1);
+  assert.ok(warnings.some((line) => line.includes('timeout') && line.includes('char-hung')));
 });
 
 test('lillie walk is the 33-frame sheet that matches her masks', () => {

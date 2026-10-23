@@ -273,7 +273,12 @@ export function attachBootLoadUi(scene, {
 
   function setProgress(value) {
     const t = Math.max(0, Math.min(1, Number(value) || 0));
+    const load = scene.load;
+    const total = load?.totalToLoad || 0;
+    const left = (load?.list?.size || 0) + (load?.inflight?.size || 0) + (load?.queue?.size || 0);
+    const done = total > 0 ? Math.max(0, Math.min(total, total - left)) : 0;
     percentText.setText(formatLoadPercent(t));
+    if (total > 0 && loadText.active !== false) loadText.setText(`${status}  ${done} / ${total}`);
     bar.clear();
     const fillW = barW * t;
     if (fillW > 0) {
@@ -284,7 +289,10 @@ export function attachBootLoadUi(scene, {
     }
   }
 
+  let dead = false;
   function destroy() {
+    if (dead) return;
+    dead = true;
     scene.load.off?.('progress', setProgress);
     scene.load.off?.('complete', destroy);
     bg.destroy();

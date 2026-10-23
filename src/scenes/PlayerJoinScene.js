@@ -9,8 +9,9 @@ import {
 import { enterScene, isLeaving, showScene } from '../ui/flow.js';
 import { attachPhoneJoin } from '../ui/phoneJoin.js';
 import { drawPadIcon, pollGamepads, syncPadSeats } from '../engine/gamepad.js';
-import { queueSelectPortraits } from '../engine/selectArt.js';
-import { formatLoadPercent } from './BootScene.js';
+import { missingSelectPortraits, queueSelectPortraits } from '../engine/selectArt.js';
+import { artGaveUp, runSafeLoad } from '../engine/safeLoad.js';
+import { attachBootLoadUi } from './BootScene.js';
 
 // Layout is fixed in 1280x720 game pixels. Scale.FIT letterboxes other
 // aspect ratios, so these rectangles never slide over each other.
@@ -50,7 +51,6 @@ export default class PlayerJoinScene extends Phaser.Scene {
 
   create() {
     drawMenuBackground(this, W, H);
-    this.pumpSelectArt();
     drawHeader(this, { kicker: 'Shell assignment', title: 'Player setup', align: 'left' });
 
     this.add.text(QR_X, LINK_TOP, 'CONTROLLER LINK', {
@@ -299,19 +299,8 @@ export default class PlayerJoinScene extends Phaser.Scene {
     this.padLine.setText(`${names} connected — press a button to claim a seat`).setX(SEAT_LEFT + 14 + waiting.length * 34);
   }
 
-  pumpSelectArt() {
-    const queued = queueSelectPortraits(this.load, (key) => this.textures.exists(key));
-    if (!queued) return;
-    const note = this.add.text(SEAT_LEFT, H - 28, 'Loading fighters…', textStyle('label')).setDepth(8);
-    this.load.on('progress', (value) => {
-      if (note.active) note.setText(`Loading fighters ${formatLoadPercent(value)}`);
-    });
-    this.load.once('complete', () => { if (note.active) note.destroy(); });
-    this.load.start();
-  }
-
   tryStart() {
-    if (isLeaving(this)) return;
+    if (isLeaving(this) || this.loadingArt) return;
     const ready = this.readiness();
     if (!ready.ok) {
       sfx('menuMove');
@@ -327,6 +316,23 @@ export default class PlayerJoinScene extends Phaser.Scene {
         if (seat.type === 'bot') return { slot: BOT_SLOT_BASE + index };
         return { slot: seat.boundSlot };
       });
-    showScene(this, 'CharacterSelect', { playerSeeds });
+    const exists = (key) => this.textures.exists(key) || artGaveUp(key);
+    const go = () => {
+      if (!this.sys?.isActive?.()) return;
+      showScene(this, 'CharacterSelect', { playerSeeds });
+    };
+    if (!missingSelectPortraits(exists).length) {
+      go();
+      return;
+    }
+    // One load, on this scene, after the seats are chosen. Starting it
+    // earlier and then stopping the scene left those requests in flight,
+    // and the select screen's own load never finished.
+    this.loadingArt = true;
+    const ui = attachBootLoadUi(this, { status: 'Loading fighters…' });
+    runSafeLoad(this, (loader) => queueSelectPortraits(loader, exists)).then(() => {
+      ui.destroy();
+      go();
+    });
   }
 }

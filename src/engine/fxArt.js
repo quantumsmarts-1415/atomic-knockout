@@ -576,10 +576,19 @@ function fit(box, imgW, imgH) {
   return { w: Math.max(CELL, imgW * scale), h: Math.max(CELL, imgH * scale) };
 }
 
+const ART_FETCH_MS = 20000;
+
+function fetchArt(url) {
+  const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+    ? AbortSignal.timeout(ART_FETCH_MS)
+    : undefined;
+  return fetch(url, signal ? { signal } : undefined);
+}
+
 async function readIndex() {
   if (indexSet !== undefined) return indexSet;
   try {
-    const res = await fetch('/fx-index');
+    const res = await fetchArt('/fx-index');
     if (!res.ok) {
       indexSet = null;
       return null;
@@ -598,8 +607,17 @@ function listed(index, rel) {
 }
 
 async function loadBitmap(url) {
-  const res = await fetch(url);
-  if (!res.ok) return null;
+  let res;
+  try {
+    res = await fetchArt(url);
+  } catch (err) {
+    console.warn(`[art] skip ${url} (${err?.name || 'error'})`);
+    return null;
+  }
+  if (!res.ok) {
+    console.warn(`[art] failed: ${url} (${res.status})`);
+    return null;
+  }
   const blob = await res.blob();
   if (blob.size < 32) return null;
   const img = new Image();
@@ -671,7 +689,7 @@ async function loadFxMeta(folder, index) {
   const rel = `${folder}/fx.json`;
   if (!listed(index, rel)) return {};
   try {
-    const res = await fetch(fxUrl(rel));
+    const res = await fetchArt(fxUrl(rel));
     if (!res.ok) return {};
     const json = await res.json();
     return json && typeof json === 'object' ? json : {};

@@ -9,6 +9,7 @@ import { phoneNet } from '../net/PhoneNet.js';
 import { isGamepadSlot, menuInputForSlot, padBySlot, pollGamepads } from '../engine/gamepad.js';
 import { loadRosterArt, registerSheetAnims, attachBootLoadUi } from './BootScene.js';
 import { missingSelectPortraits, queueSelectPortraits } from '../engine/selectArt.js';
+import { artGaveUp, runSafeLoad } from '../engine/safeLoad.js';
 import {
   FONT_DISPLAY, FONT_MONO, GRID, MOTION, PLAYER_COLORS, PLAYER_COLORS_CSS, THEME,
   drawFooterHints, drawHeader, drawMenuBackground, textStyle,
@@ -51,17 +52,17 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   create() {
-    const exists = (key) => this.textures.exists(key);
-    const missing = missingSelectPortraits(exists).length;
-    if (!this.goldOnly && missing) {
+    const exists = (key) => this.textures.exists(key) || artGaveUp(key);
+    const missing = missingSelectPortraits(exists);
+    if (!this.goldOnly && missing.length) {
       drawMenuBackground(this, W, H);
-      attachBootLoadUi(this, { status: 'Loading fighters…' });
-      queueSelectPortraits(this.load, (key) => this.textures.exists(key));
-      this.load.once('complete', () => {
+      const ui = attachBootLoadUi(this, { status: 'Loading fighters…' });
+      runSafeLoad(this, (loader) => queueSelectPortraits(loader, exists)).then(() => {
+        if (!this.sys?.isActive?.()) return;
+        ui.destroy();
         this.children.removeAll(true);
         this.buildSelect();
       });
-      this.load.start();
       return;
     }
     this.buildSelect();
@@ -681,6 +682,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    // create() can be waiting on the select-art loader, before `players`
+    // exists. Throwing here aborts the rest of the scene UPDATE listeners,
+    // including Phaser's loader, so the first parallel batch never hands
+    // off and the screen stays on the void.
+    if (!this.players) return;
     this.goldPhase = (this.goldPhase || 0) + delta * 0.0035;
     this.paintGold(this.goldPhase);
     if (this.goldOnly) return;

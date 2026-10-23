@@ -2,8 +2,8 @@
  "name": "fey",
  "move": "lodestone-guard",
  "method": "video",
- "source": "fx-art/_flow/b9/clips/722f_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
- "frameW": 585,
+ "source": "fx-art/_flow/b9/clips/722r_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
+ "frameW": 592,
  "frameH": 681,
  "idle_cell_w": 644,
  "idle_cell_h": 681,
@@ -19,27 +19,27 @@
  "visibleH": 568,
  "scale": 1.12922,
  "strike_frames": [
-  3,
-  4
+  4,
+  5
  ],
  "strike_hand_xy": {
-  "3": [
-   509,
-   187
-  ],
   "4": [
-   482,
-   189
+   587,
+   257
+  ],
+  "5": [
+   581,
+   243
   ]
  },
  "strike_reach_xy": {
-  "3": [
-   527,
-   135
-  ],
   "4": [
-   486,
-   158
+   588,
+   257
+  ],
+  "5": [
+   581,
+   242
   ]
  },
  "frames": [
@@ -61,9 +61,94 @@
    "touches_out_edge": false
   },
   {
-   "src_frame": 6,
+   "src_frame": 8,
    "bbox": [
-    94,
+    92,
+    663,
+    13,
+    581
+   ],
+   "foot": 663,
+   "front_hand_xy": [
+    579,
+    240
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 30,
+   "bbox": [
+    90,
+    663,
+    13,
+    581
+   ],
+   "foot": 663,
+   "front_hand_xy": [
+    581,
+    240
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 52,
+   "bbox": [
+    90,
+    663,
+    13,
+    581
+   ],
+   "foot": 663,
+   "front_hand_xy": [
+    581,
+    240
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 75,
+   "bbox": [
+    103,
+    663,
+    19,
+    588
+   ],
+   "foot": 663,
+   "front_hand_xy": [
+    587,
+    257
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 97,
+   "bbox": [
+    92,
+    663,
+    13,
+    581
+   ],
+   "foot": 663,
+   "front_hand_xy": [
+    581,
+    243
+   ],
+   "removed_detached_px": 0,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 119,
+   "bbox": [
+    92,
     663,
     13,
     581
@@ -78,94 +163,9 @@
    "touches_out_edge": false
   },
   {
-   "src_frame": 30,
-   "bbox": [
-    76,
-    663,
-    29,
-    445
-   ],
-   "foot": 663,
-   "front_hand_xy": [
-    443,
-    171
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 55,
-   "bbox": [
-    103,
-    663,
-    56,
-    527
-   ],
-   "foot": 663,
-   "front_hand_xy": [
-    509,
-    187
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 80,
-   "bbox": [
-    103,
-    663,
-    56,
-    486
-   ],
-   "foot": 663,
-   "front_hand_xy": [
-    482,
-    189
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 105,
-   "bbox": [
-    83,
-    663,
-    13,
-    579
-   ],
-   "foot": 663,
-   "front_hand_xy": [
-    579,
-    230
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 125,
-   "bbox": [
-    94,
-    663,
-    13,
-    581
-   ],
-   "foot": 663,
-   "front_hand_xy": [
-    581,
-    245
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
    "src_frame": 145,
    "bbox": [
-    94,
+    92,
     663,
     13,
     581
@@ -193,5 +193,6 @@
   ],
   "foot_spread_px": 0,
   "any_out_edge": false
- }
+ },
+ "notes": "722r: hammer stays held level on the shoulder (two-hand braced hammer guard) while the front hand braces; reads as a guard. Name unchanged."
 }

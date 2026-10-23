@@ -1816,7 +1816,9 @@ export function stepFxProjectile(p, time) {
     const sy = Math.abs(p.gfx.scaleY || 1);
     p.gfx.setScale(face * sx, sy);
   } else if (p.fxSpin) {
-    p.gfx.rotation = ((time - (p.born || 0)) / 1000) * p.fxSpin;
+    // A rock rolling left tumbles the other way. Zero vx keeps the painted spin.
+    const dir = (p.vx || 0) < 0 ? -1 : 1;
+    p.gfx.rotation = ((time - (p.born || 0)) / 1000) * p.fxSpin * dir;
     if (p.fxPulse && p.fxDisplayW) {
       const s = 1 + Math.sin((time - (p.born || 0)) / 150) * p.fxPulse;
       p.gfx.setDisplaySize(p.fxDisplayW * s, p.fxDisplayH * s);

@@ -27,7 +27,7 @@ import { Juice } from '../engine/juice.js';
 import { FEEL, cameraFrame, containFrame, openingZoom, percentColor } from '../engine/feel.js';
 import { clockEndsRound } from '../engine/matchRules.js';
 import { clipBeam, segmentHitsSolid, stageSolids } from '../engine/beamClip.js';
-import { shotIgnoresGround, shotRemovedOnFighter, shotStoppedBySolid } from '../engine/shotEnd.js';
+import { shotEndOf, shotIgnoresGround, shotRemovedOnFighter, shotStoppedBySolid } from '../engine/shotEnd.js';
 import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
@@ -2090,10 +2090,53 @@ export default class BattleScene extends Phaser.Scene {
     this.dropBeamStreaks(beam);
   }
 
-  /** Stop a free-flying shot on a wall. Stick, linger, and pierce keep going. */
+  /** Pin a sticky shot to a fighter or a wall and leave its radiation there. */
+  pinStuckShot(p, x, y, time, host) {
+    p.gfx.x = x;
+    p.gfx.y = y;
+    p.vx = 0;
+    p.vy = 0;
+    if (host) {
+      p.stuck = host;
+      p.stuckOx = x - host.x;
+      p.stuckOy = y - host.y;
+    } else {
+      p.stuck = { _anchor: true, x, y, alive: true, state: 'idle' };
+      p.stuckOx = 0;
+      p.stuckOy = 0;
+    }
+    p.dieAt = time + (p.move?.stickMs ?? p.move?.onHit?.root ?? p.move?.onHit?.muteMs ?? 2600);
+    this.attachStuckHazard(p);
+  }
+
+  /** The sticky zone follows whatever the shot attached to, for the shot's whole life. */
+  attachStuckHazard(p) {
+    const spec = p.move?.zone;
+    if (!spec?.onStick || p._stuckZone) return;
+    p._stuckZone = true;
+    this.spawnZone(p.owner, { ...spec, useDetonate: true, sheet: true }, p.gfx.x, p.gfx.y, p.move);
+    const z = this.zones[this.zones.length - 1];
+    if (!z) return;
+    z.host = p.stuck;
+    z.ox = p.stuck?._anchor ? 0 : p.gfx.x - p.stuck.x;
+    z.oy = p.stuck?._anchor ? 0 : p.gfx.y - p.stuck.y;
+    p.zone = z;
+  }
+
+  dropStuckZone(p) {
+    const z = p?.zone;
+    if (!z || z.dead) return;
+    z.dead = true;
+    z.gfx?.destroy?.();
+    z.aura?.destroy?.();
+    z.aura = null;
+  }
+
+  /** Stop a free-flying shot on a wall. A sticky shot stays on the wall. Linger and pierce keep going. */
   projectileHitsWall(p, prevX, prevY, time) {
     if (!p || p.dead || p.pinned || p.stuck || !p.gfx) return false;
-    if (!shotStoppedBySolid(p.move)) return false;
+    const stick = shotEndOf(p.move) === 'stick';
+    if (!stick && !shotStoppedBySolid(p.move)) return false;
     if (p.armAt && time < p.armAt) return false;
     const solids = this._clipSolids || [];
     if (!solids.length) return false;
@@ -2110,6 +2153,10 @@ export default class BattleScene extends Phaser.Scene {
     }
     p.gfx.x = wall.x;
     p.gfx.y = wall.y;
+    if (stick) {
+      this.pinStuckShot(p, wall.x, wall.y, time, null);
+      return true;
+    }
     if (p.move.explodeOnly) {
       this.resolveBurst(p.owner, { ...p.move, radius: p.move.explodeRadius ?? 70, kind: 'burst' }, { x: wall.x, y: wall.y });
     } else {
@@ -2210,7 +2257,9 @@ export default class BattleScene extends Phaser.Scene {
       });
       return;
     }
-    const sheetArt = spec.useHold && painted?.hold?.frames?.length ? painted.hold : painted;
+    const sheetArt = spec.useDetonate && painted?.detonate?.frames?.length
+      ? painted.detonate
+      : (spec.useHold && painted?.hold?.frames?.length ? painted.hold : painted);
     if (spec.sheet && sheetArt?.frames?.length) {
       const face = owner?.facing || 1;
       const gfx = placeFxImage(this, sheetArt, x, y, face);
@@ -2282,6 +2331,15 @@ export default class BattleScene extends Phaser.Scene {
           z.gfx.setAlpha?.(wave);
         }
       }
+      if (z.host) {
+        if (!z.host._anchor && (!z.host.alive || z.host.state === 'ko' || z.host.state === 'dead')) {
+          z.until = time;
+        } else {
+          z.x = z.host.x + (z.ox || 0);
+          z.y = z.host.y + (z.oy || 0);
+          z.gfx?.setPosition?.(z.x, z.y);
+        }
+      }
       if (z.spec?.drift && z.gfx?.scene) {
         const dt = Math.min(40, time - (z._driftAt ?? time));
         z._driftAt = time;
@@ -2350,9 +2408,10 @@ export default class BattleScene extends Phaser.Scene {
       }
       const tickDamage = z.tickDamage ?? z.spec.damage;
       z.tickDamage = (tickDamage ?? 0) + (z.spec.ramp ?? 0);
-      for (const target of this.fighters) {
+      const stuckBody = z.host && !z.host._anchor ? [z.host] : this.fighters;
+      for (const target of stuckBody) {
         if (target === z.owner || !target.alive || target.state === 'ko') continue;
-        if (!hurtHitsCircle(target, z.x, z.y, z.radius)) continue;
+        if (target !== z.host && !hurtHitsCircle(target, z.x, z.y, z.radius)) continue;
         if (z.spec.gas && target.state === 'defending' && target.defenseMove?.absorbGas) {
           if (time >= (target._spongeAt ?? 0)) {
             target._spongeAt = time + 1000;
@@ -2389,6 +2448,7 @@ export default class BattleScene extends Phaser.Scene {
           knockbackGrowth: z.spec.growth ?? 0.4,
           onHit: z.spec.onHit,
           bonusVsId: z.spec.bonusVsId,
+          fixed: !!z.spec.fixed,
           kind: 'burst',
           hitlagMult: 0,
           _projectile: true,
@@ -3025,6 +3085,7 @@ export default class BattleScene extends Phaser.Scene {
         const host = p.stuck;
         const gone = !host?.alive || host.state === 'ko' || host.state === 'dead';
         if (gone || time > p.dieAt) {
+          this.dropStuckZone(p);
           p.gfx.destroy();
           p.dead = true;
           continue;
@@ -3315,20 +3376,14 @@ export default class BattleScene extends Phaser.Scene {
           : { ...shot, _hitIndex: n };
         this.landHit(p.owner, victim, { ...counted, _projectile: true, _travel: p.vx, _hitAt: { x: p.gfx.x, y: p.gfx.y } }, Math.sign(p.vx) || p.owner.facing);
         if (p.move.stick && n >= want) {
-          p.stuck = victim;
           if (p.move.pinFoot) {
             const face = Math.sign((victim.x ?? 0) - (p.owner?.x ?? victim.x)) || p.owner?.facing || 1;
             p.pinFoot = true;
             p.stickRot = Math.atan2(1, face * 0.45);
-            p.stuckOx = 0;
-            p.stuckOy = 0;
+            this.pinStuckShot(p, victim.x, victim.y, time, victim);
           } else {
-            p.stuckOx = p.gfx.x - victim.x;
-            p.stuckOy = p.gfx.y - victim.y;
+            this.pinStuckShot(p, p.gfx.x, p.gfx.y, time, victim);
           }
-          p.vx = 0;
-          p.vy = 0;
-          p.dieAt = time + (p.move.onHit?.root ?? p.move.onHit?.muteMs ?? p.move.stickMs ?? 2600);
           break;
         }
         if (p.move.carry && victim.body && n < want) {

@@ -102,10 +102,13 @@ test('gold marks the reviewed roster plus later sheet or effect fighters', () =>
 });
 
 test('a later fighter lights up from a new effect folder or move sheet', () => {
-  const sterling = { id: 'sterling', atomicNumber: 38 };
-  assert.equal(artIsUpdated(sterling, new Set()), false);
-  assert.equal(artIsUpdated(sterling, new Set(['sterling'])), true);
-  assert.equal(artIsUpdated({ id: 'nova', atomicNumber: 99 }, new Set(), { nova: { attack: {} } }), true);
+  // Nova is not on the roster, so an empty effect index and no move sheet stay dark.
+  const bare = { id: 'nova', atomicNumber: 99 };
+  assert.equal(artIsUpdated(bare, new Set(), {}), false);
+  assert.equal(artIsUpdated(bare, new Set(['nova']), {}), true);
+  assert.equal(artIsUpdated(bare, new Set(), { nova: { attack: {} } }), true);
+  // Sterling is past the reviewed range and already has body sheets, so the edge is on.
+  assert.equal(artIsUpdated({ id: 'sterling', atomicNumber: 38 }, new Set()), true);
 });
 
 test('the effect index ignores the shared status folder', () => {

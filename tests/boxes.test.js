@@ -197,8 +197,10 @@ test('an armed attack draws the volume that lands the hit', () => {
   van.frameData = { startup: 2, active: 8, recovery: 4 };
   van.attackFrame = 4;
   van.activeHit = { move: { rangeW: 72, rangeH: 48 }, dir: 1, from: 0, until: 9000 };
-  const ribbon = slashRibbon(van, 8);
-  assert.ok(ribbon?.outer?.length >= 8 && ribbon.inner.length >= 8);
+  // Alloy Fist's sheet now carries its own strike pixels. Those cells are the
+  // volume that lands, and the code ribbon stays off so it is not drawn twice.
+  assert.ok(debugHitCells(van).length >= 3, 'strike pixels are the armed volume');
+  assert.equal(slashRibbon(van), null);
   const hb = hitAabb(van);
   const fist = fighter('hydra', { x: (hb.left + hb.right) / 2, y: (hb.top + hb.bottom) / 2 + 20 });
   assert.equal(strikeHits(van, fist), true);

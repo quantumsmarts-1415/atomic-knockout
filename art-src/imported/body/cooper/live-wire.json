@@ -2,59 +2,59 @@
  "name": "cooper",
  "move": "live-wire",
  "method": "video",
- "source": "fx-art/_flow/b9/clips/713f_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
- "frameW": 521,
- "frameH": 663,
+ "source": "fx-art/_flow/b9/clips/713r_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
+ "frameW": 1260,
+ "frameH": 705,
  "idle_cell_w": 779,
  "idle_cell_h": 663,
- "pad_top": 0,
+ "pad_top": 42,
  "pad_left": 0,
  "count": 8,
  "cols": 8,
  "rows": 1,
  "fps": 14,
  "loop": false,
- "foot_row": 643,
- "footY": 0.9698,
+ "foot_row": 685,
+ "footY": 0.9716,
  "visibleH": 570,
  "scale": 1.13546,
  "strike_frames": [
-  2,
-  3
+  3,
+  4
  ],
  "strike_hand_xy": {
-  "2": [
-   508,
-   323
-  ],
   "3": [
-   483,
-   368
+   1257,
+   234
+  ],
+  "4": [
+   1257,
+   231
   ]
  },
  "strike_reach_xy": {
-  "2": [
-   517,
-   378
-  ],
   "3": [
-   483,
-   367
+   1257,
+   234
+  ],
+  "4": [
+   1257,
+   231
   ]
  },
  "frames": [
   {
    "src_frame": 1,
    "bbox": [
-    73,
-    643,
+    115,
+    685,
     75,
     490
    ],
-   "foot": 643,
+   "foot": 685,
    "front_hand_xy": [
     490,
-    364
+    406
    ],
    "removed_detached_px": 0,
    "pinned": true,
@@ -63,117 +63,117 @@
   {
    "src_frame": 15,
    "bbox": [
-    76,
-    643,
-    74,
-    488
+    117,
+    685,
+    75,
+    497
    ],
-   "foot": 643,
+   "foot": 685,
    "front_hand_xy": [
-    487,
-    370
+    497,
+    399
    ],
-   "removed_detached_px": 0,
+   "removed_detached_px": 12,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 27,
+   "bbox": [
+    40,
+    685,
+    79,
+    556
+   ],
+   "foot": 685,
+   "front_hand_xy": [
+    549,
+    348
+   ],
+   "removed_detached_px": 1080,
    "pinned": true,
    "touches_out_edge": false
   },
   {
    "src_frame": 39,
    "bbox": [
-    77,
-    643,
-    75,
-    517
+    115,
+    685,
+    48,
+    1257
    ],
-   "foot": 643,
+   "foot": 685,
    "front_hand_xy": [
-    508,
-    323
-   ],
-   "removed_detached_px": 190,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 64,
-   "bbox": [
-    75,
-    643,
-    75,
-    483
-   ],
-   "foot": 643,
-   "front_hand_xy": [
-    483,
-    368
+    1257,
+    234
    ],
    "removed_detached_px": 0,
    "pinned": true,
    "touches_out_edge": false
   },
   {
-   "src_frame": 88,
+   "src_frame": 50,
    "bbox": [
-    75,
-    643,
-    75,
-    485
+    115,
+    685,
+    45,
+    1257
    ],
-   "foot": 643,
+   "foot": 685,
    "front_hand_xy": [
-    485,
-    368
+    1257,
+    231
    ],
    "removed_detached_px": 0,
    "pinned": true,
    "touches_out_edge": false
   },
   {
-   "src_frame": 113,
+   "src_frame": 62,
    "bbox": [
-    75,
-    643,
-    75,
-    485
+    115,
+    685,
+    45,
+    640
    ],
-   "foot": 643,
+   "foot": 685,
    "front_hand_xy": [
-    485,
-    367
+    639,
+    298
    ],
-   "removed_detached_px": 0,
+   "removed_detached_px": 50,
    "pinned": true,
    "touches_out_edge": false
   },
   {
-   "src_frame": 137,
+   "src_frame": 74,
    "bbox": [
-    75,
-    643,
-    75,
-    488
+    115,
+    685,
+    70,
+    490
    ],
-   "foot": 643,
+   "foot": 685,
    "front_hand_xy": [
-    487,
-    368
+    490,
+    408
    ],
-   "removed_detached_px": 0,
+   "removed_detached_px": 508,
    "pinned": true,
    "touches_out_edge": false
   },
   {
    "src_frame": 145,
    "bbox": [
-    73,
-    643,
+    114,
+    685,
     75,
     492
    ],
-   "foot": 643,
+   "foot": 685,
    "front_hand_xy": [
-    492,
-    362
+    490,
+    406
    ],
    "removed_detached_px": 0,
    "pinned": true,
@@ -182,16 +182,18 @@
  ],
  "qc": {
   "foot_rows": [
-   643,
-   643,
-   643,
-   643,
-   643,
-   643,
-   643,
-   643
+   685,
+   685,
+   685,
+   685,
+   685,
+   685,
+   685,
+   685
   ],
   "foot_spread_px": 0,
   "any_out_edge": false
- }
+ },
+ "colour_fix": "frames [2, 3, 4, 5, 6] colour-matched to frame 0 (Grok purple lighting shift)",
+ "notes": "713r: real wire lash; frames 2-6 colour-matched after Grok purple lighting shift (hair slightly darker in strike frames)."
 }

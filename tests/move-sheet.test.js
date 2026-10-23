@@ -306,8 +306,10 @@ test('a right-facing attack on a left-facing idle stays in front', () => {
   const mirrored = frameToWorld([700, 200], def.frameW, def.frameH, def.footY, def.displayScale, -1, 1, 400, 500);
   assert.ok(forward.x > 400);
   assert.ok(mirrored.x < 400);
-  const rhoda = CHARACTERS.rhoda.art.sheets.clips.attack;
-  const fist = MOVE_SHEETS.rhoda.attack.anchors.fist[3];
+  const bodyName = 'body-basicDirectional';
+  const rhoda = CHARACTERS.rhoda.art.sheets.clips[bodyName];
+  const rose = sheetMeta('rhoda', bodyName);
+  const fist = rose.anchors.tip[rose.release];
   assert.ok(fist[0] > rhoda.frameW / 2);
   const fighter = {
     x: 400,
@@ -315,10 +317,11 @@ test('a right-facing attack on a left-facing idle stays in front', () => {
     facing: 1,
     currentMoveKey: 'basicDirectional',
     charDef: CHARACTERS.rhoda,
-    rig: { moveKey: 'basicDirectional', sheetClip: 'attack', sheetFrame: 3 },
+    rig: { moveKey: 'basicDirectional', sheetClip: 'attack', sheetFrame: rose.release },
   };
   const world = frameToWorld(
-    fist, rhoda.frameW, rhoda.frameH, rhoda.footY, rhoda.displayScale, 1, 1, 400, 500,
+    fist, rhoda.frameW, rhoda.frameH, rhoda.footY, rhoda.displayScale,
+    rhoda.sheetFacing ?? CHARACTERS.rhoda.art.facing ?? 1, 1, 400, 500,
   );
   assert.deepEqual(sheetReleasePoint(fighter, 'shot'), world);
   assert.ok(world.x > 400);
@@ -402,8 +405,18 @@ test('a left-facing whip release stays in front', () => {
     rig: { _authoredSheet: true, moveKey: 'basicDirectional', sheetClip: 'attack', sheetFrame: 4 },
   };
   assert.deepEqual(sheetFxPoint(fighter, 'melee'), world);
-  assert.deepEqual(sheetReleasePoint(fighter, 'melee'), world);
-  assert.ok(world.x > 400);
+  // The whip-yank body sheet is the release. Its foot row sits about 0.1px
+  // off the older attack clip, and the shot still leaves in front of him.
+  const bodyName = 'body-basicDirectional';
+  const bodyDef = art.sheets.clips[bodyName];
+  const bodyMeta = sheetMeta('allen', bodyName);
+  const hand = bodyMeta.anchors.fist[bodyMeta.release];
+  const release = frameToWorld(
+    hand, bodyDef.frameW, bodyDef.frameH, bodyDef.footY, bodyDef.displayScale,
+    bodyDef.sheetFacing ?? art.facing ?? 1, 1, 400, 500,
+  );
+  assert.deepEqual(sheetReleasePoint(fighter, 'melee'), release);
+  assert.ok(release.x > 400);
   const lance = CHARACTERS.titan.art.sheets.clips.attack;
   const tip = MOVE_SHEETS.titan.attack.anchors.fist[6];
   assert.ok(tip[0] < lance.frameW / 2);
@@ -938,6 +951,9 @@ test('push 3 call 2 body sheets match their clip cells', () => {
   for (const [id, clip, frame, moveKey] of shots) {
     const def = CHARACTERS[id].art.sheets.clips[clip];
     const tip = MOVE_SHEETS[id][clip].anchors.tip[frame];
+    if (id === 'erin' && clip === 'charge') {
+      assert.deepEqual(tip, MOVE_SHEETS.erin.charge.anchors.fist[frame], 'charge FX sits on the hand');
+    }
     assert.ok(tip[0] > def.frameW / 2, `${id} ${clip}`);
     const world = frameToWorld(
       tip, def.frameW, def.frameH, def.footY, def.displayScale, 1, 1, 400, 500,

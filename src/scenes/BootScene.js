@@ -23,6 +23,7 @@ export function playtestSpec() {
       ms: Number(params.get('ms')) || 600000,
       speed,
       seed,
+      gold: params.get('gold') === '1',
     };
   }
   if (params.get('select') === '1') {
@@ -372,6 +373,7 @@ export default class BootScene extends Phaser.Scene {
           // start for the next frame, which is too late.
           // A full round ends when the stock rules leave one fighter. The
           // step ceiling is a hang guard, not a winner.
+          if (game.scene.isActive('CharacterSelect')) game.scene.stop('CharacterSelect');
           if (game.scene.isActive('Boot')) game.scene.stop('Boot');
           game.scene.start('Battle', {
             stageId: opts.stageId || spec.stageId,
@@ -398,6 +400,15 @@ export default class BootScene extends Phaser.Scene {
           finish(err);
         }
       });
+      if (spec.gold) {
+        // ScenePlugin queues this for the next step. The manager itself has
+        // start/stop, not launch, so game.scene.launch throws and the page
+        // never becomes ready.
+        this.scene.launch('CharacterSelect', {
+          playerSeeds: [{ slot: 0 }, { slot: 1 }],
+          goldOnly: true,
+        });
+      }
       window.__akReady = true;
       return;
     }

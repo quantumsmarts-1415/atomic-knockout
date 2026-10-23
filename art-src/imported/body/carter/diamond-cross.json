@@ -2,196 +2,198 @@
  "name": "carter",
  "move": "diamond-cross",
  "method": "video",
- "source": "fx-art/_flow/b9/clips/709f_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
- "frameW": 1013,
- "frameH": 824,
+ "source": "fx-art/_flow/b9/clips/709r_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
+ "frameW": 881,
+ "frameH": 854,
  "idle_cell_w": 897,
  "idle_cell_h": 719,
- "pad_top": 105,
+ "pad_top": 135,
  "pad_left": 0,
  "count": 8,
  "cols": 8,
  "rows": 1,
  "fps": 14,
  "loop": false,
- "foot_row": 810,
- "footY": 0.983,
+ "foot_row": 840,
+ "footY": 0.9836,
  "visibleH": 673,
- "scale": 1.33797,
+ "scale": 1.34331,
  "strike_frames": [
-  2,
-  3
+  3,
+  4
  ],
  "strike_hand_xy": {
-  "2": [
-   782,
-   191
-  ],
   "3": [
-   1010,
-   195
+   793,
+   347
+  ],
+  "4": [
+   793,
+   347
   ]
  },
  "strike_reach_xy": {
-  "2": [
-   897,
-   784
-  ],
   "3": [
-   1010,
-   193
+   877,
+   614
+  ],
+  "4": [
+   877,
+   614
   ]
  },
  "frames": [
   {
    "src_frame": 1,
    "bbox": [
-    137,
-    810,
-    36,
-    876
+    164,
+    840,
+    34,
+    877
    ],
-   "foot": 810,
+   "foot": 840,
    "front_hand_xy": [
     836,
-    505
+    533
    ],
-   "removed_detached_px": 4567,
+   "removed_detached_px": 4623,
    "pinned": true,
    "touches_out_edge": false
   },
   {
-   "src_frame": 13,
+   "src_frame": 10,
    "bbox": [
-    140,
-    810,
-    31,
-    879
+    124,
+    840,
+    34,
+    877
    ],
-   "foot": 810,
-   "front_hand_xy": [
-    849,
-    506
-   ],
-   "removed_detached_px": 4712,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 35,
-   "bbox": [
-    45,
-    810,
-    17,
-    897
-   ],
-   "foot": 810,
-   "front_hand_xy": [
-    782,
-    191
-   ],
-   "removed_detached_px": 6209,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 56,
-   "bbox": [
-    85,
-    810,
-    152,
-    1010
-   ],
-   "foot": 810,
-   "front_hand_xy": [
-    1010,
-    195
-   ],
-   "removed_detached_px": 2132,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 78,
-   "bbox": [
-    75,
-    810,
-    200,
-    1010
-   ],
-   "foot": 810,
-   "front_hand_xy": [
-    1010,
-    187
-   ],
-   "removed_detached_px": 12492,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 99,
-   "bbox": [
-    102,
-    810,
-    164,
-    893
-   ],
-   "foot": 810,
-   "front_hand_xy": [
-    777,
-    316
-   ],
-   "removed_detached_px": 7792,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 121,
-   "bbox": [
-    139,
-    810,
-    47,
-    870
-   ],
-   "foot": 810,
+   "foot": 840,
    "front_hand_xy": [
     793,
-    340
+    347
    ],
-   "removed_detached_px": 3640,
+   "removed_detached_px": 3602,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 16,
+   "bbox": [
+    38,
+    840,
+    34,
+    877
+   ],
+   "foot": 840,
+   "front_hand_xy": [
+    793,
+    347
+   ],
+   "removed_detached_px": 7621,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 20,
+   "bbox": [
+    54,
+    840,
+    34,
+    877
+   ],
+   "foot": 840,
+   "front_hand_xy": [
+    793,
+    347
+   ],
+   "removed_detached_px": 7309,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 23,
+   "bbox": [
+    100,
+    840,
+    34,
+    877
+   ],
+   "foot": 840,
+   "front_hand_xy": [
+    793,
+    347
+   ],
+   "removed_detached_px": 3573,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 50,
+   "bbox": [
+    162,
+    840,
+    34,
+    877
+   ],
+   "foot": 840,
+   "front_hand_xy": [
+    837,
+    533
+   ],
+   "removed_detached_px": 4713,
+   "pinned": true,
+   "touches_out_edge": false
+  },
+  {
+   "src_frame": 62,
+   "bbox": [
+    164,
+    840,
+    34,
+    877
+   ],
+   "foot": 840,
+   "front_hand_xy": [
+    837,
+    533
+   ],
+   "removed_detached_px": 4753,
    "pinned": true,
    "touches_out_edge": false
   },
   {
    "src_frame": 145,
    "bbox": [
-    139,
-    810,
-    36,
-    876
+    164,
+    840,
+    34,
+    877
    ],
-   "foot": 810,
+   "foot": 840,
    "front_hand_xy": [
-    836,
-    506
+    837,
+    533
    ],
-   "removed_detached_px": 4784,
+   "removed_detached_px": 4745,
    "pinned": true,
    "touches_out_edge": false
   }
  ],
  "qc": {
   "foot_rows": [
-   810,
-   810,
-   810,
-   810,
-   810,
-   810,
-   810,
-   810
+   840,
+   840,
+   840,
+   840,
+   840,
+   840,
+   840,
+   840
   ],
   "foot_spread_px": 0,
   "any_out_edge": false
- }
+ },
+ "paint_fix": "709r: slash frames 26-46 cut, yellow sparks painted out",
+ "notes": "709r cut: slash-line frames 26-46 dropped, yellow sparks painted out; front-on fists-raise then chop, no drawn X (FX carries the cross)."
 }

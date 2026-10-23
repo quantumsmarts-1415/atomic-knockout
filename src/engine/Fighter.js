@@ -176,8 +176,10 @@ const BAND_DAMAGE = {
 
 function dealtDamage(attacker, move, defender) {
   const now = defender.scene?.time?.now ?? 0;
-  // Fixed damage is the listed number. Buffs, defense, and the balance band stay off it.
-  if (move?.fixed) {
+  // Fixed damage is the listed number. A trip lists its own small percent
+  // (Banana Peel is 1.2) and must not pick up the attacker's damage band.
+  // Buffs, defense, and the balance band stay off both.
+  if (move?.fixed || move?.trip) {
     const amount = Math.max(0, move.damage ?? 0);
     const type = canonicalType(move.type || 'kinetic');
     return { total: amount, packets: [{ type, base: amount, dealt: amount }] };
@@ -1288,7 +1290,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         }
       }
     }
-    if (move.zone && move.kind !== 'zone') {
+    if (move.zone && move.kind !== 'zone' && !move.zone.onStick) {
       const placeZone = () => {
         // The blow is two frames. The vapour is the cloud, and it leaves the mouth.
         const mouth = move.name === 'Tetroxide Puff' ? sheetReleasePoint(this, 'shot') : null;

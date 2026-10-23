@@ -47,7 +47,9 @@ function counterHitFx(defense, retort, extra) {
 }
 
 function groundSlam(move, attacker, defense) {
-  if (defense?.seismicOnly) return !!(move?.ground || move?.slam);
+  // A floor rider (Tellus Tremor) is the seismic hit. `ground` still means
+  // a shot that drops onto the floor; `floor` means it is already there.
+  if (defense?.seismicOnly) return !!(move?.ground || move?.slam || move?.floor);
   if (move?.ground || move?.slam) return true;
   const b = attacker?.body;
   const grounded = !!(b && (b.blocked?.down || b.touching?.down));

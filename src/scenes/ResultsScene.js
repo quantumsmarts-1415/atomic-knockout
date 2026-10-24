@@ -4,7 +4,7 @@ import { Rig } from '../engine/Rig.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { enterScene, isLeaving, showScene } from '../ui/flow.js';
-import { menuPortraitKey } from '../ui/portraits.js';
+import { faceFrame, menuPortraitKey } from '../ui/portraits.js';
 import {
   FONT_DISPLAY, FONT_MONO, MOTION, PLAYER_COLORS, PLAYER_COLORS_CSS, THEME,
   drawCard, drawMenuBackground, drawPortraitDisc, makeButton, textStyle,
@@ -136,7 +136,7 @@ export default class ResultsScene extends Phaser.Scene {
       drawCard(g, x, y, cardW, CARDS.h, { accent: pip, state: r.won ? 'locked' : 'idle', radius: 14 });
       const d = compact ? 40 : 48;
       drawPortraitDisc(this, x + 16 + d / 2, y + 18 + d / 2, d, {
-        textureKey: menuPortraitKey(def), n: def?.atomicNumber, sym: def?.symbol, ring: pip, depth: 4,
+        textureKey: menuPortraitKey(def), face: faceFrame(this, def), n: def?.atomicNumber, sym: def?.symbol, ring: pip, depth: 4,
       });
       const tx = x + 26 + d;
       this.add.text(tx, y + 20, `P${i + 1}`, { fontFamily: FONT_MONO, fontSize: '10px', color: PLAYER_COLORS_CSS[i % PLAYER_COLORS_CSS.length], letterSpacing: 2 }).setDepth(4);

@@ -6,7 +6,7 @@ import {
 } from '../ui/theme.js';
 import { STAGES, stageKey, stagePreviewFile } from '../data/stages.js';
 import { CHARACTERS } from '../data/characters.js';
-import { menuPortraitKey } from '../ui/portraits.js';
+import { faceFrame, menuPortraitKey } from '../ui/portraits.js';
 import { play as sfx } from '../engine/sfx.js';
 import { enterScene, showScene } from '../ui/flow.js';
 import { phoneNet } from '../net/PhoneNet.js';
@@ -176,7 +176,7 @@ export default class StageSelectScene extends Phaser.Scene {
       const cx = x + 4 + i * cellW;
       const ring = PLAYER_COLORS[i % PLAYER_COLORS.length];
       drawPortraitDisc(this, cx + D / 2, top + 22, D, {
-        textureKey: menuPortraitKey(def), n: def.atomicNumber, sym: def.symbol, ring, depth: 4,
+        textureKey: menuPortraitKey(def), face: faceFrame(this, def), n: def.atomicNumber, sym: def.symbol, ring, depth: 4,
       });
       const pal = def.palettes?.[p.palette ?? 0];
       this.add.text(cx + D + 10, top + 14, def.name, textStyle('bodyStrong', { fontSize: '14px' })).setOrigin(0, 0.5).setDepth(4);

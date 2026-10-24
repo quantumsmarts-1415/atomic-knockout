@@ -431,7 +431,7 @@ export function symbolTile(scene, x, y, size, { n, sym, color = THEME.shellOn, d
  * Round portrait: a circle-cropped head shot from the fighter's cut, or the
  * symbol tile when no cut is safe for menus. `ring` is the accent color.
  */
-export function drawPortraitDisc(scene, x, y, d, { textureKey, n, sym, ring = THEME.teal, fill = THEME.shellOn, depth = 6, headBias = 0.03 } = {}) {
+export function drawPortraitDisc(scene, x, y, d, { textureKey, face, n, sym, ring = THEME.teal, fill = THEME.shellOn, depth = 6, headBias = 0.03 } = {}) {
   const c = scene.add.container(x, y).setDepth(depth);
   const back = scene.add.graphics();
   back.fillStyle(fill, 1);
@@ -439,7 +439,19 @@ export function drawPortraitDisc(scene, x, y, d, { textureKey, n, sym, ring = TH
   back.fillStyle(0x000000, 0.25);
   back.fillCircle(0, d * 0.1, d / 2);
   c.add(back);
-  if (textureKey && scene.textures.exists(textureKey)) {
+  if (face && scene.textures.exists(face.key)) {
+    // Head-and-shoulders frame from the live idle, centered on the face.
+    const img = scene.add.image(0, 0, face.key, face.frame).setOrigin(0.5, 0.5);
+    img.setScale(d / Math.max(1, img.frame.width));
+    if (face.flip) img.setFlipX(true);
+    const mask = scene.make.graphics({ x: 0, y: 0, add: false });
+    mask.fillStyle(0xffffff, 1);
+    mask.fillCircle(x, y, d / 2 - 1);
+    img.setMask(mask.createGeometryMask());
+    c.add(img);
+    c.portrait = img;
+    c.portraitMask = mask;
+  } else if (textureKey && scene.textures.exists(textureKey)) {
     const img = scene.add.image(0, 0, textureKey).setOrigin(0.5, 0);
     const src = img.texture.getSourceImage();
     const scale = (d * 5.2) / src.height;

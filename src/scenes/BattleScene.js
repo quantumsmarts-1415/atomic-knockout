@@ -7,7 +7,7 @@ import { beginMatchWarmup } from '../engine/matchWarmup.js';
 import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { showScene } from '../ui/flow.js';
 import { FONT_DISPLAY, FONT_MONO, PLAYER_COLORS, THEME, drawCard, drawPortraitDisc } from '../ui/theme.js';
-import { menuPortraitKey } from '../ui/portraits.js';
+import { faceFrame, menuPortraitKey } from '../ui/portraits.js';
 import { showGameBanner } from '../ui/banners.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { fighterInputForSlot, isGamepadSlot, padBySlot, pollGamepads, rumbleSlot } from '../engine/gamepad.js';
@@ -661,7 +661,7 @@ export default class BattleScene extends Phaser.Scene {
       const def = f.charDef;
       const d = compact ? 44 : 56;
       const disc = drawPortraitDisc(this, px + 10 + d / 2, py + ph / 2, d, {
-        textureKey: menuPortraitKey(def), n: def.atomicNumber, sym: def.symbol, ring: pip, depth: HUD_DEPTH + 1,
+        textureKey: menuPortraitKey(def), face: faceFrame(this, def), n: def.atomicNumber, sym: def.symbol, ring: pip, depth: HUD_DEPTH + 1,
       });
       const textX = px + 20 + d;
       const percentSize = Math.max(20, Math.round(30 * scale));

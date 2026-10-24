@@ -1,197 +1,445 @@
 {
  "name": "kyle",
- "move": "nerve-shock",
  "method": "video",
- "source": "fx-art/_flow/b13/clips/1107f_grokimagine.mp4 (Grok Imagine, start=end, stream 0)",
- "frameW": 547,
- "frameH": 719,
- "idle_cell_w": 551,
- "idle_cell_h": 710,
- "pad_top": 9,
- "pad_left": 0,
- "count": 8,
- "cols": 8,
- "rows": 1,
- "fps": 14,
+ "sheet": "nerve-shock",
+ "frameW": 551,
+ "frameH": 718,
+ "count": 12,
+ "grid": [
+  6,
+  2
+ ],
+ "cols": 6,
+ "rows": 2,
+ "fps": 18,
+ "duration_s": 0.667,
  "loop": false,
- "foot_row": 698,
- "footY": 0.9708,
- "visibleH": 657,
- "scale": 1.30616,
- "strike_frames": [
-  2,
-  3
- ],
- "strike_hand_xy": {
-  "2": [
-   542,
-   183
-  ],
-  "3": [
-   542,
-   185
-  ]
+ "footY": 0.961,
+ "visibleH": 666,
+ "facing_in_sheet": "right",
+ "mirrored_from_clip": false,
+ "idle": {
+  "frameW": 551,
+  "frameH": 710,
+  "footY": 0.9731,
+  "visibleH": 666
  },
- "strike_reach_xy": {
-  "2": [
-   543,
-   184
-  ],
-  "3": [
-   543,
-   185
-  ]
- },
- "frames": [
-  {
-   "src_frame": 1,
-   "bbox": [
-    40,
-    698,
-    203,
-    342
-   ],
-   "foot": 698,
-   "front_hand_xy": [
-    328,
-    224
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 3,
-   "bbox": [
-    40,
-    698,
-    203,
-    342
-   ],
-   "foot": 698,
-   "front_hand_xy": [
-    328,
-    224
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 31,
-   "bbox": [
-    40,
-    698,
-    170,
-    543
-   ],
-   "foot": 698,
-   "front_hand_xy": [
-    542,
-    183
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 60,
-   "bbox": [
-    40,
-    698,
-    172,
-    543
-   ],
-   "foot": 698,
-   "front_hand_xy": [
-    542,
-    185
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 88,
-   "bbox": [
-    40,
-    698,
-    172,
-    543
-   ],
-   "foot": 698,
-   "front_hand_xy": [
-    542,
-    188
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 117,
-   "bbox": [
-    40,
-    698,
-    203,
-    342
-   ],
-   "foot": 698,
-   "front_hand_xy": [
-    328,
-    224
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 145,
-   "bbox": [
-    40,
-    698,
-    203,
-    342
-   ],
-   "foot": 698,
-   "front_hand_xy": [
-    328,
-    224
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
-  },
-  {
-   "src_frame": 136,
-   "bbox": [
-    40,
-    698,
-    203,
-    342
-   ],
-   "foot": 698,
-   "front_hand_xy": [
-    328,
-    224
-   ],
-   "removed_detached_px": 0,
-   "pinned": true,
-   "touches_out_edge": false
+ "repo_clip_entry": {
+  "action-potential": {
+   "count": 12,
+   "fps": 18,
+   "loop": false,
+   "frameW": 551,
+   "frameH": 710,
+   "footY": 0.9731,
+   "visibleH": 666,
+   "cols": 6,
+   "rows": 2
   }
- ],
+ },
+ "move": "nerve-shock",
  "qc": {
-  "foot_rows": [
-   698,
-   698,
-   698,
-   698,
-   698,
-   698,
-   698,
-   698
+  "source": "orig13/video/kyle/action-potential-v1.mp4",
+  "keyed_dir": "orig13/video/kyle/keyed-action-potential-v1",
+  "key": {
+   "nominal": "green",
+   "sampled": [
+    23,
+    182,
+    32
+   ],
+   "hue_off": 3.4,
+   "used": "nominal",
+   "mode": "green-safe"
+  },
+  "detint": "no mod-4 class tint (residual < 0.3); motion-limb tint fixed by hue-limited clamp 'green' (px per frame [167, 349, 483, 369, 322, 264, 382, 596, 775, 389, 310, 211])",
+  "window": [
+   0,
+   142
   ],
-  "foot_spread_px": 0,
-  "any_out_edge": false
- }
+  "peak": 120,
+  "energy_base": 0.0259,
+  "arc": 6.72,
+  "frames": [
+   0,
+   12,
+   17,
+   76,
+   84,
+   92,
+   120,
+   123,
+   125,
+   128,
+   131,
+   142
+  ],
+  "head_scores": [
+   0.933,
+   0.627,
+   0.634,
+   0.761,
+   0.745,
+   0.724,
+   0.672,
+   0.689,
+   0.638,
+   0.664,
+   0.753,
+   0.927
+  ],
+  "head_template": "clip frame 0 (290, 30, 487, 197)",
+  "forward_reach_px": [
+   62.7,
+   134.6,
+   129.4,
+   130.7,
+   138.4,
+   135.4,
+   149.5,
+   145.7,
+   129.0,
+   111.0,
+   97.8,
+   63.7
+  ],
+  "mirrored": false,
+  "scale": 0.6091,
+  "scale_from": "idle_core_h 653.0 / ready frame 0 core_h 1072",
+  "translation": [
+   41,
+   10
+  ],
+  "foot_rows": [
+   688,
+   688,
+   688,
+   688,
+   686,
+   688,
+   686,
+   686,
+   685,
+   680,
+   683,
+   688
+  ],
+  "foot_row_target": 689,
+  "foot_x": [
+   277.5,
+   277.5,
+   278.0,
+   268.5,
+   264.5,
+   276.5,
+   264.5,
+   264.0,
+   262.0,
+   261.5,
+   253.5,
+   277.5
+  ],
+  "widened_px": 0,
+  "top_extra": 0,
+  "bot_extra": 0,
+  "edge_px": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "detached": {},
+  "pose_change_iou_dist": [
+   0.485,
+   0.458,
+   0.246,
+   0.379,
+   0.506,
+   0.454,
+   0.392,
+   0.272,
+   0.355,
+   0.352,
+   0.27
+  ],
+  "torso_x_out": 279.5
+ },
+ "phases": {
+  "windup": [
+   0,
+   5
+  ],
+  "active": [
+   6,
+   7
+  ],
+  "recovery": [
+   8,
+   11
+  ]
+ },
+ "phases_source": "auto (tip reach >= 85% of range)",
+ "releaseFrame": 6,
+ "anchors": {
+  "fist": [
+   [
+    402,
+    189
+   ],
+   [
+    414,
+    225
+   ],
+   [
+    422,
+    321
+   ],
+   [
+    433,
+    277
+   ],
+   [
+    425,
+    301
+   ],
+   [
+    467,
+    123
+   ],
+   [
+    482,
+    125
+   ],
+   [
+    477,
+    147
+   ],
+   [
+    471,
+    175
+   ],
+   [
+    486,
+    158
+   ],
+   [
+    424,
+    202
+   ],
+   [
+    402,
+    191
+   ]
+  ],
+  "tip": [
+   [
+    402,
+    189
+   ],
+   [
+    414,
+    225
+   ],
+   [
+    422,
+    321
+   ],
+   [
+    433,
+    277
+   ],
+   [
+    425,
+    301
+   ],
+   [
+    467,
+    123
+   ],
+   [
+    482,
+    125
+   ],
+   [
+    477,
+    147
+   ],
+   [
+    471,
+    175
+   ],
+   [
+    486,
+    158
+   ],
+   [
+    424,
+    202
+   ],
+   [
+    402,
+    191
+   ]
+  ],
+  "feet": [
+   [
+    [
+     213,
+     689
+    ],
+    [
+     312,
+     689
+    ]
+   ],
+   [
+    [
+     223,
+     689
+    ],
+    [
+     312,
+     689
+    ]
+   ],
+   [
+    [
+     241,
+     689
+    ],
+    [
+     312,
+     689
+    ]
+   ],
+   [
+    [
+     219,
+     689
+    ],
+    [
+     287,
+     689
+    ]
+   ],
+   [
+    [
+     101,
+     689
+    ],
+    [
+     156,
+     689
+    ]
+   ],
+   [
+    [
+     101,
+     689
+    ],
+    [
+     366,
+     689
+    ]
+   ],
+   [
+    [
+     101,
+     689
+    ],
+    [
+     156,
+     689
+    ]
+   ],
+   [
+    [
+     101,
+     689
+    ],
+    [
+     156,
+     689
+    ]
+   ],
+   [
+    [
+     104,
+     689
+    ],
+    [
+     156,
+     689
+    ]
+   ],
+   [
+    [
+     141,
+     689
+    ],
+    [
+     183,
+     689
+    ]
+   ],
+   [
+    [
+     188,
+     689
+    ],
+    [
+     246,
+     689
+    ]
+   ],
+   [
+    [
+     213,
+     689
+    ],
+    [
+     312,
+     689
+    ]
+   ]
+  ],
+  "hand2": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ]
+ },
+ "anchors_note": "output-frame px, x right / y down; see attack_video/phases.py",
+ "reach_px": [
+  54,
+  134,
+  135,
+  118,
+  118,
+  150,
+  135,
+  120,
+  105,
+  90,
+  87,
+  54
+ ],
+ "source": "new boxer design: copy of gemini-test/sheets/kyle_special.png"
 }

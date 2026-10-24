@@ -48,7 +48,7 @@ export const FACE_ART = {
   holly: { key: 'face-holly', file: 'art-src/portraits/holly-face.png', box: [310, 75, 440, 440] },
   indy: { key: 'face-indy', file: 'art-src/portraits/indy-face.png', box: [292, 144, 440, 440] },
   iona: { key: 'face-iona', file: 'art-src/portraits/iona-face.png', box: [351, 149, 440, 440] },
-  ira: { key: 'face-ira', file: 'art-src/portraits/ira-face.png', box: [247, 178, 440, 440] },
+  ira: { key: 'face-ira', file: 'art-src/portraits/ira-face.png', box: [194, 249, 440, 440] },
   krypto: { key: 'face-krypto', file: 'art-src/portraits/krypto-face.png', box: [261, 215, 440, 440] },
   lana: { key: 'face-lana', file: 'art-src/portraits/lana-face.png', box: [343, 208, 440, 440] },
   lars: { key: 'face-lars', file: 'art-src/portraits/lars-face.png', box: [322, 184, 440, 440] },

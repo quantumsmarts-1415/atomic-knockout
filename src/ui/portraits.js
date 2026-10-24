@@ -1,4 +1,5 @@
 import { FACE_BOX } from '../data/faceBox.js';
+import { FACE_ART } from '../data/faceArt.js';
 // Which painted cuts are safe to show in menus.
 //
 // Helen, Scarlett, Titan, Chloe, and Van have a transparency-grid checker
@@ -46,12 +47,7 @@ export function faceFrame(scene, charDef) {
   return { key, frame: name, flip: (art.facing ?? 1) === -1, size: box[2] };
 }
 
-// Approved face-on portraits. The box is the head-and-shoulders square,
-// centered on the face, inside the 1024px image.
-export const FACE_ART = {
-  lillie: { key: 'face-lillie', file: 'art-src/portraits/lillie-face.png', box: [370, 70, 440, 440] },
-  maggie: { key: 'face-maggie', file: 'art-src/portraits/maggie-face.png', box: [380, 150, 440, 440] },
-};
+export { FACE_ART };
 
 /** Queue approved face portraits for these fighters. Returns files added. */
 export function queueFaceArt(loader, roster, exists = () => false) {

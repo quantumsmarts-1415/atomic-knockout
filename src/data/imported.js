@@ -5319,23 +5319,23 @@ export const IMPORTED_ROSTER = {
       "facing": 1,
       "sheets": {
         "dir": "art-src/imported/sheets/",
-        "frameW": 94,
-        "frameH": 147,
-        "footY": 0.9388,
-        "visibleH": 132,
-        "bodyH": 132,
-        "displayScale": 1,
+        "frameW": 440,
+        "frameH": 600,
+        "footY": 0.9817,
+        "visibleH": 552,
+        "bodyH": 552,
+        "displayScale": 0.23913,
         "clips": {
           "idle": {
             "count": 6,
-            "fps": 6,
+            "fps": 6.0,
             "loop": true,
-            "frameW": 94,
-            "frameH": 147,
-            "footY": 0.9388,
-            "visibleH": 132,
-            "bodyH": 132,
-            "displayScale": 1
+            "frameW": 440,
+            "frameH": 600,
+            "footY": 0.9817,
+            "visibleH": 552,
+            "bodyH": 552,
+            "displayScale": 0.23913
           },
           "walk": {
             "count": 8,

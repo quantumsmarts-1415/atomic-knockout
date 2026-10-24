@@ -7,7 +7,8 @@ import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { isGamepadSlot, menuInputForSlot, padBySlot, pollGamepads } from '../engine/gamepad.js';
-import { loadRosterArt, registerSheetAnims, repackOversizedSheets, attachBootLoadUi } from './BootScene.js';
+import { loadRosterArt, registerSheetAnims, repackOversizedSheets, attachBootLoadUi, sheetKey } from './BootScene.js';
+import { IDLE_TILE_BOX } from '../data/idleTileBox.js';
 import { missingSelectPortraits, queueSelectPortraits } from '../engine/selectArt.js';
 import { artGaveUp, runSafeLoad } from '../engine/safeLoad.js';
 import {
@@ -215,11 +216,13 @@ export default class CharacterSelectScene extends Phaser.Scene {
   // The boot download only has the title cuts. A tile grows its portrait
   // once that fighter's file has actually arrived.
   attachTilePhoto(def) {
-    if (!def?.art?.key || !this.textures.exists(def.art.key)) return;
+    const look = this.tileLook(def);
+    if (!look) return;
     for (const tile of this.tiles || []) {
       if (tile.photo || tile.slot.charId !== def.id) continue;
       const { x, y } = tile;
-      const photo = this.add.image(x + TILE_W / 2 + 2, y + TILE_H / 2, def.art.key);
+      const photo = this.add.image(x + TILE_W / 2 + 2, y + TILE_H / 2, look.key, look.frame);
+      if (look.flip) photo.setFlipX(true);
       const pad = 8;
       const scale = Math.min((TILE_W - pad) / photo.width, (TILE_H - pad) / photo.height);
       photo.setScale(scale);
@@ -230,6 +233,25 @@ export default class CharacterSelectScene extends Phaser.Scene {
       tile.sym?.setPosition(x + TILE_W / 2 + 1, y + TILE_H - 11);
       tile.sym?.setFontSize?.('11px');
     }
+  }
+
+  // The tile shows frame 0 of the fighter's in-game idle, cropped to the
+  // drawn pixels, so it always matches what plays. The painted cut is only
+  // the fallback when a fighter has no idle sheet.
+  tileLook(def) {
+    const idleKey = def?.art?.sheets ? sheetKey(def.art, 'idle') : null;
+    const box = IDLE_TILE_BOX[def?.id];
+    if (idleKey && box && this.textures.exists(idleKey)) {
+      const tex = this.textures.get(idleKey);
+      const name = 'select-tile';
+      if (!tex.has(name)) {
+        const f0 = tex.get(0);
+        tex.add(name, f0.sourceIndex, f0.cutX + box[0], f0.cutY + box[1], box[2], box[3]);
+      }
+      return { key: idleKey, frame: name, flip: (def.art.facing ?? 1) === -1 };
+    }
+    if (def?.art?.key && this.textures.exists(def.art.key)) return { key: def.art.key };
+    return null;
   }
 
   pickWithPointer(index) {

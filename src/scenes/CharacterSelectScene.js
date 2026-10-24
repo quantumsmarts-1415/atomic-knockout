@@ -7,8 +7,8 @@ import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { isGamepadSlot, menuInputForSlot, padBySlot, pollGamepads } from '../engine/gamepad.js';
-import { loadRosterArt, registerSheetAnims, repackOversizedSheets, attachBootLoadUi, sheetKey } from './BootScene.js';
-import { IDLE_TILE_BOX } from '../data/idleTileBox.js';
+import { loadRosterArt, registerSheetAnims, repackOversizedSheets, attachBootLoadUi } from './BootScene.js';
+import { faceFrame } from '../ui/portraits.js';
 import { missingSelectPortraits, queueSelectPortraits } from '../engine/selectArt.js';
 import { artGaveUp, runSafeLoad } from '../engine/safeLoad.js';
 import {
@@ -235,21 +235,12 @@ export default class CharacterSelectScene extends Phaser.Scene {
     }
   }
 
-  // The tile shows frame 0 of the fighter's in-game idle, cropped to the
-  // drawn pixels, so it always matches what plays. The painted cut is only
-  // the fallback when a fighter has no idle sheet.
+  // The tile shows the fighter's face, cut from frame 0 of the in-game
+  // idle, so it always matches what plays. The painted cut is only the
+  // fallback when a fighter has no idle sheet loaded.
   tileLook(def) {
-    const idleKey = def?.art?.sheets ? sheetKey(def.art, 'idle') : null;
-    const box = IDLE_TILE_BOX[def?.id];
-    if (idleKey && box && this.textures.exists(idleKey)) {
-      const tex = this.textures.get(idleKey);
-      const name = 'select-tile';
-      if (!tex.has(name)) {
-        const f0 = tex.get(0);
-        tex.add(name, f0.sourceIndex, f0.cutX + box[0], f0.cutY + box[1], box[2], box[3]);
-      }
-      return { key: idleKey, frame: name, flip: (def.art.facing ?? 1) === -1 };
-    }
+    const face = faceFrame(this, def);
+    if (face) return face;
     if (def?.art?.key && this.textures.exists(def.art.key)) return { key: def.art.key };
     return null;
   }

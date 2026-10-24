@@ -544,7 +544,7 @@ export const MOVESETS = {
     specialDirectional: m('Nerve Shock', {
       kind: 'projectile', shotEnd: 'despawn', type: E, damage: 11, vfx: 'spark', vfxColor: 0xb9a0ff,
       projectileSpeed: 760, projectileRadius: 34, projectileLife: 300, onHit: { stun: 500 },
-      baseKnockback: 150, knockbackGrowth: 2.4, duration: 260, cooldown: 1500,
+      baseKnockback: 150, knockbackGrowth: 2.4, duration: 260, cooldown: 3000,
     }),
   },
 

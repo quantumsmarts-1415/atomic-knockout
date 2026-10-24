@@ -539,14 +539,12 @@ export const MOVESETS = {
       kind: 'counter', counterOnTypes: [E, K], counterDamage: 8, counterType: E,
       counterKnockback: 170, duration: 520, cooldown: 740, vfx: 'spark',
     }),
-    specialDirectional: m('Banana Peel', {
-      kind: 'zone', type: R, damage: 1.2, vfx: 'slip', vfxColor: 0xe2b13c,
-      zone: {
-        name: 'Banana Peel', type: R, damage: 1.2, solo: true, trap: true, trip: true, feet: true,
-        ms: 7000, radius: 22, delay: 220, offsetX: 56, angleDeg: 0, tripMs: 780,
-        knockback: 240, growth: 2.2, color: 0xe2b13c,
-      },
-      baseKnockback: 40, knockbackGrowth: 0.4, duration: 220, cooldown: 520,
+    // Nerve Shock: a wide action-potential wave thrown from both hands at the
+    // arms-spread frame. Fast and short so it reads as a shock, not a bullet.
+    specialDirectional: m('Nerve Shock', {
+      kind: 'projectile', shotEnd: 'despawn', type: E, damage: 11, vfx: 'spark', vfxColor: 0xb9a0ff,
+      projectileSpeed: 760, projectileRadius: 34, projectileLife: 300, onHit: { stun: 250 },
+      baseKnockback: 150, knockbackGrowth: 2.4, duration: 260, cooldown: 820,
     }),
   },
 

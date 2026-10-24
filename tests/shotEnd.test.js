@@ -33,7 +33,7 @@ test('every projectile has an explicit shotEnd and keeps its old contact rule', 
       assert.equal(shotStoppedBySolid(move), false);
     }
   });
-  assert.deepEqual(counts, { despawn: 86, stick: 3, linger: 7, pierce: 5 });
+  assert.deepEqual(counts, { despawn: 87, stick: 3, linger: 7, pierce: 5 });
 });
 
 test('stick, pierce, and placed hazards are not popped by a wall', () => {
@@ -82,14 +82,11 @@ test('ground riders and returning shots are not eaten by the floor', () => {
 });
 
 test('zones and mines are not projectiles, so the wall rule never pops them', () => {
-  const peel = MOVESETS.kyle.specialDirectional;
   const powder = MOVESETS.iona.specialDirectional;
   const mine = MOVESETS.yara.specialDirectional;
-  assert.equal(peel.kind, 'zone');
-  assert.equal(peel.zone.trap, true);
   assert.equal(powder.kind, 'zone');
   assert.equal(powder.zone.trap, true);
   assert.equal(mine.kind, 'mine');
-  assert.equal(peel.shotEnd, undefined);
+  assert.equal(powder.shotEnd, undefined);
   assert.equal(mine.shotEnd, undefined);
 });

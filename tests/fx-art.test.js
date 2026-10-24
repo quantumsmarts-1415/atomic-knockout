@@ -1257,7 +1257,7 @@ test('batch 2 wave 1 keeps the sheets the later flow art did not replace', () =>
     ['assets/fx/aaron/shield-gas/fx.json', null, 'screen'],
     ['assets/fx/kyle/static-cross/fx.json', null, 'add'],
     ['assets/fx/kyle/ion-channel/fx.json', 'shatter', 'add'],
-    ['assets/fx/kyle/banana-peel/fx.json', null, 'normal'],
+    ['assets/fx/kyle/nerve-shock/fx.json', null, 'add'],
     ['assets/fx/cal/bone-crush/fx.json', null, 'normal'],
     ['assets/fx/cal/quick-set-cement/fx.json', null, 'normal'],
   ];

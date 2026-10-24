@@ -1,16 +1,30 @@
 {
   "file": "nerve-shock-anim.png",
-  "frames": 4,
-  "cols": 4,
+  "frames": 6,
+  "cols": 6,
   "rows": 1,
-  "fps": 12,
-  "loop": false,
+  "fps": 24,
+  "loop": true,
   "blend": "add",
-  "black": false,
+  "black": 16,
   "fit": "height",
-  "heightFrac": 0.55,
+  "heightFrac": 0.9,
   "crop": "frame",
   "pivot": "center",
-  "anchor": "contact",
-  "hit": false
+  "hit": false,
+  "impact": {
+    "file": "nerve-shock-hit-anim.png",
+    "frames": 5,
+    "cols": 5,
+    "rows": 1,
+    "fps": 16,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
+    "fit": "height",
+    "heightFrac": 1.2,
+    "pivotX": 0.5,
+    "pivotY": 0.5,
+    "hit": false
+  }
 }

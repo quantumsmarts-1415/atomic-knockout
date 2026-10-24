@@ -14,19 +14,20 @@
   "pivotY": 0.5,
   "anchor": "contact",
   "flip": true,
-  "oneshot": true,
   "hit": false,
-  "fist": {
-    "file": "bass-speaker-prop.png",
-    "frames": 1,
-    "blend": "normal",
-    "black": false,
+  "impact": {
+    "file": "bass-drop-hit-anim.png",
+    "frames": 12,
+    "cols": 4,
+    "rows": 3,
+    "fps": 24,
+    "loop": false,
+    "blend": "add",
+    "black": 16,
     "fit": "height",
     "heightFrac": 0.9,
     "pivotX": 0.5,
-    "pivotY": 0.611979,
-    "flip": true,
-    "thump": true,
+    "pivotY": 0.5,
     "hit": false
   }
 }

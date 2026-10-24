@@ -5350,14 +5350,14 @@ export const IMPORTED_ROSTER = {
           },
           "attack": {
             "count": 6,
-            "fps": 12,
+            "fps": 12.0,
             "loop": false,
-            "frameW": 197,
-            "frameH": 163,
-            "footY": 0.908,
-            "visibleH": 133,
-            "bodyH": 133,
-            "displayScale": 0.99248
+            "frameW": 640,
+            "frameH": 600,
+            "footY": 0.9817,
+            "visibleH": 552,
+            "bodyH": 552,
+            "displayScale": 0.23913
           }
         }
       }

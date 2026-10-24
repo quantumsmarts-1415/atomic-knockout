@@ -543,8 +543,8 @@ export const MOVESETS = {
     // arms-spread frame. Fast and short so it reads as a shock, not a bullet.
     specialDirectional: m('Nerve Shock', {
       kind: 'projectile', shotEnd: 'despawn', type: E, damage: 11, vfx: 'spark', vfxColor: 0xb9a0ff,
-      projectileSpeed: 760, projectileRadius: 34, projectileLife: 300, onHit: { stun: 250 },
-      baseKnockback: 150, knockbackGrowth: 2.4, duration: 260, cooldown: 820,
+      projectileSpeed: 760, projectileRadius: 34, projectileLife: 300, onHit: { stun: 500 },
+      baseKnockback: 150, knockbackGrowth: 2.4, duration: 260, cooldown: 500,
     }),
   },
 

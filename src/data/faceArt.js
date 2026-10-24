@@ -18,7 +18,7 @@ export const FACE_ART = {
   silas: { key: 'face-silas', file: 'art-src/portraits/silas-face.png', box: [321, 116, 440, 440] },
   phillip: { key: 'face-phillip', file: 'art-src/portraits/phillip-face.png', box: [331, 154, 440, 440] },
   aaron: { key: 'face-aaron', file: 'art-src/portraits/aaron-face.png', box: [312, 86, 440, 440] },
-  kyle: { key: 'face-kyle', file: 'art-src/portraits/kyle-face.png', box: [332, 170, 440, 440] },
+  kyle: { key: 'face-kyle', file: 'art-src/portraits/kyle-face.png', box: [287, 128, 440, 440] },
   ace: { key: 'face-ace', file: 'art-src/portraits/ace-face.png', box: [309, 149, 440, 440] },
   agatha: { key: 'face-agatha', file: 'art-src/portraits/agatha-face.png', box: [257, 250, 440, 440] },
   amy: { key: 'face-amy', file: 'art-src/portraits/amy-face.png', box: [258, 23, 440, 440] },

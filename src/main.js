@@ -28,6 +28,9 @@ const config = {
       debug: false,
     },
   },
+  // A stalled file used to sit in the loader forever (timeout 0, two
+  // retries). One miss is logged and skipped; the placeholder draws instead.
+  loader: { timeout: 20000, maxRetries: 0 },
   scene: [BootScene, TitleScene, PlayerJoinScene, CharacterSelectScene, StageSelectScene, BattleScene, ResultsScene, PauseMenuScene],
 };
 

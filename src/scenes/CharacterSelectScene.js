@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { CHARACTERS } from '../data/characters.js';
+import { CHARACTERS, ROSTER } from '../data/characters.js';
 import { artIsUpdated, fighterIdsFromFxIndex } from '../data/updatedArt.js';
 import { buildSelectSlots, familyColor, stepSlot, TABLE_COLS, TABLE_ROWS } from '../data/periodic.js';
 import { Rig } from '../engine/Rig.js';
@@ -7,7 +7,9 @@ import { GAME_WIDTH as W, GAME_HEIGHT as H } from '../main.js';
 import { play as sfx } from '../engine/sfx.js';
 import { phoneNet } from '../net/PhoneNet.js';
 import { isGamepadSlot, menuInputForSlot, padBySlot, pollGamepads } from '../engine/gamepad.js';
-import { loadRosterArt, registerSheetAnims } from './BootScene.js';
+import { loadRosterArt, registerSheetAnims, repackOversizedSheets, attachBootLoadUi } from './BootScene.js';
+import { missingSelectPortraits, queueSelectPortraits } from '../engine/selectArt.js';
+import { artGaveUp, runSafeLoad } from '../engine/safeLoad.js';
 import {
   FONT_DISPLAY, FONT_MONO, GRID, MOTION, PLAYER_COLORS, PLAYER_COLORS_CSS, THEME,
   drawFooterHints, drawHeader, drawMenuBackground, textStyle,
@@ -50,6 +52,25 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   create() {
+    const exists = (key) => this.textures.exists(key) || artGaveUp(key);
+    const missing = missingSelectPortraits(exists);
+    if (!this.goldOnly && missing.length) {
+      drawMenuBackground(this, W, H);
+      const ui = attachBootLoadUi(this, { status: 'Loading fighters…' });
+      runSafeLoad(this, (loader) => queueSelectPortraits(loader, exists)).then(() => {
+        if (!this.sys?.isActive?.()) return;
+        ui.destroy();
+        this.children.removeAll(true);
+        this.buildSelect();
+      });
+      return;
+    }
+    this.buildSelect();
+  }
+
+  buildSelect() {
+    repackOversizedSheets(this, ROSTER);
+    registerSheetAnims(this, ROSTER);
     this.starting = false;
     this.slots = buildSelectSlots(CHARACTERS);
     this.playable = this.slots.map((s, i) => (s.charId ? i : null)).filter((i) => i !== null);
@@ -649,6 +670,9 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    // create() can be waiting on the select-art loader, before `players`
+    // exists. Throwing here would stall Phaser's loader.
+    if (!this.players) return;
     this.goldPhase = (this.goldPhase || 0) + delta * 0.0035;
     this.paintGold(this.goldPhase);
     if (this.goldOnly) return;

@@ -527,7 +527,7 @@ export const MOVESETS = {
     basicCharge: m('Action Potential', {
       kind: 'projectile', shotEnd: 'despawn', type: E, damage: 12, slam: true, fizzleBelow: 1, roll: true,
       maxChargeMs: 1500, onHit: { stun: 450 }, stunChance: 0.5, vfx: 'spark', vfxColor: 0xd2b6ff,
-      projectileSpeed: 620, projectileRadius: 14, projectileLife: 480,
+      projectileSpeed: 620, projectileRadius: 36, projectileLife: 480,
       baseKnockback: 120, duration: 200, cooldown: 760,
     }),
     basicDirectional: melee('Static Cross', {

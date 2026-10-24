@@ -5341,12 +5341,12 @@ export const IMPORTED_ROSTER = {
             "count": 8,
             "fps": 5.8,
             "loop": true,
-            "frameW": 105,
-            "frameH": 146,
-            "footY": 0.9384,
-            "visibleH": 132,
-            "bodyH": 132,
-            "displayScale": 1
+            "frameW": 440,
+            "frameH": 600,
+            "footY": 0.9817,
+            "visibleH": 552,
+            "bodyH": 552,
+            "displayScale": 0.23913
           },
           "attack": {
             "count": 6,

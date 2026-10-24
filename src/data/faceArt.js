@@ -68,4 +68,12 @@ export const FACE_ART = {
   ruben: { key: 'face-ruben', file: 'art-src/portraits/ruben-face.png', box: [356, 179, 440, 440] },
   saab: { key: 'face-saab', file: 'art-src/portraits/saab-face.png', box: [304, 164, 440, 440] },
   sterling: { key: 'face-sterling', file: 'art-src/portraits/sterling-face.png', box: [325, 209, 440, 440] },
+  talia: { key: 'face-talia', file: 'art-src/portraits/talia-face.png', box: [311, 163, 440, 440] },
+  tara: { key: 'face-tara', file: 'art-src/portraits/tara-face.png', box: [269, 229, 440, 440] },
+  tate: { key: 'face-tate', file: 'art-src/portraits/tate-face.png', box: [322, 188, 440, 440] },
+  terra: { key: 'face-terra', file: 'art-src/portraits/terra-face.png', box: [335, 197, 440, 440] },
+  tessa: { key: 'face-tessa', file: 'art-src/portraits/tessa-face.png', box: [391, 228, 440, 440] },
+  tex: { key: 'face-tex', file: 'art-src/portraits/tex-face.png', box: [309, 233, 440, 440] },
+  thule: { key: 'face-thule', file: 'art-src/portraits/thule-face.png', box: [349, 178, 440, 440] },
+  zane: { key: 'face-zane', file: 'art-src/portraits/zane-face.png', box: [327, 184, 440, 440] },
 };

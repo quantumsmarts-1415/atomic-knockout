@@ -494,7 +494,7 @@ export const CHARACTERS = {
         clips: {
           // Approved idle. Absorb reuses the Mega Discharge gather.
           idle: { count: 6, fps: 6, loop: true, frameW: 482, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678 },
-          walk: { count: 33, fps: 10, loop: true, frameW: 692, frameH: 706, footY: 0.9929, visibleH: 634, bodyH: 634, displayScale: 0.18612 },
+          walk: { count: 12, fps: 9.93, loop: true, frameW: 482, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678 },
           attack: { count: 12, fps: 18, loop: false, frameW: 746, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678 },
           charge: { count: 12, fps: 18, loop: false, frameW: 640, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678 },
           defense: { count: 12, fps: 18, loop: true, frameW: 640, frameH: 715, footY: 0.9818, visibleH: 678, bodyH: 678, displayScale: 118 / 678, file: 'lillie_charge.png' },

@@ -104,7 +104,7 @@ const BAND_DAMAGE = {
   iona: 1.89,
   ira: 1.28,
   krypto: 1.27,
-  kyle: 4.00,
+  kyle: 1.70,
   lana: 0.77,
   lars: 1.01,
   lillie: 0.51,

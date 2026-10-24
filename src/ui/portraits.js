@@ -23,6 +23,15 @@ export const TITLE_PARTNER_ID = 'natalie';
  * loaded (callers fall back to the painted cut).
  */
 export function faceFrame(scene, charDef) {
+  const painted = FACE_ART[charDef?.id];
+  if (painted && scene?.textures?.exists(painted.key)) {
+    const tex = scene.textures.get(painted.key);
+    if (!tex.has('face')) {
+      const [x, y, w, h] = painted.box;
+      tex.add('face', 0, x, y, w, h);
+    }
+    return { key: painted.key, frame: 'face', flip: false, size: painted.box[2] };
+  }
   const art = charDef?.art;
   const box = FACE_BOX[charDef?.id];
   if (!art?.sheets || !box || !scene?.textures) return null;
@@ -35,4 +44,21 @@ export function faceFrame(scene, charDef) {
     tex.add(name, f0.sourceIndex, f0.cutX + box[0], f0.cutY + box[1], box[2], box[3]);
   }
   return { key, frame: name, flip: (art.facing ?? 1) === -1, size: box[2] };
+}
+
+// Approved face-on portraits. The box is the head-and-shoulders square,
+// centered on the face, inside the 1024px image.
+export const FACE_ART = {
+  lillie: { key: 'face-lillie', file: 'art-src/portraits/lillie-face.png', box: [370, 70, 440, 440] },
+  maggie: { key: 'face-maggie', file: 'art-src/portraits/maggie-face.png', box: [380, 150, 440, 440] },
+};
+
+/** Queue approved face portraits for these fighters. Returns files added. */
+export function queueFaceArt(loader, roster, exists = () => false) {
+  let n = 0;
+  for (const c of roster) {
+    const f = FACE_ART[c?.id];
+    if (f && !exists(f.key)) { loader.image(f.key, f.file); n++; }
+  }
+  return n;
 }

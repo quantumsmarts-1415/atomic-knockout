@@ -3,10 +3,13 @@
 // Walk/attack sheets still load on demand.
 import { ROSTER } from '../data/characters.js';
 import { sheetKey, use3dSheets } from '../scenes/BootScene.js';
+import { FACE_ART } from '../ui/portraits.js';
 
 function selectFiles(c) {
   const out = [];
   if (c?.art?.key && c.art.file) out.push({ kind: 'image', key: c.art.key, file: c.art.file });
+  const face = FACE_ART[c?.id];
+  if (face) out.push({ kind: 'image', key: face.key, file: face.file });
   const s = c?.art?.sheets;
   const idle = s?.clips?.idle;
   if (idle && use3dSheets(c)) {

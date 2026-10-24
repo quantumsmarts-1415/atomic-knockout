@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { showScene } from '../ui/flow.js';
 import { loadStageThumbs } from '../data/stages.js';
-import { TITLE_PARTNER_ID } from '../ui/portraits.js';
+import { TITLE_PARTNER_ID, queueFaceArt } from '../ui/portraits.js';
 import { CHARACTERS, ROSTER } from '../data/characters.js';
 import { MATCH_STOCKS } from '../engine/matchRules.js';
 import { collectMoveStrips } from '../engine/moveClip.js';
@@ -168,6 +168,7 @@ export function queueTitlePortraits(loader, exists = () => false) {
 }
 
 export function loadRosterArt(loader, roster, exists = () => false) {
+  queueFaceArt(loader, roster, exists);
   for (const c of roster) {
     if (c.art && !exists(c.art.key)) loader.image(c.art.key, c.art.file);
     if (!use3dSheets(c)) continue;

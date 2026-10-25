@@ -8,7 +8,7 @@
 // Slots 0 and 1 are always the two local keyboard players and never appear
 // here — this class only ever knows about slots 2 through 5 (phones).
 // ---------------------------------------------------------------------------
-const EMPTY_INPUT = { left: false, right: false, up: false, down: false, confirm: false, back: false };
+const EMPTY_INPUT = { left: false, right: false, up: false, down: false, confirm: false, back: false, ax: 0, ay: 0 };
 
 class PhoneNet {
   constructor() {
@@ -42,6 +42,7 @@ class PhoneNet {
       this.inputBySlot.set(msg.slot, {
         left: !!msg.left, right: !!msg.right, up: !!msg.up, down: !!msg.down,
         confirm: !!msg.confirm, back: !!msg.back,
+        ax: Number.isFinite(msg.ax) ? msg.ax : 0, ay: Number.isFinite(msg.ay) ? msg.ay : 0,
       });
     }
     this._emit();

@@ -153,6 +153,7 @@ wss.on('connection', (ws, req) => {
   sendJSON(ws, { type: 'assigned', slot, label: `P${slot + 1}` });
   broadcastRoster();
 
+  const analog = (v) => (Number.isFinite(v) ? Math.max(-1, Math.min(1, v)) : 0);
   ws.on('message', (raw) => {
     let msg;
     try { msg = JSON.parse(raw.toString()); } catch { return; }
@@ -162,6 +163,7 @@ wss.on('connection', (ws, req) => {
       slot,
       left: !!msg.left, right: !!msg.right, up: !!msg.up, down: !!msg.down,
       confirm: !!msg.confirm, back: !!msg.back,
+      ax: analog(msg.ax), ay: analog(msg.ay),
     });
   });
 

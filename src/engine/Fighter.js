@@ -62,7 +62,7 @@ const BAND_DAMAGE = {
   aurelius: 1.63,
   barry: 1.39,
   ben: 0.57,
-  bianca: 3.08,
+  bianca: 2.70,
   boar: 0.95,
   bord: 0.56,
   brock: 0.97,

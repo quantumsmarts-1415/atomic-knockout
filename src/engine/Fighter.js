@@ -141,7 +141,7 @@ const BAND_DAMAGE = {
   rex: 0.79,
   rhoda: 1.22,
   roger: 1.33,
-  ronan: 4.00,
+  ronan: 5.40,
   ruben: 1.18,
   ruth: 2.59,
   saab: 0.81,

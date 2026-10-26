@@ -136,6 +136,9 @@ export async function collectMoveStrips(roster) {
   const jobs = [];
   await Promise.all(roster.map(async (c) => {
     if (!c?.id) return;
+    // Only fighters whose art opts in have a key-pose strip folder. Probing
+    // every fighter 404'd once per fighter in each match.
+    if (!c.art?.moveStrips) return;
     let res;
     try {
       res = await fetch(moveManifestUrl(c.id));

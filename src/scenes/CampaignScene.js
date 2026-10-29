@@ -331,11 +331,13 @@ export default class CampaignScene extends Phaser.Scene {
     const finished = won && !after.practice && chapterIndex + 1 >= CHAPTERS.length;
     if (won && !finished && !after.practice) entries.push({ label: `Next: Chapter ${chapterIndex + 2}`, run: () => this.beginChapter(chapterIndex + 1, this.save) });
     if (!won) entries.push({ label: 'Retry Chapter', run: () => this.beginChapter(chapterIndex, this.save || loadSave() || newCampaign()) });
-    if (finished) this.add2(this.add.text(W / 2, 470, 'THE STATIC FADES. CAMPAIGN COMPLETE.', textStyle('h2', { color: THEME.goldCss })).setOrigin(0.5).setDepth(6));
-    entries.push({ label: 'Campaign Menu', run: () => this.showMenu() });
+    if (finished) this.add2(this.add.text(W / 2, 476, 'THE STATIC FADES. CAMPAIGN COMPLETE.', textStyle('h2', { color: THEME.goldCss })).setOrigin(0.5).setDepth(6));
+    const newTalks = supportsFor(this.save).filter((sp) => !(this.save?.seenSupports || []).includes(sp.id)).length;
+    if (won && newTalks) entries.push({ label: `Camp Conversations (${newTalks} new)`, run: () => this.showCamp() });
+    entries.push({ label: 'Chapter Select', run: () => this.showMenu() });
     entries.push({ label: 'Return Home', run: () => this.backHome() });
     this.buttons = entries.map((e, i) => {
-      const b = makeButton(this, { x: W / 2 - 190, y: (won ? 480 : 310) + i * 54, w: 380, h: 44, label: e.label, onPress: () => { sfx('menuConfirm'); this.time.delayedCall(260, () => { if (!isLeaving(this)) e.run(); }); } });
+      const b = makeButton(this, { x: W / 2 - 190, y: (won ? (finished ? 508 : 478) : 310) + i * 52, w: 380, h: 44, label: e.label, onPress: () => { sfx('menuConfirm'); this.time.delayedCall(260, () => { if (!isLeaving(this)) e.run(); }); } });
       b.onHover = () => this.selectBtn(i);
       this.stage.push(b.container, b.zone);
       return b;

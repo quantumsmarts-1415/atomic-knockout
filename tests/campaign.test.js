@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { CHAPTERS, newCampaign, createBattle, autoplayChapter, afterVictory, partyForChapter, makeRecord, awardXp, loadSave, writeSave, baseStats } from '../src/campaign/index.js';
+import { SUPPORTS, supportsFor, CHAPTERS, newCampaign, createBattle, autoplayChapter, afterVictory, partyForChapter, makeRecord, awardXp, loadSave, writeSave, baseStats } from '../src/campaign/index.js';
 import { TERRAIN, TERRAIN_IDS } from '../src/campaign/terrain.js';
 import { parseMap, reachable, key, distanceField } from '../src/campaign/grid.js';
 import { forecast, resolve } from '../src/campaign/combat.js';
@@ -245,4 +245,42 @@ test('sheetDims.js lists the oversized fighter sheets the campaign repacks befor
       if (++checked >= 25) return;
     }
   }
+});
+
+test('camp conversations unlock with progress and only use real fighters', () => {
+  assert.equal(supportsFor({ chapter: 0 }).length, 0);
+  assert.ok(supportsFor({ chapter: 1 }).length >= 2);
+  assert.equal(supportsFor({ chapter: CHAPTERS.length }).length, SUPPORTS.length);
+  const ids = new Set();
+  for (const sp of SUPPORTS) {
+    assert.ok(!ids.has(sp.id), `duplicate ${sp.id}`);
+    ids.add(sp.id);
+    assert.ok(sp.lines.length >= 4);
+    for (const id of sp.pair) assert.ok(CHARACTERS[id], id);
+    for (const l of sp.lines) assert.ok(!l.who || CHARACTERS[l.who], l.who);
+  }
+});
+
+test('boss entrance cards name a real fighter who is on that chapter\'s map', () => {
+  let cards = 0;
+  for (const ch of CHAPTERS) {
+    for (const ev of ch.events || []) {
+      if (!ev.card) continue;
+      cards += 1;
+      assert.ok(CHARACTERS[ev.card.id], ev.card.id);
+      assert.ok(ch.enemies.some((e) => e.id === ev.card.id), `${ch.id} ${ev.card.id}`);
+    }
+  }
+  assert.ok(cards >= 3);
+});
+
+test('replaying an early chapter with a big party still fits the start tiles, lord first', () => {
+  const save = newCampaign();
+  const extra = ['nitra', 'oxana', 'neo', 'silas', 'natalie', 'sandy', 'maggie', 'allen'].map((id) => makeRecord(id, 9));
+  save.party = [...save.party, ...extra];
+  const party = partyForChapter(save, CHAPTERS[0]);
+  assert.equal(party.length, CHAPTERS[0].starts.length);
+  assert.ok(party.some((r) => r.lord));
+  const b = createBattle(save, 0, 3);
+  assert.equal(b.players.length, CHAPTERS[0].starts.length);
 });

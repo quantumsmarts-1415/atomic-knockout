@@ -9,6 +9,15 @@ Title screen -> **Campaign**. A Fire Emblem-style grid tactics campaign built fr
 - Gamepad: d-pad/left stick, A confirm, B cancel, Start end turn. In conversations A = next, B/Start = skip.
 - Conversations: Enter / click = next line (finishes the typewriter first), Esc or the SKIP chip = skip the scene.
 
+## Chapter select, replays and camp
+- The menu is a chapter select: cleared chapters are gold and can be replayed (practice: the saved campaign is unchanged);
+  the next chapter is marked NEXT; later ones are locked.
+- **Camp Conversations** (menu button): short talks between party members, unlocked as chapters are cleared
+  (`SUPPORTS` / `supportsFor` in chapters.js, `save.seenSupports`). Story only, no stat bonuses.
+- Boss encounters (`near` events with a `card: { id, name, epithet }`) open with a boss entrance card, then the conversation.
+- Map movement uses the fighter's own walk sheet when it has loaded (loaded one fighter at a time when selected / before an
+  enemy moves, at most 4 kept in memory); otherwise the unit glides with a bob. `?nowalk` forces gliding.
+
 ## Story arc
 Prologue "The Hum at the Edge" -> 1 Static in the Cloud (rout) -> 2 The Alkali Gate (seize) -> 3 Heavy Metal Heart (boss)
 -> 4 The Salt Flats (defend 6 turns) -> 5 Through the Noble Mist (escape) -> 6 The Rare Earth Vale (rout)

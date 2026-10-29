@@ -98,7 +98,7 @@ const CHAPTERS = [
     title: 'The Alkali Gate',
     kicker: 'CHAPTER 2',
     win: 'seize',
-    objective: 'Seize the throne with Hydra',
+    objective: 'Defeat Chroma, then seize the throne with Hydra',
     map: [
       'ff..#__T___#..ff',
       'f...#_F__F_#...f',
@@ -448,7 +448,7 @@ const CHAPTERS = [
     title: 'The Actinide Spire',
     kicker: 'CHAPTER 7',
     win: 'seize',
-    objective: 'Seize the Spire throne with Hydra',
+    objective: 'Defeat the bosses, then seize the Spire throne with Hydra',
     map: [
       'ff.###_T_###.ff.',
       'f..#__F_F__#...f',

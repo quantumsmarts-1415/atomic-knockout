@@ -854,3 +854,10 @@ test('chapter 1 is a fair tutorial: soft hits, almost no crits, raiders arrive s
   for (let seed = 1; seed <= 30; seed++) if (autoplayChapter(createBattle(newCampaign(), 0, seed * 100), 40).result === 'victory') wins++;
   assert.ok(wins >= 27, `the autoplay AI should win chapter 1 on at least 90% of seeds (won ${wins}/30)`);
 });
+
+test('seize chapters say up front that the boss must fall before the throne can be seized', async () => {
+  const { CHAPTERS } = await import('../src/campaign/chapters.js');
+  const seize = CHAPTERS.filter((c) => c.win === 'seize');
+  assert.ok(seize.length >= 2);
+  for (const c of seize) assert.match(c.objective, /defeat/i, c.id);
+});

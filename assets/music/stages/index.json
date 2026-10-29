@@ -16,23 +16,24 @@
   "loop_duration_s": 69.68,
   "normalization": "linear",
   "detected_key_check": "A major",
-  "lead": "steelpan",
-  "bass": "bass",
-  "arp": "marimba",
+  "lead": "brass + guitar",
+  "bass": "guitar + staccato cello",
+  "arp": "staccato cello",
   "files": {
    "ogg": {
     "file": "elemental-isle.ogg",
     "duration_s": 69.68,
-    "lufs": -19.0,
-    "true_peak_dbtp": -6.6
+    "lufs": -19.1,
+    "true_peak_dbtp": -7.8
    },
    "mp3": {
     "file": "elemental-isle.mp3",
     "duration_s": 69.72,
-    "lufs": -19.5,
-    "true_peak_dbtp": -7.1
+    "lufs": -19.4,
+    "true_peak_dbtp": -8.5
    }
-  }
+  },
+  "style": "D (rock kit + taiko, choir/brass hits, string swells)"
  },
  {
   "stage_id": "twin-peaks",
@@ -52,23 +53,24 @@
   "loop_duration_s": 73.33,
   "normalization": "linear",
   "detected_key_check": "D major",
-  "lead": "horn+flute",
-  "bass": "bass",
-  "arp": "pluck",
+  "lead": "brass + guitar",
+  "bass": "guitar + staccato cello",
+  "arp": "staccato cello",
   "files": {
    "ogg": {
     "file": "twin-peaks.ogg",
     "duration_s": 73.33,
     "lufs": -19.1,
-    "true_peak_dbtp": -7.7
+    "true_peak_dbtp": -8.4
    },
    "mp3": {
     "file": "twin-peaks.mp3",
     "duration_s": 73.38,
-    "lufs": -19.6,
-    "true_peak_dbtp": -7.9
+    "lufs": -19.5,
+    "true_peak_dbtp": -8.9
    }
-  }
+  },
+  "style": "D (rock kit + taiko, choir/brass hits, string swells)"
  },
  {
   "stage_id": "the-core",
@@ -87,23 +89,24 @@
   "loop_duration_s": 73.22,
   "normalization": "linear",
   "detected_key_check": "Bb minor",
-  "lead": "buzz",
-  "bass": "reese",
-  "arp": "fmep",
+  "lead": "brass + guitar",
+  "bass": "guitar + staccato cello",
+  "arp": "staccato cello",
   "files": {
    "ogg": {
     "file": "the-core.ogg",
     "duration_s": 73.22,
-    "lufs": -19.0,
-    "true_peak_dbtp": -5.9
+    "lufs": -19.1,
+    "true_peak_dbtp": -7.7
    },
    "mp3": {
     "file": "the-core.mp3",
     "duration_s": 73.25,
     "lufs": -19.5,
-    "true_peak_dbtp": -5.5
+    "true_peak_dbtp": -7.7
    }
-  }
+  },
+  "style": "D (rock kit + taiko, choir/brass hits, string swells)"
  },
  {
   "stage_id": "crystal-spire",
@@ -123,23 +126,24 @@
   "loop_duration_s": 70.4,
   "normalization": "linear",
   "detected_key_check": "C minor",
-  "lead": "supersaw",
-  "bass": "pbass",
-  "arp": "glass",
+  "lead": "brass + guitar",
+  "bass": "guitar + staccato cello",
+  "arp": "staccato cello",
   "files": {
    "ogg": {
     "file": "crystal-spire.ogg",
     "duration_s": 70.4,
-    "lufs": -19.2,
-    "true_peak_dbtp": -5.1
+    "lufs": -19.1,
+    "true_peak_dbtp": -7.8
    },
    "mp3": {
     "file": "crystal-spire.mp3",
     "duration_s": 70.43,
-    "lufs": -19.7,
-    "true_peak_dbtp": -6.4
+    "lufs": -19.5,
+    "true_peak_dbtp": -8.2
    }
-  }
+  },
+  "style": "D (rock kit + taiko, choir/brass hits, string swells)"
  },
  {
   "stage_id": "hydrogen-breakout",
@@ -159,23 +163,24 @@
   "loop_duration_s": 64.39,
   "normalization": "linear",
   "detected_key_check": "A major",
-  "lead": "synthlead",
-  "bass": "pbass",
-  "arp": "pluck",
+  "lead": "brass + guitar",
+  "bass": "guitar + staccato cello",
+  "arp": "staccato cello",
   "files": {
    "ogg": {
     "file": "hydrogen-breakout.ogg",
     "duration_s": 64.39,
     "lufs": -19.1,
-    "true_peak_dbtp": -6.8
+    "true_peak_dbtp": -9.3
    },
    "mp3": {
     "file": "hydrogen-breakout.mp3",
     "duration_s": 64.42,
-    "lufs": -19.6,
-    "true_peak_dbtp": -7.8
+    "lufs": -19.5,
+    "true_peak_dbtp": -9.8
    }
-  }
+  },
+  "style": "D (rock kit + taiko, choir/brass hits, string swells)"
  },
  {
   "stage_id": "silicon-foundry",
@@ -194,23 +199,24 @@
   "loop_duration_s": 80.0,
   "normalization": "linear",
   "detected_key_check": "G# minor",
-  "lead": "grit",
-  "bass": "distbass",
-  "arp": "marimba",
+  "lead": "brass + guitar",
+  "bass": "guitar + staccato cello",
+  "arp": "staccato cello",
   "files": {
    "ogg": {
     "file": "silicon-foundry.ogg",
     "duration_s": 80.0,
     "lufs": -19.1,
-    "true_peak_dbtp": -6.6
+    "true_peak_dbtp": -7.9
    },
    "mp3": {
     "file": "silicon-foundry.mp3",
     "duration_s": 80.04,
-    "lufs": -19.5,
-    "true_peak_dbtp": -7.7
+    "lufs": -19.4,
+    "true_peak_dbtp": -8.5
    }
-  }
+  },
+  "style": "D (rock kit + taiko, choir/brass hits, string swells)"
  },
  {
   "stage_id": "brimstone-caldera",
@@ -230,23 +236,24 @@
   "loop_duration_s": 77.65,
   "normalization": "linear",
   "detected_key_check": "B major",
-  "lead": "lowbrass",
-  "bass": "dist2",
-  "arp": "spicc",
+  "lead": "brass + guitar",
+  "bass": "guitar + staccato cello",
+  "arp": "staccato cello",
   "files": {
    "ogg": {
     "file": "brimstone-caldera.ogg",
     "duration_s": 77.65,
-    "lufs": -19.2,
-    "true_peak_dbtp": -6.6
+    "lufs": -19.1,
+    "true_peak_dbtp": -7.5
    },
    "mp3": {
     "file": "brimstone-caldera.mp3",
     "duration_s": 77.69,
-    "lufs": -19.6,
-    "true_peak_dbtp": -7.2
+    "lufs": -19.5,
+    "true_peak_dbtp": -8.0
    }
-  }
+  },
+  "style": "D (rock kit + taiko, choir/brass hits, string swells)"
  },
  {
   "stage_id": "neon-nexus",
@@ -265,23 +272,24 @@
   "loop_duration_s": 77.14,
   "normalization": "linear",
   "detected_key_check": "F# major",
-  "lead": "fmep",
-  "bass": "acid",
-  "arp": "pluck",
+  "lead": "brass + guitar",
+  "bass": "guitar + staccato cello",
+  "arp": "staccato cello",
   "files": {
    "ogg": {
     "file": "neon-nexus.ogg",
     "duration_s": 77.14,
     "lufs": -19.1,
-    "true_peak_dbtp": -5.1
+    "true_peak_dbtp": -6.3
    },
    "mp3": {
     "file": "neon-nexus.mp3",
     "duration_s": 77.19,
-    "lufs": -19.6,
-    "true_peak_dbtp": -5.5
+    "lufs": -19.4,
+    "true_peak_dbtp": -6.9
    }
-  }
+  },
+  "style": "D (rock kit + taiko, choir/brass hits, string swells)"
  },
  {
   "stage_id": "holdout-keep",
@@ -301,23 +309,24 @@
   "loop_duration_s": 76.52,
   "normalization": "linear",
   "detected_key_check": "Bb major",
-  "lead": "trumpet",
-  "bass": "bass",
-  "arp": "spicc",
+  "lead": "brass + guitar",
+  "bass": "guitar + staccato cello",
+  "arp": "staccato cello",
   "files": {
    "ogg": {
     "file": "holdout-keep.ogg",
     "duration_s": 76.52,
     "lufs": -19.1,
-    "true_peak_dbtp": -6.6
+    "true_peak_dbtp": -7.2
    },
    "mp3": {
     "file": "holdout-keep.mp3",
     "duration_s": 76.56,
-    "lufs": -19.6,
-    "true_peak_dbtp": -6.2
+    "lufs": -19.4,
+    "true_peak_dbtp": -7.9
    }
-  }
+  },
+  "style": "D (rock kit + taiko, choir/brass hits, string swells)"
  },
  {
   "stage_id": "carbon-skyhook",
@@ -337,22 +346,23 @@
   "loop_duration_s": 61.4,
   "normalization": "linear",
   "detected_key_check": "B major",
-  "lead": "lead",
-  "bass": "pbass",
-  "arp": "pluck",
+  "lead": "brass + guitar",
+  "bass": "guitar + staccato cello",
+  "arp": "staccato cello",
   "files": {
    "ogg": {
     "file": "carbon-skyhook.ogg",
     "duration_s": 61.4,
-    "lufs": -19.2,
-    "true_peak_dbtp": -6.2
+    "lufs": -19.1,
+    "true_peak_dbtp": -8.7
    },
    "mp3": {
     "file": "carbon-skyhook.mp3",
     "duration_s": 61.44,
-    "lufs": -19.7,
-    "true_peak_dbtp": -7.1
+    "lufs": -19.5,
+    "true_peak_dbtp": -9.4
    }
-  }
+  },
+  "style": "D (rock kit + taiko, choir/brass hits, string swells)"
  }
 ]

@@ -500,7 +500,8 @@ def t_story():
     put_bass(mx, ch, 'whole', 0.6, 0.55)
     put_arp(mx, ch, 'pluck', 4, 1.0, 0.4, 0.28, 'updown', 0.3, 0.6, only=(0, 16))
     put_melody(mx, m, 'bell', 0, 0, 0.7, 0.55, 0.0, 0.6, only=(0, 8))
-    put_melody(mx, m, 'flute', 8, 0, 0.6, 0.5, 0.1, 0.5, only=(0, 16))
+    # the second-half line (bars 8-15) over its own chords; it used to start at bar 8 with all 16 bars, so bars 16-23 spilled past the loop end onto bar 1 and the first half played over the second-half chords
+    put_melody(mx, m, 'flute', 0, 0, 0.6, 0.5, 0.1, 0.5, only=(8, 16))
     put_melody(mx, m[:8], 'bell', 8, 12, 0.5, 0.25, -0.3, 0.7, only=(0, 0))
     render_track('story', mx, rt=2.6)
 
@@ -518,7 +519,8 @@ def t_camp():
     put_pad(mx, ch, 'pad', 3, 0.5, 0.38, 0.4)
     put_arp(mx, ch, 'pluck', 4, 0.5, 0.45, 0.35, 'updown', 0.35, 0.35, only=(0, 16))
     put_melody(mx, m, 'flute', 0, 0, 0.7, 0.6, 0.0, 0.35)
-    put_melody(mx, m, 'bell', 8, 12, 0.5, 0.22, 0.3, 0.6)
+    # octave-up bells: first-half line over bars 8-15 only (bars 16+ of the old 16-bar layer spilled onto the loop start)
+    put_melody(mx, m, 'bell', 8, 12, 0.5, 0.22, 0.3, 0.6, only=(0, 8))
     render_track('camp', mx, rt=2.0)
 
 
@@ -536,7 +538,7 @@ def t_title():
     put_pad(mx, ch, 'choir', 4, 0.5, 0.3, 0.5, only=(8, 16))
     put_arp(mx, ch, 'bell', 5, 1.0, 0.4, 0.28, 'updown', 0.4, 0.7, only=(0, 16))
     put_melody(mx, m, 'horn', 0, 0, 0.85, 0.62, 0.0, 0.35)
-    put_melody(mx, m, 'lead', 8, 12, 0.6, 0.25, 0.3, 0.35, only=(8, 16))
+    # the octave-up lead layer started at bar 8 with bars 8-15 of the line, so it landed on bars 16-23, past the loop end, and only its tail folded onto the loop start; the approved v2 mix drops it
     render_track('title', mx, rt=2.4)
 
 

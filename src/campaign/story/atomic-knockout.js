@@ -98,6 +98,7 @@ const CHAPTERS = [
     title: 'The Alkali Gate',
     kicker: 'CHAPTER 2',
     win: 'seize',
+    enemyDmg: 0.65, // the throne boss now has to be beaten before the seize, so this chapter's enemies hit a little softer
     objective: 'Defeat Chroma, then seize the throne with Hydra',
     map: [
       'ff..#__T___#..ff',

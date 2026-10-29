@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { CampaignBattle, SUPPORTS, supportsFor, CHAPTERS, newCampaign, createBattle, autoplayChapter, afterVictory, partyForChapter, makeRecord, awardXp, loadSave, writeSave, baseStats } from '../src/campaign/index.js';
 import { TERRAIN, TERRAIN_IDS } from '../src/campaign/terrain.js';
 import { parseMap, reachable, key, distanceField } from '../src/campaign/grid.js';
-import { forecast, resolve } from '../src/campaign/combat.js';
+import { forecast, resolve, missHalved } from '../src/campaign/combat.js';
 import { CHARACTERS, ROSTER } from '../src/data/characters.js';
 import { mulberry32 } from '../src/engine/rng.js';
 
@@ -860,4 +860,33 @@ test('seize chapters say up front that the boss must fall before the throne can 
   const seize = CHAPTERS.filter((c) => c.win === 'seize');
   assert.ok(seize.length >= 2);
   for (const c of seize) assert.match(c.objective, /defeat/i, c.id);
+});
+
+test('misses are half as common: hit = 100 - (100 - oldHit) / 2, in the forecast and in resolve', () => {
+  assert.equal(missHalved(78), 89);
+  assert.equal(missHalved(100), 100);
+  assert.equal(missHalved(0), 50);
+  assert.equal(missHalved(50), 75);
+  const map = parseMap(['..']);
+  const a = { id: 'hydra', team: 'player', x: 0, y: 0, power: 0, def: 2, spd: 8, hp: 70, maxHp: 70, range: [1, 2] };
+  const d = { id: 'kyle', team: 'enemy', x: 1, y: 0, power: 0, def: 2, spd: 8, hp: 70, maxHp: 70, range: [1, 1] };
+  const f = forecast(a, d, map);
+  assert.equal(f.att.hit, 89, 'equal speed on plain ground used to be 78%; now 89%');
+  const fast = forecast({ ...a, spd: 20 }, d, map);   // old 78 + 24 -> capped 100
+  assert.equal(fast.att.hit, 100);
+  const forest = forecast(a, { ...d }, parseMap(['.f']));
+  assert.ok(forest.att.hit < f.att.hit && forest.att.hit >= 50);
+  // resolve rolls against the same number: rng 0.885 -> 88.5 < 89 hits, 0.895 misses
+  const hitsAt = (r) => resolve({ ...a, hp: 70 }, { ...d, hp: 70 }, map, () => r).log[0].hit;
+  assert.equal(hitsAt(0.885), true);
+  assert.equal(hitsAt(0.895), false);
+});
+
+test('enemy damage is trimmed to offset fewer misses; ch2 softer, the tutorial keeps its own', async () => {
+  const { enemyDmgMult, ENEMY_DMG } = await import('../src/campaign/state.js');
+  const { CHAPTERS } = await import('../src/campaign/chapters.js');
+  assert.equal(enemyDmgMult({}), ENEMY_DMG);
+  assert.ok(ENEMY_DMG < 1 && ENEMY_DMG >= 0.7);
+  assert.equal(enemyDmgMult(CHAPTERS[0]), CHAPTERS[0].tutorial.dmg ?? 1);
+  assert.ok(enemyDmgMult(CHAPTERS[1]) < ENEMY_DMG);
 });

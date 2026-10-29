@@ -1,6 +1,6 @@
 // Combat forecast and resolution. Pure: callers pass an rng.
 //
-//   hit%   = 78 + 2*(atk.spd - def.spd) - tile avoid        (0..100)
+//   hit%   = 78 + 2*(atk.spd - def.spd) - tile avoid        (0..100), then the miss chance is halved: 100 - (100 - hit) / 2
 //   crit%  = 5 + (atk.spd - def.spd)                         (0..50), crit = x2 damage
 //   (a chapter's `tutorial: { dmg, critMax }` softens its enemies: damage x dmg and crit capped at critMax)
 //   damage = round(move damage x elementMult x power-up) + atk.power (flat level bonus) - def.def - tile def
@@ -40,6 +40,11 @@ export function elementMult(atkId, defId, move = null) {
   return clamp(vs / neutral, 0.6, 1.5);
 }
 
+/** Campaign attacks miss half as often as the raw formula says: hit = 100 - (100 - raw) / 2. */
+export function missHalved(raw) {
+  return Math.round(100 - (100 - raw) / 2);
+}
+
 function strike(att, def, map, move) {
   const tile = terrainAt(map, def.x, def.y);
   const mult = elementMult(att.id, def.id, move);
@@ -53,7 +58,7 @@ function strike(att, def, map, move) {
     mult,
     move,
     dmg: Math.max(1, raw),
-    hit: clamp(78 + 2 * (att.spd - def.spd) - (tile?.avoid || 0) - blind, 0, 100),
+    hit: missHalved(clamp(78 + 2 * (att.spd - def.spd) - (tile?.avoid || 0) - blind, 0, 100)),
     crit: clamp(5 + (att.spd - def.spd), 0, att.critMax ?? 50),
   };
 }

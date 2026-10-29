@@ -15,6 +15,11 @@ let uidSeq = 1;
 
 export const SEIZE_HINT = 'Defeat the boss to seize';
 
+// Attacks now miss half as often (combat.js missHalved), which helps the (larger) enemy side more than the party, so enemy
+// damage is trimmed to match; a chapter can set its own `enemyDmg` (a tutorial's `tutorial.dmg` wins over both).
+export const ENEMY_DMG = 0.9;
+export function enemyDmgMult(chapter) { return chapter.tutorial ? (chapter.tutorial.dmg ?? 1) : (chapter.enemyDmg ?? ENEMY_DMG); }
+
 function makeUnit(rec, team, x, y, extra = {}) {
   const info = moveInfo(rec.id);
   return {
@@ -64,7 +69,7 @@ export class CampaignBattle {
       const tut = chapter.tutorial; // an easing chapter: its enemies hit softer and crit less; `wake` staggers when they advance
       this.units.push(makeUnit(rec, 'enemy', e.x, e.y, {
         ai: e.ai || 'aggressive', boss: !!e.boss, wake: e.wake || 0,
-        ...(tut ? { dmgMult: tut.dmg ?? 1, critMax: tut.critMax ?? 50 } : {}),
+        dmgMult: enemyDmgMult(chapter), ...(tut ? { critMax: tut.critMax ?? 50 } : {}),
       }));
     }
     this.enemyRecords = enemyRecords;
@@ -365,7 +370,7 @@ export class CampaignBattle {
         const at = this.freeTileNear(sp.x, sp.y);
         const team = sp.team || 'enemy';
         const rec = this.enemyRecords({ id: sp.id, level: sp.level ?? this.avgLevel });
-        const u = makeUnit(rec, team, at.x, at.y, { ai: sp.ai || 'aggressive', boss: !!sp.boss, arrived: true });
+        const u = makeUnit(rec, team, at.x, at.y, { ai: sp.ai || 'aggressive', boss: !!sp.boss, arrived: true, ...(team === 'enemy' ? { dmgMult: enemyDmgMult(this.chapter) } : {}) });
         this.units.push(u);
         spawned.push(u);
       }

@@ -4,6 +4,7 @@ import { MOTION } from './theme.js';
 // drops the overlay. Entering Pause is a launch, not a showScene.
 const FULL_SCENES = [
   'Boot', 'Title', 'PlayerJoin', 'CharacterSelect', 'StageSelect', 'Battle', 'Results', 'PauseMenu',
+  'Campaign', 'CampaignBattle',
 ];
 
 /**

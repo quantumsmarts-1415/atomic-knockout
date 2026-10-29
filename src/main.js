@@ -7,6 +7,8 @@ import CharacterSelectScene from './scenes/CharacterSelectScene.js';
 import StageSelectScene from './scenes/StageSelectScene.js';
 import ResultsScene from './scenes/ResultsScene.js';
 import PauseMenuScene from './scenes/PauseMenuScene.js';
+import CampaignScene from './scenes/CampaignScene.js';
+import CampaignBattleScene from './scenes/CampaignBattleScene.js';
 
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
@@ -31,7 +33,7 @@ const config = {
   // A stalled file used to sit in the loader forever (timeout 0, two
   // retries). One miss is logged and skipped; the placeholder draws instead.
   loader: { timeout: 20000, maxRetries: 0 },
-  scene: [BootScene, TitleScene, PlayerJoinScene, CharacterSelectScene, StageSelectScene, BattleScene, ResultsScene, PauseMenuScene],
+  scene: [BootScene, TitleScene, PlayerJoinScene, CharacterSelectScene, StageSelectScene, BattleScene, ResultsScene, PauseMenuScene, CampaignScene, CampaignBattleScene],
 };
 
 if (typeof document !== 'undefined' && document.fonts) {

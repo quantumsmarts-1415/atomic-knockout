@@ -307,6 +307,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     for (const v of this.views.values()) this.animateView(v, dt, true);
     for (const v of this.cutViews) this.animateView(v, dt, false);
     this.pollGamepad();
+    if (this.backBtn) this.backBtn.container.setVisible(this.battle.phase === 'player' && !this.battle.result && ['move', 'menu', 'target'].includes(this.mode));
   }
 
   /** Does this fighter have its attack clip in memory yet? */
@@ -322,7 +323,9 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.add.graphics().setDepth(4).fillStyle(THEME.ink, 0.9).fillRect(x - 8, 52, W - x + 8, H - 52);
     this.panel = { objs: [] };
     this.endBtn = makeButton(this, { x: x + 4, y: H - 118, w: 208, h: 44, label: 'End Turn', keyHint: 'E', onPress: () => { sfx('menuConfirm'); this.endTurnPressed(); }, depth: 20 });
-    this.add.text(x + 8, H - 62, 'Left click: select / confirm\nRight click, Esc: cancel\nArrows / WASD: cursor', textStyle('caption', { fontSize: '11px', lineSpacing: 4 })).setDepth(20);
+    this.backBtn = makeButton(this, { x: x + 4, y: H - 168, w: 208, h: 40, label: 'Back', keyHint: 'B', onPress: () => { sfx('menuMove'); this.cancel(); }, depth: 20 });
+    this.backBtn.container.setVisible(false);
+    this.add.text(x + 8, H - 62, 'Left click: select / confirm\nRight click, Esc, B: cancel\nArrows / WASD: cursor', textStyle('caption', { fontSize: '11px', lineSpacing: 4 })).setDepth(20);
     this.refreshPanel();
   }
 
@@ -474,7 +477,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     kb(['UP', 'W'], () => this.arrow(0, -1));
     kb(['DOWN', 'S'], () => this.arrow(0, 1));
     kb(['ENTER', 'SPACE', 'Z', 'F', 'K'], () => this.confirm(this.cursor.x, this.cursor.y, true));
-    kb(['ESC', 'X', 'BACKSPACE'], () => this.cancel());
+    kb(['ESC', 'X', 'BACKSPACE', 'B'], () => this.cancel());
     kb(['M'], () => this.toast(`Music: ${toggleMute() ? 'OFF' : 'ON'}`));
     kb(['C'], () => { this.cutOn = !this.cutOn; this.toast(`Battle scenes: ${this.cutOn ? 'ON' : 'OFF'}`); });
     kb(['E', 'TAB'], (ev) => { ev?.preventDefault?.(); this.endTurnPressed(); });
@@ -731,8 +734,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const path = this.battle.pathFor(u, { x, y }, this.reach);
     await this.walk(u, path);
     this.setCursor(x, y);
-    await this.runEvents(this.battle.checkEvents('move'));
-    if (this.battle.result) { this.finish(); return; }
+    // Move-triggered story events wait until the action is confirmed, so Back can still undo the move.
     this.openMenu();
   }
 
@@ -802,10 +804,10 @@ export default class CampaignBattleScene extends Phaser.Scene {
     if (!it) return;
     sfx('menuConfirm');
     this.closeMenu();
-    if (it.id === 'wait') this.finishAction(this.sel);
-    else if (it.id === 'escape') { this.mode = 'busy'; this.paintRanges(); this.battle.escape(this.sel); this.finishAction(this.sel, true); }
-    else if (it.id === 'talk') this.doTalk(this.talkList[0]);
-    else if (it.id === 'seize') { this.mode = 'busy'; this.paintRanges(); this.battle.seize(this.sel); this.finishAction(this.sel, true); }
+    if (it.id === 'wait') this.commitMove().then((over) => { if (!over) this.finishAction(this.sel); });
+    else if (it.id === 'escape') { this.mode = 'busy'; this.paintRanges(); this.commitMove().then((over) => { if (over) return; this.battle.escape(this.sel); this.finishAction(this.sel, true); }); }
+    else if (it.id === 'talk') this.commitMove().then((over) => { if (!over) this.doTalk(this.talkList[0]); });
+    else if (it.id === 'seize') { this.mode = 'busy'; this.paintRanges(); this.commitMove().then((over) => { if (over) return; this.battle.seize(this.sel); this.finishAction(this.sel, true); }); }
     else if (it.id === 'attack') {
       this.mode = 'target';
       this.pending = null;
@@ -826,8 +828,17 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.mode = 'busy';
     this.hideForecast();
     this.paintRanges();
+    if (await this.commitMove()) return;
     await this.combat(att, target);
     this.finishAction(att, true);
+  }
+
+  /** The move is final once an action is confirmed: only now do move-triggered events fire. True when the battle ended. */
+  async commitMove() {
+    this.mode = 'busy';
+    await this.runEvents(this.battle.checkEvents('move'));
+    if (this.battle.result) { this.finish(); return true; }
+    return false;
   }
 
   finishAction(u, already = false) {

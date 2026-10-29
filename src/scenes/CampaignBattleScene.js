@@ -15,6 +15,7 @@ import { TERRAIN } from '../campaign/terrain.js';
 import { key, ringTiles } from '../campaign/grid.js';
 import { tileKey, attackClipName, loadCampaignArt, sheetKey, walkReady, releaseWalk } from '../campaign/art.js';
 import { basicMove } from '../campaign/units.js';
+import { playMusic, stinger, watch, preload, toggleMute } from '../campaign/music.js';
 import { playDialogue, playBossCard } from '../ui/campaignDialogue.js';
 
 const TILE = 64;
@@ -68,6 +69,9 @@ export default class CampaignBattleScene extends Phaser.Scene {
     enterScene(this);
     this.events.once('shutdown', () => this.cleanup());
     window.__camp = this;
+    this.bossMusic = false;
+    watch(this.game);
+    preload(['map_player', 'map_enemy', ...(this.chapter.win === 'boss' || (this.chapter.events || []).some((e) => e.card) ? ['boss'] : [])]);
     // Attack clips stream in behind the map. Until one arrives that unit lunges instead.
     this.noWalk = /[?&]nowalk\b/.test(window.location.search);
     loadCampaignArt(this, this.battle.units.map((u) => u.id), 'attack', () => { this.attackReady = true; });
@@ -469,6 +473,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     kb(['DOWN', 'S'], () => this.arrow(0, 1));
     kb(['ENTER', 'SPACE', 'Z', 'F', 'K'], () => this.confirm(this.cursor.x, this.cursor.y, true));
     kb(['ESC', 'X', 'BACKSPACE'], () => this.cancel());
+    kb(['M'], () => this.toast(`Music: ${toggleMute() ? 'OFF' : 'ON'}`));
     kb(['C'], () => { this.cutOn = !this.cutOn; this.toast(`Battle scenes: ${this.cutOn ? 'ON' : 'OFF'}`); });
     kb(['E', 'TAB'], (ev) => { ev?.preventDefault?.(); this.endTurnPressed(); });
   }
@@ -891,6 +896,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
 
   /** Pillar of light, a ring that rises off the feet, and sparkles. */
   levelUpFx(v) {
+    stinger('levelup', { duck: 0.45 });
     const { x, y } = v.cont;
     const pillar = this.add.rectangle(x, y - 60, 60, 160, 0xffd166, 0.0).setDepth(80).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({ targets: pillar, alpha: { from: 0.55, to: 0 }, scaleX: { from: 1, to: 0.3 }, scaleY: { from: 0.6, to: 1.4 }, duration: 900 / this.speed, onComplete: () => pillar.destroy() });
@@ -1144,7 +1150,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
         }
         await this.wait(560);
       }
-      if (event.card) { this.inDialogue = true; await playBossCard(this, { card: event.card, depth: 190, speed: this.speed }); this.inDialogue = false; }
+      if (event.card) { this.bossMusic = true; playMusic('boss', { fade: 0.6 }); this.inDialogue = true; await playBossCard(this, { card: event.card, depth: 190, speed: this.speed }); this.inDialogue = false; }
       await this.talkScene(lines, event.when?.near ? 'ENCOUNTER' : event.when?.death ? 'LAST WORDS' : spawned.length ? 'REINFORCEMENTS' : 'STORY');
       this.mode = prev;
       this.refreshPanel();
@@ -1167,8 +1173,14 @@ export default class CampaignBattleScene extends Phaser.Scene {
   }
 
   // --------------------------------------------------------------- phases
+  /** Phase themes; once a boss has made its entrance the boss theme holds for the rest of the chapter. */
+  phaseMusic(name) {
+    playMusic(this.bossMusic ? 'boss' : name, { fade: this.bossMusic ? 1.0 : 1.3 });
+  }
+
   async startPlayerPhase(first = false) {
     const b = this.battle;
+    this.phaseMusic('map_player');
     this.mode = 'busy';
     const healed = b.startPhase('player');
     for (const v of this.views.values()) this.setGrey(v, false);
@@ -1195,6 +1207,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
 
   async runEnemyPhase() {
     const b = this.battle;
+    this.phaseMusic('map_enemy');
     this.mode = 'busy';
     const healed = b.endPlayerPhase();
     this.refreshPanel();
@@ -1240,6 +1253,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.paintRanges();
     const won = b.result === 'victory';
     sfx(won ? 'gameEnd' : 'alarm');
+    this.bossMusic = false;
+    stinger(won ? 'victory' : 'defeat', { hold: true, duck: 0 });
     await this.banner(won ? 'VICTORY' : 'DEFEAT', won ? this.chapter.title : 'Hydra has fallen', won ? THEME.gold : 0xff4f5f);
     const lord = b.units.find((u) => u.lord);
     const survivors = b.commit();

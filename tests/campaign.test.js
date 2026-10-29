@@ -284,3 +284,18 @@ test('replaying an early chapter with a big party still fits the start tiles, lo
   const b = createBattle(save, 0, 3);
   assert.equal(b.players.length, CHAPTERS[0].starts.length);
 });
+
+test('every campaign music track has an ogg and an mp3 on disk and a known role', async () => {
+  // music.js touches window/localStorage only inside functions, so it imports fine in node
+  const { TRACKS } = await import('../src/campaign/music.js');
+  const names = Object.keys(TRACKS);
+  for (const need of ['title', 'story', 'camp', 'map_player', 'map_enemy', 'boss', 'victory', 'defeat', 'levelup']) assert.ok(names.includes(need), need);
+  for (const n of names) {
+    for (const ext of ['ogg', 'mp3']) {
+      const f = new URL(`../assets/campaign/music/${n}.${ext}`, import.meta.url);
+      assert.ok(fs.statSync(f).size > 10000, `${n}.${ext}`);
+    }
+  }
+  const src = fs.readFileSync(new URL('../src/engine/sfx.js', import.meta.url), 'utf8');
+  assert.ok(!src.includes('campaign/music'), 'fight-mode audio must not depend on campaign music');
+});

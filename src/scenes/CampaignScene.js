@@ -8,6 +8,7 @@ import { enterScene, isLeaving, showScene } from '../ui/flow.js';
 import { CHARACTERS } from '../data/characters.js';
 import { faceFrame, menuPortraitKey } from '../ui/portraits.js';
 import { CHAPTERS, PROLOGUE, supportsFor, afterVictory, chapterSpeakers, loadSave, newCampaign, partyForChapter, writeSave, clearSave } from '../campaign/index.js';
+import { playMusic, stopMusic, watch, preload, toggleMute } from '../campaign/music.js';
 import { playDialogue } from '../ui/campaignDialogue.js';
 import { loadCampaignArt, releaseCampaignArt, tileKey } from '../campaign/art.js';
 
@@ -32,6 +33,8 @@ export default class CampaignScene extends Phaser.Scene {
   create() {
     this.busy = false;
     this.speed = Number(new URLSearchParams(window.location.search).get('campspeed')) || 1;
+    watch(this.game);
+    preload(['title', 'story', 'camp']);
     this.keyHandlers = [];
     drawMenuBackground(this, W, H);
     this.save = this.incoming.save || loadSave();
@@ -57,6 +60,7 @@ export default class CampaignScene extends Phaser.Scene {
 
   clearStage() {
     this.clearKeys();
+    this.onKey('M', () => toggleMute());
     // a button mid-press still has a tween that repaints it; stop that before it is destroyed
     this.stage?.forEach((o) => { this.tweens.killTweensOf(o); o.destroy(); });
     this.stage = [];
@@ -78,6 +82,7 @@ export default class CampaignScene extends Phaser.Scene {
   // ---------------------------------------------------------------- menu
   showMenu() {
     this.clearStage();
+    playMusic('title');
     this.header('TACTICS', 'CHAPTER SELECT');
     const save = this.save;
     const progress = save ? save.chapter : 0;
@@ -150,6 +155,7 @@ export default class CampaignScene extends Phaser.Scene {
   /** Base conversations between chapters: short talks between party members. */
   showCamp() {
     this.clearStage();
+    playMusic('camp');
     this.header('BASE CAMP', 'CAMP CONVERSATIONS');
     const save = this.save;
     const list = supportsFor(save);
@@ -207,7 +213,7 @@ export default class CampaignScene extends Phaser.Scene {
         writeSave(this.save);
         this.showCamp();
       };
-      this.playStory({ kicker: 'CAMP CONVERSATION', title: sp.title, objective: null, enemies: [] }, sp.lines, done, false);
+      this.playStory({ kicker: 'CAMP CONVERSATION', title: sp.title, objective: null, enemies: [] }, sp.lines, done, false, 'camp');
     }, { hud: true });
   }
 
@@ -232,6 +238,7 @@ export default class CampaignScene extends Phaser.Scene {
   backHome() {
     if (isLeaving(this)) return;
     releaseCampaignArt(this);
+    stopMusic(0.6);
     showScene(this, 'Title');
   }
 
@@ -263,8 +270,9 @@ export default class CampaignScene extends Phaser.Scene {
   }
 
   /** A conversation over a chapter title card. onDone runs after it ends or is skipped. */
-  playStory(chapter, lines, onDone, titleCard = false) {
+  playStory(chapter, lines, onDone, titleCard = false, music = 'story') {
     this.clearStage();
+    playMusic(music);
     this.add2(this.add.text(W / 2, 30, chapter.kicker, textStyle('kicker')).setOrigin(0.5, 0).setDepth(6));
     this.add2(this.add.text(W / 2, 50, chapter.title, textStyle('h1')).setOrigin(0.5, 0).setDepth(6));
     if (titleCard && chapter.objective) this.add2(this.add.text(W / 2, 98, `OBJECTIVE: ${chapter.objective.toUpperCase()}`, textStyle('label', { color: THEME.goldCss })).setOrigin(0.5, 0).setDepth(6));
@@ -302,6 +310,7 @@ export default class CampaignScene extends Phaser.Scene {
 
   showSummary(after, won) {
     this.clearStage();
+    playMusic('title');
     const { chapterIndex, survivors, fallen, turns, levelUps } = after;
     const chapter = CHAPTERS[chapterIndex];
     this.header(won ? (after.practice ? 'REPLAY CLEAR' : 'CHAPTER CLEAR') : 'DEFEAT', chapter.title);

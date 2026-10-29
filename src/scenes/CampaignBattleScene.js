@@ -890,6 +890,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     for (let x = 0; x < W; x += 160) for (let y = FOOT - 70; y < PY + PH; y += 160) {
       const t = x + 80 < W / 2 ? mapA : mapD;
       const img = this.add.image(x + 80, y + 80, tileKey(t.id)).setDisplaySize(160, 160);
+      if (t.id === 'road') img.setAngle(90);
       add(img, 2);
     }
     const shade = this.add.graphics();
@@ -1046,6 +1047,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
   }
 
   async banner(title, sub, color = THEME.teal) {
+    this.bannerText = title;
     const g = this.add.graphics().setDepth(95);
     g.fillStyle(THEME.void, 0.78);
     g.fillRect(0, 290, W, 120);
@@ -1060,6 +1062,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     await this.wait(sub ? 900 : 650);
     await this.tween({ targets: objs, alpha: 0, duration: 160 });
     objs.forEach((o) => o.destroy());
+    this.bannerText = null;
   }
 
   // --------------------------------------------------------------- story events

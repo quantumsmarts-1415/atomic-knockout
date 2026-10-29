@@ -76,7 +76,7 @@ export function playDialogue(scene, { lines, enemyIds = [], dim = 0, depth = 200
     skipBg.lineStyle(1.5, THEME.teal, 0.8); skipBg.strokeRoundedRect(W - 150, 14, 132, 34, 10);
     const skipT = add(scene.add.text(W - 84, 31, 'SKIP  ▸▸', textStyle('label', { fontSize: '14px' })).setOrigin(0.5), 31);
     const skipZone = scene.add.zone(W - 84, 31, 132, 34).setDepth(depth + 32).setInteractive({ useHandCursor: true });
-    if (tag) add(scene.add.text(24, 24, tag, textStyle('kicker')).setDepth(depth + 31), 31);
+    if (tag) add(scene.add.text(W / 2, 62, tag, textStyle('kicker', { color: THEME.goldCss })).setOrigin(0.5, 0), 31);
 
     const figs = new Map();
     let i = -1;

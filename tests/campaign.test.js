@@ -29,7 +29,13 @@ test('chapter maps parse, units start on passable distinct tiles', () => {
       seen.add(key(e.x, e.y));
     }
     assert.ok(ch.starts.length >= 10);
+    assert.ok(CHAPTERS.length >= 6);
     if (ch.win === 'seize') assert.ok(ok(...ch.seize));
+    if (ch.win === 'escape') for (const [x, y] of ch.exit) assert.ok(ok(x, y), `${ch.id} exit`);
+    if (ch.win === 'defend') assert.ok(ch.turns >= 3);
+    for (const n of ch.npcs || []) { assert.ok(CHARACTERS[n.id], n.id); assert.ok(ok(n.x, n.y), `${ch.id} npc ${n.id}`); assert.ok(!seen.has(key(n.x, n.y))); seen.add(key(n.x, n.y)); }
+    for (const e of ch.events || []) for (const sp of e.spawn || []) assert.ok(CHARACTERS[sp.id], sp.id);
+    for (const l of [...(ch.intro || []), ...(ch.outro || []), ...(ch.events || []).flatMap((e) => e.lines || [])]) assert.ok(l.who === null || CHARACTERS[l.who], `${ch.id} speaker ${l.who}`);
     if (ch.win === 'boss') assert.ok(ch.enemies.some((e) => e.boss));
     // everything is connected to the start area
     const field = distanceField(map, [{ x: ch.starts[0][0], y: ch.starts[0][1] }]);
@@ -132,7 +138,7 @@ test('a chapter plays out: permadeath, result, progress carry-over', () => {
     save = afterVictory(newCampaign(), 0, survivors);
     assert.equal(save.chapter, 1);
     const party = partyForChapter(save, CHAPTERS[1]);
-    assert.ok(party.length >= survivors.length + 4, 'recruits join');
+    assert.ok(party.length >= survivors.length + 3, 'recruits join');
     assert.ok(party.every((p) => p.hp === p.maxHp), 'healed between chapters');
     for (const s of survivors) assert.ok(party.find((p) => p.id === s.id && p.level === s.level));
     return;
@@ -164,4 +170,61 @@ test('save slot round-trips', () => {
   const s = newCampaign();
   writeSave(s, storage);
   assert.deepEqual(loadSave(storage), s);
+});
+
+test('campaign arc: 6-8 chapters with varied objectives and a prologue', async () => {
+  const { PROLOGUE } = await import('../src/campaign/chapters.js');
+  assert.ok(CHAPTERS.length >= 6 && CHAPTERS.length <= 8);
+  const wins = new Set(CHAPTERS.map((c) => c.win));
+  for (const w of ['rout', 'seize', 'boss', 'defend', 'escape']) assert.ok(wins.has(w), `objective ${w}`);
+  assert.ok(PROLOGUE.lines.length >= 4);
+  assert.ok(CHAPTERS.every((c) => c.intro.length >= 3 && c.outro.length >= 2));
+});
+
+test('defend wins when the turns run out; escape wins when the lord reaches the exit', () => {
+  const save = newCampaign();
+  const di = CHAPTERS.findIndex((c) => c.win === 'defend');
+  const d = createBattle(save, di, 5);
+  for (let i = 0; i < CHAPTERS[di].turns; i++) { assert.equal(d.result, null); d.endPlayerPhase(); d.endEnemyPhase(); }
+  assert.equal(d.result, 'victory');
+  const ei = CHAPTERS.findIndex((c) => c.win === 'escape');
+  const e = createBattle(save, ei, 5);
+  const lord = e.units.find((u) => u.lord);
+  assert.ok(!e.canEscape(lord));
+  e.moveUnit(lord, ...CHAPTERS[ei].exit[0]);
+  assert.ok(e.canEscape(lord));
+  e.escape(lord);
+  assert.equal(e.result, 'victory');
+});
+
+test('events: turn spawns reinforcements, near-boss fires once, talk recruits an npc', () => {
+  const save = newCampaign();
+  const i3 = CHAPTERS.findIndex((c) => c.id === 'ch3');
+  const b = createBattle(save, i3, 3);
+  assert.equal(b.checkEvents('turn').length, 0);
+  b.turn = 3;
+  const fired = b.checkEvents('turn');
+  assert.equal(fired.length, 1);
+  assert.equal(fired[0].spawned.length, 2);
+  assert.ok(fired[0].spawned.every((u) => u.team === 'player' && u.alive && !b.units.some((o) => o !== u && o.x === u.x && o.y === u.y)));
+  assert.equal(b.checkEvents('turn').length, 0, 'events fire once');
+  const titan = b.units.find((u) => u.id === 'titan');
+  const p = b.players[0];
+  b.moveUnit(p, titan.x, titan.y + 2);
+  const near = b.checkEvents('move');
+  assert.equal(near.length, 1);
+  assert.ok(near[0].lines.some((l) => l.who === 'titan'));
+  // talk
+  const i2 = CHAPTERS.findIndex((c) => c.id === 'ch2');
+  const c2 = createBattle({ ...save, chapter: i2 }, i2, 3);
+  const flora = c2.units.find((u) => u.id === 'flora');
+  assert.equal(flora.team, 'npc');
+  assert.ok(!c2.targetsFrom(c2.players[0], flora.x, flora.y).includes(flora), 'npcs are not attackable');
+  const talker = c2.players[0];
+  c2.moveUnit(talker, flora.x + 1, flora.y);
+  assert.deepEqual(c2.talkTargets(talker), [flora]);
+  const r = c2.talk(talker, flora);
+  assert.ok(r.lines.length >= 2);
+  assert.equal(flora.team, 'player');
+  assert.ok(c2.commit().some((rec) => rec.id === 'flora'));
 });

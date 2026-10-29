@@ -246,7 +246,7 @@ export const CHAPTERS = [
       { id: 'selena', level: 4, x: 2, y: 3, ai: 'aggressive' },
       { id: 'tessa', level: 4, x: 13, y: 3, ai: 'aggressive' },
       { id: 'tate', level: 4, x: 7, y: 0, ai: 'aggressive' },
-      { id: 'kyle', level: 5, x: 8, y: 1, ai: 'aggressive' },
+      { id: 'kyle', level: 5, x: 5, y: 1, ai: 'aggressive' },
     ],
     intro: [
       { who: null, text: 'Past the Core, the road crosses the Salt Flats, a wide plain with nowhere to hide. A signal beacon stands on the old fort.' },
@@ -316,8 +316,8 @@ export const CHAPTERS = [
       },
     ],
     enemies: [
-      { id: 'pit', level: 5, x: 4, y: 3, ai: 'aggressive' },
-      { id: 'ira', level: 5, x: 12, y: 3, ai: 'aggressive' },
+      { id: 'pit', level: 5, x: 3, y: 3, ai: 'aggressive' },
+      { id: 'ira', level: 5, x: 13, y: 3, ai: 'aggressive' },
       { id: 'oz', level: 5, x: 6, y: 2, ai: 'hold' },
       { id: 'rex', level: 5, x: 10, y: 2, ai: 'hold' },
       { id: 'wolf', level: 6, x: 7, y: 1, ai: 'hold' },
@@ -378,7 +378,7 @@ export const CHAPTERS = [
       },
     ],
     enemies: [
-      { id: 'lana', level: 6, x: 3, y: 2, ai: 'aggressive' },
+      { id: 'lana', level: 6, x: 2, y: 1, ai: 'aggressive' },
       { id: 'ceres', level: 6, x: 12, y: 2, ai: 'aggressive' },
       { id: 'dizzy', level: 6, x: 4, y: 4, ai: 'aggressive' },
       { id: 'nadia', level: 6, x: 11, y: 4, ai: 'aggressive' },

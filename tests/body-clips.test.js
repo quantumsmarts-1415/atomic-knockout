@@ -124,7 +124,8 @@ test('a move with no body clip keeps the generic attack sheet', () => {
   // Bone Crush was never redrawn, so it still plays Cal's attack sheet.
   assert.equal(clipNameForMove('tess', 'specialDefense'), null);
   assert.equal(clipNameForMove('cal', 'basicDirectional'), 'attack');
-  assert.equal(clipNameForMove('tess', 'basicDirectional'), 'body-basicDirectional');
+  // Tess's old-design Last Halogen sheet was removed in the modesty cleanup, so that move plays her modest attack sheet.
+  assert.equal(clipNameForMove('tess', 'basicDirectional'), 'attack');
   assert.ok(sheetMeta('tess', 'attack'));
   assert.ok(CHARACTERS.tess.art.sheets.clips.attack.count > 0);
   assert.ok(CHARACTERS.cal.art.sheets.clips.attack.count > 0);
@@ -1205,7 +1206,8 @@ test('Ben through Fey play their own sheets, and the left-facing idles do not fl
     assert.equal(CHARACTERS.ben.art.sheets.clips[key].sheetFacing, undefined, key);
     assert.equal(CHARACTERS.carter.art.sheets.clips[key].sheetFacing, undefined, key);
   }
-  assert.equal(CHARACTERS.saab.art.sheets.clips['body-basicDirectional'].sheetFacing, -1);
+  assert.equal(CHARACTERS.saab.art.sheets.clips['body-basicDirectional'].sheetFacing, undefined);
+  for (const id of ['chloe', 'chroma', 'cal']) for (const key of ['body-basicCharge', 'body-specialDefense', 'body-specialDirectional']) assert.equal(CHARACTERS[id].art.sheets.clips[key].sheetFacing, 1, `${id} ${key}`);
   assert.equal(CHARACTERS.tex.art.sheets.clips['body-basicDirectional'].sheetFacing, -1);
   assert.equal(CHARACTERS.tex.art.sheets.clips['body-basicCharge'].sheetFacing, undefined);
   assert.equal(CHARACTERS.van.art.sheets.clips['body-specialDirectional'].sheetFacing, -1);

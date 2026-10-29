@@ -99,8 +99,10 @@ for (const id of readdirSync(root).sort()) {
     if (id === 'nitra') record.sheetFacing = json.move === 'gust' ? 1 : -1;
     // Scarlett's idle faces left. These sheets strike to the right.
     if (id === 'scarlett') record.sheetFacing = 1;
-    // Saab faces right. Toxic Dust Cloud is the one sheet drawn facing left.
-    if (id === 'saab' && json.move === 'toxic-dust-cloud') record.sheetFacing = -1;
+    // Chloe, Chroma and Cal: art.facing is -1 (their older sheets face left) but the redrawn idles and
+    // every move sheet face right, same as their idle's sheetFacing. Without this the clip flipped backward.
+    if (id === 'chloe' || id === 'chroma' || id === 'cal') record.sheetFacing = 1;
+    // Saab faces right and so does the Toxic Dust Cloud sheet (anchors and pixels agree), so no flag.
     // Tex faces right. Tracer Lasso is the one sheet drawn facing left.
     if (id === 'tex' && json.move === 'tracer-lasso') record.sheetFacing = -1;
     // Van's idle faces left. Prism Surge does too. The other three strike right.

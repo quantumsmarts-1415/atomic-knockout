@@ -319,3 +319,25 @@ test('player-phase map music rotates through three themes: per chapter, and per 
   // the boss theme and enemy phase are not part of the rotation
   assert.ok(!MAP_PLAYER_ROTATION.includes('boss') && !MAP_PLAYER_ROTATION.includes('map_enemy'));
 });
+
+test('every authored move clip faces right when the rig faces right (attackers face their target)', async () => {
+  const { sheetMeta } = await import('../src/engine/moveSheet.js');
+  const bad = [];
+  for (const [id, c] of Object.entries(CHARACTERS)) {
+    const s = c.art?.sheets;
+    if (!s) continue;
+    for (const [name, def] of Object.entries(s.clips)) {
+      const meta = sheetMeta(id, name);
+      const anchors = meta?.anchors?.fist || meta?.anchors?.tip;
+      if (!anchors) continue;
+      const fw = def.frameW ?? s.frameW;
+      // the hand at the strike frames (the wind-up pose can point either way)
+      const frames = (meta.strikeFrames?.length ? meta.strikeFrames : [meta.release ?? meta.active?.[0] ?? 0]).filter((i) => anchors[i]);
+      if (!frames.length) continue;
+      const native = Math.sign(frames.reduce((a, i) => a + anchors[i][0] - fw / 2, 0));
+      const flipped = (def.sheetFacing ?? c.art.facing ?? 1) === -1;
+      if ((flipped ? -native : native) !== 1) bad.push(`${id}:${name}`);
+    }
+  }
+  assert.deepEqual(bad, []);
+});

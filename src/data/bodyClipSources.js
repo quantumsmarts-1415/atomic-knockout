@@ -3008,7 +3008,8 @@ export const BODY_SOURCES = {
           311,
           367
         ]
-      ]
+      ],
+      "sheetFacing": 1
     },
     "quick-set-cement": {
       "frameW": 504,
@@ -3054,7 +3055,8 @@ export const BODY_SOURCES = {
           315,
           378
         ]
-      ]
+      ],
+      "sheetFacing": 1
     },
     "slime-splash": {
       "frameW": 602,
@@ -3117,7 +3119,8 @@ export const BODY_SOURCES = {
           394,
           370
         ]
-      ]
+      ],
+      "sheetFacing": 1
     }
   },
   "cali": {
@@ -3742,7 +3745,8 @@ export const BODY_SOURCES = {
           679,
           510
         ]
-      ]
+      ],
+      "sheetFacing": 1
     },
     "gas-cloud": {
       "frameW": 824,
@@ -3804,7 +3808,8 @@ export const BODY_SOURCES = {
           497,
           511
         ]
-      ]
+      ],
+      "sheetFacing": 1
     },
     "salt-bond": {
       "frameW": 696,
@@ -3866,7 +3871,8 @@ export const BODY_SOURCES = {
           433,
           505
         ]
-      ]
+      ],
+      "sheetFacing": 1
     },
     "toxic-jab": {
       "frameW": 886,
@@ -3912,7 +3918,8 @@ export const BODY_SOURCES = {
           417,
           594
         ]
-      ]
+      ],
+      "sheetFacing": 1
     }
   },
   "chroma": {
@@ -3960,7 +3967,8 @@ export const BODY_SOURCES = {
           426,
           589
         ]
-      ]
+      ],
+      "sheetFacing": 1
     },
     "mirror-chrome": {
       "frameW": 752,
@@ -4026,7 +4034,8 @@ export const BODY_SOURCES = {
           467,
           553
         ]
-      ]
+      ],
+      "sheetFacing": 1
     },
     "prismatic-shatter": {
       "frameW": 834,
@@ -4087,7 +4096,8 @@ export const BODY_SOURCES = {
           563,
           560
         ]
-      ]
+      ],
+      "sheetFacing": 1
     },
     "ruby-laser": {
       "frameW": 784,
@@ -4150,7 +4160,8 @@ export const BODY_SOURCES = {
           536,
           427
         ]
-      ]
+      ],
+      "sheetFacing": 1
     }
   },
   "cody": {
@@ -17983,8 +17994,7 @@ export const BODY_SOURCES = {
           349,
           344
         ]
-      ],
-      "sheetFacing": -1
+      ]
     }
   },
   "sam": {

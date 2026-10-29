@@ -1,11 +1,11 @@
 {
   "blend": "normal",
-  "black": 16,
+  "black": false,
   "hit": false,
   "projectile": {
-    "file": "micro-rocket.jpg",
+    "file": "micro-rocket.png",
     "blend": "normal",
-    "black": 16,
+    "black": false,
     "fit": "width",
     "heightFrac": 0.62,
     "crop": "frame",

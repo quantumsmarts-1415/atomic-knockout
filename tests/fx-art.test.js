@@ -587,7 +587,8 @@ test('gemini fx sheets replace the placeholder stills', () => {
   assert.equal(aaron.spriteAura, undefined);
   assert.equal(aaron.hit, false);
   const rocket = read('assets/fx/scarlett/micro-rocket/fx.json');
-  assert.equal(rocket.projectile.file, 'micro-rocket.jpg');
+  assert.equal(rocket.projectile.file, 'micro-rocket.png'); // a cut-out with real alpha (the old jpg had a black backdrop)
+  assert.equal(rocket.projectile.black, false);
   assert.equal(rocket.projectile.blend, 'normal');
   assert.equal(rocket.detonate.file, 'rocket-explosion-anim.png');
   assert.equal(rocket.detonate.frames, 24);
@@ -670,7 +671,7 @@ test('gemini fx sheets replace the placeholder stills', () => {
   const dirs = {
     'action-potential-pulse-anim.png': 'assets/fx/kyle/action-potential/',
     'lazy-glow-aura-sheet.jpg': 'assets/fx/aaron/lazy-haymaker/',
-    'micro-rocket.jpg': 'assets/fx/scarlett/micro-rocket/',
+    'micro-rocket.png': 'assets/fx/scarlett/micro-rocket/',
     'rocket-explosion-anim.png': 'assets/fx/scarlett/micro-rocket/',
     'titanium-sparks-sheet.jpg': 'assets/fx/titan/titanium-ram/',
     'ram-impact-anim.png': 'assets/fx/titan/titanium-ram/',
@@ -3005,4 +3006,23 @@ test('a dash trail head is always on the side the fighter faces, with the tail b
     assert.equal(r.tipX - 640, 640 - l.tipX, `${id}: mirrored facings`);
   }
   assert.ok(dashTrailLayout(0, 1, 40, 'hydra').tailFrac < 1, 'Hydra tail is cut short so it is not a screen-wide beam');
+});
+
+test("Scarlett's rocket is a real cut-out: an RGBA png with a transparent border and an opaque body", () => {
+  const file = 'assets/fx/scarlett/micro-rocket/micro-rocket.png';
+  const buf = fs.readFileSync(file);
+  assert.equal(buf.readUInt32BE(16), 2752);
+  assert.equal(buf.readUInt32BE(20), 1536);
+  assert.equal(buf[25], 6, 'colour type 6 = RGBA');
+  const rocket = JSON.parse(fs.readFileSync('assets/fx/scarlett/micro-rocket/fx.json', 'utf8'));
+  assert.equal(rocket.projectile.file, 'micro-rocket.png');
+  assert.equal(rocket.black, false, 'no black key needed: the alpha is in the file');
+});
+
+test("campaign FX: Scarlett's rocket detonation is additive, so its black sheet backdrop never shows", async () => {
+  const { blendOf } = await import('../src/campaign/fx.js');
+  const meta = JSON.parse(fs.readFileSync('assets/fx/scarlett/micro-rocket/fx.json', 'utf8'));
+  assert.equal(blendOf(meta), 0, 'the rocket itself is a normal-blend cut-out');
+  assert.equal(blendOf(meta.detonate), 1, 'the detonation uses its own add blend, not the move-level normal one');
+  assert.equal(blendOf({ blend: 'screen' }), 3);
 });

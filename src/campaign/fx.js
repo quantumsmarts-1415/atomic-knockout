@@ -31,7 +31,8 @@ function addFrames(scene, key, frames, cols, rows) {
 }
 
 // Phaser.BlendModes: NORMAL 0, ADD 1, SCREEN 3 (plain numbers so this file also loads under node for tests)
-function blendOf(meta) {
+export function blendOf(meta) {
+  // a part's own blend (a projectile's, a detonation's) wins over the move's top-level one, as in the fighting game
   return meta.blend === 'add' ? 1 : meta.blend === 'screen' ? 3 : 0;
 }
 
@@ -102,7 +103,7 @@ export async function playMoveFx(scene, spec, { from, to, face = 1, ref = 200, d
     // A miss never lands: a shot sails past the target and fades, and impact art (bursts, slashes, beams) is skipped.
     if (miss && !self) {
       if (!spec.proj) return;
-      const o = scene.add.image(from.x, from.y, spec.proj.key).setDepth(depth).setBlendMode(spec.blend);
+      const o = scene.add.image(from.x, from.y, spec.proj.key).setDepth(depth).setBlendMode(spec.proj.meta.blend ? blendOf(spec.proj.meta) : spec.blend);
       const s0 = Math.min(2, Math.max(0.15, (spec.proj.meta.heightFrac || 0.3) * 2 * ref / Math.max(o.height, 1) * 0.5));
       o.setScale(s0 * face, s0);
       const past = { x: to.x + face * ref * 0.9, y: to.y - ref * 0.1 };
@@ -112,13 +113,13 @@ export async function playMoveFx(scene, spec, { from, to, face = 1, ref = 200, d
       return;
     }
     if (spec.proj) {
-      const o = scene.add.image(from.x, from.y, spec.proj.key).setDepth(depth).setBlendMode(spec.blend);
+      const o = scene.add.image(from.x, from.y, spec.proj.key).setDepth(depth).setBlendMode(spec.proj.meta.blend ? blendOf(spec.proj.meta) : spec.blend);
       const s = Math.min(2, Math.max(0.15, (spec.proj.meta.heightFrac || 0.3) * 2 * ref / Math.max(o.height, 1) * 0.5));
       o.setScale(s * face, s);
       const dist = Math.hypot(to.x - from.x, to.y - from.y);
       await new Promise((resolve) => scene.tweens.add({ targets: o, x: to.x, y: to.y, duration: Math.max(180, dist * 0.9) / speed, ease: 'Quad.easeIn', onUpdate: () => { o.rotation += (spec.proj.meta.spin || 0) * 0.02; }, onComplete: resolve }));
       o.destroy();
-      if (spec.det) await playSheet(scene, spec.det, { x: to.x, y: to.y }, { face, ref, depth, speed, blend: spec.blend, meta: spec.det.meta, cap: 900 });
+      if (spec.det) await playSheet(scene, spec.det, { x: to.x, y: to.y }, { face, ref, depth, speed, blend: spec.det.meta.blend ? blendOf(spec.det.meta) : spec.blend, meta: spec.det.meta, cap: 900 });
       return;
     }
     await playSheet(scene, spec, at, { face, ref, depth, speed, blend: spec.blend, meta: spec.meta, cap: 1000, from, to, stretch: spec.meta.stretch || spec.meta.aim ? true : false });

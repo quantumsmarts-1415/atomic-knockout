@@ -18,6 +18,24 @@ Title screen -> **Campaign**. A Fire Emblem-style grid tactics campaign built fr
 - Map movement uses the fighter's own walk sheet when it has loaded (loaded one fighter at a time when selected / before an
   enemy moves, at most 4 kept in memory); otherwise the unit glides with a bob. `?nowalk` forces gliding.
 
+## Music
+Original soundtrack, composed in code (`tools/music/synth.py` + `compose.py`, rendered by `python3 tools/music/compose.py && python3 tools/music/build.py`;
+numpy/scipy + ffmpeg, no samples). Files are in `assets/campaign/music/` as `.ogg` (used) and `.mp3` (fallback), loudness-normalised
+(loops -19 LUFS, stingers -16 LUFS, true peak under -1.5 dB), loops are seamless.
+
+| track | where | length |
+|---|---|---|
+| title | chapter select, summary | 45.7 s loop |
+| story | prologue / chapter intros and outros | 58.2 s loop |
+| camp | camp conversations list and talks | 41.7 s loop |
+| map_player | player phase | 60.0 s loop |
+| map_enemy | enemy phase | 55.7 s loop |
+| boss | from the boss entrance card to the end of the chapter | 49.2 s loop |
+| victory / defeat / levelup | stingers (victory/defeat hold the next theme until they end; level-up just ducks it) | 7.6 / 11.9 / 2.9 s |
+
+`src/campaign/music.js` plays them on its own AudioContext (fight mode audio is untouched), crossfading between themes.
+Volume = `ak-master` (the Sound setting) x `ak-music` (localStorage, default 0.6); **M** toggles `ak-music-mute`. Music stops when the campaign is left.
+
 ## Story arc
 Prologue "The Hum at the Edge" -> 1 Static in the Cloud (rout) -> 2 The Alkali Gate (seize) -> 3 Heavy Metal Heart (boss)
 -> 4 The Salt Flats (defend 6 turns) -> 5 Through the Noble Mist (escape) -> 6 The Rare Earth Vale (rout)

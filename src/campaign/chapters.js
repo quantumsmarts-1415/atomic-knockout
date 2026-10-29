@@ -1,0 +1,155 @@
+// Campaign chapters. Map glyphs: . plain  , road  _ courtyard  f forest  ^ mountain
+// ~ water  # wall  F fort  v village  T throne.
+// Units are existing fighters; the lord is Hydra and must survive.
+
+export const LORD_ID = 'hydra';
+
+export const CHAPTERS = [
+  {
+    id: 'ch1',
+    title: 'Static in the Cloud',
+    kicker: 'CHAPTER 1',
+    win: 'rout',
+    objective: 'Rout the enemy',
+    map: [
+      'ff............^^',
+      'f.....~~....^^^.',
+      '......~~..ff....',
+      ',,,,,,,,,,,,,,,,',
+      '..ff..~~...v...F',
+      '...f..~~........',
+      '......~~..ff..f.',
+      'ff....~~......^^',
+      'f.............^^',
+      '................',
+    ],
+    starts: [[0, 3], [1, 3], [0, 4], [1, 4], [0, 5], [1, 5], [2, 4], [2, 3], [2, 5], [0, 2]],
+    lordSlot: 2,
+    party: [
+      { id: 'hydra', level: 1, lord: true },
+      { id: 'helen', level: 1 },
+      { id: 'lillie', level: 1 },
+      { id: 'ben', level: 1 },
+      { id: 'bord', level: 1 },
+      { id: 'carter', level: 1 },
+    ],
+    enemies: [
+      { id: 'chloe', level: 1, x: 11, y: 4, ai: 'aggressive' },
+      { id: 'aaron', level: 1, x: 10, y: 3, ai: 'aggressive' },
+      { id: 'sully', level: 1, x: 12, y: 2, ai: 'hold' },
+      { id: 'cal', level: 1, x: 12, y: 6, ai: 'aggressive' },
+      { id: 'phillip', level: 1, x: 13, y: 5, ai: 'hold' },
+      { id: 'kyle', level: 2, x: 15, y: 4, ai: 'hold' },
+    ],
+    intro: [
+      { who: 'hydra', text: 'The Hydrogen Cloud is the lightest place in the whole Table. Nothing here was ever meant to burn.' },
+      { who: 'helen', text: 'Then why is the Raider banner flying over the old fort? Kyle and his crew are pillaging the village road.' },
+      { who: 'lillie', text: 'Reactive little thieves. They grab anything that is not bonded down.' },
+      { who: 'hydra', text: 'We are not letting them take the Cloud. Move out, and keep everyone together.' },
+    ],
+    outro: [
+      { who: 'kyle', text: 'You are... stable. Too stable. The Table will not stay quiet for long.' },
+      { who: 'hydra', text: 'He ran toward the Alkali Gate. Whatever is pulling the Raiders, it is in that fortress.' },
+    ],
+  },
+  {
+    id: 'ch2',
+    title: 'The Alkali Gate',
+    kicker: 'CHAPTER 2',
+    win: 'seize',
+    objective: 'Seize the throne with Hydra',
+    map: [
+      'ff..#__T___#..ff',
+      'f...#_F__F_#...f',
+      '....#______#....',
+      '....###__###....',
+      '..ff...,,...ff..',
+      '......~,,~......',
+      '..v...~,,~...v..',
+      '......~,,~......',
+      'f.....,,,,.....f',
+      'ff............ff',
+    ],
+    starts: [[4, 8], [5, 8], [6, 8], [7, 8], [8, 8], [9, 8], [10, 8], [11, 8], [6, 9], [7, 9], [8, 9], [9, 9]],
+    lordSlot: 9,
+    seize: [7, 0],
+    party: [],
+    recruits: [
+      { id: 'nitra', join: 'level' },
+      { id: 'oxana', join: 'level' },
+      { id: 'flora', join: 'level' },
+      { id: 'neo', join: 'level' },
+    ],
+    enemies: [
+      { id: 'brock', level: 2, x: 5, y: 4, ai: 'aggressive' },
+      { id: 'collin', level: 2, x: 11, y: 4, ai: 'aggressive' },
+      { id: 'van', level: 2, x: 7, y: 3, ai: 'hold' },
+      { id: 'scarlett', level: 2, x: 6, y: 1, ai: 'hold' },
+      { id: 'arsenio', level: 2, x: 9, y: 1, ai: 'hold' },
+      { id: 'chroma', level: 3, x: 7, y: 0, ai: 'boss', boss: true },
+    ],
+    intro: [
+      { who: 'nitra', text: 'Hydra! Oxana, Flora, Neo and I came as soon as we heard. The Gate has closed behind the Raiders.' },
+      { who: 'oxana', text: 'Chroma holds the vault throne. Whoever sits there decides who may pass the Gate.' },
+      { who: 'hydra', text: 'Then I will sit there first. Break the guards at the gatehouse, and I will seize the throne.' },
+      { who: 'neo', text: 'Noble and ready. Let us light the way.' },
+    ],
+    outro: [
+      { who: 'chroma', text: 'Pretty colors do not make a king. Titan already has the Heavy Core. You are too late.' },
+      { who: 'hydra', text: 'Then we go to the Core. All of us.' },
+    ],
+  },
+  {
+    id: 'ch3',
+    title: 'Heavy Metal Heart',
+    kicker: 'CHAPTER 3',
+    win: 'boss',
+    objective: 'Defeat Titan',
+    map: [
+      '^^^^..........^^',
+      '^^f..##_T__##..f',
+      '^f...#______#...',
+      '....##__##__##..',
+      '..f.....ff...f..',
+      '.^^..~~~~~~..^^.',
+      '.....~~~~~~.....',
+      'f....~~~~~~....f',
+      'ff...........^^f',
+      'fff............f',
+    ],
+    starts: [[3, 8], [4, 8], [5, 8], [6, 8], [7, 8], [8, 8], [9, 8], [10, 8], [11, 8], [12, 8], [4, 9], [8, 9]],
+    lordSlot: 11,
+    party: [],
+    recruits: [
+      { id: 'natalie', join: 'level' },
+      { id: 'maggie', join: 'level' },
+      { id: 'allen', join: 'level' },
+      { id: 'silas', join: 'level' },
+    ],
+    enemies: [
+      { id: 'cooper', level: 4, x: 3, y: 4, ai: 'aggressive' },
+      { id: 'tex', level: 4, x: 12, y: 4, ai: 'aggressive' },
+      { id: 'manny', level: 4, x: 3, y: 3, ai: 'aggressive' },
+      { id: 'molly', level: 4, x: 14, y: 3, ai: 'aggressive' },
+      { id: 'rhoda', level: 4, x: 9, y: 4, ai: 'hold' },
+      { id: 'zane', level: 4, x: 11, y: 2, ai: 'hold' },
+      { id: 'fey', level: 4, x: 6, y: 2, ai: 'hold' },
+      { id: 'zora', level: 4, x: 7, y: 4, ai: 'hold' },
+      { id: 'titan', level: 6, x: 8, y: 1, ai: 'boss', boss: true },
+    ],
+    intro: [
+      { who: 'silas', text: 'Natalie, Maggie, Allen and I are with you. The Core is a heavy place. Everything here pulls down.' },
+      { who: 'maggie', text: 'Titan sits at the center of it. Strong, slow, and he hits like a collapsing star.' },
+      { who: 'allen', text: 'We can strip his guards and corner him. Stay out of reach of that lance when you can.' },
+      { who: 'hydra', text: 'This ends today. Bring Titan down and the Table is safe.' },
+    ],
+    outro: [
+      { who: 'titan', text: 'The lightest of the elements... brought down the heaviest. Maybe the Table does balance.' },
+      { who: 'hydra', text: 'Not balance. Together. Thank you, everyone. The Cloud is quiet again.' },
+    ],
+  },
+];
+
+export function chapterById(id) {
+  return CHAPTERS.find((c) => c.id === id) || null;
+}

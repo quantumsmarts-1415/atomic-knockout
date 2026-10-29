@@ -220,7 +220,7 @@ function warmupIntro(scene, stage, def, ctl, done) {
     }
   }
   function arm(skipped) {
-    if (ended || armed) return;
+    if (ended || armed || !charge?.scene) return; // the match can end (scene shut down) before the warm-up promise resolves
     armed = true;
     charge.setText('REACTOR LIVE');
     const elapsed = (scene.simNow || 0) - started;

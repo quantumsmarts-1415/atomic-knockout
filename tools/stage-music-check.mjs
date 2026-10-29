@@ -6,7 +6,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME || '/
   args: ['--no-sandbox', '--disable-dev-shm-usage', '--autoplay-policy=no-user-gesture-required', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 const errs = [];
-page.on('pageerror', (e) => errs.push((e.stack || e.message).slice(0, 400)));
+page.on('pageerror', (e) => errs.push((e.stack || e.message).slice(0, 1500)));
 const failed = [];
 page.on('response', (r) => { if (r.status() >= 400 && /music/.test(r.url())) failed.push(r.url()); });
 await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load' });

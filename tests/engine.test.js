@@ -396,7 +396,9 @@ test('a charged sniper ignores defense and a pass-through shot does not', () => 
   saab.chargeStart = 0;
   saab.fireCharge(950);
   assert.strictEqual(saab.currentMove.name, 'Sniper Round');
-  assert.ok(Math.abs(saab.currentMove.damage - 12.1) < 1e-6);
+  const sniper = CHARACTERS.saab.moves.basicCharge;
+  const fullCharge = sniper.damage * sniper.chargeDamageMult;
+  assert.ok(Math.abs(saab.currentMove.damage - fullCharge) < 1e-6);
   assert.strictEqual(saab.currentMove.defensePierce, 1);
   assert.strictEqual(saab.currentMove._chargeFrac, 1);
   assert.ok(!saab.currentMove.pierce);
@@ -404,7 +406,7 @@ test('a charged sniper ignores defense and a pass-through shot does not', () => 
   saab.chargeStart = 0;
   saab.fireCharge(475);
   assert.ok(Math.abs(saab.currentMove.defensePierce - 0.5) < 1e-6);
-  assert.ok(saab.currentMove.damage > 5.5 && saab.currentMove.damage < 12.1);
+  assert.ok(saab.currentMove.damage > sniper.damage && saab.currentMove.damage < fullCharge);
 
   const wall = new Fighter(mockScene, 80, 0, {
     ...baseCharDef,
@@ -626,4 +628,33 @@ test('a dive stops at the ledge and hops back if it is already past it', () => {
   assert.strictEqual(diveVelocityX(640, 220, isle), 220);
   assert.strictEqual(diveVelocityX(1088, 220, isle, 0.2), 0);
   assert.ok(diveVelocityX(1200, 220, isle) < 0);
+});
+
+test('a light fighter throws a short string: swings recharge by the gap, the last one by the full 1.0 s', () => {
+  const mockScene = createMockScene();
+  const def = CHARACTERS.hydra;
+  const jab = def.moves.basicDirectional;
+  assert.ok(jab.string && jab.cooldown === 1000);
+  const f = new Fighter(mockScene, 0, 0, def, 0, 0);
+  f.rig = { animate: () => {}, setFlash: () => {}, play: () => {}, updateSheetFacing: () => {} };
+  const rechargeAfterSwing = (t) => {
+    f.state = 'idle'; f.stateUntil = 0;
+    f.input = { left: false, attack: false, special: false };
+    f.update(t - 16, 16);                   // button released, so the next press is a fresh one
+    f.state = 'idle'; f.stateUntil = 0;
+    f.input = { left: true, attack: true, special: false };
+    f.update(t, 16);
+    assert.strictEqual(f.state, 'attack', `swing at ${t}`);
+    return f.attackCooldownUntil - t - jab.duration;
+  };
+  let t = 1000;
+  const got = [];
+  for (let i = 0; i < jab.string.hits; i++) {
+    got.push(rechargeAfterSwing(t));
+    t = f.attackCooldownUntil + 17;
+  }
+  const want = Array.from({ length: jab.string.hits }, (_, i) => (i === jab.string.hits - 1 ? 1000 : jab.string.gap));
+  assert.deepEqual(got, want);
+  // the next swing starts a fresh string
+  assert.equal(rechargeAfterSwing(t), jab.string.gap);
 });

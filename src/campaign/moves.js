@@ -10,11 +10,11 @@
 // 9% jab into 22 HP of damage so a fight with 60-100 HP units takes about 3-4 hits.
 import { CHARACTERS } from '../data/characters.js';
 import { MOVESETS } from '../data/movesets.js';
-import { resolveMoveDamage } from '../data/balance.js';
+import { hitsPerUse, resolveMoveDamage } from '../data/balance.js';
 
-export const DAMAGE_SCALE = 2.4;
+export const DAMAGE_SCALE = 1.8;
 export const DAMAGE_CAP = 60;            // one hit never exceeds this before defence
-export const CHARGE_DEFAULT_MULT = 1.5;
+export const CHARGE_DEFAULT_MULT = 1;
 export const SPECIAL_COOLDOWN = 2;       // turns: usable, rests one turn, usable again
 export const POWER_UP_MULT = 1.35;
 
@@ -25,15 +25,19 @@ const SLOTS = [
   ['specialDefense', 'guard'],
 ];
 
+// A projectile needs room (2 tiles) once it is among the harder hits of its slot. Normal/special/charge damage now sit in
+// 5-12 / 13-20 / 20-30%, so the cut-off is per slot (it used to be a flat 10%).
+const TWO_TILE_PCT = { basic: 10, special: 18, charge: 26 };
+
 const GUARD_BY_KIND = { block: 0.5, wall: 0.5, shield: 0.6, counter: 0.35, oxide: 0.5 };
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const isMelee = (mv) => !mv.kind || mv.kind === 'melee';
 
 /** Reach in tiles [min, max]. Shells need room, beams reach furthest, jabs are adjacent. */
-export function rangeOf(mv, pct) {
+export function rangeOf(mv, pct, slot = 'basic') {
   switch (mv.kind) {
-    case 'projectile': return pct >= 10 ? [2, 2] : [1, 2];
+    case 'projectile': return pct >= (TWO_TILE_PCT[slot] ?? 10) ? [2, 2] : [1, 2];
     case 'beam': return [2, 3];
     case 'dash': return [1, 2];
     case 'zone': case 'mine': return [1, 2];
@@ -86,7 +90,8 @@ function dedupe(list) {
 }
 
 function build(id, key, slot, mv, charDef) {
-  const pct = resolveMoveDamage(mv, charDef, null).total;
+  const perHit = resolveMoveDamage(mv, charDef, null).total;
+  const pct = perHit * hitsPerUse(mv);   // per use: a 3-hit string counts all three
   const base = { key, slot, name: mv.name || key, kind: mv.kind || 'melee', element: mv.type || 'kinetic', pct: Math.round(pct * 10) / 10, raw: mv };
   if (slot === 'guard') {
     const frac = GUARD_BY_KIND[mv.kind] ?? 0.4;
@@ -101,7 +106,7 @@ function build(id, key, slot, mv, charDef) {
   const dmg = clamp(Math.round(useDmg * DAMAGE_SCALE), 1, DAMAGE_CAP);
   return {
     ...base, action: 'attack', attack: true, dmg, charge: slot === 'charge', cd: slot === 'special' ? SPECIAL_COOLDOWN : 0,
-    range: rangeOf(mv, pct), effects: effectsOf(mv, slot),
+    range: rangeOf(mv, slot === 'charge' ? perHit * (mv.chargeDamageMult ?? CHARGE_DEFAULT_MULT) : perHit, slot), effects: effectsOf(mv, slot),
   };
 }
 

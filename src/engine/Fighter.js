@@ -9,6 +9,7 @@ import { playVfx } from './MoveVfx.js';
 import { armGeyser, artFor, fxAnchor, groundTop, hitAnchor, playRetortPulse, reverseFrameOrder, spawnFxSprite, spawnMeteor, spawnMoveExtra, spawnReplayGhost, surgeBeamScale } from './fxArt.js';
 import { clipNameForMove, sheetMeta, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
+import { stringStep } from './swingString.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
 
 function vaporAttack(move, attacker) {
@@ -302,6 +303,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.state = 'idle'; // idle|walk|jump|fall|attack|hurt|ko|dead|grabbing|grabbed
     this.stateUntil = 0;
     this.attackCooldownUntil = 0;
+    this._string = null;       // light fighters' normal-attack string (see swingString.js)
     this.specialCooldownUntil = 0;
     this.grabCooldownUntil = 0;
     this.grabTarget = null;
@@ -1126,7 +1128,15 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this._whooshed = false;
     this.stateUntil = time + fd.visible * step;
     this.scene.noteMove?.(this, move);
-    if (slot === 'basic') this.attackCooldownUntil = time + move.duration + move.cooldown;
+    if (slot === 'basic') {
+      let recharge = move.cooldown;
+      if (move.string && moveKey === 'basicDirectional') {
+        const step = stringStep(this._string, move, time);
+        this._string = step.state;
+        recharge = step.recharge;
+      }
+      this.attackCooldownUntil = time + move.duration + recharge;
+    }
     else {
       this.specialCooldownUntil = time + move.duration + move.cooldown;
       sfx('special');
@@ -2350,6 +2360,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       'mitigateUntil', 'lingerImmuneUntil', 'frozenUntil',
     ];
     for (const k of keys) if (this[k] > 0) this[k] += ms;
+    if (this._string?.until > 0) this._string = { ...this._string, until: this._string.until + ms };
     if (this.chargeStart) this.chargeStart += ms;
     if (this.defenseStart) this.defenseStart += ms;
     if (this.activeHit) {

@@ -371,7 +371,8 @@ function tryAttacks(time, bot, target, ai, input, bounds) {
   }
   if (wantBasic) {
     input.attack = true;
-    ai.nextAttackAt = time + basic.duration + basic.cooldown + 80;
+    // A light fighter's string recharges only `gap` between swings; Fighter.attackCooldownUntil gates the real timing.
+    ai.nextAttackAt = time + basic.duration + (basic.string ? basic.string.gap : basic.cooldown) + 80;
   }
   if (wantSpecial) {
     input.special = true;

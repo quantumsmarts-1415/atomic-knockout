@@ -86,7 +86,7 @@ export const YVETTE = {
   clockMaxChargeMs: 3000,
   stressCap: 2.5,
   counterRange: 180,
-  counterDamage: 8,
+  counterDamage: 17.8,
   metalBonus: 1.5,
 };
 

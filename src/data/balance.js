@@ -287,3 +287,18 @@ export function resolveMoveDamage(move, attackerDef, defenderDef, opts = {}) {
   }
   return { total, packets: out };
 }
+
+/**
+ * How many hits one use of a move lands on a single target, so a move's damage can be judged per use
+ * (multi-hit strings, salvos, rains, fans, chains and pulse cascades count more than one hit).
+ * Spread shots (salvo, rain, fan) count 60% / 60% / 40% of their extra pellets: not every one connects.
+ */
+export function hitsPerUse(m) {
+  if (m.multiHit > 1) return m.multiHit;
+  if (m.salvo > 1) return 1 + (m.salvo - 1) * 0.6;
+  if (m.rain > 1) return 1 + (m.rain - 1) * 0.6;
+  if (m.fan > 1) return 1 + (m.fan - 1) * 0.4;
+  if (m.chain?.count) return 1 + m.chain.count * (m.chain.scale ?? 1);
+  if (m.pulses?.length > 1 && m.pulses[0].damage > 0) return m.pulses.reduce((t, q) => t + (q.damage ?? 0), 0) / m.pulses[0].damage;
+  return 1;
+}

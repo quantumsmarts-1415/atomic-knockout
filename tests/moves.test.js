@@ -70,14 +70,14 @@ test('owner-locked kits stay as specified', () => {
   assert.equal(grown(nova.radius, nova.chargeRadiusMult, 0), 64);
   assert.equal(grown(nova.radius, nova.chargeRadiusMult, 0.5), 96);
   assert.equal(grown(nova.radius, nova.chargeRadiusMult, 1), 128);
-  assert.equal(grown(nova.damage, nova.chargeDamageMult, 1), 10);
+  assert.equal(grown(nova.damage, nova.chargeDamageMult, 1), 15.8);
   assert.equal(grown(nova.baseKnockback, nova.chargeKnockbackMult, 1), 400);
   assert.equal(grown(nova.selfDamage.damage, nova.selfDamage.chargeMult, 0), 4);
   assert.equal(grown(nova.selfDamage.damage, nova.selfDamage.chargeMult, 1), 6);
   const novaFrames = frameData(nova.duration, nova.cooldown, nova);
   assert.equal(novaFrames.startup, 4);
   assert.equal(novaFrames.recovery, 11);
-  assert.equal(novaFrames.coolF, 22);
+  assert.equal(novaFrames.coolF, 79);
   const dash = h.basicDirectional;
   const dashFrames = frameData(dash.duration, dash.cooldown, {
     ...dash,
@@ -85,14 +85,14 @@ test('owner-locked kits stay as specified', () => {
   });
   assert.equal(dashFrames.startup, 1);
   assert.equal(dashFrames.recovery, 12);
-  assert.equal(dashFrames.coolF, 23);
+  assert.equal(dashFrames.coolF, 60);
   const bomb = h.specialDirectional;
   const bombFrames = frameData(bomb.duration, bomb.cooldown, bomb);
   assert.equal(bombFrames.startup, 4);
   assert.equal(bombFrames.recovery, 11);
-  assert.equal(bombFrames.coolF, 29);
+  assert.equal(bombFrames.coolF, 58);
   assert.equal(Math.round(h.specialDefense.duration / STEP_MS), 19);
-  assert.equal(Math.round(h.specialDefense.cooldown / STEP_MS), 20);
+  assert.equal(Math.round(h.specialDefense.cooldown / STEP_MS), 30);
   assert.strictEqual(CHARACTERS.helen.moves.basicCharge.name, 'Air Wave');
   assert.strictEqual(CHARACTERS.helen.moves.specialDirectional.name, 'Balloon Bop');
   assert.strictEqual(CHARACTERS.natalie.moves.specialDirectional.name, 'Brine Burst');
@@ -176,7 +176,7 @@ test('neo uses the approved neon kit', () => {
   assert.strictEqual(flash.onHit.dazzle, 800);
   const tube = frameData(moves.basicCharge.duration, moves.basicCharge.cooldown, moves.basicCharge);
   assert.strictEqual(tube.recovery, 12);
-  assert.ok(tube.total < 45, 'tube wait is shortened');
+  assert.ok(tube.total < 100, 'tube wait stays inside the 0.5-1.5 s recharge band'); // was < 45 before the 2026-10-29 balance pass
   for (const c of Object.values(CHARACTERS)) {
     for (const slot of SLOTS) assert.notStrictEqual(c.moves[slot].name, 'Neon Flare');
   }
@@ -191,18 +191,18 @@ test('maggie uses the approved magnesium kit', () => {
   assert.strictEqual(lit.buff.heatOnHit, 3);
   assert.strictEqual(lit.buff.hits, 0);
   assert.strictEqual(lit.buff.selfDot.dps, 1);
-  assert.ok(frameData(lit.duration, lit.cooldown, lit).total < 40);
+  assert.ok(frameData(lit.duration, lit.cooldown, lit).total < 50); // was < 40 before the 2026-10-29 balance pass
   const jab = moves.basicDirectional;
   assert.strictEqual(jab.name, 'Flare Jab');
   assert.strictEqual(jab.type, 'kinetic');
   assert.strictEqual(jab.type2, 'heat');
   assert.strictEqual(jab.vfx, 'flare');
-  assert.ok(frameData(jab.duration, jab.cooldown, jab).total <= 33);
+  assert.ok(frameData(jab.duration, jab.cooldown, jab).total <= 60); // was <= 33 before the 2026-10-29 balance pass
   const ribbon = moves.specialDefense;
   assert.strictEqual(ribbon.name, 'Ribbon Guard');
   assert.deepStrictEqual(ribbon.blocks, ['chemical', 'kinetic']);
   assert.strictEqual(ribbon.igniteOn, 'heat');
-  assert.ok(ribbon.cooldown < 400);
+  assert.ok(ribbon.cooldown < 525); // was < 400 before the 2026-10-29 balance pass (value 500)
   const guard = { state: 'defending', defenseMove: ribbon, facing: 1, x: 100, y: 400, bodyH: 100 };
   const foe = { x: 180, y: 400 };
   assert.strictEqual(interceptHit(guard, foe, { type: 'chemical', damage: 6 }, 0).result, 'negate');
@@ -227,19 +227,19 @@ test('allen uses the approved aluminum kit', () => {
   assert.strictEqual(burn.onHit.burn.dps, 3);
   assert.strictEqual(burn.onHit.burn.every, 1000);
   assert.strictEqual(burn.onHit.burn.ms, 3500);
-  assert.ok(frameData(burn.duration, burn.cooldown, burn).total < 45);
+  assert.ok(frameData(burn.duration, burn.cooldown, burn).total < 100); // was < 45 before the 2026-10-29 balance pass
   const whip = moves.basicDirectional;
   assert.strictEqual(whip.name, 'Power-Line Whips');
   assert.strictEqual(whip.type, 'electrical');
   assert.strictEqual(whip.type2, 'kinetic');
   assert.strictEqual(whip.multiHit, undefined);
-  assert.ok(frameData(whip.duration, whip.cooldown, whip).total < 30);
+  assert.ok(frameData(whip.duration, whip.cooldown, whip).total < 54.6); // was < 30 before the 2026-10-29 balance pass (value 52)
   const skin = moves.specialDefense;
   assert.strictEqual(skin.name, 'Oxide Skin');
   assert.strictEqual(skin.kind, 'oxide');
   assert.strictEqual(skin.regrow, 'press');
-  assert.ok(skin.cooldown < 400);
-  assert.strictEqual(rearmDefense(skin, 5000), 5200);
+  assert.ok(skin.cooldown < 525); // was < 400 before the 2026-10-29 balance pass (value 500)
+  assert.strictEqual(rearmDefense(skin, 5000), 5500);
   assert.strictEqual(rearmDefense(burn, 5000), null);
   const guard = { state: 'defending', defenseMove: skin, facing: 1, x: 100, y: 400, bodyH: 100 };
   const foe = { x: 180, y: 400 };
@@ -292,20 +292,20 @@ test('silas uses the approved silicon kit', () => {
   const blade = moves.basicDirectional;
   assert.strictEqual(blade.name, 'Crystal Blade');
   assert.strictEqual(blade.type, 'kinetic');
-  assert.strictEqual(blade.damage, 13.44);
+  assert.strictEqual(blade.damage, 7.2);
   assert.strictEqual(blade.shatter.damage, 2.24);
   const shattered = withShatter(blade);
-  assert.strictEqual(shattered.damage, 13.44);
+  assert.strictEqual(shattered.damage, 7.2);
   assert.strictEqual(shattered.type2, 'kinetic');
   assert.strictEqual(shattered.damage2, 2.24);
-  assert.ok(frameData(blade.duration, blade.cooldown, blade).total < 30);
+  assert.ok(frameData(blade.duration, blade.cooldown, blade).total < 54.6); // was < 30 before the 2026-10-29 balance pass (value 52)
   const hasted = scaledByHaste(blade, clock.overclock.attack);
   assert.ok(hasted.duration < blade.duration);
   assert.ok(hasted.cooldown < blade.cooldown);
   const pane = moves.specialDefense;
   assert.strictEqual(pane.name, 'Silica Pane');
   assert.deepStrictEqual(pane.blocks, ['heat', 'chemical']);
-  assert.ok(pane.cooldown < 400);
+  assert.ok(pane.cooldown < 1050); // was < 400 before the 2026-10-29 balance pass (value 1000)
   const guard = { state: 'defending', defenseMove: pane, facing: 1, x: 100, y: 400, bodyH: 100 };
   const foe = { x: 180, y: 400 };
   assert.strictEqual(interceptHit(guard, foe, { type: 'heat', damage: 10 }, 0).result, 'negate');
@@ -315,7 +315,7 @@ test('silas uses the approved silicon kit', () => {
   assert.strictEqual(strong.result, 'counter');
   assert.strictEqual(strong.negate, true);
   assert.strictEqual(strong.endDefense, true);
-  assert.strictEqual(strong.counter.damage, 7.84);
+  assert.strictEqual(strong.counter.damage, 17.6);
   assert.strictEqual(strong.counter.type, 'kinetic');
   assert.strictEqual(strong.selfHit.damage, 7.84);
   assert.strictEqual(strong.selfHit.type, 'kinetic');
@@ -325,8 +325,8 @@ test('silas uses the approved silicon kit', () => {
   assert.strictEqual(surge.type, 'electrical');
   assert.strictEqual(surge.missRetry, true);
   assert.ok(surge.retryMs < 180);
-  assert.strictEqual(surge.damage, 12.32);
-  assert.ok(frameData(surge.duration, surge.cooldown, surge).total < 40);
+  assert.strictEqual(surge.damage, 17.6);
+  assert.ok(frameData(surge.duration, surge.cooldown, surge).total < 75.6); // was < 40 before the 2026-10-29 balance pass (value 72)
   const stripped = { speedBuffUntil: 500, attackHasteUntil: 500, bonusHits: 1, bonusPacket: {} };
   stripBuffs(stripped);
   assert.strictEqual(stripped.attackHasteUntil, 0);
@@ -342,20 +342,20 @@ test('phillip uses the approved phosphorus kit', () => {
   assert.strictEqual(flare.rain, 5);
   assert.ok(flare.chargeSpreadMult > 1);
   assert.strictEqual(flare.chargeDamageMult, undefined);
-  assert.ok(frameData(flare.duration, flare.cooldown, flare).total < 40);
+  assert.ok(frameData(flare.duration, flare.cooldown, flare).total < 90); // was < 40 before the 2026-10-29 balance pass
   const tracers = moves.basicDirectional;
   assert.strictEqual(tracers.name, 'Tracers');
   assert.strictEqual(tracers.type, 'heat');
   assert.strictEqual(tracers.type2, 'kinetic');
   assert.strictEqual(tracers.salvo, 5);
   assert.strictEqual(tracers.trailMs, 500);
-  assert.ok(frameData(tracers.duration, tracers.cooldown, tracers).total < 35);
+  assert.ok(frameData(tracers.duration, tracers.cooldown, tracers).total < 73.5); // was < 35 before the 2026-10-29 balance pass (value 70)
   const form = moves.specialDefense;
   assert.strictEqual(form.name, 'Red Phosphorus Form');
   assert.deepStrictEqual(form.blocks, ['heat', 'chemical']);
   assert.strictEqual(form.rooted, true);
   assert.strictEqual(form.stripBlocked, true);
-  assert.ok(form.cooldown < 400);
+  assert.ok(form.cooldown < 525); // was < 400 before the 2026-10-29 balance pass (value 500)
   const guard = { state: 'defending', defenseMove: form, facing: 1, x: 100, y: 400, bodyH: 100 };
   const foe = { x: 180, y: 400 };
   assert.strictEqual(interceptHit(guard, foe, { type: 'heat', damage: 8 }, 0).result, 'negate');
@@ -371,7 +371,7 @@ test('phillip uses the approved phosphorus kit', () => {
   assert.strictEqual(thrown.onHit.burn.dps, 1);
   assert.strictEqual(thrown.onHit.burn.every, 1000);
   assert.strictEqual(thrown.onHit.burn.untilKo, true);
-  assert.ok(frameData(thrown.duration, thrown.cooldown, thrown).total < 40);
+  assert.ok(frameData(thrown.duration, thrown.cooldown, thrown).total < 75.6); // was < 40 before the 2026-10-29 balance pass (value 72)
   const victim = { percent: 10, scene: { noteDot() {} } };
   applyOnHit(null, victim, thrown, 0);
   assert.strictEqual(victim.percent, 10);
@@ -620,8 +620,8 @@ test('cody rods block kinetic and the paint coat is two percent for seven second
   assert.strictEqual(dot.chargeDamageMult, 2.3);
   assert.deepStrictEqual(dot.redFrames, [3, 4, 5, 6, 7, 8, 18, 19, 20]);
   assert.strictEqual(sheetFrameAt(dot, 0, 1000 / 9.6 * 4), 4);
-  assert.strictEqual(withRedFrame(dot, 4).damage, 4.5);
-  assert.strictEqual(withRedFrame(dot, 0).damage, 3);
+  assert.strictEqual(withRedFrame(dot, 4).damage, 14.25);
+  assert.strictEqual(withRedFrame(dot, 0).damage, 9.5);
   const rods = moves.specialDefense;
   const guard = { state: 'defending', defenseMove: rods, x: 0, y: 0 };
   assert.strictEqual(applyImmunities({ type: 'radiation', damage: 8 }, rods).emptied, true);
@@ -682,8 +682,8 @@ test('niobe pulse locks a special for fifteen seconds and the stone stays put', 
   assert.strictEqual(ring.kind, 'beam');
   assert.strictEqual(ring.type, 'electrical');
   assert.strictEqual(ring.type2, 'radiation');
-  assert.strictEqual(ring.damage, 3.51);
-  assert.strictEqual(ring.damage2, 2.96);
+  assert.strictEqual(ring.damage, 9.3);
+  assert.strictEqual(ring.damage2, 7.9);
   const edge = moves.basicDirectional;
   assert.strictEqual(edge.name, 'Anodized Edge');
   assert.strictEqual(edge.sharpen.step, 1);
@@ -701,7 +701,7 @@ test('niobe pulse locks a special for fifteen seconds and the stone stays put', 
   assert.strictEqual(pulse.kind, 'beam');
   assert.strictEqual(pulse.type, 'electrical');
   assert.strictEqual(pulse.type2, undefined);
-  assert.ok(pulse.damage < ring.damage);
+  assert.ok(pulse.damage < (ring.damage + ring.damage2) * ring.chargeDamageMult); // full-charge ring vs the pulse (balance pass 2026-10-29: charge is 20-30%)
   assert.strictEqual(pulse.onHit.muteSpecialMs, 15000);
   const victim = { state: 'idle' };
   applyOnHit({ charDef: { id: 'niobe' } }, victim, pulse, 400);
@@ -723,13 +723,13 @@ test('tex tags for ten seconds and the camera hits every tag', () => {
   assert.strictEqual(flash.name, 'Metastable Flash');
   assert.strictEqual(flash.kind, 'burst');
   assert.strictEqual(flash.type, 'radiation');
-  assert.strictEqual(flash.damage, 14);
+  assert.strictEqual(flash.damage, 21.3);
   const lasso = moves.basicDirectional;
   assert.strictEqual(lasso.name, 'Tracer Lasso');
   assert.strictEqual(lasso.type, 'kinetic');
   assert.strictEqual(lasso.type2, 'radiation');
-  assert.strictEqual(lasso.damage, 7);
-  assert.strictEqual(lasso.damage2, 7);
+  assert.strictEqual(lasso.damage, 4.8);
+  assert.strictEqual(lasso.damage2, 4.8);
   assert.strictEqual(lasso.breakPhase, true);
   assert.strictEqual(lasso.onHit.mark, 'tracer');
   assert.strictEqual(lasso.onHit.markMs, 10000);
@@ -754,14 +754,14 @@ test('tex tags for ten seconds and the camera hits every tag', () => {
   const answer = interceptHit(guard, { x: 80, y: 0 }, { type: 'kinetic', damage: 9 }, 0);
   assert.strictEqual(answer.result, 'counter');
   assert.strictEqual(answer.counter.type, 'radiation');
-  assert.strictEqual(answer.counter.damage, 7);
+  assert.strictEqual(answer.counter.damage, 18);
   assert.strictEqual(answer.counter.isCounterAttack, true);
 
   const camera = moves.specialDirectional;
   assert.strictEqual(camera.name, 'Gamma Camera');
   assert.strictEqual(camera.kind, 'beam');
   assert.strictEqual(camera.type, 'radiation');
-  assert.strictEqual(camera.damage, 11);
+  assert.strictEqual(camera.damage, 18.4);
   assert.strictEqual(camera.hitMarked, 'tracer');
   const tex = { charDef: { id: 'tex' }, alive: true, state: 'idle' };
   const near = { alive: true, state: 'idle', mark: 'tracer', markUntil: 5000, markedBy: 'tex' };
@@ -813,7 +813,7 @@ test('agatha reflects heat, electricity, and radiation and tarnishes for two per
   const moves = CHARACTERS.agatha.moves;
   const bullet = moves.basicCharge;
   assert.strictEqual(bullet.name, 'Silver Bullet');
-  assert.strictEqual(bullet.damage, 5);
+  assert.strictEqual(bullet.damage, 15.2);
   assert.strictEqual(bullet.bonusVsBuff, 1.75);
   const slash = moves.basicDirectional;
   assert.strictEqual(slash.name, 'Current Slash');
@@ -871,7 +871,7 @@ test('indy films the floor, roots with no knockback, and weakens electrical defe
   assert.strictEqual(whip.kind, 'projectile');
   assert.strictEqual(whip.type, 'heat');
   assert.strictEqual(whip.type2, undefined);
-  assert.strictEqual(whip.damage, 6);
+  assert.strictEqual(whip.damage, 18.3);
   assert.strictEqual(whip.onHit.elecTaken.ms, 5000);
   const victim = { state: 'idle' };
   applyOnHit({ charDef: { id: 'indy' } }, victim, whip, 1000);
@@ -957,7 +957,7 @@ test('batch 11 kits follow the approved briefs', () => {
   assert.strictEqual(caesar.basicCharge.chargeControlMult, 3);
   assert.strictEqual(caesar.basicDirectional.hyperArmor, true);
   assert.ok(caesar.basicDirectional.dashSpeed < 400);
-  assert.ok(caesar.basicDirectional.damage >= 12);
+  assert.ok(caesar.basicDirectional.damage >= 5.13); // was >= 12 before the 2026-10-29 balance pass (value 5.4)
   assert.strictEqual(caesar.specialDirectional.dropZone.ms, 10000);
   assert.strictEqual(caesar.specialDirectional.dropZone.sheet, true);
 
@@ -1018,7 +1018,7 @@ test('europa kits follow the approved brief', () => {
   assert.ok(geyser.geyser.warnMs >= 400);
   assert.strictEqual(moves.basicCharge.name, 'Phosphor Bloom');
   assert.strictEqual(moves.basicCharge.type, 'radiation');
-  assert.strictEqual(moves.basicCharge.damage, 9);
+  assert.strictEqual(moves.basicCharge.damage, 18.3);
 });
 
 test('goldie kits follow the approved brief', () => {
@@ -1049,9 +1049,9 @@ test('goldie kits follow the approved brief', () => {
   const palm = moves.basicDirectional;
   assert.strictEqual(palm.name, 'Magnetocaloric Palm');
   assert.strictEqual(palm.type, 'kinetic');
-  assert.strictEqual(palm.damage, 7);
+  assert.strictEqual(palm.damage, 4.9);
   assert.strictEqual(palm.type2, 'heat');
-  assert.strictEqual(palm.damage2, 6);
+  assert.strictEqual(palm.damage2, 4.2);
   const chill = moves.specialDefense;
   assert.strictEqual(chill.name, 'Magnetic Chill');
   assert.deepStrictEqual(chill.immune, ['heat']);
@@ -1079,7 +1079,7 @@ test('terra kits follow the approved brief', () => {
   assert.strictEqual(sonar.name, 'Sonar Pulse');
   assert.strictEqual(sonar.kind, 'beam');
   assert.strictEqual(sonar.type, 'kinetic');
-  assert.strictEqual(sonar.damage, 7);
+  assert.strictEqual(sonar.damage, 19);
   assert.strictEqual(sonar.breakPhase, true);
   assert.strictEqual(sonar.onHit.reveal, true);
   assert.strictEqual(sonar.stageWide, true);
@@ -1090,13 +1090,13 @@ test('terra kits follow the approved brief', () => {
   const speaker = moves.specialDefense;
   assert.strictEqual(speaker.name, 'Floor Speaker');
   assert.strictEqual(speaker.retort.type, 'kinetic');
-  assert.strictEqual(speaker.retort.damage, 6);
+  assert.strictEqual(speaker.retort.damage, 17.9);
   assert.strictEqual(speaker.retortBurst, true);
   const bolt = moves.specialDirectional;
   assert.strictEqual(bolt.name, 'Green Phosphor Bolt');
   assert.strictEqual(bolt.kind, 'projectile');
   assert.strictEqual(bolt.type, 'radiation');
-  assert.strictEqual(bolt.damage, 8);
+  assert.strictEqual(bolt.damage, 18.3);
 });
 
 test('haley kits follow the approved brief', () => {
@@ -1106,9 +1106,9 @@ test('haley kits follow the approved brief', () => {
   assert.ok(cutter.kind == null || cutter.kind === 'melee');
   assert.ok(cutter.rangeW > 0 && cutter.rangeW < 110);
   assert.strictEqual(cutter.type, 'heat');
-  assert.strictEqual(cutter.damage, 4);
+  assert.strictEqual(cutter.damage, 10.3);
   assert.strictEqual(cutter.type2, 'electrical');
-  assert.strictEqual(cutter.damage2, 3);
+  assert.strictEqual(cutter.damage2, 7.7);
   assert.ok(cutter.chargeDamageMult > 1);
   const kick = moves.basicDirectional;
   assert.strictEqual(kick.name, 'Carbide Kick');
@@ -1161,7 +1161,7 @@ test('thule kits follow the approved brief', () => {
   assert.strictEqual(ultima.name, 'Ultima Thule');
   assert.strictEqual(ultima.kind, 'projectile');
   assert.strictEqual(ultima.type, 'kinetic');
-  assert.strictEqual(ultima.damage, 8);
+  assert.strictEqual(ultima.damage, 20.3);
   assert.strictEqual(ultima.growWithDistance.reach, 1000);
   assert.strictEqual(ultima.growWithDistance.mult, 1.85);
   assert.ok(ultima.projectileSpeed * (ultima.projectileLife / 1000) > 1500, 'the throw can cross the stage');
@@ -1190,7 +1190,7 @@ test('thule kits follow the approved brief', () => {
   assert.strictEqual(ray.name, 'Handheld X-Ray');
   assert.strictEqual(ray.kind, 'beam');
   assert.strictEqual(ray.type, 'radiation');
-  assert.strictEqual(ray.damage, 9);
+  assert.strictEqual(ray.damage, 18.3);
   assert.strictEqual(ray.beamLen, 520);
 });
 
@@ -1200,13 +1200,13 @@ test('holly kits follow the approved brief', () => {
   assert.strictEqual(laser.name, 'Stone Breaker');
   assert.strictEqual(laser.kind, 'beam');
   assert.strictEqual(laser.type, 'heat');
-  assert.strictEqual(laser.damage, 9);
+  assert.strictEqual(laser.damage, 19.7);
   assert.strictEqual(laser.beamArtPx, 1100);
   assert.deepStrictEqual(laser.bonusVsId, { carter: 2, bord: 2, silas: 2 });
   const doubled = prepareMove(laser, {}, { charDef: { id: 'silas' } }, 0);
-  assert.strictEqual(doubled.damage, 18);
+  assert.strictEqual(doubled.damage, 39.4);
   const plain = prepareMove(laser, {}, { charDef: { id: 'sandy' } }, 0);
-  assert.strictEqual(plain.damage, 9);
+  assert.strictEqual(plain.damage, 19.7);
   const strike = moves.basicDirectional;
   assert.strictEqual(strike.name, 'Calibration Strike');
   assert.strictEqual(strike.type, 'kinetic');
@@ -1228,7 +1228,7 @@ test('holly kits follow the approved brief', () => {
   assert.strictEqual(pole.name, 'Pole Piece');
   assert.strictEqual(pole.kind, 'projectile');
   assert.strictEqual(pole.type, 'kinetic');
-  assert.strictEqual(pole.damage, 8);
+  assert.strictEqual(pole.damage, 16.9);
   assert.ok(pole.pullProjectiles >= 90);
   assert.ok(pole.projectileRadius > 0);
 });
@@ -1239,26 +1239,26 @@ test('dizzy kits follow the approved brief', () => {
   assert.strictEqual(gust.name, 'Turbine Gust');
   assert.strictEqual(gust.kind, 'beam');
   assert.strictEqual(gust.type, 'kinetic');
-  assert.strictEqual(gust.damage, 7);
+  assert.strictEqual(gust.damage, 15.1);
   assert.ok(gust.chargeDamageMult > 1);
   assert.ok(gust.chargeKnockbackMult > 1);
   const punch = moves.basicDirectional;
   assert.strictEqual(punch.name, 'EV Motor Punch');
   assert.strictEqual(punch.type, 'kinetic');
-  assert.strictEqual(punch.damage, 3);
+  assert.strictEqual(punch.damage, 1.9);
   assert.strictEqual(punch.type2, 'electrical');
-  assert.strictEqual(punch.damage2, 2);
+  assert.strictEqual(punch.damage2, 1.3);
   assert.strictEqual(punch.multiHit, 3);
   assert.strictEqual(punch.fullWhenHot, true);
   const fd = frameData(punch.duration, punch.cooldown, punch);
   assert.ok(fd.active * STEP_MS >= 180, 'three hits need an active window past 180 ms');
   const hot = { burnUntil: 9000, heatedUntil: 9000 };
   const kept = prepareMove(punch, hot, { charDef: {} }, 1000);
-  assert.strictEqual(kept.damage, 3);
-  assert.strictEqual(kept.damage2, 2);
+  assert.strictEqual(kept.damage, 1.9);
+  assert.strictEqual(kept.damage2, 1.3);
   const taxed = prepareMove({ ...punch, fullWhenHot: false, hotPenalty: 0.5 }, hot, { charDef: {} }, 1000);
-  assert.strictEqual(taxed.damage, 1.5);
-  assert.strictEqual(taxed.damage2, 1);
+  assert.strictEqual(taxed.damage, 0.95);
+  assert.strictEqual(taxed.damage2, 0.65);
   const wall = moves.specialDefense;
   assert.strictEqual(wall.name, 'Control Rod Wall');
   assert.deepStrictEqual(wall.blocks, ['kinetic', 'radiation']);
@@ -1288,7 +1288,7 @@ test('tara and rex kits follow the approved briefs', () => {
   assert.strictEqual(dump.name, 'Capacitor Dump');
   assert.strictEqual(dump.kind, 'beam');
   assert.strictEqual(dump.type, 'electrical');
-  assert.strictEqual(dump.damage, 6);
+  assert.strictEqual(dump.damage, 13.1);
   assert.strictEqual(dump.chargeDamageMult, 1.75);
   assert.strictEqual(dump.chargeLengthMult, 2.15);
   assert.strictEqual(dump.beamLen, 148);
@@ -1313,7 +1313,7 @@ test('tara and rex kits follow the approved briefs', () => {
   const pin = tara.specialDirectional;
   assert.strictEqual(pin.name, 'Implant Pin');
   assert.strictEqual(pin.type, 'kinetic');
-  assert.strictEqual(pin.damage, 5);
+  assert.strictEqual(pin.damage, 13);
   assert.strictEqual(pin.stick, true);
   assert.strictEqual(pin.pinFoot, true);
   assert.strictEqual(pin.onHit.root, 3000);
@@ -1355,13 +1355,13 @@ test('tara and rex kits follow the approved briefs', () => {
   const lash = rex.specialDirectional;
   assert.strictEqual(lash.name, 'Thermocouple Lash');
   assert.strictEqual(lash.type, 'electrical');
-  assert.strictEqual(lash.damage, 8);
+  assert.strictEqual(lash.damage, 15.7);
   assert.strictEqual(lash.vsHot.type, 'heat');
   assert.strictEqual(lash.vsHot.damage, 11);
   assert.ok(lash.rangeW >= 110);
   const cold = prepareMove(lash, {}, { burnUntil: 0, heatedUntil: 0 }, 1000);
   assert.strictEqual(cold.type, 'electrical');
-  assert.strictEqual(cold.damage, 8);
+  assert.strictEqual(cold.damage, 15.7);
   const hot = prepareMove(lash, {}, { burnUntil: 4000 }, 1000);
   assert.strictEqual(hot.type, 'heat');
   assert.strictEqual(hot.damage, 11);
@@ -1373,7 +1373,7 @@ test('wolf kit follows the approved brief', () => {
   assert.strictEqual(filament.name, 'White-Hot Filament');
   assert.strictEqual(filament.kind, 'burst');
   assert.strictEqual(filament.type, 'heat');
-  assert.strictEqual(filament.damage, 7);
+  assert.strictEqual(filament.damage, 14.7);
   assert.strictEqual(filament.chargeDamageMult, 1.9);
   assert.strictEqual(filament.chargeRadiusMult, 1.85);
   let longest = 0;
@@ -1391,7 +1391,7 @@ test('wolf kit follows the approved brief', () => {
   assert.strictEqual(drill.name, 'Carbide Drill');
   assert.notStrictEqual(drill.name, 'Tin Eater');
   assert.strictEqual(drill.type, 'kinetic');
-  assert.strictEqual(drill.damage, 3);
+  assert.strictEqual(drill.damage, 1.5);
   assert.strictEqual(drill.multiHit, 5);
   assert.strictEqual(drill.kind, undefined);
   assert.strictEqual(drill.bonusVsId, undefined);
@@ -1416,7 +1416,7 @@ test('wolf kit follows the approved brief', () => {
   const dart = wolf.specialDirectional;
   assert.strictEqual(dart.name, 'Armor Piercer');
   assert.strictEqual(dart.type, 'kinetic');
-  assert.strictEqual(dart.damage, 7);
+  assert.strictEqual(dart.damage, 12.9);
   assert.strictEqual(dart.breaksBlock, true);
   assert.strictEqual(dart.pierce, true);
   const shield = {
@@ -1502,7 +1502,7 @@ test('oz, ira, and aurelius keep the approved move rules', () => {
   assert.equal(oz.specialDefense.rooted, true);
   assert.equal(oz.specialDefense.noKnockback, true);
   assert.equal(oz.specialDefense.blockReduction, 0.55);
-  assert.equal(oz.specialDefense.recoil.damage, 4);
+  assert.equal(oz.specialDefense.recoil.damage, 18.1);
   const ira = CHARACTERS.ira.moves;
   assert.equal(ira.basicDirectional.name, 'Spark Plug');
   assert.equal(ira.basicDirectional.type, 'kinetic');
@@ -1555,7 +1555,7 @@ test('pit ignites gas clouds and flame-tests by electronegativity', () => {
   const clamp = pit.specialDefense;
   assert.equal(clamp.name, 'Cisplatin Clamp');
   assert.equal(clamp.counterType, 'chemical');
-  assert.equal(clamp.counterDamage, 7);
+  assert.equal(clamp.counterDamage, 18.1);
   assert.equal(clamp.rootMs, 700);
   assert.equal(clamp.counterKnockback, 0);
   assert.equal(clamp.counterCoat, 'Cisplatin Clamp');
@@ -1586,10 +1586,10 @@ test('hog, talia, pablo, and bianca keep the approved batch rules', () => {
   assert.equal(hog.specialDirectional.zone.type, 'chemical');
   assert.equal(hog.specialDirectional.zone.drift, 48);
   const heated = prepareMove(hog.basicCharge, { heatTaken: true }, { charDef: { id: 'sandy' } }, 0);
-  assert.ok(Math.abs(heated.damage - 5 * 1.4) < 1e-9);
-  assert.ok(Math.abs(heated.damage2 - 3.8 * 1.4) < 1e-9);
+  assert.ok(Math.abs(heated.damage - hog.basicCharge.damage * 1.4) < 1e-9);
+  assert.ok(Math.abs(heated.damage2 - hog.basicCharge.damage2 * 1.4) < 1e-9);
   const cold = prepareMove(hog.basicCharge, { heatTaken: false }, { charDef: { id: 'sandy' } }, 0);
-  assert.equal(cold.damage, 5);
+  assert.equal(cold.damage, hog.basicCharge.damage);
 
   const talia = CHARACTERS.talia.moves;
   assert.equal(talia.basicCharge.zone.ramp, 0.5);
@@ -1598,7 +1598,7 @@ test('hog, talia, pablo, and bianca keep the approved batch rules', () => {
   assert.equal(talia.specialDefense.immune[0], 'chemical');
   assert.deepEqual(talia.specialDefense.cleanse, ['poison']);
   const dart = talia.specialDirectional;
-  assert.equal(dart.damage, 1);
+  assert.equal(dart.damage, 14.2);
   assert.equal(dart.onHit.poison.delay, 1100);
   const victim = { charDef: { combat: { en: 2 } } };
   applyOnHit({ charDef: { id: 'talia', combat: { en: 1.62 } } }, victim, dart, 1000);
@@ -1609,7 +1609,7 @@ test('hog, talia, pablo, and bianca keep the approved batch rules', () => {
 
   const pablo = CHARACTERS.pablo.moves;
   assert.equal(pablo.basicCharge.name, 'Machine Gun');
-  assert.equal(pablo.basicCharge.damage, 1);
+  assert.equal(pablo.basicCharge.damage, 3.4);
   assert.equal(pablo.basicCharge.salvo, 12);
   assert.equal(pablo.basicCharge.type, 'kinetic');
   assert.equal(pablo.basicDirectional.name, 'Lead Pipe');
@@ -1999,7 +1999,7 @@ test('thor, boar, and dash keep the approved batch rules', () => {
   assert.equal(thor.specialDirectional.kind, 'beam');
   assert.equal(thor.specialDirectional.type, 'electrical');
   assert.equal(thor.specialDirectional.ground, true);
-  assert.equal(thor.specialDirectional.damage, 8);
+  assert.equal(thor.specialDirectional.damage, 15.4);
   assert.equal(thor.specialDirectional.surgePer, 2);
   assert.equal(thor.specialDirectional.beamLen, 360);
   assert.equal(thor.specialDirectional.beamArtPx, 620);
@@ -2032,7 +2032,7 @@ test('thor, boar, and dash keep the approved batch rules', () => {
   assert.equal(dash.specialDefense.hitRadius, 48);
   assert.equal(dash.specialDefense.phase, true);
   assert.equal(dash.specialDefense.phaseRetort.type, 'radiation');
-  assert.equal(dash.specialDefense.phaseRetort.damage, 8.1);
+  assert.equal(dash.specialDefense.phaseRetort.damage, 17.4);
   assert.equal(dash.specialDirectional.projectileRadius, 4);
   assert.equal(dash.specialDirectional.type, 'radiation');
   assert.equal(dash.specialDirectional.igniteAt, undefined);
@@ -2044,7 +2044,7 @@ test('noble, roger, niko, and flo keep the approved batch rules', () => {
   assert.equal(noble.basicCharge.type, 'kinetic');
   assert.equal(noble.basicCharge.type2, undefined);
   assert.equal(noble.basicCharge.overhold, undefined);
-  assert.equal(noble.basicCharge.damage, 9.8);
+  assert.equal(noble.basicCharge.damage, 16.2);
   assert.equal(noble.basicCharge.radius, 60);
   assert.equal(noble.basicDirectional.name, 'Medal Swing');
   assert.equal(noble.specialDefense.truce.ms, 480);
@@ -2052,7 +2052,7 @@ test('noble, roger, niko, and flo keep the approved batch rules', () => {
   assert.equal(noble.specialDirectional.type, 'radiation');
   assert.equal(noble.specialDirectional.salvo, 6);
   assert.equal(noble.specialDirectional.igniteAt, undefined);
-  assert.equal(noble.specialDirectional.damage, 2.63);
+  assert.equal(noble.specialDirectional.damage, 4.6);
   const earlyIon = finalBlow({ ...noble.specialDirectional, multiHit: 6, _hitIndex: 1 });
   const lastIon = finalBlow({ ...noble.specialDirectional, multiHit: 6, _hitIndex: 6 });
   assert.equal(earlyIon.baseKnockback, 0);
@@ -2173,7 +2173,7 @@ test('hoss, mae, and copernicus keep the approved batch rules', () => {
   assert.equal(hoss.specialDirectional.luckyEvery, 4);
   assert.equal(hoss.specialDirectional.explodeOnly, true);
   assert.equal(hoss.specialDirectional.landBurst, true);
-  assert.equal(hoss.specialDirectional.damage, 12);
+  assert.equal(hoss.specialDirectional.damage, 17.4);
   assert.equal(hoss.specialDirectional.igniteAt, undefined);
 
   const mae = CHARACTERS.mae.moves;
@@ -2203,8 +2203,8 @@ test('hoss, mae, and copernicus keep the approved batch rules', () => {
   assert.equal(cope.specialDirectional.name, 'Liquid Metal Splash');
   assert.equal(cope.specialDirectional.type, 'chemical');
   assert.equal(cope.specialDirectional.type2, 'radiation');
-  assert.equal(cope.specialDirectional.damage, 14);
-  assert.equal(cope.specialDirectional.damage2, 10);
+  assert.equal(cope.specialDirectional.damage, 10.2);
+  assert.equal(cope.specialDirectional.damage2, 7.3);
   assert.equal(cope.specialDirectional.liquidWobble, true);
   assert.equal(cope.specialDirectional.orbitMs, undefined);
   assert.equal(cope.specialDirectional.igniteAt, undefined);

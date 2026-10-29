@@ -177,3 +177,23 @@ to the cap and is not the number the doc gives as the working value.
 - Metals feel the same: widen `solidDensityLo` / `solidDensityHi` or the spans.
 - Electrical peak in the wrong place: move `elecMidLog` (it is a log10 of MS/m).
 - Chemical matchups too swingy: lower `chemPerEn`.
+
+## Balance pass 2026-10-29 (base damage and recharge)
+
+Base damage only (poison, burn, radiation clouds and other damage-over-time are not counted). Per use: every hit of a
+multi-hit move (`hitsPerUse` in `src/data/balance.js`), full-charge value for charge moves.
+
+| Slot | Base damage |
+|---|---|
+| Normal (`basicDirectional`) | 5-12% |
+| Special (`specialDirectional`) | 13-20% |
+| Charge (`basicCharge`, full charge) | 20-30% |
+| Defense (`specialDefense`) | 0, unless it counters (`counterDamage`, `retort`, `phaseRetort`, `recoil`): 13-20% |
+
+Where a move lands in its range: strong effects (stun, freeze, root, poison, burn, zones, big knockback) sit lower, clean
+hits higher, heavier fighters a little higher and light ones a little lower (Core Stats Weight, 1-10).
+Recharge is the move's `cooldown`: every move sits in 0.5-1.5 s, longer for stronger moves
+(`0.5 s + 1.0 s x (damage - 5) / 25`). Light fighters (Weight <= 3.0) instead throw `string: { hits, gap }` on their normal
+attack: 2-3 swings with 0.2-0.3 s between, then the full 1.0 s (`src/engine/swingString.js`).
+Campaign: `DAMAGE_SCALE` 2.4 -> 1.8, `CHARGE_DEFAULT_MULT` 1.5 -> 1 (charge moves are already full-charge values), and a
+move's campaign damage counts every hit of a multi-hit move. `tests/balance-pass.test.js` pins all of this.

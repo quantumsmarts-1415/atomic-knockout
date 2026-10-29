@@ -428,7 +428,7 @@ test('story validation reports mistakes in plain words', async () => {
 
 // ------------------------------------------------------------------ moves and damage rules
 import { campaignMoves, DAMAGE_SCALE, basicOf } from '../src/campaign/moves.js';
-import { resolveMoveDamage } from '../src/data/balance.js';
+import { hitsPerUse, resolveMoveDamage } from '../src/data/balance.js';
 import { upgradeRecord, MAX_LEVEL } from '../src/campaign/units.js';
 
 test('every attack deals its fighting-game damage % (x one scale), straight from the move data', () => {
@@ -437,7 +437,7 @@ test('every attack deals its fighting-game damage % (x one scale), straight from
     assert.equal(moves.length, 4, c.id);
     const basic = basicOf(c.id);
     assert.ok(basic.attack && !basic.charge && basic.cd === 0, `${c.id} basic`);
-    const pct = resolveMoveDamage(basic.raw, c, null).total;
+    const pct = resolveMoveDamage(basic.raw, c, null).total * hitsPerUse(basic.raw);   // multi-hit moves count every hit
     assert.equal(basic.dmg, Math.min(60, Math.max(1, Math.round(pct * DAMAGE_SCALE))), `${c.id} basic dmg = move % x scale`);
     for (const m of moves) {
       if (m.attack) assert.ok(m.dmg >= 1 && m.dmg <= 60 && m.range[0] >= 1 && m.range[1] <= 3, `${c.id} ${m.key}`);

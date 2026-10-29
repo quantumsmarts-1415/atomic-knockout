@@ -227,7 +227,7 @@ export class CampaignBattle {
   checkEvents(kind, ctx = {}) {
     const out = [];
     (this.chapter.events || []).forEach((ev, i) => {
-      if (this.fired.has(i) || this.result) return;
+      if (this.fired.has(i) || (this.result && kind !== 'death')) return;
       const w = ev.when || {};
       let hit = false;
       if (kind === 'start') hit = !!w.start;

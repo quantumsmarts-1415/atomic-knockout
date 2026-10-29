@@ -228,3 +228,21 @@ test('events: turn spawns reinforcements, near-boss fires once, talk recruits an
   assert.equal(flora.team, 'player');
   assert.ok(c2.commit().some((rec) => rec.id === 'flora'));
 });
+
+test('sheetDims.js lists the oversized fighter sheets the campaign repacks before upload', async () => {
+  const { BIG_SHEETS } = await import('../src/campaign/sheetDims.js');
+  assert.ok(Object.keys(BIG_SHEETS).length > 0);
+  let checked = 0;
+  for (const c of ROSTER) {
+    const s = c.art?.sheets;
+    if (!c.art?.use3d || !s) continue;
+    for (const [clip, def] of Object.entries(s.clips)) {
+      const k = `${c.art.key}-${clip}`;
+      if (!BIG_SHEETS[k]) continue;
+      const file = new URL(`../${s.dir}${def.file || `${c.id}_${clip}.png`}`, import.meta.url);
+      const buf = fs.readFileSync(file).subarray(0, 24);
+      assert.deepEqual([buf.readUInt32BE(16), buf.readUInt32BE(20)], BIG_SHEETS[k], k);
+      if (++checked >= 25) return;
+    }
+  }
+});

@@ -15,6 +15,7 @@ import { TERRAIN } from '../campaign/terrain.js';
 import { key, ringTiles } from '../campaign/grid.js';
 import { tileKey, attackClipName, loadCampaignArt, sheetKey } from '../campaign/art.js';
 import { basicMove } from '../campaign/units.js';
+import { playDialogue } from '../ui/campaignDialogue.js';
 
 const TILE = 64;
 const MAPX = 8;
@@ -24,6 +25,7 @@ const FLIPPABLE = new Set(['plain', 'water', 'floor']);
 const HP_PLAYER = 0x3ef0e0;
 const HP_ENEMY = 0xff4f5f;
 const FEET = 54;
+const UNIT_H = 102;
 
 const tx = (c) => MAPX + c * TILE;
 const ty = (r) => MAPY + r * TILE;
@@ -48,6 +50,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.cursor = { x: 0, y: 0 };
     this.views = new Map();
     this.levelUps = [];
+    this.cutViews = [];
+    this.cutOn = new URLSearchParams(window.location.search).get('cut') !== '0';
     this.speed = Number(new URLSearchParams(window.location.search).get('campspeed')) || 1;
     this.keyHandlers = [];
     this.padPrev = {};
@@ -108,7 +112,12 @@ export default class CampaignBattleScene extends Phaser.Scene {
         const id = map.tiles[r][c];
         const img = this.add.image(tx(c) + TILE / 2, ty(r) + TILE / 2, tileKey(id)).setDisplaySize(TILE, TILE).setDepth(0);
         if (FLIPPABLE.has(id)) img.setFlip(rnd.pick([true, false]), rnd.pick([true, false]));
-        else if (id === 'road') img.setFlipX(rnd.pick([true, false]));
+        else if (id === 'road') {
+          const horiz = map.tiles[r][c - 1] === 'road' || map.tiles[r][c + 1] === 'road';
+          const vert = map.tiles[r - 1]?.[c] === 'road' || map.tiles[r + 1]?.[c] === 'road';
+          if (horiz && !vert) img.setAngle(90);
+          img.setFlipX(rnd.pick([true, false]));
+        }
         this.tileImgs.push(img);
       }
     }
@@ -116,6 +125,16 @@ export default class CampaignBattleScene extends Phaser.Scene {
     g.lineStyle(1, 0x07060e, 0.28);
     for (let c = 0; c <= map.w; c++) g.lineBetween(tx(c), MAPY, tx(c), MAPY + map.h * TILE);
     for (let r = 0; r <= map.h; r++) g.lineBetween(MAPX, ty(r), MAPX + map.w * TILE, ty(r));
+    // Escape gate
+    for (const [ex, ey] of this.chapter.exit || []) {
+      const gm = this.add.graphics().setDepth(2);
+      gm.lineStyle(3, THEME.gold, 0.95);
+      gm.strokeRect(tx(ex) + 3, ty(ey) + 3, TILE - 6, TILE - 6);
+      gm.fillStyle(THEME.gold, 0.22);
+      gm.fillRect(tx(ex) + 3, ty(ey) + 3, TILE - 6, TILE - 6);
+      const ar = this.add.text(tx(ex) + TILE / 2, ty(ey) + TILE / 2, '⇧', { fontFamily: FONT_DISPLAY, fontSize: '34px', color: THEME.goldCss, stroke: '#07060E', strokeThickness: 4 }).setOrigin(0.5).setDepth(2);
+      this.tweens.add({ targets: [gm, ar], alpha: { from: 0.45, to: 1 }, duration: 700, yoyo: true, repeat: -1 });
+    }
     // Seize / boss marker
     const s = this.chapter.seize;
     if (s) {
@@ -186,17 +205,17 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const charDef = CHARACTERS[u.id];
     const cont = this.add.container(tx(u.x) + TILE / 2, ty(u.y) + FEET);
     const ring = this.add.graphics();
-    const col = u.team === 'player' ? 0x35a8ff : 0xff4f5f;
-    ring.fillStyle(col, 0.28);
-    ring.fillEllipse(0, -2, 52, 16);
-    ring.lineStyle(2, col, 0.9);
-    ring.strokeEllipse(0, -2, 52, 16);
+    const col = u.lord ? 0xffd166 : u.team === 'player' ? 0x35a8ff : u.team === 'npc' ? 0x53e0a8 : 0xff4f5f;
+    ring.fillStyle(col, u.lord ? 0.4 : 0.28);
+    ring.fillEllipse(0, -2, u.lord ? 60 : 52, u.lord ? 19 : 16);
+    ring.lineStyle(u.lord ? 3 : 2, col, 0.95);
+    ring.strokeEllipse(0, -2, u.lord ? 60 : 52, u.lord ? 19 : 16);
     cont.add(ring);
     let rig = null;
     if (this.textures.exists(sheetKey(charDef.art, 'idle'))) {
       rig = new Rig(this, charDef, 0);
-      rig.baseScale = 82 / (charDef.art.height || 130);
-      rig.facing = u.team === 'player' ? 1 : -1;
+      rig.baseScale = UNIT_H / (charDef.art.height || 130);
+      rig.facing = u.team === 'enemy' ? -1 : 1;
       cont.add(rig);
     } else {
       const f = this.add.circle(0, -30, 20, col, 0.9);
@@ -204,13 +223,32 @@ export default class CampaignBattleScene extends Phaser.Scene {
     }
     const bar = this.add.graphics();
     cont.add(bar);
-    const flag = u.lord ? this.add.text(0, -92, '★', { fontFamily: FONT_DISPLAY, fontSize: '16px', color: THEME.goldCss }).setOrigin(0.5) : null;
-    if (flag) cont.add(flag);
-    const view = { u, cont, rig, bar, shownHp: u.hp, grey: false, atk: null, t: Math.random() * 3 };
+    let badge = null;
+    if (u.lord) {
+      // gold crest at the feet (right of the HP bar) plus a floating crown over the head
+      badge = this.add.container(0, 0);
+      const crest = this.add.graphics();
+      crest.fillStyle(0x1a1330, 1); crest.fillCircle(34, 8, 10);
+      crest.lineStyle(2, 0xffd166, 1); crest.strokeCircle(34, 8, 10);
+      badge.add(crest);
+      badge.add(this.add.text(34, 8, '★', { fontFamily: FONT_DISPLAY, fontSize: '14px', color: THEME.goldCss }).setOrigin(0.5));
+      const crown = this.add.text(0, -UNIT_H - 14, '♛', { fontFamily: FONT_DISPLAY, fontSize: '20px', color: THEME.goldCss, stroke: '#07060E', strokeThickness: 4 }).setOrigin(0.5);
+      badge.add(crown);
+      this.tweens.add({ targets: crown, y: crown.y - 5, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      cont.add(badge);
+    }
+    const view = { u, cont, rig, bar, badge, shownHp: u.hp, grey: false, atk: null, t: Math.random() * 6, moving: false };
     this.views.set(u.uid, view);
     this.paintBar(view);
     this.sortDepth(view);
     return view;
+  }
+
+  /** Re-skin a unit's view after it changes sides (a recruit). */
+  rebuildView(u) {
+    const old = this.views.get(u.uid);
+    if (old) { this.tweens.killTweensOf(old.cont); old.cont.destroy(); this.views.delete(u.uid); }
+    return this.addView(u);
   }
 
   sortDepth(v) {
@@ -226,7 +264,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     g.fillStyle(0x000000, 0.75);
     g.fillRect(x - 1, y - 1, w + 2, 8);
     const frac = Phaser.Math.Clamp(v.shownHp / v.u.maxHp, 0, 1);
-    g.fillStyle(v.u.team === 'player' ? HP_PLAYER : HP_ENEMY, 1);
+    g.fillStyle(v.u.team === 'enemy' ? HP_ENEMY : HP_PLAYER, 1);
     g.fillRect(x, y, w * frac, 6);
     g.fillStyle(0xffffff, 0.2);
     g.fillRect(x, y, w * frac, 2);
@@ -238,20 +276,27 @@ export default class CampaignBattleScene extends Phaser.Scene {
     v.rig?.setFlash(on ? 0x7a7a8a : null);
   }
 
+  animateView(v, dt, bob = true) {
+    if (!v.rig || !v.rig.active) return;
+    if (v.atk) {
+      v.atk.t += dt;
+      const f = Math.min(v.atk.fd.visible - 1, Math.floor((v.atk.t / v.atk.dur) * v.atk.fd.visible));
+      v.rig.attackFrame = Math.max(0, f);
+      v.rig.animate(dt, 'attack', 1);
+      if (v.atk.t >= v.atk.dur) { v.rig.moveKey = null; v.rig.frameData = null; v.rig.attackFrame = 0; v.rig.currentClip = null; v.atk = null; }
+    } else {
+      v.rig.animate(dt, 'idle', 1);
+    }
+    if (bob && !v.atk && !v.moving) {
+      v.t += dt;
+      v.rig.y = v.grey ? 0 : -Math.abs(Math.sin(v.t * 2.4)) * 2.2;
+    }
+  }
+
   update(_t, dtMs) {
     const dt = Math.min(0.05, dtMs / 1000) * this.speed;
-    for (const v of this.views.values()) {
-      if (!v.rig || !v.rig.active) continue;
-      if (v.atk) {
-        v.atk.t += dt;
-        const f = Math.min(v.atk.fd.visible - 1, Math.floor((v.atk.t / v.atk.dur) * v.atk.fd.visible));
-        v.rig.attackFrame = Math.max(0, f);
-        v.rig.animate(dt, 'attack', 1);
-        if (v.atk.t >= v.atk.dur) { v.rig.moveKey = null; v.rig.frameData = null; v.rig.attackFrame = 0; v.rig.currentClip = null; v.atk = null; }
-      } else {
-        v.rig.animate(dt, 'idle', 1);
-      }
-    }
+    for (const v of this.views.values()) this.animateView(v, dt, true);
+    for (const v of this.cutViews) this.animateView(v, dt, false);
     this.pollGamepad();
   }
 
@@ -290,21 +335,21 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const x = PANEL_X + 4;
     const u = b.unitAt(this.cursor.x, this.cursor.y) || (this.sel && this.sel.alive ? null : null);
     let y = 64;
-    this.turnText.setText(`TURN ${b.turn}  ·  ${b.phase === 'player' ? 'PLAYER PHASE' : 'ENEMY PHASE'}`);
+    this.turnText.setText(`TURN ${b.turn}${this.chapter.win === 'defend' ? ` / ${this.chapter.turns}` : ''}  ·  ${b.phase === 'player' ? 'PLAYER PHASE' : 'ENEMY PHASE'}`);
     if (u) {
       const c = CHARACTERS[u.id];
-      const ring = u.team === 'player' ? 0x35a8ff : 0xff4f5f;
+      const ring = u.team === 'player' ? 0x35a8ff : u.team === 'npc' ? 0x53e0a8 : 0xff4f5f;
       this.pAdd(drawPortraitDisc(this, x + 34, y + 38, 64, {
         textureKey: menuPortraitKey(c), face: faceFrame(this, c), n: c.atomicNumber, sym: c.symbol, ring,
       }));
       this.pAdd(this.add.text(x + 78, y + 8, u.name.toUpperCase(), textStyle('h3', { fontSize: '17px' })));
-      this.pAdd(this.add.text(x + 78, y + 30, `Lv ${u.level}  ${u.team === 'player' ? 'ALLY' : u.boss ? 'BOSS' : 'ENEMY'}`, textStyle('label', { color: u.team === 'player' ? THEME.tealCss : THEME.pinkCss })));
+      this.pAdd(this.add.text(x + 78, y + 30, `Lv ${u.level}  ${u.team === 'player' ? 'ALLY' : u.team === 'npc' ? 'NEUTRAL' : u.boss ? 'BOSS' : 'ENEMY'}`, textStyle('label', { color: u.team === 'enemy' ? THEME.pinkCss : THEME.tealCss })));
       this.pAdd(this.add.text(x + 78, y + 46, u.moveName, textStyle('caption', { fontSize: '12px' })));
       y += 86;
       const bar = this.add.graphics();
       bar.fillStyle(0x000000, 0.7);
       bar.fillRect(x, y, 206, 12);
-      bar.fillStyle(u.team === 'player' ? HP_PLAYER : HP_ENEMY, 1);
+      bar.fillStyle(u.team === 'enemy' ? HP_ENEMY : HP_PLAYER, 1);
       bar.fillRect(x + 1, y + 1, 204 * Phaser.Math.Clamp(u.hp / u.maxHp, 0, 1), 10);
       this.pAdd(bar);
       this.pAdd(this.add.text(x + 4, y + 16, `HP ${u.hp} / ${u.maxHp}`, textStyle('mono')));
@@ -338,8 +383,19 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.pAdd(this.add.text(PANEL_X + 78, ty0 + 34, info, textStyle('caption', { fontSize: '11px', lineSpacing: 2 })));
     // counts
     this.pAdd(this.add.text(x, ty0 + 104, `ALLIES ${b.players.length}   FOES ${b.enemies.length}`, textStyle('mono')));
+    this.pAdd(this.add.text(x, ty0 + 126, this.objectiveLine(), textStyle('label', { color: THEME.goldCss, wordWrap: { width: 206 } })));
     this.endBtn?.container.setVisible(b.phase === 'player' && !b.result);
     this.endBtn?.zone.setVisible(b.phase === 'player' && !b.result);
+  }
+
+  objectiveLine() {
+    const b = this.battle;
+    const c = this.chapter;
+    if (c.win === 'defend') return `HOLD: ${Math.max(0, c.turns - b.turn + 1)} turn(s) to survive`;
+    if (c.win === 'escape') return 'GET HYDRA TO THE GOLD GATE';
+    if (c.win === 'seize') return 'HYDRA TO THE GOLD TILE';
+    if (c.win === 'boss') return `DEFEAT ${(CHARACTERS[c.enemies.find((e) => e.boss)?.id]?.name || 'THE BOSS').toUpperCase()}`;
+    return 'ROUT ALL ENEMIES';
   }
 
   showForecast(att, def) {
@@ -410,7 +466,13 @@ export default class CampaignBattleScene extends Phaser.Scene {
     kb(['DOWN', 'S'], () => this.arrow(0, 1));
     kb(['ENTER', 'SPACE', 'Z', 'F', 'K'], () => this.confirm(this.cursor.x, this.cursor.y, true));
     kb(['ESC', 'X', 'BACKSPACE'], () => this.cancel());
+    kb(['C'], () => { this.cutOn = !this.cutOn; this.toast(`Battle scenes: ${this.cutOn ? 'ON' : 'OFF'}`); });
     kb(['E', 'TAB'], (ev) => { ev?.preventDefault?.(); this.endTurnPressed(); });
+  }
+
+  toast(text) {
+    const t = this.add.text(MAPX + 512, MAPY + 20, text, textStyle('label', { fontSize: '14px', color: THEME.goldCss })).setOrigin(0.5).setDepth(98);
+    this.tweens.add({ targets: t, alpha: 0, y: t.y - 10, delay: 900, duration: 400, onComplete: () => t.destroy() });
   }
 
   tileAt(p) {
@@ -556,16 +618,57 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.sortDepth(v);
   }
 
+  /** Glide along the whole path at a steady pace (eased at both ends), hopping with each tile. */
   async walk(u, path) {
     const v = this.views.get(u.uid);
-    for (const step of path.slice(1)) {
-      if (v.rig) v.rig.facing = step.x < Math.round((v.cont.x - MAPX - TILE / 2) / TILE) ? -1 : step.x > Math.round((v.cont.x - MAPX - TILE / 2) / TILE) ? 1 : v.rig.facing;
-      const hop = this.tween({ targets: v.cont, x: tx(step.x) + TILE / 2, y: ty(step.y) + FEET, duration: 110, ease: 'Sine.easeInOut', onUpdate: () => this.sortDepth(v) });
-      this.tween({ targets: v.rig || v.cont, y: '-=6', duration: 55, yoyo: true });
-      await hop;
-    }
+    if (!v || path.length < 2) { this.battle.moveUnit(u, path[path.length - 1].x, path[path.length - 1].y); return; }
+    const pts = path.map((p) => ({ x: tx(p.x) + TILE / 2, y: ty(p.y) + FEET }));
+    const segs = [];
+    let total = 0;
+    for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); segs.push({ a: pts[i - 1], b: pts[i], l, from: total }); total += l; }
+    const SPEED = 430; // px per second
+    const dur = (total / SPEED) * 1000 + 90;
+    v.moving = true;
+    let lastDust = 0;
+    await new Promise((res) => {
+      const counter = this.tweens.addCounter({
+        from: 0, to: 1, duration: Math.max(1, dur / this.speed), ease: 'Sine.easeInOut',
+        onUpdate: () => {
+          const d = counter.getValue() * total;
+          const seg = segs.find((sg) => d <= sg.from + sg.l) || segs[segs.length - 1];
+          const f = Phaser.Math.Clamp((d - seg.from) / seg.l, 0, 1);
+          v.cont.x = seg.a.x + (seg.b.x - seg.a.x) * f;
+          v.cont.y = seg.a.y + (seg.b.y - seg.a.y) * f;
+          if (v.rig) {
+            if (seg.b.x !== seg.a.x) v.rig.facing = seg.b.x > seg.a.x ? 1 : -1;
+            v.rig.y = -Math.abs(Math.sin((d / TILE) * Math.PI)) * 7;
+            v.rig.rotation = Math.sin((d / TILE) * Math.PI * 2) * 0.03 * (v.rig.facing || 1);
+          }
+          if (d - lastDust > TILE * 0.55) { lastDust = d; this.dust(v.cont.x, v.cont.y); }
+          this.sortDepth(v);
+        },
+        onComplete: () => res(),
+      });
+    });
+    v.moving = false;
+    if (v.rig) { v.rig.y = 0; v.rig.rotation = 0; }
+    v.cont.setPosition(pts[pts.length - 1].x, pts[pts.length - 1].y);
     this.battle.moveUnit(u, path[path.length - 1].x, path[path.length - 1].y);
     this.sortDepth(v);
+  }
+
+  dust(x, y) {
+    const c = this.add.circle(x + Phaser.Math.Between(-6, 6), y - 2, Phaser.Math.Between(3, 5), 0xe8f6ff, 0.45).setDepth(9);
+    this.tweens.add({ targets: c, y: c.y - 8, alpha: 0, scale: 1.8, duration: 380 / this.speed, onComplete: () => c.destroy() });
+  }
+
+  burst(x, y, color = 0xffd166, n = 12, spread = 80, depth = 92) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const d = spread * (0.4 + Math.random() * 0.8);
+      const c = this.add.circle(x, y, 2 + Math.random() * 3, color, 1).setDepth(depth);
+      this.tweens.add({ targets: c, x: x + Math.cos(a) * d, y: y + Math.sin(a) * d - 12, alpha: 0, scale: 0.2, duration: (360 + Math.random() * 300) / this.speed, ease: 'Cubic.easeOut', onComplete: () => c.destroy() });
+    }
   }
 
   async moveSelected(x, y) {
@@ -575,6 +678,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const path = this.battle.pathFor(u, { x, y }, this.reach);
     await this.walk(u, path);
     this.setCursor(x, y);
+    await this.runEvents(this.battle.checkEvents('move'));
+    if (this.battle.result) { this.finish(); return; }
     this.openMenu();
   }
 
@@ -587,6 +692,9 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const items = [];
     if (this.targets.length) items.push({ id: 'attack', label: 'Attack' });
     if (b.canSeize(u)) items.push({ id: 'seize', label: 'Seize' });
+    if (b.canEscape(u)) items.push({ id: 'escape', label: 'Escape' });
+    this.talkList = b.talkTargets(u);
+    if (this.talkList.length) items.push({ id: 'talk', label: 'Talk' });
     items.push({ id: 'wait', label: 'Wait' });
     this.menuItems = items;
     this.menuSel = 0;
@@ -642,6 +750,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
     sfx('menuConfirm');
     this.closeMenu();
     if (it.id === 'wait') this.finishAction(this.sel);
+    else if (it.id === 'escape') { this.mode = 'busy'; this.paintRanges(); this.battle.escape(this.sel); this.finishAction(this.sel, true); }
+    else if (it.id === 'talk') this.doTalk(this.talkList[0]);
     else if (it.id === 'seize') { this.mode = 'busy'; this.paintRanges(); this.battle.seize(this.sel); this.finishAction(this.sel, true); }
     else if (it.id === 'attack') {
       this.mode = 'target';
@@ -694,49 +804,219 @@ export default class CampaignBattleScene extends Phaser.Scene {
     // the state already holds the final HP; the bars catch up strike by strike
     va.shownHp = before.get(att.uid);
     vd.shownHp = before.get(def.uid);
-    for (const strike of res.log) {
-      const sv = strike.by === 'att' ? va : vd;
-      const tv = strike.by === 'att' ? vd : va;
-      await this.strike(sv, tv, strike);
+    if (this.cutOn && va.rig && vd.rig) {
+      await this.cutaway(att, def, res, before);
+      va.shownHp = att.hp; vd.shownHp = def.hp;
+      this.paintBar(va); this.paintBar(vd);
+    } else {
+      for (const strike of res.log) {
+        const sv = strike.by === 'att' ? va : vd;
+        const tv = strike.by === 'att' ? vd : va;
+        await this.strike(sv, tv, strike);
+      }
     }
     for (const k of res.killed) {
       const v = this.views.get(k.uid);
       sfx('ko');
-      await this.tween({ targets: v.cont, alpha: 0, y: v.cont.y - 14, duration: 420 });
-      v.cont.destroy();
-      this.views.delete(k.uid);
+      if (v) {
+        this.burst(v.cont.x, v.cont.y - 40, 0xff4f5f, 16, 70);
+        await this.tween({ targets: v.cont, alpha: 0, y: v.cont.y - 14, duration: 420 });
+        v.cont.destroy();
+        this.views.delete(k.uid);
+      }
+      await this.runEvents(b.checkEvents('death', { unit: k }));
     }
     for (const x of res.xp) {
       const v = this.views.get(x.unit.uid);
       if (!v) continue;
-      this.floatText(v.cont.x, v.cont.y - 90, `EXP +${x.amount}`, THEME.goldCss, 15);
+      this.floatText(v.cont.x, v.cont.y - UNIT_H - 8, `EXP +${x.amount}`, THEME.goldCss, 15);
       await this.wait(380);
       for (const lu of x.levelUps) {
         this.levelUps.push({ name: x.unit.name, level: lu.level });
         const g = lu.gains;
         const parts = [`HP+${g.hp}`, g.power && 'POW+1', g.def && 'DEF+1', g.spd && 'SPD+1'].filter(Boolean).join('  ');
         sfx('go');
+        this.levelUpFx(v);
         await this.banner(`LEVEL UP  ${x.unit.name.toUpperCase()}  Lv ${lu.level}`, parts, THEME.gold);
       }
     }
     this.refreshPanel();
   }
 
+  /** Pillar of light, a ring that rises off the feet, and sparkles. */
+  levelUpFx(v) {
+    const { x, y } = v.cont;
+    const pillar = this.add.rectangle(x, y - 60, 60, 160, 0xffd166, 0.0).setDepth(80).setBlendMode(Phaser.BlendModes.ADD);
+    this.tweens.add({ targets: pillar, alpha: { from: 0.55, to: 0 }, scaleX: { from: 1, to: 0.3 }, scaleY: { from: 0.6, to: 1.4 }, duration: 900 / this.speed, onComplete: () => pillar.destroy() });
+    for (let i = 0; i < 3; i++) {
+      const ring = this.add.ellipse(x, y - 4, 40, 14).setStrokeStyle(3, 0xffd166, 1).setDepth(81);
+      this.tweens.add({ targets: ring, y: y - 96, scaleX: 1.7, alpha: 0, duration: (700 + i * 170) / this.speed, delay: (i * 140) / this.speed, onComplete: () => ring.destroy() });
+    }
+    this.burst(x, y - 50, 0xfff2b0, 22, 90, 82);
+    v.rig?.setFlash(0xffffff);
+    this.time.delayedCall(180 / this.speed, () => v.rig?.setFlash(v.grey ? 0x7a7a8a : null));
+  }
+
+  /** Start the fighter's attack clip on a view (map or cutaway). Returns false when the clip is not loaded yet. */
+  startAttack(v, dur) {
+    if (!v.rig || !this.clipLoaded(v.u)) return false;
+    const mv = basicMove(CHARACTERS[v.u.id]);
+    const fd = frameData(mv?.duration ?? 250, mv?.cooldown ?? 380, mv || {}, 1000 / 60);
+    v.rig.moveKey = 'basicDirectional';
+    v.rig.moveSlot = 'basic';
+    v.rig.frameData = fd;
+    v.rig.attackFrame = 0;
+    v.atk = { t: 0, dur, fd };
+    return true;
+  }
+
+  /** Close-up of the exchange: both fighters large, attack clips, hit / crit / miss / KO effects. */
+  async cutaway(att, def, res, before) {
+    const depth = 120;
+    const objs = [];
+    const add = (o, d = 0) => { o.setDepth(depth + d); objs.push(o); return o; };
+    const PY = 96;
+    const PH = 524;
+    const FOOT = 560;
+    const veil = add(this.add.rectangle(W / 2, H / 2, W, H, 0x04030a, 0.97), 0);
+    veil.setAlpha(0);
+    const stage = this.add.graphics();
+    stage.fillGradientStyle(0x14102a, 0x14102a, 0x2a1d4a, 0x2a1d4a, 1);
+    stage.fillRect(0, PY, W, FOOT - 70 - PY);
+    add(stage, 1);
+    // ground: the terrain under each fighter
+    const mapA = this.battle.tile(att.x, att.y);
+    const mapD = this.battle.tile(def.x, def.y);
+    for (let x = 0; x < W; x += 160) for (let y = FOOT - 70; y < PY + PH; y += 160) {
+      const t = x + 80 < W / 2 ? mapA : mapD;
+      const img = this.add.image(x + 80, y + 80, tileKey(t.id)).setDisplaySize(160, 160);
+      add(img, 2);
+    }
+    const shade = this.add.graphics();
+    shade.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.55, 0.55, 0, 0);
+    shade.fillRect(0, FOOT - 70, W, 60);
+    add(shade, 3);
+    const rim = this.add.graphics();
+    rim.lineStyle(3, THEME.teal, 0.8);
+    rim.lineBetween(0, PY, W, PY); rim.lineBetween(0, PY + PH, W, PY + PH);
+    add(rim, 4);
+    // fighters
+    const mk = (u, x, face) => {
+      const c = CHARACTERS[u.id];
+      const rig = new Rig(this, c, 0);
+      rig.baseScale = 270 / (c.art.height || 130);
+      rig.facing = face;
+      rig.setPosition(x + face * -160, FOOT);
+      this.add.existing(rig);
+      add(rig, 10);
+      const v = { u, rig, atk: null, grey: false, t: 0, moving: true, home: x };
+      this.cutViews.push(v);
+      return v;
+    };
+    const A = mk(att, 330, 1);
+    const D = mk(def, W - 330, -1);
+    // info plates
+    const plates = new Map();
+    const mkPlate = (u, x, left) => {
+      const g = this.add.graphics();
+      const col = u.team === 'enemy' ? HP_ENEMY : HP_PLAYER;
+      const px = x; const py = PY + 18; const pw = 400;
+      g.fillStyle(THEME.ink, 0.95); g.fillRoundedRect(px, py, pw, 76, 12);
+      g.lineStyle(2, u.team === 'enemy' ? THEME.pink : THEME.teal, 1); g.strokeRoundedRect(px, py, pw, 76, 12);
+      add(g, 20);
+      add(this.add.text(px + 16, py + 8, u.name.toUpperCase(), { fontFamily: FONT_DISPLAY, fontSize: '20px', color: THEME.mistCss, letterSpacing: 2 }), 21);
+      add(this.add.text(px + pw - 16, py + 12, `Lv ${u.level}`, textStyle('label', { color: u.team === 'enemy' ? THEME.pinkCss : THEME.tealCss })).setOrigin(1, 0), 21);
+      const bar = this.add.graphics();
+      add(bar, 21);
+      const hpT = add(this.add.text(px + 16, py + 54, '', textStyle('mono', { fontSize: '13px' })), 21);
+      const plate = { u, bar, hpT, px, py, pw, col, shown: before.get(u.uid) };
+      plates.set(u.uid, plate);
+      return plate;
+    };
+    const paintPlate = (pl) => {
+      pl.bar.clear();
+      pl.bar.fillStyle(0x000000, 0.8); pl.bar.fillRect(pl.px + 16, pl.py + 38, pl.pw - 32, 12);
+      pl.bar.fillStyle(pl.col, 1); pl.bar.fillRect(pl.px + 17, pl.py + 39, (pl.pw - 34) * Phaser.Math.Clamp(pl.shown / pl.u.maxHp, 0, 1), 10);
+      pl.bar.fillStyle(0xffffff, 0.2); pl.bar.fillRect(pl.px + 17, pl.py + 39, (pl.pw - 34) * Phaser.Math.Clamp(pl.shown / pl.u.maxHp, 0, 1), 3);
+      pl.hpT.setText(`HP ${Math.max(0, Math.round(pl.shown))} / ${pl.u.maxHp}`);
+    };
+    const plA = mkPlate(att, 40, true);
+    const plD = mkPlate(def, W - 440, false);
+    paintPlate(plA); paintPlate(plD);
+    const setPlate = (pl, hp) => new Promise((resolve) => {
+      const o = { v: pl.shown };
+      this.tweens.add({ targets: o, v: hp, duration: 360 / this.speed, onUpdate: () => { pl.shown = o.v; paintPlate(pl); }, onComplete: () => { pl.shown = hp; paintPlate(pl); resolve(); } });
+    });
+    // intro
+    this.tween({ targets: veil, alpha: 0.97, duration: 170 });
+    await Promise.all([A, D].map((v) => this.tween({ targets: v.rig, x: v.home, duration: 260, ease: 'Cubic.easeOut' })));
+    A.moving = false; D.moving = false;
+    await this.wait(160);
+    const hpNow = new Map([[att.uid, before.get(att.uid)], [def.uid, before.get(def.uid)]]);
+    for (const s of res.log) {
+      const sv = s.by === 'att' ? A : D;
+      const tv = s.by === 'att' ? D : A;
+      const dir = sv === A ? 1 : -1;
+      const startX = sv.home;
+      const dur = 0.58;
+      sfx('whoosh');
+      sv.rig.facing = dir; tv.rig.facing = -dir;
+      const clip = this.startAttack(sv, dur);
+      this.tween({ targets: sv.rig, x: startX + dir * (clip ? 70 : 110), duration: 190, ease: 'Cubic.easeOut' });
+      await this.wait(dur * 1000 * 0.45);
+      const tx0 = tv.home;
+      if (s.hit) {
+        playHit(s.dmg, 'kinetic', s.killed);
+        tv.rig.setFlash(s.crit ? 0xffd166 : 0xff6a6a);
+        this.time.delayedCall(120 / this.speed, () => tv.rig?.active && tv.rig.setFlash(null));
+        this.tween({ targets: tv.rig, x: tx0 + dir * (s.crit ? 52 : 26), duration: 90, yoyo: !s.killed, ease: 'Sine.easeOut' });
+        const cx = tv.rig.x;
+        this.burst(cx, FOOT - 130, s.crit ? 0xffd166 : 0xffffff, s.crit ? 26 : 12, s.crit ? 150 : 90, depth + 40);
+        const dmgT = this.add.text(cx, FOOT - 250, `${s.dmg}`, { fontFamily: FONT_DISPLAY, fontSize: s.crit ? '84px' : '56px', color: s.crit ? '#FFD166' : '#FFFFFF', stroke: '#07060E', strokeThickness: 8 }).setOrigin(0.5).setDepth(depth + 41);
+        objs.push(dmgT);
+        dmgT.setScale(0.4);
+        this.tweens.add({ targets: dmgT, scale: 1, duration: 140 / this.speed, ease: 'Back.easeOut' });
+        this.tweens.add({ targets: dmgT, y: dmgT.y - 50, alpha: 0, delay: 520 / this.speed, duration: 380 / this.speed });
+        if (s.crit) {
+          const flash = add(this.add.rectangle(W / 2, H / 2, W, H, 0xfff2b0, 0.55), 30);
+          this.tweens.add({ targets: flash, alpha: 0, duration: 300 / this.speed });
+          const ct = add(this.add.text(W / 2, PY + 140, 'CRITICAL!', { fontFamily: FONT_DISPLAY, fontSize: '46px', color: '#FFD166', stroke: '#07060E', strokeThickness: 8, letterSpacing: 6 }).setOrigin(0.5), 42);
+          ct.setScale(0.5);
+          this.tweens.add({ targets: ct, scale: 1.1, duration: 160 / this.speed, ease: 'Back.easeOut' });
+          this.tweens.add({ targets: ct, alpha: 0, delay: 650 / this.speed, duration: 260 / this.speed });
+          this.cameras.main.shake(260 / this.speed, 0.012);
+          sfx('koHit');
+        } else this.cameras.main.shake(130 / this.speed, 0.005);
+        hpNow.set(tv.u.uid, s.targetHp);
+        await setPlate(plates.get(tv.u.uid), s.targetHp);
+        if (s.killed) {
+          sfx('ko');
+          this.tween({ targets: tv.rig, x: tv.rig.x + dir * 90, y: FOOT - 10, rotation: dir * 1.3, alpha: 0, duration: 650, ease: 'Cubic.easeIn' });
+          this.burst(tv.rig.x, FOOT - 100, 0xff4f5f, 24, 130, depth + 40);
+        }
+      } else {
+        this.tween({ targets: tv.rig, x: tx0 + dir * 70, duration: 110, yoyo: true, ease: 'Sine.easeOut' });
+        const mt = this.add.text(tv.rig.x, FOOT - 230, 'MISS', { fontFamily: FONT_DISPLAY, fontSize: '40px', color: '#9A91B0', stroke: '#07060E', strokeThickness: 6 }).setOrigin(0.5).setDepth(depth + 41);
+        objs.push(mt);
+        this.tweens.add({ targets: mt, y: mt.y - 40, alpha: 0, duration: 800 / this.speed });
+      }
+      await this.wait(dur * 1000 * 0.55 + (s.crit ? 420 : 140));
+      if (sv.atk) sv.atk.t = sv.atk.dur;
+      if (!s.killed || s.by !== 'att' && false) await this.tween({ targets: sv.rig, x: startX, duration: 170, ease: 'Sine.easeInOut' });
+      if (s.killed) break;
+    }
+    await this.wait(320);
+    await this.tween({ targets: objs.filter((o) => o !== veil), alpha: 0, duration: 160 });
+    await this.tween({ targets: veil, alpha: 0, duration: 120 });
+    this.cutViews = this.cutViews.filter((v) => v !== A && v !== D);
+    objs.forEach((o) => { this.tweens.killTweensOf(o); o.destroy(); });
+  }
+
   async strike(sv, tv, s) {
-    const a = sv.u;
-    const clip = sv.rig && this.clipLoaded(a);
     const dx = Math.sign(tv.cont.x - sv.cont.x) || 1;
     sfx('whoosh');
     const dur = 0.55;
-    if (clip) {
-      const mv = basicMove(CHARACTERS[a.id]);
-      const fd = frameData(mv?.duration ?? 250, mv?.cooldown ?? 380, mv || {}, 1000 / 60);
-      sv.rig.moveKey = 'basicDirectional';
-      sv.rig.moveSlot = 'basic';
-      sv.rig.frameData = fd;
-      sv.rig.attackFrame = 0;
-      sv.atk = { t: 0, dur, fd };
-    }
+    this.startAttack(sv, dur);
     const home = sv.cont.x;
     this.tween({ targets: sv.cont, x: home + dx * 16, duration: 140, yoyo: true, ease: 'Sine.easeOut', hold: 60 });
     await this.wait(dur * 1000 * 0.42);
@@ -782,6 +1062,60 @@ export default class CampaignBattleScene extends Phaser.Scene {
     objs.forEach((o) => o.destroy());
   }
 
+  // --------------------------------------------------------------- story events
+  enemyIds() {
+    return [...new Set([...this.battle.units.filter((u) => u.team === 'enemy').map((u) => u.id), ...this.chapter.enemies.map((e) => e.id)])];
+  }
+
+  /** Mid-battle conversation over a dimmed map. */
+  async talkScene(lines, tag = null) {
+    if (!lines?.length) return;
+    const prev = this.mode;
+    this.mode = 'busy';
+    this.hideForecast();
+    this.inDialogue = true;
+    await playDialogue(this, { lines, enemyIds: this.enemyIds(), dim: 0.62, depth: 200, speed: this.speed, tag });
+    this.inDialogue = false;
+    this.mode = prev;
+  }
+
+  /** Show newly arrived units, then play the event's lines. */
+  async runEvents(list) {
+    for (const { event, lines, spawned } of list || []) {
+      const prev = this.mode;
+      this.mode = 'busy';
+      if (spawned.length) {
+        sfx('go');
+        for (const u of spawned) {
+          const v = this.addView(u);
+          v.cont.setAlpha(0);
+          this.setCursor(u.x, u.y);
+          this.burst(v.cont.x, v.cont.y - 40, u.team === 'enemy' ? 0xff4f5f : 0x35a8ff, 18, 90);
+          this.tweens.add({ targets: v.cont, alpha: 1, y: { from: v.cont.y - 26, to: v.cont.y }, duration: 420 / this.speed, ease: 'Bounce.easeOut' });
+        }
+        await this.wait(560);
+      }
+      await this.talkScene(lines, event.when?.near ? 'ENCOUNTER' : event.when?.death ? 'LAST WORDS' : spawned.length ? 'REINFORCEMENTS' : 'STORY');
+      this.mode = prev;
+      this.refreshPanel();
+    }
+  }
+
+  async doTalk(npc) {
+    const u = this.sel;
+    this.mode = 'busy';
+    this.paintRanges();
+    this.hideForecast();
+    const r = this.battle.talk(u, npc);
+    await this.talkScene(r.lines, 'RECRUIT');
+    const v = this.rebuildView(npc);
+    this.burst(v.cont.x, v.cont.y - 40, 0x53e0a8, 20, 90);
+    this.floatText(v.cont.x, v.cont.y - UNIT_H - 8, `${npc.name} joins!`, '#53E0A8', 20);
+    sfx('go');
+    await this.wait(700);
+    this.finishAction(u, true);
+  }
+
   // --------------------------------------------------------------- phases
   async startPlayerPhase(first = false) {
     const b = this.battle;
@@ -789,7 +1123,9 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const healed = b.startPhase('player');
     for (const v of this.views.values()) this.setGrey(v, false);
     this.refreshPanel();
-    await this.banner('PLAYER PHASE', first ? this.chapter.objective : `Turn ${b.turn}`, 0x35a8ff);
+    await this.banner('PLAYER PHASE', first ? this.chapter.objective : (this.chapter.win === 'defend' ? `Turn ${b.turn} of ${this.chapter.turns}` : `Turn ${b.turn}`), 0x35a8ff);
+    if (first) await this.runEvents(b.checkEvents('start'));
+    await this.runEvents(b.checkEvents('turn'));
     for (const h of healed) {
       const v = this.views.get(h.unit.uid);
       if (v) { v.shownHp = h.unit.hp; this.paintBar(v); this.floatText(v.cont.x, v.cont.y - 80, `+${h.amount}`, '#53E0A8', 20); }
@@ -813,6 +1149,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const healed = b.endPlayerPhase();
     this.refreshPanel();
     await this.banner('ENEMY PHASE', `Turn ${b.turn}`, 0xff4f5f);
+    await this.runEvents(b.checkEvents('enemyTurn'));
     for (const h of healed) {
       const v = this.views.get(h.unit.uid);
       if (v) { v.shownHp = h.unit.hp; this.paintBar(v); this.floatText(v.cont.x, v.cont.y - 80, `+${h.amount}`, '#53E0A8', 20); }
@@ -827,6 +1164,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       if (plan.to.x !== u.x || plan.to.y !== u.y) {
         const reach = b.reachFor(u);
         await this.walk(u, b.pathFor(u, plan.to, reach));
+        await this.runEvents(b.checkEvents('move'));
       }
       if (plan.target) {
         this.setCursor(plan.target.x, plan.target.y);
@@ -840,6 +1178,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     if (b.result) { this.finish(); return; }
     for (const v of this.views.values()) this.setGrey(v, false);
     b.endEnemyPhase();
+    if (b.result) { this.finish(); return; }
     await this.startPlayerPhase();
   }
 

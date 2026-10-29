@@ -1246,3 +1246,8 @@ test('charge loops the windup and a guard holds the strike frames', () => {
   const pose = sheetFrameIndex(guard, { state: 'defending', animT: 0.2, fd: null });
   assert.ok(pose >= guard.active[0] && pose <= guard.active[1], pose);
 });
+
+test('Van: the idle sheet faces right, so its clip keeps it unflipped (it used to face backwards)', () => {
+  assert.equal(CHARACTERS.van.art.sheets.clips.idle.sheetFacing, 1);
+  assert.equal(CHARACTERS.van.art.facing, -1, 'the walk and Prism Surge sheets still face left');
+});

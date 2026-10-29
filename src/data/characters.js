@@ -2305,8 +2305,10 @@ export const CHARACTERS = {
         bodyH: 652,
         displayScale: 0.22393,
         clips: {
-          idle: { count: 13, fps: 3.6, loop: true },
-          // Walk, Alloy Fist, and Prism Surge face left, the same way the idle does.
+          // The idle sheet (van_idle.png, 8 frames of 810px via sideIdles.js) faces right, so sheetFacing: 1 keeps it unflipped
+          // (art.facing -1 used to mirror it into facing backward).
+          idle: { count: 13, fps: 3.6, loop: true, sheetFacing: 1 },
+          // Walk and Prism Surge face left; Alloy Fist, Four-State Guard and Redox Flow face right (their body clips set sheetFacing).
           // Each clip keeps its own cell and sole. Four-State Guard and Redox Flow
           // play ranges of the attack and Prism Surge sheets.
           walk: { count: 12, fps: 11.52, loop: true, frameW: 1222, frameH: 720, footY: 0.9899, visibleH: 684, bodyH: 684, displayScale: 146 / 684 },

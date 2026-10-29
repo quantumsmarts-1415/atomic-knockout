@@ -285,11 +285,16 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const u = v.u;
     const list = u.alive ? statusTags(u) : [];
     if (!list.length) { v.tags = null; return; }
-    const c = this.add.container(0, 22);
+    const c = this.add.container(0, 20);
     list.slice(0, 4).forEach((tag, i) => {
-      const txt = this.add.text(0, i * 15, tag.label, { fontFamily: FONT_DISPLAY, fontSize: '12px', color: tag.color, stroke: '#07060E', strokeThickness: 5, letterSpacing: 1 }).setOrigin(0.5, 0);
-      c.add(txt);
-      if (tag.id === 'charging') this.tweens.add({ targets: txt, alpha: 0.35, duration: 380, yoyo: true, repeat: -1 });
+      const txt = this.add.text(0, i * 17 + 8, tag.label, { fontFamily: FONT_DISPLAY, fontSize: '11px', color: tag.color, letterSpacing: 1 }).setOrigin(0.5, 0.5);
+      // a pill under the HP bar, centred on the unit, so the label reads as part of it
+      const bg = this.add.graphics();
+      const pw = txt.width + 14;
+      bg.fillStyle(0x07060e, 0.85); bg.fillRoundedRect(-pw / 2, i * 17, pw, 16, 8);
+      bg.lineStyle(1, Phaser.Display.Color.HexStringToColor(tag.color).color, 0.9); bg.strokeRoundedRect(-pw / 2, i * 17, pw, 16, 8);
+      c.add(bg); c.add(txt);
+      if (tag.id === 'charging') this.tweens.add({ targets: [txt, bg], alpha: 0.45, duration: 380, yoyo: true, repeat: -1 });
     });
     v.cont.add(c);
     v.tags = c;
@@ -555,7 +560,15 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const c = Math.floor((p.x - MAPX) / TILE);
     const r = Math.floor((p.y - MAPY) / TILE);
     const { map } = this.battle;
-    return c >= 0 && r >= 0 && c < map.w && r < map.h ? { x: c, y: r } : null;
+    if (!(c >= 0 && r >= 0 && c < map.w && r < map.h)) return null;
+    // Sprites are taller than a tile, so a unit standing one row below paints over this tile's lower half:
+    // when the tile itself is empty, a click on that sprite picks the unit (back-line units stay clickable).
+    if ((this.mode === 'idle' || this.mode === 'target') && !this.battle.unitAt(c, r)) {
+      const below = this.battle.unitAt(c, r + 1);
+      const v = below && this.views.get(below.uid);
+      if (v && Math.abs(p.x - v.cont.x) <= 24 && p.y >= v.cont.y - (UNIT_H - 14) && p.y < ty(r + 1)) return { x: c, y: r + 1 };
+    }
+    return { x: c, y: r };
   }
 
   arrow(dx, dy) {

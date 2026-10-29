@@ -74,12 +74,12 @@ export function playDialogue(scene, { lines, enemyIds = [], dim = 0, depth = 200
     const more = add(scene.add.text(W - 130, BOX_Y + 154, '▼', textStyle('label', { fontSize: '16px', color: THEME.goldCss })).setOrigin(1, 1), 24);
     scene.tweens.add({ targets: more, alpha: { from: 0.25, to: 1 }, duration: 520, yoyo: true, repeat: -1 });
     const hint = add(scene.add.text(W / 2, H - 18, 'ENTER / click: next      ESC: skip scene', textStyle('caption', { fontSize: '12px', color: THEME.dimCss || '#8a82a8' })).setOrigin(0.5, 1), 24);
-    // skip chip
+    // skip chip: below the scene's turn header, never over it
     const skipBg = add(scene.add.graphics(), 30);
-    skipBg.fillStyle(THEME.ink, 0.9); skipBg.fillRoundedRect(W - 150, 14, 132, 34, 10);
-    skipBg.lineStyle(1.5, THEME.teal, 0.8); skipBg.strokeRoundedRect(W - 150, 14, 132, 34, 10);
-    const skipT = add(scene.add.text(W - 84, 31, 'SKIP  ▸▸', textStyle('label', { fontSize: '14px' })).setOrigin(0.5), 31);
-    const skipZone = scene.add.zone(W - 84, 31, 132, 34).setDepth(depth + 32).setInteractive({ useHandCursor: true });
+    skipBg.fillStyle(THEME.ink, 0.9); skipBg.fillRoundedRect(W - 150, 60, 132, 32, 10);
+    skipBg.lineStyle(1.5, THEME.teal, 0.8); skipBg.strokeRoundedRect(W - 150, 60, 132, 32, 10);
+    const skipT = add(scene.add.text(W - 84, 76, 'SKIP  ▸▸', textStyle('label', { fontSize: '14px' })).setOrigin(0.5), 31);
+    const skipZone = scene.add.zone(W - 84, 76, 132, 32).setDepth(depth + 32).setInteractive({ useHandCursor: true });
     if (tag) add(scene.add.text(W / 2, 62, tag, textStyle('kicker', { color: THEME.goldCss })).setOrigin(0.5, 0), 31);
 
     const figs = new Map();

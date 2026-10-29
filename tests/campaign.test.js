@@ -157,10 +157,55 @@ test('lord death is defeat; routing the enemy is victory; seize wins chapter 2',
   const s = createBattle(save, 1, 4);
   const lord = s.units.find((u) => u.lord);
   assert.ok(!s.canSeize(lord));
+  const boss = s.enemies.find((u) => u.boss);
+  boss.alive = false;                       // the throne boss has to fall before the lord can stand there and seize
   s.moveUnit(lord, ...CHAPTERS[1].seize);
   assert.ok(s.canSeize(lord));
   s.seize(lord);
   assert.equal(s.result, 'victory');
+});
+
+test('seize chapters: the boss never leaves the throne, and the lord cannot seize until the boss is down', () => {
+  for (const ci of CHAPTERS.map((c, i) => (c.win === 'seize' ? i : -1)).filter((i) => i >= 0)) {
+    const ch = CHAPTERS[ci];
+    const b = createBattle({ ...newCampaign(), chapter: ci }, ci, 9);
+    const boss = b.enemies.find((u) => u.boss);
+    assert.ok(boss && boss.ai === 'boss', `${ch.id} has a throne boss`);
+    assert.deepEqual([boss.x, boss.y], ch.seize, `${ch.id}: the boss starts on the throne`);
+    const lord = b.units.find((u) => u.lord);
+    assert.ok(b.seizeBlock(), 'seize is blocked while the boss lives');
+    assert.match(b.seizeBlock(), /Defeat the boss to seize/);
+    // drop the whole party next to the throne so the boss always has someone to hit, and play many enemy phases
+    for (let turn = 0; turn < 6; turn++) {
+      b.endPlayerPhase();
+      for (let i = 0; i < 20; i++) {
+        const u = b.nextEnemy();
+        if (!u) break;
+        const plan = b.plan(u);
+        if (u === boss) assert.deepEqual(plan.to, { x: ch.seize[0], y: ch.seize[1] }, `${ch.id}: boss stays on its tile`);
+        u.acted = true;
+        if (plan.to.x !== u.x || plan.to.y !== u.y) { u.x = plan.to.x; u.y = plan.to.y; }
+      }
+      b.endEnemyPhase();
+    }
+    // a lord that reaches the throne tile with the boss alive still cannot seize; once it falls, the lord can
+    boss.alive = false;
+    assert.equal(b.seizeBlock(), '');
+    b.moveUnit(lord, ...ch.seize);
+    assert.ok(b.canSeize(lord));
+  }
+});
+
+test('a pinned boss attacks a unit that comes into range of its own tile', () => {
+  const ch = CHAPTERS[1];
+  const b = createBattle({ ...newCampaign(), chapter: 1 }, 1, 9);
+  const boss = b.enemies.find((u) => u.boss);
+  const victim = b.players.find((u) => !u.lord);
+  b.moveUnit(victim, boss.x, boss.y + 1);
+  b.endPlayerPhase();
+  const plan = b.plan(boss);
+  assert.deepEqual(plan.to, { x: ch.seize[0], y: ch.seize[1] });
+  assert.equal(plan.target, victim, 'attacks the adjacent unit without moving');
 });
 
 test('save slot round-trips', () => {

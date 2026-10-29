@@ -471,7 +471,10 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const c = this.chapter;
     if (c.win === 'defend') return `HOLD: ${Math.max(0, c.turns - b.turn + 1)} turn(s) to survive`;
     if (c.win === 'escape') return 'GET HYDRA TO THE GOLD GATE';
-    if (c.win === 'seize') return 'HYDRA TO THE GOLD TILE';
+    if (c.win === 'seize') {
+      const boss = b.units.find((u) => u.boss && u.alive && u.team === 'enemy');
+      return boss ? `DEFEAT ${(CHARACTERS[boss.id]?.name || 'THE BOSS').toUpperCase()}, THEN SEIZE THE GOLD TILE` : 'HYDRA TO THE GOLD TILE';
+    }
     if (c.win === 'boss') return `DEFEAT ${(CHARACTERS[c.enemies.find((e) => e.boss)?.id]?.name || 'THE BOSS').toUpperCase()}`;
     return 'ROUT ALL ENEMIES';
   }
@@ -847,6 +850,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       }
     }
     if (b.canSeize(u)) items.push({ id: 'seize', label: 'Seize' });
+    else if (u.lord && b.chapter.win === 'seize' && b.chapter.seize && u.x === b.chapter.seize[0] && u.y === b.chapter.seize[1] && b.seizeBlock()) items.push({ id: 'seize', label: 'Seize', disabled: true, note: b.seizeBlock() });
     if (b.canEscape(u)) items.push({ id: 'escape', label: 'Escape' });
     this.talkList = b.talkTargets(u);
     if (this.talkList.length) items.push({ id: 'talk', label: 'Talk' });

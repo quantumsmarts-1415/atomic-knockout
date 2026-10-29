@@ -39,7 +39,13 @@ function bestAttack(state, unit, reach, foes, moves) {
 }
 
 export function planEnemy(state, unit) {
-  const reach = reachable(state.map, unit, state.units);
+  let reach = reachable(state.map, unit, state.units);
+  // in a seize chapter the throne boss fights whatever comes into range of its own tile but never steps off it
+  // (a throne boss that wandered off made the chapter trivial)
+  if (unit.ai === 'boss' && unit.team === 'enemy' && state.chapter.win === 'seize') {
+    const here = reach.stops.get(key(unit.x, unit.y)) || { x: unit.x, y: unit.y, cost: 0, prev: null };
+    reach = { ...reach, stops: new Map([[key(unit.x, unit.y), here]]) };
+  }
   const foes = state.units.filter((u) => u.alive && hostile(unit, u));
   if (!foes.length) return { to: { x: unit.x, y: unit.y }, target: null };
   const origin = { x: unit.x, y: unit.y };

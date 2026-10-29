@@ -13,6 +13,8 @@ import { applyHitEffects, applyRecoil, startOfTurn, cleanse } from './status.js'
 let uidSeq = 1;
 
 
+export const SEIZE_HINT = 'Defeat the boss to seize';
+
 function makeUnit(rec, team, x, y, extra = {}) {
   const info = moveInfo(rec.id);
   return {
@@ -177,9 +179,15 @@ export class CampaignBattle {
     return { amount, xp, target, healer, move };
   }
 
+  /** Why the lord cannot seize right now ('' when it can, or when this is not a seize chapter): the boss must fall first. */
+  seizeBlock() {
+    if (this.chapter.win !== 'seize') return '';
+    return this.units.some((u) => u.boss && u.alive && u.team === 'enemy') ? SEIZE_HINT : '';
+  }
+
   canSeize(unit) {
     const s = this.chapter.seize;
-    return this.chapter.win === 'seize' && unit.lord && unit.team === 'player' && s && unit.x === s[0] && unit.y === s[1];
+    return this.chapter.win === 'seize' && unit.lord && unit.team === 'player' && !!s && unit.x === s[0] && unit.y === s[1] && !this.seizeBlock();
   }
 
   canEscape(unit) {
@@ -288,7 +296,8 @@ export class CampaignBattle {
       for (const [name, st] of Object.entries(u.status)) { st.turns -= 1; if (st.turns <= 0) delete u.status[name]; }
       this.phaseEvents.push(...ticking);
       if (u.hp <= 0) { u.alive = false; this.phaseEvents.push({ type: 'dotKill', unit: u }); this.updateResult(); continue; }
-      const heal = this.tile(u.x, u.y)?.heal;
+      // a pinned throne boss would out-heal a small party (20% a turn on top of the throne's cover), so only others rest on healing tiles
+      const heal = u.boss && u.ai === 'boss' && this.chapter.win === 'seize' ? 0 : this.tile(u.x, u.y)?.heal;
       if (heal && u.hp < u.maxHp) {
         const n = Math.min(u.maxHp - u.hp, Math.max(2, Math.round(u.maxHp * heal)));
         u.hp += n;

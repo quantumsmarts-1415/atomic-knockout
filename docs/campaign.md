@@ -32,7 +32,7 @@ numpy/scipy + ffmpeg, no samples). Files are in `assets/campaign/music/` as `.og
 | map_player_2 | player phase (rotation 2 of 3): the original boss theme, E minor 156 bpm | 49.2 s loop |
 | map_player_3 | player phase (rotation 3 of 3): the second boss theme, F minor 140 bpm | 54.9 s loop |
 | map_enemy | enemy phase | 55.7 s loop |
-| boss | from the boss entrance card to the end of the chapter (F minor, war drums, sub bass) | 54.9 s loop |
+| boss | from the boss entrance card to the end of the chapter (C# minor, 156 bpm, double-kick + war drums, 35 Hz sub, crushing distorted bass, stacked low brass + choir hits; intro, two themes, half-time breakdown, climax; -16 LUFS, a little hotter than the maps) | 67.7 s loop |
 | victory / defeat / levelup | stingers (victory/defeat hold the next theme until they end; level-up just ducks it) | 7.6 / 11.9 / 2.9 s |
 
 Player-phase map music rotates (`createMapRotation` in `music.js`): chapter N opens on `map_player`, `_2`, `_3` in turn (N mod 3), and inside a chapter the theme moves on after one full loop of player-phase listening (the enemy phase always plays `map_enemy`).

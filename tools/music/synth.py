@@ -218,7 +218,40 @@ def lowbrass(m, dur, vel):      # dark, heavy brass stab / swell
     return x * adsr(n, 0.04, 0.2, 0.7, 0.2) * vel * 0.8
 
 
-INSTR = dict(subbass=subbass, distbass=distbass, lowbrass=lowbrass, lead=lead, horn=horn, stab=stab, strings=strings, pad=pad, choir=choir, bass=bass, pluck=pluck, flute=flute, bell=bell)
+def dist2(m, dur, vel):         # crushing bass: hard-clipped saw + square an octave down, a clean sine sub underneath
+    n = _n(dur)
+    tot = n + _n(0.05)
+    x = 0.8 * osc('saw', m, tot) + 0.6 * osc('pulse50', m - 12, tot) + 0.4 * osc('saw', m, tot, detune=-11)
+    x = np.clip(lp(x, 1100) * 6.0, -1, 1) * 0.55
+    x = lp(x, 2400) + 0.7 * osc('sine', m - 12 if m > 36 else m, tot)
+    return x * adsr(n, 0.003, 0.08, 0.85, 0.05) * vel
+
+
+def brasshit(m, dur, vel):      # huge stacked low-brass stab: three detuned saws + octave below, saturated
+    n = _n(dur)
+    tot = n + _n(0.22)
+    x = sum(osc('saw', m, tot, detune=d) for d in (-14, 0, 14)) / 2 + 0.7 * osc('saw', m - 12, tot) + 0.4 * osc('pulse25', m + 12, tot)
+    x = np.tanh(lp(x, 2200 + 1400 * vel) * 2.4) * 0.8
+    return x * adsr(n, 0.015, 0.16, 0.75, 0.22) * vel
+
+
+def choirhit(m, dur, vel):      # shouted choir stab with a bite of saw on top
+    n = _n(dur)
+    tot = n + _n(0.4)
+    f = hz(m)
+    t = np.arange(tot) / SR
+    x = np.zeros(tot)
+    for k in range(1, 14):
+        fk = f * k
+        if fk > 6000:
+            break
+        form = np.exp(-((fk - 800) / 380) ** 2) + 0.8 * np.exp(-((fk - 1250) / 330) ** 2) + 0.2 * np.exp(-((fk - 2800) / 500) ** 2) + 0.04
+        x += form / k ** 0.5 * np.sin(2 * np.pi * np.cumsum(np.full(tot, f * k) / SR) + 0.3 * k)
+    x = x / 3 + 0.25 * lp(osc('saw', m, tot), 2000)
+    return np.tanh(x * 1.6) * adsr(n, 0.02, 0.15, 0.7, 0.4) * vel
+
+
+INSTR = dict(dist2=dist2, brasshit=brasshit, choirhit=choirhit, subbass=subbass, distbass=distbass, lowbrass=lowbrass, lead=lead, horn=horn, stab=stab, strings=strings, pad=pad, choir=choir, bass=bass, pluck=pluck, flute=flute, bell=bell)
 
 
 # ---------------------------------------------------------------- drums
@@ -273,7 +306,34 @@ def bigsnare(vel):
     return (0.8 * nz + 0.7 * tone) * vel
 
 
-DRUM = dict(taiko=taiko, bigsnare=bigsnare, kick=kick, snare=snare, hat=hat, ohat=lambda v: hat(v, True), tom=tom, tomlo=lambda v: tom(v, 38), crash=crash)
+def kick2(vel):                 # tighter, harder double-kick: short body, beater click
+    t = np.arange(_n(0.22)) / SR
+    f = 42 + 150 * np.exp(-t * 38)
+    x = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 13)
+    click = hp(_rng(11).standard_normal(len(t)), 2500) * np.exp(-t * 160) * 0.35
+    return np.tanh((x + click) * 1.5) * vel
+
+
+def impact(vel):                # cinematic hit: falling sub boom + noise burst
+    t = np.arange(_n(2.6)) / SR
+    f = 34 + 90 * np.exp(-t * 9)
+    boom = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 1.6)
+    burst = lp(_rng(12).standard_normal(len(t)), 2500) * np.exp(-t * 7) * 0.7
+    return np.tanh((boom * 1.6 + burst)) * vel
+
+
+def riser(vel):                 # 4-second noise sweep that builds up to the next downbeat
+    n = _n(4.0)
+    t = np.arange(n) / SR
+    nz = _rng(13).standard_normal(n)
+    out = np.zeros(n)
+    for a, b in ((0, n // 4), (n // 4, n // 2), (n // 2, 3 * n // 4), (3 * n // 4, n)):
+        k = int(300 + 6500 * (a / n) ** 1.5)
+        out[a:b] = lp(nz, k)[a:b]
+    return out * (t / 4.0) ** 2.2 * vel * 0.9
+
+
+DRUM = dict(kick2=kick2, impact=impact, riser=riser, tomhi=lambda v: tom(v, 57), tommid=lambda v: tom(v, 50), taiko=taiko, bigsnare=bigsnare, kick=kick, snare=snare, hat=hat, ohat=lambda v: hat(v, True), tom=tom, tomlo=lambda v: tom(v, 38), crash=crash)
 
 
 # ---------------------------------------------------------------- mixing

@@ -341,3 +341,38 @@ test('every authored move clip faces right when the rig faces right (attackers f
   }
   assert.deepEqual(bad, []);
 });
+
+test('story data is isolated in src/campaign/story and validates', async () => {
+  const { validateStory } = await import('../src/campaign/story/validate.js');
+  const { default: story } = await import('../src/campaign/story/index.js');
+  const { default: mini } = await import('../src/campaign/story/example-mini.js');
+  const chapters = await import('../src/campaign/chapters.js');
+  const ids = Object.keys(CHARACTERS);
+  assert.deepEqual(validateStory(story, ids), []);
+  assert.deepEqual(validateStory(mini, ids), []);
+  assert.equal(chapters.CHAPTERS, story.chapters);
+  assert.equal(chapters.PROLOGUE, story.prologue);
+  assert.equal(chapters.SUPPORTS, story.supports);
+  assert.equal(chapters.LORD_ID, story.lord);
+  // the example plays through the same engine as the real chapters
+  const battle = new (await import('../src/campaign/state.js')).CampaignBattle(mini.chapters[0], mini.chapters[0].party.map((p) => makeRecord(p.id, p.level, { lord: !!p.lord })), { seed: 3, enemyRecords: (e) => makeRecord(e.id, e.level) });
+  assert.ok(autoplayChapter(battle).result);
+});
+
+test('story validation reports mistakes in plain words', async () => {
+  const { validateStory } = await import('../src/campaign/story/validate.js');
+  const { default: mini } = await import('../src/campaign/story/example-mini.js');
+  const broken = structuredClone(mini);
+  broken.chapters[0].map[1] = '..ff....F';             // short row
+  broken.chapters[0].enemies[0].id = 'nobody';          // unknown fighter
+  broken.chapters[0].enemies[1].x = 6;                  // water tile (6,3)? y=3 -> '~'
+  broken.chapters[0].enemies[1].y = 3;
+  broken.chapters[0].win = 'seize';                     // no seize tile
+  broken.chapters[0].events[0].when = {};
+  const problems = validateStory(broken, Object.keys(CHARACTERS)).join('\n');
+  assert.match(problems, /row 1 is 9 wide/);
+  assert.match(problems, /unknown fighter "nobody"/);
+  assert.match(problems, /off the map or blocked/);
+  assert.match(problems, /seize needs/);
+  assert.match(problems, /when needs one of/);
+});

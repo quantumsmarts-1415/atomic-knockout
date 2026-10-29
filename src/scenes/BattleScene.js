@@ -227,7 +227,10 @@ export default class BattleScene extends Phaser.Scene {
     // the view. A normal stage can open a little past its edges, into the
     // blast zone, when a fighter is up there.
     const blast = this.blast || { left: 0, top: 0, right: WW, bottom: WH };
-    const bounds = this.stage.camera
+    // Painted stages (art layers) are drawn for their own world only (layers 1440 wide at most), so the camera
+    // never opens past it: the background always covers the whole screen, with no black strip in the blast zone.
+    const paintedWorld = !!this.stage.camera || !!this.stage.art?.layers?.length;
+    const bounds = paintedWorld
       ? { left: 0, top: 0, right: WW, bottom: WH }
       : {
         left: Math.min(0, blast.left),
@@ -236,7 +239,7 @@ export default class BattleScene extends Phaser.Scene {
         bottom: Math.max(WH, blast.bottom),
       };
     const blastFit = Math.min(W / (bounds.right - bounds.left), H / (bounds.bottom - bounds.top));
-    const minZoom = this.stage.camera
+    const minZoom = paintedWorld
       ? Math.min(1, Math.max(whole, stageCam.minZoom ?? 0))
       : Math.min(whole, Math.max(blastFit, 0.5));
     const maxZoom = Math.max(minZoom, cap);
@@ -373,9 +376,20 @@ export default class BattleScene extends Phaser.Scene {
       // with the terrain, which is how they're painted.
       const mx = W / (2 * this.camRig.minZoom) - W / 2;
       const my = H / (2 * this.camRig.minZoom) - H / 2;
+      const rb = this.camRig.bounds;
       art.layers.forEach((l, i) => {
-        this.add.image(-(1 - l.par) * mx, -(1 - l.par) * my, stageKey(this.stage, `layer${i}`))
+        const x0 = -(1 - l.par) * mx, y0 = -(1 - l.par) * my;
+        const img = this.add.image(x0, y0, stageKey(this.stage, `layer${i}`))
           .setOrigin(0, 0).setScrollFactor(l.par);
+        if (i === 0) {
+          // the sky is the opaque layer: stretch it just enough that it still covers the view at the closest zoom with
+          // the camera panned to a corner (a layer on a scrollFactor lags the view by par x the scroll)
+          const vw = W / this.camRig.maxZoom, vh = H / this.camRig.maxZoom;
+          const needW = (rb.right - rb.left) + l.par * (rb.right - rb.left - vw) - x0;
+          const needH = (rb.bottom - rb.top) + l.par * (rb.bottom - rb.top - vh) - y0;
+          const k = Math.max(1, needW / img.width, needH / img.height);
+          if (k > 1) img.setScale(k * 1.002);
+        }
       });
       this.parallax = null;
       this.buildAmbient(art.ambient);

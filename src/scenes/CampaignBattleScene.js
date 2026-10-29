@@ -15,7 +15,7 @@ import { TERRAIN } from '../campaign/terrain.js';
 import { key, ringTiles } from '../campaign/grid.js';
 import { tileKey, attackClipName, loadCampaignArt, sheetKey, walkReady, releaseWalk } from '../campaign/art.js';
 import { basicMove } from '../campaign/units.js';
-import { playDialogue } from '../ui/campaignDialogue.js';
+import { playDialogue, playBossCard } from '../ui/campaignDialogue.js';
 
 const TILE = 64;
 const MAPX = 8;
@@ -1144,6 +1144,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
         }
         await this.wait(560);
       }
+      if (event.card) { this.inDialogue = true; await playBossCard(this, { card: event.card, depth: 190, speed: this.speed }); this.inDialogue = false; }
       await this.talkScene(lines, event.when?.near ? 'ENCOUNTER' : event.when?.death ? 'LAST WORDS' : spawned.length ? 'REINFORCEMENTS' : 'STORY');
       this.mode = prev;
       this.refreshPanel();

@@ -136,10 +136,13 @@ export const CHAPTERS = [
     events: [
       {
         when: { near: 'chroma', dist: 4 },
+        card: { id: 'chroma', name: 'CHROMA', epithet: 'Keeper of the Vault Throne' },
         lines: [
           { who: 'chroma', text: 'So the Cloud sends its little spark to my vault. Every color on this wall belongs to me!' },
           { who: 'oxana', text: 'Chroma, this is not like you. Where did you hear the hum?' },
           { who: 'chroma', text: 'It came with the Heavy Core. A voice from below the Table. It says the row at the edge is calling us all.' },
+          { who: 'neo', text: 'Then we are not here to take your vault, Chroma. We are here to find out who is calling.' },
+          { who: 'chroma', text: 'Find it, then. But you will have to get past my colors first!' },
         ],
       },
     ],
@@ -204,10 +207,14 @@ export const CHAPTERS = [
       },
       {
         when: { near: 'titan', dist: 3 },
+        card: { id: 'titan', name: 'TITAN', epithet: 'The Heaviest Heart of the Core' },
         lines: [
+          { who: null, text: 'The floor hums under every step. At the far end of the hall, something very large stands up.' },
           { who: 'titan', text: 'Stop there, little Cloud. This hall is mine. The Static asked me to hold the Core, and I will.' },
           { who: 'silas', text: 'Titan, you have always been a strong, steady friend to the Table. What is it asking you to do?' },
           { who: 'titan', text: 'It asks me to stop everyone who walks toward the edge. I cannot stop hearing it. Forgive me!' },
+          { who: 'natalie', text: 'Then we will be quick and careful, big friend. Hold your ground, everyone. Do not break the line.' },
+          { who: 'hydra', text: 'We are not here to hurt you, Titan. But we are not turning back either.' },
         ],
       },
     ],
@@ -450,10 +457,14 @@ export const CHAPTERS = [
     events: [
       {
         when: { near: 'uri', dist: 4 },
+        card: { id: 'uri', name: 'URI', epithet: 'Warden of the Actinide Spire' },
         lines: [
+          { who: null, text: 'The Spire glows from the inside, soft and green, like a lantern left burning for a very long time.' },
           { who: 'uri', text: 'Neutron and proton, bound tight. I am the heaviest thing most of the Table will ever meet. Turn back!' },
           { who: 'hydra', text: 'We do not want your throne, Uri. We want the Last Row, and Ogden.' },
           { who: 'uri', text: 'Ogden does not want to be found. The hum is how the last element asks for someone to answer it...' },
+          { who: 'yvette', text: 'Then why is it hurting everyone, Uri? Nobody should have to ask for help like that.' },
+          { who: 'uri', text: 'Because it does not know how to ask any other way. I cannot let you pass. Not until I know you mean it!' },
         ],
       },
       {
@@ -508,10 +519,13 @@ export const CHAPTERS = [
     events: [
       {
         when: { near: 'ogden', dist: 4 },
+        card: { id: 'ogden', name: 'OGDEN', epithet: 'The Last Element' },
         lines: [
+          { who: null, text: 'The hum stops. The whole last row holds its breath. On the lone throne, a figure lifts its head.' },
           { who: 'ogden', text: 'You came all the way here. Nobody ever comes this far. I only wanted someone to answer me.' },
           { who: 'hydra', text: 'We heard you, Ogden. The Static was your call, and it hurt everyone it reached. We are here now.' },
           { who: 'ogden', text: 'I do not know how to stop it. It is part of me. Please, stop me before it tears the Table apart!' },
+          { who: 'helen', text: 'He is shaking. He is as scared as we are. Hydra, we can still reach him.' },
           { who: 'hydra', text: 'Then we will. Gently, and together. Everyone, hold nothing back, but do not give up on him.' },
         ],
       },
@@ -523,6 +537,74 @@ export const CHAPTERS = [
     ],
   },
 ];
+
+/**
+ * Camp conversations: short talks between party members at the base between chapters.
+ * They unlock once chapter `after` (0-based) is cleared. Story only; no stat changes.
+ */
+export const SUPPORTS = [
+  { id: 's-hydra-helen', after: 0, title: 'Light Enough to Float', pair: ['hydra', 'helen'], lines: [
+    { who: 'helen', text: 'You are very quiet tonight, Hydra. The first battle was hard on everyone.' },
+    { who: 'hydra', text: 'I keep thinking about the Raiders. They did not look angry. They looked like they were sleepwalking.' },
+    { who: 'helen', text: 'I am light, so I notice when the air changes. The hum does not feel cruel. It feels lonely.' },
+    { who: 'hydra', text: 'Then we are not fighting enemies. We are waking up friends.' },
+    { who: 'helen', text: 'Exactly. Now eat something. A hero who floats away is no good to anyone.' },
+  ] },
+  { id: 's-ben-carter', after: 0, title: 'Hard Edges', pair: ['ben', 'carter'], lines: [
+    { who: 'carter', text: 'You swing that lance like it weighs nothing. How do you do that, Ben?' },
+    { who: 'ben', text: 'Practice. And I never let go of it first. Let go last, hit first.' },
+    { who: 'carter', text: 'Hmm. Hard to argue with that. I would like to train with you tomorrow, if you are willing.' },
+    { who: 'ben', text: 'Gladly. You are the sturdiest one in camp. I will gladly learn how you stay standing.' },
+  ] },
+  { id: 's-lillie-nitra', after: 1, title: 'A Spark of Charge', pair: ['lillie', 'nitra'], lines: [
+    { who: 'nitra', text: 'Lillie, you are always so ready to run in. Does it never worry you?' },
+    { who: 'lillie', text: 'Every time. But my friends are right behind me, so I go anyway.' },
+    { who: 'nitra', text: 'I am the opposite. I am slow to start, but I am steady once I do.' },
+    { who: 'lillie', text: 'Then we make a good pair. I light the way, and you make sure we arrive.' },
+  ] },
+  { id: 's-oxana-neo', after: 1, title: 'The Colors of the Gate', pair: ['oxana', 'neo'], lines: [
+    { who: 'neo', text: 'Did you see the vault walls today? Every color just kept glowing.' },
+    { who: 'oxana', text: 'I did. It was lovely, and it reminded me why we guard the Gate in the first place.' },
+    { who: 'neo', text: 'Chroma used to leave the lanterns lit all night, for travelers. I hope he remembers that.' },
+    { who: 'oxana', text: 'He will. People remember the best of themselves when someone is kind to them.' },
+  ] },
+  { id: 's-silas-natalie', after: 2, title: 'Salt and Stone', pair: ['silas', 'natalie'], lines: [
+    { who: 'natalie', text: 'Titan is resting now, finally. He kept saying sorry the whole way out of the Core.' },
+    { who: 'silas', text: 'He was never a bad one. When something heavy is pushed, it is hard to stop it.' },
+    { who: 'natalie', text: 'I am glad we did not have to be harder on him than we were.' },
+    { who: 'silas', text: 'The Salt Flats are next. Keep your spirits up and your boots dry.' },
+  ] },
+  { id: 's-maggie-allen', after: 2, title: 'Late Again', pair: ['maggie', 'allen'], lines: [
+    { who: 'allen', text: 'We arrived on turn three. Turn three! The line was nearly done without us.' },
+    { who: 'maggie', text: 'We took the lower pass, Allen. That is not late. That is thorough.' },
+    { who: 'allen', text: 'Fine. Thorough. But next time I am bringing a map.' },
+    { who: 'maggie', text: 'And I will bring snacks. Everyone fights better with snacks.' },
+  ] },
+  { id: 's-helen-xander', after: 4, title: 'Noble Company', pair: ['helen', 'xander'], lines: [
+    { who: 'xander', text: 'The mist is thick, but your light is easy to follow, Helen.' },
+    { who: 'helen', text: 'Thank you for joining us, Xander. Most of the noble folk keep to themselves.' },
+    { who: 'xander', text: 'We have had a very long quiet, and I did not realize how much I missed company.' },
+    { who: 'helen', text: 'Then stay as long as you like. You will find there is always room by the fire.' },
+  ] },
+  { id: 's-hydra-yvette', after: 5, title: 'Rare Finds', pair: ['hydra', 'yvette'], lines: [
+    { who: 'yvette', text: 'The Vale was beautiful before the Static. Every stone here sparkles in a different shade.' },
+    { who: 'hydra', text: 'You know this place well. I am glad you came along with us.' },
+    { who: 'yvette', text: 'The rare ones get overlooked. It means a lot that you asked me to join.' },
+    { who: 'hydra', text: 'Nobody is overlooked in this party. Everyone has a place on the Table.' },
+  ] },
+  { id: 's-hydra-lillie', after: 6, title: 'The Night Before', pair: ['hydra', 'lillie'], lines: [
+    { who: 'lillie', text: 'We are almost at the Last Row. Are you ready?' },
+    { who: 'hydra', text: 'I do not think anyone is ever ready. But we are all here, and that is the part that matters.' },
+    { who: 'lillie', text: 'Whatever Ogden says, we answer him kindly. Right?' },
+    { who: 'hydra', text: 'Right. Get some rest. Tomorrow we finish what the Static started.' },
+  ] },
+];
+
+/** Camp conversations unlocked by progress (save.chapter = how many chapters are cleared). */
+export function supportsFor(save) {
+  const cleared = save?.chapter || 0;
+  return SUPPORTS.filter((s) => cleared > s.after);
+}
 
 export function chapterById(id) {
   return CHAPTERS.find((c) => c.id === id) || null;
@@ -536,6 +618,7 @@ export function chapterSpeakers(ch) {
     for (const l of e.lines || []) if (l.who) ids.add(l.who);
     for (const s of e.spawn || []) ids.add(s.id);
   }
+  for (const e of ch.events || []) if (e.card) ids.add(e.card.id);
   for (const n of ch.npcs || []) {
     ids.add(n.id);
     for (const l of n.lines || []) if (l.who) ids.add(l.who);

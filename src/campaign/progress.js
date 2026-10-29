@@ -21,6 +21,12 @@ export function partyForChapter(save, chapter) {
     if (party.some((p) => p.id === r.id)) continue;
     party.push(makeRecord(r.id, r.join === 'level' ? avg : (r.level || 1)));
   }
+  // a replay of an early chapter with a big party: the lord and the strongest fit the start tiles
+  const cap = chapter.starts?.length || 0;
+  if (cap && party.length > cap) {
+    const ranked = party.map((r, i) => ({ r, i })).sort((a, b) => (b.r.lord ? 1 : 0) - (a.r.lord ? 1 : 0) || b.r.level - a.r.level || a.i - b.i).slice(0, cap);
+    return ranked.sort((a, b) => a.i - b.i).map((x) => x.r);
+  }
   return party;
 }
 

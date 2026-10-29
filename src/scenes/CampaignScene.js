@@ -7,7 +7,7 @@ import {
 import { enterScene, isLeaving, showScene } from '../ui/flow.js';
 import { CHARACTERS } from '../data/characters.js';
 import { faceFrame, menuPortraitKey } from '../ui/portraits.js';
-import { CHAPTERS, PROLOGUE, afterVictory, chapterSpeakers, loadSave, newCampaign, partyForChapter, writeSave, clearSave } from '../campaign/index.js';
+import { CHAPTERS, PROLOGUE, supportsFor, afterVictory, chapterSpeakers, loadSave, newCampaign, partyForChapter, writeSave, clearSave } from '../campaign/index.js';
 import { playDialogue } from '../ui/campaignDialogue.js';
 import { loadCampaignArt, releaseCampaignArt, tileKey } from '../campaign/art.js';
 
@@ -78,44 +78,137 @@ export default class CampaignScene extends Phaser.Scene {
   // ---------------------------------------------------------------- menu
   showMenu() {
     this.clearStage();
-    this.header('TACTICS', 'CAMPAIGN');
+    this.header('TACTICS', 'CHAPTER SELECT');
     const save = this.save;
+    const progress = save ? save.chapter : 0;
     const px = 250;
-    const py = 116;
+    const py = 112;
     const pw = W - 500;
-    const rowH = 38;
-    this.add2(drawPanel(this, px, py, pw, 62 + CHAPTERS.length * rowH, 18).setDepth(5));
-    this.add2(this.add.text(px + 28, py + 18, 'CHAPTERS', textStyle('kicker')).setDepth(6));
+    const rowH = 36;
+    this.add2(drawPanel(this, px, py, pw, 50 + CHAPTERS.length * rowH, 18).setDepth(5));
+    const cleared = save?.cleared?.length || 0;
+    this.add2(this.add.text(px + 28, py + 16, `CHAPTERS  ·  ${cleared} / ${CHAPTERS.length} CLEARED`, textStyle('kicker')).setDepth(6));
+    this.items = [];
     CHAPTERS.forEach((ch, i) => {
-      const y = py + 46 + i * rowH;
-      const cleared = save?.cleared?.includes(ch.id);
-      const current = save ? save.chapter === i : i === 0;
-      const locked = save ? i > save.chapter : i > 0;
-      const col = cleared ? THEME.goldCss : locked ? THEME.disabledCss : THEME.mistCss;
-      this.add2(this.add.text(px + 28, y + 4, `${i + 1}`, textStyle('label', { color: locked ? THEME.disabledCss : THEME.tealCss, fontSize: '16px' })).setDepth(6));
-      this.add2(this.add.text(px + 60, y, locked ? '???' : ch.title, textStyle('h3', { color: col })).setDepth(6));
-      this.add2(this.add.text(px + 60, y + 19, ch.objective.toUpperCase(), textStyle('label', { color: locked ? THEME.disabledCss : THEME.dimCss, fontSize: '10px' })).setDepth(6));
-      const tag = cleared ? 'CLEARED' : current ? 'NEXT' : locked ? 'LOCKED' : '';
-      this.add2(this.add.text(px + pw - 28, y + 8, tag, textStyle('label', { color: col })).setOrigin(1, 0).setDepth(6));
+      const y = py + 42 + i * rowH;
+      const isCleared = save?.cleared?.includes(ch.id);
+      const current = i === progress && progress < CHAPTERS.length;
+      const locked = i > progress;
+      const col = isCleared ? THEME.goldCss : locked ? THEME.disabledCss : THEME.mistCss;
+      const hl = this.add.graphics().setDepth(5.5).setVisible(false);
+      hl.fillStyle(THEME.teal, 0.14); hl.fillRoundedRect(px + 12, y - 2, pw - 24, rowH - 2, 8);
+      hl.lineStyle(1.5, THEME.teal, 0.9); hl.strokeRoundedRect(px + 12, y - 2, pw - 24, rowH - 2, 8);
+      this.add2(hl);
+      this.add2(this.add.text(px + 30, y + 4, `${i + 1}`, textStyle('label', { color: locked ? THEME.disabledCss : THEME.tealCss, fontSize: '16px' })).setDepth(6));
+      this.add2(this.add.text(px + 62, y - 1, locked ? '???' : ch.title, textStyle('h3', { color: col })).setDepth(6));
+      this.add2(this.add.text(px + 62, y + 17, (locked ? 'LOCKED  ·  CLEAR CHAPTER ' + i + ' TO OPEN' : ch.objective.toUpperCase()), textStyle('label', { color: locked ? THEME.disabledCss : THEME.dimCss, fontSize: '10px' })).setDepth(6));
+      const tag = isCleared ? (current ? 'CLEARED  ·  REPLAY' : 'CLEARED  ·  REPLAY') : current ? 'NEXT  ▸' : locked ? '🔒' : '';
+      this.add2(this.add.text(px + pw - 28, y + 8, tag === '🔒' ? 'LOCKED' : tag, textStyle('label', { color: col })).setOrigin(1, 0).setDepth(6));
+      if (locked) return;
+      const zone = this.add.zone(px + pw / 2, y + rowH / 2 - 1, pw - 24, rowH - 2).setDepth(7).setInteractive({ useHandCursor: true });
+      this.stage.push(zone);
+      const item = {
+        kind: 'row',
+        setSelected: (on) => hl.setVisible(on),
+        press: () => this.pickChapter(i),
+      };
+      zone.on('pointerover', () => this.selectBtn(this.items.indexOf(item)));
+      zone.on('pointerdown', () => item.press());
+      this.items.push(item);
     });
+    const rowCount = this.items.length;
+    const newSupports = supportsFor(save).filter((s) => !(save?.seenSupports || []).includes(s.id)).length;
     const entries = [];
-    if (save && save.chapter < CHAPTERS.length) entries.push({ label: save.chapter === 0 ? 'Start Chapter 1' : `Continue: Chapter ${save.chapter + 1}`, run: () => this.beginChapter(save.chapter, save) });
-    if (save && save.chapter >= CHAPTERS.length) entries.push({ label: 'Replay Final Chapter', run: () => this.beginChapter(CHAPTERS.length - 1, { ...save, chapter: CHAPTERS.length - 1, party: save.party }) });
+    if (save && supportsFor(save).length) entries.push({ label: `Camp Conversations${newSupports ? ` (${newSupports} new)` : ''}`, run: () => this.showCamp() });
     entries.push({ label: save ? 'New Campaign (erase save)' : 'New Campaign', run: () => { clearSave(); this.save = newCampaign(); writeSave(this.save); this.beginChapter(0, this.save); } });
     entries.push({ label: 'Back', run: () => this.backHome() });
-    this.buttons = entries.map((e, i) => {
-      const b = makeButton(this, { x: W / 2 - 190, y: 106 + 62 + CHAPTERS.length * 38 + 14 + i * 50, w: 380, h: 44, label: e.label, onPress: () => { sfx('menuConfirm'); this.time.delayedCall(260, () => { if (!isLeaving(this)) e.run(); }); } });
-      b.onHover = () => this.selectBtn(i);
+    const by = py + 50 + CHAPTERS.length * rowH + 12;
+    entries.forEach((e, i) => {
+      const b = makeButton(this, { x: W / 2 - 190, y: by + i * 46, w: 380, h: 40, label: e.label, onPress: () => { sfx('menuConfirm'); this.time.delayedCall(260, () => { if (!isLeaving(this)) e.run(); }); } });
+      b.onHover = () => this.selectBtn(rowCount + i);
       this.stage.push(b.container, b.zone);
-      return b;
+      this.items.push(b);
     });
-    this.sel = 0;
-    this.buttons[0].setSelected(true);
+    this.buttons = this.items;
+    this.sel = Math.min(progress, rowCount - 1);
+    this.items[this.sel].setSelected(true);
     this.add2(this.footerHints([{ keys: ['W', 'S'], label: 'Choose' }, { key: 'ENTER', label: 'Select' }, { key: 'ESC', label: 'Back' }]));
     this.onKey(['UP', 'W'], () => this.moveBtn(-1));
     this.onKey(['DOWN', 'S'], () => this.moveBtn(1));
-    this.onKey(['ENTER', 'SPACE', 'F', 'K'], () => this.buttons[this.sel].press());
+    this.onKey(['ENTER', 'SPACE', 'F', 'K'], () => this.items[this.sel].press());
     this.onKey(['ESC', 'BACKSPACE'], () => this.backHome());
+  }
+
+  /** The next chapter plays for real; a cleared one is a replay that leaves the save alone. */
+  pickChapter(i) {
+    sfx('menuConfirm');
+    const save = this.save || newCampaign();
+    this.time.delayedCall(260, () => { if (!isLeaving(this)) this.beginChapter(i, save); });
+  }
+
+  // ---------------------------------------------------------------- camp
+  /** Base conversations between chapters: short talks between party members. */
+  showCamp() {
+    this.clearStage();
+    this.header('BASE CAMP', 'CAMP CONVERSATIONS');
+    const save = this.save;
+    const list = supportsFor(save);
+    const seen = new Set(save?.seenSupports || []);
+    const px = 250;
+    const py = 120;
+    const pw = W - 500;
+    const rowH = 44;
+    this.add2(drawPanel(this, px, py, pw, 28 + list.length * rowH + 14, 18).setDepth(5));
+    this.items = [];
+    list.forEach((sp, i) => {
+      const y = py + 20 + i * rowH;
+      const hl = this.add.graphics().setDepth(5.5).setVisible(false);
+      hl.fillStyle(THEME.teal, 0.14); hl.fillRoundedRect(px + 12, y - 2, pw - 24, rowH - 2, 8);
+      hl.lineStyle(1.5, THEME.teal, 0.9); hl.strokeRoundedRect(px + 12, y - 2, pw - 24, rowH - 2, 8);
+      this.add2(hl);
+      const names = sp.pair.map((id) => CHARACTERS[id]?.name || id).join('  &  ');
+      this.add2(this.add.text(px + 32, y, sp.title, textStyle('h3', { color: seen.has(sp.id) ? THEME.mistCss : THEME.goldCss })).setDepth(6));
+      this.add2(this.add.text(px + 32, y + 20, names.toUpperCase(), textStyle('label', { color: THEME.dimCss, fontSize: '10px' })).setDepth(6));
+      this.add2(this.add.text(px + pw - 28, y + 12, seen.has(sp.id) ? 'SEEN' : 'NEW', textStyle('label', { color: seen.has(sp.id) ? THEME.dimCss : THEME.tealCss })).setOrigin(1, 0).setDepth(6));
+      const zone = this.add.zone(px + pw / 2, y + rowH / 2 - 1, pw - 24, rowH - 2).setDepth(7).setInteractive({ useHandCursor: true });
+      this.stage.push(zone);
+      const item = { setSelected: (on) => hl.setVisible(on), press: () => this.playSupport(sp) };
+      zone.on('pointerover', () => this.selectBtn(this.items.indexOf(item)));
+      zone.on('pointerdown', () => item.press());
+      this.items.push(item);
+    });
+    const rowCount = this.items.length;
+    const back = makeButton(this, { x: W / 2 - 190, y: py + 28 + list.length * rowH + 30, w: 380, h: 40, label: 'Back to Chapters', onPress: () => { sfx('menuConfirm'); this.time.delayedCall(200, () => this.showMenu()); } });
+    back.onHover = () => this.selectBtn(rowCount);
+    this.stage.push(back.container, back.zone);
+    this.items.push(back);
+    this.buttons = this.items;
+    const firstNew = list.findIndex((sp) => !seen.has(sp.id));
+    this.sel = firstNew >= 0 ? firstNew : 0;
+    this.items[this.sel].setSelected(true);
+    this.add2(this.footerHints([{ keys: ['W', 'S'], label: 'Choose' }, { key: 'ENTER', label: 'Listen' }, { key: 'ESC', label: 'Back' }]));
+    this.onKey(['UP', 'W'], () => this.moveBtn(-1));
+    this.onKey(['DOWN', 'S'], () => this.moveBtn(1));
+    this.onKey(['ENTER', 'SPACE', 'F', 'K'], () => this.items[this.sel].press());
+    this.onKey(['ESC', 'BACKSPACE'], () => this.showMenu());
+  }
+
+  playSupport(sp) {
+    if (this.busy) return;
+    this.busy = true;
+    sfx('menuConfirm');
+    const ids = sp.pair.concat(sp.lines.map((l) => l.who).filter(Boolean));
+    loadCampaignArt(this, ids, 'idle', () => {
+      this.busy = false;
+      const done = () => {
+        const seen = new Set(this.save?.seenSupports || []);
+        seen.add(sp.id);
+        this.save = { ...this.save, seenSupports: [...seen] };
+        writeSave(this.save);
+        this.showCamp();
+      };
+      this.playStory({ kicker: 'CAMP CONVERSATION', title: sp.title, objective: null, enemies: [] }, sp.lines, done, false);
+    }, { hud: true });
   }
 
   footerHints(list) {
@@ -194,10 +287,14 @@ export default class CampaignScene extends Phaser.Scene {
     const chapter = CHAPTERS[chapterIndex];
     if (result === 'victory') {
       let save = this.save || newCampaign();
-      save = afterVictory(save, chapterIndex, survivors);
-      this.save = save;
-      writeSave(save);
-      this.playStory(chapter, chapter.outro || [], () => this.showSummary(after, true));
+      // a replay of a cleared chapter is practice: the save keeps its progress
+      const practice = chapterIndex < save.chapter;
+      if (!practice) {
+        save = afterVictory(save, chapterIndex, survivors);
+        this.save = save;
+        writeSave(save);
+      }
+      this.playStory(chapter, chapter.outro || [], () => this.showSummary({ ...after, practice }, true));
     } else {
       this.showSummary(after, false);
     }
@@ -207,7 +304,7 @@ export default class CampaignScene extends Phaser.Scene {
     this.clearStage();
     const { chapterIndex, survivors, fallen, turns, levelUps } = after;
     const chapter = CHAPTERS[chapterIndex];
-    this.header(won ? 'CHAPTER CLEAR' : 'DEFEAT', chapter.title);
+    this.header(won ? (after.practice ? 'REPLAY CLEAR' : 'CHAPTER CLEAR') : 'DEFEAT', chapter.title);
     const px = 260;
     const py = 150;
     const pw = W - 520;
@@ -220,7 +317,7 @@ export default class CampaignScene extends Phaser.Scene {
       const topLv = new Map();
       for (const l of levelUps) topLv.set(l.name, Math.max(topLv.get(l.name) || 0, l.level));
       lines.push(`Level-ups: ${topLv.size ? [...topLv].map(([n, lv]) => `${n} → Lv ${lv}`).join(', ') : 'none'}`);
-      lines.push('Everyone is healed between chapters. Fallen fighters stay down.');
+      lines.push(after.practice ? 'Practice run: your saved campaign is unchanged.' : 'Everyone is healed between chapters. Fallen fighters stay down.');
     } else {
       lines.push(after.reason === 'lord' ? 'Hydra has fallen.' : 'The whole party has fallen.');
       lines.push('Retry the chapter with the party you started it with.');
@@ -231,8 +328,8 @@ export default class CampaignScene extends Phaser.Scene {
       ly += tx.height + 14;
     });
     const entries = [];
-    const finished = won && chapterIndex + 1 >= CHAPTERS.length;
-    if (won && !finished) entries.push({ label: `Next: Chapter ${chapterIndex + 2}`, run: () => this.beginChapter(chapterIndex + 1, this.save) });
+    const finished = won && !after.practice && chapterIndex + 1 >= CHAPTERS.length;
+    if (won && !finished && !after.practice) entries.push({ label: `Next: Chapter ${chapterIndex + 2}`, run: () => this.beginChapter(chapterIndex + 1, this.save) });
     if (!won) entries.push({ label: 'Retry Chapter', run: () => this.beginChapter(chapterIndex, this.save || loadSave() || newCampaign()) });
     if (finished) this.add2(this.add.text(W / 2, 470, 'THE STATIC FADES. CAMPAIGN COMPLETE.', textStyle('h2', { color: THEME.goldCss })).setOrigin(0.5).setDepth(6));
     entries.push({ label: 'Campaign Menu', run: () => this.showMenu() });

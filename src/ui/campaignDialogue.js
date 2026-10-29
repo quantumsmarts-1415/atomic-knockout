@@ -191,3 +191,51 @@ export function playDialogue(scene, { lines, enemyIds = [], dim = 0, depth = 200
     next();
   });
 }
+
+/**
+ * A boss entrance: the screen darkens, red bands sweep in, the boss stands up large with a name
+ * slam and an epithet. Resolves after a beat, or at once on Enter / click / Esc.
+ *   card { id, name, epithet }
+ */
+export function playBossCard(scene, { card, depth = 190, speed = 1 } = {}) {
+  return new Promise((resolve) => {
+    const charDef = CHARACTERS[card.id];
+    const objs = [];
+    const add = (o, d = 0) => { o.setDepth(depth + d); objs.push(o); return o; };
+    const veil = add(scene.add.rectangle(W / 2, H / 2, W, H, 0x05030c, 1).setAlpha(0), 0);
+    scene.tweens.add({ targets: veil, alpha: 0.88, duration: 260 / speed });
+    const band = (y, h, col, a, fromX, delay) => {
+      const r = scene.add.rectangle(fromX, y, W * 1.3, h, col, a).setRotation(-0.06).setDepth(depth + 1);
+      objs.push(r);
+      scene.tweens.add({ targets: r, x: W / 2, duration: 420 / speed, delay: delay / speed, ease: 'Cubic.easeOut' });
+    };
+    band(H * 0.50, 190, 0xa3203a, 0.82, -W, 60);
+    band(H * 0.50 + 118, 10, 0xffd166, 0.95, W * 2, 140);
+    band(H * 0.50 - 118, 10, 0xffd166, 0.95, -W * 2, 140);
+    const fig = charDef ? placeFigure(scene, charDef, W * 0.78, H - 24, 560, -1) : null;
+    if (fig) {
+      add(fig, 3);
+      fig.setAlpha(0).setX(W * 0.78 + 160);
+      scene.tweens.add({ targets: fig, alpha: 1, x: W * 0.78, duration: 520 / speed, delay: 200 / speed, ease: 'Cubic.easeOut' });
+    }
+    const tag = add(scene.add.text(120, H * 0.5 - 86, 'BOSS', textStyle('kicker', { color: '#FFD166', fontSize: '18px' })).setAlpha(0), 4);
+    const name = add(scene.add.text(120, H * 0.5 - 62, card.name, { fontFamily: FONT_DISPLAY, fontSize: '88px', color: '#FFFFFF', stroke: '#2a0610', strokeThickness: 8 }).setAlpha(0).setScale(1.6), 4);
+    const epi = add(scene.add.text(124, H * 0.5 + 54, card.epithet, textStyle('h3', { color: '#FFE9C2', fontSize: '24px' })).setAlpha(0), 4);
+    scene.tweens.add({ targets: tag, alpha: 1, duration: 200 / speed, delay: 380 / speed });
+    scene.tweens.add({ targets: name, alpha: 1, scale: 1, duration: 260 / speed, delay: 420 / speed, ease: 'Back.easeOut', onStart: () => { sfx('go'); scene.cameras.main.shake(260 / speed, 0.006); } });
+    scene.tweens.add({ targets: epi, alpha: 1, duration: 360 / speed, delay: 760 / speed });
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      scene.input.keyboard?.off('keydown', onKey);
+      zone.destroy();
+      scene.tweens.add({ targets: objs, alpha: 0, duration: 240 / speed, onComplete: () => { objs.forEach((o) => o.destroy()); resolve(); } });
+    };
+    const onKey = (e) => { if (['Enter', ' ', 'Escape'].includes(e.key)) finish(); };
+    scene.input.keyboard?.on('keydown', onKey);
+    const zone = scene.add.zone(W / 2, H / 2, W, H).setDepth(depth + 40).setInteractive();
+    zone.on('pointerdown', finish);
+    scene.time.delayedCall(2900 / speed, finish);
+  });
+}

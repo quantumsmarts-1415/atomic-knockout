@@ -13,7 +13,7 @@ import { authoredClipName } from '../engine/moveSheet.js';
 import { createBattle, CHAPTERS, XP_PER_LEVEL, autoplayPhase } from '../campaign/index.js';
 import { TERRAIN } from '../campaign/terrain.js';
 import { key, ringTiles } from '../campaign/grid.js';
-import { tileKey, attackClipName, loadCampaignArt, sheetKey } from '../campaign/art.js';
+import { tileKey, attackClipName, loadCampaignArt, sheetKey, walkReady, releaseWalk } from '../campaign/art.js';
 import { basicMove } from '../campaign/units.js';
 import { playDialogue } from '../ui/campaignDialogue.js';
 
@@ -69,6 +69,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.events.once('shutdown', () => this.cleanup());
     window.__camp = this;
     // Attack clips stream in behind the map. Until one arrives that unit lunges instead.
+    this.noWalk = /[?&]nowalk\b/.test(window.location.search);
     loadCampaignArt(this, this.battle.units.map((u) => u.id), 'attack', () => { this.attackReady = true; });
     const lord = this.battle.units.find((u) => u.lord);
     this.setCursor(lord.x, lord.y);
@@ -284,6 +285,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
       v.rig.attackFrame = Math.max(0, f);
       v.rig.animate(dt, 'attack', 1);
       if (v.atk.t >= v.atk.dur) { v.rig.moveKey = null; v.rig.frameData = null; v.rig.attackFrame = 0; v.rig.currentClip = null; v.atk = null; }
+    } else if (v.moving && v.walkOn) {
+      v.rig.animate(dt, 'walk', 1);
     } else {
       v.rig.animate(dt, 'idle', 1);
     }
@@ -562,6 +565,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
   }
 
   selectUnit(u) {
+    this.ensureWalk(u.id);
     this.sel = u;
     this.origin = { x: u.x, y: u.y };
     this.reach = this.battle.reachFor(u);
@@ -619,6 +623,43 @@ export default class CampaignBattleScene extends Phaser.Scene {
   }
 
   /** Glide along the whole path at a steady pace (eased at both ends), hopping with each tile. */
+  /** Walk sheets are huge, so load them one fighter at a time and keep only a few. Until one is ready, units glide. */
+  /** Give a not-yet-loaded walk sheet a short chance to arrive before the unit moves (otherwise it glides). */
+  async waitWalk(id, ms) {
+    this.ensureWalk(id);
+    const t0 = performance.now();
+    while (this.attackReady && !walkReady(this, id) && performance.now() - t0 < ms && (this.walkBusy || this.walkQueue?.length)) await new Promise((r) => setTimeout(r, 60));
+  }
+
+  ensureWalk(id) {
+    if (this.noWalk || !this.attackReady || walkReady(this, id)) return;
+    this.walkQueue = this.walkQueue || [];
+    if (!this.walkQueue.includes(id) && this.walkBusy !== id) this.walkQueue.push(id);
+    this.pumpWalk();
+  }
+
+  pumpWalk() {
+    if (this.walkBusy || !this.walkQueue?.length || !this.scene.isActive()) return;
+    const id = this.walkQueue.shift();
+    this.walkBusy = id;
+    loadCampaignArt(this, [id], 'walk', () => {
+      this.walkBusy = null;
+      this.touchWalk(id);
+      this.pumpWalk();
+    });
+  }
+
+  touchWalk(id) {
+    this.walkLru = (this.walkLru || []).filter((x) => x !== id);
+    this.walkLru.push(id);
+    while (this.walkLru.length > 4) {
+      const old = this.walkLru.find((x) => { const u = this.battle.units.find((q) => q.id === x); const w = u && this.views.get(u.uid); return !(w && w.moving); });
+      if (!old) break;
+      this.walkLru = this.walkLru.filter((x) => x !== old);
+      releaseWalk(this, old);
+    }
+  }
+
   async walk(u, path) {
     const v = this.views.get(u.uid);
     if (!v || path.length < 2) { this.battle.moveUnit(u, path[path.length - 1].x, path[path.length - 1].y); return; }
@@ -629,6 +670,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const SPEED = 430; // px per second
     const dur = (total / SPEED) * 1000 + 90;
     v.moving = true;
+    v.walkOn = !!(v.rig && walkReady(this, u.id));
+    if (v.walkOn) { v.rig.currentClip = null; this.touchWalk(u.id); }
     let lastDust = 0;
     await new Promise((res) => {
       const counter = this.tweens.addCounter({
@@ -641,8 +684,10 @@ export default class CampaignBattleScene extends Phaser.Scene {
           v.cont.y = seg.a.y + (seg.b.y - seg.a.y) * f;
           if (v.rig) {
             if (seg.b.x !== seg.a.x) v.rig.facing = seg.b.x > seg.a.x ? 1 : -1;
-            v.rig.y = -Math.abs(Math.sin((d / TILE) * Math.PI)) * 7;
-            v.rig.rotation = Math.sin((d / TILE) * Math.PI * 2) * 0.03 * (v.rig.facing || 1);
+            if (!v.walkOn) {
+              v.rig.y = -Math.abs(Math.sin((d / TILE) * Math.PI)) * 7;
+              v.rig.rotation = Math.sin((d / TILE) * Math.PI * 2) * 0.03 * (v.rig.facing || 1);
+            }
           }
           if (d - lastDust > TILE * 0.55) { lastDust = d; this.dust(v.cont.x, v.cont.y); }
           this.sortDepth(v);
@@ -651,6 +696,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       });
     });
     v.moving = false;
+    if (v.walkOn) { v.walkOn = false; v.rig.currentClip = null; }
     if (v.rig) { v.rig.y = 0; v.rig.rotation = 0; }
     v.cont.setPosition(pts[pts.length - 1].x, pts[pts.length - 1].y);
     this.battle.moveUnit(u, path[path.length - 1].x, path[path.length - 1].y);
@@ -1166,6 +1212,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       this.setCursor(u.x, u.y);
       if (plan.to.x !== u.x || plan.to.y !== u.y) {
         const reach = b.reachFor(u);
+        await this.waitWalk(u.id, 1800);
         await this.walk(u, b.pathFor(u, plan.to, reach));
         await this.runEvents(b.checkEvents('move'));
       }

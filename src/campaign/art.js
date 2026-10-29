@@ -1,7 +1,8 @@
 // Campaign art loading. Uses the game's own loaders, but only pulls what the
 // map needs: the idle sheet (stands on the map) and the one attack clip used for
-// the battle animation. Walk sheets are skipped (they are the largest files);
-// units slide between tiles with a bob instead.
+// the battle animation. Walk sheets are the largest files, so they load one unit
+// at a time, only when that unit is about to move (see CampaignBattleScene.ensureWalk);
+// until one is ready the unit glides between tiles with a bob instead.
 import { CHARACTERS } from '../data/characters.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets, use3dSheets, sheetKey, attachBootLoadUi, clipFrameSize, fitSheetGrid } from '../scenes/BootScene.js';
 import { BIG_SHEETS } from './sheetDims.js';
@@ -85,7 +86,7 @@ function loadBigSheet(scene, c, clip, maxSize, done) {
 
 export function loadCampaignArt(scene, ids, phase, done, { hud = false } = {}) {
   const chars = [...new Set(ids)].map((id) => CHARACTERS[id]).filter((c) => c && c.art);
-  const names = (c) => (phase === 'attack' ? [attackClipName(c)].filter(Boolean) : ['idle']);
+  const names = (c) => (phase === 'attack' ? [attackClipName(c)].filter(Boolean) : phase === 'walk' ? ['walk'] : ['idle']);
   const slimmed = chars.map((c) => (use3dSheets(c) ? slim(c, names(c)) : c));
   const maxSize = scene.game?.renderer?.getMaxTextureSize?.() || 8192;
   const big = [];
@@ -113,6 +114,24 @@ export function loadCampaignArt(scene, ids, phase, done, { hud = false } = {}) {
     if (phase === 'idle') queueTiles(scene.load, scene.textures);
     loadRosterArt(scene.load, slimmed, exists);
   }, tick, hud);
+}
+
+/** True when this fighter's walk sheet is loaded and has its animation, so the map can use it. */
+export function walkReady(scene, id) {
+  const c = CHARACTERS[id];
+  if (!c || !c.art || !c.art.sheets?.clips?.walk) return false;
+  const k = sheetKey(c.art, 'walk');
+  return scene.textures.exists(k) && scene.anims.exists(k);
+}
+
+/** Free one fighter's walk sheet (they are the biggest files; the map keeps only a few at a time). */
+export function releaseWalk(scene, id) {
+  const c = CHARACTERS[id];
+  if (!c || !c.art) return;
+  const k = sheetKey(c.art, 'walk');
+  if (scene.anims.exists(k)) scene.anims.remove(k);
+  if (scene.textures.exists(k)) scene.textures.remove(k);
+  added.delete(k);
 }
 
 /** Drop everything the campaign loaded (called on the way back to the title). */

@@ -95,10 +95,22 @@ function fitSize(spec, frameH, ref, meta) {
  * scales with the scene (270 in a close-up, ~100 on the map); `self` puts it on the attacker (guards, buffs).
  * Resolves when the effect has finished; never throws.
  */
-export async function playMoveFx(scene, spec, { from, to, face = 1, ref = 200, depth = 100, speed = 1, self = false } = {}) {
+export async function playMoveFx(scene, spec, { from, to, face = 1, ref = 200, depth = 100, speed = 1, self = false, miss = false } = {}) {
   if (!spec) return;
   try {
     const at = self ? from : to;
+    // A miss never lands: a shot sails past the target and fades, and impact art (bursts, slashes, beams) is skipped.
+    if (miss && !self) {
+      if (!spec.proj) return;
+      const o = scene.add.image(from.x, from.y, spec.proj.key).setDepth(depth).setBlendMode(spec.blend);
+      const s0 = Math.min(2, Math.max(0.15, (spec.proj.meta.heightFrac || 0.3) * 2 * ref / Math.max(o.height, 1) * 0.5));
+      o.setScale(s0 * face, s0);
+      const past = { x: to.x + face * ref * 0.9, y: to.y - ref * 0.1 };
+      const d = Math.hypot(past.x - from.x, past.y - from.y);
+      await new Promise((resolve) => scene.tweens.add({ targets: o, x: past.x, y: past.y, alpha: 0, duration: Math.max(220, d * 0.9) / speed, ease: 'Quad.easeIn', onUpdate: () => { o.rotation += (spec.proj.meta.spin || 0) * 0.02; }, onComplete: resolve }));
+      o.destroy();
+      return;
+    }
     if (spec.proj) {
       const o = scene.add.image(from.x, from.y, spec.proj.key).setDepth(depth).setBlendMode(spec.blend);
       const s = Math.min(2, Math.max(0.15, (spec.proj.meta.heightFrac || 0.3) * 2 * ref / Math.max(o.height, 1) * 0.5));

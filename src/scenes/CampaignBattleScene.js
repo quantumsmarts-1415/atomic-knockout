@@ -1165,11 +1165,35 @@ export default class CampaignBattleScene extends Phaser.Scene {
     // ground: the terrain under each fighter
     const mapA = this.battle.tile(att.x, att.y);
     const mapD = this.battle.tile(def.x, def.y);
-    for (let x = 0; x < W; x += 160) for (let y = FOOT - 70; y < PY + PH; y += 160) {
-      const t = x + 80 < W / 2 ? mapA : mapD;
-      const img = this.add.image(x + 80, y + 80, tileKey(t.id)).setDisplaySize(160, 160);
-      if (t.id === 'road') img.setAngle(90);
-      add(img, 2);
+    // The ground under each fighter is that fighter's own terrain, blended across the middle so there is no seam.
+    const GY = FOOT - 70;
+    const texKeys = [];
+    const groundTex = (t) => {
+      const key = `cutground-${t.id}-${this.cutSeq = (this.cutSeq || 0) + 1}`;
+      const rt = this.make.renderTexture({ x: 0, y: 0, width: W, height: 160, add: false });
+      for (let x = 0; x < W; x += 160) {
+        const img = this.make.image({ key: tileKey(t.id), add: false }).setDisplaySize(160, 160);
+        if (t.id === 'road') img.setAngle(90);
+        rt.draw(img, x + 80, 80);
+        img.destroy();
+      }
+      rt.saveTexture(key);
+      texKeys.push(key);
+      add(rt, 0);
+      rt.setVisible(false);
+      return key;
+    };
+    const keyA = groundTex(mapA);
+    const baseA = add(this.add.image(0, GY, keyA).setOrigin(0, 0), 2);
+    void baseA;
+    if (mapD.id !== mapA.id) {
+      const keyD = groundTex(mapD);
+      const TW = 260; const STEPS = 13; const sw = TW / STEPS; const x0 = W / 2 - TW / 2;
+      for (let i = 0; i < STEPS; i++) {
+        const strip = this.add.image(0, GY, keyD).setOrigin(0, 0).setCrop(x0 + i * sw, 0, sw + 1, 160).setAlpha((i + 1) / (STEPS + 1));
+        add(strip, 2.1);
+      }
+      add(this.add.image(0, GY, keyD).setOrigin(0, 0).setCrop(x0 + TW, 0, W - x0 - TW, 160), 2.2);
     }
     const shade = this.add.graphics();
     shade.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.55, 0.55, 0, 0);
@@ -1196,6 +1220,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const D = mk(def, W - 330, -1);
     // info plates
     const plates = new Map();
+    this.cutPlates = plates;
     const mkPlate = (u, x, left) => {
       const g = this.add.graphics();
       const col = u.team === 'enemy' ? HP_ENEMY : HP_PLAYER;
@@ -1240,13 +1265,18 @@ export default class CampaignBattleScene extends Phaser.Scene {
       const startX = sv.home;
       const dur = 0.58;
       sfx('whoosh');
+      if (s.by === 'def') {
+        const ct0 = this.add.text(sv.rig.x, FOOT - 330, 'COUNTER', { fontFamily: FONT_DISPLAY, fontSize: '26px', color: '#FFD166', stroke: '#07060E', strokeThickness: 6, letterSpacing: 4 }).setOrigin(0.5).setDepth(depth + 41);
+        objs.push(ct0);
+        this.tweens.add({ targets: ct0, y: ct0.y - 24, alpha: 0, duration: 900 / this.speed, delay: 200 / this.speed });
+      }
       const fxSpec = await this.fxSpec(sv.u, s.move);
       sv.rig.facing = dir; tv.rig.facing = -dir;
       const clip = this.startAttack(sv, dur, s.move);
       this.tween({ targets: sv.rig, x: startX + dir * (clip ? 70 : 110), duration: 190, ease: 'Cubic.easeOut' });
       await this.wait(dur * 1000 * 0.45);
       if (fxSpec) {
-        const fxp = playMoveFx(this, fxSpec, { from: { x: sv.rig.x + dir * 70, y: FOOT - 150 }, to: { x: tv.rig.x, y: FOOT - 140 }, face: dir, ref: 270, depth: depth + 35, speed: this.speed });
+        const fxp = playMoveFx(this, fxSpec, { from: { x: sv.rig.x + dir * 70, y: FOOT - 150 }, to: { x: tv.rig.x, y: FOOT - 140 }, face: dir, ref: 270, depth: depth + 35, speed: this.speed, miss: !s.hit });
         if (fxSpec.proj) await fxp; else pendingFx.push(fxp);
       }
       const tx0 = tv.home;
@@ -1295,7 +1325,9 @@ export default class CampaignBattleScene extends Phaser.Scene {
     await this.tween({ targets: objs.filter((o) => o !== veil), alpha: 0, duration: 160 });
     await this.tween({ targets: veil, alpha: 0, duration: 120 });
     this.cutViews = this.cutViews.filter((v) => v !== A && v !== D);
+    this.cutPlates = null;
     objs.forEach((o) => { this.tweens.killTweensOf(o); o.destroy(); });
+    for (const k of texKeys) if (this.textures.exists(k)) this.textures.remove(k);
   }
 
   async strike(sv, tv, s) {
@@ -1308,7 +1340,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.tween({ targets: sv.cont, x: home + dx * 16, duration: 140, yoyo: true, ease: 'Sine.easeOut', hold: 60 });
     await this.wait(dur * 1000 * 0.42);
     if (fxSpec) {
-      const fxp = playMoveFx(this, fxSpec, { from: { x: sv.cont.x + dx * 20, y: sv.cont.y - 50 }, to: { x: tv.cont.x, y: tv.cont.y - 50 }, face: dx, ref: UNIT_H, depth: 92, speed: this.speed });
+      const fxp = playMoveFx(this, fxSpec, { from: { x: sv.cont.x + dx * 20, y: sv.cont.y - 50 }, to: { x: tv.cont.x, y: tv.cont.y - 50 }, face: dx, ref: UNIT_H, depth: 92, speed: this.speed, miss: !s.hit });
       if (fxSpec.proj) await fxp;
     }
     // impact

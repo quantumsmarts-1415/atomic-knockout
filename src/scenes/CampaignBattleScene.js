@@ -31,6 +31,18 @@ const HP_ENEMY = 0xff4f5f;
 const FEET = 54;
 const UNIT_H = 102;
 
+const rangeLabel = (m) => (m.range[0] === m.range[1] ? `${m.range[0]}` : `${m.range[0]}-${m.range[1]}`);
+const reachNote = (m) => `Out of reach: range ${rangeLabel(m)}${m.range[1] === 1 ? ' (adjacent tiles only; a diagonal is 2 away)' : ''}`;
+/** Shrink a label (down to 10px) and then ellipsise it so it never runs past `maxW`. */
+function fitText(t, maxW) {
+  let size = parseInt(t.style.fontSize, 10) || 14;
+  while (t.width > maxW && size > 10) { size -= 1; t.setFontSize(`${size}px`); }
+  if (t.width > maxW) {
+    let txt = t.text;
+    while (txt.length > 3 && t.width > maxW) { txt = txt.slice(0, -1); t.setText(`${txt.trimEnd()}…`); }
+  }
+  return t;
+}
 const tx = (c) => MAPX + c * TILE;
 const ty = (r) => MAPY + r * TILE;
 
@@ -423,10 +435,13 @@ export default class CampaignBattleScene extends Phaser.Scene {
       // the fighter's moves, with cooldowns
       for (const m of u.moves) {
         const cd = u.cd[m.key] || 0;
-        const tag = m.action === 'heal' ? 'HEAL' : m.action === 'guard' ? 'GRD' : m.action === 'power' ? 'PWR' : m.charge ? `CHG ${m.dmg}` : `${m.dmg}`;
+        const tag = m.action === 'heal' ? `HEAL R${rangeLabel(m)}` : m.action === 'guard' ? 'GRD' : m.action === 'power' ? 'PWR' : m.charge ? `CHG ${m.dmg} R${rangeLabel(m)}` : `${m.dmg} R${rangeLabel(m)}`;
         const col = cd > 0 ? THEME.disabledCss : THEME.mistCss;
-        this.pAdd(this.add.text(x, y, `${m.name}${cd > 0 ? ` (${cd})` : ''}`, textStyle('caption', { fontSize: '11px', color: col })));
-        this.pAdd(this.add.text(x + 204, y, tag, textStyle('mono', { fontSize: '11px', color: col })).setOrigin(1, 0));
+        const tagT = this.add.text(x + 204, y, tag, textStyle('mono', { fontSize: '11px', color: col })).setOrigin(1, 0);
+        const nameT = this.add.text(x, y, `${m.name}${cd > 0 ? ` (${cd})` : ''}`, textStyle('caption', { fontSize: '11px', color: col }));
+        fitText(nameT, 204 - tagT.width - 8);
+        this.pAdd(nameT);
+        this.pAdd(tagT);
         y += 14;
       }
     }
@@ -798,16 +813,16 @@ export default class CampaignBattleScene extends Phaser.Scene {
     if (u.charging) {
       const rel = b.chargedMove(u);
       const has = rel && b.targetsFrom(u, u.x, u.y, rel).length > 0;
-      items.push({ id: 'release', move: rel, label: `Release ${rel.name}`, tag: `${rel.dmg}`, disabled: !has, note: has ? '' : 'No target in range' });
+      items.push({ id: 'release', move: rel, label: `Release ${rel.name}`, tag: `${rel.dmg} R${rangeLabel(rel)}`, disabled: !has, note: has ? '' : reachNote(rel) });
       items.push({ id: 'cancelCharge', label: 'Cancel Charge', info: ['Stop charging and act normally this turn.'] });
     } else {
       for (const m of u.moves) {
         const block = b.moveBlock(u, m);
         if (m.action === 'attack' && !m.charge) {
           const has = b.targetsFrom(u, u.x, u.y, m).length > 0;
-          items.push({ id: 'attack', move: m, label: m.name, tag: `${m.dmg}`, disabled: !!block || !has, note: block || (has ? '' : 'No target in range') });
+          items.push({ id: 'attack', move: m, label: m.name, tag: `${m.dmg} R${rangeLabel(m)}`, disabled: !!block || !has, note: block || (has ? '' : reachNote(m)) });
         } else if (m.action === 'attack') {
-          items.push({ id: 'charge', move: m, label: m.name, tag: 'CHG', disabled: !!block, note: block || '' });
+          items.push({ id: 'charge', move: m, label: m.name, tag: `CHG R${rangeLabel(m)}`, disabled: !!block, note: block || '' });
         } else if (m.action === 'power') {
           items.push({ id: 'power', move: m, label: m.name, tag: 'PWR', disabled: !!block, note: block || '' });
         } else if (m.action === 'heal') {
@@ -826,7 +841,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.menuItems = items;
     this.menuSel = Math.max(0, items.findIndex((it) => !it.disabled));
     const objs = [];
-    const w = 214;
+    const w = 270;
     const rowH = 32;
     const h = items.length * rowH + 12;
     const infoW = 262;
@@ -839,8 +854,14 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const bg = drawPanel(this, mx, my, w, h, 10, THEME.gold, 0.9).setDepth(70);
     objs.push(bg);
     this.menuRows = items.map((it, i) => {
+      let tagW = 0;
+      if (it.tag) {
+        const tagT = this.add.text(mx + w - 14, my + 6 + i * rowH + rowH / 2, it.tag, textStyle('mono', { fontSize: '12px', color: THEME.dimCss })).setOrigin(1, 0.5).setDepth(71);
+        tagW = tagT.width + 10;
+        objs.push(tagT);
+      }
       const row = this.add.text(mx + 14, my + 6 + i * rowH + rowH / 2, it.label.toUpperCase(), { fontFamily: FONT_DISPLAY, fontSize: '14px', color: THEME.mistCss, letterSpacing: 1 }).setOrigin(0, 0.5).setDepth(71);
-      if (it.tag) objs.push(this.add.text(mx + w - 14, my + 6 + i * rowH + rowH / 2, it.tag, textStyle('mono', { fontSize: '12px', color: THEME.dimCss })).setOrigin(1, 0.5).setDepth(71));
+      fitText(row, w - 28 - tagW);
       const zone = this.add.zone(mx, my + 6 + i * rowH, w, rowH).setOrigin(0, 0).setDepth(72).setInteractive({ useHandCursor: true });
       zone.on('pointerover', () => { this.menuSel = i; this.paintMenu(); });
       zone.on('pointerdown', (p) => { if (p.leftButtonDown()) { this.menuSel = i; this.menuPick(); } });

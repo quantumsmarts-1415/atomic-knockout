@@ -2,6 +2,7 @@
 //
 //   hit%   = 78 + 2*(atk.spd - def.spd) - tile avoid        (0..100)
 //   crit%  = 5 + (atk.spd - def.spd)                         (0..50), crit = x2 damage
+//   (a chapter's `tutorial: { dmg, critMax }` softens its enemies: damage x dmg and crit capped at critMax)
 //   damage = round(move damage x elementMult x power-up) + atk.power (flat level bonus) - def.def - tile def
 //            then x (1 - guard) when the defender is guarding           (min 1 on a hit)
 //   move damage = the move's fighting-game damage % x DAMAGE_SCALE (src/campaign/moves.js);
@@ -45,7 +46,7 @@ function strike(att, def, map, move) {
   const power = att.status?.power ? att.status.power.mult : 1;
   const weaken = att.status?.weaken ? att.status.weaken.mult : 1;
   const vuln = def.status?.vulnerable ? def.status.vulnerable.mult : 1;
-  let raw = Math.round((move.dmg || 0) * mult * power * weaken * vuln) + (att.power || 0) - def.def - (tile?.def || 0);
+  let raw = Math.round((move.dmg || 0) * mult * power * weaken * vuln * (att.dmgMult ?? 1)) + (att.power || 0) - def.def - (tile?.def || 0);
   if (def.status?.guard) raw = Math.round(raw * (1 - def.status.guard.frac));
   const blind = att.status?.blind ? 30 : 0;
   return {
@@ -53,7 +54,7 @@ function strike(att, def, map, move) {
     move,
     dmg: Math.max(1, raw),
     hit: clamp(78 + 2 * (att.spd - def.spd) - (tile?.avoid || 0) - blind, 0, 100),
-    crit: clamp(5 + (att.spd - def.spd), 0, 50),
+    crit: clamp(5 + (att.spd - def.spd), 0, att.critMax ?? 50),
   };
 }
 

@@ -782,3 +782,30 @@ test('enemy healers heal a wounded ally instead of attacking, and there are no i
   assert.ok(!b.plan(iona).heal);
   for (const u of b.units) assert.ok(u.moves.every((m) => !/item|potion|vulnerary/i.test(m.action + m.key)), 'no item actions');
 });
+
+test('chapter 1 is a fair tutorial: soft hits, almost no crits, raiders arrive staggered, autoplay wins 90%+ of seeds', () => {
+  const ch1 = CHAPTERS[0];
+  assert.ok(ch1.enemies.length <= 5, 'at most five raiders');
+  assert.ok(ch1.tutorial && ch1.tutorial.dmg < 1 && ch1.tutorial.critMax <= 10);
+  const later = CHAPTERS.slice(1).filter((c) => !c.tutorial);
+  assert.equal(later.length, CHAPTERS.length - 1, 'only chapter 1 is eased');
+  const b = createBattle(newCampaign(), 0, 3);
+  const lillie = b.players.find((u) => u.id === 'lillie');
+  const chloe = b.enemies.find((u) => u.id === 'chloe');
+  assert.equal(chloe.dmgMult, ch1.tutorial.dmg);
+  const soft = forecast(chloe, lillie, b.map);
+  const plain = forecast({ ...chloe, dmgMult: 1, critMax: 50 }, lillie, b.map);
+  assert.ok(soft.att.dmg < plain.att.dmg, 'tutorial enemy hits softer');
+  assert.ok(soft.att.crit <= ch1.tutorial.critMax, 'crit capped');
+  // staggered aggro: the second raider holds until its wake turn, the first rushes at once
+  const aaron = b.enemies.find((u) => u.id === 'aaron');
+  assert.ok(aaron.wake >= 2);
+  const start = { x: aaron.x, y: aaron.y };
+  b.endPlayerPhase();
+  const plan = b.plan(aaron);
+  assert.deepEqual(plan.to, start, 'aaron waits on turn 1');
+  assert.ok(b.plan(chloe).to.x !== chloe.x, 'chloe advances on turn 1');
+  let wins = 0;
+  for (let seed = 1; seed <= 30; seed++) if (autoplayChapter(createBattle(newCampaign(), 0, seed * 100), 40).result === 'victory') wins++;
+  assert.ok(wins >= 27, `the autoplay AI should win chapter 1 on at least 90% of seeds (won ${wins}/30)`);
+});

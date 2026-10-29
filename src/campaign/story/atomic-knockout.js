@@ -32,6 +32,7 @@ const CHAPTERS = [
     kicker: 'CHAPTER 1',
     win: 'rout',
     objective: 'Rout the enemy',
+    tutorial: { dmg: 0.7, critMax: 5 }, // chapter 1 teaches the game: enemy hits are softer and almost never crit
     map: [
       'ff............^^',
       'f.....~~....^^^.',
@@ -55,11 +56,11 @@ const CHAPTERS = [
       { id: 'carter', level: 1 },
     ],
     enemies: [
-      { id: 'chloe', level: 1, x: 11, y: 4, ai: 'aggressive' },
-      { id: 'aaron', level: 1, x: 10, y: 3, ai: 'aggressive' },
-      { id: 'sully', level: 1, x: 12, y: 2, ai: 'hold' },
-      { id: 'cal', level: 1, x: 12, y: 6, ai: 'aggressive' },
-      { id: 'phillip', level: 1, x: 13, y: 5, ai: 'hold' },
+      // a tutorial fight: five raiders, one rushing the line on turn 1 and the rest arriving a turn apart (`wake`)
+      { id: 'chloe', level: 1, x: 12, y: 4, ai: 'aggressive' },
+      { id: 'aaron', level: 1, x: 11, y: 3, ai: 'aggressive', wake: 3 },
+      { id: 'sully', level: 1, x: 13, y: 2, ai: 'hold' },
+      { id: 'cal', level: 1, x: 13, y: 6, ai: 'aggressive', wake: 4 },
       { id: 'kyle', level: 1, x: 15, y: 4, ai: 'hold' },
     ],
     intro: [

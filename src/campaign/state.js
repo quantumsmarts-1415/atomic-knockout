@@ -59,7 +59,11 @@ export class CampaignBattle {
     });
     for (const e of chapter.enemies) {
       const rec = enemyRecords(e);
-      this.units.push(makeUnit(rec, 'enemy', e.x, e.y, { ai: e.ai || 'aggressive', boss: !!e.boss }));
+      const tut = chapter.tutorial; // an easing chapter: its enemies hit softer and crit less; `wake` staggers when they advance
+      this.units.push(makeUnit(rec, 'enemy', e.x, e.y, {
+        ai: e.ai || 'aggressive', boss: !!e.boss, wake: e.wake || 0,
+        ...(tut ? { dmgMult: tut.dmg ?? 1, critMax: tut.critMax ?? 50 } : {}),
+      }));
     }
     this.enemyRecords = enemyRecords;
     this.avgLevel = Math.max(1, Math.round(party.reduce((a, r) => a + r.level, 0) / Math.max(1, party.length)));

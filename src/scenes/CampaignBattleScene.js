@@ -1519,7 +1519,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const healed = first ? b.startPhase('player') : (b.lastHealed || []);
     // only player units that have already acted (a stun cost them the turn) dim; enemies keep `acted` from their own phase
     for (const v of this.views.values()) this.setGrey(v, v.u.team === 'player' && v.u.acted && v.u.alive);
-    this.refreshPanel();
+    // (no panel refresh here: the phase-start heal is already in the state, and the panel would show the raised HP before its "+N" appears)
     await this.banner('PLAYER PHASE', first ? this.chapter.objective : (this.chapter.win === 'defend' ? `Turn ${b.turn} of ${this.chapter.turns}` : `Turn ${b.turn}`), 0x35a8ff);
     if (first) await this.runEvents(b.checkEvents('start'));
     await this.runEvents(b.checkEvents('turn'));
@@ -1527,6 +1527,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       const v = this.views.get(h.unit.uid);
       if (v) { v.shownHp = h.unit.hp; this.paintBar(v); this.floatText(v.cont.x, v.cont.y - 80, `+${h.amount}`, '#53E0A8', 20); }
     }
+    this.refreshPanel();
     await this.showPhaseEvents();
     if (b.result) { this.finish(); return; }
     this.mode = 'idle';

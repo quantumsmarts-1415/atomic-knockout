@@ -2,7 +2,7 @@
 //   score = damage dealt (+60 for a kill, +8 if the target is the lord)
 //           - 0.6 * expected counter damage + 2 * tile defense
 // 'hold' units only act once a player unit is inside move+attack reach
-// (from turn 8 they advance too, so a battle can't stall; 'boss' never leaves its post). 'aggressive' units always advance.
+// (from turn 8, or their `wake` turn, they advance too, so a battle can't stall; 'boss' never leaves its post). 'aggressive' units always advance.
 import { reachable, ringTiles, distanceField, key, dist, hostile } from './grid.js';
 import { forecast } from './combat.js';
 import { terrainAt } from './terrain.js';
@@ -93,7 +93,7 @@ function planNormal(state, unit, reach, foes, origin) {
     }
     return best;
   }
-  if (unit.ai === 'boss' || (unit.ai === 'hold' && state.turn < 8)) return { to: origin, target: null };
+  if (unit.ai === 'boss' || (unit.ai === 'hold' && state.turn < (unit.wake || 8)) || (unit.wake && state.turn < unit.wake)) return { to: origin, target: null };
   // approach: minimise remaining path cost to the nearest foe
   const field = distanceField(state.map, foes.map((f) => ({ x: f.x, y: f.y })));
   let spot = null;

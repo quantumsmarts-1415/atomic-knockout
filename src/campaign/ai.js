@@ -3,7 +3,7 @@
 //           - 0.6 * expected counter damage + 2 * tile defense
 // 'hold' units only act once a player unit is inside move+attack reach
 // (from turn 8 they advance too, so a battle can't stall; 'boss' never leaves its post). 'aggressive' units always advance.
-import { reachable, ringTiles, distanceField, key, dist } from './grid.js';
+import { reachable, ringTiles, distanceField, key, dist, hostile } from './grid.js';
 import { forecast } from './combat.js';
 import { terrainAt } from './terrain.js';
 
@@ -16,7 +16,7 @@ function expected(f, side) {
 
 export function planEnemy(state, unit) {
   const reach = reachable(state.map, unit, state.units);
-  const foes = state.units.filter((u) => u.alive && u.team !== unit.team);
+  const foes = state.units.filter((u) => u.alive && hostile(unit, u));
   if (!foes.length) return { to: { x: unit.x, y: unit.y }, target: null };
   const origin = { x: unit.x, y: unit.y };
   let best = null;

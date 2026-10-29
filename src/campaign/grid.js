@@ -3,6 +3,8 @@
 import { GLYPH_TO_TERRAIN, TERRAIN } from './terrain.js';
 
 export const key = (x, y) => `${x},${y}`;
+/** Players and enemies fight each other; npc (to be recruited) units take no part. */
+export const hostile = (a, b) => (a.team === 'player' && b.team === 'enemy') || (a.team === 'enemy' && b.team === 'player');
 export const dist = (ax, ay, bx, by) => Math.abs(ax - bx) + Math.abs(ay - by);
 
 export function parseMap(rows) {

@@ -2,13 +2,14 @@
 // and animates the events it returns.
 import { mulberry32 } from '../engine/rng.js';
 import { CHARACTERS } from '../data/characters.js';
-import { parseMap, reachable, threatTiles, ringTiles, pathTo, key, dist } from './grid.js';
+import { hostile, parseMap, reachable, threatTiles, ringTiles, pathTo, key, dist } from './grid.js';
 import { terrainAt } from './terrain.js';
 import { resolve, forecast } from './combat.js';
 import { awardXp, moveInfo } from './units.js';
 import { planEnemy } from './ai.js';
 
 let uidSeq = 1;
+
 
 function makeUnit(rec, team, x, y, extra = {}) {
   const info = moveInfo(rec.id);
@@ -40,11 +41,13 @@ export class CampaignBattle {
     this.phase = 'player';
     this.result = null; // 'victory' | 'defeat'
     this.kills = 0;
+    this.fired = new Set();
+    this.recruited = [];
     const starts = chapter.starts;
     // The lord takes the chapter's rear slot; everyone else fills the rest in order.
     const lordSlot = Math.min(chapter.lordSlot ?? 0, starts.length - 1);
     const lordRec = party.find((r) => r.lord);
-    const others = party.filter((r) => r !== lordRec);
+    const others = party.filter((r) => r !== lordRec).sort((a, b) => b.level - a.level);
     const slots = starts.map((_, i) => i).filter((i) => !lordRec || i !== lordSlot);
     if (lordRec) this.units.push(makeUnit(lordRec, 'player', starts[lordSlot][0], starts[lordSlot][1]));
     others.slice(0, slots.length).forEach((rec, n) => {
@@ -54,6 +57,12 @@ export class CampaignBattle {
     for (const e of chapter.enemies) {
       const rec = enemyRecords(e);
       this.units.push(makeUnit(rec, 'enemy', e.x, e.y, { ai: e.ai || 'aggressive', boss: !!e.boss }));
+    }
+    this.enemyRecords = enemyRecords;
+    this.avgLevel = Math.max(1, Math.round(party.reduce((a, r) => a + r.level, 0) / Math.max(1, party.length)));
+    for (const n of chapter.npcs || []) {
+      const rec = enemyRecords({ id: n.id, level: n.level ?? this.avgLevel });
+      this.units.push(makeUnit(rec, 'npc', n.x, n.y, { ai: 'none', talkWith: n.with || null, talkLines: n.lines || [] }));
     }
   }
 
@@ -71,7 +80,7 @@ export class CampaignBattle {
     const out = [];
     for (const t of ringTiles(this.map, x, y, unit.range[0], unit.range[1])) {
       const u = this.unitAt(t.x, t.y);
-      if (u && u.team !== unit.team) out.push(u);
+      if (u && hostile(unit, u)) out.push(u);
     }
     return out;
   }
@@ -81,6 +90,33 @@ export class CampaignBattle {
   canSeize(unit) {
     const s = this.chapter.seize;
     return this.chapter.win === 'seize' && unit.lord && unit.team === 'player' && s && unit.x === s[0] && unit.y === s[1];
+  }
+
+  canEscape(unit) {
+    const ex = this.chapter.exit;
+    return this.chapter.win === 'escape' && unit.lord && unit.team === 'player' && !!ex && ex.some(([x, y]) => x === unit.x && y === unit.y);
+  }
+
+  escape(unit) {
+    unit.acted = true;
+    if (this.canEscape(unit)) this.result = 'victory';
+    this.updateResult();
+  }
+
+  /** Recruitable neighbours of `unit` at (x,y). */
+  talkTargets(unit, x = unit.x, y = unit.y) {
+    if (unit.team !== 'player') return [];
+    return this.units.filter((n) => n.alive && n.team === 'npc' && dist(x, y, n.x, n.y) === 1 && (!n.talkWith || n.talkWith === unit.id));
+  }
+
+  /** The unit talks to an npc: it joins the party. Returns { lines, npc }. */
+  talk(unit, npc) {
+    unit.acted = true;
+    npc.team = 'player';
+    npc.ai = 'aggressive';
+    npc.acted = false;
+    this.recruited.push(npc);
+    return { lines: npc.talkLines, npc };
   }
 
   moveUnit(unit, x, y) {
@@ -128,6 +164,8 @@ export class CampaignBattle {
     if ((lord && !lord.alive) || !this.players.length) { this.result = 'defeat'; return this.result; }
     const { win } = this.chapter;
     if (win === 'rout' && !this.enemies.length) this.result = 'victory';
+    if (win === 'escape' && !this.enemies.length) this.result = 'victory';
+    if (win === 'defend' && !this.enemies.length && !this.pendingSpawns()) this.result = 'victory';
     if (win === 'boss' && !this.units.some((u) => u.boss && u.alive)) this.result = 'victory';
     if (win === 'seize' && !this.enemies.length) this.result = 'victory';
     return this.result;
@@ -158,7 +196,62 @@ export class CampaignBattle {
 
   endEnemyPhase() {
     this.turn += 1;
+    if (this.chapter.win === 'defend' && this.turn > this.chapter.turns && !this.result) this.result = 'victory';
     return this.startPhase('player');
+  }
+
+  // -------------------------------------------------------------- events
+  pendingSpawns() {
+    return (this.chapter.events || []).some((e, i) => !this.fired.has(i) && e.spawn?.some((s) => (s.team || 'enemy') === 'enemy'));
+  }
+
+  freeTileNear(x, y) {
+    for (let r = 0; r < 6; r++) {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          const nx = x + dx; const ny = y + dy;
+          const t = this.tile(nx, ny);
+          if (t && Number.isFinite(t.cost) && !this.unitAt(nx, ny)) return { x: nx, y: ny };
+        }
+      }
+    }
+    return { x, y };
+  }
+
+  /**
+   * Fire any story events due. kind: 'start' | 'turn' | 'enemyTurn' | 'move' | 'death'.
+   * Spawns are applied here; the scene shows the lines and adds views for `spawned`.
+   * Returns [{ event, lines, spawned }].
+   */
+  checkEvents(kind, ctx = {}) {
+    const out = [];
+    (this.chapter.events || []).forEach((ev, i) => {
+      if (this.fired.has(i) || this.result) return;
+      const w = ev.when || {};
+      let hit = false;
+      if (kind === 'start') hit = !!w.start;
+      else if (kind === 'turn') hit = w.turn === this.turn;
+      else if (kind === 'enemyTurn') hit = w.enemyTurn === this.turn;
+      else if (kind === 'death') hit = w.death === ctx.unit?.id;
+      else if (kind === 'move' && w.near) {
+        const target = this.units.find((u) => u.alive && u.team === 'enemy' && u.id === w.near);
+        hit = !!target && this.players.some((p) => dist(p.x, p.y, target.x, target.y) <= (w.dist ?? 4));
+      }
+      if (!hit) return;
+      this.fired.add(i);
+      const spawned = [];
+      for (const sp of ev.spawn || []) {
+        const at = this.freeTileNear(sp.x, sp.y);
+        const team = sp.team || 'enemy';
+        const rec = this.enemyRecords({ id: sp.id, level: sp.level ?? this.avgLevel });
+        const u = makeUnit(rec, team, at.x, at.y, { ai: sp.ai || 'aggressive', boss: !!sp.boss, arrived: true });
+        this.units.push(u);
+        spawned.push(u);
+      }
+      out.push({ event: ev, lines: ev.lines || [], spawned });
+    });
+    return out;
   }
 
   /** Next enemy still to act, boss last. */

@@ -68,6 +68,14 @@ export const CHAPTERS = [
     ],
     events: [
       {
+        when: { turn: 2 },
+        lines: [
+          { who: 'lillie', text: "My heart is pounding. Is it always like this?" },
+          { who: 'hydra', text: "Every time. Breathe, and look after the person next to you. That is how a line holds." },
+          { who: 'helen', text: "And if anyone gets hurt, step back. There is no shame in that." },
+        ],
+      },
+      {
         when: { near: 'kyle', dist: 5 },
         lines: [
           { who: 'kyle', text: 'Ha! Look at the little Cloud-folk, marching right up to my fort. Boys, show them what a real reaction looks like!' },
@@ -134,6 +142,14 @@ export const CHAPTERS = [
       { who: 'neo', text: 'Noble and ready. Let us light the way. And look, someone is hiding in the west village.' },
     ],
     events: [
+      {
+        when: { turn: 2 },
+        lines: [
+          { who: 'oxana', text: "Mind the gatehouse walls. The Raiders can see everything from up there." },
+          { who: 'neo', text: "Then let us give them something worth watching. Together, now." },
+          { who: 'hydra', text: "Keep moving toward the throne. We do not need to win every fight, only to arrive." },
+        ],
+      },
       {
         when: { near: 'chroma', dist: 4 },
         card: { id: 'chroma', name: 'CHROMA', epithet: 'Keeper of the Vault Throne' },
@@ -338,6 +354,13 @@ export const CHAPTERS = [
     ],
     events: [
       {
+        when: { turn: 2 },
+        lines: [
+          { who: 'helen', text: "I can barely see my own hands in this mist. Keep one eye on Hydra's glow." },
+          { who: 'hydra', text: "Stay close and keep walking. The gate is to the north. We do not stop until everyone is through." },
+        ],
+      },
+      {
         when: { near: 'wolf', dist: 4 },
         lines: [
           { who: 'wolf', text: 'The Gate is mine to hold. Nobody walks through the Mist while the hum asks me to stand here.' },
@@ -456,6 +479,14 @@ export const CHAPTERS = [
     ],
     events: [
       {
+        when: { turn: 2 },
+        lines: [
+          { who: 'yvette', text: "Everything glows in here. It is hard to tell friend from foe." },
+          { who: 'neo', text: "Foes stand in the light and friends stay close. Stand close, and you will be fine." },
+          { who: 'hydra', text: "Watch your footing. Nobody goes ahead alone." },
+        ],
+      },
+      {
         when: { near: 'uri', dist: 4 },
         card: { id: 'uri', name: 'URI', epithet: 'Warden of the Actinide Spire' },
         lines: [
@@ -517,6 +548,13 @@ export const CHAPTERS = [
       { who: 'helen', text: 'Whatever happens, we do it together. Everyone is here.' },
     ],
     events: [
+      {
+        when: { turn: 2 },
+        lines: [
+          { who: 'helen', text: "The hum is louder. It is not an attack. It sounds like someone asking a question." },
+          { who: 'hydra', text: "Then we answer it when we reach him. Keep the line tight until then." },
+        ],
+      },
       {
         when: { near: 'ogden', dist: 4 },
         card: { id: 'ogden', name: 'OGDEN', epithet: 'The Last Element' },

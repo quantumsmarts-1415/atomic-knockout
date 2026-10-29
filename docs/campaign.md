@@ -67,6 +67,24 @@ Every unit fights with its fighter's four real moves (`src/data/movesets.js`), s
 - **Balance check**: `node tools/campaign-balance.mjs [seeds]` plays the whole campaign with the autoplay AI (3 tries per chapter);
   the AI ignores terrain, guards and charges, so a real player does better. Enemy levels in the story data were tuned with it.
 
+## Move effects (`src/campaign/status.js`, `fx.js`)
+The fighting game's move effects become tactics effects. Each is written out in the move's info (and the forecast), pills sit under the unit's HP bar, and the unit panel lists them with turns left. Statuses count down at the start of the owner's own phase.
+
+| Fighting-game effect | On the map |
+| --- | --- |
+| stun | the target skips its next turn |
+| burn / poison | damage at the start of each of its turns (poison never takes the last HP) |
+| slow / freeze / root | -2 / -3 / no movement on its next turn (attacks still work) |
+| knockback / pull | pushed or pulled 1 tile |
+| blind / weaken / vulnerable | -30% to hit / its hits do -25% / it takes +30% |
+| guard / shield | damage reduction for a turn |
+| lifesteal, recoil, thorns, regen | HP moves between attacker and target, or heals at turn start |
+| interrupt | cancels a charge |
+
+**Stuns cannot chain.** A unit that loses a turn to a stun is immune to stun for the next turn (a `STUN IMMUNE` pill shows it), then can be stunned again (tests: `stuns cannot chain...`).
+
+Moves with FX art in `assets/fx/<fighter>/<move>/` play it in the battle cutaway, on self-targeted moves (guard/charge/power up), and on the map; textures load on demand and are released when the battle ends.
+
 ## Chapter data (`src/campaign/story/atomic-knockout.js`; adding your own story: `docs/campaign-story.md`)
 `win`: `rout | seize | boss | defend | escape` (`seize: [x,y]`, `turns: N`, `exit: [[x,y],...]`).
 `intro` / `outro`: lines `{ who: fighterId | null, text }` (`null` = narration).

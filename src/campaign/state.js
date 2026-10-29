@@ -8,6 +8,7 @@ import { resolve, forecast } from './combat.js';
 import { awardXp, moveInfo } from './units.js';
 import { campaignMoves, unionRange } from './moves.js';
 import { planEnemy } from './ai.js';
+import { applyHitEffects, applyRecoil, startOfTurn, cleanse } from './status.js';
 
 let uidSeq = 1;
 
@@ -130,6 +131,11 @@ export class CampaignBattle {
   /** Guard: damage reduction until the unit's next turn. Returns the guard status. */
   guard(unit, move) {
     unit.status.guard = { frac: move.guard, turns: 1 };
+    for (const e of move.effects) {
+      if (e.type === 'cleanse') cleanse(unit);
+      else if (e.type === 'regen') unit.status.regen = { frac: e.frac, turns: 1 };
+      else if (e.type === 'thorns') unit.status.guard.thorns = e.dmg;
+    }
     unit.acted = true;
     return unit.status.guard;
   }
@@ -187,6 +193,15 @@ export class CampaignBattle {
     if (released) att.charging = null;
     if (move.cd) att.cd[move.key] = move.cd;
     const res = resolve(att, def, this.map, this.rng, move);
+    // effects of every strike that landed (the counter's effects hit the attacker)
+    const effects = [];
+    for (const l of res.log) {
+      if (!l.hit) continue;
+      const [from, to] = l.by === 'att' ? [att, def] : [def, att];
+      effects.push(...applyHitEffects(this, from, to, l.move, l, this.rng));
+    }
+    const recoil = applyRecoil(att, move);
+    if (recoil) effects.push(recoil);
     const killed = [];
     for (const u of [att, def]) {
       if (u.hp <= 0 && u.alive) { u.alive = false; killed.push(u); }
@@ -207,7 +222,7 @@ export class CampaignBattle {
     if (killed.some((k) => k.team === 'enemy')) this.kills += killed.filter((k) => k.team === 'enemy').length;
     att.acted = true;
     this.updateResult();
-    return { ...res, killed, xp, move, released };
+    return { ...res, killed, xp, move, released, effects };
   }
 
   wait(unit) { unit.acted = true; }
@@ -235,11 +250,16 @@ export class CampaignBattle {
   startPhase(team) {
     this.phase = team;
     const healed = [];
+    this.phaseEvents = [];
     for (const u of this.units) {
       if (!u.alive || u.team !== team) continue;
       u.acted = false;
       for (const k of Object.keys(u.cd)) if (u.cd[k] > 0) u.cd[k] -= 1;
+      // statuses count down at the start of the owner's phase; burn/poison/regen tick and a stun skips the turn
+      const ticking = startOfTurn(u);
       for (const [name, st] of Object.entries(u.status)) { st.turns -= 1; if (st.turns <= 0) delete u.status[name]; }
+      this.phaseEvents.push(...ticking);
+      if (u.hp <= 0) { u.alive = false; this.phaseEvents.push({ type: 'dotKill', unit: u }); this.updateResult(); continue; }
       const heal = this.tile(u.x, u.y)?.heal;
       if (heal && u.hp < u.maxHp) {
         const n = Math.min(u.maxHp - u.hp, Math.max(2, Math.round(u.maxHp * heal)));
@@ -247,6 +267,7 @@ export class CampaignBattle {
         healed.push({ unit: u, amount: n });
       }
     }
+    this.lastHealed = healed;
     return healed;
   }
 

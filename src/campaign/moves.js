@@ -142,11 +142,11 @@ export function effectText(e) {
     case 'freeze': return 'Freeze: target moves 3 less next turn';
     case 'root': return 'Root: target cannot move next turn';
     case 'slow': return 'Slow: target moves 2 less next turn';
-    case 'blind': return 'Blind: target hit chance -30% next turn';
-    case 'vulnerable': return `Vulnerable: target takes +${Math.round((e.mult - 1) * 100)}% next hit`;
+    case 'blind': return 'Blind: target hit chance -30% on its next turn';
+    case 'vulnerable': return `Vulnerable: target takes +${Math.round((e.mult - 1) * 100)}% damage until its next turn ends`;
     case 'weaken': return `Corrode: target deals -${Math.round((1 - e.mult) * 100)}% next turn`;
     case 'interrupt': return 'Interrupts a charging target';
-    case 'strip': return 'Strips guard and power-ups';
+    case 'strip': return 'Strips the target\'s guard and power-ups';
     case 'lifesteal': return `Heals you for ${Math.round(e.frac * 100)}% of damage`;
     case 'pull': return 'Pulls the target 1 tile closer';
     case 'push': return 'Knocks the target back 1 tile';

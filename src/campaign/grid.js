@@ -32,7 +32,16 @@ const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
  * cannot stop on an occupied tile. Returns Map<key, { x, y, cost, prev }>.
  * Includes the unit's own tile at cost 0.
  */
+/** Movement points this turn: slow -2, freeze -3 (never below 1), root leaves none. */
+export function movePoints(unit) {
+  const st = unit.status;
+  if (!st) return unit.mov;
+  if (st.root) return 0;
+  return Math.max(1, unit.mov - (st.freeze ? 3 : 0) - (st.slow ? 2 : 0));
+}
+
 export function reachable(map, unit, units) {
+  const mov = movePoints(unit);
   const occ = new Map();
   for (const u of units) if (u.alive && u !== unit) occ.set(key(u.x, u.y), u);
   const best = new Map();
@@ -51,7 +60,7 @@ export function reachable(map, unit, units) {
       const blocker = occ.get(key(nx, ny));
       if (blocker && blocker.team !== unit.team) continue;
       const cost = cur.cost + step;
-      if (cost > unit.mov) continue;
+      if (cost > mov) continue;
       const k = key(nx, ny);
       const prior = best.get(k);
       if (prior && prior.cost <= cost) continue;

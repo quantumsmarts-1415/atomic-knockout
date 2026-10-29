@@ -567,3 +567,139 @@ test('the campaign is beatable by the AI: the AI clears every chapter within thr
   }
   assert.ok(cleared >= 2, `${cleared}/${seeds} seeds cleared the whole campaign`);
 });
+
+// ------------------------------------------------------------------ move effects
+import { applyHitEffects, startOfTurn, statusTags } from '../src/campaign/status.js';
+import { movePoints } from '../src/campaign/grid.js';
+import { describeMove, effectText } from '../src/campaign/moves.js';
+import { moveSlug } from '../src/data/attackFx.js';
+
+const always = () => 0;          // rng that always rolls "yes"
+const hitOf = (dmg = 20) => ({ hit: true, dmg });
+const stunMove = { effects: [{ type: 'stun', chance: 1 }] };
+
+test('stuns cannot chain: a stunned unit skips one turn, is immune for its next turn, then can be stunned again', () => {
+  const { b, a, d } = twoUnits('hydra', 'kyle', 1);
+  assert.ok(applyHitEffects(b, a, d, stunMove, hitOf(), always).some((e) => e.type === 'stun'));
+  assert.ok(d.stunned, 'stunned during the player phase');
+  assert.ok(statusTags(d).some((t) => t.id === 'stun'));
+  b.endPlayerPhase();                                   // enemy phase starts: the stunned unit loses its turn
+  assert.equal(d.acted, true, 'turn skipped');
+  assert.equal(d.stunned, false);
+  assert.equal(d.stunImmune, true, 'immune right after the lost turn');
+  assert.ok(statusTags(d).some((t) => t.id === 'immune' && /IMMUNE/.test(t.label)), 'immunity is shown');
+  assert.ok(b.phaseEvents.some((e) => e.type === 'skip' && e.unit === d));
+  // the player tries to stun it again during its immune window
+  const blocked = applyHitEffects(b, a, d, stunMove, hitOf(), always);
+  assert.ok(blocked.some((e) => e.type === 'immune'), 'reports the immunity');
+  assert.equal(d.stunned, false, 'no second stunned turn in a row');
+  b.endEnemyPhase();                                    // player phase
+  b.endPlayerPhase();                                   // the enemy's next turn begins: it acts normally
+  assert.equal(d.acted, false, 'acts again');
+  assert.equal(d.stunImmune, false, 'immunity ends once it has had a normal turn start');
+  // and now it can be stunned again
+  assert.ok(applyHitEffects(b, a, d, stunMove, hitOf(), always).some((e) => e.type === 'stun'));
+  assert.equal(d.stunned, true);
+});
+
+test('stun never skips two consecutive turns even when hit every round', () => {
+  const { b, a, d } = twoUnits('hydra', 'kyle', 1);
+  const skipped = [];
+  for (let round = 0; round < 8; round++) {
+    applyHitEffects(b, a, d, stunMove, hitOf(), always);   // player stuns it every turn
+    b.endPlayerPhase();
+    skipped.push(d.acted);
+    b.endEnemyPhase();
+  }
+  for (let i = 1; i < skipped.length; i++) assert.ok(!(skipped[i] && skipped[i - 1]), `rounds ${i - 1} and ${i} both skipped`);
+  assert.ok(skipped.some(Boolean), 'it does lose turns');
+});
+
+test('burn and poison tick each turn; poison never kills, burn can; slow, freeze and root cut movement', () => {
+  const { b, a, d } = twoUnits('hydra', 'kyle', 1);
+  applyHitEffects(b, a, d, { effects: [{ type: 'burn', dmg: 5, turns: 2 }] }, hitOf(), always);
+  const hp = d.hp;
+  b.endPlayerPhase();
+  assert.equal(d.hp, hp - 5, 'burn ticks at the start of its turn');
+  b.endEnemyPhase(); b.endPlayerPhase();
+  assert.equal(d.hp, hp - 10);
+  b.endEnemyPhase(); b.endPlayerPhase();
+  assert.equal(d.hp, hp - 10, 'burn wore off after two ticks');
+  d.hp = 3;
+  applyHitEffects(b, a, d, { effects: [{ type: 'poison', dmg: 9, turns: 2 }] }, hitOf(), always);
+  b.endEnemyPhase(); b.endPlayerPhase();
+  assert.equal(d.hp, 1, 'poison leaves 1 HP');
+  assert.equal(d.alive, true);
+  d.status = {};
+  d.hp = 3;
+  applyHitEffects(b, a, d, { effects: [{ type: 'burn', dmg: 9, turns: 2 }] }, hitOf(), always);
+  b.endEnemyPhase(); b.endPlayerPhase();
+  assert.equal(d.alive, false, 'burn can KO');
+  assert.ok(b.phaseEvents.some((e) => e.type === 'dotKill'));
+  const u = { mov: 5, status: {} };
+  assert.equal(movePoints(u), 5);
+  assert.equal(movePoints({ ...u, status: { slow: { turns: 1 } } }), 3);
+  assert.equal(movePoints({ ...u, status: { freeze: { turns: 1 } } }), 2);
+  assert.equal(movePoints({ ...u, status: { root: { turns: 1 } } }), 0);
+  const e2 = twoUnits('hydra', 'kyle', 1);
+  applyHitEffects(e2.b, e2.a, e2.d, { effects: [{ type: 'slow', turns: 1 }] }, hitOf(), always);
+  const full = e2.b.reachFor({ ...e2.d, status: {} }).stops.size;
+  e2.b.endPlayerPhase();
+  assert.ok(e2.b.reachFor(e2.d).stops.size < full, 'a slowed unit reaches fewer tiles on its turn');
+  e2.b.endEnemyPhase(); e2.b.endPlayerPhase();
+  assert.equal(movePoints(e2.d), e2.d.mov, 'slow lasts one turn');
+});
+
+test('knockback pushes one tile, interrupt and stun break a charge, lifesteal heals, thorns bite melee attackers', () => {
+  const { b, a, d } = twoUnits('hydra', 'kyle', 1);
+  const x0 = d.x;
+  assert.ok(applyHitEffects(b, a, d, { effects: [{ type: 'push' }] }, hitOf(), always).some((e) => e.type === 'push'));
+  assert.equal(d.x, x0 + 1);
+  assert.equal(applyHitEffects(b, a, d, { effects: [{ type: 'pull' }] }, hitOf(), always).length, 1);
+  assert.equal(d.x, x0);
+  const wall = twoUnits('hydra', 'kyle', 1);
+  wall.b.map.tiles[wall.d.y][wall.d.x + 1] = 'wall';
+  assert.equal(applyHitEffects(wall.b, wall.a, wall.d, { effects: [{ type: 'push' }] }, hitOf(), always).length, 0, 'walls stop a push');
+  d.charging = 'basicCharge';
+  applyHitEffects(b, a, d, { effects: [{ type: 'interrupt' }] }, hitOf(), always);
+  assert.equal(d.charging, null);
+  d.charging = 'basicCharge';
+  applyHitEffects(b, a, d, stunMove, hitOf(), always);
+  assert.equal(d.charging, null, 'a stun breaks the charge');
+  a.hp = 10;
+  applyHitEffects(b, a, d, { effects: [{ type: 'lifesteal', frac: 0.5 }] }, hitOf(20), always);
+  assert.equal(a.hp, 20);
+  const g = twoUnits('hydra', 'kyle', 1);
+  g.d.status.guard = { frac: 0.4, turns: 1, thorns: 6 };
+  const hp = g.a.hp;
+  applyHitEffects(g.b, g.a, g.d, { effects: [] }, hitOf(), always);
+  assert.equal(g.a.hp, hp - 6, 'thorns hurt a melee attacker');
+});
+
+test('every effect is spelled out in the move info, and enemies and allies both get them', () => {
+  const seen = new Set();
+  for (const c of ROSTER) {
+    for (const m of campaignMoves(c.id)) {
+      const lines = describeMove(m);
+      for (const e of m.effects) { assert.ok(lines.includes(effectText(e)), `${c.id} ${m.key} ${e.type}`); seen.add(e.type); }
+    }
+  }
+  for (const need of ['stun', 'burn', 'poison', 'slow', 'freeze', 'push', 'lifesteal', 'interrupt']) assert.ok(seen.has(need), `some move has ${need}`);
+});
+
+test('moves reuse the fighting game FX art when the move has some', () => {
+  let withFx = 0; let attacks = 0;
+  for (const c of ROSTER) {
+    for (const m of campaignMoves(c.id)) {
+      if (!m.attack) continue;
+      attacks++;
+      const dir = new URL(`../assets/fx/${c.id}/${moveSlug(m.name)}/`, import.meta.url);
+      if (!fs.existsSync(new URL('fx.json', dir))) continue;
+      withFx++;
+      const meta = JSON.parse(fs.readFileSync(new URL('fx.json', dir), 'utf8'));
+      const file = meta.projectile?.file || meta.file;      // named art must exist; the player falls back to sheet.png / object.png
+      if (file) assert.ok(fs.existsSync(new URL(file, dir)), `${c.id} ${m.name} ${file}`);
+    }
+  }
+  assert.ok(withFx / attacks > 0.6, `${withFx}/${attacks} attack moves have FX art`);
+});

@@ -16,6 +16,8 @@ import { key, ringTiles } from '../campaign/grid.js';
 import { tileKey, attackClipName, loadCampaignArt, sheetKey, walkReady, releaseWalk } from '../campaign/art.js';
 import { basicMove } from '../campaign/units.js';
 import { describeMove, effectText } from '../campaign/moves.js';
+import { statusTags } from '../campaign/status.js';
+import { loadMoveFx, playMoveFx, releaseMoveFx } from '../campaign/fx.js';
 import { playMusic, stinger, watch, preload, toggleMute, createMapRotation, MAP_PLAYER_ROTATION, STINGER_BOOST } from '../campaign/music.js';
 import { playDialogue, playBossCard } from '../ui/campaignDialogue.js';
 
@@ -86,6 +88,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
   cleanup() {
     for (const [ev, fn] of this.keyHandlers) this.input.keyboard?.off(ev, fn);
     this.keyHandlers = [];
+    releaseMoveFx(this);
     if (window.__camp === this) window.__camp = null;
   }
 
@@ -263,21 +266,18 @@ export default class CampaignBattleScene extends Phaser.Scene {
     v.cont.setDepth(10 + v.cont.y / 10);
   }
 
-  /** Small status pills under the HP bar: charging, guard, power up. */
+  /** Small pills under the HP bar: charging, stun, stun immunity, guard, power up, burn, slow, ... */
   paintTags(v) {
     if (!v) return;
     if (v.tags) { v.tags.list.forEach((t) => this.tweens.killTweensOf(t)); v.tags.destroy(); }
     const u = v.u;
-    const list = [];
-    if (u.charging) list.push(['CHARGING', '#FFD166']);
-    if (u.status?.guard) list.push(['GUARD', '#35A8FF']);
-    if (u.status?.power) list.push(['POWER UP', '#FF9A3C']);
-    if (!list.length || !u.alive) { v.tags = null; return; }
+    const list = u.alive ? statusTags(u) : [];
+    if (!list.length) { v.tags = null; return; }
     const c = this.add.container(0, 22);
-    list.forEach(([t, col], i) => {
-      const txt = this.add.text(0, i * 13, t, { fontFamily: FONT_DISPLAY, fontSize: '12px', color: col, stroke: '#07060E', strokeThickness: 5, letterSpacing: 1 }).setOrigin(0.5, 0);
-      c.add(txt); txt.y = i * 15;
-      if (t === 'CHARGING') this.tweens.add({ targets: txt, alpha: 0.35, duration: 380, yoyo: true, repeat: -1 });
+    list.slice(0, 4).forEach((tag, i) => {
+      const txt = this.add.text(0, i * 15, tag.label, { fontFamily: FONT_DISPLAY, fontSize: '12px', color: tag.color, stroke: '#07060E', strokeThickness: 5, letterSpacing: 1 }).setOrigin(0.5, 0);
+      c.add(txt);
+      if (tag.id === 'charging') this.tweens.add({ targets: txt, alpha: 0.35, duration: 380, yoyo: true, repeat: -1 });
     });
     v.cont.add(c);
     v.tags = c;
@@ -405,6 +405,20 @@ export default class CampaignBattleScene extends Phaser.Scene {
         xb.fillRect(x, y + 16, 206 * (u.xp / XP_PER_LEVEL), 6);
         this.pAdd(xb);
         y += 26;
+      }
+      // status effects with their turns left
+      const tags = statusTags(u);
+      if (tags.length) {
+        let tx = x;
+        for (const t of tags) {
+          const st = (u.status || {})[t.id];
+          const label = st && st.turns ? `${t.label} ${st.turns}` : t.label;
+          const txt = this.add.text(tx, y, label, textStyle('mono', { fontSize: '10px', color: t.color }));
+          this.pAdd(txt);
+          tx += txt.width + 8;
+          if (tx > x + 190) { tx = x; y += 13; }
+        }
+        y += 18;
       }
       // the fighter's moves, with cooldowns
       for (const m of u.moves) {
@@ -905,6 +919,14 @@ export default class CampaignBattleScene extends Phaser.Scene {
     }
   }
 
+  /** The fighting game's FX for an enemy's guard or charge, played on the unit. */
+  async enemySelfFx(u, move, v) {
+    this.paintTags(v);
+    const spec = await this.fxSpec(u, move);
+    const at = { x: v.cont.x, y: v.cont.y - 50 };
+    await playMoveFx(this, spec, { from: at, to: at, ref: UNIT_H, depth: 92, speed: this.speed, self: true });
+  }
+
   /** Charge, guard and power up: the move is the whole action. */
   async selfAction(move, apply, color) {
     const u = this.sel;
@@ -916,7 +938,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.paintTags(v);
     this.floatText(v.cont.x, v.cont.y - 100, label, color, 18);
     this.burst(v.cont.x, v.cont.y - 40, Phaser.Display.Color.HexStringToColor(color).color, 14, 60);
-    await this.wait(480);
+    const spec = await this.fxSpec(u, move);
+    await Promise.all([this.wait(480), playMoveFx(this, spec, { from: { x: v.cont.x, y: v.cont.y - 50 }, to: { x: v.cont.x, y: v.cont.y - 50 }, ref: UNIT_H, depth: 92, speed: this.speed, self: true })]);
     this.finishAction(u, true);
   }
 
@@ -979,6 +1002,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
         await this.strike(sv, tv, strike);
       }
     }
+    await this.showEffects(res.effects);
     for (const k of res.killed) {
       const v = this.views.get(k.uid);
       sfx('ko');
@@ -1120,6 +1144,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     A.moving = false; D.moving = false;
     await this.wait(160);
     const hpNow = new Map([[att.uid, before.get(att.uid)], [def.uid, before.get(def.uid)]]);
+    const pendingFx = [];
     for (const s of res.log) {
       const sv = s.by === 'att' ? A : D;
       const tv = s.by === 'att' ? D : A;
@@ -1127,10 +1152,15 @@ export default class CampaignBattleScene extends Phaser.Scene {
       const startX = sv.home;
       const dur = 0.58;
       sfx('whoosh');
+      const fxSpec = await this.fxSpec(sv.u, s.move);
       sv.rig.facing = dir; tv.rig.facing = -dir;
       const clip = this.startAttack(sv, dur, s.move);
       this.tween({ targets: sv.rig, x: startX + dir * (clip ? 70 : 110), duration: 190, ease: 'Cubic.easeOut' });
       await this.wait(dur * 1000 * 0.45);
+      if (fxSpec) {
+        const fxp = playMoveFx(this, fxSpec, { from: { x: sv.rig.x + dir * 70, y: FOOT - 150 }, to: { x: tv.rig.x, y: FOOT - 140 }, face: dir, ref: 270, depth: depth + 35, speed: this.speed });
+        if (fxSpec.proj) await fxp; else pendingFx.push(fxp);
+      }
       const tx0 = tv.home;
       if (s.hit) {
         playHit(s.dmg, 'kinetic', s.killed);
@@ -1172,6 +1202,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       if (!s.killed || s.by !== 'att' && false) await this.tween({ targets: sv.rig, x: startX, duration: 170, ease: 'Sine.easeInOut' });
       if (s.killed) break;
     }
+    await Promise.all(pendingFx);
     await this.wait(320);
     await this.tween({ targets: objs.filter((o) => o !== veil), alpha: 0, duration: 160 });
     await this.tween({ targets: veil, alpha: 0, duration: 120 });
@@ -1184,9 +1215,14 @@ export default class CampaignBattleScene extends Phaser.Scene {
     sfx('whoosh');
     const dur = 0.55;
     this.startAttack(sv, dur, s.move);
+    const fxSpec = await this.fxSpec(sv.u, s.move);
     const home = sv.cont.x;
     this.tween({ targets: sv.cont, x: home + dx * 16, duration: 140, yoyo: true, ease: 'Sine.easeOut', hold: 60 });
     await this.wait(dur * 1000 * 0.42);
+    if (fxSpec) {
+      const fxp = playMoveFx(this, fxSpec, { from: { x: sv.cont.x + dx * 20, y: sv.cont.y - 50 }, to: { x: tv.cont.x, y: tv.cont.y - 50 }, face: dx, ref: UNIT_H, depth: 92, speed: this.speed });
+      if (fxSpec.proj) await fxp;
+    }
     // impact
     const pct = tv.u.maxHp;
     if (s.hit) {
@@ -1205,6 +1241,67 @@ export default class CampaignBattleScene extends Phaser.Scene {
     await this.wait(dur * 1000 * 0.58 + 120);
     if (sv.atk) { sv.atk.t = sv.atk.dur; }
     void pct;
+  }
+
+  /** The move's FX art, loaded on demand; gives up after a moment so a slow file never stalls a fight. */
+  async fxSpec(u, move) {
+    if (!move) return null;
+    try { return await Promise.race([loadMoveFx(this, u.id, move), new Promise((r) => setTimeout(() => r(null), 1500))]); } catch { return null; }
+  }
+
+  /** Show what a strike did besides damage: stun, burn, knockback, lifesteal... */
+  async showEffects(list) {
+    const label = {
+      stun: ['STUNNED!', '#FF6FA8'], immune: ['STUN IMMUNE', '#D6E4FF'], burn: ['BURNING', '#FF7A3C'], poison: ['POISONED', '#9AE04A'],
+      slow: ['SLOWED', '#7CC8FF'], freeze: ['FROZEN', '#BFF0FF'], root: ['ROOTED', '#C9A15A'], blind: ['BLINDED', '#E8E8A0'],
+      weaken: ['WEAKENED', '#B79CFF'], vulnerable: ['EXPOSED', '#FF6F6F'], interrupt: ['CHARGE BROKEN', '#FFD166'], strip: ['STRIPPED', '#FFD166'],
+      push: ['KNOCKED BACK', '#FFFFFF'], pull: ['PULLED IN', '#FFFFFF'],
+    };
+    for (const e of list || []) {
+      const v = this.views.get(e.unit.uid);
+      if (!v) continue;
+      const head = v.cont.y - 100;
+      if (e.type === 'lifesteal') this.floatText(v.cont.x, head, `+${e.amount}`, '#53E0A8', 22);
+      else if (e.type === 'recoil' || e.type === 'thorns') this.floatText(v.cont.x, head, `-${e.amount}`, '#FF9A3C', 22);
+      else if (label[e.type]) this.floatText(v.cont.x, head, label[e.type][0], label[e.type][1], 17);
+      if ((e.type === 'push' || e.type === 'pull') && e.to) {
+        await this.tween({ targets: v.cont, x: tx(e.to.x) + TILE / 2, y: ty(e.to.y) + FEET, duration: 180, ease: 'Cubic.easeOut' });
+        this.sortDepth(v);
+      }
+      v.shownHp = e.unit.hp;
+      this.paintBar(v);
+      await this.wait(e.type === 'immune' || e.type === 'stun' ? 420 : 240);
+    }
+  }
+
+  /** Start-of-phase events: lost turns to a stun, burn / poison damage, regeneration, and anyone the damage KOs. */
+  async showPhaseEvents() {
+    const b = this.battle;
+    for (const e of b.phaseEvents || []) {
+      const v = this.views.get(e.unit.uid);
+      if (!v) continue;
+      const head = v.cont.y - 100;
+      if (e.type === 'skip') { this.floatText(v.cont.x, head, 'STUNNED · TURN LOST', '#FF6FA8', 16); sfx('menuMove'); this.setGrey(v, true); await this.wait(520); }
+      else if (e.type === 'burnTick' || e.type === 'poisonTick') {
+        sfx('hit');
+        this.floatText(v.cont.x, head, `-${e.amount}`, e.type === 'burnTick' ? '#FF7A3C' : '#9AE04A', 22);
+        v.rig?.setFlash(e.type === 'burnTick' ? 0xff7a3c : 0x9ae04a);
+        this.time.delayedCall(160 / this.speed, () => v.rig?.active && v.rig.setFlash(v.grey ? 0x7a7a8a : null));
+        await this.wait(380);
+      } else if (e.type === 'regenTick') { this.floatText(v.cont.x, head, `+${e.amount}`, '#53E0A8', 22); await this.wait(300); }
+      else if (e.type === 'dotKill') {
+        sfx('ko');
+        this.burst(v.cont.x, v.cont.y - 40, 0xff4f5f, 16, 70);
+        await this.tween({ targets: v.cont, alpha: 0, y: v.cont.y - 14, duration: 420 });
+        v.cont.destroy();
+        this.views.delete(e.unit.uid);
+        await this.runEvents(b.checkEvents('death', { unit: e.unit }));
+        continue;
+      }
+      v.shownHp = e.unit.hp;
+      this.paintBar(v);
+    }
+    b.phaseEvents = [];
   }
 
   floatText(x, y, text, color, size = 20) {
@@ -1298,8 +1395,9 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.playerPhaseAt = performance.now();
     this.phaseMusic(this.mapRotation.current());
     this.mode = 'busy';
-    const healed = b.startPhase('player');
-    for (const v of this.views.values()) this.setGrey(v, false);
+    // the very first player phase starts here; later ones were already started by endEnemyPhase() (ticking twice would double cooldowns and stuns)
+    const healed = first ? b.startPhase('player') : (b.lastHealed || []);
+    for (const v of this.views.values()) this.setGrey(v, v.u.acted && v.u.alive);
     this.refreshPanel();
     await this.banner('PLAYER PHASE', first ? this.chapter.objective : (this.chapter.win === 'defend' ? `Turn ${b.turn} of ${this.chapter.turns}` : `Turn ${b.turn}`), 0x35a8ff);
     if (first) await this.runEvents(b.checkEvents('start'));
@@ -1308,6 +1406,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
       const v = this.views.get(h.unit.uid);
       if (v) { v.shownHp = h.unit.hp; this.paintBar(v); this.floatText(v.cont.x, v.cont.y - 80, `+${h.amount}`, '#53E0A8', 20); }
     }
+    await this.showPhaseEvents();
+    if (b.result) { this.finish(); return; }
     this.mode = 'idle';
     this.refreshPanel();
   }
@@ -1334,6 +1434,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       const v = this.views.get(h.unit.uid);
       if (v) { v.shownHp = h.unit.hp; this.paintBar(v); this.floatText(v.cont.x, v.cont.y - 80, `+${h.amount}`, '#53E0A8', 20); }
     }
+    await this.showPhaseEvents();
     let guard = 0;
     while (!b.result && guard++ < 40) {
       const u = b.nextEnemy();
@@ -1352,8 +1453,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
         this.setCursor(plan.target.x, plan.target.y);
         await this.wait(260);
         await this.combat(u, plan.target, plan.move);
-      } else if (plan.guard) { b.guard(u, plan.guard); this.floatText(v.cont.x, v.cont.y - 100, `${plan.guard.name.toUpperCase()}!`, '#35A8FF', 20); await this.wait(420); }
-      else if (plan.charge) { b.startCharge(u, plan.charge); this.floatText(v.cont.x, v.cont.y - 100, `CHARGING ${plan.charge.name.toUpperCase()}`, '#FFD166', 18); sfx('menuConfirm'); await this.wait(520); }
+      } else if (plan.guard) { b.guard(u, plan.guard); this.floatText(v.cont.x, v.cont.y - 100, `${plan.guard.name.toUpperCase()}!`, '#35A8FF', 20); await this.enemySelfFx(u, plan.guard, v); await this.wait(300); }
+      else if (plan.charge) { b.startCharge(u, plan.charge); this.floatText(v.cont.x, v.cont.y - 100, `CHARGING ${plan.charge.name.toUpperCase()}`, '#FFD166', 18); sfx('menuConfirm'); await this.enemySelfFx(u, plan.charge, v); await this.wait(360); }
       else b.wait(u);
       this.paintTags(v);
       u.acted = true;

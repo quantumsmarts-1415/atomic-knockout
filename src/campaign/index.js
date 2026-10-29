@@ -59,8 +59,9 @@ export function autoplayPhase(battle, team = 'enemy') {
 
 /** Full AI-vs-AI chapter; returns the result and turns used. */
 export function autoplayChapter(battle, maxTurns = 40) {
+  let started = false;
   while (!battle.result && battle.turn <= maxTurns) {
-    battle.startPhase('player');
+    if (!started) { battle.startPhase('player'); started = true; } // later player phases begin in endEnemyPhase()
     battle.checkEvents('turn');
     if (battle.turn === 3) for (const n of battle.units.filter((x) => x.team === 'npc' && x.alive)) { n.team = 'player'; n.ai = 'aggressive'; n.acted = false; battle.recruited.push(n); } // the sim assumes a player reaches recruits by turn 3
     for (const u of battle.players) if (u.lord) u.ai = 'boss'; // the sim's lord sits tight (never leaves, only fights what walks up)

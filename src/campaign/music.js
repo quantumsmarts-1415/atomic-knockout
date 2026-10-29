@@ -5,13 +5,37 @@ export const TRACKS = {
   title: { loop: true },
   story: { loop: true },
   camp: { loop: true },
-  map_player: { loop: true },
+  map_player: { loop: true, len: 60 },
+  map_player_2: { loop: true, len: 49.2 },
+  map_player_3: { loop: true, len: 54.9 },
   map_enemy: { loop: true },
   boss: { loop: true },
   victory: { loop: false, len: 7.6 },
   defeat: { loop: false, len: 11.9 },
   levelup: { loop: false, len: 2.9 },
 };
+
+/** Player-phase map themes take turns; the enemy phase keeps map_enemy. */
+export const MAP_PLAYER_ROTATION = ['map_player', 'map_player_2', 'map_player_3'];
+
+/**
+ * Which player-phase map theme is up. A chapter opens on `rotation[chapterIndex % 3]`, so consecutive chapters differ,
+ * and within a chapter the theme moves on once it has been heard for one full loop (counted over player phases only,
+ * since the enemy phase interrupts it), so a short turn never cuts a song off mid-phrase.
+ */
+export function createMapRotation(chapterIndex = 0, rotation = MAP_PLAYER_ROTATION) {
+  let i = ((chapterIndex % rotation.length) + rotation.length) % rotation.length;
+  let heard = 0;
+  return {
+    /** Theme for the player phase that is starting now. */
+    current() {
+      if (heard >= (TRACKS[rotation[i]].len || 60)) { i = (i + 1) % rotation.length; heard = 0; }
+      return rotation[i];
+    },
+    /** Add the seconds a player phase lasted. */
+    heard(seconds) { heard += Math.max(0, seconds); },
+  };
+}
 
 const DIR = 'assets/campaign/music/';
 let ctx = null;

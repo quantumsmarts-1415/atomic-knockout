@@ -289,7 +289,7 @@ test('every campaign music track has an ogg and an mp3 on disk and a known role'
   // music.js touches window/localStorage only inside functions, so it imports fine in node
   const { TRACKS } = await import('../src/campaign/music.js');
   const names = Object.keys(TRACKS);
-  for (const need of ['title', 'story', 'camp', 'map_player', 'map_enemy', 'boss', 'victory', 'defeat', 'levelup']) assert.ok(names.includes(need), need);
+  for (const need of ['title', 'story', 'camp', 'map_player', 'map_player_2', 'map_player_3', 'map_enemy', 'boss', 'victory', 'defeat', 'levelup']) assert.ok(names.includes(need), need);
   for (const n of names) {
     for (const ext of ['ogg', 'mp3']) {
       const f = new URL(`../assets/campaign/music/${n}.${ext}`, import.meta.url);
@@ -298,4 +298,24 @@ test('every campaign music track has an ogg and an mp3 on disk and a known role'
   }
   const src = fs.readFileSync(new URL('../src/engine/sfx.js', import.meta.url), 'utf8');
   assert.ok(!src.includes('campaign/music'), 'fight-mode audio must not depend on campaign music');
+});
+
+test('player-phase map music rotates through three themes: per chapter, and per full loop heard', async () => {
+  const { createMapRotation, MAP_PLAYER_ROTATION, TRACKS } = await import('../src/campaign/music.js');
+  assert.deepEqual(MAP_PLAYER_ROTATION, ['map_player', 'map_player_2', 'map_player_3']);
+  for (const t of MAP_PLAYER_ROTATION) assert.ok(TRACKS[t].loop && TRACKS[t].len > 30, t);
+  // chapters open on different themes, all three get used
+  const opening = [0, 1, 2, 3, 4, 5, 6, 7].map((c) => createMapRotation(c).current());
+  assert.deepEqual(opening.slice(0, 3), MAP_PLAYER_ROTATION);
+  assert.equal(opening[3], MAP_PLAYER_ROTATION[0]);
+  // short turns keep the same song; once a loop has been heard the next one is up, wrapping round
+  const r = createMapRotation(0);
+  assert.equal(r.current(), 'map_player');
+  r.heard(20); assert.equal(r.current(), 'map_player');
+  r.heard(20); assert.equal(r.current(), 'map_player');
+  r.heard(25); assert.equal(r.current(), 'map_player_2');
+  r.heard(TRACKS.map_player_2.len); assert.equal(r.current(), 'map_player_3');
+  r.heard(TRACKS.map_player_3.len); assert.equal(r.current(), 'map_player');
+  // the boss theme and enemy phase are not part of the rotation
+  assert.ok(!MAP_PLAYER_ROTATION.includes('boss') && !MAP_PLAYER_ROTATION.includes('map_enemy'));
 });

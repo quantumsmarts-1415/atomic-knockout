@@ -28,10 +28,14 @@ numpy/scipy + ffmpeg, no samples). Files are in `assets/campaign/music/` as `.og
 | title | chapter select, summary | 45.7 s loop |
 | story | prologue / chapter intros and outros | 58.2 s loop |
 | camp | camp conversations list and talks | 41.7 s loop |
-| map_player | player phase | 60.0 s loop |
+| map_player | player phase (rotation 1 of 3) | 60.0 s loop |
+| map_player_2 | player phase (rotation 2 of 3): the original boss theme, E minor 156 bpm | 49.2 s loop |
+| map_player_3 | player phase (rotation 3 of 3): the second boss theme, F minor 140 bpm | 54.9 s loop |
 | map_enemy | enemy phase | 55.7 s loop |
 | boss | from the boss entrance card to the end of the chapter (F minor, war drums, sub bass) | 54.9 s loop |
 | victory / defeat / levelup | stingers (victory/defeat hold the next theme until they end; level-up just ducks it) | 7.6 / 11.9 / 2.9 s |
+
+Player-phase map music rotates (`createMapRotation` in `music.js`): chapter N opens on `map_player`, `_2`, `_3` in turn (N mod 3), and inside a chapter the theme moves on after one full loop of player-phase listening (the enemy phase always plays `map_enemy`).
 
 `src/campaign/music.js` plays them on its own AudioContext (fight mode audio is untouched), crossfading between themes.
 Volume = `ak-master` (the Sound setting) x `ak-music` (localStorage, default 0.6); **M** toggles `ak-music-mute`. Music stops when the campaign is left.

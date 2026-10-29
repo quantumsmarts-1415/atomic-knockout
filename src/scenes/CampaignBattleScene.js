@@ -15,7 +15,7 @@ import { TERRAIN } from '../campaign/terrain.js';
 import { key, ringTiles } from '../campaign/grid.js';
 import { tileKey, attackClipName, loadCampaignArt, sheetKey, walkReady, releaseWalk } from '../campaign/art.js';
 import { basicMove } from '../campaign/units.js';
-import { playMusic, stinger, watch, preload, toggleMute } from '../campaign/music.js';
+import { playMusic, stinger, watch, preload, toggleMute, createMapRotation, MAP_PLAYER_ROTATION } from '../campaign/music.js';
 import { playDialogue, playBossCard } from '../ui/campaignDialogue.js';
 
 const TILE = 64;
@@ -70,8 +70,10 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.events.once('shutdown', () => this.cleanup());
     window.__camp = this;
     this.bossMusic = false;
+    this.mapRotation = createMapRotation(this.chapterIndex);
+    this.playerPhaseAt = 0;
     watch(this.game);
-    preload(['map_player', 'map_enemy', ...(this.chapter.win === 'boss' || (this.chapter.events || []).some((e) => e.card) ? ['boss'] : [])]);
+    preload([this.mapRotation.current(), 'map_enemy', ...MAP_PLAYER_ROTATION, ...(this.chapter.win === 'boss' || (this.chapter.events || []).some((e) => e.card) ? ['boss'] : [])]);
     // Attack clips stream in behind the map. Until one arrives that unit lunges instead.
     this.noWalk = /[?&]nowalk\b/.test(window.location.search);
     loadCampaignArt(this, this.battle.units.map((u) => u.id), 'attack', () => { this.attackReady = true; });
@@ -1180,7 +1182,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
 
   async startPlayerPhase(first = false) {
     const b = this.battle;
-    this.phaseMusic('map_player');
+    this.playerPhaseAt = performance.now();
+    this.phaseMusic(this.mapRotation.current());
     this.mode = 'busy';
     const healed = b.startPhase('player');
     for (const v of this.views.values()) this.setGrey(v, false);
@@ -1207,6 +1210,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
 
   async runEnemyPhase() {
     const b = this.battle;
+    this.mapRotation.heard((performance.now() - this.playerPhaseAt) / 1000);
     this.phaseMusic('map_enemy');
     this.mode = 'busy';
     const healed = b.endPlayerPhase();

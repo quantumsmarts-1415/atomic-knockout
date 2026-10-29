@@ -4,13 +4,14 @@ import json, os, re, subprocess, sys
 
 SRC = '/tmp/ak-music'
 DST = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'campaign', 'music')
-LOOPS = {'map_player', 'map_enemy', 'boss', 'story', 'camp', 'title'}
+LOOPS = {'map_player', 'map_player_2', 'map_player_3', 'map_enemy', 'boss', 'story', 'camp', 'title'}
+TARGET = {'boss': -16}  # the boss theme sits a little above the map themes
 os.makedirs(DST, exist_ok=True)
 
 
 def norm(name):
     src = f'{SRC}/{name}.wav'
-    target = -19 if name in LOOPS else -16
+    target = TARGET.get(name, -19 if name in LOOPS else -16)
     af = f'loudnorm=I={target}:TP=-1.5:LRA=9:print_format=json'
     r = subprocess.run(['ffmpeg', '-hide_banner', '-nostats', '-i', src, '-af', af, '-f', 'null', '-'], capture_output=True, text=True)
     j = json.loads(re.search(r'\{[^{}]*"input_i"[^{}]*\}', r.stderr, re.S).group(0))

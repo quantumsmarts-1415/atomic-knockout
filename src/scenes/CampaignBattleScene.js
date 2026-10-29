@@ -15,7 +15,7 @@ import { TERRAIN } from '../campaign/terrain.js';
 import { key, ringTiles } from '../campaign/grid.js';
 import { tileKey, attackClipName, loadCampaignArt, sheetKey, walkReady, releaseWalk } from '../campaign/art.js';
 import { basicMove } from '../campaign/units.js';
-import { describeMove, effectText } from '../campaign/moves.js';
+import { healAmount, describeMove, effectText } from '../campaign/moves.js';
 import { statusTags } from '../campaign/status.js';
 import { loadMoveFx, playMoveFx, releaseMoveFx } from '../campaign/fx.js';
 import { playMusic, stinger, watch, preload, toggleMute, createMapRotation, MAP_PLAYER_ROTATION, STINGER_BOOST } from '../campaign/music.js';
@@ -423,7 +423,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       // the fighter's moves, with cooldowns
       for (const m of u.moves) {
         const cd = u.cd[m.key] || 0;
-        const tag = m.action === 'guard' ? 'GRD' : m.action === 'power' ? 'PWR' : m.charge ? `CHG ${m.dmg}` : `${m.dmg}`;
+        const tag = m.action === 'heal' ? 'HEAL' : m.action === 'guard' ? 'GRD' : m.action === 'power' ? 'PWR' : m.charge ? `CHG ${m.dmg}` : `${m.dmg}`;
         const col = cd > 0 ? THEME.disabledCss : THEME.mistCss;
         this.pAdd(this.add.text(x, y, `${m.name}${cd > 0 ? ` (${cd})` : ''}`, textStyle('caption', { fontSize: '11px', color: col })));
         this.pAdd(this.add.text(x + 204, y, tag, textStyle('mono', { fontSize: '11px', color: col })).setOrigin(1, 0));
@@ -593,15 +593,17 @@ export default class CampaignBattleScene extends Phaser.Scene {
       return;
     }
     if (this.mode === 'target') {
+      const healing = this.curMove?.action === 'heal';
+      const preview = (t) => { if (healing) this.previewHeal(t); else this.showForecast(this.sel, t, this.curMove); };
       if (u && this.targets.includes(u)) {
-        if (this.pending === u) this.doAttack(u);
-        else { this.pending = u; this.showForecast(this.sel, u, this.curMove); this.paintRanges({ attack: this.atkSet, targets: [u] }); }
+        if (this.pending === u) (healing ? this.doHeal(u) : this.doAttack(u));
+        else { this.pending = u; preview(u); this.paintRanges({ attack: this.atkSet, targets: [u] }); }
       } else if (fromKey && !u && this.targets.length) {
         // keyboard: cycle to the first target when the cursor isn't on one
         const t = this.targets[0];
         this.setCursor(t.x, t.y);
         this.pending = t;
-        this.showForecast(this.sel, t, this.curMove);
+        preview(t);
       } else this.cancel();
     }
   }
@@ -808,6 +810,9 @@ export default class CampaignBattleScene extends Phaser.Scene {
           items.push({ id: 'charge', move: m, label: m.name, tag: 'CHG', disabled: !!block, note: block || '' });
         } else if (m.action === 'power') {
           items.push({ id: 'power', move: m, label: m.name, tag: 'PWR', disabled: !!block, note: block || '' });
+        } else if (m.action === 'heal') {
+          const has = b.healTargets(u, u.x, u.y, m).length > 0;
+          items.push({ id: 'heal', move: m, label: m.name, tag: '+HP', disabled: !!block || !has, note: block || (has ? '' : 'No wounded ally in range') });
         } else if (m.action === 'guard') {
           items.push({ id: 'guard', move: m, label: m.name, tag: 'GRD', disabled: !!block, note: block || '' });
         }
@@ -903,7 +908,17 @@ export default class CampaignBattleScene extends Phaser.Scene {
     else if (it.id === 'charge') this.selfAction(it.move, () => { this.battle.startCharge(u, it.move); return `CHARGING ${it.move.name.toUpperCase()}`; }, '#FFD166');
     else if (it.id === 'guard') this.selfAction(it.move, () => { this.battle.guard(u, it.move); return `${it.move.name.toUpperCase()}`; }, '#35A8FF');
     else if (it.id === 'power') this.selfAction(it.move, () => { this.battle.powerUp(u, it.move); return `${it.move.name.toUpperCase()}!`; }, '#FF9A3C');
-    else if (it.id === 'attack' || it.id === 'release') {
+    else if (it.id === 'heal') {
+      const move = it.move;
+      this.mode = 'target';
+      this.curMove = move;
+      this.targets = this.battle.healTargets(u, u.x, u.y, move);
+      this.atkSet = new Map(ringTiles(this.battle.map, u.x, u.y, move.range[0], move.range[1]).map((t) => [key(t.x, t.y), t]));
+      this.pending = this.targets[0];
+      this.setCursor(this.pending.x, this.pending.y);
+      this.previewHeal(this.pending);
+      this.paintRanges({ attack: this.atkSet, targets: [this.pending] });
+    } else if (it.id === 'attack' || it.id === 'release') {
       const move = it.move;
       this.mode = 'target';
       this.curMove = move;
@@ -952,6 +967,41 @@ export default class CampaignBattleScene extends Phaser.Scene {
     if (await this.commitMove()) return;
     await this.combat(att, target, this.curMove);
     this.finishAction(att, true);
+  }
+
+  previewHeal(t) {
+    this.hideForecast();
+    this.toast(`${t.name}: +${healAmount(t)} HP  (${t.hp} -> ${t.hp + healAmount(t)} / ${t.maxHp})`);
+  }
+
+  async doHeal(target) {
+    const healer = this.sel;
+    this.mode = 'busy';
+    this.paintRanges();
+    if (await this.commitMove()) return;
+    await this.healAction(healer, target, this.curMove);
+    this.finishAction(healer, true);
+  }
+
+  /** A healer restores an ally: the fighter's guard FX plays on the ally, green numbers float up. */
+  async healAction(healer, target, move) {
+    const b = this.battle;
+    const vh = this.views.get(healer.uid);
+    const vt = this.views.get(target.uid);
+    if (vh?.rig) vh.rig.facing = target.x < healer.x ? -1 : target.x > healer.x ? 1 : vh.rig.facing;
+    const res = b.heal(healer, target, move);
+    this.floatText(vh.cont.x, vh.cont.y - 100, move.name.toUpperCase(), '#53E0A8', 16);
+    sfx('menuConfirm');
+    const spec = await this.fxSpec(healer, move.fxFrom || move);
+    const at = { x: vt.cont.x, y: vt.cont.y - 50 };
+    await Promise.all([this.wait(520), playMoveFx(this, spec, { from: at, to: at, ref: UNIT_H, depth: 92, speed: this.speed, self: true })]);
+    this.burst(vt.cont.x, vt.cont.y - 40, 0x53e0a8, 16, 60);
+    vt.shownHp = target.hp;
+    this.paintBar(vt);
+    this.floatText(vt.cont.x, vt.cont.y - 80, `+${res.amount}`, '#53E0A8', 22);
+    await this.wait(420);
+    if (res.xp) await this.showXpGain([res.xp]);
+    this.refreshPanel();
   }
 
   /** The move is final once an action is confirmed: only now do move-triggered events fire. True when the battle ended. */
@@ -1015,7 +1065,12 @@ export default class CampaignBattleScene extends Phaser.Scene {
       }
       await this.runEvents(b.checkEvents('death', { unit: k }));
     }
-    for (const x of res.xp) {
+    await this.showXpGain(res.xp);
+    this.refreshPanel();
+  }
+
+  async showXpGain(list) {
+    for (const x of list) {
       const v = this.views.get(x.unit.uid);
       if (!v) continue;
       this.floatText(v.cont.x, v.cont.y - UNIT_H - 8, `EXP +${x.amount}`, THEME.goldCss, 15);
@@ -1029,7 +1084,6 @@ export default class CampaignBattleScene extends Phaser.Scene {
         await this.banner(`LEVEL UP  ${x.unit.name.toUpperCase()}  Lv ${lu.level}`, parts, THEME.gold);
       }
     }
-    this.refreshPanel();
   }
 
   /** Pillar of light, a ring that rises off the feet, and sparkles. */
@@ -1449,7 +1503,11 @@ export default class CampaignBattleScene extends Phaser.Scene {
         await this.walk(u, b.pathFor(u, plan.to, reach));
         await this.runEvents(b.checkEvents('move'));
       }
-      if (plan.target) {
+      if (plan.heal) {
+        this.setCursor(plan.heal.ally.x, plan.heal.ally.y);
+        await this.wait(260);
+        await this.healAction(u, plan.heal.ally, plan.heal.move);
+      } else if (plan.target) {
         this.setCursor(plan.target.x, plan.target.y);
         await this.wait(260);
         await this.combat(u, plan.target, plan.move);

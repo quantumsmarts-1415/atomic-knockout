@@ -6,7 +6,7 @@ import { hostile, parseMap, reachable, threatTiles, ringTiles, pathTo, key, dist
 import { terrainAt } from './terrain.js';
 import { resolve, forecast } from './combat.js';
 import { awardXp, moveInfo } from './units.js';
-import { campaignMoves, unionRange } from './moves.js';
+import { campaignMoves, unionRange, healMoveOf, healAmount } from './moves.js';
 import { planEnemy } from './ai.js';
 import { applyHitEffects, applyRecoil, startOfTurn, cleanse } from './status.js';
 
@@ -21,7 +21,7 @@ function makeUnit(rec, team, x, y, extra = {}) {
     name: CHARACTERS[rec.id]?.name || rec.id,
     level: rec.level, xp: rec.xp, hp: rec.hp, maxHp: rec.maxHp,
     power: rec.power, def: rec.def, spd: rec.spd, mov: rec.mov, range: unionRange(rec.id),
-    moves: campaignMoves(rec.id), cd: {}, charging: null, status: {},
+    moves: campaignMoves(rec.id).concat(healMoveOf(rec.id) || []), cd: {}, charging: null, status: {},
     lord: !!rec.lord, moveName: info.name,
     ai: 'aggressive', boss: false,
     acted: false, alive: true,
@@ -147,6 +147,30 @@ export class CampaignBattle {
     unit.cd[move.key] = move.cd;
     unit.acted = true;
     return unit.status.power;
+  }
+
+  /** Wounded allies a healer could heal from (x,y) with `move` (default: its HEAL), nearest first. */
+  healTargets(unit, x = unit.x, y = unit.y, move = unit.moves.find((m) => m.action === 'heal')) {
+    if (!move) return [];
+    const out = [];
+    for (const t of ringTiles(this.map, x, y, move.range[0], move.range[1])) {
+      const u = this.unitAt(t.x, t.y);
+      if (u && u !== unit && u.team === unit.team && u.hp < u.maxHp) out.push(u);
+    }
+    return out;
+  }
+
+  /** Heal `target`: the whole action. A player healer earns EXP for what it restored. Returns { amount, xp }. */
+  heal(healer, target, move = healer.moves.find((m) => m.action === 'heal')) {
+    const amount = healAmount(target);
+    target.hp += amount;
+    healer.acted = true;
+    let xp = null;
+    if (healer.team === 'player' && amount > 0) {
+      const gain = Math.min(45, 12 + Math.round(amount * 0.8));
+      xp = { unit: healer, amount: gain, levelUps: awardXp(healer, gain, this.rng) };
+    }
+    return { amount, xp, target, healer, move };
   }
 
   canSeize(unit) {

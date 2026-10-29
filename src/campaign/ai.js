@@ -6,6 +6,7 @@
 import { reachable, ringTiles, distanceField, key, dist, hostile } from './grid.js';
 import { forecast } from './combat.js';
 import { terrainAt } from './terrain.js';
+import { healAmount } from './moves.js';
 
 function expected(f, side) {
   const s = f[side];
@@ -52,9 +53,33 @@ export function planEnemy(state, unit) {
   return planNormal(state, unit, reach, foes, origin);
 }
 
+/** A healer's best heal: the most wounded ally it can reach (lord and boss first), from the tile nearest to it. */
+function bestHeal(state, unit, reach) {
+  const move = unit.moves.find((m) => m.action === 'heal');
+  if (!move) return null;
+  let best = null;
+  const stops = unit.ai === 'boss' ? [{ x: unit.x, y: unit.y, cost: 0 }] : [...reach.stops.values()];
+  for (const stop of stops) {
+    for (const t of ringTiles(state.map, stop.x, stop.y, move.range[0], move.range[1])) {
+      const ally = state.unitAt(t.x, t.y);
+      if (!ally || ally === unit || ally.team !== unit.team || !ally.alive) continue;
+      const missing = ally.maxHp - ally.hp;
+      if (missing < Math.min(healAmount({ ...ally, hp: 0 }) * 0.6, ally.maxHp * 0.3)) continue; // not worth a turn
+      const score = missing / ally.maxHp * 100 + (ally.lord || ally.boss ? 10 : 0) - stop.cost * 0.5;
+      if (!best || score > best.score) best = { to: { x: stop.x, y: stop.y }, target: null, heal: { move, ally }, score };
+    }
+  }
+  return best;
+}
+
 function planNormal(state, unit, reach, foes, origin) {
   const moves = state.usableAttacks(unit);
   const best = bestAttack(state, unit, reach, foes, moves);
+  // a healer patches up wounded allies before it fights, unless it can take a kill right now
+  if (!best || !best.kill) {
+    const heal = bestHeal(state, unit, reach);
+    if (heal) return heal;
+  }
   if (best) {
     // wounded and no kill on offer: brace instead (guard moves exist for every fighter that has a defense slot)
     const guard = unit.moves.find((m) => m.action === 'guard');

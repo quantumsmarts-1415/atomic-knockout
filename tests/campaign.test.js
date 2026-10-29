@@ -703,3 +703,82 @@ test('moves reuse the fighting game FX art when the move has some', () => {
   }
   assert.ok(withFx / attacks > 0.6, `${withFx}/${attacks} attack moves have FX art`);
 });
+
+// ------------------------------------------------------------------ healing (note 8): healers + healing terrain, no items
+import { HEALERS, healMoveOf, isHealer, healAmount, HEAL_FRAC } from '../src/campaign/moves.js';
+
+test('2-4 fighters can heal: one is in the first chapter party, some enemy healers appear later; nobody else has the action', () => {
+  const ids = Object.keys(HEALERS);
+  assert.ok(ids.length >= 2 && ids.length <= 4, `healers: ${ids}`);
+  const ch1 = CHAPTERS[0].party.map((p) => p.id);
+  assert.ok(ids.some((id) => ch1.includes(id)), 'a healer in the starting party');
+  const enemyHealerChapters = CHAPTERS.map((c, i) => (c.enemies.some((e) => isHealer(e.id)) ? i : -1)).filter((i) => i >= 0);
+  assert.ok(enemyHealerChapters.length >= 1 && enemyHealerChapters[0] >= 2, `enemy healers show up later: ${enemyHealerChapters}`);
+  for (const id of Object.keys(CHARACTERS)) {
+    const has = !!healMoveOf(id);
+    assert.equal(has, isHealer(id), id);
+    assert.ok(campaignMoves(id).every((m) => m.action !== 'heal'), 'the four fighting-game moves stay as they are');
+  }
+  for (const id of ids) assert.match(describeMove(healMoveOf(id)).join(' '), /HEAL .*max HP/);
+});
+
+test('HEAL restores 30% of an ally\'s max HP at range 1-2, takes the turn, never overheals, earns EXP, and cannot target yourself or the unhurt', () => {
+  const { b, a } = twoUnits('hydra', 'kyle', 3);
+  const helen = b.players.find((u) => u.id === 'helen');
+  const heal = helen.moves.find((m) => m.action === 'heal');
+  assert.ok(heal && heal.range[0] === 1 && heal.range[1] === 2);
+  b.moveUnit(helen, a.x + 1, a.y);                      // next to hydra
+  assert.equal(b.healTargets(helen).length, 0, 'nobody is hurt');
+  a.hp = 10;
+  assert.deepEqual(b.healTargets(helen).map((u) => u.id), ['hydra']);
+  helen.hp = helen.maxHp - 5;
+  assert.ok(!b.healTargets(helen).includes(helen), 'not yourself');
+  b.moveUnit(helen, a.x + 3, a.y);
+  assert.equal(b.healTargets(helen).length, 0, 'out of range (3 tiles)');
+  b.moveUnit(helen, a.x + 2, a.y);
+  assert.equal(b.healTargets(helen).length, 1, 'range 2 reaches');
+  const want = Math.round(a.maxHp * HEAL_FRAC);
+  assert.equal(healAmount(a), want);
+  const xp0 = helen.xp;
+  const res = b.heal(helen, a, heal);
+  assert.equal(res.amount, want);
+  assert.equal(a.hp, 10 + want);
+  assert.equal(helen.acted, true, 'healing is the whole action');
+  assert.ok(helen.xp > xp0 || helen.level > 1, 'the healer earns EXP');
+  a.hp = a.maxHp - 3;
+  assert.equal(b.heal(helen, a, heal).amount, 3, 'never beyond max HP');
+  assert.equal(a.hp, a.maxHp);
+  assert.equal(b.moveBlock(helen, heal), null);
+  assert.ok(!b.usableAttacks(helen).includes(heal), 'heal is not an attack');
+});
+
+test('forts, villages and thrones heal ~20% of max HP at the start of the owner\'s phase, for allies and enemies alike', () => {
+  for (const id of ['fort', 'village', 'throne']) assert.equal(TERRAIN[id].heal, 0.2, id);
+  assert.ok(TERRAIN.fort.def > 0 && TERRAIN.village.def > 0 && TERRAIN.throne.def > 0 && TERRAIN.village.avoid > 0, 'with defence and avoid bonuses');
+  for (const id of ['plain', 'forest', 'mountain', 'road']) assert.ok(!TERRAIN[id].heal);
+  const { b, a, d } = twoUnits('hydra', 'kyle', 4);
+  const row = [...b.map.tiles[a.y]];
+  row[a.x] = 'village'; row[d.x] = 'fort';
+  b.map.tiles[a.y] = row;
+  a.hp = a.maxHp - 30; d.hp = d.maxHp - 30;
+  const healed = b.endEnemyPhase();                       // the player's phase begins
+  assert.ok(healed.some((h) => h.unit === a && h.amount === Math.round(a.maxHp * 0.2)), 'village heals the player at their phase start');
+  assert.equal(d.hp, d.maxHp - 30, 'the enemy waits for its own phase');
+  const h2 = b.endPlayerPhase();
+  assert.ok(h2.some((h) => h.unit === d && h.amount === Math.round(d.maxHp * 0.2)), 'fort heals the enemy at its phase start');
+});
+
+test('enemy healers heal a wounded ally instead of attacking, and there are no items anywhere', () => {
+  const { b, d } = twoUnits('hydra', 'kyle', 8);
+  const iona = Object.assign({}, d, { uid: 1001, id: 'iona', rec: makeRecord('iona', 1), x: d.x - 1, y: d.y, moves: [...campaignMoves('iona'), healMoveOf('iona')], cd: {}, status: {}, hp: 70, maxHp: 70, acted: false });
+  b.units.push(iona);
+  d.hp = 20;
+  const plan = b.plan(iona);
+  assert.ok(plan.heal && plan.heal.ally === d, 'the healer picks the wounded ally');
+  const before = d.hp;
+  b.heal(iona, plan.heal.ally, plan.heal.move);
+  assert.ok(d.hp > before);
+  d.hp = d.maxHp;                                         // nobody to heal now: back to fighting
+  assert.ok(!b.plan(iona).heal);
+  for (const u of b.units) assert.ok(u.moves.every((m) => !/item|potion|vulnerary/i.test(m.action + m.key)), 'no item actions');
+});

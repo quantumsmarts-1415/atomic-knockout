@@ -105,6 +105,39 @@ function build(id, key, slot, mv, charDef) {
   };
 }
 
+// Healers: these fighters get a fifth action, HEAL, on a wounded ally 1-2 tiles away. It takes the turn like a guard.
+// To change who heals, edit this table (name = the action's name; the FX art comes from the fighter's guard move).
+export const HEALERS = {
+  helen: 'Soothing Breeze',
+  oxana: 'Breath of Life',
+  iona: 'Antiseptic Mist',
+  lana: 'Restoring Glow',
+};
+export const HEAL_FRAC = 0.3;     // of the ally's max HP
+export const HEAL_MIN = 12;
+export const HEAL_RANGE = [1, 2];
+
+export function isHealer(id) { return Object.prototype.hasOwnProperty.call(HEALERS, id); }
+
+/** How much a heal restores `target` (never more than the missing HP). */
+export function healAmount(target) {
+  return Math.max(0, Math.min(target.maxHp - target.hp, Math.max(HEAL_MIN, Math.round(target.maxHp * HEAL_FRAC))));
+}
+
+const healCache = new Map();
+/** The healer's HEAL move, or null for everyone else. */
+export function healMoveOf(id) {
+  if (!isHealer(id)) return null;
+  if (!healCache.has(id)) {
+    const guard = campaignMoves(id).find((m) => m.action === 'guard') || null;
+    healCache.set(id, {
+      key: 'heal', slot: 'heal', name: HEALERS[id], kind: 'heal', element: 'kinetic', pct: 0, raw: {},
+      action: 'heal', attack: false, dmg: 0, range: HEAL_RANGE, cd: 0, effects: [], frac: HEAL_FRAC, min: HEAL_MIN, fxFrom: guard,
+    });
+  }
+  return healCache.get(id);
+}
+
 const cache = new Map();
 
 /** The unit's four campaign moves in menu order (basic, charge, special, guard). */
@@ -162,7 +195,8 @@ export function effectText(e) {
 /** Menu / info text for a move. */
 export function describeMove(m) {
   const lines = [];
-  if (m.action === 'guard') lines.push(`GUARD  takes -${Math.round(m.guard * 100)}% damage until your next turn`);
+  if (m.action === 'heal') lines.push(`HEAL  restores ${Math.round(m.frac * 100)}% of an ally's max HP (at least ${m.min})`, `range ${m.range[0]}-${m.range[1]}, allies only; the whole action. Healing earns EXP.`);
+  else if (m.action === 'guard') lines.push(`GUARD  takes -${Math.round(m.guard * 100)}% damage until your next turn`);
   else if (m.action === 'power') lines.push('POWER UP  (cooldown 3)');
   else {
     const r = m.range[0] === m.range[1] ? `${m.range[0]}` : `${m.range[0]}-${m.range[1]}`;

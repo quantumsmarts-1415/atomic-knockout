@@ -12,8 +12,8 @@ export const TERRAIN = {
   water: { id: 'water', name: 'Water', cost: Infinity, def: 0, avoid: 0, glyph: '~' },
   wall: { id: 'wall', name: 'Wall', cost: Infinity, def: 0, avoid: 0, glyph: '#' },
   fort: { id: 'fort', name: 'Fort', cost: 1, def: 2, avoid: 20, heal: 0.2, glyph: 'F' },
-  village: { id: 'village', name: 'Village', cost: 1, def: 1, avoid: 10, glyph: 'v' },
-  throne: { id: 'throne', name: 'Throne', cost: 1, def: 3, avoid: 30, heal: 0.1, glyph: 'T' },
+  village: { id: 'village', name: 'Village', cost: 1, def: 1, avoid: 10, heal: 0.2, glyph: 'v' },
+  throne: { id: 'throne', name: 'Throne', cost: 1, def: 3, avoid: 30, heal: 0.2, glyph: 'T' },
 };
 
 export const GLYPH_TO_TERRAIN = Object.fromEntries(Object.values(TERRAIN).map((t) => [t.glyph, t.id]));

@@ -85,6 +85,11 @@ The fighting game's move effects become tactics effects. Each is written out in 
 
 Moves with FX art in `assets/fx/<fighter>/<move>/` play it in the battle cutaway, on self-targeted moves (guard/charge/power up), and on the map; textures load on demand and are released when the battle ends.
 
+## Healing (no items)
+There are no items in campaign mode. HP comes back two ways:
+- **Healers.** Helen (in the first party), Oxana (joins in chapter 2) and, on the enemy side, Iona (chapter 4) and Lana (chapter 6) have a fifth action, HEAL: restore 30% of a wounded ally's max HP (at least 12) at range 1-2. It takes the turn like a guard, never targets the healer itself, and earns the healer EXP. Enemy healers heal their wounded allies before they fight (unless they can take a KO). To change who heals, edit `HEALERS` in `src/campaign/moves.js`; the FX art is the fighter's guard move.
+- **Healing terrain.** Forts, villages and thrones restore 20% of max HP at the start of the owner's phase (either side), on top of their defense and avoid bonuses. The terrain card shows `Heals 20%/turn`.
+
 ## Chapter data (`src/campaign/story/atomic-knockout.js`; adding your own story: `docs/campaign-story.md`)
 `win`: `rout | seize | boss | defend | escape` (`seize: [x,y]`, `turns: N`, `exit: [[x,y],...]`).
 `intro` / `outro`: lines `{ who: fighterId | null, text }` (`null` = narration).

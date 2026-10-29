@@ -174,7 +174,7 @@ export const CHAPTERS = [
       { id: 'silas', join: 'level' },
     ],
     enemies: [
-      { id: 'cooper', level: 3, x: 3, y: 4, ai: 'aggressive' },
+      { id: 'cooper', level: 2, x: 3, y: 4, ai: 'aggressive' },
       { id: 'tex', level: 3, x: 12, y: 4, ai: 'aggressive' },
       { id: 'manny', level: 3, x: 3, y: 3, ai: 'aggressive' },
       { id: 'molly', level: 3, x: 14, y: 3, ai: 'aggressive' },

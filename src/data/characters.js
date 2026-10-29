@@ -1172,7 +1172,6 @@ export const CHARACTERS = {
         clips: {
           // Approved idle. Move sheets play the body for each slot.
           idle: { count: 6, fps: 6, loop: true, frameW: 710, frameH: 734, footY: 0.9782, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
-          walk: { count: 29, fps: 10, loop: true, frameW: 458, frameH: 674, footY: 0.9837, visibleH: 636, bodyH: 636, displayScale: 0.19497 },
           attack: { count: 12, fps: 18, loop: false, frameW: 710, frameH: 734, footY: 0.9782, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
           charge: { count: 12, fps: 18, loop: false, frameW: 712, frameH: 743, footY: 0.9664, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
           defense: { count: 12, fps: 18, loop: false, frameW: 780, frameH: 734, footY: 0.9782, visibleH: 634, bodyH: 634, displayScale: 124 / 634 },
@@ -1492,10 +1491,6 @@ export const CHARACTERS = {
         displayScale: 126 / 1013,
         clips: {
           idle: { count: 6, fps: 6, loop: true, frameW: 594, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
-          // Walk from Gemini video maggie_walk_v1 (pink-magenta key, in place,
-          // faces right like her idle). Frames 30-60 step 3 = one 33-frame stride
-          // at 24fps, so fps 8 is true walking speed and the loop is seamless.
-          walk: { count: 11, fps: 8, loop: true, frameW: 398, frameH: 688, footY: 0.966, visibleH: 638, bodyH: 638, displayScale: 126 / 638 },
           // Flare Jab. Blinding Flare is also the Unquenchable gather.
           attack: { count: 12, fps: 18, loop: false, frameW: 988, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },
           charge: { count: 12, fps: 18, loop: false, frameW: 868, frameH: 1058, footY: 0.9849, visibleH: 1013, bodyH: 1013, displayScale: 126 / 1013 },

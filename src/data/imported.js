@@ -3172,17 +3172,6 @@ export const IMPORTED_ROSTER = {
             "bodyH": 926,
             "displayScale": 132 / 926
           },
-          "walk": {
-            "count": 12,
-            "fps": 9.6,
-            "loop": true,
-            "frameW": 104,
-            "frameH": 148,
-            "footY": 0.9392,
-            "visibleH": 134,
-            "bodyH": 134,
-            "displayScale": 0.98507
-          },
           "attack": {
             "count": 12,
             "fps": 18,
@@ -6392,17 +6381,6 @@ export const IMPORTED_ROSTER = {
             "visibleH": 1050,
             "bodyH": 1050,
             "displayScale": 132 / 1050
-          },
-          "walk": {
-            "count": 8,
-            "fps": 6.4,
-            "loop": true,
-            "frameW": 105,
-            "frameH": 148,
-            "footY": 0.9392,
-            "visibleH": 134,
-            "bodyH": 134,
-            "displayScale": 0.98507
           },
           "attack": {
             "count": 12,

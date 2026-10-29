@@ -81,7 +81,6 @@ const SHEET_SLUGS = {
   },
   gail: {
     basicDirectional: 'embrittle-grab',
-    specialDefense: 'melt-point',
   },
   kyle: { specialDirectional: 'nerve-shock' },
   natalie: { specialDirectional: 'salt-spikes' },

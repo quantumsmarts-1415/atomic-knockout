@@ -306,7 +306,7 @@ test('a right-facing attack on a left-facing idle stays in front', () => {
   const mirrored = frameToWorld([700, 200], def.frameW, def.frameH, def.footY, def.displayScale, -1, 1, 400, 500);
   assert.ok(forward.x > 400);
   assert.ok(mirrored.x < 400);
-  const bodyName = 'body-basicDirectional';
+  const bodyName = 'body-specialDirectional';
   const rhoda = CHARACTERS.rhoda.art.sheets.clips[bodyName];
   const rose = sheetMeta('rhoda', bodyName);
   const fist = rose.anchors.tip[rose.release];
@@ -315,9 +315,9 @@ test('a right-facing attack on a left-facing idle stays in front', () => {
     x: 400,
     y: 500,
     facing: 1,
-    currentMoveKey: 'basicDirectional',
+    currentMoveKey: 'specialDirectional',
     charDef: CHARACTERS.rhoda,
-    rig: { moveKey: 'basicDirectional', sheetClip: 'attack', sheetFrame: rose.release },
+    rig: { moveKey: 'specialDirectional', sheetClip: 'attack', sheetFrame: rose.release },
   };
   const world = frameToWorld(
     fist, rhoda.frameW, rhoda.frameH, rhoda.footY, rhoda.displayScale,

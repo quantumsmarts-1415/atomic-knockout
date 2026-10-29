@@ -3135,17 +3135,6 @@
             "bodyH": 133,
             "displayScale": 0.99248
           },
-          "walk": {
-            "count": 12,
-            "fps": 9.6,
-            "loop": true,
-            "frameW": 104,
-            "frameH": 148,
-            "footY": 0.9392,
-            "visibleH": 134,
-            "bodyH": 134,
-            "displayScale": 0.98507
-          },
           "attack": {
             "count": 6,
             "fps": 12,
@@ -6298,17 +6287,6 @@
             "visibleH": 133,
             "bodyH": 133,
             "displayScale": 0.99248
-          },
-          "walk": {
-            "count": 8,
-            "fps": 6.4,
-            "loop": true,
-            "frameW": 105,
-            "frameH": 148,
-            "footY": 0.9392,
-            "visibleH": 134,
-            "bodyH": 134,
-            "displayScale": 0.98507
           },
           "attack": {
             "count": 6,

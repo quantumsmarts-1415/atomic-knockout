@@ -218,31 +218,70 @@ def t_map_enemy():
     render_track('map_enemy', mx)
 
 
+def put_taiko(mx, nb, vel=0.9, gain=0.9):
+    """War-drum bed: heavy hits on the strong beats, a rolling pickup into every 4th bar, a big fill every 8th."""
+    for bi in range(nb):
+        b = bi * 4
+        mx.drum('taiko', b, vel, gain, 0, 0.18)
+        mx.drum('kick', b, vel, gain * 0.9)
+        mx.drum('taiko', b + 1.5, vel * 0.65, gain, -0.2, 0.15)
+        mx.drum('kick', b + 2, vel * 0.9, gain * 0.9)
+        mx.drum('bigsnare', b + 2, vel * 0.95, gain * 0.9, 0, 0.3)
+        mx.drum('taiko', b + 2.5, vel * 0.6, gain, 0.2, 0.15)
+        mx.drum('kick', b + 3.5, vel * 0.7, gain * 0.9)
+        for i in range(8):
+            mx.drum('hat', b + i * 0.5 + 0.25, vel * (0.4 if i % 2 else 0.3), gain * 0.55, 0.35 if i % 2 else -0.35)
+        if bi % 4 == 3:
+            for k in range(6):
+                mx.drum('taiko' if k < 4 else 'bigsnare', b + 2.5 + k * 0.25, vel * (0.5 + 0.08 * k), gain, (k - 3) * 0.12, 0.2)
+        if bi % 8 == 7:
+            for k in range(8):
+                mx.drum(['tom', 'tom', 'tomlo', 'tomlo', 'bigsnare', 'bigsnare', 'bigsnare', 'bigsnare'][k], b + 3 + k * 0.125, vel * (0.5 + 0.07 * k), gain, (k - 4) * 0.15, 0.2)
+        if bi % 8 == 0:
+            mx.drum('crash', b, vel * 0.75, gain * 0.8, 0, 0.3)
+
+
 def t_boss():
-    bpm, nb = 156, 32
-    mx = Mix(bpm, nb)
-    ch1 = ['Em', 'Em', 'C', 'D', 'Em', 'C', 'D', 'B7']
-    ch2 = ['Am', 'Em', 'C', 'D', 'Am', 'Em', 'B7', 'B7']
-    m1 = bars_of('E5:.5 G5:.5 B5:1 E6:1 D6:.5 B5:.5 | B5:.5 E6:.5 G6:1 F#6:1 E6:1 | C6:1 G5:.5 C6:.5 E6:1 D6:.5 C6:.5 | D6:1 A5:.5 D6:.5 F#6:2 |'
-                  'G6:1 E6:.5 G6:.5 B6:1 A6:.5 G6:.5 | E6:1 G6:1 E6:1 C6:1 | F#6:1 A6:1 F#6:1 D6:1 | D#6:1 F#6:1 B6:1 A6:.5 F#6:.5')
-    m2 = bars_of('A5:.5 C6:.5 E6:1 A6:2 | G6:1 E6:1 B5:2 | C6:.5 E6:.5 G6:1 E6:1 C6:1 | A5:.5 D6:.5 F#6:1 A6:2 |'
-                 'E6:1 A6:1 G6:1 E6:1 | G6:.5 F#6:.5 E6:1 B5:1 E6:1 | D#6:.5 F#6:.5 A6:1 F#6:1 D#6:1 | B5:1 D#6:1 F#6:1 B6:1')
+    """F minor with the Phrygian Gb and the harmonic-minor E natural: dark, heavy, half-time war drums over a driving distorted bass."""
+    bpm, nb = 140, 32
+    mx = Mix(bpm, nb, tail=5.0)
+    ch1 = ['Fm', 'Fm', 'Gb', 'Gb', 'Db', 'C', 'Fm', 'C']
+    ch2 = ['Bbm', 'Fm', 'Db', 'C', 'Bbm', 'Gb', 'C', 'C']
+    m1 = bars_of('F5:1.5 F5:.5 Ab5:1 C6:1 | Bb5:1 Ab5:1 G5:.5 F5:.5 Ab5:1 | Gb5:1.5 Gb5:.5 Bb5:1 Db6:1 | C6:1 Bb5:1 Gb5:2 |'
+                  'Ab5:1 Db6:1 F6:1.5 Eb6:.5 | E6:1 G6:1 C6:2 | F6:1.5 Eb6:.5 Db6:1 C6:1 | G5:.5 C6:.5 E6:1 Db6:2')
+    m2 = bars_of('Bb5:1 Db6:1 F6:2 | C6:1.5 Db6:.5 C6:1 Ab5:1 | F6:1 Ab6:1 F6:1 Db6:1 | E6:1 G6:1 E6:2 |'
+                 'F6:.5 Db6:.5 Bb5:1 Db6:1 F6:1 | Gb6:1.5 F6:.5 Db6:1 Bb5:1 | E6:.5 G6:.5 C7:1 Bb6:1 G6:1 | G6:1 E6:1 C6:2')
     chords = ch1 + ch1 + ch2 + ch1
-    put_bass(mx, chords, 'gallop', 0.85, 0.75)
-    put_drums(mx, nb, 'boss', 0.9, 0.8)
-    put_pad(mx, chords, 'strings', 3, 0.6, 0.42)
-    put_pad(mx, chords, 'choir', 4, 0.6, 0.38, only=(8, 32))
-    put_arp(mx, chords, 'lead', 4, 0.25, 0.4, 0.25, only=(0, 8), pan=0.4)
-    put_melody(mx, m1, 'horn', 0, 0, 0.9, 0.62, 0, 0.3)
-    put_melody(mx, m1, 'lead', 8, 0, 0.8, 0.45, -0.2, 0.2)
-    put_melody(mx, m1, 'horn', 8, 0, 0.9, 0.6, 0.1, 0.3)
-    put_melody(mx, m2, 'horn', 16, 0, 0.95, 0.65, 0, 0.3)
-    put_melody(mx, m2, 'lead', 16, 12, 0.7, 0.3, 0.3, 0.3)
-    put_melody(mx, m2, 'bell', 16, 12, 0.7, 0.28, -0.3, 0.5)
-    put_melody(mx, m1, 'horn', 24, 0, 0.95, 0.62, 0, 0.3)
-    put_melody(mx, m1, 'stab', 24, -12, 0.9, 0.45, 0, 0.2)
-    put_melody(mx, m1, 'lead', 24, 12, 0.7, 0.3, 0.3, 0.3)
-    render_track('boss', mx)
+    # weight: sub sine under everything, distorted bass driving 8ths (16ths in the big sections)
+    for bi, c in enumerate(chords):
+        root = chord(c, 1)[0]
+        mx.note('subbass', root + 12 if root < 30 else root, bi * 4, 3.95, 0.95, 1.0, 0, 0.02)
+    put_bass(mx, chords, 'eighths', 0.9, 0.8, only=(0, 8))
+    put_bass(mx, chords, 'gallop', 0.95, 0.8, only=(8, 32))
+    put_taiko(mx, nb, 0.95, 0.95)
+    # low brass stabs on the downbeat + choir and strings for the cinematic width
+    for bi, c in enumerate(chords):
+        t = chord(c, 2)
+        mx.note('lowbrass', t[0] + 12, bi * 4, 1.2, 0.95, 0.55, -0.15, 0.3)
+        mx.note('lowbrass', t[2] + 12, bi * 4, 1.2, 0.85, 0.4, 0.15, 0.3)
+        if bi % 2 == 1:
+            mx.note('lowbrass', t[0] + 12, bi * 4 + 2.5, 0.5, 0.8, 0.45, 0, 0.3)
+    put_pad(mx, chords, 'choir', 3, 0.7, 0.5, 0.5)
+    put_pad(mx, chords, 'strings', 3, 0.55, 0.4, 0.5, only=(8, 32))
+    put_arp(mx, chords, 'lead', 4, 0.25, 0.35, 0.18, only=(8, 16), pan=0.6)
+    # melody: low brass + lead first time, horns doubled an octave up for the second theme, bells for sparkle
+    put_melody(mx, m1, 'lowbrass', 0, -12, 0.95, 0.7, 0, 0.3)
+    put_melody(mx, m1, 'horn', 0, 0, 0.8, 0.45, 0.1, 0.35)
+    put_melody(mx, m1, 'horn', 8, 0, 0.95, 0.6, 0, 0.35)
+    put_melody(mx, m1, 'lead', 8, 12, 0.7, 0.28, -0.3, 0.3)
+    put_melody(mx, m2, 'horn', 16, 0, 1.0, 0.65, 0, 0.35)
+    put_melody(mx, m2, 'lowbrass', 16, -12, 0.95, 0.55, 0, 0.3)
+    put_melody(mx, m2, 'bell', 16, 12, 0.7, 0.3, 0.4, 0.6)
+    put_melody(mx, m1, 'horn', 24, 0, 1.0, 0.62, 0, 0.35)
+    put_melody(mx, m1, 'lowbrass', 24, -12, 0.95, 0.55, 0, 0.3)
+    put_melody(mx, m1, 'lead', 24, 12, 0.75, 0.3, 0.3, 0.3)
+    put_melody(mx, m1, 'bell', 24, 12, 0.7, 0.26, -0.4, 0.6)
+    render_track('boss', mx, rt=2.8)
 
 
 def t_story():

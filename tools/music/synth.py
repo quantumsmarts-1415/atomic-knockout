@@ -194,7 +194,31 @@ def bell(m, dur, vel):          # FM bell: the "atomic sparkle"
     return x * np.exp(-t * 2.2) * vel * 0.55
 
 
-INSTR = dict(lead=lead, horn=horn, stab=stab, strings=strings, pad=pad, choir=choir, bass=bass, pluck=pluck, flute=flute, bell=bell)
+def subbass(m, dur, vel):       # pure low sine with a hint of 2nd harmonic: the weight under everything
+    n = _n(dur)
+    tot = n + _n(0.12)
+    x = osc('sine', m, tot) + 0.22 * osc('sine', m + 12, tot)
+    return x * adsr(n, 0.01, 0.2, 0.9, 0.12) * vel
+
+
+def distbass(m, dur, vel):      # driving, overdriven saw bass
+    n = _n(dur)
+    tot = n + _n(0.06)
+    x = 0.8 * osc('saw', m, tot) + 0.5 * osc('pulse25', m, tot, detune=-7)
+    x = np.tanh(lp(x, 900) * 3.4) * 0.8
+    x = lp(x, 1800)
+    return x * adsr(n, 0.004, 0.1, 0.75, 0.06) * vel
+
+
+def lowbrass(m, dur, vel):      # dark, heavy brass stab / swell
+    n = _n(dur)
+    tot = n + _n(0.2)
+    x = 0.7 * osc('saw', m, tot, vib=0.002) + 0.5 * osc('saw', m, tot, detune=12) + 0.3 * osc('pulse50', m - 12, tot)
+    x = np.tanh(lp(x, 1500 + 900 * vel) * 1.8)
+    return x * adsr(n, 0.04, 0.2, 0.7, 0.2) * vel * 0.8
+
+
+INSTR = dict(subbass=subbass, distbass=distbass, lowbrass=lowbrass, lead=lead, horn=horn, stab=stab, strings=strings, pad=pad, choir=choir, bass=bass, pluck=pluck, flute=flute, bell=bell)
 
 
 # ---------------------------------------------------------------- drums
@@ -234,7 +258,22 @@ def crash(vel):
     return hp(_rng(5).standard_normal(n), 4000) * np.exp(-t * 2.0) * vel * 0.55
 
 
-DRUM = dict(kick=kick, snare=snare, hat=hat, ohat=lambda v: hat(v, True), tom=tom, tomlo=lambda v: tom(v, 38), crash=crash)
+def taiko(vel):
+    t = np.arange(_n(1.1)) / SR
+    f = 52 + 70 * np.exp(-t * 22)
+    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 4.2)
+    skin = lp(_rng(6).standard_normal(len(t)), 900) * np.exp(-t * 38) * 0.6
+    return (body + skin) * vel * 1.1
+
+
+def bigsnare(vel):
+    t = np.arange(_n(0.4)) / SR
+    nz = hp(_rng(8).standard_normal(len(t)), 900) * np.exp(-t * 11)
+    tone = np.sin(2 * np.pi * (170 + 60 * np.exp(-t * 40)) * t) * np.exp(-t * 18)
+    return (0.8 * nz + 0.7 * tone) * vel
+
+
+DRUM = dict(taiko=taiko, bigsnare=bigsnare, kick=kick, snare=snare, hat=hat, ohat=lambda v: hat(v, True), tom=tom, tomlo=lambda v: tom(v, 38), crash=crash)
 
 
 # ---------------------------------------------------------------- mixing

@@ -19,7 +19,7 @@ Title screen -> **Campaign**. A Fire Emblem-style grid tactics campaign built fr
   enemy moves, at most 4 kept in memory); otherwise the unit glides with a bob. `?nowalk` forces gliding.
 
 ## Music
-Original soundtrack, composed in code (`tools/music/synth.py` + `compose.py`, rendered by `python3 tools/music/compose.py && python3 tools/music/build.py`;
+Soundtrack. Most tracks are composed in code; `battle`, `defeat_player` and `defeat_enemy` were made separately by a teammate (OGG + MP3, -19 LUFS) and copied in as they are. If a battle/defeat file is missing the game keeps the phase theme and plays no sting. Composed-in-code part: (`tools/music/synth.py` + `compose.py`, rendered by `python3 tools/music/compose.py && python3 tools/music/build.py`;
 numpy/scipy + ffmpeg, no samples). Files are in `assets/campaign/music/` as `.ogg` (used) and `.mp3` (fallback), loudness-normalised
 (loops -19 LUFS, stingers -16 LUFS, true peak under -1.5 dB), loops are seamless.
 
@@ -33,6 +33,8 @@ numpy/scipy + ffmpeg, no samples). Files are in `assets/campaign/music/` as `.og
 | map_player_3 | player phase (rotation 3 of 3): the second boss theme, F minor 140 bpm | 54.9 s loop |
 | map_enemy | enemy phase | 55.7 s loop |
 | boss | from the boss entrance card to the end of the chapter (C# minor, 156 bpm, double-kick + war drums, 35 Hz sub, crushing distorted bass, stacked low brass + choir hits; intro, two themes, half-time breakdown, climax; -16 LUFS, a little hotter than the maps) | 67.7 s loop |
+| battle | the close-up battle scenes only; the phase theme resumes when the scene ends (40 s loop) | 40 s loop |
+| defeat_player / defeat_enemy | short stings when a unit falls (the lord's fall plays `defeat` instead); played +3 dB hotter (`STINGER_BOOST`) | 2.7 / 1.9 s |
 | victory / defeat / levelup | stingers (victory/defeat hold the next theme until they end; level-up just ducks it) | 7.6 / 11.9 / 2.9 s |
 
 Player-phase map music rotates (`createMapRotation` in `music.js`): chapter N opens on `map_player`, `_2`, `_3` in turn (N mod 3), and inside a chapter the theme moves on after one full loop of player-phase listening (the enemy phase always plays `map_enemy`).

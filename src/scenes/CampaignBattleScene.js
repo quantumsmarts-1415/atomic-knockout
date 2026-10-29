@@ -15,7 +15,7 @@ import { TERRAIN } from '../campaign/terrain.js';
 import { key, ringTiles } from '../campaign/grid.js';
 import { tileKey, attackClipName, loadCampaignArt, sheetKey, walkReady, releaseWalk } from '../campaign/art.js';
 import { basicMove } from '../campaign/units.js';
-import { playMusic, stinger, watch, preload, toggleMute, createMapRotation, MAP_PLAYER_ROTATION } from '../campaign/music.js';
+import { playMusic, stinger, watch, preload, toggleMute, createMapRotation, MAP_PLAYER_ROTATION, STINGER_BOOST } from '../campaign/music.js';
 import { playDialogue, playBossCard } from '../ui/campaignDialogue.js';
 
 const TILE = 64;
@@ -73,7 +73,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.mapRotation = createMapRotation(this.chapterIndex);
     this.playerPhaseAt = 0;
     watch(this.game);
-    preload([this.mapRotation.current(), 'map_enemy', ...MAP_PLAYER_ROTATION, ...(this.chapter.win === 'boss' || (this.chapter.events || []).some((e) => e.card) ? ['boss'] : [])]);
+    preload([this.mapRotation.current(), 'map_enemy', 'battle', 'defeat_player', 'defeat_enemy', ...MAP_PLAYER_ROTATION, ...(this.chapter.win === 'boss' || (this.chapter.events || []).some((e) => e.card) ? ['boss'] : [])]);
     // Attack clips stream in behind the map. Until one arrives that unit lunges instead.
     this.noWalk = /[?&]nowalk\b/.test(window.location.search);
     loadCampaignArt(this, this.battle.units.map((u) => u.id), 'attack', () => { this.attackReady = true; });
@@ -869,7 +869,9 @@ export default class CampaignBattleScene extends Phaser.Scene {
     va.shownHp = before.get(att.uid);
     vd.shownHp = before.get(def.uid);
     if (this.cutOn && va.rig && vd.rig) {
-      await this.cutaway(att, def, res, before);
+      // the close-up has its own track; the phase theme resumes after (a missing file just leaves the phase theme on)
+      playMusic('battle', { fade: 0.4 });
+      try { await this.cutaway(att, def, res, before); } finally { this.phaseMusic(this.phaseTrack || 'map_enemy'); }
       va.shownHp = att.hp; vd.shownHp = def.hp;
       this.paintBar(va); this.paintBar(vd);
     } else {
@@ -882,6 +884,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     for (const k of res.killed) {
       const v = this.views.get(k.uid);
       sfx('ko');
+      if (!b.result) stinger(k.team === 'player' ? 'defeat_player' : 'defeat_enemy', { duck: 0.3, vol: STINGER_BOOST });
       if (v) {
         this.burst(v.cont.x, v.cont.y - 40, 0xff4f5f, 16, 70);
         await this.tween({ targets: v.cont, alpha: 0, y: v.cont.y - 14, duration: 420 });
@@ -1188,6 +1191,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
   // --------------------------------------------------------------- phases
   /** Phase themes; once a boss has made its entrance the boss theme holds for the rest of the chapter. */
   phaseMusic(name) {
+    this.phaseTrack = name;
     playMusic(this.bossMusic ? 'boss' : name, { fade: this.bossMusic ? 1.0 : 1.3 });
   }
 

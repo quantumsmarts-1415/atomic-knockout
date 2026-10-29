@@ -289,7 +289,10 @@ test('every campaign music track has an ogg and an mp3 on disk and a known role'
   // music.js touches window/localStorage only inside functions, so it imports fine in node
   const { TRACKS } = await import('../src/campaign/music.js');
   const names = Object.keys(TRACKS);
-  for (const need of ['title', 'story', 'camp', 'map_player', 'map_player_2', 'map_player_3', 'map_enemy', 'boss', 'victory', 'defeat', 'levelup']) assert.ok(names.includes(need), need);
+  for (const need of ['title', 'story', 'camp', 'map_player', 'map_player_2', 'map_player_3', 'map_enemy', 'boss', 'victory', 'defeat', 'levelup', 'battle', 'defeat_player', 'defeat_enemy']) assert.ok(names.includes(need), need);
+  assert.ok(TRACKS.battle.loop && !TRACKS.defeat_player.loop && !TRACKS.defeat_enemy.loop);
+  const { STINGER_BOOST } = await import('../src/campaign/music.js');
+  assert.ok(Math.abs(20 * Math.log10(STINGER_BOOST) - 3) < 0.01, 'defeat stingers play +3 dB hotter');
   for (const n of names) {
     for (const ext of ['ogg', 'mp3']) {
       const f = new URL(`../assets/campaign/music/${n}.${ext}`, import.meta.url);

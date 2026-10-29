@@ -13,7 +13,14 @@ export const TRACKS = {
   victory: { loop: false, len: 7.6 },
   defeat: { loop: false, len: 11.9 },
   levelup: { loop: false, len: 2.9 },
+  // close-up battle scenes: a loop under the cutaway, and a short sting when a unit falls
+  battle: { loop: true, len: 40 },
+  defeat_player: { loop: false, len: 2.7 },
+  defeat_enemy: { loop: false, len: 1.9 },
 };
+
+/** The defeat stingers are mastered quiet (-19 LUFS), so they play +3 dB hotter. */
+export const STINGER_BOOST = 10 ** (3 / 20);
 
 /** Player-phase map themes take turns; the enemy phase keeps map_enemy. */
 export const MAP_PLAYER_ROTATION = ['map_player', 'map_player_2', 'map_player_3'];

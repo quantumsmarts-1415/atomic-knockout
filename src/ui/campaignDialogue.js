@@ -8,9 +8,13 @@ import { CHARACTERS } from '../data/characters.js';
 import { faceFrame, menuPortraitKey } from './portraits.js';
 
 /** A standing figure: the painted cut when it is clean, otherwise frame 0 of the idle sheet. */
+// fighters whose painted cut is a different design from their in-game sheets: use the sheet so the figure
+// matches the map unit and the face disc
+const PREFER_SHEET = new Set(['lillie']);
+
 export function placeFigure(scene, charDef, x, footY, height, faceDir) {
   const art = charDef.art;
-  const k = menuPortraitKey(charDef);
+  const k = PREFER_SHEET.has(charDef.id) ? null : menuPortraitKey(charDef);
   let img = null;
   if (k && scene.textures.exists(k)) {
     img = scene.add.image(x, footY, k).setOrigin(0.5, 1);

@@ -1485,7 +1485,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.mode = 'busy';
     // the very first player phase starts here; later ones were already started by endEnemyPhase() (ticking twice would double cooldowns and stuns)
     const healed = first ? b.startPhase('player') : (b.lastHealed || []);
-    for (const v of this.views.values()) this.setGrey(v, v.u.acted && v.u.alive);
+    // only player units that have already acted (a stun cost them the turn) dim; enemies keep `acted` from their own phase
+    for (const v of this.views.values()) this.setGrey(v, v.u.team === 'player' && v.u.acted && v.u.alive);
     this.refreshPanel();
     await this.banner('PLAYER PHASE', first ? this.chapter.objective : (this.chapter.win === 'defend' ? `Turn ${b.turn} of ${this.chapter.turns}` : `Turn ${b.turn}`), 0x35a8ff);
     if (first) await this.runEvents(b.checkEvents('start'));

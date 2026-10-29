@@ -1,19 +1,18 @@
 # Campaign map art
 
 Ten terrain/building tiles for the campaign grid map live in `assets/campaign/tiles/*.jpg`
-(512 px, what the game loads). Full 1024 px originals are in `art-src/campaign/full/`.
+(512 px, what the game loads): plain, forest, mountain, water, wall, fort, village, throne, road, floor.
 
-Tiles: plain, forest, mountain, water, wall, fort, village, throne, road, floor.
+## Current set: Gemini
+The tiles are Gemini renders (2048 px originals kept on the box under `art-src/campaign/gemini/*.png`,
+not committed because they are ~59 MB; 1024 px JPG copies of the untouched renders are committed in
+`art-src/campaign/gemini-1024/`). The runtime tiles are those renders downscaled to 512 px.
+Plain, forest, mountain, floor and water were made seamless (half-tile offset cross-blend) so repeated
+tiles do not show seams; the road is seamless along its length only (the scene rotates it to follow
+the road, see `drawMap` in `CampaignBattleScene.js`). Fort, village, throne and wall are single
+"building" tiles and are left as rendered.
 
-Generated 2026-10-29 with the box's image generator (not Gemini web, which needs a signed-in
-browser session). To replace any tile with a Gemini render, drop a square image with the same
-file name into `assets/campaign/tiles/` (512 px, JPG). No code change needed.
+## Earlier set
+The first placeholder set (box image generator, glowing teal style) is kept in `art-src/campaign/full/`.
 
-Style anchor prompt (plain tile), reused as the reference image for every other tile:
-"single square game map tile for a tactics RPG, top-down three-quarter view, hand-painted stylised look,
-faint sci-fi atomic glow with cyan star-flowers, soft even lighting from the upper left, fills the whole
-square edge to edge, no border, no text, no characters, tiles seamlessly."
-Per tile: forest (dense teal/emerald trees), mountain (violet-grey peak, snow caps, cyan veins),
-water (deep blue-teal ripples), wall (slate-blue crenellated fortress wall), fort (stone gatehouse tower,
-pink banner), village (terracotta cottages, lantern), throne (golden throne, crimson carpet), road (dirt road,
-left-to-right), floor (slate flagstones with cyan seams).
+To replace a tile, drop a square JPG with the same name into `assets/campaign/tiles/`. No code change needed.

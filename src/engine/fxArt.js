@@ -2671,6 +2671,18 @@ function ensureTrailLayer(scene, live, slot, frame) {
   return img;
 }
 
+/**
+ * Where a dash trail's bright head sits and how much of its tail is drawn. The head is always on the side the fighter
+ * faces (`face` * the offset), and the tail streams out behind it. Hydra's Flame Dash tail is long, so it is squashed to
+ * 60% and the head is pushed out past his fist; otherwise the stream spanned half the screen and read as a flamethrower
+ * firing backwards.
+ */
+export function dashTrailLayout(x, face, bodyW, charId) {
+  const f = face < 0 ? -1 : 1;
+  const hydra = charId === 'hydra';
+  return { tipX: x + f * bodyW * (hydra ? 1.15 : 0.85), tailFrac: hydra ? 0.6 : 1 };
+}
+
 /** Right-edge crop of a trail texture. Origin stays on the full frame, so the
  *  visible flame still ends at the pivot. */
 function cropTrailHead(img, frac) {
@@ -3046,12 +3058,12 @@ function syncAttached(scene, fighter) {
   const bodyH = fighter.bodyH ?? 80;
   // The art's right edge is the bright head. Sit that head on his front so
   // the streak runs back through his body, then paint the head over him.
-  const tipX = fighter.x + face * bodyW * 0.85;
+  const { tipX, tailFrac } = dashTrailLayout(fighter.x, face, bodyW, fighter.charDef?.id);
   const y = fighter.y - bodyH * 0.52;
   live.img.setPosition(tipX, y);
   const sx = Math.abs(live.img.scaleX || 1);
   const sy = Math.abs(live.img.scaleY || 1);
-  live.img.setScale(face * sx, sy);
+  live.img.setScale(face * sx * tailFrac, sy);
   const alpha = art.flicker ? 0.88 + 0.12 * Math.sin((scene.simNow || 0) * 0.05) : 1;
   live.img.setAlpha(alpha);
 

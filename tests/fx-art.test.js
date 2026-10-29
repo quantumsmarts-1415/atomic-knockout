@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { CHARACTERS, ROSTER } from '../src/data/characters.js';
 import { classifyRoster, fxFolder, moveSlug, objectTypeOf } from '../src/data/attackFx.js';
-import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeTint, chargeWaveAlpha, cloudIgnitionScale, contentSpan, curieFade, curiePulse, fadeLoopFrames, flameTestColor, flareCover, gradePixels, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, handPropHeld, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pileCount, playsFinalImpact, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, poisonStatusArt, slashArtReplacesStroke, slashNeedsCodeFlash, sliceGrid, sliceHorizontal, rodOrbitPoint, stackPipIndex, stageSpanSize, stepFxProjectile, stickAim, survivedPipAlpha, surgeAlpha, surgeBeamScale, throwGrowth, tintToward, trailBackOffset, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
+import { auraFrame, beamDrawScale, blackThreshold, breakFrames, burnVisual, chargeFrac, chargeTint, chargeWaveAlpha, cloudIgnitionScale, contentSpan, curieFade, curiePulse, fadeLoopFrames, flameTestColor, flareCover, gradePixels, flareEmbers, flareShower, fxFadeAlpha, fxFrameIndex, fxGameplayScale, fxShrink, handheldUnit, handPropHeld, impactRadiusScale, keyNearBlack, lumaToAlpha, pixelsPerSource, pileCount, playsFinalImpact, pullFieldSize, rasterAlpha, reverseFrameOrder, rotorTurns, sheetPlayOrder, shellFrame, poisonStatusArt, slashArtReplacesStroke, slashNeedsCodeFlash, sliceGrid, sliceHorizontal, rodOrbitPoint, stackPipIndex, stageSpanSize, stepFxProjectile, stickAim, survivedPipAlpha, surgeAlpha, surgeBeamScale, throwGrowth, tintToward, trailBackOffset, dashTrailLayout, vacancySignFrame, vacancySignPoint } from '../src/engine/fxArt.js';
 import { fxPlacementHits, projectileHits } from '../src/engine/boxes.js';
 import { interceptHit } from '../src/engine/defense.js';
 
@@ -2992,4 +2992,17 @@ test('Ceres move FX keeps the shower, the puck, the oven glow, and the rolling r
   }
   const src = fs.readFileSync('src/engine/fxArt.js', 'utf8');
   assert.match(src, /want\.kind === 'fist' && art\.pulse/);
+});
+
+test('a dash trail head is always on the side the fighter faces, with the tail behind it (Hydra Flame Dash reads forward)', () => {
+  for (const id of ['hydra', 'wolf', 'ace']) {
+    for (const face of [1, -1]) {
+      const { tipX, tailFrac } = dashTrailLayout(640, face, 40, id);
+      assert.ok((tipX - 640) * face > 30, `${id} face ${face}: head must sit ahead of the body`);
+      assert.ok(tailFrac > 0 && tailFrac <= 1);
+    }
+    const r = dashTrailLayout(640, 1, 40, id), l = dashTrailLayout(640, -1, 40, id);
+    assert.equal(r.tipX - 640, 640 - l.tipX, `${id}: mirrored facings`);
+  }
+  assert.ok(dashTrailLayout(0, 1, 40, 'hydra').tailFrac < 1, 'Hydra tail is cut short so it is not a screen-wide beam');
 });

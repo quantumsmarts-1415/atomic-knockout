@@ -211,19 +211,25 @@ export default class CampaignScene extends Phaser.Scene {
     const px = 260;
     const py = 150;
     const pw = W - 520;
-    this.add2(drawPanel(this, px, py, pw, won ? 290 : 130, 18, won ? THEME.gold : THEME.pink).setDepth(5));
+    this.add2(drawPanel(this, px, py, pw, won ? 310 : 130, 18, won ? THEME.gold : THEME.pink).setDepth(5));
     const lines = [];
     if (won) {
       lines.push(`Turns taken: ${turns}`);
       lines.push(`Survivors: ${survivors.map((r) => CHARACTERS[r.id].name).join(', ')}`);
       lines.push(`Fallen: ${fallen.length ? fallen.map((n) => n).join(', ') : 'none'}`);
-      lines.push(`Level-ups: ${levelUps.length ? levelUps.map((l) => `${l.name} → Lv ${l.level}`).join(', ') : 'none'}`);
+      const topLv = new Map();
+      for (const l of levelUps) topLv.set(l.name, Math.max(topLv.get(l.name) || 0, l.level));
+      lines.push(`Level-ups: ${topLv.size ? [...topLv].map(([n, lv]) => `${n} → Lv ${lv}`).join(', ') : 'none'}`);
       lines.push('Everyone is healed between chapters. Fallen fighters stay down.');
     } else {
       lines.push(after.reason === 'lord' ? 'Hydra has fallen.' : 'The whole party has fallen.');
       lines.push('Retry the chapter with the party you started it with.');
     }
-    lines.forEach((t, i) => this.add2(this.add.text(px + 36, py + 36 + i * 44, t, textStyle('body', { fontSize: '18px', wordWrap: { width: pw - 72 } })).setDepth(6)));
+    let ly = py + 30;
+    lines.forEach((t) => {
+      const tx = this.add2(this.add.text(px + 36, ly, t, textStyle('body', { fontSize: '17px', wordWrap: { width: pw - 72 }, lineSpacing: 4 })).setDepth(6));
+      ly += tx.height + 14;
+    });
     const entries = [];
     const finished = won && chapterIndex + 1 >= CHAPTERS.length;
     if (won && !finished) entries.push({ label: `Next: Chapter ${chapterIndex + 2}`, run: () => this.beginChapter(chapterIndex + 1, this.save) });

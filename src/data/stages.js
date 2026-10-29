@@ -27,7 +27,8 @@
 //   blast:    { left, right, top, bottom } world-space KO lines (default:
 //             140px past the screen sides/bottom, 308px above the top).
 //   spawns:   [{ x, y }] -- one per player seat (y = drop-in height).
-//   music:    placeholder track key for when stage music exists.
+//   music:    the stage's own track, 'stage-<id>' (assets/music/stages/<id>.ogg|mp3; src/engine/stageMusic.js plays it
+//             while a match is on).
 //   layout:   short layout label shown on the stage select screen.
 //   platforms[].move: { axis: 'x' | 'y', range, period } -- the platform
 //             swings +-range/2 around its x/y on a sine wave, carrying anyone
@@ -58,6 +59,7 @@ export const DEFAULT_BLAST = { left: -140, right: 1420, top: -308, bottom: 860 }
 export const STAGES = [
   {
     id: 'elemental-isle',
+    music: 'stage-elemental-isle',
     name: 'Elemental Isle',
     desc: 'A floating island over the reactor sea. One platform, no hazards.',
     theme: { skyTop: 0x101b33, skyBottom: 0x2a4a6e, hills: [0x18294a, 0x14223d] },
@@ -73,6 +75,7 @@ export const STAGES = [
   },
   {
     id: 'twin-peaks',
+    music: 'stage-twin-peaks',
     name: 'Twin Peaks',
     desc: 'Two separate islands over an open pit, joined by one high platform.',
     theme: { skyTop: 0x1a1030, skyBottom: 0x3a2a5e, hills: [0x241a3f, 0x1c1433] },
@@ -93,6 +96,7 @@ export const STAGES = [
   },
   {
     id: 'the-core',
+    music: 'stage-the-core',
     name: 'The Core',
     desc: 'A reactor pillar splits the floor -- hop it, or fight around it.',
     theme: { skyTop: 0x0f2418, skyBottom: 0x1f4a34, hills: [0x163828, 0x122c20] },
@@ -120,6 +124,7 @@ export const STAGES = [
   },
   {
     id: 'crystal-spire',
+    music: 'stage-crystal-spire',
     name: 'Crystal Spire',
     desc: 'A narrower floor with a hard-to-reach summit platform up top.',
     theme: { skyTop: 0x1c1420, skyBottom: 0x4a2a5e, hills: [0x2a1c3a, 0x201530] },
@@ -159,10 +164,10 @@ export const STAGES = [
   // ---------------------------------------------------------------------
   {
     id: 'hydrogen-breakout',
+    music: 'stage-hydrogen-breakout',
     name: 'Hydrogen Breakout',
     desc: "Silicon's containment lab, the night Hydra broke out. Classic three-platform layout.",
     layout: 'Tri-platform',
-    music: 'bgm-hydrogen-breakout',
     theme: { skyTop: 0x0a1626, skyBottom: 0x1b3a55, hills: [0x10243a, 0x0c1c2e] },
     // optional match intro (engine/stageIntros.js): blast doors built from
     // Gemini's bulkhead-door art (tools/stages/build_door_intro.py)
@@ -197,10 +202,10 @@ export const STAGES = [
   },
   {
     id: 'silicon-foundry',
+    music: 'stage-silicon-foundry',
     name: 'Silicon Foundry',
     desc: "The AI's wafer foundry, where it was built. A cargo lift sweeps back and forth overhead.",
     layout: 'Moving platform',
-    music: 'bgm-silicon-foundry',
     theme: { skyTop: 0x1a0f1c, skyBottom: 0x4a2030, hills: [0x2a1424, 0x22101c] },
     art: {
       dir: 'art-src/stages/silicon-foundry/',
@@ -230,10 +235,10 @@ export const STAGES = [
   },
   {
     id: 'brimstone-caldera',
+    music: 'stage-brimstone-caldera',
     name: 'Brimstone Caldera',
     desc: 'A basalt slab over a sulfur volcano. One wide, flat floor and nowhere to hide.',
     layout: 'Flat',
-    music: 'bgm-brimstone-caldera',
     theme: { skyTop: 0x1c0c08, skyBottom: 0x5a2410, hills: [0x2a120a, 0x200e08] },
     art: {
       dir: 'art-src/stages/brimstone-caldera/',
@@ -262,10 +267,10 @@ export const STAGES = [
   },
   {
     id: 'neon-nexus',
+    music: 'stage-neon-nexus',
     name: 'Neon Nexus',
     desc: 'A noble-gas city rooftop. The roof runs off both screen edges -- walk off and you are gone.',
     layout: 'Walk-off',
-    music: 'bgm-neon-nexus',
     theme: { skyTop: 0x0c0820, skyBottom: 0x2a1450, hills: [0x160f30, 0x120c26] },
     art: {
       dir: 'art-src/stages/neon-nexus/',
@@ -298,10 +303,10 @@ export const STAGES = [
   },
   {
     id: 'holdout-keep',
+    music: 'stage-holdout-keep',
     name: 'Holdout Keep',
     desc: 'Castle ramparts of the last free kingdom. A raised keep in the middle, balconies on the wings.',
     layout: 'Stepped',
-    music: 'bgm-holdout-keep',
     theme: { skyTop: 0x2a3050, skyBottom: 0xd88a5a, hills: [0x3a3550, 0x2e2a42] },
     art: {
       dir: 'art-src/stages/holdout-keep/',
@@ -332,10 +337,10 @@ export const STAGES = [
   },
   {
     id: 'carbon-skyhook',
+    music: 'stage-carbon-skyhook',
     name: 'Carbon Skyhook',
     desc: "The AI's orbital-elevator anchor, strung from a carbon-nanotube tether. Three tiers, stairs up the wings, a cargo lift up the middle -- and a lot of sky.",
     layout: 'Mega (camera)',
-    music: 'bgm-carbon-skyhook',
     theme: { skyTop: 0x070b1c, skyBottom: 0xd77a4a, hills: [0x1a2236, 0x141a2a] },
     world: { width: 2560, height: 1440 },
     camera: { maxZoom: 1 },

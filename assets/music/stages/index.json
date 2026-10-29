@@ -1,0 +1,358 @@
+[
+ {
+  "stage_id": "elemental-isle",
+  "stage_name": "Elemental Isle",
+  "key": "A major",
+  "bpm": 124,
+  "mood": "Breezy, bright and optimistic: steel-pan hook over marimba arpeggios and shaker, an island-hop starter stage.",
+  "bars": 36,
+  "form": [
+   "intro:4",
+   "A:8",
+   "B:8",
+   "A2:8",
+   "B2:8"
+  ],
+  "loop_duration_s": 69.68,
+  "normalization": "linear",
+  "detected_key_check": "A major",
+  "lead": "steelpan",
+  "bass": "bass",
+  "arp": "marimba",
+  "files": {
+   "ogg": {
+    "file": "elemental-isle.ogg",
+    "duration_s": 69.68,
+    "lufs": -19.0,
+    "true_peak_dbtp": -6.6
+   },
+   "mp3": {
+    "file": "elemental-isle.mp3",
+    "duration_s": 69.72,
+    "lufs": -19.5,
+    "true_peak_dbtp": -7.1
+   }
+  }
+ },
+ {
+  "stage_id": "twin-peaks",
+  "stage_name": "Twin Peaks",
+  "key": "B minor",
+  "bpm": 144,
+  "mood": "Mysterious-heroic dusk duel: horn and flute answer each other from the left and right peaks over a driving rock beat.",
+  "bars": 44,
+  "form": [
+   "intro:4",
+   "A:8",
+   "B:8",
+   "brk:8",
+   "A2:8",
+   "B2:8"
+  ],
+  "loop_duration_s": 73.33,
+  "normalization": "linear",
+  "detected_key_check": "D major",
+  "lead": "horn+flute",
+  "bass": "bass",
+  "arp": "pluck",
+  "files": {
+   "ogg": {
+    "file": "twin-peaks.ogg",
+    "duration_s": 73.33,
+    "lufs": -19.1,
+    "true_peak_dbtp": -7.7
+   },
+   "mp3": {
+    "file": "twin-peaks.mp3",
+    "duration_s": 73.38,
+    "lufs": -19.6,
+    "true_peak_dbtp": -7.9
+   }
+  }
+ },
+ {
+  "stage_id": "the-core",
+  "stage_name": "The Core",
+  "key": "Bb minor",
+  "bpm": 118,
+  "mood": "Heavy reactor groove: pulsing reese bass, half-time backbeat, metallic clanks and a buzzing square lead; menacing but playful.",
+  "bars": 36,
+  "form": [
+   "intro:4",
+   "A:8",
+   "B:8",
+   "A2:8",
+   "B2:8"
+  ],
+  "loop_duration_s": 73.22,
+  "normalization": "linear",
+  "detected_key_check": "Bb minor",
+  "lead": "buzz",
+  "bass": "reese",
+  "arp": "fmep",
+  "files": {
+   "ogg": {
+    "file": "the-core.ogg",
+    "duration_s": 73.22,
+    "lufs": -19.0,
+    "true_peak_dbtp": -5.9
+   },
+   "mp3": {
+    "file": "the-core.mp3",
+    "duration_s": 73.25,
+    "lufs": -19.5,
+    "true_peak_dbtp": -5.5
+   }
+  }
+ },
+ {
+  "stage_id": "crystal-spire",
+  "stage_name": "Crystal Spire",
+  "key": "Eb lydian",
+  "bpm": 150,
+  "mood": "Shimmering and soaring: fast glassy arpeggios and a supersaw lead climbing the spire, bright lydian colour over a four-on-the-floor beat.",
+  "bars": 44,
+  "form": [
+   "intro:4",
+   "A:8",
+   "B:8",
+   "brk:8",
+   "A2:8",
+   "B2:8"
+  ],
+  "loop_duration_s": 70.4,
+  "normalization": "linear",
+  "detected_key_check": "C minor",
+  "lead": "supersaw",
+  "bass": "pbass",
+  "arp": "glass",
+  "files": {
+   "ogg": {
+    "file": "crystal-spire.ogg",
+    "duration_s": 70.4,
+    "lufs": -19.2,
+    "true_peak_dbtp": -5.1
+   },
+   "mp3": {
+    "file": "crystal-spire.mp3",
+    "duration_s": 70.43,
+    "lufs": -19.7,
+    "true_peak_dbtp": -6.4
+   }
+  }
+ },
+ {
+  "stage_id": "hydrogen-breakout",
+  "stage_name": "Hydrogen Breakout",
+  "key": "F# minor",
+  "bpm": 164,
+  "mood": "Tense lab-escape chase: breakbeat 2-step, fast pulse-bass, urgent saw lead and alarm-bell blips under dark strings.",
+  "bars": 44,
+  "form": [
+   "intro:4",
+   "A:8",
+   "B:8",
+   "brk:8",
+   "A2:8",
+   "B2:8"
+  ],
+  "loop_duration_s": 64.39,
+  "normalization": "linear",
+  "detected_key_check": "A major",
+  "lead": "synthlead",
+  "bass": "pbass",
+  "arp": "pluck",
+  "files": {
+   "ogg": {
+    "file": "hydrogen-breakout.ogg",
+    "duration_s": 64.39,
+    "lufs": -19.1,
+    "true_peak_dbtp": -6.8
+   },
+   "mp3": {
+    "file": "hydrogen-breakout.mp3",
+    "duration_s": 64.42,
+    "lufs": -19.6,
+    "true_peak_dbtp": -7.8
+   }
+  }
+ },
+ {
+  "stage_id": "silicon-foundry",
+  "stage_name": "Silicon Foundry",
+  "key": "G# minor",
+  "bpm": 108,
+  "mood": "Mechanical factory stomp: machine-like distorted bass and gritty lead, clanking anvils and heavy brass hits on the cargo lift.",
+  "bars": 36,
+  "form": [
+   "intro:4",
+   "A:8",
+   "B:8",
+   "A2:8",
+   "B2:8"
+  ],
+  "loop_duration_s": 80.0,
+  "normalization": "linear",
+  "detected_key_check": "G# minor",
+  "lead": "grit",
+  "bass": "distbass",
+  "arp": "marimba",
+  "files": {
+   "ogg": {
+    "file": "silicon-foundry.ogg",
+    "duration_s": 80.0,
+    "lufs": -19.1,
+    "true_peak_dbtp": -6.6
+   },
+   "mp3": {
+    "file": "silicon-foundry.mp3",
+    "duration_s": 80.04,
+    "lufs": -19.5,
+    "true_peak_dbtp": -7.7
+   }
+  }
+ },
+ {
+  "stage_id": "brimstone-caldera",
+  "stage_name": "Brimstone Caldera",
+  "key": "Eb phrygian",
+  "bpm": 136,
+  "mood": "Volcanic and epic: war-drum taiko, crushing low brass and choir hits in dark phrygian; hot but cartoonish, not scary.",
+  "bars": 44,
+  "form": [
+   "intro:4",
+   "A:8",
+   "B:8",
+   "brk:8",
+   "A2:8",
+   "B2:8"
+  ],
+  "loop_duration_s": 77.65,
+  "normalization": "linear",
+  "detected_key_check": "B major",
+  "lead": "lowbrass",
+  "bass": "dist2",
+  "arp": "spicc",
+  "files": {
+   "ogg": {
+    "file": "brimstone-caldera.ogg",
+    "duration_s": 77.65,
+    "lufs": -19.2,
+    "true_peak_dbtp": -6.6
+   },
+   "mp3": {
+    "file": "brimstone-caldera.mp3",
+    "duration_s": 77.69,
+    "lufs": -19.6,
+    "true_peak_dbtp": -7.2
+   }
+  }
+ },
+ {
+  "stage_id": "neon-nexus",
+  "stage_name": "Neon Nexus",
+  "key": "F# major",
+  "bpm": 112,
+  "mood": "Rainy neon-city synthwave: gated snare, acid bass, plucked 8th arps and an electric-piano lead, glossy and a little nostalgic.",
+  "bars": 36,
+  "form": [
+   "intro:4",
+   "A:8",
+   "B:8",
+   "A2:8",
+   "B2:8"
+  ],
+  "loop_duration_s": 77.14,
+  "normalization": "linear",
+  "detected_key_check": "F# major",
+  "lead": "fmep",
+  "bass": "acid",
+  "arp": "pluck",
+  "files": {
+   "ogg": {
+    "file": "neon-nexus.ogg",
+    "duration_s": 77.14,
+    "lufs": -19.1,
+    "true_peak_dbtp": -5.1
+   },
+   "mp3": {
+    "file": "neon-nexus.mp3",
+    "duration_s": 77.19,
+    "lufs": -19.6,
+    "true_peak_dbtp": -5.5
+   }
+  }
+ },
+ {
+  "stage_id": "holdout-keep",
+  "stage_name": "Holdout Keep",
+  "key": "Bb major",
+  "bpm": 138,
+  "mood": "Heroic castle-rampart anthem at sunset: trumpet fanfare, galloping staccato strings, war drums and choir swells; triumphant last stand.",
+  "bars": 44,
+  "form": [
+   "intro:4",
+   "A:8",
+   "B:8",
+   "brk:8",
+   "A2:8",
+   "B2:8"
+  ],
+  "loop_duration_s": 76.52,
+  "normalization": "linear",
+  "detected_key_check": "Bb major",
+  "lead": "trumpet",
+  "bass": "bass",
+  "arp": "spicc",
+  "files": {
+   "ogg": {
+    "file": "holdout-keep.ogg",
+    "duration_s": 76.52,
+    "lufs": -19.1,
+    "true_peak_dbtp": -6.6
+   },
+   "mp3": {
+    "file": "holdout-keep.mp3",
+    "duration_s": 76.56,
+    "lufs": -19.6,
+    "true_peak_dbtp": -6.2
+   }
+  }
+ },
+ {
+  "stage_id": "carbon-skyhook",
+  "stage_name": "Carbon Skyhook",
+  "key": "B major",
+  "bpm": 172,
+  "mood": "Soaring orbital-climb trance: gated supersaw offbeat chords, plucked 16th arps, chip-pulse lead with choir and bell doubles; fast and uplifting.",
+  "bars": 44,
+  "form": [
+   "intro:4",
+   "A:8",
+   "B:8",
+   "brk:8",
+   "A2:8",
+   "B2:8"
+  ],
+  "loop_duration_s": 61.4,
+  "normalization": "linear",
+  "detected_key_check": "B major",
+  "lead": "lead",
+  "bass": "pbass",
+  "arp": "pluck",
+  "files": {
+   "ogg": {
+    "file": "carbon-skyhook.ogg",
+    "duration_s": 61.4,
+    "lufs": -19.2,
+    "true_peak_dbtp": -6.2
+   },
+   "mp3": {
+    "file": "carbon-skyhook.mp3",
+    "duration_s": 61.44,
+    "lufs": -19.7,
+    "true_peak_dbtp": -7.1
+   }
+  }
+ }
+]

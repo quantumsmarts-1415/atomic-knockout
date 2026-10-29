@@ -45,6 +45,11 @@ export function createMapRotation(chapterIndex = 0, rotation = MAP_PLAYER_ROTATI
 }
 
 const DIR = 'assets/campaign/music/';
+
+/** Add looping/one-shot tracks from elsewhere (fight-mode stage music): name -> { loop, dir, file?, len? }. */
+export function registerTracks(tracks) {
+  for (const [name, meta] of Object.entries(tracks)) TRACKS[name] = { loop: true, ...meta };
+}
 let ctx = null;
 let out = null; // master (volume + mute)
 let bus = null; // music bus (ducked by stingers)
@@ -109,7 +114,7 @@ function load(name) {
   if (loading.has(name)) return loading.get(name);
   const c = ac();
   if (!c) return Promise.resolve(null);
-  const p = fetch(`${DIR}${name}.${ext}`)
+  const p = fetch(`${TRACKS[name]?.dir || DIR}${TRACKS[name]?.file || name}.${ext}`)
     .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
     .then((ab) => new Promise((res, rej) => c.decodeAudioData(ab, res, rej)))
     .then((b) => { buffers.set(name, b); return b; })

@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { startStageMusic } from '../engine/stageMusic.js';
 import Fighter from '../engine/Fighter.js';
 import { CHARACTERS } from '../data/characters.js';
 import { STAGES, stageKey, getStageBlast, getStageSpawns, getStageBounds, getStageWorld, loadStageArt, moverPosition } from '../data/stages.js';
@@ -91,6 +92,8 @@ export default class BattleScene extends Phaser.Scene {
     this.physics.world.gravity.y = GRAVITY;
     this.matchOver = false;
     this.reportPublished = false;
+    // The stage's own music starts in the background (no part of the art loading).
+    startStageMusic(this, this.stage);
     // KO lines and CPU ledge bounds come from the stage (data/stages.js);
     // the original four stages keep their old values via the defaults.
     this.blast = getStageBlast(this.stage);

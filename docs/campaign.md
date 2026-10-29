@@ -48,6 +48,25 @@ Prologue "The Hum at the Edge" -> 1 Static in the Cloud (rout) -> 2 The Alkali G
 -> 7 The Actinide Spire (seize) -> 8 The Last Row (boss, Ogden). The Static is a lonely call from the last
 element on the table; the party answers it instead of silencing it.
 
+## Moves and combat rules (`src/campaign/moves.js`, `combat.js`, `units.js`)
+Every unit fights with its fighter's four real moves (`src/data/movesets.js`), shown in the action menu with an info card:
+| slot | campaign action |
+|---|---|
+| basicDirectional | **Basic** attack, no cooldown, also the counterattack |
+| basicCharge | **Charge**: takes the whole turn (a CHARGING tag shows), next turn it can **Release** at full-charge damage, or **Cancel Charge** and act normally. A zero-damage buff here becomes **Power Up** (+35% damage, 2 attacks, cooldown 3) |
+| specialDirectional | **Special** attack, usable every other turn (cooldown 2) |
+| specialDefense | **Guard**: no attack, the unit takes less damage until its next turn (shield/wall/block 50-60%, counter 35%) |
+
+- **Damage** = the move's fighting-game damage % (defender-neutral, `resolveMoveDamage`) x `DAMAGE_SCALE` (2.4), capped at 60 per hit.
+  The scale turns a 9% jab into ~22 HP so that 60-100 HP units fall in about 3-4 hits; change that one constant to retune everything.
+  The element table still scales a move against the defender (0.6x-1.5x). On top: the unit's flat level bonus (+1 at every even level),
+  minus the defender's Def (1-4) and terrain Def (0-3). Crit x2. A guarding defender takes less.
+- **Range** by move kind: melee 1, long-reach melee / dash / zone 1-2, projectiles 1-2 (2 for heavy shells), beams 2-3.
+- **HP** 60-100 (weight and kinetic defense), the lord +10; each level adds 3-5 HP. Older saves are rebuilt at their level when loaded (`upgradeRecord`).
+- **Enemy AI** picks the best (tile, move, target); it also charges and releases, guards when wounded, and uses specials.
+- **Balance check**: `node tools/campaign-balance.mjs [seeds]` plays the whole campaign with the autoplay AI (3 tries per chapter);
+  the AI ignores terrain, guards and charges, so a real player does better. Enemy levels in the story data were tuned with it.
+
 ## Chapter data (`src/campaign/story/atomic-knockout.js`; adding your own story: `docs/campaign-story.md`)
 `win`: `rout | seize | boss | defend | escape` (`seize: [x,y]`, `turns: N`, `exit: [[x,y],...]`).
 `intro` / `outro`: lines `{ who: fighterId | null, text }` (`null` = narration).

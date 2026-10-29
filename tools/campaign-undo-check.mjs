@@ -38,9 +38,9 @@ for (const [name, fire] of [['Escape', () => press('Escape')], ['B key', () => p
   await until(() => window.__camp.mode === 'menu', 'menu again');
 }
 // attack target menu -> back to the menu -> back to the tile
-const hasAttack = await ev(() => window.__camp.menuItems.some((i) => i.id === 'attack'));
+const hasAttack = await ev(() => window.__camp.menuItems.some((i) => i.id === 'attack' && !i.disabled));
 if (hasAttack) {
-  await ev(() => { const s = window.__camp; s.menuSel = s.menuItems.findIndex((i) => i.id === 'attack'); s.menuPick(); });
+  await ev(() => { const s = window.__camp; s.menuSel = s.menuItems.findIndex((i) => i.id === 'attack' && !i.disabled); s.menuPick(); });
   st = await state(); check(st.mode === 'target', 'Attack -> target mode');
   await press('Escape'); st = await state(); check(st.mode === 'menu' && st.menu, 'Esc in target mode -> action menu');
 } else console.log('(no attack target from this tile; skipped target step)');

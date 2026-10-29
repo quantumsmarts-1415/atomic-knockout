@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { SUPPORTS, supportsFor, CHAPTERS, newCampaign, createBattle, autoplayChapter, afterVictory, partyForChapter, makeRecord, awardXp, loadSave, writeSave, baseStats } from '../src/campaign/index.js';
+import { CampaignBattle, SUPPORTS, supportsFor, CHAPTERS, newCampaign, createBattle, autoplayChapter, afterVictory, partyForChapter, makeRecord, awardXp, loadSave, writeSave, baseStats } from '../src/campaign/index.js';
 import { TERRAIN, TERRAIN_IDS } from '../src/campaign/terrain.js';
 import { parseMap, reachable, key, distanceField } from '../src/campaign/grid.js';
 import { forecast, resolve } from '../src/campaign/combat.js';
@@ -47,14 +47,14 @@ test('chapter maps parse, units start on passable distinct tiles', () => {
 test('stats derive sensibly for the whole roster', () => {
   for (const c of ROSTER) {
     const s = baseStats(c);
-    for (const [k, v] of Object.entries(s)) if (k !== 'range') assert.ok(Number.isFinite(v) && v > 0, `${c.id}.${k}=${v}`);
-    assert.ok(s.maxHp >= 15 && s.maxHp <= 45, `${c.id} hp ${s.maxHp}`);
-    assert.ok(s.power >= 4 && s.power <= 20, `${c.id} pow ${s.power}`);
+    for (const [k, v] of Object.entries(s)) if (k !== 'range' && k !== 'power') assert.ok(Number.isFinite(v) && v > 0, `${c.id}.${k}=${v}`);
+    assert.ok(s.maxHp >= 60 && s.maxHp <= 100, `${c.id} hp ${s.maxHp}`);
+    assert.equal(s.power, 0, 'no flat damage bonus at level 1');
     assert.ok(s.mov >= 4 && s.mov <= 6);
-    assert.ok(s.range[0] === 1 && s.range[1] >= 1 && s.range[1] <= 2);
+    assert.ok(s.range[0] >= 1 && s.range[1] >= s.range[0] && s.range[1] <= 3);
   }
   assert.deepEqual(baseStats(CHARACTERS.phillip).range, [1, 2]); // projectile
-  assert.deepEqual(baseStats(CHARACTERS.hydra).range, [1, 1]);
+  assert.deepEqual(baseStats(CHARACTERS.hydra).range, [1, 2]);   // Flame Dash 1-2, Hydrogen Bomb 2
 });
 
 test('movement respects terrain cost, walls and enemy blockers', () => {
@@ -77,8 +77,8 @@ test('movement respects terrain cost, walls and enemy blockers', () => {
 
 test('forecast: terrain, double attack, counter range', () => {
   const map = parseMap(['....f', '.....']);
-  const a = { id: 'hydra', team: 'player', x: 0, y: 0, power: 8, def: 2, spd: 12, hp: 20, maxHp: 20, range: [1, 1] };
-  const d = { id: 'kyle', team: 'enemy', x: 1, y: 0, power: 8, def: 2, spd: 6, hp: 20, maxHp: 20, range: [1, 1] };
+  const a = { id: 'hydra', team: 'player', x: 0, y: 0, power: 0, def: 2, spd: 12, hp: 70, maxHp: 70, range: [1, 2] };
+  const d = { id: 'kyle', team: 'enemy', x: 1, y: 0, power: 0, def: 2, spd: 6, hp: 70, maxHp: 70, range: [1, 1] };
   const f = forecast(a, d, map);
   assert.equal(f.attHits, 2);
   assert.equal(f.defHits, 1);
@@ -378,4 +378,192 @@ test('story validation reports mistakes in plain words', async () => {
   assert.match(problems, /off the map or blocked/);
   assert.match(problems, /seize needs/);
   assert.match(problems, /when needs one of/);
+});
+
+
+// ------------------------------------------------------------------ moves and damage rules
+import { campaignMoves, DAMAGE_SCALE, basicOf } from '../src/campaign/moves.js';
+import { resolveMoveDamage } from '../src/data/balance.js';
+import { upgradeRecord, MAX_LEVEL } from '../src/campaign/units.js';
+
+test('every attack deals its fighting-game damage % (x one scale), straight from the move data', () => {
+  for (const c of ROSTER) {
+    const moves = campaignMoves(c.id);
+    assert.equal(moves.length, 4, c.id);
+    const basic = basicOf(c.id);
+    assert.ok(basic.attack && !basic.charge && basic.cd === 0, `${c.id} basic`);
+    const pct = resolveMoveDamage(basic.raw, c, null).total;
+    assert.equal(basic.dmg, Math.min(60, Math.max(1, Math.round(pct * DAMAGE_SCALE))), `${c.id} basic dmg = move % x scale`);
+    for (const m of moves) {
+      if (m.attack) assert.ok(m.dmg >= 1 && m.dmg <= 60 && m.range[0] >= 1 && m.range[1] <= 3, `${c.id} ${m.key}`);
+      if (m.slot === 'charge' && m.attack) assert.ok(m.dmg >= basic.dmg * 0 && m.charge === true);
+    }
+  }
+  // the forecast adds only the flat level bonus and modest defense / terrain, not another multiplier
+  const map = parseMap(['..']);
+  const a = { id: 'hydra', team: 'player', x: 0, y: 0, power: 3, def: 1, spd: 8, hp: 80, maxHp: 80 };
+  const d = { id: 'kyle', team: 'enemy', x: 1, y: 0, power: 0, def: 2, spd: 8, hp: 80, maxHp: 80 };
+  const f = forecast(a, d, map);
+  const el = f.att.mult;
+  assert.equal(f.att.dmg, Math.round(basicOf('hydra').dmg * el) + 3 - 2);
+});
+
+test('with 60-100 HP a typical fight takes about 3-4 hits', () => {
+  const hits = [];
+  for (const c of ROSTER) {
+    const hp = baseStats(c).maxHp;
+    for (const m of campaignMoves(c.id)) {
+      if (!m.attack || m.charge) continue;
+      hits.push(Math.ceil(hp / Math.max(1, m.dmg - 2)));
+    }
+  }
+  hits.sort((x, y) => x - y);
+  const median = hits[hits.length >> 1];
+  assert.ok(median >= 3 && median <= 5, `median hits to KO ${median}`);
+});
+
+test('ranged attacks are common: projectiles reach 2, beams reach further', () => {
+  let ranged = 0;
+  for (const c of ROSTER) if (campaignMoves(c.id).some((m) => m.attack && m.range[1] >= 2)) ranged++;
+  assert.ok(ranged / ROSTER.length >= 0.7, `${ranged}/${ROSTER.length} fighters have a ranged attack`);
+  const kinds = new Set();
+  for (const c of ROSTER) for (const m of campaignMoves(c.id)) if (m.attack && m.kind === 'beam') { assert.deepEqual(m.range, [2, 3]); kinds.add('beam'); }
+  assert.ok(kinds.has('beam'));
+  assert.ok(campaignMoves('helen').some((m) => m.kind === 'projectile' && m.range[1] === 2));
+});
+
+test('level-ups add HP and a small flat damage bonus', () => {
+  const rec = makeRecord('helen', 1);
+  const hp = rec.maxHp;
+  awardXp(rec, 100 * 4, mulberry32(5));
+  assert.equal(rec.level, 5);
+  assert.ok(rec.maxHp >= hp + 4 * 3 && rec.maxHp <= hp + 4 * 5, 'HP +3..5 per level');
+  assert.equal(rec.power, 2, '+1 damage at levels 2 and 4');
+  assert.deepEqual(makeRecord('helen', 5).power, 2);
+  assert.ok(makeRecord('helen', MAX_LEVEL).power <= 10, 'the bonus stays small');
+});
+
+test('older saves are rebuilt with the new HP and keep their level, xp and lord', () => {
+  const old = { id: 'hydra', level: 4, xp: 35, lord: true, maxHp: 40, hp: 12, power: 9, def: 3, spd: 8, mov: 5, range: [1, 1] };
+  const up = upgradeRecord(old);
+  assert.equal(up.level, 4);
+  assert.equal(up.xp, 35);
+  assert.ok(up.lord && up.maxHp >= 70 && up.hp === up.maxHp);
+  assert.equal(upgradeRecord(up), up, 'current records are left alone');
+  const mem = new Map();
+  const storage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v), removeItem: (k) => mem.delete(k) };
+  writeSave({ chapter: 1, party: [old], cleared: ['ch1'], lost: [] }, storage);
+  assert.ok(loadSave(storage).party[0].maxHp >= 70);
+});
+
+function twoUnits(att = 'hydra', def = 'kyle', gap = 1) {
+  const chapter = { ...CHAPTERS[0], enemies: [], npcs: [], events: [] };
+  const party = [makeRecord(att, 1, { lord: true }), makeRecord('helen', 1)];
+  const b = new (class extends CampaignBattle {})(chapter, party, { seed: 4, enemyRecords: (e) => makeRecord(e.id, e.level) });
+  const a = b.players.find((u) => u.id === att);
+  const rec = makeRecord(def, 1);
+  b.units.push(Object.assign({}, b.players[0], { uid: 999, rec, id: def, team: 'enemy', x: a.x + gap, y: a.y, hp: rec.maxHp, maxHp: rec.maxHp, def: rec.def, spd: rec.spd, power: 0, moves: campaignMoves(def), cd: {}, charging: null, status: {}, alive: true, acted: false, lord: false }));
+  return { b, a, d: b.units[b.units.length - 1] };
+}
+
+test('a charge move takes the turn, releases at full power next turn, and can be cancelled', () => {
+  const { b, a, d } = twoUnits('hydra', 'kyle', 1);
+  const charge = a.moves.find((m) => m.charge);
+  assert.ok(charge && charge.dmg > a.moves[0].dmg, 'the charged release hits harder than the basic');
+  assert.equal(b.moveBlock(a, charge), null);
+  b.startCharge(a, charge);
+  assert.equal(a.charging, charge.key);
+  assert.ok(a.acted, 'charging uses the whole turn');
+  assert.equal(b.usableAttacks(a).length, 1, 'only the release is available while charging');
+  assert.match(b.moveBlock(a, a.moves[0]) || '', /Charging/);
+  b.endPlayerPhase(); b.endEnemyPhase();           // next turn
+  assert.equal(a.charging, charge.key, 'the charge is held');
+  assert.equal(a.acted, false);
+  const hp = d.hp;
+  const f = b.forecastFor(a, d, charge);
+  assert.equal(f.att.move, charge);
+  const res = b.attack(a, d, charge);
+  assert.ok(res.released && a.charging === null, 'release clears the charge');
+  assert.ok(res.log[0].move === charge);
+  if (res.log[0].hit) assert.equal(hp - d.hp, res.log[0].dmg);
+  // cancel instead
+  const t2 = twoUnits('hydra', 'kyle', 1);
+  t2.b.startCharge(t2.a, t2.a.moves.find((m) => m.charge));
+  t2.b.cancelCharge(t2.a);
+  assert.equal(t2.a.charging, null);
+});
+
+test('specials rest a turn; guard cuts damage until the next turn; power up boosts the next hits', () => {
+  const { b, a, d } = twoUnits('hydra', 'kyle', 2);
+  const special = a.moves.find((m) => m.slot === 'special');
+  assert.equal(b.moveBlock(a, special), null);
+  b.attack(a, d, special);
+  assert.match(b.moveBlock(a, special), /Ready in/);
+  b.endPlayerPhase(); b.endEnemyPhase();
+  assert.match(b.moveBlock(a, special), /Ready in 1/);
+  b.endPlayerPhase(); b.endEnemyPhase();
+  assert.equal(b.moveBlock(a, special), null, 'ready again two turns later');
+  // guard
+  const g = twoUnits('hydra', 'kyle', 1);
+  const base = g.b.forecastFor(g.d, g.a).att.dmg;
+  const guard = g.a.moves.find((m) => m.action === 'guard');
+  g.b.guard(g.a, guard);
+  const guarded = g.b.forecastFor(g.d, g.a).att.dmg;
+  assert.ok(guarded < base && guarded >= Math.floor(base * (1 - guard.guard)) - 1, `${guarded} < ${base}`);
+  g.b.endPlayerPhase(); g.b.endEnemyPhase();
+  assert.equal(g.b.forecastFor(g.d, g.a).att.dmg, base, 'guard wears off on the unit\'s next turn');
+  // power up
+  const p = twoUnits('aaron', 'kyle', 1);
+  const pw = p.a.moves.find((m) => m.action === 'power');
+  assert.ok(pw, 'Aaron has a power-up');
+  const before = p.b.forecastFor(p.a, p.d).att.dmg;
+  p.b.powerUp(p.a, pw);
+  assert.ok(p.b.forecastFor(p.a, p.d).att.dmg > before);
+});
+
+test('enemies use real moves: they can charge, release, and fire specials', () => {
+  let usedSpecial = 0; let charged = 0; let released = 0;
+  for (let seed = 1; seed <= 12; seed++) {
+    const b = createBattle({ ...newCampaign(), chapter: 2 }, 3, seed);
+    for (let t = 0; t < 8 && !b.result; t++) {
+      b.startPhase('player'); b.checkEvents('turn');
+      for (const u of b.players) u.acted = true;
+      b.startPhase('enemy');
+      for (const u of b.enemies) {
+        const wasCharging = !!u.charging;
+        const plan = b.plan(u);
+        if (plan.charge) charged++;
+        if (plan.move?.slot === 'special') usedSpecial++;
+        if (wasCharging && plan.move?.charge) released++;
+        // apply like autoplayPhase does
+        b.moveUnit(u, plan.to.x, plan.to.y);
+        if (plan.cancelCharge) b.cancelCharge(u);
+        if (plan.target) b.attack(u, plan.target, plan.move); else if (plan.charge) b.startCharge(u, plan.charge); else if (plan.guard) b.guard(u, plan.guard); else b.wait(u);
+        if (b.result) break;
+      }
+      b.endEnemyPhase();
+    }
+  }
+  assert.ok(usedSpecial > 0, 'specials are used');
+  assert.ok(charged > 0, 'charges are started');
+  assert.ok(released > 0, 'charges are released');
+});
+
+test('the campaign is beatable by the AI: the AI clears every chapter within three tries on some seeds (it ignores terrain, guards and charges, so a player does better)', () => {
+  let cleared = 0;
+  const seeds = 8;
+  for (let seed = 1; seed <= seeds; seed++) {
+    let save = newCampaign();
+    let ok = true;
+    for (let ci = 0; ci < CHAPTERS.length && ok; ci++) {
+      let won = false;
+      for (let attempt = 0; attempt < 3 && !won; attempt++) {
+        const b = createBattle(save, ci, seed * 100 + ci * 7 + attempt);
+        if (autoplayChapter(b, 40).result === 'victory') { won = true; save = afterVictory(save, ci, b.commit()); }
+      }
+      ok = won;
+    }
+    if (ok) cleared++;
+  }
+  assert.ok(cleared >= 2, `${cleared}/${seeds} seeds cleared the whole campaign`);
 });

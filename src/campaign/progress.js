@@ -1,6 +1,6 @@
 // Campaign progress and save slot. Records carry level/xp/stats between chapters.
 import { CHAPTERS } from './chapters.js';
-import { makeRecord, restored } from './units.js';
+import { makeRecord, restored, upgradeRecord } from './units.js';
 
 const SAVE_KEY = 'ak-campaign-v1';
 
@@ -47,6 +47,7 @@ export function loadSave(storage = (typeof localStorage !== 'undefined' ? localS
     if (!raw) return null;
     const s = JSON.parse(raw);
     if (!s || !Array.isArray(s.party) || typeof s.chapter !== 'number') return null;
+    s.party = s.party.map(upgradeRecord); // saves from before campaign moves get 60-100 HP stats at their level
     return s;
   } catch { return null; }
 }

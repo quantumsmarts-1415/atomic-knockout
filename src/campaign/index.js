@@ -47,8 +47,11 @@ export function autoplayPhase(battle, team = 'enemy') {
       continue;
     }
     const plan = battle.plan(u);
+    if (plan.cancelCharge) battle.cancelCharge(u);
     battle.moveUnit(u, plan.to.x, plan.to.y);
-    if (plan.target) events.push({ unit: u, ...battle.attack(u, plan.target) });
+    if (plan.target) events.push({ unit: u, ...battle.attack(u, plan.target, plan.move) });
+    else if (plan.guard) battle.guard(u, plan.guard);
+    else if (plan.charge) battle.startCharge(u, plan.charge);
     else battle.wait(u);
   }
   return events;

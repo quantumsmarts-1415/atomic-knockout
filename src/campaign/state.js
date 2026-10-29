@@ -6,6 +6,7 @@ import { hostile, parseMap, reachable, threatTiles, ringTiles, pathTo, key, dist
 import { terrainAt } from './terrain.js';
 import { resolve, forecast } from './combat.js';
 import { awardXp, moveInfo } from './units.js';
+import { campaignMoves, unionRange } from './moves.js';
 import { planEnemy } from './ai.js';
 
 let uidSeq = 1;
@@ -18,7 +19,8 @@ function makeUnit(rec, team, x, y, extra = {}) {
     id: rec.id,
     name: CHARACTERS[rec.id]?.name || rec.id,
     level: rec.level, xp: rec.xp, hp: rec.hp, maxHp: rec.maxHp,
-    power: rec.power, def: rec.def, spd: rec.spd, mov: rec.mov, range: rec.range,
+    power: rec.power, def: rec.def, spd: rec.spd, mov: rec.mov, range: unionRange(rec.id),
+    moves: campaignMoves(rec.id), cd: {}, charging: null, status: {},
     lord: !!rec.lord, moveName: info.name,
     ai: 'aggressive', boss: false,
     acted: false, alive: true,
@@ -75,17 +77,71 @@ export class CampaignBattle {
   pathFor(unit, to, reach = this.reachFor(unit)) { return pathTo(reach, to); }
   threatFor(unit) { return threatTiles(this.map, unit, this.reachFor(unit)); }
 
-  /** Foes of `unit` within its range if it stood at (x,y). */
-  targetsFrom(unit, x = unit.x, y = unit.y) {
+  /** Foes of `unit` in range of `move` (default: any move it can use now) if it stood at (x,y). */
+  targetsFrom(unit, x = unit.x, y = unit.y, move = null) {
+    const ranges = move ? [move.range] : this.usableAttacks(unit).map((m) => m.range);
+    const seen = new Set();
     const out = [];
-    for (const t of ringTiles(this.map, x, y, unit.range[0], unit.range[1])) {
-      const u = this.unitAt(t.x, t.y);
-      if (u && hostile(unit, u)) out.push(u);
+    for (const r of ranges) {
+      for (const t of ringTiles(this.map, x, y, r[0], r[1])) {
+        const u = this.unitAt(t.x, t.y);
+        if (u && hostile(unit, u) && !seen.has(u.uid)) { seen.add(u.uid); out.push(u); }
+      }
     }
     return out;
   }
 
-  forecastFor(att, def) { return forecast(att, def, this.map); }
+  forecastFor(att, def, move = null) { return forecast(att, def, this.map, move); }
+
+  // --------------------------------------------------------------- moves
+  /** Why `move` cannot be used right now, or null when it can. */
+  moveBlock(unit, move) {
+    if (unit.charging) {
+      if (move.key === unit.charging) return null;           // release
+      return 'Charging: release or cancel first';
+    }
+    if (move.action === 'attack' && move.charge) return null; // starting a charge needs no target
+    const cd = unit.cd[move.key] || 0;
+    if (cd > 0) return `Ready in ${cd} turn${cd > 1 ? 's' : ''}`;
+    return null;
+  }
+
+  /** Attack moves the unit can fire at a target this turn (a charge in progress counts as the release). */
+  usableAttacks(unit) {
+    if (unit.charging) return unit.moves.filter((m) => m.key === unit.charging);
+    return unit.moves.filter((m) => m.attack && !m.charge && !this.moveBlock(unit, m));
+  }
+
+  /** The charge move to release this turn, if the unit is charging. */
+  chargedMove(unit) {
+    return unit.charging ? unit.moves.find((m) => m.key === unit.charging) || null : null;
+  }
+
+  /** Charging takes the whole turn; the release comes next turn at full power. */
+  startCharge(unit, move) {
+    unit.charging = move.key;
+    unit.acted = true;
+  }
+
+  cancelCharge(unit) {
+    unit.charging = null;
+  }
+
+  /** Guard: damage reduction until the unit's next turn. Returns the guard status. */
+  guard(unit, move) {
+    unit.status.guard = { frac: move.guard, turns: 1 };
+    unit.acted = true;
+    return unit.status.guard;
+  }
+
+  /** Power up: bigger hits for the next attacks. */
+  powerUp(unit, move) {
+    const e = move.effects.find((x) => x.type === 'power');
+    unit.status.power = { mult: e.mult, turns: e.turns };
+    unit.cd[move.key] = move.cd;
+    unit.acted = true;
+    return unit.status.power;
+  }
 
   canSeize(unit) {
     const s = this.chapter.seize;
@@ -125,8 +181,12 @@ export class CampaignBattle {
   }
 
   /** Strike. Returns { log, xp:[{unit,amount,levelUps}], killed:[units], forecast }. */
-  attack(att, def) {
-    const res = resolve(att, def, this.map, this.rng);
+  attack(att, def, move = null) {
+    move = move || att.moves.find((m) => m.key === 'basicDirectional');
+    const released = att.charging === move.key;
+    if (released) att.charging = null;
+    if (move.cd) att.cd[move.key] = move.cd;
+    const res = resolve(att, def, this.map, this.rng, move);
     const killed = [];
     for (const u of [att, def]) {
       if (u.hp <= 0 && u.alive) { u.alive = false; killed.push(u); }
@@ -147,7 +207,7 @@ export class CampaignBattle {
     if (killed.some((k) => k.team === 'enemy')) this.kills += killed.filter((k) => k.team === 'enemy').length;
     att.acted = true;
     this.updateResult();
-    return { ...res, killed, xp };
+    return { ...res, killed, xp, move, released };
   }
 
   wait(unit) { unit.acted = true; }
@@ -178,6 +238,8 @@ export class CampaignBattle {
     for (const u of this.units) {
       if (!u.alive || u.team !== team) continue;
       u.acted = false;
+      for (const k of Object.keys(u.cd)) if (u.cd[k] > 0) u.cd[k] -= 1;
+      for (const [name, st] of Object.entries(u.status)) { st.turns -= 1; if (st.turns <= 0) delete u.status[name]; }
       const heal = this.tile(u.x, u.y)?.heal;
       if (heal && u.hp < u.maxHp) {
         const n = Math.min(u.maxHp - u.hp, Math.max(2, Math.round(u.maxHp * heal)));
@@ -270,7 +332,7 @@ export class CampaignBattle {
       if (u.team !== 'player') continue;
       if (!u.alive) continue;
       Object.assign(u.rec, {
-        level: u.level, xp: u.xp, hp: u.hp, maxHp: u.maxHp, power: u.power, def: u.def, spd: u.spd,
+        v: 2, level: u.level, xp: u.xp, hp: u.hp, maxHp: u.maxHp, power: u.power, def: u.def, spd: u.spd,
       });
       survivors.push(u.rec);
     }

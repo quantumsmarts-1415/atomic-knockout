@@ -15,6 +15,7 @@ import { TERRAIN } from '../campaign/terrain.js';
 import { key, ringTiles } from '../campaign/grid.js';
 import { tileKey, attackClipName, loadCampaignArt, sheetKey, walkReady, releaseWalk } from '../campaign/art.js';
 import { basicMove } from '../campaign/units.js';
+import { describeMove, effectText } from '../campaign/moves.js';
 import { playMusic, stinger, watch, preload, toggleMute, createMapRotation, MAP_PLAYER_ROTATION, STINGER_BOOST } from '../campaign/music.js';
 import { playDialogue, playBossCard } from '../ui/campaignDialogue.js';
 
@@ -262,7 +263,28 @@ export default class CampaignBattleScene extends Phaser.Scene {
     v.cont.setDepth(10 + v.cont.y / 10);
   }
 
+  /** Small status pills under the HP bar: charging, guard, power up. */
+  paintTags(v) {
+    if (!v) return;
+    if (v.tags) { v.tags.list.forEach((t) => this.tweens.killTweensOf(t)); v.tags.destroy(); }
+    const u = v.u;
+    const list = [];
+    if (u.charging) list.push(['CHARGING', '#FFD166']);
+    if (u.status?.guard) list.push(['GUARD', '#35A8FF']);
+    if (u.status?.power) list.push(['POWER UP', '#FF9A3C']);
+    if (!list.length || !u.alive) { v.tags = null; return; }
+    const c = this.add.container(0, 22);
+    list.forEach(([t, col], i) => {
+      const txt = this.add.text(0, i * 13, t, { fontFamily: FONT_DISPLAY, fontSize: '12px', color: col, stroke: '#07060E', strokeThickness: 5, letterSpacing: 1 }).setOrigin(0.5, 0);
+      c.add(txt); txt.y = i * 15;
+      if (t === 'CHARGING') this.tweens.add({ targets: txt, alpha: 0.35, duration: 380, yoyo: true, repeat: -1 });
+    });
+    v.cont.add(c);
+    v.tags = c;
+  }
+
   paintBar(v) {
+    this.paintTags(v);
     const g = v.bar;
     g.clear();
     const w = 50;
@@ -366,14 +388,14 @@ export default class CampaignBattleScene extends Phaser.Scene {
       this.pAdd(bar);
       this.pAdd(this.add.text(x + 4, y + 16, `HP ${u.hp} / ${u.maxHp}`, textStyle('mono')));
       y += 40;
-      const stats = [['POW', u.power], ['DEF', u.def], ['SPD', u.spd], ['MOV', u.mov], ['RNG', u.range[0] === u.range[1] ? u.range[0] : `${u.range[0]}-${u.range[1]}`]];
+      const stats = [['DMG+', u.power], ['DEF', u.def], ['SPD', u.spd], ['MOV', u.mov], ['RNG', u.range[0] === u.range[1] ? u.range[0] : `${u.range[0]}-${u.range[1]}`]];
       stats.forEach(([k, v], i) => {
         const cx = x + (i % 3) * 70;
         const cy = y + Math.floor(i / 3) * 38;
         this.pAdd(this.add.text(cx, cy, k, textStyle('label')));
         this.pAdd(this.add.text(cx, cy + 14, String(v), textStyle('h3', { fontSize: '19px' })));
       });
-      y += 84;
+      y += 80;
       if (u.team === 'player') {
         this.pAdd(this.add.text(x, y, `EXP ${u.xp} / ${XP_PER_LEVEL}`, textStyle('label')));
         const xb = this.add.graphics();
@@ -382,6 +404,16 @@ export default class CampaignBattleScene extends Phaser.Scene {
         xb.fillStyle(THEME.gold, 1);
         xb.fillRect(x, y + 16, 206 * (u.xp / XP_PER_LEVEL), 6);
         this.pAdd(xb);
+        y += 26;
+      }
+      // the fighter's moves, with cooldowns
+      for (const m of u.moves) {
+        const cd = u.cd[m.key] || 0;
+        const tag = m.action === 'guard' ? 'GRD' : m.action === 'power' ? 'PWR' : m.charge ? `CHG ${m.dmg}` : `${m.dmg}`;
+        const col = cd > 0 ? THEME.disabledCss : THEME.mistCss;
+        this.pAdd(this.add.text(x, y, `${m.name}${cd > 0 ? ` (${cd})` : ''}`, textStyle('caption', { fontSize: '11px', color: col })));
+        this.pAdd(this.add.text(x + 204, y, tag, textStyle('mono', { fontSize: '11px', color: col })).setOrigin(1, 0));
+        y += 14;
       }
     }
     // terrain card
@@ -391,7 +423,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const thumb = this.add.image(PANEL_X + 8 + 32, ty0 + 46, tileKey(t.id)).setDisplaySize(56, 56);
     this.pAdd(thumb);
     this.pAdd(this.add.text(PANEL_X + 78, ty0 + 12, t.name.toUpperCase(), textStyle('h3', { fontSize: '15px' })));
-    const info = Number.isFinite(t.cost) ? `Move cost ${t.cost}\nDefense +${t.def}\nAvoid +${t.avoid}${t.heal ? '\nHeals' : ''}` : 'Impassable';
+    const info = Number.isFinite(t.cost) ? `Move cost ${t.cost}\nDefense +${t.def}\nAvoid +${t.avoid}${t.heal ? `\nHeals ${Math.round(t.heal * 100)}%/turn` : ''}` : 'Impassable';
     this.pAdd(this.add.text(PANEL_X + 78, ty0 + 34, info, textStyle('caption', { fontSize: '11px', lineSpacing: 2 })));
     // counts
     this.pAdd(this.add.text(x, ty0 + 104, `ALLIES ${b.players.length}   FOES ${b.enemies.length}`, textStyle('mono')));
@@ -410,9 +442,9 @@ export default class CampaignBattleScene extends Phaser.Scene {
     return 'ROUT ALL ENEMIES';
   }
 
-  showForecast(att, def) {
+  showForecast(att, def, move = null) {
     this.hideForecast();
-    const f = this.battle.forecastFor(att, def);
+    const f = this.battle.forecastFor(att, def, move);
     const x = PANEL_X;
     const y = 64;
     const objs = [];
@@ -422,7 +454,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     solid.fillRoundedRect(x, y, 216, 330, 12);
     add(solid);
     add(drawPanel(this, x, y, 216, 330, 12, THEME.gold, 0.9));
-    add(this.add.text(x + 108, y + 10, 'FORECAST', textStyle('kicker')).setOrigin(0.5, 0));
+    add(this.add.text(x + 108, y + 10, f.move ? f.move.name.toUpperCase() : 'FORECAST', textStyle('kicker', { fontSize: '13px' })).setOrigin(0.5, 0));
     const cols = [{ u: att, f: f.att, hits: f.attHits, cx: x + 58 }, { u: def, f: f.def, hits: f.defHits, cx: x + 160 }];
     cols.forEach(({ u, f: s, hits, cx }) => {
       add(this.add.text(cx, y + 36, u.name.toUpperCase(), textStyle('h3', { fontSize: '14px', color: u.team === 'player' ? THEME.tealCss : THEME.pinkCss })).setOrigin(0.5, 0));
@@ -441,11 +473,13 @@ export default class CampaignBattleScene extends Phaser.Scene {
     if (!f.def) notes.push('No counterattack');
     if (f.attHits === 2) notes.push(`${att.name} strikes twice`);
     if (f.defHits === 2) notes.push(`${def.name} strikes twice`);
+    for (const e of f.move?.effects || []) notes.push(effectText(e));
+    if (f.move?.charge) notes.push('Fully charged release');
     if (f.att.mult > 1.05) notes.push('Element: effective');
     else if (f.att.mult < 0.95) notes.push('Element: resisted');
     const tile = this.battle.tile(def.x, def.y);
     if (tile.def || tile.avoid) notes.push(`${tile.name}: +${tile.def} DEF, +${tile.avoid} avoid`);
-    add(this.add.text(x + 12, y + 238, notes.join('\n'), textStyle('caption', { fontSize: '11px', lineSpacing: 3, wordWrap: { width: 192 } })));
+    add(this.add.text(x + 12, y + 228, notes.join('\n'), textStyle('caption', { fontSize: '10px', lineSpacing: 2, wordWrap: { width: 192 } })));
     add(this.add.text(x + 108, y + 308, 'ENTER / click again to attack', textStyle('label', { fontSize: '9px' })).setOrigin(0.5, 1));
     this.forecastObjs = objs;
   }
@@ -547,13 +581,13 @@ export default class CampaignBattleScene extends Phaser.Scene {
     if (this.mode === 'target') {
       if (u && this.targets.includes(u)) {
         if (this.pending === u) this.doAttack(u);
-        else { this.pending = u; this.showForecast(this.sel, u); this.paintRanges({ attack: this.atkSet, targets: [u] }); }
+        else { this.pending = u; this.showForecast(this.sel, u, this.curMove); this.paintRanges({ attack: this.atkSet, targets: [u] }); }
       } else if (fromKey && !u && this.targets.length) {
         // keyboard: cycle to the first target when the cursor isn't on one
         const t = this.targets[0];
         this.setCursor(t.x, t.y);
         this.pending = t;
-        this.showForecast(this.sel, t);
+        this.showForecast(this.sel, t, this.curMove);
       } else this.cancel();
     }
   }
@@ -745,31 +779,60 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.mode = 'menu';
     this.targets = b.targetsFrom(u);
     const items = [];
-    if (this.targets.length) items.push({ id: 'attack', label: 'Attack' });
+    if (u.charging) {
+      const rel = b.chargedMove(u);
+      const has = rel && b.targetsFrom(u, u.x, u.y, rel).length > 0;
+      items.push({ id: 'release', move: rel, label: `Release ${rel.name}`, tag: `${rel.dmg}`, disabled: !has, note: has ? '' : 'No target in range' });
+      items.push({ id: 'cancelCharge', label: 'Cancel Charge', info: ['Stop charging and act normally this turn.'] });
+    } else {
+      for (const m of u.moves) {
+        const block = b.moveBlock(u, m);
+        if (m.action === 'attack' && !m.charge) {
+          const has = b.targetsFrom(u, u.x, u.y, m).length > 0;
+          items.push({ id: 'attack', move: m, label: m.name, tag: `${m.dmg}`, disabled: !!block || !has, note: block || (has ? '' : 'No target in range') });
+        } else if (m.action === 'attack') {
+          items.push({ id: 'charge', move: m, label: m.name, tag: 'CHG', disabled: !!block, note: block || '' });
+        } else if (m.action === 'power') {
+          items.push({ id: 'power', move: m, label: m.name, tag: 'PWR', disabled: !!block, note: block || '' });
+        } else if (m.action === 'guard') {
+          items.push({ id: 'guard', move: m, label: m.name, tag: 'GRD', disabled: !!block, note: block || '' });
+        }
+      }
+    }
     if (b.canSeize(u)) items.push({ id: 'seize', label: 'Seize' });
     if (b.canEscape(u)) items.push({ id: 'escape', label: 'Escape' });
     this.talkList = b.talkTargets(u);
     if (this.talkList.length) items.push({ id: 'talk', label: 'Talk' });
-    items.push({ id: 'wait', label: 'Wait' });
+    items.push({ id: 'wait', label: 'Wait', info: [u.charging ? 'Hold position and keep the charge.' : 'End this unit\'s turn.'] });
     this.menuItems = items;
-    this.menuSel = 0;
+    this.menuSel = Math.max(0, items.findIndex((it) => !it.disabled));
     const objs = [];
-    const w = 132;
-    const rowH = 36;
+    const w = 214;
+    const rowH = 32;
     const h = items.length * rowH + 12;
+    const infoW = 262;
+    const mapRight = MAPX + b.map.w * TILE;
     let mx = tx(u.x) + TILE + 6;
-    if (mx + w > MAPX + b.map.w * TILE) mx = tx(u.x) - w - 6;
+    let infoLeft = false;
+    if (mx + w + infoW + 6 > mapRight) { infoLeft = mx + w > mapRight - 20; if (mx + w > mapRight) mx = tx(u.x) - w - 6; }
     let my = Math.min(ty(u.y), MAPY + b.map.h * TILE - h);
+    my = Math.max(my, MAPY + 4);
     const bg = drawPanel(this, mx, my, w, h, 10, THEME.gold, 0.9).setDepth(70);
     objs.push(bg);
     this.menuRows = items.map((it, i) => {
-      const row = this.add.text(mx + 16, my + 6 + i * rowH + rowH / 2, it.label.toUpperCase(), { fontFamily: FONT_DISPLAY, fontSize: '15px', color: THEME.mistCss, letterSpacing: 2 }).setOrigin(0, 0.5).setDepth(71);
+      const row = this.add.text(mx + 14, my + 6 + i * rowH + rowH / 2, it.label.toUpperCase(), { fontFamily: FONT_DISPLAY, fontSize: '14px', color: THEME.mistCss, letterSpacing: 1 }).setOrigin(0, 0.5).setDepth(71);
+      if (it.tag) objs.push(this.add.text(mx + w - 14, my + 6 + i * rowH + rowH / 2, it.tag, textStyle('mono', { fontSize: '12px', color: THEME.dimCss })).setOrigin(1, 0.5).setDepth(71));
       const zone = this.add.zone(mx, my + 6 + i * rowH, w, rowH).setOrigin(0, 0).setDepth(72).setInteractive({ useHandCursor: true });
       zone.on('pointerover', () => { this.menuSel = i; this.paintMenu(); });
       zone.on('pointerdown', (p) => { if (p.leftButtonDown()) { this.menuSel = i; this.menuPick(); } });
       objs.push(row, zone);
       return row;
     });
+    // move info card beside the menu
+    const ix = infoLeft || mx + w + 6 + infoW > mapRight + 40 ? mx - infoW - 6 : mx + w + 6;
+    this.menuInfoBg = drawPanel(this, ix, my, infoW, 176, 10, THEME.teal, 0.9).setDepth(70);
+    this.menuInfoT = this.add.text(ix + 12, my + 10, '', textStyle('caption', { fontSize: '12px', lineSpacing: 4, wordWrap: { width: infoW - 24 } })).setDepth(71);
+    objs.push(this.menuInfoBg, this.menuInfoT);
     this.menuObjs = objs;
     this.menuSelG = this.add.graphics().setDepth(70.5);
     this.menuGeo = { mx, my, w, rowH };
@@ -783,11 +846,21 @@ export default class CampaignBattleScene extends Phaser.Scene {
     g.clear();
     g.fillStyle(THEME.shellOn, 0.9);
     g.fillRoundedRect(mx + 6, my + 6 + this.menuSel * rowH, w - 12, rowH - 2, 6);
-    this.menuRows.forEach((r, i) => r.setColor(i === this.menuSel ? THEME.goldCss : THEME.mistCss));
+    this.menuRows.forEach((r, i) => r.setColor(this.menuItems[i].disabled ? THEME.disabledCss : i === this.menuSel ? THEME.goldCss : THEME.mistCss));
+    const it = this.menuItems[this.menuSel];
+    const lines = it?.move ? describeMove(it.move) : (it?.info || []);
+    if (it?.note) lines.push(`(${it.note})`);
+    this.menuInfoT?.setText(lines.join('\n'));
   }
 
   menuMove(d) {
-    this.menuSel = (this.menuSel + d + this.menuItems.length) % this.menuItems.length;
+    const n = this.menuItems.length;
+    let i = this.menuSel;
+    for (let k = 0; k < n; k++) {
+      i = (i + d + n) % n;
+      if (!this.menuItems[i].disabled) break;
+    }
+    this.menuSel = i;
     this.paintMenu();
     sfx('menuMove');
   }
@@ -795,6 +868,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
   closeMenu() {
     this.menuObjs?.forEach((o) => o.destroy());
     this.menuObjs = null;
+    this.menuInfoT = null;
+    this.menuInfoBg = null;
     this.menuSelG?.destroy();
     this.menuSelG = null;
   }
@@ -802,24 +877,47 @@ export default class CampaignBattleScene extends Phaser.Scene {
   menuPick() {
     const it = this.menuItems[this.menuSel];
     if (!it) return;
+    if (it.disabled) { this.toast(it.note || 'Not available'); return; }
     sfx('menuConfirm');
+    const u = this.sel;
+    if (it.id === 'cancelCharge') { this.battle.cancelCharge(u); this.paintTags(this.views.get(u.uid)); this.closeMenu(); this.openMenu(); return; }
     this.closeMenu();
     if (it.id === 'wait') this.commitMove().then((over) => { if (!over) this.finishAction(this.sel); });
     else if (it.id === 'escape') { this.mode = 'busy'; this.paintRanges(); this.commitMove().then((over) => { if (over) return; this.battle.escape(this.sel); this.finishAction(this.sel, true); }); }
     else if (it.id === 'talk') this.commitMove().then((over) => { if (!over) this.doTalk(this.talkList[0]); });
     else if (it.id === 'seize') { this.mode = 'busy'; this.paintRanges(); this.commitMove().then((over) => { if (over) return; this.battle.seize(this.sel); this.finishAction(this.sel, true); }); }
-    else if (it.id === 'attack') {
+    else if (it.id === 'charge') this.selfAction(it.move, () => { this.battle.startCharge(u, it.move); return `CHARGING ${it.move.name.toUpperCase()}`; }, '#FFD166');
+    else if (it.id === 'guard') this.selfAction(it.move, () => { this.battle.guard(u, it.move); return `${it.move.name.toUpperCase()}`; }, '#35A8FF');
+    else if (it.id === 'power') this.selfAction(it.move, () => { this.battle.powerUp(u, it.move); return `${it.move.name.toUpperCase()}!`; }, '#FF9A3C');
+    else if (it.id === 'attack' || it.id === 'release') {
+      const move = it.move;
       this.mode = 'target';
+      this.curMove = move;
       this.pending = null;
-      const u = this.sel;
-      this.atkSet = new Map(ringTiles(this.battle.map, u.x, u.y, u.range[0], u.range[1]).map((t) => [key(t.x, t.y), t]));
+      this.targets = this.battle.targetsFrom(u, u.x, u.y, move);
+      this.atkSet = new Map(ringTiles(this.battle.map, u.x, u.y, move.range[0], move.range[1]).map((t) => [key(t.x, t.y), t]));
       this.paintRanges({ attack: this.atkSet, targets: this.targets });
       const t = this.targets[0];
       this.pending = t;
       this.setCursor(t.x, t.y);
-      this.showForecast(u, t);
+      this.showForecast(u, t, move);
       this.paintRanges({ attack: this.atkSet, targets: [t] });
     }
+  }
+
+  /** Charge, guard and power up: the move is the whole action. */
+  async selfAction(move, apply, color) {
+    const u = this.sel;
+    this.mode = 'busy';
+    this.paintRanges();
+    if (await this.commitMove()) return;
+    const label = apply();
+    const v = this.views.get(u.uid);
+    this.paintTags(v);
+    this.floatText(v.cont.x, v.cont.y - 100, label, color, 18);
+    this.burst(v.cont.x, v.cont.y - 40, Phaser.Display.Color.HexStringToColor(color).color, 14, 60);
+    await this.wait(480);
+    this.finishAction(u, true);
   }
 
   // --------------------------------------------------------------- combat
@@ -829,7 +927,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.hideForecast();
     this.paintRanges();
     if (await this.commitMove()) return;
-    await this.combat(att, target);
+    await this.combat(att, target, this.curMove);
     this.finishAction(att, true);
   }
 
@@ -857,14 +955,14 @@ export default class CampaignBattleScene extends Phaser.Scene {
     if (b.players.every((p) => p.acted)) this.endTurnPressed(true);
   }
 
-  async combat(att, def) {
+  async combat(att, def, move = null) {
     const b = this.battle;
     const va = this.views.get(att.uid);
     const vd = this.views.get(def.uid);
     if (va.rig) va.rig.facing = def.x < att.x ? -1 : def.x > att.x ? 1 : va.rig.facing;
     if (vd.rig) vd.rig.facing = att.x < def.x ? -1 : att.x > def.x ? 1 : vd.rig.facing;
     const before = new Map([[att.uid, att.hp], [def.uid, def.hp]]);
-    const res = b.attack(att, def);
+    const res = b.attack(att, def, move);
     // the state already holds the final HP; the bars catch up strike by strike
     va.shownHp = before.get(att.uid);
     vd.shownHp = before.get(def.uid);
@@ -926,7 +1024,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
   }
 
   /** Start the fighter's attack clip on a view (map or cutaway). Returns false when the clip is not loaded yet. */
-  startAttack(v, dur) {
+  startAttack(v, dur, _move = null) {
     if (!v.rig || !this.clipLoaded(v.u)) return false;
     const mv = basicMove(CHARACTERS[v.u.id]);
     const fd = frameData(mv?.duration ?? 250, mv?.cooldown ?? 380, mv || {}, 1000 / 60);
@@ -1030,7 +1128,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       const dur = 0.58;
       sfx('whoosh');
       sv.rig.facing = dir; tv.rig.facing = -dir;
-      const clip = this.startAttack(sv, dur);
+      const clip = this.startAttack(sv, dur, s.move);
       this.tween({ targets: sv.rig, x: startX + dir * (clip ? 70 : 110), duration: 190, ease: 'Cubic.easeOut' });
       await this.wait(dur * 1000 * 0.45);
       const tx0 = tv.home;
@@ -1085,7 +1183,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const dx = Math.sign(tv.cont.x - sv.cont.x) || 1;
     sfx('whoosh');
     const dur = 0.55;
-    this.startAttack(sv, dur);
+    this.startAttack(sv, dur, s.move);
     const home = sv.cont.x;
     this.tween({ targets: sv.cont, x: home + dx * 16, duration: 140, yoyo: true, ease: 'Sine.easeOut', hold: 60 });
     await this.wait(dur * 1000 * 0.42);
@@ -1242,6 +1340,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       if (!u) break;
       const plan = b.plan(u);
       const v = this.views.get(u.uid);
+      if (plan.cancelCharge) { b.cancelCharge(u); this.paintTags(v); }
       this.setCursor(u.x, u.y);
       if (plan.to.x !== u.x || plan.to.y !== u.y) {
         const reach = b.reachFor(u);
@@ -1252,8 +1351,11 @@ export default class CampaignBattleScene extends Phaser.Scene {
       if (plan.target) {
         this.setCursor(plan.target.x, plan.target.y);
         await this.wait(260);
-        await this.combat(u, plan.target);
-      } else b.wait(u);
+        await this.combat(u, plan.target, plan.move);
+      } else if (plan.guard) { b.guard(u, plan.guard); this.floatText(v.cont.x, v.cont.y - 100, `${plan.guard.name.toUpperCase()}!`, '#35A8FF', 20); await this.wait(420); }
+      else if (plan.charge) { b.startCharge(u, plan.charge); this.floatText(v.cont.x, v.cont.y - 100, `CHARGING ${plan.charge.name.toUpperCase()}`, '#FFD166', 18); sfx('menuConfirm'); await this.wait(520); }
+      else b.wait(u);
+      this.paintTags(v);
       u.acted = true;
       if (v && u.alive) this.setGrey(v, true);
       await this.wait(160);

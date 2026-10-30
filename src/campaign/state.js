@@ -9,6 +9,7 @@ import { awardXp, moveInfo } from './units.js';
 import { campaignMoves, unionRange, healMoveOf, healAmount } from './moves.js';
 import { planEnemy } from './ai.js';
 import { applyHitEffects, applyRecoil, startOfTurn, cleanse } from './status.js';
+import { robotExtras } from './robots.js';
 
 let uidSeq = 1;
 
@@ -35,6 +36,14 @@ function makeUnit(rec, team, x, y, extra = {}) {
     ...extra,
   };
 }
+
+/** Extra unit fields from an enemy spec: a story key (events target it) and, for robots, the shared body + tint. */
+function enemyExtras(spec) {
+  return { ...(spec.key ? { key: spec.key } : {}), ...(spec.robot ? robotExtras(spec) : {}) };
+}
+
+/** The name story events use for a unit: its `key` when it has one, else its fighter id. */
+const keyOf = (u) => u?.key || u?.id;
 
 export class CampaignBattle {
   /**
@@ -64,15 +73,15 @@ export class CampaignBattle {
       const st = starts[slots[n]];
       this.units.push(makeUnit(rec, 'player', st[0], st[1]));
     });
+    this.enemyRecords = enemyRecords;
     for (const e of chapter.enemies) {
       const rec = enemyRecords(e);
       const tut = chapter.tutorial; // an easing chapter: its enemies hit softer and crit less; `wake` staggers when they advance
       this.units.push(makeUnit(rec, 'enemy', e.x, e.y, {
         ai: e.ai || 'aggressive', boss: !!e.boss, wake: e.wake || 0,
-        dmgMult: enemyDmgMult(chapter), ...(tut ? { critMax: tut.critMax ?? 50 } : {}),
+        dmgMult: enemyDmgMult(chapter), ...(tut ? { critMax: tut.critMax ?? 50 } : {}), ...enemyExtras(e),
       }));
     }
-    this.enemyRecords = enemyRecords;
     this.avgLevel = Math.max(1, Math.round(party.reduce((a, r) => a + r.level, 0) / Math.max(1, party.length)));
     for (const n of chapter.npcs || []) {
       const rec = enemyRecords({ id: n.id, level: n.level ?? this.avgLevel });
@@ -279,11 +288,13 @@ export class CampaignBattle {
     const lord = this.units.find((u) => u.lord && u.team === 'player');
     if ((lord && !lord.alive) || !this.players.length) { this.result = 'defeat'; return this.result; }
     const { win } = this.chapter;
-    if (win === 'rout' && !this.enemies.length) this.result = 'victory';
-    if (win === 'escape' && !this.enemies.length) this.result = 'victory';
-    if (win === 'defend' && !this.enemies.length && !this.pendingSpawns()) this.result = 'victory';
+    // a wave still to arrive (a spawn event not fired yet) keeps the fight going: clearing the field calls it in at once
+    const cleared = !this.enemies.length && !this.pendingSpawns();
+    if (win === 'rout' && cleared) this.result = 'victory';
+    if (win === 'escape' && cleared) this.result = 'victory';
+    if (win === 'defend' && cleared) this.result = 'victory';
     if (win === 'boss' && !this.units.some((u) => u.boss && u.alive)) this.result = 'victory';
-    if (win === 'seize' && !this.enemies.length) this.result = 'victory';
+    if (win === 'seize' && cleared) this.result = 'victory';
     return this.result;
   }
 
@@ -326,8 +337,13 @@ export class CampaignBattle {
   }
 
   // -------------------------------------------------------------- events
+  /** An enemy wave that can still arrive on its own: unfired, and tied to a turn that is not past or to the field being cleared. */
   pendingSpawns() {
-    return (this.chapter.events || []).some((e, i) => !this.fired.has(i) && e.spawn?.some((s) => (s.team || 'enemy') === 'enemy'));
+    return (this.chapter.events || []).some((e, i) => {
+      if (this.fired.has(i) || !e.spawn?.some((s) => (s.team || 'enemy') === 'enemy')) return false;
+      const w = e.when || {};
+      return !!w.orClear || w.start || w.turn >= this.turn || w.enemyTurn >= this.turn;
+    });
   }
 
   freeTileNear(x, y) {
@@ -358,11 +374,13 @@ export class CampaignBattle {
       if (kind === 'start') hit = !!w.start;
       else if (kind === 'turn') hit = w.turn === this.turn;
       else if (kind === 'enemyTurn') hit = w.enemyTurn === this.turn;
-      else if (kind === 'death') hit = w.death === ctx.unit?.id;
+      else if (kind === 'death') hit = w.death === keyOf(ctx.unit);
       else if (kind === 'move' && w.near) {
-        const target = this.units.find((u) => u.alive && u.team === 'enemy' && u.id === w.near);
+        const target = this.units.find((u) => u.alive && u.team === 'enemy' && keyOf(u) === w.near);
         hit = !!target && this.players.some((p) => dist(p.x, p.y, target.x, target.y) <= (w.dist ?? 4));
       }
+      // a wave (`orClear`) also arrives the moment the field is empty, so a quick win never skips it
+      if (!hit && w.orClear && !this.enemies.length) hit = true;
       if (!hit) return;
       this.fired.add(i);
       const spawned = [];
@@ -370,7 +388,7 @@ export class CampaignBattle {
         const at = this.freeTileNear(sp.x, sp.y);
         const team = sp.team || 'enemy';
         const rec = this.enemyRecords({ id: sp.id, level: sp.level ?? this.avgLevel });
-        const u = makeUnit(rec, team, at.x, at.y, { ai: sp.ai || 'aggressive', boss: !!sp.boss, arrived: true, ...(team === 'enemy' ? { dmgMult: enemyDmgMult(this.chapter) } : {}) });
+        const u = makeUnit(rec, team, at.x, at.y, { ai: sp.ai || 'aggressive', boss: !!sp.boss, arrived: true, ...(team === 'enemy' ? { dmgMult: enemyDmgMult(this.chapter), ...enemyExtras(sp) } : {}) });
         this.units.push(u);
         spawned.push(u);
       }

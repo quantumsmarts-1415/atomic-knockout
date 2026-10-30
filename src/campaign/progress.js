@@ -30,11 +30,19 @@ export function partyForChapter(save, chapter) {
   return party;
 }
 
-/** After a win: keep survivors, advance the chapter pointer. */
+/** Elements a chapter frees when it is won (`frees: [fighterId, ...]`) that are not in `party` yet. */
+export function freedFor(chapter, party = []) {
+  return (chapter.frees || []).filter((id) => !party.some((r) => r.id === id));
+}
+
+/** After a win: keep survivors, add the elements the chapter frees (they join at the party's average level), advance the chapter pointer. */
 export function afterVictory(save, chapterIndex, survivors) {
+  const party = survivors.map((r) => ({ ...r }));
+  const avg = averageLevel(party);
+  for (const id of freedFor(CHAPTERS[chapterIndex], party)) party.push(makeRecord(id, avg));
   const next = {
     ...save,
-    party: survivors.map((r) => ({ ...r })),
+    party,
     chapter: Math.min(CHAPTERS.length, chapterIndex + 1),
     cleared: [...new Set([...save.cleared, CHAPTERS[chapterIndex].id])],
   };

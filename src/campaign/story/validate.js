@@ -3,7 +3,8 @@
 import { GLYPH_TO_TERRAIN, TERRAIN } from '../terrain.js';
 
 const WINS = ['rout', 'seize', 'boss', 'defend', 'escape'];
-const WHENS = ['start', 'turn', 'enemyTurn', 'near', 'death'];
+// `orClear: true` fires a wave as soon as the field is empty (alone, or beside turn/enemyTurn: whichever comes first)
+const WHENS = ['start', 'turn', 'enemyTurn', 'near', 'death', 'orClear'];
 
 export function validateStory(story, knownFighters = null) {
   const bad = [];
@@ -63,6 +64,11 @@ export function validateStory(story, knownFighters = null) {
     (ch.enemies || []).forEach((e, i) => {
       fighter(`${w} enemies[${i}]`, e.id);
       if (!walkable(e.x, e.y)) err(w, `enemy ${e.id} (${e.x},${e.y}) is off the map or blocked`);
+      if (e.robot != null && e.robot !== true) err(`${w} enemies[${i}]`, 'robot must be true (id is the enslaved element whose moves it uses)');
+    });
+    (ch.frees || []).forEach((id, i) => {
+      fighter(`${w} frees[${i}]`, id);
+      if (story.chapters.some((o, oi) => oi < ci && (o.frees || []).includes(id))) err(`${w} frees[${i}]`, `"${id}" is already freed by an earlier chapter`);
     });
     if (!(ch.enemies || []).length) err(w, 'needs at least one enemy');
     if (ch.win === 'seize' && !(Array.isArray(ch.seize) && walkable(...ch.seize))) err(w, 'seize needs a walkable [x, y]');
@@ -74,12 +80,16 @@ export function validateStory(story, knownFighters = null) {
     (ch.events || []).forEach((ev, i) => {
       const ew = `${w} events[${i}]`;
       const keys = Object.keys(ev.when || {}).filter((k) => WHENS.includes(k));
+      if (ev.when?.orClear && !(ev.spawn || []).length) err(ew, 'orClear is for waves: the event needs a spawn');
       if (!keys.length) err(ew, `when needs one of ${WHENS.join(', ')}`);
-      if (ev.when?.near != null) fighter(`${ew}.when.near`, ev.when.near);
-      if (ev.when?.death != null) fighter(`${ew}.when.death`, ev.when.death);
+      // near / death name an enemy's `key` (robots, bosses) or its fighter id
+      const enemyKeys = new Set([...(ch.enemies || []), ...(ch.events || []).flatMap((o) => o.spawn || [])].map((e) => e.key || e.id));
+      for (const k of ['near', 'death']) {
+        if (ev.when?.[k] != null && !enemyKeys.has(ev.when[k])) err(`${ew}.when.${k}`, `no enemy or spawn with key/id "${ev.when[k]}"`);
+      }
       lines(`${ew}.lines`, ev.lines);
       (ev.spawn || []).forEach((s, j) => { fighter(`${ew}.spawn[${j}]`, s.id); if (!walkable(s.x, s.y)) err(`${ew}.spawn[${j}]`, 'off the map or blocked'); });
-      if (ev.card) fighter(`${ew}.card`, ev.card.id);
+      if (ev.card && !ev.card.robot) fighter(`${ew}.card`, ev.card.id);   // a robot card has no portrait
     });
     (ch.npcs || []).forEach((n, i) => {
       fighter(`${w} npcs[${i}]`, n.id);

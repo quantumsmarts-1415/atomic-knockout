@@ -1,3 +1,4 @@
+import { jumpLaunchOf } from '../src/data/statRework.js';
 import test from 'node:test';
 import assert from 'node:assert';
 import { CHARACTERS } from '../src/data/characters.js';
@@ -79,24 +80,25 @@ test('chemical damage grows with electronegativity difference', () => {
   assert.strictEqual(resolveMoveDamage(move, CHARACTERS.flora, CHARACTERS.aaron).total, 0);
 });
 
-test('density orders speed and weight, and every roster fighter stays in clamp', () => {
+test('Weight and Speed (1-5, sum 6) drive speed, weight and jumps; every roster fighter stays in range', () => {
   const ids = Object.keys(CHARACTERS);
   for (const id of ids) {
     const c = CHARACTERS[id].combat;
     assert.ok(c, `${id} has a combat profile`);
-    assert.ok(c.speed >= TUNING.speedClamp[0] && c.speed <= TUNING.speedClamp[1], id);
-    assert.ok(c.jumpVelocity >= TUNING.jumpClamp[0] && c.jumpVelocity <= TUNING.jumpClamp[1], id);
-    assert.ok(c.weight >= TUNING.weightClamp[0] && c.weight <= TUNING.weightClamp[1], id);
+    assert.ok(c.speed >= 190 && c.speed <= 350, id);
+    assert.ok(c.weight >= 0.75 && c.weight <= 1.75, id);
+    assert.ok(Math.abs(c.jumpVelocity - jumpLaunchOf(Math.round((c.weight - 0.5) * 4))) < 1e-6, id);
   }
   assert.ok(CHARACTERS.hydra.combat.speed > CHARACTERS.chroma.combat.speed);
   assert.ok(CHARACTERS.hydra.combat.weight < CHARACTERS.chroma.combat.weight);
   assert.ok(CHARACTERS.chroma.combat.radDef > CHARACTERS.hydra.combat.radDef);
 });
 
-test('air jumps are preserved from the character while movement comes from density', () => {
-  assert.strictEqual(CHARACTERS.helen.stats.airJumps, 2);
-  assert.strictEqual(CHARACTERS.sully.stats.airJumps, 0);
+test('air jumps follow Speed (ceil(S / 2)) and walk speed follows 150 + 40 S', () => {
+  assert.strictEqual(CHARACTERS.helen.stats.airJumps, 3);
+  assert.strictEqual(CHARACTERS.sully.stats.airJumps, 2);
   assert.strictEqual(CHARACTERS.helen.stats.speed, CHARACTERS.helen.combat.speed);
+  assert.strictEqual(CHARACTERS.helen.stats.speed, 150 + 40 * 5);
 });
 
 test('cold gases take more heat damage than refractory metals', () => {

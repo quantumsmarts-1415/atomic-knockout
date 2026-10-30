@@ -112,7 +112,8 @@ test('painted stages: platforms within reach of every air-jumper; solid steps ho
   // than that on purpose and are tanks (no extra air jump), same as Van.
   const hop = reach.filter((r) => r.single >= 90);
   assert.ok(hop.length >= 24, 'launch roster still clears the stage floor');
-  assert.ok(reach.some((r) => r.single < 90), 'denser imports keep the short hop');
+  // Stat rework: everyone jumps the same height (1.1 x Sully, 162.8 px), so no one has the short hop any more.
+  assert.ok(reach.every((r) => Math.abs(r.single - 162.8) < 0.5), 'everyone jumps the same height');
   const air = hop.filter((r) => r.airJumps > 0);
   // The painted spare (40px) is the launch roster's, whose shortest hop is
   // about 105px. Later air-jumpers between 90 and 100px still have to clear
@@ -347,14 +348,13 @@ test('a bot above an opponent keeps dropping after their feet leave the platform
 test('big-stage CPU: a tank heads for the lift to reach the summit; nobody walks into the void', () => {
   const st = STAGES.find((s) => s.id === 'carbon-skyhook');
   const nav = buildNavGraph(st);
-  // Densest grounded fighter on the lower deck, target up on the summit.
-  // Density now sets jump height, so the old hand-tuned tanks (Bord) can
-  // hop the first gap. Van still cannot, and should walk to the lift.
+  // Stat rework: everyone jumps the same height, so a tank takes the same route as anyone else.
+  // The CPU either boards the lift or jumps toward the summit, and it never stands still.
   const van = fakeFighter('van', 800, st.groundY);
   const foe = fakeFighter('hydra', 1065, 560);
   const inp = computeBotInput(1000, van, [van, foe], getStageBounds(st), nav);
-  assert.ok(inp.right && !inp.left, 'heavy should walk right toward the lift');
-  assert.match(van._ai.lastEdge, /^board/);
+  assert.ok(inp.right && !inp.left, 'heavy should head right toward the lift');
+  assert.match(van._ai.lastEdge, /^(board|jump)/);
   // on the outer dock, target hanging off-stage to the left: hold the ledge
   const dockX = 280 + 24;
   const guard = fakeFighter('natalie', dockX, 1120);

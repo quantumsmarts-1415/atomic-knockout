@@ -1,4 +1,5 @@
-import { deriveProfile, TUNING } from './balance.js';
+import { deriveProfile } from './balance.js';
+import { REWORK_FIGHTERS, airJumpsOf, gravityScaleOf, jumpLaunchOf, knockbackResistance, walkSpeedOf } from './statRework.js';
 import { ELEMENTS } from './elements.js';
 import { MOVESETS } from './movesets.js';
 import { IMPORTED_ROSTER, characterFromImport } from './imported.js';
@@ -2463,32 +2464,6 @@ for (const def of Object.values(CHARACTERS)) {
 // Per-move body sheets (Ace and later batches). A move with no sheet
 // keeps the generic attack.png already on the fighter.
 installBodyClips(CHARACTERS);
-// Helium's derived weight and gravity let the new launch carry her out at
-// low percent. Keep the float, but not enough to stock her for free.
-{
-  const helen = CHARACTERS.helen;
-  if (helen?.stats) {
-    helen.stats.weight = Math.max(helen.stats.weight, 0.92);
-    helen.stats.gravityScale = Math.max(helen.stats.gravityScale, 0.98);
-  }
-}
-// Yttrium rings out while she is still at a low percent. A small weight
-// bump keeps the density order and lets Maglev Launch finish a stock.
-{
-  const yara = CHARACTERS.yara;
-  if (yara?.stats) {
-    yara.stats.weight = Math.max(yara.stats.weight, 1.28);
-    if (yara.combat) yara.combat.weight = yara.stats.weight;
-  }
-}
-// Hydrogen's density curve gives Hydra a ~870 jump — too floaty in play.
-// Cap him near the roster middle without touching the shared formula.
-{
-  const hydra = CHARACTERS.hydra;
-  if (hydra?.stats) {
-    hydra.stats.jumpVelocity = Math.min(hydra.stats.jumpVelocity, 720);
-  }
-}
 // Bord's walk sheet faces the viewer's right (mace), while idle faces left
 // (crystal). Without a per-clip facing override the shared art.facing flips
 // the walk backwards.
@@ -2505,17 +2480,25 @@ installBodyClips(CHARACTERS);
     bord.art.bodyH = Math.max(bord.art.bodyH ?? 0, 108);
   }
 }
-// Ghosts (Rf–Og) keep a steady percent drain and a slow step.
-// Their attacks are the strong part. Missing density already derives
-// weight 1; pinning that to the lightest clamp launched them like hydrogen.
-// TUNING itself is unchanged.
+// Stat rework (Benjamin, Oct 30 2026): Weight and Speed (1-5, summing to 6) decide the physical stats.
+// Knockback resistance 0.5 + W/4, gravity 0.5 + W/5, walk speed 150 + 40 S, air jumps ceil(S/2), and a
+// launch speed that reaches the same jump height (1.1 x Sully, 162.8 px) under that gravity.
+// Everyone jumps the same height, ghosts included: the ghost x0.62 walk, x0.78 jump and the 0.7-0.8
+// gravity cap are gone. The old density-derived numbers above only remain as the fallback for a fighter
+// that has no rework row.
 for (const def of Object.values(CHARACTERS)) {
-  if (!def.ghost || !def.stats) continue;
-  const [speedLo] = TUNING.speedClamp;
-  const [jumpLo] = TUNING.jumpClamp;
-  def.stats.speed = Math.max(speedLo, Math.round(def.stats.speed * 0.62));
-  def.stats.jumpVelocity = Math.max(jumpLo, Math.round(def.stats.jumpVelocity * 0.78));
-  def.stats.gravityScale = Math.max(0.7, Math.min(def.stats.gravityScale, 0.8));
+  const rw = REWORK_FIGHTERS[def.id];
+  if (!rw || !def.stats) continue;
+  def.rework = rw;
+  // The Campaign still builds its unit stats from the old density numbers until its own rework lands.
+  if (def.combat) def.combat.legacy = { speed: def.combat.speed, weight: def.combat.weight };
+  def.stats = {
+    speed: walkSpeedOf(rw.s),
+    jumpVelocity: jumpLaunchOf(rw.w),
+    weight: knockbackResistance(rw.w),
+    gravityScale: gravityScaleOf(rw.w),
+    airJumps: airJumpsOf(rw.s),
+  };
   if (def.combat) {
     def.combat.speed = def.stats.speed;
     def.combat.jumpVelocity = def.stats.jumpVelocity;

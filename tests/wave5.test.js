@@ -33,8 +33,8 @@ test('ghosts drain, keep a slow step, and keep translucent sheets', () => {
   for (const id of GHOSTS) {
     const c = CHARACTERS[id];
     assert.strictEqual(c.ghost, true, id);
-    assert.ok(Math.abs(c.stats.weight - 1) < 1e-9, `${id} weight stays on the missing-density curve`);
-    assert.ok(c.stats.speed < 220, id);
+    assert.ok(c.stats.weight >= 0.75 && c.stats.weight <= 1.75, `${id} weight is a rework resistance`);
+    assert.ok(Math.abs(c.stats.speed - (150 + 40 * c.rework.s)) < 1e-9, `${id} ghosts walk at the normal speed`);
     const png = PNG.sync.read(readFileSync(`art-src/imported/sheets/${id}_idle.png`));
     let ink = 0;
     let partial = 0;

@@ -41,12 +41,10 @@ test('every move recharges between 0.5 and 1.5 s, except the short swings of a l
   assert.deepEqual(out, []);
 });
 
-test('only fighters of weight 3.0 or less (1-10 core scale) get a string: 2-3 swings, 0.2-0.3 s apart, then 1.0 s', () => {
+test('a string stays a data field of the normal attack: 2-3 swings, 0.2-0.3 s apart (stat rework: no longer tied to weight)', () => {
   const lights = [];
   for (const c of ROSTER) {
     const s = c.moves.basicDirectional.string;
-    const light = weightScore(c.stats.weight) <= 3.0 + 1e-9;
-    assert.equal(!!s, light, `${c.id} weight ${weightScore(c.stats.weight).toFixed(2)}`);
     if (s) { lights.push(c.id); assert.ok(s.hits >= 2 && s.hits <= 3 && s.gap >= 200 && s.gap <= 300, c.id); }
   }
   assert.ok(lights.length >= 5, lights.join(','));

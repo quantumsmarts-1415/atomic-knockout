@@ -25,8 +25,8 @@ export function basicMove(charDef) {
 
 export function baseStats(charDef) {
   const c = charDef.combat || {};
-  const weight = c.weight ?? 1;
-  const speed = c.speed ?? 300;
+  const weight = c.legacy?.weight ?? c.weight ?? 1;   // Campaign rework pending: still the density numbers
+  const speed = c.legacy?.speed ?? c.speed ?? 300;
   const t = Math.max(0, Math.min(1, (weight - 0.58) / 0.9));
   const maxHp = Math.round(Math.max(60, Math.min(100, 60 + 30 * t + 40 * Math.max(0, c.kineticDef || 0))));
   return {

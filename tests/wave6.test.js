@@ -61,7 +61,8 @@ test('wave 6 ghosts are playable with the doc moves and pronouns', () => {
   for (const id of WAVE6) {
     const c = CHARACTERS[id];
     assert.strictEqual(c.ghost, true, id);
-    assert.ok(Math.abs(c.stats.weight - 1) < 1e-9, id);
+    assert.ok(c.stats.weight >= 0.75 && c.stats.weight <= 1.75, id);
+    assert.ok(Math.abs(c.stats.speed - (150 + 40 * c.rework.s)) < 1e-9, `${id} ghosts walk at the normal speed`);
     const names = SLOTS.map((slot) => c.moves[slot].name);
     assert.deepStrictEqual(names, NAMES[id], id);
     const teach = c.teach || '';

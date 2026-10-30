@@ -1,20 +1,20 @@
-// Campaign moves: every fighter's four fighting-game moves, turned into tactics actions.
+// Campaign moves: every fighter's four fighting-game moves, turned into tactics actions (stat rework, Oct 2026).
 //
-//   basicDirectional  -> BASIC    attack, no cooldown, counters when attacked
+//   basicDirectional  -> BASIC    attack, counters when attacked
 //   basicCharge       -> CHARGE   takes the whole turn to charge, releases next turn at full power
-//                                 (a zero-damage buff in the roster becomes a POWER UP instead)
+//                                 (a move with no damaging hits on the sheet becomes a POWER UP instead)
 //   specialDirectional-> SPECIAL  attack, every other turn (cooldown 2)
 //   specialDefense    -> GUARD    no attack: shrugs off damage until the next turn
 //
-// Damage = the move's fighting-game damage % (resolveMoveDamage, defender-neutral) x DAMAGE_SCALE. The scale turns a
-// 9% jab into 22 HP of damage so a fight with 60-100 HP units takes about 3-4 hits.
+// Damage is flat HP, the same numbers as the Smash Ring percent: base by slot (Normal 10, Special 15, Charge 20,
+// Defense 5, ghosts +5) plus the average (Attack - Defense) over the move's types, split over its hits with the bonus
+// on the last one (see combat.js). Range, hits and the number of uses per map come from the rework sheet
+// (src/data/statReworkData.js); a move with the sheet's `heal` flag is a healing move.
 import { CHARACTERS } from '../data/characters.js';
 import { MOVESETS } from '../data/movesets.js';
-import { hitsPerUse, resolveMoveDamage } from '../data/balance.js';
+import { canonicalType } from '../data/balance.js';
+import { RW, REWORK_SLOT_OF_CAMPAIGN, baseOf, canonical, moveRework } from '../data/statRework.js';
 
-export const DAMAGE_SCALE = 1.8;
-export const DAMAGE_CAP = 60;            // one hit never exceeds this before defence
-export const CHARGE_DEFAULT_MULT = 1;
 export const SPECIAL_COOLDOWN = 2;       // turns: usable, rests one turn, usable again
 export const POWER_UP_MULT = 1.35;
 
@@ -25,26 +25,10 @@ const SLOTS = [
   ['specialDefense', 'guard'],
 ];
 
-// A projectile needs room (2 tiles) once it is among the harder hits of its slot. Normal/special/charge damage now sit in
-// 5-12 / 13-20 / 20-30%, so the cut-off is per slot (it used to be a flat 10%).
-const TWO_TILE_PCT = { basic: 10, special: 18, charge: 26 };
-
 const GUARD_BY_KIND = { block: 0.5, wall: 0.5, shield: 0.6, counter: 0.35, oxide: 0.5 };
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const isMelee = (mv) => !mv.kind || mv.kind === 'melee';
-
-/** Reach in tiles [min, max]. Shells need room, beams reach furthest, jabs are adjacent. */
-export function rangeOf(mv, pct, slot = 'basic') {
-  switch (mv.kind) {
-    case 'projectile': return pct >= (TWO_TILE_PCT[slot] ?? 10) ? [2, 2] : [1, 2];
-    case 'beam': return [2, 3];
-    case 'dash': return [1, 2];
-    case 'zone': case 'mine': return [1, 2];
-    case 'burst': return (mv.radius ?? 0) >= 80 ? [1, 2] : [1, 1];
-    default: return isMelee(mv) && (mv.rangeW ?? 0) >= 100 ? [1, 2] : [1, 1];
-  }
-}
 
 /** Gameplay effects of a move, as tactics-map effects (see status.js for how each one plays). */
 export function effectsOf(mv, slot) {
@@ -52,15 +36,10 @@ export function effectsOf(mv, slot) {
   const oh = mv.onHit || {};
   const stunMs = typeof oh.stun === 'number' ? oh.stun : 0;
   if (mv.stunChance || stunMs) out.push({ type: 'stun', chance: mv.stunChance ?? (stunMs >= 1000 ? 0.6 : 0.4) });
-  const dot = (kind, spec) => {
-    const dps = spec.dps ?? 1.5;
-    const ms = spec.untilKo ? 4000 : (spec.ms ?? 3000);
-    const turns = ms >= 3000 ? 3 : 2;
-    out.push({ type: kind, turns, dmg: Math.max(2, Math.round(dps * (ms / 1000) * DAMAGE_SCALE * 0.5 / turns)) });
-  };
-  if (oh.burn) dot('burn', oh.burn);
-  if (oh.poison) dot('poison', oh.poison);
-  if (mv.igniteDamage) out.push({ type: 'burn', turns: 2, dmg: Math.max(2, Math.round(mv.igniteDamage * DAMAGE_SCALE * 0.25)) });
+  // Stat rework: burn lasts 2 turns (3 then 4 damage), poison does 3 a turn until the target is healed; neither stacks on itself.
+  if (oh.burn || mv.igniteDamage) out.push({ type: 'burn', turns: RW.campaignBurn.length, dmgs: RW.campaignBurn });
+  if (oh.poison) out.push({ type: 'poison', turns: Infinity, dmg: RW.campaignPoison });
+  if (oh.sleep || mv.retort?.sleep) out.push({ type: 'sleep', min: RW.sleepTurns[0], max: RW.sleepTurns[1] });
   if (oh.freeze) out.push({ type: 'freeze', turns: 1 });
   else if (oh.root) out.push({ type: 'root', turns: 1 });
   else if (oh.slow || oh.slowHit || mv.slowHit || oh.attackSlow) out.push({ type: 'slow', turns: 1 });
@@ -71,14 +50,15 @@ export function effectsOf(mv, slot) {
   if (oh.strip || mv.stripBuffs) out.push({ type: 'strip' });
   if (oh.heal || mv.drain || mv.chargeHeal) out.push({ type: 'lifesteal', frac: 0.3 });
   if (mv.pull || mv.yank) out.push({ type: 'pull' });
-  else if (slot !== 'guard' && (mv.baseKnockback ?? 0) * (slot === 'charge' ? (mv.chargeKnockbackMult ?? 1) : 1) >= 200 && isMelee(mv)) out.push({ type: 'push' });
-  if (mv.selfDamage?.damage) out.push({ type: 'recoil', dmg: Math.max(2, Math.round(mv.selfDamage.damage * DAMAGE_SCALE * 0.5)) });
+  else if (slot !== 'guard' && (((mv.baseKnockback ?? 0) * (slot === 'charge' ? (mv.chargeKnockbackMult ?? 1) : 1)) >= 200 || (mv.knockbackGrowth ?? 0) > 6.5)) out.push({ type: 'push' });
+  if (mv.selfDamage?.damage) out.push({ type: 'recoil', dmg: Math.max(2, Math.round(mv.selfDamage.damage * 0.9)) });
   if (slot === 'guard') {
     if (mv.cleanse) out.push({ type: 'cleanse' });
+    if (mv.retort?.sleep) out.push({ type: 'sleepback' });
     if (mv.regen || mv.regenEvery) out.push({ type: 'regen', frac: 0.1 });
     if (mv.counterDamage || mv.recoil) {
       const d = mv.counterDamage ?? mv.recoil?.damage ?? 4;
-      out.push({ type: 'thorns', dmg: Math.max(3, Math.round(d * DAMAGE_SCALE * 0.5)) });
+      out.push({ type: 'thorns', dmg: Math.max(3, Math.round(d * 0.9)) });
     }
   }
   return dedupe(out);
@@ -89,24 +69,38 @@ function dedupe(list) {
   return list.filter((e) => !seen.has(e.type) && seen.add(e.type));
 }
 
+/** Damage types a move deals in (kinetic spelled the new way). */
+function typesOf(mv) {
+  const out = [];
+  const add = (type, amount) => { if (type && amount > 0) out.push(canonical(canonicalType(type))); };
+  add(mv.type, mv.damage);
+  add(mv.type2, mv.damage2);
+  add(mv.type3, mv.damage3);
+  if (Array.isArray(mv.hits)) for (const h of mv.hits) add(h.type, h.damage);
+  return [...new Set(out)];
+}
+
 function build(id, key, slot, mv, charDef) {
-  const perHit = resolveMoveDamage(mv, charDef, null).total;
-  const pct = perHit * hitsPerUse(mv);   // per use: a 3-hit string counts all three
-  const base = { key, slot, name: mv.name || key, kind: mv.kind || 'melee', element: mv.type || 'kinetic', pct: Math.round(pct * 10) / 10, raw: mv };
+  const row = moveRework(id, key) || { hits: 1, range: 1, uses: 4, cd: 1 };
+  const types = typesOf(mv);
+  const rwSlot = REWORK_SLOT_OF_CAMPAIGN[slot];
+  const dealsDamage = row.hits > 0 && types.length > 0;
+  const hits = dealsDamage ? row.hits : 0;
+  const base = dealsDamage ? baseOf(rwSlot, { ghost: !!charDef?.ghost }) : 0;
+  const reach = Math.max(1, row.range || 1);
+  const range = [1, reach];
+  const uses = Math.max(1, row.uses || 1);
+  const common = { key, slot, name: mv.name || key, kind: mv.kind || 'melee', element: types[0] || canonical(canonicalType(mv.type || 'kinetic')), types, hits, base, pct: base, uses, raw: mv };
   if (slot === 'guard') {
     const frac = GUARD_BY_KIND[mv.kind] ?? 0.4;
-    return { ...base, action: 'guard', attack: false, dmg: 0, range: [0, 0], guard: frac, cd: 0, effects: effectsOf(mv, slot) };
+    return { ...common, action: 'guard', attack: false, dmg: 0, range: [0, 0], guard: frac, cd: 0, effects: effectsOf(mv, slot) };
   }
-  if (slot === 'charge' && pct <= 0) {
-    return { ...base, action: 'power', attack: false, dmg: 0, range: [0, 0], cd: 3, effects: [{ type: 'power', mult: POWER_UP_MULT, turns: 3 }] };
+  if (slot === 'charge' && !dealsDamage) {
+    return { ...common, action: 'power', attack: false, dmg: 0, range: [0, 0], cd: 3, effects: [{ type: 'power', mult: POWER_UP_MULT, turns: 3 }] };
   }
-  let useDmg = pct;
-  if (slot === 'charge') useDmg = pct * (mv.chargeDamageMult ?? CHARGE_DEFAULT_MULT);
-  if (slot === 'special' && pct <= 0) useDmg = 4;
-  const dmg = clamp(Math.round(useDmg * DAMAGE_SCALE), 1, DAMAGE_CAP);
   return {
-    ...base, action: 'attack', attack: true, dmg, charge: slot === 'charge', cd: slot === 'special' ? SPECIAL_COOLDOWN : 0,
-    range: rangeOf(mv, slot === 'charge' ? perHit * (mv.chargeDamageMult ?? CHARGE_DEFAULT_MULT) : perHit, slot), effects: effectsOf(mv, slot),
+    ...common, action: 'attack', attack: true, dmg: base, charge: slot === 'charge', cd: slot === 'special' ? SPECIAL_COOLDOWN : 0,
+    range, effects: effectsOf(mv, slot),
   };
 }
 
@@ -126,7 +120,9 @@ export function isHealer(id) { return Object.prototype.hasOwnProperty.call(HEALE
 
 /** How much a heal restores `target` (never more than the missing HP). */
 export function healAmount(target) {
-  return Math.max(0, Math.min(target.maxHp - target.hp, Math.max(HEAL_MIN, Math.round(target.maxHp * HEAL_FRAC))));
+  const missing = Math.max(target.worstMissing ?? 0, target.maxHp - target.hp);
+  const cap = target.maxHp - Math.floor(missing * RW.healFloorFrac);   // never heal above max HP minus half the worst damage taken
+  return Math.max(0, Math.min(cap - target.hp, target.maxHp - target.hp, Math.max(HEAL_MIN, Math.round(target.maxHp * HEAL_FRAC))));
 }
 
 const healCache = new Map();
@@ -175,8 +171,10 @@ export function unionRange(id) {
 export function effectText(e) {
   switch (e.type) {
     case 'stun': return `Stun ${Math.round(e.chance * 100)}%: target skips its next turn`;
-    case 'burn': return `Burn: ${e.dmg} damage/turn for ${e.turns} turns`;
-    case 'poison': return `Poison: ${e.dmg} damage/turn for ${e.turns} turns (cannot KO)`;
+    case 'burn': return `Burn: ${e.dmgs.join(' then ')} damage over ${e.turns} turns (does not stack)`;
+    case 'poison': return `Poison: ${e.dmg} damage/turn until healed (cannot KO, does not stack)`;
+    case 'sleep': return `Sleep: target skips ${e.min}-${e.max} turns; damage wakes it`;
+    case 'sleepback': return 'Attackers fall asleep';
     case 'freeze': return 'Freeze: target moves 3 less next turn';
     case 'root': return 'Root: target cannot move next turn';
     case 'slow': return 'Slow: target moves 2 less next turn';
@@ -187,7 +185,7 @@ export function effectText(e) {
     case 'strip': return 'Strips the target\'s guard and power-ups';
     case 'lifesteal': return `Heals you for ${Math.round(e.frac * 100)}% of damage`;
     case 'pull': return 'Pulls the target 1 tile closer';
-    case 'push': return 'Knocks the target back 1 tile';
+    case 'push': return 'Knocks the target back 1 tile (blocked: 2 damage instead)';
     case 'recoil': return `Recoil: you take ${e.dmg}`;
     case 'cleanse': return 'Cleanses your status effects';
     case 'regen': return `Regenerate ${Math.round(e.frac * 100)}% max HP next turn`;
@@ -205,7 +203,8 @@ export function describeMove(m) {
   else if (m.action === 'power') lines.push('POWER UP  (cooldown 3)');
   else {
     const r = m.range[0] === m.range[1] ? `${m.range[0]}` : `${m.range[0]}-${m.range[1]}`;
-    lines.push(`${m.charge ? 'CHARGE' : m.slot === 'special' ? 'SPECIAL' : 'BASIC'}  dmg ${m.dmg} (${m.pct}%)  range ${r}`);
+    const hitsTxt = m.hits > 1 ? ` x${m.hits} hits` : '';
+    lines.push(`${m.charge ? 'CHARGE' : m.slot === 'special' ? 'SPECIAL' : 'BASIC'}  base ${m.base}${hitsTxt} + stat bonus  range ${r}  uses ${m.uses}`);
     if (m.charge) lines.push('Charges this turn; release next turn at full power, or cancel');
     if (m.slot === 'special') lines.push('Cooldown: every other turn');
   }

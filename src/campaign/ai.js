@@ -1,6 +1,6 @@
 // Enemy AI: pick the tile + target with the best trade, else approach.
 //   score = damage dealt (+60 for a kill, +8 if the target is the lord)
-//           - 0.6 * expected counter damage + 2 * tile defense
+//           - 0.6 * expected counter damage + a little for tile dodge
 // 'hold' units only act once a player unit is inside move+attack reach
 // (from turn 8, or their `wake` turn, they advance too, so a battle can't stall; 'boss' never leaves its post). 'aggressive' units always advance.
 import { reachable, ringTiles, distanceField, key, dist, hostile } from './grid.js';
@@ -11,8 +11,7 @@ import { healAmount } from './moves.js';
 function expected(f, side) {
   const s = f[side];
   if (!s) return 0;
-  const hits = side === 'att' ? f.attHits : f.defHits;
-  return s.dmg * (s.hit / 100) * (1 + s.crit / 100) * hits;
+  return s.exp ?? 0;
 }
 
 /** Best attack for a unit over every tile it can reach and every move it can fire, or null. */
@@ -30,7 +29,7 @@ function bestAttack(state, unit, reach, foes, moves) {
         const taken = expected(f, 'def');
         const kill = dealt >= foe.hp ? 60 : 0;
         // a special or release is worth a turn only when it hits harder; basic moves keep the tie
-        const score = dealt + kill + (foe.lord ? 8 : 0) - 0.6 * taken + 2 * (tile?.def || 0) - stop.cost * 0.05 + (move.slot === 'special' ? 1 : 0);
+        const score = dealt + kill + (foe.lord ? 8 : 0) - 0.6 * taken + 0.1 * (tile?.avoid || 0) - stop.cost * 0.05 + (move.slot === 'special' ? 1 : 0);
         if (!best || score > best.score) best = { to: { x: stop.x, y: stop.y }, target: foe, move, score, dealt, kill: kill > 0 };
       }
     }

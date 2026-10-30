@@ -5,30 +5,31 @@ import { CHARACTERS } from '../data/characters.js';
 import { hostile, parseMap, reachable, threatTiles, ringTiles, pathTo, key, dist } from './grid.js';
 import { terrainAt } from './terrain.js';
 import { resolve, forecast } from './combat.js';
-import { awardXp, moveInfo } from './units.js';
+import { awardXp, moveInfo, RECORD_VERSION } from './units.js';
 import { campaignMoves, unionRange, healMoveOf, healAmount } from './moves.js';
 import { planEnemy } from './ai.js';
-import { applyHitEffects, applyRecoil, startOfTurn, cleanse } from './status.js';
+import { applyHitEffects, applyRecoil, startOfTurn, cleanse, healUnit } from './status.js';
 
 let uidSeq = 1;
 
 
 export const SEIZE_HINT = 'Defeat the boss to seize';
 
-// Attacks now miss half as often (combat.js missHalved), which helps the (larger) enemy side more than the party, so enemy
-// damage is trimmed to match; a chapter can set its own `enemyDmg` (a tutorial's `tutorial.dmg` wins over both).
+// Enemy damage is trimmed a little because the larger enemy side benefits more from the sheet's crit/miss rolls (combat.js); a chapter can set its own `enemyDmg` (a tutorial's `tutorial.dmg` wins over both).
 export const ENEMY_DMG = 0.9;
 export function enemyDmgMult(chapter) { return chapter.tutorial ? (chapter.tutorial.dmg ?? 1) : (chapter.enemyDmg ?? ENEMY_DMG); }
 
 function makeUnit(rec, team, x, y, extra = {}) {
   const info = moveInfo(rec.id);
+  const moves = campaignMoves(rec.id).concat(healMoveOf(rec.id) || []);
   return {
     uid: uidSeq++, rec, team, x, y,
     id: rec.id,
     name: CHARACTERS[rec.id]?.name || rec.id,
     level: rec.level, xp: rec.xp, hp: rec.hp, maxHp: rec.maxHp,
-    power: rec.power, def: rec.def, spd: rec.spd, mov: rec.mov, range: unionRange(rec.id),
-    moves: campaignMoves(rec.id).concat(healMoveOf(rec.id) || []), cd: {}, charging: null, status: {},
+    weight: rec.weight, skill: rec.skill, atk: { ...rec.atk }, dst: { ...rec.dst }, worstMissing: 0, sleeping: 0,
+    spd: rec.spd, mov: rec.mov, range: unionRange(rec.id),
+    moves, uses: Object.fromEntries(moves.map((m) => [m.key, m.uses ?? Infinity])), cd: {}, charging: null, status: {},
     lord: !!rec.lord, moveName: info.name,
     ai: 'aggressive', boss: false,
     acted: false, alive: true,
@@ -112,6 +113,7 @@ export class CampaignBattle {
       if (move.key === unit.charging) return null;           // release
       return 'Charging: release or cancel first';
     }
+    if ((unit.uses?.[move.key] ?? Infinity) <= 0) return 'No uses left on this map';
     if (move.action === 'attack' && move.charge) return null; // starting a charge needs no target
     const cd = unit.cd[move.key] || 0;
     if (cd > 0) return `Ready in ${cd} turn${cd > 1 ? 's' : ''}`;
@@ -146,7 +148,9 @@ export class CampaignBattle {
       if (e.type === 'cleanse') cleanse(unit);
       else if (e.type === 'regen') unit.status.regen = { frac: e.frac, turns: 1 };
       else if (e.type === 'thorns') unit.status.guard.thorns = e.dmg;
+      else if (e.type === 'sleepback') unit.status.guard.sleepback = true;
     }
+    this.spend(unit, move);
     unit.acted = true;
     return unit.status.guard;
   }
@@ -156,8 +160,14 @@ export class CampaignBattle {
     const e = move.effects.find((x) => x.type === 'power');
     unit.status.power = { mult: e.mult, turns: e.turns };
     unit.cd[move.key] = move.cd;
+    this.spend(unit, move);
     unit.acted = true;
     return unit.status.power;
+  }
+
+  /** One use of a move is gone for the rest of the map. */
+  spend(unit, move) {
+    if (unit.uses && Number.isFinite(unit.uses[move.key])) unit.uses[move.key] = Math.max(0, unit.uses[move.key] - 1);
   }
 
   /** Wounded allies a healer could heal from (x,y) with `move` (default: its HEAL), nearest first. */
@@ -173,8 +183,7 @@ export class CampaignBattle {
 
   /** Heal `target`: the whole action. A player healer earns EXP for what it restored. Returns { amount, xp }. */
   heal(healer, target, move = healer.moves.find((m) => m.action === 'heal')) {
-    const amount = healAmount(target);
-    target.hp += amount;
+    const amount = healUnit(target, healAmount(target));
     healer.acted = true;
     let xp = null;
     if (healer.team === 'player' && amount > 0) {
@@ -233,6 +242,7 @@ export class CampaignBattle {
     const released = att.charging === move.key;
     if (released) att.charging = null;
     if (move.cd) att.cd[move.key] = move.cd;
+    this.spend(att, move);
     const res = resolve(att, def, this.map, this.rng, move);
     // effects of every strike that landed (the counter's effects hit the attacker)
     const effects = [];
@@ -304,9 +314,8 @@ export class CampaignBattle {
       // a pinned throne boss would out-heal a small party (20% a turn on top of the throne's cover), so only others rest on healing tiles
       const heal = u.boss && u.ai === 'boss' && this.chapter.win === 'seize' ? 0 : this.tile(u.x, u.y)?.heal;
       if (heal && u.hp < u.maxHp) {
-        const n = Math.min(u.maxHp - u.hp, Math.max(2, Math.round(u.maxHp * heal)));
-        u.hp += n;
-        healed.push({ unit: u, amount: n });
+        const n = healUnit(u, Math.max(2, Math.round(u.maxHp * heal)));
+        if (n > 0) healed.push({ unit: u, amount: n });
       }
     }
     this.lastHealed = healed;
@@ -395,7 +404,7 @@ export class CampaignBattle {
       if (u.team !== 'player') continue;
       if (!u.alive) continue;
       Object.assign(u.rec, {
-        v: 2, level: u.level, xp: u.xp, hp: u.hp, maxHp: u.maxHp, power: u.power, def: u.def, spd: u.spd,
+        v: RECORD_VERSION, level: u.level, xp: u.xp, hp: u.hp, maxHp: u.maxHp, skill: u.skill, atk: { ...u.atk }, dst: { ...u.dst },
       });
       survivors.push(u.rec);
     }

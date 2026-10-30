@@ -51,7 +51,7 @@ check(t1.samples.some((smp) => smp.find((p) => p[0] === 'cal')[1] < t1.calHp), '
 await sleep(600);
 await ev(() => {
   const s = window.__camp, b = s.battle;
-  b.rng = () => 0.9999;                       // every roll misses
+  b.rng = () => 0.0001;                       // every roll misses (a low roll is a miss in the stat rework)
   const lil = b.players.find((u) => u.id === 'lillie'), aar = b.enemies.find((u) => u.id === 'aaron');
   lil.charging = null; lil.acted = false; aar.hp = aar.maxHp;
   const mv = lil.moves.find((m) => m.charge);

@@ -49,7 +49,7 @@ await sleep(500);
 d = await dims();
 check(d.filter((v) => v.grey).length === 1 && d.find((v) => v.grey).team === 'player', 'a unit that has acted dims, and only that one');
 
-// 2. reach: Ben's Precision Strike is range 1 (a diagonal is 2 away), Gyro Disc 1-2; the menu says so
+// 2. reach: Ben's Precision Strike is range 1 (a diagonal is 2 away), Gyro Disc 1-3 (sheet range 3); the menu says so
 const reach = await ev(() => {
   const s = window.__camp, b = s.battle;
   const ben = b.players.find((u) => u.id === 'ben'), foe = b.enemies[0];
@@ -62,7 +62,7 @@ await until(() => window.__camp.mode === 'menu', 'ben menu');
 const items = await ev(() => window.__camp.menuItems.filter((i) => i.move).map((i) => ({ label: i.label, tag: i.tag, disabled: !!i.disabled, note: i.note })));
 const ps = items.find((i) => /precision/i.test(i.label)), gd = items.find((i) => /gyro/i.test(i.label));
 check(ps && ps.disabled && /range 1/.test(ps.note) && /diagonal/.test(ps.note) && /R1$/.test(ps.tag), `diagonal foe: Precision Strike is out of reach and says why (${ps && ps.note})`);
-check(gd && !gd.disabled && /R1-2$/.test(gd.tag), 'diagonal foe: Gyro Disc (range 1-2) is available');
+check(gd && !gd.disabled && /R1-3$/.test(gd.tag), "diagonal foe: Gyro Disc (range 1-3) is available");
 // 3. menu text fits next to its tag
 const fit = await ev(() => window.__camp.menuRows.map((r, i) => { const it = window.__camp.menuItems[i]; return { label: it.label, right: r.x + r.width, limit: window.__camp.menuGeo.mx + window.__camp.menuGeo.w - 14 }; }));
 check(fit.every((f) => f.right <= f.limit), 'menu: no label runs past the menu box');

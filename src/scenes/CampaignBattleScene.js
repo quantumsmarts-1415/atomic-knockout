@@ -405,7 +405,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       this.pAdd(bar);
       this.pAdd(this.add.text(x + 4, y + 16, `HP ${u.hp} / ${u.maxHp}`, textStyle('mono')));
       y += 40;
-      const stats = [['DMG+', u.power], ['DEF', u.def], ['SPD', u.spd], ['MOV', u.mov], ['RNG', u.range[0] === u.range[1] ? u.range[0] : `${u.range[0]}-${u.range[1]}`]];
+      const stats = [['SKILL', u.skill ?? 1], ['SPD', u.spd], ['MOV', u.mov], ['RNG', u.range[0] === u.range[1] ? u.range[0] : `${u.range[0]}-${u.range[1]}`]];
       stats.forEach(([k, v], i) => {
         const cx = x + (i % 3) * 70;
         const cy = y + Math.floor(i / 3) * 38;
@@ -457,7 +457,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const thumb = this.add.image(PANEL_X + 8 + 32, ty0 + 46, tileKey(t.id)).setDisplaySize(56, 56);
     this.pAdd(thumb);
     this.pAdd(this.add.text(PANEL_X + 78, ty0 + 12, t.name.toUpperCase(), textStyle('h3', { fontSize: '15px' })));
-    const info = Number.isFinite(t.cost) ? `Move cost ${t.cost}\nDefense +${t.def}\nAvoid +${t.avoid}${t.heal ? `\nHeals ${Math.round(t.heal * 100)}%/turn` : ''}` : 'Impassable';
+    const info = Number.isFinite(t.cost) ? `Move cost ${t.cost}\nDodge +${t.avoid}${t.heal ? `\nHeals ${Math.round(t.heal * 100)}%/turn` : ''}` : 'Impassable';
     this.pAdd(this.add.text(PANEL_X + 78, ty0 + 34, info, textStyle('caption', { fontSize: '11px', lineSpacing: 2 })));
     // counts
     this.pAdd(this.add.text(x, ty0 + 104, `ALLIES ${b.players.length}   FOES ${b.enemies.length}`, textStyle('mono')));
@@ -497,7 +497,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       add(this.add.text(cx, y + 36, u.name.toUpperCase(), textStyle('h3', { fontSize: '14px', color: u.team === 'player' ? THEME.tealCss : THEME.pinkCss })).setOrigin(0.5, 0));
       const rows = [
         ['HP', `${u.hp}`],
-        ['DMG', s ? `${s.dmg}${hits > 1 ? ` ×${hits}` : ''}` : '—'],
+        ['DMG', s ? `${s.dmg}${s.hits > 1 ? ` (${s.hits} hits)` : ''}` : '—'],
         ['HIT', s ? `${s.hit}%` : '—'],
         ['CRIT', s ? `${s.crit}%` : '—'],
       ];
@@ -508,14 +508,13 @@ export default class CampaignBattleScene extends Phaser.Scene {
     });
     const notes = [];
     if (!f.def) notes.push('No counterattack');
-    if (f.attHits === 2) notes.push(`${att.name} strikes twice`);
-    if (f.defHits === 2) notes.push(`${def.name} strikes twice`);
     for (const e of f.move?.effects || []) notes.push(effectText(e));
     if (f.move?.charge) notes.push('Fully charged release');
-    if (f.att.mult > 1.05) notes.push('Element: effective');
-    else if (f.att.mult < 0.95) notes.push('Element: resisted');
+    if (f.att.bonus == null) notes.push('Immune: no damage');
+    else if (f.att.bonus > 0) notes.push(`Stat edge: +${Math.round(f.att.bonus * 10) / 10} damage`);
+    else if (f.att.bonus < 0) notes.push(`Stat edge: ${Math.round(f.att.bonus * 10) / 10} damage`);
     const tile = this.battle.tile(def.x, def.y);
-    if (tile.def || tile.avoid) notes.push(`${tile.name}: +${tile.def} DEF, +${tile.avoid} avoid`);
+    if (tile.avoid) notes.push(`${tile.name}: +${tile.avoid} dodge`);
     add(this.add.text(x + 12, y + 228, notes.join('\n'), textStyle('caption', { fontSize: '10px', lineSpacing: 2, wordWrap: { width: 192 } })));
     add(this.add.text(x + 108, y + 308, 'ENTER / click again to attack', textStyle('label', { fontSize: '9px' })).setOrigin(0.5, 1));
     this.forecastObjs = objs;
@@ -1116,7 +1115,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       for (const lu of x.levelUps) {
         this.levelUps.push({ name: x.unit.name, level: lu.level });
         const g = lu.gains;
-        const parts = [`HP+${g.hp}`, g.power && 'POW+1', g.def && 'DEF+1', g.spd && 'SPD+1'].filter(Boolean).join('  ');
+        const parts = [`HP+${g.hp}`, g.stat && `${g.stat.side === 'atk' ? 'ATK' : 'DEF'} ${g.stat.type.toUpperCase()}+1`, g.skill && 'SKILL+1'].filter(Boolean).join('  ');
         sfx('go');
         this.levelUpFx(v);
         await this.banner(`LEVEL UP  ${x.unit.name.toUpperCase()}  Lv ${lu.level}`, parts, THEME.gold);
@@ -1379,14 +1378,14 @@ export default class CampaignBattleScene extends Phaser.Scene {
       stun: ['STUNNED!', '#FF6FA8'], immune: ['STUN IMMUNE', '#D6E4FF'], burn: ['BURNING', '#FF7A3C'], poison: ['POISONED', '#9AE04A'],
       slow: ['SLOWED', '#7CC8FF'], freeze: ['FROZEN', '#BFF0FF'], root: ['ROOTED', '#C9A15A'], blind: ['BLINDED', '#E8E8A0'],
       weaken: ['WEAKENED', '#B79CFF'], vulnerable: ['EXPOSED', '#FF6F6F'], interrupt: ['CHARGE BROKEN', '#FFD166'], strip: ['STRIPPED', '#FFD166'],
-      push: ['KNOCKED BACK', '#FFFFFF'], pull: ['PULLED IN', '#FFFFFF'],
+      push: ['KNOCKED BACK', '#FFFFFF'], pull: ['PULLED IN', '#FFFFFF'], sleep: ['ASLEEP', '#C9B6FF'],
     };
     for (const e of list || []) {
       const v = this.views.get(e.unit.uid);
       if (!v) continue;
       const head = v.cont.y - 100;
       if (e.type === 'lifesteal') this.floatText(v.cont.x, head, `+${e.amount}`, '#53E0A8', 22);
-      else if (e.type === 'recoil' || e.type === 'thorns') this.floatText(v.cont.x, head, `-${e.amount}`, '#FF9A3C', 22);
+      else if (e.type === 'recoil' || e.type === 'thorns' || e.type === 'pushBlocked') this.floatText(v.cont.x, head, `-${e.amount}`, '#FF9A3C', 22);
       else if (label[e.type]) this.floatText(v.cont.x, head, label[e.type][0], label[e.type][1], 17);
       if ((e.type === 'push' || e.type === 'pull') && e.to) {
         await this.tween({ targets: v.cont, x: tx(e.to.x) + TILE / 2, y: ty(e.to.y) + FEET, duration: 180, ease: 'Cubic.easeOut' });
@@ -1405,7 +1404,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       const v = this.views.get(e.unit.uid);
       if (!v) continue;
       const head = v.cont.y - 100;
-      if (e.type === 'skip') { this.floatText(v.cont.x, head, 'STUNNED · TURN LOST', '#FF6FA8', 16); sfx('menuMove'); this.setGrey(v, true); await this.wait(520); }
+      if (e.type === 'skip') { this.floatText(v.cont.x, head, e.sleep ? 'ASLEEP · TURN LOST' : 'STUNNED · TURN LOST', e.sleep ? '#C9B6FF' : '#FF6FA8', 16); sfx('menuMove'); this.setGrey(v, true); await this.wait(520); }
       else if (e.type === 'burnTick' || e.type === 'poisonTick') {
         sfx('hit');
         this.floatText(v.cont.x, head, `-${e.amount}`, e.type === 'burnTick' ? '#FF7A3C' : '#9AE04A', 22);

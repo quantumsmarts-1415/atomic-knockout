@@ -72,6 +72,8 @@ export const SLOT_OF_KEY = Object.freeze({
   basicCharge: 'charge',
   specialDefense: 'defense',
 });
+/** Campaign slot names (basic/special/charge/guard) to the rework's normal/special/charge/defense. */
+export const REWORK_SLOT_OF_CAMPAIGN = Object.freeze({ basic: 'normal', special: 'special', charge: 'charge', guard: 'defense' });
 export const KEY_OF_SLOT = Object.freeze({
   normal: 'basicDirectional', special: 'specialDirectional', charge: 'basicCharge', defense: 'specialDefense',
 });
@@ -136,15 +138,21 @@ export function chargeBase(heldMs) {
  * (the move then deals no damage at all).
  */
 export function statBonus(atkId, defId, types) {
+  const a = REWORK_FIGHTERS[atkId];
+  const d = REWORK_FIGHTERS[defId];
+  return bonusFromTables(a ? a.atk : null, d ? d.def : null, types);
+}
+
+/** The same bonus from two stat tables ({ kinetic, heat, ... } with null = N/A or immune); Campaign units carry their own. */
+export function bonusFromTables(atk, def, types) {
   const list = [...new Set((types || []).map(canonical))];
   if (!list.length) return 0;
-  const f = REWORK_FIGHTERS[defId];
-  if (f && list.every((t) => f.def[t] == null)) return null;
+  if (def && list.every((t) => def[t] == null)) return null;
   let sum = 0;
   for (const t of list) {
-    if (f && f.def[t] == null) continue;           // immune: zero
-    const a = typeStat(atkId, 'atk', t) ?? 0;      // a noble gas has no chemical attack
-    const d = f ? f.def[t] : 0;
+    if (def && def[t] == null) continue;            // immune: zero
+    const a = (atk ? atk[t] : 0) ?? 0;               // a noble gas has no chemical attack
+    const d = def ? def[t] : 0;
     sum += a - d;
   }
   return sum / list.length;

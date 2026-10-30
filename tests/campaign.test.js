@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { CampaignBattle, SUPPORTS, supportsFor, CHAPTERS, newCampaign, createBattle, autoplayChapter, afterVictory, partyForChapter, makeRecord, awardXp, loadSave, writeSave, baseStats } from '../src/campaign/index.js';
 import { TERRAIN, TERRAIN_IDS } from '../src/campaign/terrain.js';
 import { parseMap, reachable, key, distanceField } from '../src/campaign/grid.js';
-import { forecast, resolve, missHalved } from '../src/campaign/combat.js';
+import { forecast, resolve } from '../src/campaign/combat.js';
 import { CHARACTERS, ROSTER } from '../src/data/characters.js';
 import { mulberry32 } from '../src/engine/rng.js';
 
@@ -47,13 +47,17 @@ test('chapter maps parse, units start on passable distinct tiles', () => {
 test('stats derive sensibly for the whole roster', () => {
   for (const c of ROSTER) {
     const s = baseStats(c);
-    for (const [k, v] of Object.entries(s)) if (k !== 'range' && k !== 'power') assert.ok(Number.isFinite(v) && v > 0, `${c.id}.${k}=${v}`);
-    assert.ok(s.maxHp >= 60 && s.maxHp <= 100, `${c.id} hp ${s.maxHp}`);
-    assert.equal(s.power, 0, 'no flat damage bonus at level 1');
-    assert.ok(s.mov >= 4 && s.mov <= 6);
+    for (const [k, v] of Object.entries(s)) if (!['range', 'atk', 'dst'].includes(k)) assert.ok(Number.isFinite(v) && v > 0, `${c.id}.${k}=${v}`);
+    assert.equal(s.maxHp, 50 + 10 * c.rework.w, `${c.id} HP = 50 + 10 x Weight`);
+    assert.equal(s.mov, Math.floor(3 + c.rework.s / 2), `${c.id} MOV = floor(3 + Speed / 2)`);
+    assert.equal(s.spd, c.rework.s, 'SPD is Speed');
+    assert.equal(s.skill, 1);
+    assert.deepEqual(s.atk, c.rework.atk);
+    assert.deepEqual(s.dst, c.rework.def);
+    assert.ok(s.maxHp >= 60 && s.maxHp <= 100 && s.mov >= 3 && s.mov <= 5);
     assert.ok(s.range[0] >= 1 && s.range[1] >= s.range[0] && s.range[1] <= 3);
   }
-  assert.deepEqual(baseStats(CHARACTERS.phillip).range, [1, 2]); // projectile
+  assert.deepEqual(baseStats(CHARACTERS.phillip).range, [1, 3]); // Tracers: Traveling, long reach (sheet range 3)
   assert.deepEqual(baseStats(CHARACTERS.hydra).range, [1, 2]);   // Flame Dash 1-2, Hydrogen Bomb 2
 });
 
@@ -75,12 +79,12 @@ test('movement respects terrain cost, walls and enemy blockers', () => {
   assert.ok(r4.all.has('1,1') && !r4.stops.has('1,1'), 'pass through allies but cannot stop on them');
 });
 
-test('forecast: terrain, double attack, counter range', () => {
+test('forecast: terrain dodge, no double attacks, counter range', () => {
   const map = parseMap(['....f', '.....']);
-  const a = { id: 'hydra', team: 'player', x: 0, y: 0, power: 0, def: 2, spd: 12, hp: 70, maxHp: 70, range: [1, 2] };
-  const d = { id: 'kyle', team: 'enemy', x: 1, y: 0, power: 0, def: 2, spd: 6, hp: 70, maxHp: 70, range: [1, 1] };
+  const a = { id: 'hydra', team: 'player', x: 0, y: 0, spd: 5, skill: 1, hp: 70, maxHp: 70, range: [1, 2] };
+  const d = { id: 'kyle', team: 'enemy', x: 1, y: 0, spd: 1, skill: 1, hp: 70, maxHp: 70, range: [1, 1] };
   const f = forecast(a, d, map);
-  assert.equal(f.attHits, 2);
+  assert.equal(f.attHits, 1, 'Speed no longer gives follow-up attacks');
   assert.equal(f.defHits, 1);
   const onForest = forecast(a, { ...d, x: 4, y: 0 }, map);
   assert.equal(onForest.def, null, 'out of the defender melee range -> no counter');
@@ -92,14 +96,21 @@ test('forecast: terrain, double attack, counter range', () => {
   const fortMap = parseMap(['.F']);
   const inFort = forecast({ ...a }, { ...d, x: 1, y: 0 }, fortMap);
   const onPlain = forecast({ ...a }, { ...d, x: 1, y: 0 }, parseMap(['..']));
-  assert.ok(inFort.att.hit < onPlain.att.hit && inFort.att.dmg < onPlain.att.dmg);
+  assert.ok(inFort.att.hit < onPlain.att.hit, 'terrain dodge adds to the miss chance');
+  assert.equal(inFort.att.dmg, onPlain.att.dmg, 'terrain defense is gone');
+  assert.equal(inFort.att.hit, onPlain.att.hit - 20);
+  // Speed changes nothing in the roll
+  const quick = forecast({ ...a, spd: 5 }, { ...d, spd: 1 }, parseMap(['..']));
+  const slow = forecast({ ...a, spd: 1 }, { ...d, spd: 5 }, parseMap(['..']));
+  assert.equal(quick.att.hit, slow.att.hit);
+  assert.equal(quick.att.crit, slow.att.crit);
 });
 
 test('resolve is deterministic for a seed and kills end the exchange', () => {
   const map = parseMap(['..']);
   const mk = () => [
-    { id: 'hydra', team: 'player', x: 0, y: 0, power: 30, def: 2, spd: 10, hp: 20, maxHp: 20, range: [1, 1] },
-    { id: 'kyle', team: 'enemy', x: 1, y: 0, power: 30, def: 2, spd: 10, hp: 5, maxHp: 5, range: [1, 1] },
+    { id: 'hydra', team: 'player', x: 0, y: 0, spd: 5, skill: 1, hp: 20, maxHp: 20, range: [1, 1] },
+    { id: 'kyle', team: 'enemy', x: 1, y: 0, spd: 5, skill: 1, hp: 5, maxHp: 5, range: [1, 1] },
   ];
   const [a1, d1] = mk(); const [a2, d2] = mk();
   const r1 = resolve(a1, d1, map, mulberry32(9));
@@ -427,73 +438,101 @@ test('story validation reports mistakes in plain words', async () => {
 
 
 // ------------------------------------------------------------------ moves and damage rules
-import { campaignMoves, DAMAGE_SCALE, basicOf } from '../src/campaign/moves.js';
-import { hitsPerUse, resolveMoveDamage } from '../src/data/balance.js';
-import { upgradeRecord, MAX_LEVEL } from '../src/campaign/units.js';
+import { campaignMoves, basicOf } from '../src/campaign/moves.js';
+import { REWORK_MOVES } from '../src/data/statRework.js';
+import { upgradeRecord, MAX_LEVEL, levelUp } from '../src/campaign/units.js';
 
-test('every attack deals its fighting-game damage % (x one scale), straight from the move data', () => {
+test('every attack is base + stat bonus: Normal 10, Special 15, Charge 20, ghosts +5; range, hits and uses come from the sheet', () => {
+  const baseBy = { basic: 10, special: 15, charge: 20 };
   for (const c of ROSTER) {
     const moves = campaignMoves(c.id);
     assert.equal(moves.length, 4, c.id);
     const basic = basicOf(c.id);
     assert.ok(basic.attack && !basic.charge && basic.cd === 0, `${c.id} basic`);
-    const pct = resolveMoveDamage(basic.raw, c, null).total * hitsPerUse(basic.raw);   // multi-hit moves count every hit
-    assert.equal(basic.dmg, Math.min(60, Math.max(1, Math.round(pct * DAMAGE_SCALE))), `${c.id} basic dmg = move % x scale`);
     for (const m of moves) {
-      if (m.attack) assert.ok(m.dmg >= 1 && m.dmg <= 60 && m.range[0] >= 1 && m.range[1] <= 3, `${c.id} ${m.key}`);
-      if (m.slot === 'charge' && m.attack) assert.ok(m.dmg >= basic.dmg * 0 && m.charge === true);
+      const row = REWORK_MOVES[c.id][m.key];
+      assert.equal(m.uses, Math.max(1, row.uses), `${c.id} ${m.key} uses`);
+      if (m.attack) {
+        assert.equal(m.hits, m.types.length ? row.hits : 0, `${c.id} ${m.key} hits (a move with no damage type deals none)`);
+        assert.deepEqual(m.range, [1, Math.max(1, row.range)], `${c.id} ${m.key} range`);
+        if (m.hits > 0) assert.equal(m.base, baseBy[m.slot] + (c.ghost ? 5 : 0), `${c.id} ${m.key} base`);
+        assert.ok(m.range[1] <= 3);
+      }
+      if (m.slot === 'charge' && m.attack) assert.ok(m.charge === true);
     }
   }
-  // the forecast adds only the flat level bonus and modest defense / terrain, not another multiplier
+  // the forecast is flat: base + (Attack - Defense) with the bonus on the last hit, then the roll table
   const map = parseMap(['..']);
-  const a = { id: 'hydra', team: 'player', x: 0, y: 0, power: 3, def: 1, spd: 8, hp: 80, maxHp: 80 };
-  const d = { id: 'kyle', team: 'enemy', x: 1, y: 0, power: 0, def: 2, spd: 8, hp: 80, maxHp: 80 };
+  const a = { id: 'hydra', team: 'player', x: 0, y: 0, spd: 5, skill: 1, hp: 80, maxHp: 80 };
+  const d = { id: 'kyle', team: 'enemy', x: 1, y: 0, spd: 3, skill: 1, hp: 80, maxHp: 80 };
   const f = forecast(a, d, map);
-  const el = f.att.mult;
-  assert.equal(f.att.dmg, Math.round(basicOf('hydra').dmg * el) + 3 - 2);
+  const bm = basicOf('hydra');
+  const bonus = f.att.bonus;
+  assert.equal(f.att.hits, bm.hits);
+  assert.equal(f.att.perHit.length, bm.hits);
+  assert.equal(f.att.dmg, f.att.perHit.reduce((x, y) => x + y, 0));
+  const share = Math.round(bm.base / bm.hits);
+  assert.equal(f.att.perHit[0], bm.hits > 1 ? share : Math.max(0, Math.round(bm.base + bonus)));
+  assert.equal(f.att.perHit[bm.hits - 1], Math.max(0, Math.round(bm.base / bm.hits + bonus)));
+  assert.deepEqual(f.att.table, { miss: 4, crit: 6, hit: 90 }, 'Normal 5% miss / 5% crit, Skill 1 shifts one point');
 });
 
-test('with 60-100 HP a typical fight takes about 3-4 hits', () => {
+test('hits to KO: report the median number of Normal hits to drop a unit (60-100 HP)', () => {
   const hits = [];
   for (const c of ROSTER) {
     const hp = baseStats(c).maxHp;
     for (const m of campaignMoves(c.id)) {
-      if (!m.attack || m.charge) continue;
-      hits.push(Math.ceil(hp / Math.max(1, m.dmg - 2)));
+      if (!m.attack || m.charge || !(m.base > 0)) continue;
+      hits.push(Math.ceil(hp / m.base));
     }
   }
   hits.sort((x, y) => x - y);
   const median = hits[hits.length >> 1];
-  assert.ok(median >= 3 && median <= 5, `median hits to KO ${median}`);
+  assert.ok(median >= 4 && median <= 10, `median hits to KO ${median}`);
 });
 
-test('ranged attacks are common: projectiles reach 2, beams reach further', () => {
+test('ranged attacks are common: sheet range 2-3 for traveling moves', () => {
   let ranged = 0;
   for (const c of ROSTER) if (campaignMoves(c.id).some((m) => m.attack && m.range[1] >= 2)) ranged++;
   assert.ok(ranged / ROSTER.length >= 0.7, `${ranged}/${ROSTER.length} fighters have a ranged attack`);
-  const kinds = new Set();
-  for (const c of ROSTER) for (const m of campaignMoves(c.id)) if (m.attack && m.kind === 'beam') { assert.deepEqual(m.range, [2, 3]); kinds.add('beam'); }
-  assert.ok(kinds.has('beam'));
-  assert.ok(campaignMoves('helen').some((m) => m.kind === 'projectile' && m.range[1] === 2));
+  assert.ok(campaignMoves('helen').some((m) => m.kind === 'projectile' && m.range[1] >= 2));
+  assert.ok(campaignMoves('phillip').some((m) => m.range[1] === 3));
 });
 
-test('level-ups add HP and a small flat damage bonus', () => {
+test('level-up: +Weight HP, +1 to one Attack/Defense stat (cap 10, never a noble gas chemical), 25% chance of +1 Skill (cap 10)', () => {
   const rec = makeRecord('helen', 1);
+  assert.equal(rec.skill, 1);
   const hp = rec.maxHp;
+  const total0 = Object.values(rec.atk).concat(Object.values(rec.dst)).reduce((x, v) => x + (v ?? 0), 0);
   awardXp(rec, 100 * 4, mulberry32(5));
   assert.equal(rec.level, 5);
-  assert.ok(rec.maxHp >= hp + 4 * 3 && rec.maxHp <= hp + 4 * 5, 'HP +3..5 per level');
-  assert.equal(rec.power, 2, '+1 damage at levels 2 and 4');
-  assert.deepEqual(makeRecord('helen', 5).power, 2);
-  assert.ok(makeRecord('helen', MAX_LEVEL).power <= 10, 'the bonus stays small');
+  assert.equal(rec.maxHp, hp + 4 * rec.weight, 'HP per level = Weight');
+  const total1 = Object.values(rec.atk).concat(Object.values(rec.dst)).reduce((x, v) => x + (v ?? 0), 0);
+  assert.equal(total1, total0 + 4, 'one stat point per level');
+  assert.equal(rec.atk.chemical, null, 'a noble gas keeps no chemical');
+  assert.equal(rec.dst.chemical, null);
+  // stats cap at 10 and Skill at 10 over many levels
+  const big = makeRecord('hydra', MAX_LEVEL);
+  for (const v of Object.values(big.atk).concat(Object.values(big.dst))) assert.ok(v == null || v <= 10);
+  assert.ok(big.skill >= 1 && big.skill <= 10);
+  assert.equal(big.maxHp, 60 + 19 * big.weight, 'level 20 = base + 19 x Weight');
+  // Skill chance is about 25% per level over lots of level-ups
+  let skills = 0;
+  const rng = mulberry32(77);
+  for (let i = 0; i < 4000; i++) { const r = { weight: 3, maxHp: 80, hp: 80, skill: 1, atk: { kinetic: 1 }, dst: { kinetic: 1 } }; levelUp(r, rng); skills += r.skill - 1; }
+  assert.ok(Math.abs(skills / 4000 - 0.25) < 0.03, `skill rate ${skills / 4000}`);
+  // a record at level n is stable (seeded growth)
+  assert.deepEqual(makeRecord('hydra', 8), makeRecord('hydra', 8));
+  assert.equal(makeRecord('hydra', 1, { lord: true }).skill, 2, 'the lord gets +1 Skill');
+  assert.equal(makeRecord('hydra', 1, { lord: true }).maxHp, 70, 'and +10 HP');
 });
 
-test('older saves are rebuilt with the new HP and keep their level, xp and lord', () => {
+test('older saves are rebuilt with the new stats and keep their level, xp and lord', () => {
   const old = { id: 'hydra', level: 4, xp: 35, lord: true, maxHp: 40, hp: 12, power: 9, def: 3, spd: 8, mov: 5, range: [1, 1] };
   const up = upgradeRecord(old);
   assert.equal(up.level, 4);
   assert.equal(up.xp, 35);
-  assert.ok(up.lord && up.maxHp >= 70 && up.hp === up.maxHp);
+  assert.ok(up.lord && up.maxHp >= 70 && up.hp === up.maxHp && up.v === 3 && up.skill >= 2);
   assert.equal(upgradeRecord(up), up, 'current records are left alone');
   const mem = new Map();
   const storage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v), removeItem: (k) => mem.delete(k) };
@@ -507,7 +546,7 @@ function twoUnits(att = 'hydra', def = 'kyle', gap = 1) {
   const b = new (class extends CampaignBattle {})(chapter, party, { seed: 4, enemyRecords: (e) => makeRecord(e.id, e.level) });
   const a = b.players.find((u) => u.id === att);
   const rec = makeRecord(def, 1);
-  b.units.push(Object.assign({}, b.players[0], { uid: 999, rec, id: def, team: 'enemy', x: a.x + gap, y: a.y, hp: rec.maxHp, maxHp: rec.maxHp, def: rec.def, spd: rec.spd, power: 0, moves: campaignMoves(def), cd: {}, charging: null, status: {}, alive: true, acted: false, lord: false }));
+  b.units.push(Object.assign({}, b.players[0], { uid: 999, rec, id: def, team: 'enemy', x: a.x + gap, y: a.y, hp: rec.maxHp, maxHp: rec.maxHp, spd: rec.spd, skill: rec.skill, atk: { ...rec.atk }, dst: { ...rec.dst }, weight: rec.weight, worstMissing: 0, sleeping: 0, moves: campaignMoves(def), uses: Object.fromEntries(campaignMoves(def).map((m) => [m.key, m.uses])), cd: {}, charging: null, status: {}, alive: true, acted: false, lord: false }));
   return { b, a, d: b.units[b.units.length - 1] };
 }
 
@@ -614,7 +653,7 @@ test('the campaign is beatable by the AI: the AI clears every chapter within thr
 });
 
 // ------------------------------------------------------------------ move effects
-import { applyHitEffects, startOfTurn, statusTags } from '../src/campaign/status.js';
+import { applyHitEffects, startOfTurn, statusTags, healUnit } from '../src/campaign/status.js';
 import { movePoints } from '../src/campaign/grid.js';
 import { describeMove, effectText } from '../src/campaign/moves.js';
 import { moveSlug } from '../src/data/attackFx.js';
@@ -660,24 +699,37 @@ test('stun never skips two consecutive turns even when hit every round', () => {
   assert.ok(skipped.some(Boolean), 'it does lose turns');
 });
 
-test('burn and poison tick each turn; poison never kills, burn can; slow, freeze and root cut movement', () => {
+test('burn is 3 then 4 over two turns and poison is 3 a turn until healed; neither stacks; poison never kills, burn can; slow, freeze and root cut movement', () => {
   const { b, a, d } = twoUnits('hydra', 'kyle', 1);
-  applyHitEffects(b, a, d, { effects: [{ type: 'burn', dmg: 5, turns: 2 }] }, hitOf(), always);
+  const burn = { effects: [{ type: 'burn', dmgs: [3, 4], turns: 2 }] };
+  applyHitEffects(b, a, d, burn, hitOf(), always);
   const hp = d.hp;
   b.endPlayerPhase();
-  assert.equal(d.hp, hp - 5, 'burn ticks at the start of its turn');
+  assert.equal(d.hp, hp - 3, 'burn ticks 3 at the start of its turn');
+  applyHitEffects(b, a, d, burn, hitOf(), always);   // no stacking: the running burn keeps its clock
   b.endEnemyPhase(); b.endPlayerPhase();
-  assert.equal(d.hp, hp - 10);
+  assert.equal(d.hp, hp - 7, 'the second tick is 4');
   b.endEnemyPhase(); b.endPlayerPhase();
-  assert.equal(d.hp, hp - 10, 'burn wore off after two ticks');
-  d.hp = 3;
-  applyHitEffects(b, a, d, { effects: [{ type: 'poison', dmg: 9, turns: 2 }] }, hitOf(), always);
+  assert.equal(d.hp, hp - 7, 'burn wore off after two ticks');
+  d.hp = 10;
+  const poison = { effects: [{ type: 'poison', dmg: 3, turns: Infinity }] };
+  applyHitEffects(b, a, d, poison, hitOf(), always);
+  applyHitEffects(b, a, d, poison, hitOf(), always);
+  applyHitEffects(b, a, d, burn, hitOf(), always);   // burn and poison coexist
+  assert.ok(d.status.poison && d.status.burn);
+  d.hp = 20;
   b.endEnemyPhase(); b.endPlayerPhase();
+  assert.equal(d.hp, 20 - 3 - 3, 'one poison tick and the first burn tick, no doubling');
+  delete d.status.burn;
+  for (let i = 0; i < 6; i++) { b.endEnemyPhase(); b.endPlayerPhase(); }
+  assert.ok(d.status.poison, 'poison lasts until healed');
   assert.equal(d.hp, 1, 'poison leaves 1 HP');
   assert.equal(d.alive, true);
+  assert.ok(healUnit(d, 5) >= 0);
+  assert.ok(!d.status.poison, 'a heal ends poison');
   d.status = {};
   d.hp = 3;
-  applyHitEffects(b, a, d, { effects: [{ type: 'burn', dmg: 9, turns: 2 }] }, hitOf(), always);
+  applyHitEffects(b, a, d, { effects: [{ type: 'burn', dmgs: [9, 9], turns: 2 }] }, hitOf(), always);
   b.endEnemyPhase(); b.endPlayerPhase();
   assert.equal(d.alive, false, 'burn can KO');
   assert.ok(b.phaseEvents.some((e) => e.type === 'dotKill'));
@@ -704,7 +756,11 @@ test('knockback pushes one tile, interrupt and stun break a charge, lifesteal he
   assert.equal(d.x, x0);
   const wall = twoUnits('hydra', 'kyle', 1);
   wall.b.map.tiles[wall.d.y][wall.d.x + 1] = 'wall';
-  assert.equal(applyHitEffects(wall.b, wall.a, wall.d, { effects: [{ type: 'push' }] }, hitOf(), always).length, 0, 'walls stop a push');
+  const wx = wall.d.x; const whp = wall.d.hp;
+  const blocked = applyHitEffects(wall.b, wall.a, wall.d, { effects: [{ type: 'push' }] }, hitOf(), always);
+  assert.ok(blocked.some((e) => e.type === 'pushBlocked'), 'walls stop a push');
+  assert.equal(wall.d.x, wx, 'and the target does not move');
+  assert.equal(wall.d.hp, whp - 2, 'it takes 2 damage instead');
   d.charging = 'basicCharge';
   applyHitEffects(b, a, d, { effects: [{ type: 'interrupt' }] }, hitOf(), always);
   assert.equal(d.charging, null);
@@ -783,23 +839,25 @@ test('HEAL restores 30% of an ally\'s max HP at range 1-2, takes the turn, never
   b.moveUnit(helen, a.x + 2, a.y);
   assert.equal(b.healTargets(helen).length, 1, 'range 2 reaches');
   const want = Math.round(a.maxHp * HEAL_FRAC);
-  assert.equal(healAmount(a), want);
+  assert.equal(healAmount(a), want);   // 18 of the 50 missing
   const xp0 = helen.xp;
   const res = b.heal(helen, a, heal);
   assert.equal(res.amount, want);
   assert.equal(a.hp, 10 + want);
   assert.equal(helen.acted, true, 'healing is the whole action');
   assert.ok(helen.xp > xp0 || helen.level > 1, 'the healer earns EXP');
-  a.hp = a.maxHp - 3;
-  assert.equal(b.heal(helen, a, heal).amount, 3, 'never beyond max HP');
-  assert.equal(a.hp, a.maxHp);
+  // the heal floor: healing stops at max HP minus half of the worst damage taken this map (a unit that was down 60 can only be healed back to 30 missing)
+  const floorHp = a.maxHp - Math.floor((a.maxHp - 10) / 2);
+  assert.equal(b.heal(helen, a, heal).amount, floorHp - (10 + want), 'only up to the floor');
+  assert.equal(a.hp, floorHp);
+  assert.equal(b.heal(helen, a, heal).amount, 0, 'nothing left to heal below the floor');
   assert.equal(b.moveBlock(helen, heal), null);
   assert.ok(!b.usableAttacks(helen).includes(heal), 'heal is not an attack');
 });
 
 test('forts, villages and thrones heal ~20% of max HP at the start of the owner\'s phase, for allies and enemies alike', () => {
   for (const id of ['fort', 'village', 'throne']) assert.equal(TERRAIN[id].heal, 0.2, id);
-  assert.ok(TERRAIN.fort.def > 0 && TERRAIN.village.def > 0 && TERRAIN.throne.def > 0 && TERRAIN.village.avoid > 0, 'with defence and avoid bonuses');
+  assert.ok(TERRAIN.fort.def === 0 && TERRAIN.village.def === 0 && TERRAIN.throne.def === 0 && TERRAIN.village.avoid > 0, 'dodge stays, terrain defense is retired');
   for (const id of ['plain', 'forest', 'mountain', 'road']) assert.ok(!TERRAIN[id].heal);
   const { b, a, d } = twoUnits('hydra', 'kyle', 4);
   const row = [...b.map.tiles[a.y]];
@@ -862,24 +920,82 @@ test('seize chapters say up front that the boss must fall before the throne can 
   for (const c of seize) assert.match(c.objective, /defeat/i, c.id);
 });
 
-test('misses are half as common: hit = 100 - (100 - oldHit) / 2, in the forecast and in resolve', () => {
-  assert.equal(missHalved(78), 89);
-  assert.equal(missHalved(100), 100);
-  assert.equal(missHalved(0), 50);
-  assert.equal(missHalved(50), 75);
+test('one roll per hit gives miss / hit / crit; Skill adds +1% hit and +1% crit; terrain dodge and blindness add to the miss chance', () => {
   const map = parseMap(['..']);
-  const a = { id: 'hydra', team: 'player', x: 0, y: 0, power: 0, def: 2, spd: 8, hp: 70, maxHp: 70, range: [1, 2] };
-  const d = { id: 'kyle', team: 'enemy', x: 1, y: 0, power: 0, def: 2, spd: 8, hp: 70, maxHp: 70, range: [1, 1] };
+  const a = { id: 'hydra', team: 'player', x: 0, y: 0, spd: 5, skill: 1, hp: 70, maxHp: 70, range: [1, 2] };
+  const d = { id: 'kyle', team: 'enemy', x: 1, y: 0, spd: 5, skill: 1, hp: 70, maxHp: 70, range: [1, 1] };
   const f = forecast(a, d, map);
-  assert.equal(f.att.hit, 89, 'equal speed on plain ground used to be 78%; now 89%');
-  const fast = forecast({ ...a, spd: 20 }, d, map);   // old 78 + 24 -> capped 100
-  assert.equal(fast.att.hit, 100);
-  const forest = forecast(a, { ...d }, parseMap(['.f']));
-  assert.ok(forest.att.hit < f.att.hit && forest.att.hit >= 50);
-  // resolve rolls against the same number: rng 0.885 -> 88.5 < 89 hits, 0.895 misses
-  const hitsAt = (r) => resolve({ ...a, hp: 70 }, { ...d, hp: 70 }, map, () => r).log[0].hit;
-  assert.equal(hitsAt(0.885), true);
-  assert.equal(hitsAt(0.895), false);
+  assert.deepEqual(f.att.table, { miss: 4, crit: 6, hit: 90 });
+  assert.equal(f.att.hit, 96);
+  assert.equal(f.att.crit, 6);
+  const skilled = forecast({ ...a, skill: 10 }, d, map);
+  assert.deepEqual(skilled.att.table, { miss: 0, crit: 15, hit: 85 }, 'Skill 10: +10% hit, +10% crit');
+  const special = forecast(a, d, map, campaignMoves('hydra').find((m) => m.slot === 'special'));
+  assert.deepEqual(special.att.table, { miss: 14, crit: 16, hit: 70 }, 'Special 15% / 15%');
+  const forest = forecast(a, d, parseMap(['.f']));
+  assert.equal(forest.att.table.miss, 24);
+  const blind = forecast({ ...a, status: { blind: { turns: 1 } } }, d, map);
+  assert.equal(blind.att.table.miss, 34);
+  // resolve rolls against the same table: 0.03 misses, 0.07 crits (x2), 0.5 hits
+  const first = (r) => resolve({ ...a, hp: 70 }, { ...d, hp: 70 }, map, () => r).log[0];
+  assert.equal(first(0.03).hit, false);
+  const crit = first(0.07);
+  assert.equal(crit.crit, true);
+  const plain = first(0.5);
+  assert.equal(plain.hit && !plain.crit, true);
+  assert.equal(crit.dmg, plain.dmg * 2);
+});
+
+test('multi-hit moves roll every hit and put the stat bonus on the last one; an all-immune target takes nothing', () => {
+  const map = parseMap(['..']);
+  const a = { id: 'hydra', team: 'player', x: 0, y: 0, spd: 5, skill: 1, hp: 70, maxHp: 70, range: [1, 2] };
+  const d = { id: 'kyle', team: 'enemy', x: 1, y: 0, spd: 5, skill: 1, hp: 700, maxHp: 700, range: [1, 1] };
+  const r = resolve(a, d, map, () => 0.5);
+  const bm = basicOf('hydra');
+  assert.equal(r.log.filter((l) => l.by === 'att').length, bm.hits, 'one log entry per hit');
+  assert.equal(r.log.filter((l) => l.by === 'att').at(-1).of, bm.hits);
+  // a pure-chemical move against a noble gas is immune
+  const neo = { id: 'neo', team: 'enemy', x: 1, y: 0, spd: 3, skill: 1, hp: 70, maxHp: 70, range: [1, 1] };
+  const chem = { key: 'x', slot: 'basic', types: ['chemical'], hits: 1, base: 10, effects: [] };
+  assert.equal(forecast(a, neo, map, chem).att.dmg, 0);
+  assert.equal(forecast(a, neo, map, chem).att.bonus, null);
+});
+
+test('uses per map: every move spends a use, an empty move is blocked, specials still rest every other turn', () => {
+  const { b, a, d } = twoUnits('hydra', 'kyle', 1);
+  const basic = a.moves.find((m) => m.key === 'basicDirectional');
+  assert.equal(a.uses.basicDirectional, basic.uses);
+  b.attack(a, d, basic);
+  assert.equal(a.uses.basicDirectional, basic.uses - 1);
+  a.uses.basicDirectional = 0;
+  assert.match(b.moveBlock(a, basic), /No uses/);
+  assert.ok(!b.usableAttacks(a).includes(basic));
+  const special = a.moves.find((m) => m.key === 'specialDirectional');
+  a.acted = false;
+  b.attack(a, d, special);
+  assert.equal(a.cd.specialDirectional, 2, 'special keeps the every-other-turn rest');
+});
+
+test('sleep: 1-3 turns skipped (random), damage wakes the sleeper, Anesthesia puts attackers to sleep, a sleeper cannot counter', () => {
+  const { b, a, d } = twoUnits('hydra', 'kyle', 1);
+  const lens = new Set();
+  for (let i = 0; i < 60; i++) { d.sleeping = 0; applyHitEffects(b, a, d, { effects: [{ type: 'sleep', min: 1, max: 3 }] }, hitOf(), mulberry32(i + 1)); lens.add(d.sleeping); }
+  assert.deepEqual([...lens].sort(), [1, 2, 3]);
+  d.sleeping = 2;
+  assert.equal(forecast(a, d, b.map).def, null, 'a sleeper cannot counter');
+  assert.ok(statusTags(d).some((t) => t.id === 'sleep'));
+  const ev = startOfTurn(d);
+  assert.equal(d.sleeping, 1);
+  assert.ok(ev.some((e) => e.type === 'skip' && e.sleep) && d.acted);
+  const r = resolve(a, d, b.map, () => 0.5);
+  assert.ok(r.log.some((l) => l.dmg > 0));
+  assert.equal(d.sleeping, 0, 'damage wakes the sleeper');
+  // Xander's guard
+  const g = twoUnits('hydra', 'xander', 1);
+  g.d.status.guard = { frac: 0.4, turns: 1, sleepback: true };
+  applyHitEffects(g.b, g.a, g.d, { effects: [] }, hitOf(), always);
+  assert.ok(g.a.sleeping >= 1 && g.a.sleeping <= 3);
+  assert.ok(campaignMoves('xander').find((m) => m.action === 'guard').effects.some((e) => e.type === 'sleepback'));
 });
 
 test('enemy damage is trimmed to offset fewer misses; ch2 softer, the tutorial keeps its own', async () => {

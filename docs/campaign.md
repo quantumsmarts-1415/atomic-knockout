@@ -87,16 +87,17 @@ Moves with FX art in `assets/fx/<fighter>/<move>/` play it in the battle cutaway
 
 ## Healing (no items)
 There are no items in campaign mode. HP comes back two ways:
-- **Healers.** Helen (in the first party), Oxana (joins in chapter 2) and, on the enemy side, Iona (chapter 4) and Lana (chapter 6) have a fifth action, HEAL: restore 30% of a wounded ally's max HP (at least 12) at range 1-2. It takes the turn like a guard, never targets the healer itself, and earns the healer EXP. Enemy healers heal their wounded allies before they fight (unless they can take a KO). To change who heals, edit `HEALERS` in `src/campaign/moves.js`; the FX art is the fighter's guard move.
+- **Healers.** Helen (in the first party), Oxana (freed in chapter 1) and, on the enemy side, the healing elements' robots have a fifth action, HEAL: restore 30% of a wounded ally's max HP (at least 12) at range 1-2. It takes the turn like a guard, never targets the healer itself, and earns the healer EXP. Enemy healers heal their wounded allies before they fight (unless they can take a KO). To change who heals, edit `HEALERS` in `src/campaign/moves.js`; the FX art is the fighter's guard move.
 - **Healing terrain.** Forts, villages and thrones restore 20% of max HP at the start of the owner's phase (either side), on top of their defense and avoid bonuses. The terrain card shows `Heals 20%/turn`.
 
-## Chapter data (`src/campaign/story/atomic-knockout.js`; adding your own story: `docs/campaign-story.md`)
+## Chapter data (`src/campaign/story/silas-robots.js`, the active story; adding your own story: `docs/campaign-story.md`)
 `win`: `rout | seize | boss | defend | escape` (`seize: [x,y]`, `turns: N`, `exit: [[x,y],...]`).
 `intro` / `outro`: lines `{ who: fighterId | null, text }` (`null` = narration).
 `npcs`: neutral fighters a player unit can **Talk** to when adjacent (`with: id` restricts who) - they join the party.
 `events`: `{ when, lines, spawn }` where `when` is one of
-`{ start: true }`, `{ turn: n }`, `{ enemyTurn: n }`, `{ near: enemyId, dist }` (boss encounter), `{ death: enemyId }`.
-`spawn` entries `{ id, level, x, y, team: 'player' | 'enemy', ai, boss }` arrive with a flash before the lines play.
+`{ start: true }`, `{ turn: n }`, `{ turn: n, orClear: true }` (a robot wave), `{ enemyTurn: n }`, `{ near: enemyId|key, dist }` (boss encounter), `{ death: enemyId|key }`.
+`spawn` entries `{ id, level, x, y, team: 'player' | 'enemy', ai, boss, robot, key }` arrive with a flash before the lines play.
+`frees: [ids]` are elements freed (they join the party) when the chapter is won; robots (`robot: true`) fight with the element's moves and are drawn with one tinted shared body (see `docs/campaign-story.md`).
 Every id used in a chapter's lines/spawns/npcs is loaded before the chapter starts (`chapterSpeakers`).
 
 ## Files

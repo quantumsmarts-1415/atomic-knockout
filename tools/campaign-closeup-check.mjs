@@ -25,11 +25,11 @@ await until(() => window.__camp?.mode === 'idle', 'idle');
 // 1. charge release: plates start at the HP from before the hit
 await ev(() => {
   const s = window.__camp, b = s.battle;
-  const ben = b.players.find((u) => u.id === 'ben'), cal = b.enemies.find((u) => u.id === 'cal');
+  const ben = b.players.find((u) => u.id === 'ben'), cal = b.enemies[0];      // a robot: the close-up draws the shared body, tinted
   const mv = ben.moves.find((m) => m.charge);
   b.rng = () => 0.3;                           // every roll hits (no crit)
   b.startCharge(ben, mv); ben.acted = false;
-  window.__t = { ben: ben.uid, cal: cal.uid, calHp: cal.hp, benHp: ben.hp, samples: [] };
+  window.__t = { ben: ben.uid, cal: cal.uid, calId: cal.id, calHp: cal.hp, benHp: ben.hp, samples: [] };
   window.__done = false;
   s.combat(ben, cal, mv).then(() => { window.__done = true; });
   const tick = () => {
@@ -43,16 +43,16 @@ await sleep(900); await page.screenshot({ path: '/workspace/pt/campaign5_closeup
 await until(() => window.__done, 'combat 1', 30000);
 const t1 = await ev(() => window.__t);
 const first = t1.samples[0];
-const calStart = first && first.find((p) => p[0] === 'cal');
+const calStart = first && first.find((p) => p[0] === t1.calId);
 check(!!calStart && calStart[1] === t1.calHp, `release close-up: defender plate starts at its pre-hit HP (${calStart ? calStart[1] : '?'} vs ${t1.calHp})`);
-check(t1.samples.some((smp) => smp.find((p) => p[0] === 'cal')[1] < t1.calHp), 'release close-up: the plate then drops with the hit');
+check(t1.samples.some((smp) => smp.find((p) => p[0] === t1.calId)[1] < t1.calHp), 'release close-up: the plate then drops with the hit');
 
 // 2. miss: FX and recoil on the defender side, no duplicate sprite
 await sleep(600);
 await ev(() => {
   const s = window.__camp, b = s.battle;
   b.rng = () => 0.9999;                       // every roll misses
-  const lil = b.players.find((u) => u.id === 'lillie'), aar = b.enemies.find((u) => u.id === 'aaron');
+  const lil = b.players.find((u) => u.id === 'lillie'), aar = b.enemies[1];
   lil.charging = null; lil.acted = false; aar.hp = aar.maxHp;
   const mv = lil.moves.find((m) => m.charge);
   window.__done = false;
@@ -79,7 +79,7 @@ await sleep(600);
 await ev(() => {
   const s = window.__camp, b = s.battle;
   b.rng = () => 0.3;
-  const lil = b.players.find((u) => u.id === 'lillie'), aar = b.enemies.find((u) => u.id === 'aaron');
+  const lil = b.players.find((u) => u.id === 'lillie'), aar = b.enemies[1];
   s.placeUnit(lil, 0, 0); s.placeUnit(aar, 5, 3); lil.acted = false; lil.charging = null; aar.hp = aar.maxHp;
   window.__done = false;
   s.combat(lil, aar, lil.moves[0]).then(() => { window.__done = true; });

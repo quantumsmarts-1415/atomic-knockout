@@ -1,4 +1,4 @@
-// Chapter 2 (Alkali Gate) in headless Chrome: the seize hint, the throne boss staying put through enemy phases, Van's idle facing,
+// Chapter 2 (Alkali Gate) in headless Chrome: the seize hint, the throne boss (a robot) staying put through enemy phases,
 // and Scarlett's rocket FX (a cut-out with a transparent border) in the close-up. Screenshots: /workspace/pt/campaign6_*.png
 //   PORT=5173 node tools/campaign-ch2-check.mjs
 import { chromium } from 'playwright-core';
@@ -31,17 +31,12 @@ await until(() => window.__camp?.mode === 'idle', 'idle', 120000);
 await sleep(600);
 await page.screenshot({ path: '/workspace/pt/campaign6_ch2_start.png' });
 
-// 1. seize hint on the objective line + Van's idle faces forward
+// 1. seize hint on the objective line, and the boss is a robot
 const obj = await ev(() => window.__camp.objectiveLine());
-check(/DEFEAT CHROMA, THEN SEIZE/.test(obj), `objective line: "${obj}"`);
+check(/DEFEAT GATE WARDEN, THEN SEIZE/.test(obj), `objective line: "${obj}"`);
 const boss0 = await ev(() => { const b = window.__camp.battle; const u = b.enemies.find((x) => x.boss); return { x: u.x, y: u.y, id: u.id }; });
-const van = await ev(async () => {
-  const s = window.__camp, u = s.battle.enemies.find((x) => x.id === 'van'); const v = u && s.views.get(u.uid);
-  const { CHARACTERS } = await import('/src/data/characters.js');
-  return { hasRig: !!v?.rig, flipX: v?.rig?.sprite?.flipX, sheetFacing: CHARACTERS.van.art.sheets.clips.idle.sheetFacing, artFacing: CHARACTERS.van.art.facing, cont: v?.cont?.scaleX };
-});
-// the idle clip carries its own sheet facing (right), so the sprite is never mirrored by the art-level facing -1
-check(van.sheetFacing === 1 && (!van.hasRig || van.flipX === false), `Van idle sprite is unflipped ${JSON.stringify(van)}`);
+const bossInfo = await ev(() => { const u = window.__camp.battle.enemies.find((x) => x.boss); return { name: u.name, robot: u.robot, tint: u.tint }; });
+check(bossInfo.robot && bossInfo.name === 'Gate Warden' && typeof bossInfo.tint === 'number', `the throne boss is the tinted Gate Warden robot ${JSON.stringify(bossInfo)}`);
 
 // 2. the throne boss stays on the throne through four enemy phases, even with the whole party standing in reach of it
 await ev(() => {
@@ -67,10 +62,19 @@ for (let phase = 0; phase < 3; phase++) {
 await page.screenshot({ path: '/workspace/pt/campaign6_ch2_boss_on_throne.png' });
 
 // 3. Scarlett's rocket: texture has a transparent corner and an opaque body, and the close-up shows the cut-out
-await ev(() => { const s = window.__camp, b = s.battle; b.rng = () => 0.3; window.__sc = { done: false }; });
+// no Scarlett on this stage any more, so stand a stand-in for her next to the party (her rocket FX is the thing under test)
+await ev(async () => {
+  const s = window.__camp, b = s.battle; b.rng = () => 0.3; window.__sc = { done: false };
+  const { campaignMoves } = await import('/src/campaign/moves.js');
+  const { loadCampaignArt } = await import('/src/campaign/art.js');
+  await new Promise((res) => loadCampaignArt(s, ['scarlett'], 'attack', res));
+  const base = b.enemies.find((x) => x.robot);
+  const sc = { ...base, uid: 9001, id: 'scarlett', name: 'Scarlett', robot: false, bodyId: undefined, tint: undefined, scale: 1, moves: campaignMoves('scarlett') };
+  b.units.push(sc); s.addView(sc);
+});
 const alpha = await ev(async () => {
   const s = window.__camp;
-  const sc = s.battle.enemies.find((x) => x.id === 'scarlett');
+  const sc = s.battle.units.find((x) => x.id === 'scarlett');
   const mv = sc.moves.find((m) => /rocket/i.test(m.name));
   const tgt = s.battle.players.find((u) => !u.lord);
   const { loadMoveFx } = await import('/src/campaign/fx.js');

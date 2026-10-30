@@ -66,6 +66,7 @@ export function validateStory(story, knownFighters = null) {
       if (!walkable(e.x, e.y)) err(w, `enemy ${e.id} (${e.x},${e.y}) is off the map or blocked`);
       if (e.robot != null && e.robot !== true) err(`${w} enemies[${i}]`, 'robot must be true (id is the enslaved element whose moves it uses)');
     });
+    (ch.foes || []).forEach((id, i) => fighter(`${w} foes[${i}]`, id));
     (ch.frees || []).forEach((id, i) => {
       fighter(`${w} frees[${i}]`, id);
       if (story.chapters.some((o, oi) => oi < ci && (o.frees || []).includes(id))) err(`${w} frees[${i}]`, `"${id}" is already freed by an earlier chapter`);

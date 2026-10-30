@@ -46,7 +46,7 @@ export function chapterEnemyArtIds(ch) {
   return [...new Set(enemySpecs(ch).map(artIdOf))];
 }
 
-/** Fighter ids of enemies that are people (they can speak and show as foes in dialogue); robots are machines and stay silent. */
+/** Fighter ids of enemies that are people (they can speak and show as foes in dialogue); robots are machines and stay silent. A chapter's `foes` adds voices such as Silas on the loudspeakers. */
 export function chapterFoeIds(ch) {
-  return [...new Set(enemySpecs(ch).filter((e) => !e.robot).map((e) => e.id))];
+  return [...new Set([...enemySpecs(ch).filter((e) => !e.robot).map((e) => e.id), ...(ch.foes || [])])];
 }

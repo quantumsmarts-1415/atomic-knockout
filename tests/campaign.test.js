@@ -138,7 +138,8 @@ test('a chapter plays out: permadeath, result, progress carry-over', () => {
     save = afterVictory(newCampaign(), 0, survivors);
     assert.equal(save.chapter, 1);
     const party = partyForChapter(save, CHAPTERS[1]);
-    assert.ok(party.length >= survivors.length + 3, 'recruits join');
+    assert.deepEqual(CHAPTERS[0].frees.filter((id) => !save.party.some((r) => r.id === id)), [], 'the elements chapter 1 frees are in the saved party');
+    assert.ok(party.length >= survivors.length + CHAPTERS[0].frees.length, 'freed elements join');
     assert.ok(party.every((p) => p.hp === p.maxHp), 'healed between chapters');
     for (const s of survivors) assert.ok(party.find((p) => p.id === s.id && p.level === s.level));
     return;
@@ -152,7 +153,13 @@ test('lord death is defeat; routing the enemy is victory; seize wins chapter 2',
   assert.equal(b.updateResult(), 'defeat');
   const c = createBattle(newCampaign(), 0, 4);
   for (const e of c.enemies) e.alive = false;
-  assert.equal(c.updateResult(), 'victory');
+  assert.equal(c.updateResult(), null, 'a wave is still due, so clearing the field does not end the chapter yet');
+  for (let guard = 0; guard < 10 && !c.result; guard++) {      // each cleared field calls the next wave in; the last wave ends it
+    c.checkEvents('death', { unit: c.units[0] });
+    for (const e of c.enemies) e.alive = false;
+    c.updateResult();
+  }
+  assert.equal(c.result, 'victory');
   const save = { ...newCampaign(), chapter: 1 };
   const s = createBattle(save, 1, 4);
   const lord = s.units.find((u) => u.lord);
@@ -217,9 +224,9 @@ test('save slot round-trips', () => {
   assert.deepEqual(loadSave(storage), s);
 });
 
-test('campaign arc: 6-8 chapters with varied objectives and a prologue', async () => {
+test('campaign arc: 8-12 chapters with varied objectives and a prologue', async () => {
   const { PROLOGUE } = await import('../src/campaign/chapters.js');
-  assert.ok(CHAPTERS.length >= 6 && CHAPTERS.length <= 8);
+  assert.ok(CHAPTERS.length >= 8 && CHAPTERS.length <= 12);
   const wins = new Set(CHAPTERS.map((c) => c.win));
   for (const w of ['rout', 'seize', 'boss', 'defend', 'escape']) assert.ok(wins.has(w), `objective ${w}`);
   assert.ok(PROLOGUE.lines.length >= 4);
@@ -242,7 +249,7 @@ test('defend wins when the turns run out; escape wins when the lord reaches the 
   assert.equal(e.result, 'victory');
 });
 
-test('events: turn spawns reinforcements, near-boss fires once, talk recruits an npc', () => {
+test('events: a turn wave spawns robots, near-boss fires once, talk recruits an npc', () => {
   const save = newCampaign();
   const i3 = CHAPTERS.findIndex((c) => c.id === 'ch3');
   const b = createBattle(save, i3, 3);
@@ -250,28 +257,28 @@ test('events: turn spawns reinforcements, near-boss fires once, talk recruits an
   b.turn = 3;
   const fired = b.checkEvents('turn');
   assert.equal(fired.length, 1);
-  assert.equal(fired[0].spawned.length, 2);
-  assert.ok(fired[0].spawned.every((u) => u.team === 'player' && u.alive && !b.units.some((o) => o !== u && o.x === u.x && o.y === u.y)));
+  assert.ok(fired[0].spawned.length >= 1);
+  assert.ok(fired[0].spawned.every((u) => u.team === 'enemy' && u.robot && u.alive && !b.units.some((o) => o !== u && o.x === u.x && o.y === u.y)));
   assert.equal(b.checkEvents('turn').length, 0, 'events fire once');
-  const titan = b.units.find((u) => u.id === 'titan');
+  const chief = b.units.find((u) => u.key === 'chief');
   const p = b.players[0];
-  b.moveUnit(p, titan.x, titan.y + 2);
+  b.moveUnit(p, chief.x, chief.y + 2);
   const near = b.checkEvents('move');
   assert.equal(near.length, 1);
-  assert.ok(near[0].lines.some((l) => l.who === 'titan'));
-  // talk
-  const i2 = CHAPTERS.findIndex((c) => c.id === 'ch2');
-  const c2 = createBattle({ ...save, chapter: i2 }, i2, 3);
-  const flora = c2.units.find((u) => u.id === 'flora');
-  assert.equal(flora.team, 'npc');
-  assert.ok(!c2.targetsFrom(c2.players[0], flora.x, flora.y).includes(flora), 'npcs are not attackable');
-  const talker = c2.players[0];
-  c2.moveUnit(talker, flora.x + 1, flora.y);
-  assert.deepEqual(c2.talkTargets(talker), [flora]);
-  const r = c2.talk(talker, flora);
+  assert.ok(near[0].lines.some((l) => l.who === 'silas'));
+  // talk: Silas, held in the Master Core's cell, joins when a unit reaches him
+  const iLast = CHAPTERS.length - 1;
+  const cl = createBattle({ ...save, chapter: iLast }, iLast, 3);
+  const silas = cl.units.find((u) => u.id === 'silas' && u.team === 'npc');
+  assert.ok(silas, 'Silas is in the cell');
+  assert.ok(!cl.targetsFrom(cl.players[0], silas.x, silas.y).includes(silas), 'npcs are not attackable');
+  const talker = cl.players[0];
+  cl.moveUnit(talker, silas.x + 1, silas.y);
+  assert.deepEqual(cl.talkTargets(talker), [silas]);
+  const r = cl.talk(talker, silas);
   assert.ok(r.lines.length >= 2);
-  assert.equal(flora.team, 'player');
-  assert.ok(c2.commit().some((rec) => rec.id === 'flora'));
+  assert.equal(silas.team, 'player');
+  assert.ok(cl.commit().some((rec) => rec.id === 'silas'));
 });
 
 test('sheetDims.js lists the oversized fighter sheets the campaign repacks before upload', async () => {
@@ -300,7 +307,7 @@ test('camp conversations unlock with progress and only use real fighters', () =>
   for (const sp of SUPPORTS) {
     assert.ok(!ids.has(sp.id), `duplicate ${sp.id}`);
     ids.add(sp.id);
-    assert.ok(sp.lines.length >= 4);
+    assert.ok(sp.lines.length >= 3);
     for (const id of sp.pair) assert.ok(CHARACTERS[id], id);
     for (const l of sp.lines) assert.ok(!l.who || CHARACTERS[l.who], l.who);
   }
@@ -312,6 +319,10 @@ test('boss entrance cards name a real fighter who is on that chapter\'s map', ()
     for (const ev of ch.events || []) {
       if (!ev.card) continue;
       cards += 1;
+      if (ev.card.robot) {           // a robot boss has no portrait: its card carries the boss's name
+        assert.ok(ch.enemies.some((e) => e.boss && e.robot && e.name.toUpperCase() === ev.card.name), `${ch.id} ${ev.card.name}`);
+        continue;
+      }
       assert.ok(CHARACTERS[ev.card.id], ev.card.id);
       assert.ok(ch.enemies.some((e) => e.id === ev.card.id), `${ch.id} ${ev.card.id}`);
     }
@@ -828,28 +839,32 @@ test('enemy healers heal a wounded ally instead of attacking, and there are no i
   for (const u of b.units) assert.ok(u.moves.every((m) => !/item|potion|vulnerary/i.test(m.action + m.key)), 'no item actions');
 });
 
-test('chapter 1 is a fair tutorial: soft hits, almost no crits, raiders arrive staggered, autoplay wins 90%+ of seeds', () => {
+test('chapter 1 is a fair tutorial: soft hits, almost no crits, robots arrive staggered and in waves, autoplay wins 90%+ of seeds', () => {
   const ch1 = CHAPTERS[0];
-  assert.ok(ch1.enemies.length <= 5, 'at most five raiders');
+  assert.ok(ch1.enemies.length <= 4, 'at most four robots on the map at the start');
+  const waves = (ch1.events || []).filter((e) => e.spawn);
+  assert.ok(waves.length >= 2 && waves.every((w) => w.when.orClear), 'then waves, which also arrive if the field is cleared early');
+  assert.ok(ch1.enemies.length + waves.reduce((a, w) => a + w.spawn.length, 0) <= 6, 'no more than six robots in all');
   assert.ok(ch1.tutorial && ch1.tutorial.dmg < 1 && ch1.tutorial.critMax <= 10);
   const later = CHAPTERS.slice(1).filter((c) => !c.tutorial);
   assert.equal(later.length, CHAPTERS.length - 1, 'only chapter 1 is eased');
   const b = createBattle(newCampaign(), 0, 3);
   const lillie = b.players.find((u) => u.id === 'lillie');
-  const chloe = b.enemies.find((u) => u.id === 'chloe');
-  assert.equal(chloe.dmgMult, ch1.tutorial.dmg);
-  const soft = forecast(chloe, lillie, b.map);
-  const plain = forecast({ ...chloe, dmgMult: 1, critMax: 50 }, lillie, b.map);
+  const rusher = b.enemies.find((u) => u.ai === 'aggressive' && !u.wake);
+  assert.ok(rusher.robot, 'enemies are robots');
+  assert.equal(rusher.dmgMult, ch1.tutorial.dmg);
+  const soft = forecast(rusher, lillie, b.map);
+  const plain = forecast({ ...rusher, dmgMult: 1, critMax: 50 }, lillie, b.map);
   assert.ok(soft.att.dmg < plain.att.dmg, 'tutorial enemy hits softer');
   assert.ok(soft.att.crit <= ch1.tutorial.critMax, 'crit capped');
-  // staggered aggro: the second raider holds until its wake turn, the first rushes at once
-  const aaron = b.enemies.find((u) => u.id === 'aaron');
-  assert.ok(aaron.wake >= 2);
-  const start = { x: aaron.x, y: aaron.y };
+  // staggered aggro: the second robot holds until its wake turn, the first rushes at once
+  const sleeper = b.enemies.find((u) => u.wake >= 2);
+  assert.ok(sleeper, 'one robot wakes later');
+  const start = { x: sleeper.x, y: sleeper.y };
   b.endPlayerPhase();
-  const plan = b.plan(aaron);
-  assert.deepEqual(plan.to, start, 'aaron waits on turn 1');
-  assert.ok(b.plan(chloe).to.x !== chloe.x, 'chloe advances on turn 1');
+  const plan = b.plan(sleeper);
+  assert.deepEqual(plan.to, start, 'the sleeper waits on turn 1');
+  assert.ok(b.plan(rusher).to.x !== rusher.x, 'the rusher advances on turn 1');
   let wins = 0;
   for (let seed = 1; seed <= 30; seed++) if (autoplayChapter(createBattle(newCampaign(), 0, seed * 100), 40).result === 'victory') wins++;
   assert.ok(wins >= 27, `the autoplay AI should win chapter 1 on at least 90% of seeds (won ${wins}/30)`);

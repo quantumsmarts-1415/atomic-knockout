@@ -3,11 +3,11 @@
 // the battle animation. Walk sheets are the largest files, so they load one unit
 // at a time, only when that unit is about to move (see CampaignBattleScene.ensureWalk);
 // until one is ready the unit glides between tiles with a bob instead.
-import { CHARACTERS } from '../data/characters.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets, use3dSheets, sheetKey, attachBootLoadUi, clipFrameSize, fitSheetGrid } from '../scenes/BootScene.js';
 import { BIG_SHEETS } from './sheetDims.js';
 import { clipNameForMove } from '../engine/moveSheet.js';
 import { TERRAIN_IDS } from './terrain.js';
+import { bodyDefOf } from './robots.js';
 
 export const tileKey = (id) => `cmp-tile-${id}`;
 
@@ -85,7 +85,7 @@ function loadBigSheet(scene, c, clip, maxSize, done) {
 }
 
 export function loadCampaignArt(scene, ids, phase, done, { hud = false } = {}) {
-  const chars = [...new Set(ids)].map((id) => CHARACTERS[id]).filter((c) => c && c.art);
+  const chars = [...new Set(ids)].map((id) => bodyDefOf(id)).filter((c) => c && c.art);   // ids are fighters, or the shared robot body (robots.js)
   const names = (c) => (phase === 'attack' ? [attackClipName(c)].filter(Boolean) : phase === 'walk' ? ['walk'] : ['idle']);
   const slimmed = chars.map((c) => (use3dSheets(c) ? slim(c, names(c)) : c));
   const maxSize = scene.game?.renderer?.getMaxTextureSize?.() || 8192;
@@ -118,7 +118,7 @@ export function loadCampaignArt(scene, ids, phase, done, { hud = false } = {}) {
 
 /** True when this fighter's walk sheet is loaded and has its animation, so the map can use it. */
 export function walkReady(scene, id) {
-  const c = CHARACTERS[id];
+  const c = bodyDefOf(id);
   if (!c || !c.art || !c.art.sheets?.clips?.walk) return false;
   const k = sheetKey(c.art, 'walk');
   return scene.textures.exists(k) && scene.anims.exists(k);
@@ -126,7 +126,7 @@ export function walkReady(scene, id) {
 
 /** Free one fighter's walk sheet (they are the biggest files; the map keeps only a few at a time). */
 export function releaseWalk(scene, id) {
-  const c = CHARACTERS[id];
+  const c = bodyDefOf(id);
   if (!c || !c.art) return;
   const k = sheetKey(c.art, 'walk');
   if (scene.anims.exists(k)) scene.anims.remove(k);

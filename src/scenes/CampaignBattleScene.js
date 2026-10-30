@@ -10,11 +10,12 @@ import { faceFrame, menuPortraitKey } from '../ui/portraits.js';
 import { Rig } from '../engine/Rig.js';
 import { frameData } from '../engine/feel.js';
 import { authoredClipName } from '../engine/moveSheet.js';
-import { createBattle, CHAPTERS, XP_PER_LEVEL, autoplayPhase } from '../campaign/index.js';
+import { createBattle, CHAPTERS, XP_PER_LEVEL, autoplayPhase, chapterFoeIds } from '../campaign/index.js';
 import { TERRAIN } from '../campaign/terrain.js';
 import { key, ringTiles } from '../campaign/grid.js';
 import { tileKey, attackClipName, loadCampaignArt, sheetKey, walkReady, releaseWalk } from '../campaign/art.js';
 import { basicMove } from '../campaign/units.js';
+import { bodyDefOf, bodyIdOf } from '../campaign/robots.js';
 import { healAmount, describeMove, effectText } from '../campaign/moves.js';
 import { statusTags } from '../campaign/status.js';
 import { loadMoveFx, playMoveFx, releaseMoveFx } from '../campaign/fx.js';
@@ -91,7 +92,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     preload([this.mapRotation.current(), 'map_enemy', 'battle', 'defeat_player', 'defeat_enemy', ...MAP_PLAYER_ROTATION, ...(this.chapter.win === 'boss' || (this.chapter.events || []).some((e) => e.card) ? ['boss'] : [])]);
     // Attack clips stream in behind the map. Until one arrives that unit lunges instead.
     this.noWalk = /[?&]nowalk\b/.test(window.location.search);
-    loadCampaignArt(this, this.battle.units.map((u) => u.id), 'attack', () => { this.attackReady = true; });
+    loadCampaignArt(this, this.battle.units.map(bodyIdOf), 'attack', () => { this.attackReady = true; });
     const lord = this.battle.units.find((u) => u.lord);
     this.setCursor(lord.x, lord.y);
     this.startPlayerPhase(true);
@@ -225,7 +226,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
   }
 
   addView(u) {
-    const charDef = CHARACTERS[u.id];
+    const charDef = bodyDefOf(bodyIdOf(u)); // robots all share one body (campaign/robots.js)
     const cont = this.add.container(tx(u.x) + TILE / 2, ty(u.y) + FEET);
     const ring = this.add.graphics();
     const col = u.lord ? 0xffd166 : u.team === 'player' ? 0x35a8ff : u.team === 'npc' ? 0x53e0a8 : 0xff4f5f;
@@ -237,8 +238,9 @@ export default class CampaignBattleScene extends Phaser.Scene {
     let rig = null;
     if (this.textures.exists(sheetKey(charDef.art, 'idle'))) {
       rig = new Rig(this, charDef, 0);
-      rig.baseScale = UNIT_H / (charDef.art.height || 130);
+      rig.baseScale = (UNIT_H / (charDef.art.height || 130)) * (u.scale || 1);
       rig.facing = u.team === 'enemy' ? -1 : 1;
+      this.tintRobot(rig, u);
       cont.add(rig);
     } else {
       const f = this.add.circle(0, -30, 20, col, 0.9);
@@ -335,6 +337,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     } else {
       v.rig.animate(dt, 'idle', 1);
     }
+    if (v.u.robot) for (const spr of [v.rig.clipA, v.rig.clipB]) if (spr && !spr.robotTinted) { spr.setTint(v.u.tint); spr.robotTinted = true; } // attack-clip sprites are made on demand
     if (bob && !v.atk && !v.moving) {
       v.t += dt;
       v.rig.y = v.grey ? 0 : -Math.abs(Math.sin(v.t * 2.4)) * 2.2;
@@ -349,9 +352,16 @@ export default class CampaignBattleScene extends Phaser.Scene {
     if (this.backBtn) this.backBtn.container.setVisible(this.battle.phase === 'player' && !this.battle.result && ['move', 'menu', 'target'].includes(this.mode));
   }
 
+  /** A robot wears its element's colour: a flat tint that survives hit flashes (setFlash(null) returns to it). */
+  tintRobot(rig, u) {
+    if (!u.robot || !rig) return;
+    rig.paletteTint = u.tint;
+    rig.sprite?.setTint?.(u.tint);
+  }
+
   /** Does this fighter have its attack clip in memory yet? */
   clipLoaded(u) {
-    const c = CHARACTERS[u.id];
+    const c = bodyDefOf(bodyIdOf(u));
     const name = attackClipName(c);
     return !!name && this.textures.exists(sheetKey(c.art, name));
   }
@@ -390,11 +400,12 @@ export default class CampaignBattleScene extends Phaser.Scene {
     if (u) {
       const c = CHARACTERS[u.id];
       const ring = u.team === 'player' ? 0x35a8ff : u.team === 'npc' ? 0x53e0a8 : 0xff4f5f;
-      this.pAdd(drawPortraitDisc(this, x + 34, y + 38, 64, {
-        textureKey: menuPortraitKey(c), face: faceFrame(this, c), n: c.atomicNumber, sym: c.symbol, ring,
-      }));
+      // a robot shows its element's number and symbol on its own colour (no face: the machine is not the fighter)
+      this.pAdd(drawPortraitDisc(this, x + 34, y + 38, 64, u.robot
+        ? { n: c.atomicNumber, sym: c.symbol, ring, fill: u.tint }
+        : { textureKey: menuPortraitKey(c), face: faceFrame(this, c), n: c.atomicNumber, sym: c.symbol, ring }));
       this.pAdd(this.add.text(x + 78, y + 8, u.name.toUpperCase(), textStyle('h3', { fontSize: '17px' })));
-      this.pAdd(this.add.text(x + 78, y + 30, `Lv ${u.level}  ${u.team === 'player' ? 'ALLY' : u.team === 'npc' ? 'NEUTRAL' : u.boss ? 'BOSS' : 'ENEMY'}`, textStyle('label', { color: u.team === 'enemy' ? THEME.pinkCss : THEME.tealCss })));
+      this.pAdd(this.add.text(x + 78, y + 30, `Lv ${u.level}  ${u.team === 'player' ? 'ALLY' : u.team === 'npc' ? 'NEUTRAL' : u.boss ? 'BOSS' : u.robot ? 'ROBOT' : 'ENEMY'}`, textStyle('label', { color: u.team === 'enemy' ? THEME.pinkCss : THEME.tealCss })));
       this.pAdd(this.add.text(x + 78, y + 46, u.moveName, textStyle('caption', { fontSize: '12px' })));
       y += 86;
       const bar = this.add.graphics();
@@ -473,9 +484,9 @@ export default class CampaignBattleScene extends Phaser.Scene {
     if (c.win === 'escape') return 'GET HYDRA TO THE GOLD GATE';
     if (c.win === 'seize') {
       const boss = b.units.find((u) => u.boss && u.alive && u.team === 'enemy');
-      return boss ? `DEFEAT ${(CHARACTERS[boss.id]?.name || 'THE BOSS').toUpperCase()}, THEN SEIZE THE GOLD TILE` : 'HYDRA TO THE GOLD TILE';
+      return boss ? `DEFEAT ${(boss.name || 'THE BOSS').toUpperCase()}, THEN SEIZE THE GOLD TILE` : 'HYDRA TO THE GOLD TILE';
     }
-    if (c.win === 'boss') return `DEFEAT ${(CHARACTERS[c.enemies.find((e) => e.boss)?.id]?.name || 'THE BOSS').toUpperCase()}`;
+    if (c.win === 'boss') { const bu = b.units.find((u) => u.boss && u.team === 'enemy'); return `DEFEAT ${(bu?.name || CHARACTERS[c.enemies.find((e) => e.boss)?.id]?.name || 'THE BOSS').toUpperCase()}`; }
     return 'ROUT ALL ENEMIES';
   }
 
@@ -656,7 +667,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
   }
 
   selectUnit(u) {
-    this.ensureWalk(u.id);
+    this.ensureWalk(bodyIdOf(u));
     this.sel = u;
     this.origin = { x: u.x, y: u.y };
     this.reach = this.battle.reachFor(u);
@@ -744,7 +755,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
     this.walkLru = (this.walkLru || []).filter((x) => x !== id);
     this.walkLru.push(id);
     while (this.walkLru.length > 4) {
-      const old = this.walkLru.find((x) => { const u = this.battle.units.find((q) => q.id === x); const w = u && this.views.get(u.uid); return !(w && w.moving); });
+      const old = this.walkLru.find((x) => { const u = this.battle.units.find((q) => bodyIdOf(q) === x); const w = u && this.views.get(u.uid); return !(w && w.moving); });
       if (!old) break;
       this.walkLru = this.walkLru.filter((x) => x !== old);
       releaseWalk(this, old);
@@ -761,8 +772,8 @@ export default class CampaignBattleScene extends Phaser.Scene {
     const SPEED = 430; // px per second
     const dur = (total / SPEED) * 1000 + 90;
     v.moving = true;
-    v.walkOn = !!(v.rig && walkReady(this, u.id));
-    if (v.walkOn) { v.rig.currentClip = null; this.touchWalk(u.id); }
+    v.walkOn = !!(v.rig && walkReady(this, bodyIdOf(u)));
+    if (v.walkOn) { v.rig.currentClip = null; this.touchWalk(bodyIdOf(u)); }
     let lastDust = 0;
     await new Promise((res) => {
       const counter = this.tweens.addCounter({
@@ -1209,10 +1220,11 @@ export default class CampaignBattleScene extends Phaser.Scene {
     add(rim, 4);
     // fighters
     const mk = (u, x, face) => {
-      const c = CHARACTERS[u.id];
+      const c = bodyDefOf(bodyIdOf(u));
       const rig = new Rig(this, c, 0);
-      rig.baseScale = 270 / (c.art.height || 130);
+      rig.baseScale = (270 / (c.art.height || 130)) * (u.scale || 1);
       rig.facing = face;
+      this.tintRobot(rig, u);
       rig.setPosition(x + face * -160, FOOT);
       this.add.existing(rig);
       add(rig, 10);
@@ -1454,7 +1466,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
 
   // --------------------------------------------------------------- story events
   enemyIds() {
-    return [...new Set([...this.battle.units.filter((u) => u.team === 'enemy').map((u) => u.id), ...this.chapter.enemies.map((e) => e.id)])];
+    return [...new Set([...this.battle.units.filter((u) => u.team === 'enemy' && !u.robot).map((u) => u.id), ...chapterFoeIds(this.chapter)])];
   }
 
   /** Mid-battle conversation over a dimmed map. */
@@ -1571,7 +1583,7 @@ export default class CampaignBattleScene extends Phaser.Scene {
       this.setCursor(u.x, u.y);
       if (plan.to.x !== u.x || plan.to.y !== u.y) {
         const reach = b.reachFor(u);
-        await this.waitWalk(u.id, 1800);
+        await this.waitWalk(bodyIdOf(u), 1800);
         await this.walk(u, b.pathFor(u, plan.to, reach));
         await this.runEvents(b.checkEvents('move'));
       }

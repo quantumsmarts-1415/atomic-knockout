@@ -7,7 +7,7 @@ import {
 import { enterScene, isLeaving, showScene } from '../ui/flow.js';
 import { CHARACTERS } from '../data/characters.js';
 import { faceFrame, menuPortraitKey } from '../ui/portraits.js';
-import { CHAPTERS, PROLOGUE, supportsFor, afterVictory, chapterSpeakers, loadSave, newCampaign, partyForChapter, writeSave, clearSave } from '../campaign/index.js';
+import { CHAPTERS, PROLOGUE, supportsFor, afterVictory, chapterSpeakers, chapterEnemyArtIds, chapterFoeIds, freedFor, loadSave, newCampaign, partyForChapter, writeSave, clearSave } from '../campaign/index.js';
 import { playMusic, stopMusic, watch, preload, toggleMute } from '../campaign/music.js';
 import { playDialogue } from '../ui/campaignDialogue.js';
 import { loadCampaignArt, releaseCampaignArt, tileKey } from '../campaign/art.js';
@@ -15,7 +15,7 @@ import { loadCampaignArt, releaseCampaignArt, tileKey } from '../campaign/art.js
 /** Fighters a chapter needs on screen: party, recruits, enemies and the story's speakers. */
 export function chapterFighterIds(save, chapter) {
   const ids = new Set(partyForChapter(save, chapter).map((r) => r.id));
-  for (const e of chapter.enemies) ids.add(e.id);
+  for (const id of chapterEnemyArtIds(chapter)) ids.add(id);   // robots all share one body, so that is one entry
   for (const id of chapterSpeakers(chapter)) ids.add(id);
   if (chapter.id === CHAPTERS[0].id) for (const l of PROLOGUE.lines) if (l.who) ids.add(l.who);
   return [...ids];
@@ -264,9 +264,7 @@ export default class CampaignScene extends Phaser.Scene {
 
   // --------------------------------------------------------------- story
   enemyIdsFor(chapter) {
-    const ids = new Set(chapter.enemies.map((e) => e.id));
-    for (const ev of chapter.events || []) for (const sp of ev.spawn || []) if ((sp.team || 'enemy') === 'enemy') ids.add(sp.id);
-    return [...ids];
+    return chapterFoeIds(chapter);   // people who fight against you (robots are machines and never speak)
   }
 
   /** A conversation over a chapter title card. onDone runs after it ends or is skipped. */
@@ -297,12 +295,13 @@ export default class CampaignScene extends Phaser.Scene {
       let save = this.save || newCampaign();
       // a replay of a cleared chapter is practice: the save keeps its progress
       const practice = chapterIndex < save.chapter;
+      const freed = practice ? [] : freedFor(chapter, survivors);   // elements this win frees; they join the party
       if (!practice) {
         save = afterVictory(save, chapterIndex, survivors);
         this.save = save;
         writeSave(save);
       }
-      this.playStory(chapter, chapter.outro || [], () => this.showSummary({ ...after, practice }, true));
+      this.playStory(chapter, chapter.outro || [], () => this.showSummary({ ...after, practice, freed }, true));
     } else {
       this.showSummary(after, false);
     }
@@ -320,9 +319,13 @@ export default class CampaignScene extends Phaser.Scene {
     this.add2(drawPanel(this, px, py, pw, won ? 310 : 130, 18, won ? THEME.gold : THEME.pink).setDepth(5));
     const lines = [];
     if (won) {
-      lines.push(`Turns taken: ${turns}`);
+      const freed = after.freed || [];
+      const fallenText = fallen.length ? fallen.map((n) => n).join(', ') : 'none';
+      // freed elements take the top line; turns and fallen share one so the summary keeps its five lines
+      if (freed.length) lines.push(`FREED: ${freed.map((id) => CHARACTERS[id].name).join(' and ')} ${freed.length > 1 ? 'join' : 'joins'} your party!`, `Turns taken: ${turns}    Fallen: ${fallenText}`);
+      else lines.push(`Turns taken: ${turns}`);
       lines.push(`Survivors: ${survivors.map((r) => CHARACTERS[r.id].name).join(', ')}`);
-      lines.push(`Fallen: ${fallen.length ? fallen.map((n) => n).join(', ') : 'none'}`);
+      if (!freed.length) lines.push(`Fallen: ${fallenText}`);
       const topLv = new Map();
       for (const l of levelUps) topLv.set(l.name, Math.max(topLv.get(l.name) || 0, l.level));
       lines.push(`Level-ups: ${topLv.size ? [...topLv].map(([n, lv]) => `${n} → Lv ${lv}`).join(', ') : 'none'}`);

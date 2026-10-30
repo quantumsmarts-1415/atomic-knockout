@@ -945,7 +945,8 @@ test('batch 11 kits follow the approved briefs', () => {
   assert.strictEqual(xander.basicCharge.recoilSelf, 240);
   assert.strictEqual(xander.basicDirectional.damage, 4.2);
   assert.strictEqual(xander.specialDirectional.kind, 'projectile');
-  assert.strictEqual(xander.specialDefense.retort.stun, 420);
+  assert.strictEqual(xander.specialDefense.retort.sleep, true);
+  assert.strictEqual(xander.specialDefense.retort.damage, 0);
 
   const caesar = CHARACTERS.caesar.moves;
   assert.strictEqual(caesar.basicCharge.damage, 0);

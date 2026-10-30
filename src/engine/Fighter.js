@@ -10,6 +10,7 @@ import { armGeyser, artFor, fxAnchor, groundTop, hitAnchor, playRetortPulse, rev
 import { clipNameForMove, sheetMeta, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { stringStep } from './swingString.js';
+import { baseOf, moveRework, RW, SLOT_OF_KEY, statBonus, hitDamage, canonical } from '../data/statRework.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
 
 function vaporAttack(move, attacker) {
@@ -49,131 +50,72 @@ const GRAVITY = 1500;
 
 /** Damage after the derived combat profile, or the legacy 5%-per-point
  *  table when the defender has no element record (engine tests). */
-// Dealt-damage multipliers from the full-roster 3-stock round robin.
-// The stored kits stay as written; only the dealt total moves.
-// A self-hit does not use this band, so a tuned fighter does not punish
-// their own designed cost harder.
-const BAND_DAMAGE = {
-  aaron: 1.20,
-  ace: 1.36,
-  agatha: 0.63,
-  allen: 0.48,
-  amy: 1.54,
-  arsenio: 0.75,
-  aurelius: 1.63,
-  barry: 1.39,
-  ben: 0.57,
-  bianca: 2.70,
-  boar: 0.95,
-  bord: 0.56,
-  brock: 0.97,
-  burke: 1.02,
-  caesar: 0.79,
-  cal: 1.12,
-  cali: 0.79,
-  carter: 0.51,
-  ceres: 1.22,
-  chloe: 0.93,
-  chroma: 0.77,
-  cody: 1.28,
-  collin: 0.62,
-  cooper: 1.18,
-  copernicus: 0.67,
-  curie: 1.60,
-  dash: 0.74,
-  dizzy: 0.52,
-  duke: 0.82,
-  einstein: 1.09,
-  erin: 1.11,
-  europa: 1.38,
-  fermi: 1.16,
-  fey: 0.71,
-  flo: 1.16,
-  flora: 0.96,
-  ford: 1.21,
-  frank: 1.07,
-  gail: 1.19,
-  gertrude: 1.07,
-  goldie: 1.46,
-  haley: 1.61,
-  helen: 0.70,
-  hog: 1.62,
-  holly: 0.87,
-  hoss: 0.93,
-  hydra: 0.77,
-  indy: 0.74,
-  iona: 1.89,
-  ira: 1.28,
-  krypto: 1.27,
-  kyle: 1.70,
-  lana: 0.77,
-  lars: 1.01,
-  lillie: 0.51,
-  liv: 2.10,
-  lucy: 1.37,
-  mac: 0.94,
-  mae: 1.18,
-  maggie: 0.30,
-  manny: 1.74,
-  mendel: 0.89,
-  molly: 0.83,
-  nadia: 0.80,
-  natalie: 0.64,
-  neo: 0.29,
-  neptune: 0.88,
-  nick: 0.76,
-  niko: 0.81,
-  niobe: 0.76,
-  nitra: 0.46,
-  noble: 0.65,
-  ogden: 1.22,
-  oxana: 0.35,
-  oz: 1.35,
-  pablo: 1.14,
-  pat: 1.01,
-  paula: 1.13,
-  percy: 1.29,
-  phillip: 1.07,
-  pit: 0.73,
-  pluto: 0.64,
-  polonius: 1.11,
-  prometheus: 1.59,
-  ray: 2.81,
-  rex: 0.79,
-  rhoda: 1.22,
-  roger: 1.33,
-  ronan: 5.40,
-  ruben: 1.18,
-  ruth: 2.59,
-  saab: 0.81,
-  sam: 1.11,
-  sandy: 1.40,
-  sarge: 1.15,
-  scarlett: 0.52,
-  selena: 1.12,
-  silas: 0.68,
-  sterling: 1.18,
-  sully: 1.47,
-  talia: 1.06,
-  tara: 0.76,
-  tate: 1.25,
-  terra: 1.14,
-  tess: 1.54,
-  tessa: 1.54,
-  tex: 1.21,
-  thor: 1.49,
-  thule: 1.24,
-  titan: 0.55,
-  uri: 1.13,
-  van: 1.88,
-  wolf: 0.72,
-  xander: 1.06,
-  yara: 1.27,
-  yvette: 0.86,
-  zane: 2.94,
-  zora: 0.97,
-};
+/** Types a prepared move still deals damage in (after mutes and defense gates), in canonical form. */
+function activeTypes(move) {
+  const out = [];
+  const add = (type, amount) => { if (type && amount > 0) out.push(canonical(canonicalType(type))); };
+  add(move.type, move.damage);
+  add(move.type2, move.damage2);
+  add(move.type3, move.damage3);
+  if (Array.isArray(move.hits)) for (const h of move.hits) add(h.type, h.damage);
+  return [...new Set(out)];
+}
 
+/** Hit n of a multi-hit move on this victim. Hits of one move land close together; a gap resets the count. */
+function nextHitIndex(attacker, move, defender, hits, now) {
+  const tracker = (attacker._rwSeq ??= new Map());
+  const key = `${move.rwKey}|${defender.playerIndex ?? ''}|${defender.charDef?.id}`;
+  const cur = tracker.get(key);
+  let n = cur && now - cur.at < 1200 ? cur.n + 1 : 1;
+  if (n > hits) n = 1;
+  tracker.set(key, { n, at: now });
+  return n;
+}
+
+/**
+ * Stat rework damage: base by move slot (Normal 10, Special 15, Charge 5-20, Defense 5; ghosts +5) plus the
+ * average Attack - Defense of the move's types. Multi-hit moves split the base and put the stat bonus on the last
+ * hit. Runtime buffs (resists, vulnerable, attack power, the move's own conditional bonuses) still scale it.
+ */
+function reworkDamage(attacker, original, move, defender, now) {
+  const slot = SLOT_OF_KEY[move.rwKey];
+  const row = moveRework(attacker.charDef.id, move.rwKey);
+  const types = activeTypes(move);
+  const hits = Math.max(1, row?.hits ?? 1);
+  const empty = { total: 0, packets: [] };
+  if (!slot || !types.length || (row && row.hits === 0)) return empty;
+  let bonus = statBonus(attacker.charDef.id, defender.charDef.id, types);
+  if (move.ignoreDefense) {
+    bonus = types.reduce((t, ty) => t + (attacker.charDef.rework.atk[ty] ?? 0), 0) / types.length;
+  }
+  if (bonus == null) return empty;
+  const base = baseOf(slot, { ghost: !!attacker.charDef.ghost, charge: move._chargeBase ?? (slot === 'charge' ? RW.baseDamage.charge : null) });
+  const n = nextHitIndex(attacker, move, defender, hits, now);
+  let amount = hitDamage({ base, bonus, hits, n });
+  // Conditional bonuses written on the move (bonusVsStun, heatEmpower ...) scale the hit in proportion.
+  const sum = (m) => (m.damage ?? 0) + (m.damage2 ?? 0) + (m.damage3 ?? 0);
+  if (sum(original) > 0 && sum(move) !== sum(original)) amount *= Math.max(0, sum(move) / sum(original));
+  // Runtime defender buffs (resist, vulnerable, corroded armor) still multiply what lands.
+  const opts = combatOpts(defender);
+  if (move.ignoreDefense) { /* defense stat already ignored above */ }
+  else if (!move.ignoreReductions) {
+    let mult = 0;
+    for (const ty of types) mult += resolvePacket(1, ty, null, null, opts);
+    amount *= mult / types.length;
+  }
+  const packets = types.map((ty) => ({ type: ty, base: amount / types.length, dealt: amount / types.length }));
+  const resolved = { total: amount, packets };
+  for (const bp of bonusPackets(attacker, now)) {
+    resolved.packets.push({ type: bp.type, base: bp.damage, dealt: bp.damage, bonus: true });
+    resolved.total += bp.damage;
+  }
+  if (move.flareHeat && (defender.burnUntil > now || defender.heatOnHitUntil > now)) {
+    resolved.packets.push({ type: 'heat', base: move.flareHeat, dealt: move.flareHeat, bonus: true });
+    resolved.total += move.flareHeat;
+  }
+  applyAttackPower(attacker, resolved, now);
+  return resolved;
+}
 
 function dealtDamage(attacker, move, defender) {
   const now = defender.scene?.time?.now ?? 0;
@@ -185,7 +127,11 @@ function dealtDamage(attacker, move, defender) {
     const type = canonicalType(move.type || 'kinetic');
     return { total: amount, packets: [{ type, base: amount, dealt: amount }] };
   }
+  const before = move;
   move = prepareMove(move, attacker, defender, now);
+  if (attacker?.charDef?.rework && defender?.charDef?.rework && move?.rwKey && !move.isSelf && !move.dot) {
+    return reworkDamage(attacker, before, move, defender, now);
+  }
   if (move?.enScale && attacker?.charDef?.combat && defender.charDef?.combat) {
     const mult = enGapMult(attacker.charDef.combat, defender.charDef.combat);
     move = {
@@ -214,13 +160,6 @@ function dealtDamage(attacker, move, defender) {
       resolved.total += dealt;
     }
     applyAttackPower(attacker, resolved, now);
-    // Own blasts and designed self-costs stay at the written number.
-    const selfHit = attacker === defender || move?.isSelf;
-    const band = selfHit ? 1 : BAND_DAMAGE[attacker?.charDef?.id];
-    if (band && band !== 1) {
-      resolved.total *= band;
-      for (const p of resolved.packets) p.dealt *= band;
-    }
     return resolved;
   }
   let total = applyDefense(move.damage ?? 0, move.type, defender.charDef?.defense);
@@ -2844,7 +2783,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       knockbackGrowth: ret.growth ?? 0.4,
       isCounterAttack: true,
       stunChance: this.defenseMove.stunChance,
-      onHit: ret.blind || ret.stun ? { blind: ret.blind, stun: ret.stun } : undefined,
+      onHit: ret.blind || ret.stun || ret.sleep ? { blind: ret.blind, stun: ret.stun, sleep: ret.sleep } : undefined,
     }, time, this.facing);
     if (cdmg > 0) this.scene?.noteHit?.(this, attacker, { name: this.defenseMove.name, type: ret.type });
   }

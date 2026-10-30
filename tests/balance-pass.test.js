@@ -7,28 +7,10 @@ import { CHARACTERS, ROSTER } from '../src/data/characters.js';
 import { hitsPerUse, resolveMoveDamage } from '../src/data/balance.js';
 import { stringStep, STRING_WINDOW } from '../src/engine/swingString.js';
 
-const RANGE = { basicDirectional: [5, 12], specialDirectional: [13, 20], basicCharge: [20, 30], counter: [13, 20] };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const weightScore = (w) => 1 + 9 * clamp((w - 0.58) / (1.48 - 0.58), 0, 1);
 const counterOf = (m) => m.counterDamage || m.retort?.damage || m.phaseRetort?.damage || m.recoil?.damage || 0;
 const perUse = (c, m, key) => resolveMoveDamage(m, c, null).total * hitsPerUse(m) * (key === 'basicCharge' ? (m.chargeDamageMult ?? 1) : 1);
-
-test('every damaging normal / special / charge move and every counter sits in its base-damage range', () => {
-  const out = [];
-  for (const c of ROSTER) {
-    for (const [key, [lo, hi]] of Object.entries(RANGE)) {
-      if (key === 'counter') {
-        const d = counterOf(c.moves.specialDefense || {});
-        if (d && (d < lo - 0.35 || d > hi + 0.35)) out.push(`${c.id} counter ${d}`);
-        continue;
-      }
-      const m = c.moves[key];
-      const d = m ? perUse(c, m, key) : 0;
-      if (d > 0 && (d < lo - 0.35 || d > hi + 0.35)) out.push(`${c.id} ${key} ${d.toFixed(2)} not in ${lo}-${hi}`);
-    }
-  }
-  assert.deepEqual(out, []);
-});
 
 test('every move recharges between 0.5 and 1.5 s, except the short swings of a light fighter\'s string', () => {
   const out = [];

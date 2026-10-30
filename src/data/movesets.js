@@ -2070,7 +2070,8 @@ export const MOVESETS = {
       baseKnockback: 63.6, knockbackGrowth: 1.27, duration: 180, cooldown: 1000, string: { hits: 2, gap: 290 },
     }),
     specialDefense: m('Anesthesia', {
-      stunChance: 0.5, retort: { type: C, damage: 15.1, knockback: 21.2, growth: 0.32, stun: 420 },
+      // Anesthesia puts the attacker to sleep (stat rework): no damage.
+      stunChance: 0.5, retort: { type: C, damage: 0, knockback: 21.2, growth: 0.32, sleep: true },
       duration: 620, cooldown: 900, vfx: 'shield', vfxColor: 0xd8e8ff,
     }),
     specialDirectional: m('Xenon Strobe', {

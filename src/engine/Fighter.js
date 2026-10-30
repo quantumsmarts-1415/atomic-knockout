@@ -10,7 +10,7 @@ import { armGeyser, artFor, fxAnchor, groundTop, hitAnchor, playRetortPulse, rev
 import { clipNameForMove, sheetMeta, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { stringStep } from './swingString.js';
-import { baseOf, moveRework, RW, SLOT_OF_KEY, statBonus, hitDamage, canonical } from '../data/statRework.js';
+import { baseOf, chargeBase, moveRework, RW, SLOT_OF_KEY, statBonus, hitDamage, hitstunMsFor, canonical } from '../data/statRework.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
 
 function vaporAttack(move, attacker) {
@@ -242,6 +242,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.state = 'idle'; // idle|walk|jump|fall|attack|hurt|ko|dead|grabbing|grabbed
     this.stateUntil = 0;
     this.attackCooldownUntil = 0;
+    this.moveReady = {};       // per-move readiness (stat rework): when each of the four moves may be used again
+    this.recoverUntil = 0;     // global recovery: no attack can start before this
     this._string = null;       // light fighters' normal-attack string (see swingString.js)
     this.specialCooldownUntil = 0;
     this.grabCooldownUntil = 0;
@@ -667,7 +669,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
         if (queued.left) this.facing = -1;
         if (queued.right) this.facing = 1;
       }
-      if (pressedAttack && time >= this.attackCooldownUntil) {
+      const keyA = (dirHeld || !this.charDef.moves.basicCharge) ? 'basicDirectional' : 'basicCharge';
+      const keyS = (dirHeld || !this.charDef.moves.specialDefense) ? 'specialDirectional' : 'specialDefense';
+      if (pressedAttack && this.canStart(keyA, time)) {
         if (dirHeld || !this.charDef.moves.basicCharge) {
           let swing = this.charDef.moves.basicDirectional;
           if (this.copiedMove && !((this.moveLock?.[this.copiedMove.name] ?? 0) > time)) {
@@ -682,13 +686,13 @@ export default class Fighter extends Phaser.GameObjects.Container {
           this._critCue = false;
           if (this.charDef.moves.basicCharge?.perTravel) this.travel = 0;
         }
-      } else if (pressedSpecial && time >= this.specialCooldownUntil && time >= (this.vulnerableUntil ?? 0) && time >= (this.specialMutedUntil ?? 0)) {
+      } else if (pressedSpecial && this.canStart(keyS, time) && time >= (this.vulnerableUntil ?? 0) && time >= (this.specialMutedUntil ?? 0)) {
         if (dirHeld || !this.charDef.moves.specialDefense) {
           this.startMove(time, this.charDef.moves.specialDirectional, 'special', 'specialDirectional');
         } else {
           this.startDefense(time);
         }
-      } else if ((pressedAttack || pressedSpecial || pressedJump) && (this.isBusy || time < this.attackCooldownUntil)) {
+      } else if ((pressedAttack || pressedSpecial || pressedJump) && (this.isBusy || time < this.attackCooldownUntil || time < this.recoverUntil || (pressedAttack && !this.canStart(keyA, time)) || (pressedSpecial && !this.canStart(keyS, time)))) {
         this.pushBuffer(time, { attack: pressedAttack, special: pressedSpecial, jump: pressedJump });
       }
     } else if (pressedAttack || pressedSpecial || (pressedJump && this.state !== 'jumpsquat')) {
@@ -881,7 +885,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.scene?.throwRods?.(this, coat, glow);
     }
     const ready = rearmDefense(coat, time);
-    if (ready != null) this.specialCooldownUntil = ready;
+    if (ready != null) this.moveReady.specialDefense = ready;
   }
 
   /** Green twin: snapshot the strike, then a beat later show the tinted copy and the shimmer. */
@@ -909,6 +913,20 @@ export default class Fighter extends Phaser.GameObjects.Container {
         face,
       );
     });
+  }
+
+  /** Cooldown of one of this fighter's four moves in ms: the sheet's value, else the move's own number. */
+  cdMsFor(key, move = null) {
+    const row = key ? moveRework(this.charDef.id, key) : null;
+    if (row && Number.isFinite(row.cd)) return Math.round(row.cd * 1000);
+    return move?.cooldown ?? this.charDef.moves?.[key]?.cooldown ?? 0;
+  }
+
+  /** True when this move may start: its own cooldown is over, the global recovery is over, and no old slot timer holds it. */
+  canStart(key, time) {
+    if (time < (this.recoverUntil ?? 0)) return false;
+    if (time < (this.moveReady?.[key] ?? 0)) return false;
+    return time >= (key.startsWith('basic') ? this.attackCooldownUntil : this.specialCooldownUntil);
   }
 
   startMove(time, move, slot, moveKey = null) {
@@ -1067,19 +1085,19 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this._whooshed = false;
     this.stateUntil = time + fd.visible * step;
     this.scene.noteMove?.(this, move);
-    if (slot === 'basic') {
-      let recharge = move.cooldown;
-      if (move.string && moveKey === 'basicDirectional') {
-        const step = stringStep(this._string, move, time);
-        this._string = step.state;
-        recharge = step.recharge;
-      }
-      this.attackCooldownUntil = time + move.duration + recharge;
+    // Stat rework timing: every move has its own cooldown (the sheet's value, effect costs included) and a
+    // global 0.4 s recovery follows every attack, so switching to another move skips the wait for that move.
+    let recharge = this.cdMsFor(moveKey, move);
+    let recover = RW.recoveryMs;
+    if (slot === 'basic' && move.string && moveKey === 'basicDirectional') {
+      const step = stringStep(this._string, { ...move, cooldown: recharge }, time);
+      this._string = step.state;
+      recharge = step.recharge;
+      if (!step.last) recover = 0;   // swings of one string keep their own tempo
     }
-    else {
-      this.specialCooldownUntil = time + move.duration + move.cooldown;
-      sfx('special');
-    }
+    if (moveKey) this.moveReady[moveKey] = time + move.duration + recharge;
+    this.recoverUntil = Math.max(this.recoverUntil, this.stateUntil + recover);
+    if (slot !== 'basic') sfx('special');
 
     if (move.replayCapture) {
       if (this.captured) {
@@ -1328,6 +1346,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const scaled = {
       ...src,
       _chargeFrac: frac,
+      _chargeBase: chargeBase(heldMs),
       _baseRadius: move.radius,
       damage: src.damage != null ? scale(src.damage, src.chargeDamageMult) : src.damage,
       damage2: src.damage2 != null ? scale(src.damage2, src.chargeDamageMult) : src.damage2,
@@ -1499,9 +1518,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.rig.moveKey = 'specialDefense';
     this.rig.moveSlot = 'special';
     this.stateUntil = time + move.duration;
-    this.specialCooldownUntil = move.regrow === 'press'
+    this.moveReady.specialDefense = move.regrow === 'press'
       ? time
-      : time + move.duration + move.cooldown;
+      : time + move.duration + this.cdMsFor('specialDefense', move);
     playVfx(this.scene, this, move, 'defense');
     applyOnCast(this, move, time, 1);
     if (move.swapLine) this.scene?.swapAlongLine?.(this);
@@ -1919,7 +1938,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
           attacker.moveLock[move.name] = time + def.lockAttackMs;
         }
         const regrow = def?.regrow ?? 1600;
-        this.specialCooldownUntil = Math.max(this.specialCooldownUntil ?? 0, time + regrow);
+        this.moveReady.specialDefense = Math.max(this.moveReady.specialDefense ?? 0, time + regrow);
         this.scene?.dropPins?.(this);
         this.state = 'idle';
         this.defenseMove = null;
@@ -1929,7 +1948,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (gate.result === 'pop') {
         const popped = this.defenseMove;
         const ready = rearmDefense(this.defenseMove, time);
-        if (ready != null) this.specialCooldownUntil = ready;
+        if (ready != null) this.moveReady.specialDefense = ready;
         const shed = coatSpec(this.defenseMove);
         if (shed?.flake) {
           this._coatFlaked = true;
@@ -2273,7 +2292,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       const stepMs = this.scene?.stepMs || FEEL.stepMs;
       const stun = incoming.trip
         ? Math.max(FEEL.hitstunMin, Math.round((incoming.tripMs ?? 780) / stepMs))
-        : Math.max(FEEL.hitstunMin, hitstunFrames(units));
+        : Math.round(hitstunMsFor(this.percent, Math.max(FEEL.hitstunMin, hitstunFrames(units)) * stepMs) / stepMs);
       this.state = 'hurt';
       this.stateUntil = time + stun * stepMs;
       this.activeHit = null;
@@ -2291,7 +2310,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
   shiftTimers(ms) {
     const keys = [
-      'stateUntil', 'attackCooldownUntil', 'specialCooldownUntil', 'specialMutedUntil', 'vulnerableUntil', 'lockedUntil',
+      'stateUntil', 'attackCooldownUntil', 'specialCooldownUntil', 'recoverUntil', 'specialMutedUntil', 'vulnerableUntil', 'lockedUntil',
       'dashUntil', 'diveUntil', 'diveArm', 'slowUntil', 'rootedUntil', 'speedBuffUntil', 'attackHasteUntil', 'driftUntil',
       'phasingUntil', 'weightBuffUntil', 'goldUntil', 'poisonUntil', 'stunUntil', 'freezeUntil', 'burnUntil',
       'unquenchableUntil', 'heatOnHitUntil',
@@ -2299,6 +2318,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       'mitigateUntil', 'lingerImmuneUntil', 'frozenUntil',
     ];
     for (const k of keys) if (this[k] > 0) this[k] += ms;
+    for (const k of Object.keys(this.moveReady || {})) if (this.moveReady[k] > 0) this.moveReady[k] += ms;
     if (this._string?.until > 0) this._string = { ...this._string, until: this._string.until + ms };
     if (this.chargeStart) this.chargeStart += ms;
     if (this.defenseStart) this.defenseStart += ms;

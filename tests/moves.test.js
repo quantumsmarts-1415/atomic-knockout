@@ -140,7 +140,7 @@ test('bots cycle a neutral charge and a neutral defense without walking', () => 
 test('a charge that fizzles below full is held through the scripted release', () => {
   const bot = fake('kyle', 400, 500);
   bot.state = 'charging';
-  bot.chargeStart = 2620;
+  bot.chargeStart = 4100 - (CHARACTERS.kyle.moves.basicCharge.maxChargeMs - 20);   // released the frame it reaches full
   const foe = fake('hydra', 900, 500);
   const bounds = { minX: 0, maxX: 2000 };
   const early = computeBotInput(4100, bot, [bot, foe], bounds);
@@ -482,7 +482,7 @@ test('batch 2 kits match the edited move doc', () => {
   assert.strictEqual(helen.specialDirectional.lift, true);
   assert.strictEqual(helen.specialDefense.kind, 'shield');
   const kyle = CHARACTERS.kyle.moves;
-  assert.strictEqual(kyle.basicCharge.maxChargeMs, 1500);
+  assert.strictEqual(kyle.basicCharge.maxChargeMs, 3000);   // stat rework: every charge takes 3 s to full
   assert.strictEqual(kyle.basicCharge.fizzleBelow, 1);
   assert.strictEqual(kyle.basicCharge.roll, true);
   const shock = kyle.specialDirectional;
@@ -1377,17 +1377,9 @@ test('wolf kit follows the approved brief', () => {
   assert.strictEqual(filament.damage, 14.7);
   assert.strictEqual(filament.chargeDamageMult, 1.9);
   assert.strictEqual(filament.chargeRadiusMult, 1.85);
-  let longest = 0;
-  let who = '';
   for (const fighter of Object.values(CHARACTERS)) {
-    const ms = fighter.moves.basicCharge?.maxChargeMs ?? 0;
-    if (ms >= longest) {
-      longest = ms;
-      who = fighter.id;
-    }
+    if (fighter.moves.basicCharge) assert.strictEqual(fighter.moves.basicCharge.maxChargeMs, 3000, fighter.id);   // one shared 3 s ramp
   }
-  assert.strictEqual(who, 'wolf');
-  assert.ok(filament.maxChargeMs > 3000);
   const drill = wolf.basicDirectional;
   assert.strictEqual(drill.name, 'Carbide Drill');
   assert.notStrictEqual(drill.name, 'Tin Eater');
@@ -1513,9 +1505,7 @@ test('oz, ira, and aurelius keep the approved move rules', () => {
   assert.deepEqual(ira.specialDirectional.fanTypes, ['kinetic', 'heat', 'electrical', 'chemical']);
   assert.equal(ira.specialDirectional.fanDeg, 30);
   assert.equal(ira.specialDirectional.ghostCopies, 3);
-  const iraCharges = Object.values(ira).map((move) => move.maxChargeMs || 0);
-  assert.equal(Math.max(...iraCharges), ira.basicCharge.maxChargeMs);
-  assert.ok(ira.basicCharge.maxChargeMs < CHARACTERS.wolf.moves.basicCharge.maxChargeMs);
+  assert.equal(ira.basicCharge.maxChargeMs, 3000);
   assert.equal(ira.basicCharge.meteor, true);
   assert.equal(ira.basicCharge.impactAt, 0.9);
   const gold = CHARACTERS.aurelius.moves;

@@ -337,6 +337,15 @@ function diveLeavesDeck(bot, input, target, bounds) {
   return bot.x - travel < bounds.minX;
 }
 
+/** A fighter's readiness for one of its moves; a bare test double falls back to the old slot timers. */
+function canUse(bot, key, time) {
+  if (typeof bot.canStart === 'function') return bot.canStart(key, time);
+  return time >= ((key.startsWith('basic') ? bot.attackCooldownUntil : bot.specialCooldownUntil) ?? 0);
+}
+function cdOf(bot, key, move) {
+  return typeof bot.cdMsFor === 'function' ? bot.cdMsFor(key, move) : move.cooldown;
+}
+
 function tryAttacks(time, bot, target, ai, input, bounds) {
   if (input.down) return;
   const basic = bot.charDef.moves.basicDirectional;
@@ -348,9 +357,9 @@ function tryAttacks(time, bot, target, ai, input, bounds) {
   const ready = bot.state !== 'attack' && bot.state !== 'hurt' && bot.state !== 'ko'
     && bot.state !== 'charging' && bot.state !== 'defending' && bot.state !== 'dead';
   let wantBasic = ready && dist <= basicRange && dy < ATTACK_DY
-    && time >= ai.nextAttackAt && time >= (bot.attackCooldownUntil ?? 0);
+    && time >= ai.nextAttackAt && canUse(bot, 'basicDirectional', time);
   let wantSpecial = ready && dist <= specialRange && dy < ATTACK_DY + 20
-    && time >= ai.nextSpecialAt && time >= (bot.specialCooldownUntil ?? 0)
+    && time >= ai.nextSpecialAt && canUse(bot, 'specialDirectional', time)
     && time >= (bot.specialMutedUntil ?? 0);
   // Both buttons are edge-triggered on the same frame; attack would eat the
   // special press. Alternate so a bot actually uses both directional moves.
@@ -372,11 +381,11 @@ function tryAttacks(time, bot, target, ai, input, bounds) {
   if (wantBasic) {
     input.attack = true;
     // A light fighter's string recharges only `gap` between swings; Fighter.attackCooldownUntil gates the real timing.
-    ai.nextAttackAt = time + basic.duration + (basic.string ? basic.string.gap : basic.cooldown) + 80;
+    ai.nextAttackAt = time + basic.duration + (basic.string ? basic.string.gap : cdOf(bot, 'basicDirectional', basic)) + 80;
   }
   if (wantSpecial) {
     input.special = true;
-    ai.nextSpecialAt = time + special.duration + special.cooldown + 200;
+    ai.nextSpecialAt = time + special.duration + cdOf(bot, 'specialDirectional', special) + 200;
   }
 }
 

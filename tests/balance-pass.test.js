@@ -12,17 +12,6 @@ const weightScore = (w) => 1 + 9 * clamp((w - 0.58) / (1.48 - 0.58), 0, 1);
 const counterOf = (m) => m.counterDamage || m.retort?.damage || m.phaseRetort?.damage || m.recoil?.damage || 0;
 const perUse = (c, m, key) => resolveMoveDamage(m, c, null).total * hitsPerUse(m) * (key === 'basicCharge' ? (m.chargeDamageMult ?? 1) : 1);
 
-test('every move recharges between 0.5 and 1.5 s, except the short swings of a light fighter\'s string', () => {
-  const out = [];
-  for (const c of ROSTER) {
-    for (const [key, m] of Object.entries(c.moves)) {
-      if (m.string) { assert.equal(key, 'basicDirectional'); assert.equal(m.cooldown, 1000, `${c.id} string rest`); continue; }
-      if (m.cooldown < 500 || m.cooldown > 1500) out.push(`${c.id} ${key} ${m.cooldown}`);
-    }
-  }
-  assert.deepEqual(out, []);
-});
-
 test('a string stays a data field of the normal attack: 2-3 swings, 0.2-0.3 s apart (stat rework: no longer tied to weight)', () => {
   const lights = [];
   for (const c of ROSTER) {

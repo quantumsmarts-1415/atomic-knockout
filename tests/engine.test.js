@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert';
 import { mock } from 'node:test';
 import { applyDefense, CHARACTERS } from '../src/data/characters.js';
+import { REWORK_MOVES } from '../src/data/statRework.js';
 
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -390,11 +391,12 @@ test('a charged sniper ignores defense and a pass-through shot does not', () => 
   const mockScene = createMockScene();
   mockScene.simFast = true;
   const rig = () => ({ animate() {}, setFlash() {}, play() {}, updateSheetFacing() {} });
+  const sniper0 = CHARACTERS.saab.moves.basicCharge;
   const saab = new Fighter(mockScene, 0, 0, CHARACTERS.saab, 0, 0);
   saab.rig = rig();
   saab.state = 'charging';
   saab.chargeStart = 0;
-  saab.fireCharge(950);
+  saab.fireCharge(sniper0.maxChargeMs);
   assert.strictEqual(saab.currentMove.name, 'Sniper Round');
   const sniper = CHARACTERS.saab.moves.basicCharge;
   const fullCharge = sniper.damage * sniper.chargeDamageMult;
@@ -404,7 +406,7 @@ test('a charged sniper ignores defense and a pass-through shot does not', () => 
   assert.ok(!saab.currentMove.pierce);
   saab.state = 'charging';
   saab.chargeStart = 0;
-  saab.fireCharge(475);
+  saab.fireCharge(sniper0.maxChargeMs / 2);
   assert.ok(Math.abs(saab.currentMove.defensePierce - 0.5) < 1e-6);
   assert.ok(saab.currentMove.damage > sniper.damage && saab.currentMove.damage < fullCharge);
 
@@ -440,7 +442,7 @@ test('a full defining second freezes for three seconds and the sponge drinks che
   caesar.rig = rig();
   caesar.state = 'charging';
   caesar.chargeStart = 0;
-  caesar.fireCharge(1000);
+  caesar.fireCharge(CHARACTERS.caesar.moves.basicCharge.maxChargeMs);
   assert.strictEqual(caesar.currentMove.onHit.freeze, 3000);
   assert.strictEqual(caesar.currentMove.onHit.coatMs, 3000);
   caesar.state = 'charging';
@@ -630,11 +632,12 @@ test('a dive stops at the ledge and hops back if it is already past it', () => {
   assert.ok(diveVelocityX(1200, 220, isle) < 0);
 });
 
-test('a light fighter throws a short string: swings recharge by the gap, the last one by the full 1.0 s', () => {
+test('a light fighter throws a short string: swings recharge by the gap, the last one by the sheet cooldown', () => {
   const mockScene = createMockScene();
   const def = CHARACTERS.hydra;
   const jab = def.moves.basicDirectional;
-  assert.ok(jab.string && jab.cooldown === 1000);
+  const cd = REWORK_MOVES.hydra.basicDirectional.cd * 1000;
+  assert.ok(jab.string);
   const f = new Fighter(mockScene, 0, 0, def, 0, 0);
   f.rig = { animate: () => {}, setFlash: () => {}, play: () => {}, updateSheetFacing: () => {} };
   const rechargeAfterSwing = (t) => {
@@ -645,15 +648,16 @@ test('a light fighter throws a short string: swings recharge by the gap, the las
     f.input = { left: true, attack: true, special: false };
     f.update(t, 16);
     assert.strictEqual(f.state, 'attack', `swing at ${t}`);
-    return f.attackCooldownUntil - t - jab.duration;
+    return f.moveReady.basicDirectional - t - jab.duration;
   };
+  const next = () => Math.max(f.moveReady.basicDirectional, f.recoverUntil) + 17;
   let t = 1000;
   const got = [];
   for (let i = 0; i < jab.string.hits; i++) {
     got.push(rechargeAfterSwing(t));
-    t = f.attackCooldownUntil + 17;
+    t = next();
   }
-  const want = Array.from({ length: jab.string.hits }, (_, i) => (i === jab.string.hits - 1 ? 1000 : jab.string.gap));
+  const want = Array.from({ length: jab.string.hits }, (_, i) => (i === jab.string.hits - 1 ? cd : jab.string.gap));
   assert.deepEqual(got, want);
   // the next swing starts a fresh string
   assert.equal(rechargeAfterSwing(t), jab.string.gap);

@@ -167,3 +167,44 @@ test('a noble gas takes nothing from a chemical-only move; Ogden is not immune',
   const b = fight(chem.id, 'ogden');
   assert.ok(hit(b.x, b.y, 'basicDirectional') > 0 || statBonus(chem.id, 'ogden', ['chemical']) <= -10);
 });
+
+test('global recovery: a 0.4 s gap after any attack, and another move can start without waiting for its own cooldown', () => {
+  const { x } = fight('ben', 'aurelius');
+  const t = 5000;
+  x.startMove(t, x.charDef.moves.basicDirectional, 'basic', 'basicDirectional');
+  assert.ok(x.recoverUntil >= x.stateUntil + 400 - 1e-6, 'recovery follows the swing');
+  assert.equal(x.canStart('specialDirectional', x.stateUntil + 100), false, 'still recovering');
+  assert.equal(x.canStart('specialDirectional', x.recoverUntil + 1), true, 'chain into another move');
+  assert.equal(x.canStart('basicDirectional', x.recoverUntil + 1), x.moveReady.basicDirectional <= x.recoverUntil + 1);
+  const cd = Math.round(REWORK_MOVES.ben.basicDirectional.cd * 1000);
+  assert.equal(x.moveReady.basicDirectional, t + x.charDef.moves.basicDirectional.duration + cd);
+});
+
+test('each of the four moves has its own cooldown from the sheet', () => {
+  const { x } = fight('hydra', 'aurelius');
+  for (const key of ['basicDirectional', 'specialDirectional', 'basicCharge', 'specialDefense']) {
+    assert.equal(x.cdMsFor(key), Math.round(REWORK_MOVES.hydra[key].cd * 1000), key);
+  }
+});
+
+test('charge ramps 5% at 0 s to 20% at 3 s and every charge move takes 3 s to full', () => {
+  const plain = Object.values(CHARACTERS).find((c) => { const m = c.moves.basicCharge; return m && !m.fizzleBelow && !m.gamble && !m.fizzleCoin && !m.releaseOnHit && !m.stealHeat && !m.riseUnder && !m.clockWindow; });
+  const { x } = fight(plain.id, 'aurelius');
+  assert.equal(x.charDef.moves.basicCharge.maxChargeMs, 3000);
+  const bases = [];
+  for (const held of [0, 1000, 3000, 6000]) {
+    x.state = 'charging'; x.chargeStart = 10000;
+    x.fireCharge(10000 + held);
+    bases.push(x.currentMove?._chargeBase);
+    x.state = 'idle'; x.recoverUntil = 0; x.moveReady = {};
+  }
+  assert.deepEqual(bases.map((b) => (b == null ? b : Math.round(b))), [5, 10, 20, 20]);
+});
+
+test('hitstun is a flat 0.25 s below 75% damage', () => {
+  const { x, y } = fight('ben', 'aurelius');
+  y.percent = 10;
+  const m = { ...x.charDef.moves.basicDirectional, baseKnockback: 100, knockbackGrowth: 3 };
+  y.takeHit(x, m, 20000, 1);
+  assert.ok(Math.abs((y.stateUntil - 20000) - 250) < 20, `hitstun ${y.stateUntil - 20000}`);
+});

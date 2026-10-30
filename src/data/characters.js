@@ -1,5 +1,5 @@
 import { deriveProfile } from './balance.js';
-import { REWORK_FIGHTERS, SLOT_OF_KEY, airJumpsOf, gravityScaleOf, jumpLaunchOf, knockbackResistance, walkSpeedOf } from './statRework.js';
+import { REWORK_FIGHTERS, RW, SLOT_OF_KEY, airJumpsOf, gravityScaleOf, jumpLaunchOf, knockbackResistance, walkSpeedOf } from './statRework.js';
 import { ELEMENTS } from './elements.js';
 import { MOVESETS } from './movesets.js';
 import { IMPORTED_ROSTER, characterFromImport } from './imported.js';
@@ -2491,6 +2491,8 @@ for (const def of Object.values(CHARACTERS)) {
   if (!rw || !def.stats) continue;
   def.rework = rw;
   for (const key of Object.keys(SLOT_OF_KEY)) if (def.moves?.[key]) def.moves[key].rwKey = key;   // which slot a hit belongs to
+  // Every charge reaches full in 3 s (5% base at 0 s, +1% every 0.2 s, 20% at 3 s).
+  if (def.moves?.basicCharge) def.moves.basicCharge.maxChargeMs = RW.chargeMs;
   // The Campaign still builds its unit stats from the old density numbers until its own rework lands.
   if (def.combat) def.combat.legacy = { speed: def.combat.speed, weight: def.combat.weight };
   def.stats = {

@@ -1,5 +1,35 @@
 # Combat balance
 
+> **Stat rework (branch `stat-rework`, Oct 2026) supersedes the density formulas, the 5-12 / 13-20 / 20-30 balance-pass
+> clamps and `BAND_DAMAGE` described further down.** Those sections stay only as history; do not restore them.
+> The numbers come from the "Benjamin's Stat Rework" tab of the Rules sheet (his values win) and live in
+> `src/data/statRework.js` (formulas) and `src/data/statReworkData.js` (per-fighter and per-move sheet data).
+
+## Stat rework rules
+
+- **Weight + Speed = 6.** Knockback resistance 0.5 + W/4, gravity scale 0.5 + W/5, walk speed 150 + 40*S, air jumps ceil(S/2).
+  Jump height is one constant (162.8) for everyone.
+- **Damage** = move base (Normal 10, Special 15, Charge 20, Defense 5) + the average of (Attack - Defense) over the move's
+  damage types. An immune type counts 0 in the average; a move whose types are all immune does nothing. Ghosts get +5 on any
+  damaging move. Noble gases are chemical-immune (Ogden keeps his full 30 points). Multi-hit: the base is split evenly, the stat
+  bonus lands on the last hit. Xander's Anesthesia is sleep, no damage.
+- **Timing**: 0.4 s global recovery after a move plus the sheet's per-move cooldown and chains. Charge ramps 5% to 20% over 3 s
+  (+1% every 0.2 s). Hitstun is a flat 0.25 s below 75% damage.
+- **Status**: burn 1%/s for 8 s, poison 1%/s until healed; neither stacks on itself, burn and poison coexist. Lingering zones and
+  traps keep their own tick damage and schedule. Sleep lasts 2-5 s (random), damage wakes. Ghosts drain 1% per second.
+- **Healing floor**: a heal restores up to half of the peak damage taken this stock (15% per use cap); Campaign uses the worst
+  HP missing since the map began.
+- **Campaign**: HP 50 + 10W, MOV floor(3 + S/2), Speed only moves. One roll per hit gives miss / hit / crit (crit x2); crit%
+  equals miss% per slot (Normal 5, Special 15, Charge 10, Defense 5), Skill 1-10 adds +1% hit and +1% crit per point. Terrain
+  dodge stays, terrain defense is gone. Burn 3 then 4 over two turns, poison 3 a turn until healed, sleep 1-3 turns. Level-up:
+  +Weight HP, +1 to one Attack/Defense (cap 10), 25% chance of +1 Skill. A push moves 1 tile; a blocked push is 2 damage.
+  Uses per map and the every-other-turn Special cooldown come from the sheet.
+
+Regenerating `statReworkData.js` from the sheet: the generator is not in the repo (it lives in the sheet tooling), and
+`xander.specialDefense.hits` was patched to 0 by hand afterwards.
+
+## Pre-rework design (history)
+
 Stats are modifiers on one shared base. A modifier of **0 means no change**.
 Every constant lives in `TUNING` inside `src/data/balance.js`. Raw element
 numbers live in `src/data/elements.js`. Derived profiles are attached to each

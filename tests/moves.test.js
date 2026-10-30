@@ -254,16 +254,20 @@ test('allen uses the approved aluminum kit', () => {
   const victim = { percent: 10, scene: { noteDot() {} } };
   applyOnHit(null, victim, burn, 0);
   assert.strictEqual(victim.percent, 10);
+  // Stat rework: burn is 1% a second for 8 s whatever the move wrote.
   tickKit(victim, 1000);
-  assert.strictEqual(victim.percent, 13);
+  assert.strictEqual(victim.percent, 11);
   tickKit(victim, 1500);
-  assert.strictEqual(victim.percent, 13);
+  assert.strictEqual(victim.percent, 11);
   tickKit(victim, 2000);
-  assert.strictEqual(victim.percent, 16);
+  assert.strictEqual(victim.percent, 12);
   tickKit(victim, 3000);
-  assert.strictEqual(victim.percent, 19);
-  tickKit(victim, 4000);
-  assert.strictEqual(victim.percent, 19);
+  assert.strictEqual(victim.percent, 13);
+  assert.strictEqual(victim.burnUntil, 8000);
+  tickKit(victim, 9000);   // past 8 s the flame is out
+  const after = victim.percent;
+  tickKit(victim, 10000);
+  assert.strictEqual(victim.percent, after);
   assert.strictEqual(victim.state, undefined);
   assert.strictEqual(victim.hitlagFrames, undefined);
 });
@@ -402,8 +406,10 @@ test('phillip uses the approved phosphorus kit', () => {
   applyOnHit(flora, kyle, poison, 0);
   applyOnHit(flora, oxana, poison, 0);
   applyOnHit(flora, noble, poison, 0);
-  assert.ok(kyle.poisonDps > oxana.poisonDps);
-  assert.strictEqual(noble.poisonDps, 0);
+  // Stat rework: poison is 1% a second for everyone and a noble gas cannot be poisoned (chemical immune).
+  assert.strictEqual(kyle.poisonDps, 1);
+  assert.strictEqual(oxana.poisonDps, 1);
+  assert.ok(!(noble.poisonUntil > 0));
   tickKit(noble, 280);
   assert.strictEqual(noble.percent, 0);
 });
@@ -502,14 +508,14 @@ test('batch 2 kits match the edited move doc', () => {
   assert.strictEqual(shards.explodeOnly, true);
   const slashPoison = { charDef: {} };
   applyOnHit({ charDef: { id: 'arsenio' } }, slashPoison, CHARACTERS.arsenio.moves.basicDirectional, 1000);
-  assert.equal(slashPoison.poisonDps, 2);
+  assert.equal(slashPoison.poisonDps, 1);
   assert.equal(slashPoison.poisonFrom.id, 'arsenio');
   assert.equal(slashPoison.poisonFrom.move, 'Paris Green Slash');
   assert.equal(slashPoison.poisonFrom.burstAt, undefined);
   assert.equal(slashPoison.clingFrom, undefined);
   const powderPoison = { charDef: {} };
   applyOnHit({ charDef: { id: 'arsenio' } }, powderPoison, CHARACTERS.arsenio.moves.basicCharge, 1000);
-  assert.equal(powderPoison.poisonDps, 1.6);
+  assert.equal(powderPoison.poisonDps, 1);
   assert.equal(powderPoison.poisonFrom.move, 'Inheritance Powder');
   assert.equal(powderPoison.poisonFrom.burstAt, undefined);
   const gate = CHARACTERS.gertrude.moves.specialDefense;
@@ -642,7 +648,7 @@ test('cody rods block kinetic and the paint coat is two percent for seven second
   assert.strictEqual(coated.slowUntil, 7000);
   assert.strictEqual(coated.clingFrom.until, 7000);
   tickKit(coated, 1000);
-  assert.strictEqual(coated.percent, 12);
+  assert.strictEqual(coated.percent, 11);   // poison is 1% a second now and lasts until healed
   tickKit(coated, 7000);
   assert.strictEqual(coated.percent, 12);
 });

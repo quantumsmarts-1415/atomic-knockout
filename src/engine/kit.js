@@ -1,6 +1,7 @@
 // On-hit and on-cast consequences that any move can opt into.
 // Fighter and BattleScene stay character-agnostic; they read these flags.
 import { chemicalMult } from '../data/balance.js';
+import { RW, healFloor } from '../data/statRework.js';
 
 export function applyOnHit(attacker, victim, move, time) {
   if (!move || victim === attacker) return;
@@ -32,7 +33,7 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx?.miss && (fx.dazzleCling || !immune)) {
     victim.missNext = (victim.missNext ?? 0) + (fx.miss === true ? 1 : fx.miss);
   }
-  if (fx?.heal && attacker) attacker.percent = Math.max(0, (attacker.percent ?? 0) - fx.heal);
+  if (fx?.heal && attacker) healPercent(attacker, fx.heal);
   if (!fx || immune) return;
 
   if (fx.slow) {
@@ -90,24 +91,35 @@ export function applyOnHit(attacker, victim, move, time) {
   }
   if (fx.drift) victim.driftUntil = time + fx.drift;
   if (fx.interrupt) lock(victim, time, fx.interrupt, true);
+  if (fx.sleep) {
+    // Stat rework: sleep lasts 2-5 s (random) and any damage wakes the sleeper.
+    const rng = attacker?.scene?.rng || victim?.scene?.rng || Math.random;
+    const ms = RW.sleepRingMs[0] + rng() * (RW.sleepRingMs[1] - RW.sleepRingMs[0]);
+    victim.sleepUntil = time + ms;
+    lock(victim, time, ms, true);
+  }
   if (fx.poison) {
+    // Stat rework: poison is 1% a second and lasts until the victim is healed. It does not stack on itself,
+    // a chemical-immune noble gas is not poisoned, and it coexists with burn.
     const p = fx.poison;
-    const chem = p.flat ? 1 : chemicalMult(attacker?.charDef?.combat, victim.charDef?.combat);
     const wait = p.delay > 0 ? p.delay : 0;
-    victim.poisonUntil = time + wait + (p.ms ?? 1600);
-    victim.poisonDps = (p.dps ?? 1.4) * chem;
-    victim.poisonRamp = (p.ramp ?? 0) * chem;
-    victim.poisonTick = time + (wait || (p.every ?? 280));
-    victim.poisonEvery = p.every ?? 280;
-    if (p.inherit) victim.poisonInherit = true;
-    if (wait && attacker?.charDef?.id) {
+    const poisonable = !(victim.charDef?.rework && victim.charDef.rework.def.chemical == null) && !(victim.poisonUntil > time);
+    if (poisonable) {
+      victim.poisonUntil = Number.POSITIVE_INFINITY;
+      victim.poisonDps = RW.dotPct;
+      victim.poisonRamp = 0;
+      victim.poisonTick = time + (wait || RW.dotTickMs);
+      victim.poisonEvery = RW.dotTickMs;
+    }
+    if (poisonable && p.inherit) victim.poisonInherit = true;
+    if (poisonable && wait && attacker?.charDef?.id) {
       victim.poisonFrom = { id: attacker.charDef.id, move: move.name, burstAt: victim.poisonTick };
       victim.clingFrom = {
         id: attacker.charDef.id,
         move: move.name,
         until: victim.poisonTick,
       };
-    } else if (!wait && attacker?.charDef?.id === 'arsenio') {
+    } else if (poisonable && !wait && attacker?.charDef?.id === 'arsenio') {
       // Immediate poison. No burstAt, or the hit flash would fire at once.
       // The feet sheet is drawn from this source; clingFrom would stack a second copy.
       victim.poisonFrom = { id: attacker.charDef.id, move: move.name };
@@ -191,10 +203,11 @@ export function applyOnHit(attacker, victim, move, time) {
   if (fx.burn && victim.charDef?.combat?.state !== 'gas') {
     const sticky = !!fx.burn.untilKo;
     // A washable burn does not put out white phosphorus.
-    if (!(victim.burnSticky && !sticky)) {
-      victim.burnUntil = sticky ? Number.POSITIVE_INFINITY : time + (fx.burn.ms ?? 1200);
-      victim.burnDps = fx.burn.dps ?? 2;
-      victim.burnEvery = fx.burn.every ?? 280;
+    // Stat rework: burn is 1% a second for 8 s and does not stack on itself (white phosphorus stays lit until KO).
+    if (!(victim.burnSticky && !sticky) && (sticky || !(victim.burnUntil > time))) {
+      victim.burnUntil = sticky ? Number.POSITIVE_INFINITY : time + RW.burnMs;
+      victim.burnDps = RW.dotPct;
+      victim.burnEvery = RW.dotTickMs;
       victim.burnTick = time + victim.burnEvery;
       victim.burnSticky = sticky;
       victim.burnOwnerId = attacker?.charDef?.id ?? null;
@@ -387,6 +400,23 @@ export function bankStolenPackets(fighter) {
 }
 
 /** Damage over time only raises percent. No hitstun, flinch, knockback, flash, or hitstop. */
+/**
+ * Healing. A heal can never take a fighter below half of the highest percent reached this stock
+ * (`peakPercent`, reset when the next stock starts); any heal ends poison. A single use heals at most 15%
+ * (`regen` heals are the small continuous trickles of a held defense and skip the per-use cap).
+ */
+export function healPercent(fighter, amount, { regen = false, cap = 15 } = {}) {
+  if (!(amount > 0) || fighter?.percent == null) return 0;
+  fighter.peakPercent = Math.max(fighter.peakPercent ?? 0, fighter.percent);
+  const floor = healFloor(fighter.peakPercent);
+  const take = regen ? amount : Math.min(amount, cap);
+  const before = fighter.percent;
+  const after = before > floor ? Math.max(floor, before - take) : before;
+  fighter.percent = after;
+  fighter.poisonUntil = 0;
+  return before - after;
+}
+
 export function applyDot(fighter, amount, type = 'heat') {
   if (!(amount > 0) || fighter?.percent == null) return 0;
   fighter.percent = Math.min(999, fighter.percent + amount);
@@ -395,6 +425,7 @@ export function applyDot(fighter, amount, type = 'heat') {
 }
 
 export function tickKit(fighter, time) {
+  if (fighter.percent > (fighter.peakPercent ?? 0)) fighter.peakPercent = fighter.percent;
   if (fighter.burnUntil && time < fighter.burnUntil && time >= (fighter.burnTick ?? 0)) {
     fighter.burnTick = time + (fighter.burnEvery ?? 280);
     applyDot(fighter, fighter.burnDps ?? 2, 'heat');
@@ -422,8 +453,8 @@ export function tickGhostDrain(fighter, time) {
   if (!fighter.alive || fighter.state === 'ko' || fighter.state === 'dead') return;
   if (time < (fighter.drainPauseUntil ?? 0)) return;
   if (time < (fighter._ghostDrainAt ?? 0)) return;
-  fighter._ghostDrainAt = time + 500;
-  const cost = applyDot(fighter, 1, 'radiation');
+  fighter._ghostDrainAt = time + RW.ghostDrainMs;
+  const cost = applyDot(fighter, RW.ghostDrainPct, 'radiation');
   fighter.damageTaken = (fighter.damageTaken ?? 0) + cost;
   if (fighter.takenByType) {
     fighter.takenByType.radiation = (fighter.takenByType.radiation ?? 0) + cost;
@@ -468,7 +499,7 @@ export function applyOnCast(fighter, move, time, frac = 1) {
     fighter.scene?.noteHit?.(fighter, fighter, selfMove);
   }
   if (move.chargeHeal) {
-    fighter.percent = Math.max(0, (fighter.percent ?? 0) - move.chargeHeal * frac);
+    healPercent(fighter, move.chargeHeal * frac);
   }
   if (move.buff) {
     let buff = move.buff;

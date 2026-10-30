@@ -3,7 +3,7 @@ import { Rig } from './Rig.js';
 import { applyDefense } from '../data/characters.js';
 import { canonicalType, enGapMult, resolveMoveDamage, resolvePacket, TUNING } from '../data/balance.js';
 import { applyImmunities, gateStored, interceptHit, rearmDefense } from './defense.js';
-import { applyDot, applyOnCast, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, prepareMove, rewindPoint, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
+import { applyDot, applyOnCast, healPercent, applyOnHit, bonusPackets, cleanse, combatOpts, finalBlow, grantTonic, halfLifeScale, lightUnquenchable, prepareMove, rewindPoint, scaledByHaste, stripProtection, tickKit, visibleAlpha, weakestType } from './kit.js';
 import { clockPerfect, gambleFizzle, glideAim } from './batch3.js';
 import { playVfx } from './MoveVfx.js';
 import { armGeyser, artFor, fxAnchor, groundTop, hitAnchor, playRetortPulse, reverseFrameOrder, spawnFxSprite, spawnMeteor, spawnMoveExtra, spawnReplayGhost, surgeBeamScale } from './fxArt.js';
@@ -236,6 +236,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
 
     // match state
     this.percent = 0;
+    this.peakPercent = 0;
     this.stocks = 3;
     this.facing = 1;
     this.airJumpsLeft = charDef.stats.airJumps;
@@ -369,7 +370,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
     if (this.state === 'defending' && this.defenseMove?.regen && time >= (this._regenAt ?? 0)) {
       this._regenAt = time + (this.defenseMove.regenEvery ?? 800);
-      this.percent = Math.max(0, this.percent - this.defenseMove.regen);
+      healPercent(this, this.defenseMove.regen, { regen: true });
     }
     if (this.state === 'defending' && this.defenseMove?.clearType && time >= (this._regenAt ?? 0)) {
       this._regenAt = time + (this.defenseMove.regenEvery ?? 500);
@@ -378,7 +379,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       const step = Math.min(pile, this.defenseMove.clearStep ?? 2);
       if (step > 0) {
         this.takenByType[type] = pile - step;
-        this.percent = Math.max(0, (this.percent ?? 0) - step);
+        healPercent(this, step, { regen: true });
       }
     }
     if (this.state === 'defending' && this.defenseMove?.rewind) {
@@ -1697,7 +1698,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
             });
           }
         }
-        if (this.defenseMove.fuelHeal) this.percent = Math.max(0, this.percent - this.defenseMove.fuelHeal);
+        if (this.defenseMove.fuelHeal) healPercent(this, this.defenseMove.fuelHeal);
         if (this.defenseMove.fizzChem && move._projectile) {
           const chem = [move.type, move.type2, move.type3].some((t) => t && canonicalType(t) === 'chemical');
           if (chem) playVfx(this.scene, this, this.defenseMove, 'fizz');
@@ -1767,14 +1768,14 @@ export default class Fighter extends Phaser.GameObjects.Container {
     }
     if (!move.isSelf && this.state === 'defending' && this.defenseMove?.absorbGas && move.gas) {
       const heal = this.defenseMove.absorbHeal ?? 0;
-      if (heal) this.percent = Math.max(0, this.percent - heal);
+      if (heal) healPercent(this, heal);
       this.absorbedGas = true;
       this.rig?.setFlash?.(0xd7ecff);
       return 0;
     }
     if (!move.isSelf && this.state === 'defending' && this.defenseMove?.absorbState
       && attacker?.charDef?.combat?.state === this.defenseMove.absorbState) {
-      if (this.defenseMove.fuelHeal) this.percent = Math.max(0, this.percent - this.defenseMove.fuelHeal);
+      if (this.defenseMove.fuelHeal) healPercent(this, this.defenseMove.fuelHeal);
       this.bonusHits = (this.bonusHits ?? 0) + 1;
       this.bonusPacket = {
         type: this.defenseMove.fuelType ?? 'electrical',
@@ -1912,7 +1913,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
         };
       }
       if (this.defenseMove?.healOnBlock) {
-        this.percent = Math.max(0, this.percent - this.defenseMove.healOnBlock);
+        healPercent(this, this.defenseMove.healOnBlock);
       }
       if (gate.result === 'negate' && this.defenseMove?.amalgam && attacker) {
         playVfx(this.scene, this, this.defenseMove, 'absorb', {
@@ -2122,6 +2123,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (ownBlast) dmg *= TUNING.selfDamageMult;
       this.lastPackets = dealt.packets.map((p) => ({ ...p, dealt: p.dealt * (1 - reduction) * (ownBlast ? TUNING.selfDamageMult : 1) }));
       this.percent = Math.min(999, this.percent + dmg);
+      if (dmg > 0 && this.sleepUntil > time) { this.sleepUntil = 0; this.lockedUntil = 0; }
       this.creditDamage(attacker, dmg, incoming.type);
       this.igniteFromGuard(incoming, time, dmg);
       if (!gate.noKnockback && !incoming.noKnockback && !move.isSelf && !move.dot) {
@@ -2179,6 +2181,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
       if (ownBlast) dmg *= TUNING.selfDamageMult;
     }
     this.percent = Math.min(999, this.percent + dmg);
+    if (dmg > 0 && this.sleepUntil > time && !move.dot) { this.sleepUntil = 0; this.lockedUntil = 0; }   // damage wakes a sleeper
     this.lastPackets = ownBlast
       ? dealt.packets.map((p) => ({ ...p, dealt: p.dealt * TUNING.selfDamageMult }))
       : dealt.packets;
@@ -2312,7 +2315,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     const keys = [
       'stateUntil', 'attackCooldownUntil', 'specialCooldownUntil', 'recoverUntil', 'specialMutedUntil', 'vulnerableUntil', 'lockedUntil',
       'dashUntil', 'diveUntil', 'diveArm', 'slowUntil', 'rootedUntil', 'speedBuffUntil', 'attackHasteUntil', 'driftUntil',
-      'phasingUntil', 'weightBuffUntil', 'goldUntil', 'poisonUntil', 'stunUntil', 'freezeUntil', 'burnUntil',
+      'phasingUntil', 'weightBuffUntil', 'goldUntil', 'poisonUntil', 'sleepUntil', 'stunUntil', 'freezeUntil', 'burnUntil',
       'unquenchableUntil', 'heatOnHitUntil',
       'slipperyUntil', 'kineticResistUntil', 'heatedUntil',
       'mitigateUntil', 'lingerImmuneUntil', 'frozenUntil',
@@ -2870,6 +2873,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
     // White phosphorus goes out when that fighter is KO'd, not before.
     this.burnUntil = 0;
     this.burnSticky = false;
+    this.poisonUntil = 0;       // losing a stock ends poison and sleep
+    this.sleepUntil = 0;
     this.heatTaken = false;
     this.goldUntil = 0;
     if (this.rig) this.rig.holdFrame = false;
@@ -2889,6 +2894,7 @@ export default class Fighter extends Phaser.GameObjects.Container {
     this.scene.time.delayedCall(900, () => {
       if (this.state !== 'ko') return;
       this.percent = 0;
+      this.peakPercent = 0;       // the heal floor counts the highest percent of THIS stock
       this.setPosition(this.spawnPoint.x, this.spawnPoint.y - 120);
       this.body.reset(this.spawnPoint.x, this.spawnPoint.y - 120);
       this.body.setEnable(true);

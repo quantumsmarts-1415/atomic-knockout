@@ -208,3 +208,55 @@ test('hitstun is a flat 0.25 s below 75% damage', () => {
   y.takeHit(x, m, 20000, 1);
   assert.ok(Math.abs((y.stateUntil - 20000) - 250) < 20, `hitstun ${y.stateUntil - 20000}`);
 });
+
+const kit = await import('../src/engine/kit.js');
+
+test('DoT: burn lasts 8 s at 1% a second, poison lasts until healed, neither stacks on itself, both can run together', () => {
+  const v = { percent: 0, scene: { noteDot() {} }, charDef: { id: 'x' } };
+  const a = { charDef: { id: 'y' } };
+  const burn = { onHit: { burn: { dps: 9, ms: 99999, every: 50 } } };
+  const poison = { onHit: { poison: { dps: 9, ms: 99999 } } };
+  kit.applyOnHit(a, v, burn, 0);
+  kit.applyOnHit(a, v, burn, 3000);          // no stacking: the first flame keeps its clock
+  assert.equal(v.burnUntil, 8000);
+  kit.applyOnHit(a, v, poison, 100);
+  kit.applyOnHit(a, v, poison, 4000);
+  assert.equal(v.poisonUntil, Number.POSITIVE_INFINITY);
+  assert.equal(v.poisonDps, 1);
+  for (let t = 1000; t <= 12000; t += 1000) kit.tickKit(v, t);
+  // 1% a second of burn for 8 s and of poison for 12 s
+  assert.ok(Math.abs(v.percent - (8 + 12)) <= 2, `percent ${v.percent}`);
+});
+
+test('healing: never below half of this stock\'s highest percent, at most 15% a use, and a heal ends poison', () => {
+  const v = { percent: 60, scene: { noteDot() {} } };
+  kit.tickKit(v, 100);
+  v.poisonUntil = Infinity;
+  assert.equal(v.peakPercent, 60);
+  assert.equal(kit.healPercent(v, 40), 15, 'a use heals at most 15');
+  assert.equal(v.percent, 45);
+  assert.equal(v.poisonUntil, 0, 'healed: poison ends');
+  assert.equal(kit.healPercent(v, 15), 15);
+  assert.equal(v.percent, 30);
+  assert.equal(kit.healPercent(v, 10), 0, 'the floor is half the peak (30)');
+  assert.equal(v.percent, 30);
+  v.percent = 50;                       // later hits do not lower the peak
+  assert.equal(kit.healPercent(v, 15), 15);
+  assert.equal(v.percent, 35);
+});
+
+test('sleep lasts 2-5 s and damage wakes the sleeper; ghost drain is 1% every 1 s', () => {
+  const { x, y } = fight('xander', 'aurelius');
+  kit.applyOnHit(y, x, { onHit: { sleep: true } }, 1000);
+  assert.ok(x.sleepUntil - 1000 >= 2000 && x.sleepUntil - 1000 <= 5000);
+  assert.ok(x.lockedUntil > 1000);
+  const rest = x.percent;
+  x.takeHit(y, { ...CHARACTERS.aurelius.moves.basicDirectional }, 1500, 1);
+  assert.equal(x.sleepUntil, 0);
+  const g = fight(Object.values(CHARACTERS).find((c) => c.ghost).id, 'aurelius').x;
+  g.alive = true; g.state = 'idle';
+  const p0 = g.percent;
+  kit.tickKit(g, 1000); kit.tickKit(g, 1400); kit.tickKit(g, 2100);
+  assert.equal(g.percent - p0, 2, 'two drain ticks in 2.1 s');
+  assert.ok(g.percent >= rest);
+});

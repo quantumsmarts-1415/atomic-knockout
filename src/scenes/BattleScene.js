@@ -19,7 +19,7 @@ import { playVfx, projectileStyle, syncChargeGlow } from '../engine/MoveVfx.js';
 import { paintShot, syncMoveFx, tickChargeOrbits } from '../engine/moveFx.js';
 import { syncCoats } from '../engine/coatView.js';
 import { syncAuras } from '../engine/auraView.js';
-import { applyDot, applyOnHit, cleanse, fighterInView, fighterOnSwapLine, markedStrikeTargets, sheetFrameAt, slowHitScale, withRedFrame, withShatter } from '../engine/kit.js';
+import { applyDot, applyOnHit, cleanse, healPercent, fighterInView, fighterOnSwapLine, markedStrikeTargets, sheetFrameAt, slowHitScale, withRedFrame, withShatter } from '../engine/kit.js';
 import { resolvePacket } from '../data/balance.js';
 import { fanVelocity, inPinZone, MINE_SHARDS, nearestInFront } from '../engine/batch3.js';
 import { mulberry32 } from '../engine/rng.js';
@@ -2433,7 +2433,7 @@ export default class BattleScene extends Phaser.Scene {
           if (time >= (target._spongeAt ?? 0)) {
             target._spongeAt = time + 1000;
             const heal = target.defenseMove.cloudHeal ?? 1;
-            target.percent = Math.max(0, (target.percent ?? 0) - heal);
+            healPercent(target, heal);
             target.absorbedGas = true;
           }
           continue;

@@ -180,7 +180,12 @@ export function frameData(durationMs, cooldownMs = 0, move = {}, stepMs = STEP_M
   }
   const recoveryBase = Math.max(0, durF - startup - active);
   const extra = move.endlagF != null ? 0 : Math.min(coolF, FEEL.endlagFromCooldown);
-  const recovery = move.endlagF ?? (recoveryBase + extra);
+  let recovery = move.endlagF ?? (recoveryBase + extra);
+  // hitHoldF: keep the hit live for the held pose of the art. The frames come out of endlag, so the move is
+  // exactly as long as before (see src/data/hitTiming.js).
+  const hold = Math.max(0, Math.min(move.hitHoldF | 0, recovery - 2));
+  active += hold;
+  recovery -= hold;
   const visible = startup + active + recovery;
   const total = durF + coolF;
   return { startup, active, recovery, visible, total, durF, coolF, extra };

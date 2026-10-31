@@ -1,4 +1,5 @@
 import { deriveProfile } from './balance.js';
+import { HIT_HOLD_F } from './hitTiming.js';
 import { REWORK_FIGHTERS, RW, SLOT_OF_KEY, airJumpsOf, gravityScaleOf, jumpLaunchOf, knockbackResistance, walkSpeedOf } from './statRework.js';
 import { ELEMENTS } from './elements.js';
 import { MOVESETS } from './movesets.js';
@@ -2507,6 +2508,11 @@ for (const def of Object.values(CHARACTERS)) {
     def.combat.gravityScale = def.stats.gravityScale;
     if (def.combat.noble && rw.def.chemical != null) def.combat.noble = false;   // Ogden is a noble gas that can be hurt by chemicals
   }
+}
+
+// Hit windows that cover the art's held pose (src/data/hitTiming.js). Endlag shrinks by the same amount.
+for (const [id, slots] of Object.entries(HIT_HOLD_F)) {
+  for (const [key, frames] of Object.entries(slots)) if (CHARACTERS[id]?.moves?.[key]) CHARACTERS[id].moves[key].hitHoldF = frames;
 }
 
 // Colorways: the reviewed roster's alternates are hue remaps authored in

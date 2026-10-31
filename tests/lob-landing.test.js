@@ -67,3 +67,19 @@ test('every lobbed or thrown move flies flat: tiny rise, long even range', () =>
   assert.ok(n >= 11, `only ${n} lob moves`);
   assert.deepEqual(bad, []);
 });
+
+import { aimLandVx } from '../src/engine/feel.js';
+
+test('aimLandVx lands a dive on the target x, forward or back, and clamps the speed', () => {
+  const args = { fromX: 0, height: 455, fallSpeed: 740, fallAccel: 980 };
+  const T = (-740 + Math.sqrt(740 * 740 + 2 * 980 * 455)) / 980;
+  const vx = aimLandVx({ ...args, landX: 300 });
+  assert.ok(Math.abs(vx * T - 300) < 1, `${vx * T}`);
+  assert.ok(aimLandVx({ ...args, landX: -300 }) < 0);
+  assert.equal(aimLandVx({ ...args, landX: 1, minSpeed: 120 }), 120);
+  assert.equal(aimLandVx({ ...args, landX: 9999, maxSpeed: 900 }), 900);
+});
+
+test('Nick Meteorite Drop is aimed at the opponent', () => {
+  assert.equal(MOVESETS.nick.specialDirectional.aimLand, true);
+});

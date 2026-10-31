@@ -610,3 +610,15 @@ export function rainFallMs(drop, speed) {
   if (!(drop > 0) || !(speed > 0)) return 0;
   return Math.ceil((drop / speed) * 1000) + 60;
 }
+
+// Horizontal speed that makes a dive launched at fromX land on landX after falling `height`
+// (initial fall speed + constant acceleration). Clamped so it never stalls or becomes a streak.
+export function aimLandVx({ fromX, landX, height, fallSpeed = 420, fallAccel = 0, minSpeed = 0, maxSpeed = Infinity }) {
+  const h = Math.max(1, height);
+  let T;
+  if (fallAccel > 0) T = (-fallSpeed + Math.sqrt(fallSpeed * fallSpeed + 2 * fallAccel * h)) / fallAccel;
+  else T = h / Math.max(1, fallSpeed);
+  const raw = (landX - fromX) / T;
+  const mag = Math.min(maxSpeed, Math.max(minSpeed, Math.abs(raw)));
+  return (raw < 0 ? -1 : 1) * mag;
+}

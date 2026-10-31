@@ -1331,7 +1331,7 @@ export const MOVESETS = {
     specialDirectional: m('Meteorite Drop', {
       // Painted meteor streaks down-forward; match that dive instead of a
       // near-vertical drop (projectileSpeed 40 / fallSpeed 560 read as "rock falls").
-      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 9, type2: H, damage2: 7, slam: true, fromAbove: true,
+      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 9, type2: H, damage2: 7, slam: true, fromAbove: true, aimLand: true,
       delayMs: 280, fallSpeed: 740, fallAccel: 980,
       skyHeight: 380, skyLead: 200,
       vfx: 'strike', vfxColor: 0x8a93a0,

@@ -33,7 +33,7 @@ import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
-import { rainFallMs } from '../engine/feel.js';
+import { rainFallMs, aimLandVx } from '../engine/feel.js';
 import { artFor, beamDrawScale, cloudIgnitionScale, collectFxArt, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnJumpArc, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
 import { bodySheetMuzzle, sheetFxPoint, sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
@@ -1552,6 +1552,24 @@ export default class BattleScene extends Phaser.Scene {
     if (move._rainChild && vy > 0) {
       // Rain falls until it lands, whatever height it was thrown from.
       move = { ...move, projectileLife: Math.max(move.projectileLife ?? 0, rainFallMs(groundTop(this, x, owner.y) - y, vy)) };
+    }
+    if (move.fromAbove && move.aimLand && dropVx == null && move._vx == null) {
+      // A diagonal call-down is aimed to land on the nearest opponent (front first),
+      // so it connects at any distance instead of one fixed landing spot.
+      let best = null;
+      let bestD = Infinity;
+      for (const other of this.fighters) {
+        if (other === owner || !other.alive || other.state === 'ko') continue;
+        const dx = other.x - owner.x;
+        const d = Math.abs(dx) + (dx * face < 0 ? 400 : 0);
+        if (d < bestD) { bestD = d; best = other; }
+      }
+      const landX = best ? best.x : x + face * move.projectileSpeed * 0.5;
+      dropVx = aimLandVx({
+        fromX: x, landX, height: groundTop(this, landX, owner.y) - y,
+        fallSpeed: move.fallSpeed ?? 420, fallAccel: move.fallAccel ?? 0,
+        minSpeed: move.aimMinSpeed ?? 120, maxSpeed: move.aimMaxSpeed ?? 1300,
+      });
     }
     const shotVx = dropVx != null ? dropVx : (move._vx != null ? move._vx : face * move.projectileSpeed);
     const shot = {

@@ -2339,7 +2339,9 @@ export default class Fighter extends Phaser.GameObjects.Container {
       special: !!inp.special && !this._prev.special,
     };
     this._prev.jump = !!inp.jump;
-    this._prev.attack = !!inp.attack;
+    // A charge released during hitlag must still fire when the freeze ends. Without this the release edge
+    // is eaten here and the fighter stays "charging" until the player presses and releases again.
+    if (!(this.state === 'charging' && !inp.attack && this._prev.attack)) this._prev.attack = !!inp.attack;
     this._prev.special = !!inp.special;
     if (pressed.jump || pressed.attack || pressed.special) this.pushBuffer(time, pressed);
   }

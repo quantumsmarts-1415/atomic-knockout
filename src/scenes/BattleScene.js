@@ -2223,6 +2223,8 @@ export default class BattleScene extends Phaser.Scene {
 
   spawnZone(owner, spec, x, y, move) {
     const radius = spec.radius ?? 70;
+    // Every zone remembers which way its owner faced: a drifting cloud (Radon Creep) goes that way even when no art is loaded.
+    const ownerFace = owner?.facing === -1 ? -1 : 1;
     if (spec.solo && owner) {
       for (const z of this.zones) {
         if (z.dead || z.owner !== owner || z.spec?.name !== spec.name) continue;
@@ -2237,6 +2239,7 @@ export default class BattleScene extends Phaser.Scene {
         gfx: { destroy() {} },
         until: this.time.now + (spec.ms ?? 1600),
         next: this.time.now + (spec.delay ?? 0),
+        face: ownerFace,
       });
       return;
     }
@@ -2271,6 +2274,7 @@ export default class BattleScene extends Phaser.Scene {
         stain, stainBorn: this.time.now,
         until: this.time.now + (spec.ms ?? 1600),
         next: this.time.now + (spec.delay ?? 0),
+        face: ownerFace,
       });
       return;
     }
@@ -2303,6 +2307,7 @@ export default class BattleScene extends Phaser.Scene {
         gfx: { destroy() {} },
         until: this.time.now + (spec.ms ?? 1600),
         next: this.time.now + (spec.delay ?? 0),
+        face: ownerFace,
       });
       return;
     }
@@ -2315,6 +2320,7 @@ export default class BattleScene extends Phaser.Scene {
       owner, spec, x, y, radius, gfx,
       until: this.time.now + (spec.ms ?? 1600),
       next: this.time.now + (spec.delay ?? 0),
+      face: ownerFace,
     });
   }
 
@@ -2357,7 +2363,7 @@ export default class BattleScene extends Phaser.Scene {
           z.gfx?.setPosition?.(z.x, z.y);
         }
       }
-      if (z.spec?.drift && z.gfx?.scene) {
+      if (z.spec?.drift && (z.gfx?.scene || this.simFast)) {
         const dt = Math.min(40, time - (z._driftAt ?? time));
         z._driftAt = time;
         z.x += (z.face || 1) * z.spec.drift * dt / 1000;

@@ -2224,8 +2224,8 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Breeder Seed', {
       kind: 'projectile', shotEnd: 'linger', type: H, damage: 9, type2: R, damage2: 7.7, explodeRadius: 58,
-      lob: 400, landBurst: true, hatch: { ms: 1000 }, vfx: 'fire', vfxColor: 0xffb45a,
-      projectileSpeed: 300, projectileRadius: 10, projectileLife: 1600,
+      lob: { vy: 0, g: 600 }, landBurst: true, hatch: { ms: 1000 }, vfx: 'fire', vfxColor: 0xffb45a,
+      projectileSpeed: 520, projectileRadius: 10, projectileLife: 1600,
       baseKnockback: 122, knockbackGrowth: 2.07, duration: 220, cooldown: 970,
     }),
   },

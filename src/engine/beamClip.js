@@ -66,11 +66,14 @@ export function rayBoxEntry(x, y, ux, uy, box) {
   return tmin < 0 ? 0 : tmin;
 }
 
-function expandBox(box, pad) {
+// The beam is `thick` tall, so every box grows by half of it. A horizontal beam grows its box only on the side
+// the beam enters from: growing the far side made fighters standing up to half the beam thickness BEHIND the
+// muzzle count as hit (Thule's 260 px X-Ray hit anyone within 130 px behind her).
+function expandBox(box, pad, dir = 0) {
   const p = pad > 0 ? pad : 0;
   return {
-    left: box.left - p,
-    right: box.right + p,
+    left: box.left - (dir < 0 ? 0 : p),
+    right: box.right + (dir > 0 ? 0 : p),
     top: box.top - p,
     bottom: box.bottom + p,
     ground: box.ground,
@@ -102,7 +105,7 @@ export function clipBeam(spec, blockers, opts = {}) {
   for (const blocker of blockers || []) {
     if (!blocker?.box) continue;
     if (horizontal && isGround(blocker)) continue;
-    const entry = rayBoxEntry(origin.x, origin.y, ux, uy, expandBox(blocker.box, pad));
+    const entry = rayBoxEntry(origin.x, origin.y, ux, uy, expandBox(blocker.box, pad, horizontal ? Math.sign(ux) : 0));
     if (entry == null || entry > maxLen + 1e-4) continue;
     const point = { x: origin.x + ux * entry, y: origin.y + uy * entry };
     const rec = { ...blocker, dist: entry, point };

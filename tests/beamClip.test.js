@@ -122,3 +122,23 @@ test('beam draw scale stays put until a clip shortens the reach', () => {
   assert.equal(beamDrawScale({ ...move, _beamReach: 180 }), 180 / 440);
   assert.equal(beamDrawScale({ beamLen: 160, _beamScale: 1.5, _beamReach: 40 }), 1.5);
 });
+
+test('a thick beam does not hit a fighter standing behind the muzzle within half its thickness', () => {
+  const behind = { kind: 'fighter', target: 'behind', box: { left: -60, right: -20, top: 80, bottom: 180 } };
+  const clip = clipBeam(beam({ thick: 260 }), [behind]);
+  assert.equal(clip.hit, null);
+  assert.equal(clip.hits.length, 0);
+});
+
+test('a thick beam still reaches a fighter half its thickness past the nominal length', () => {
+  const edge = { kind: 'fighter', target: 'edge', box: { left: 480, right: 540, top: 80, bottom: 180 } };
+  const clip = clipBeam(beam({ thick: 260 }), [edge]);
+  assert.equal(clip.hit.target, 'edge');
+});
+
+test('a thick beam facing left behaves the same mirrored', () => {
+  const behind = { kind: 'fighter', target: 'behind', box: { left: 20, right: 60, top: 80, bottom: 180 } };
+  assert.equal(clipBeam(beam({ dx: -1, thick: 260 }), [behind]).hit, null);
+  const front = { kind: 'fighter', target: 'front', box: { left: -540, right: -480, top: 80, bottom: 180 } };
+  assert.equal(clipBeam(beam({ dx: -1, thick: 260 }), [front]).hit.target, 'front');
+});

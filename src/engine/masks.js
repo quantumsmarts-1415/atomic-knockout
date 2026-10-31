@@ -233,12 +233,131 @@ function attackStrip(fighter) {
   return { book, clip: 'attack', frame: 0 };
 }
 
-export function strikeMask(fighter) {
+function legacyStrikeMask(fighter) {
   const { book, clip, frame } = attackStrip(fighter);
   const frames = book?.strike?.[clip] || (clip === 'special' ? null : book?.strike?.attack);
   if (!frames?.length) return null;
   const i = Math.min(frames.length - 1, Math.max(0, frame));
   return frames[i] || null;
+}
+
+// A move with its own painted clip (`body-<move>`) is drawn from that clip, but the strike data only ever
+// described the old 4-12 frame "attack" strip, so the hit shape could be a stub next to a long arm or blade.
+// The part of the painted frame that sticks out in front of the idle body is the strike. The legacy shape
+// stays when it is bigger, so a hit never gets smaller than it was.
+const DERIVED = new Map();
+function protrusion(book, clip, frame) {
+  const frames = book.clips[clip];
+  const mask = frames?.[Math.min(frames.length - 1, Math.max(0, frame))];
+  if (!mask?.n) return null;
+  const idle = book.clips.idle?.[0];
+  const keep = new Uint8Array(mask.bits.length);
+  let n = 0;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  let sx = 0;
+  let sy = 0;
+  const col = new Uint8Array(mask.n);
+  const row = new Uint8Array(mask.n);
+  for (let k = 0; k < mask.n; k++) {
+    const x0 = mask.ox + mask.col[k] * CELL;
+    const y0 = mask.oy + mask.row[k] * CELL;
+    const gx = x0 + CELL * 0.5;
+    const gy = y0 + CELL * 0.5;
+    if (gx <= 0) continue;                                  // art faces right: only what reaches forward of the feet line
+    if (idle && solidAt(idle, gx, gy)) continue;            // already part of the standing body
+    const bit = mask.row[k] * mask.cols + mask.col[k];
+    keep[bit >> 3] |= 1 << (bit & 7);
+    col[n] = mask.col[k];
+    row[n] = mask.row[k];
+    if (x0 < minX) minX = x0;
+    if (y0 < minY) minY = y0;
+    if (x0 + CELL > maxX) maxX = x0 + CELL;
+    if (y0 + CELL > maxY) maxY = y0 + CELL;
+    sx += gx;
+    sy += gy;
+    n += 1;
+  }
+  if (n < 3) return null;
+  return { ox: mask.ox, oy: mask.oy, cols: mask.cols, rows: mask.rows, bits: keep, n, col, row, minX, minY, maxX, maxY, cx: sx / n, cy: sy / n };
+}
+
+export function derivedStrike(id, clip, frame) {
+  const book = BOOKS[id];
+  if (!book?.clips?.[clip]) return null;
+  const key = `${id}:${clip}:${frame}`;
+  if (!DERIVED.has(key)) DERIVED.set(key, protrusion(book, clip, frame));
+  return DERIVED.get(key);
+}
+
+export function strikeMask(fighter) {
+  const legacy = legacyStrikeMask(fighter);
+  const { book, clip, frame } = currentClipFrame(fighter);
+  if (!book || !clip || !clip.startsWith('body-')) return legacy;
+  const painted = derivedStrike(fighter?.charDef?.id, clip, frame);
+  if (!painted) return legacy;
+  if (!legacy) {
+    // No strike data: the hit was the parametric arc (rangeW). Keep the arc unless the painted frame reaches past it.
+    const move = fighter?.activeHit?.move || {};
+    const reach = move.rangeW ?? Math.round((fighter.bodyW ?? fighter.charDef?.art?.bodyW ?? 40) * 1.7);
+    return painted.maxX > reach + 10 ? painted : null;
+  }
+  let byLegacy = UNION.get(legacy);
+  if (!byLegacy) { byLegacy = new Map(); UNION.set(legacy, byLegacy); }
+  if (!byLegacy.has(painted)) byLegacy.set(painted, unionMask(legacy, painted));
+  return byLegacy.get(painted);
+}
+
+// Both shapes on one CELL lattice: a cell is in the union when either one has it.
+const UNION = new WeakMap();
+function unionMask(a, b) {
+  const cells = new Set();
+  const add = (m) => {
+    for (let k = 0; k < m.n; k++) {
+      const gx = m.ox + (m.col[k] + 0.5) * CELL;
+      const gy = m.oy + (m.row[k] + 0.5) * CELL;
+      cells.add(`${Math.floor(gx / CELL)},${Math.floor(gy / CELL)}`);
+    }
+  };
+  add(a);
+  add(b);
+  let c0 = Infinity;
+  let c1 = -Infinity;
+  let r0 = Infinity;
+  let r1 = -Infinity;
+  const pts = [];
+  for (const key of cells) {
+    const [cx, cy] = key.split(',');
+    const c = +cx;
+    const r = +cy;
+    pts.push([c, r]);
+    if (c < c0) c0 = c;
+    if (c > c1) c1 = c;
+    if (r < r0) r0 = r;
+    if (r > r1) r1 = r;
+  }
+  const cols = c1 - c0 + 1;
+  const rows = r1 - r0 + 1;
+  const bits = new Uint8Array(Math.ceil((cols * rows) / 8));
+  const col = new Uint8Array(pts.length);
+  const row = new Uint8Array(pts.length);
+  let sx = 0;
+  let sy = 0;
+  pts.forEach(([c, r], i) => {
+    const bit = (r - r0) * cols + (c - c0);
+    bits[bit >> 3] |= 1 << (bit & 7);
+    col[i] = c - c0;
+    row[i] = r - r0;
+    sx += (c + 0.5) * CELL;
+    sy += (r + 0.5) * CELL;
+  });
+  return {
+    ox: c0 * CELL, oy: r0 * CELL, cols, rows, bits, n: pts.length, col, row,
+    minX: c0 * CELL, minY: r0 * CELL, maxX: (c1 + 1) * CELL, maxY: (r1 + 1) * CELL,
+    cx: sx / pts.length, cy: sy / pts.length,
+  };
 }
 
 function solidAt(mask, gx, gy) {

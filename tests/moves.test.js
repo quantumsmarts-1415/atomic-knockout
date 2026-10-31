@@ -1523,7 +1523,7 @@ test('oz, ira, and aurelius keep the approved move rules', () => {
   assert.deepEqual(gold.specialDefense.reflectTypes, ['heat', 'radiation']);
   assert.equal(gold.basicCharge.onHit.freeze, 640);
   assert.equal(gold.basicCharge.onHit.gold, 640);
-  assert.equal(gold.specialDirectional.lob, 620);
+  assert.equal(gold.specialDirectional.lob, 280);
   assert.equal(gold.specialDirectional.angleable, undefined);
   assert.equal(gold.specialDirectional.baseKnockback, 200);
   assert.equal(gold.basicCharge.stunChance, 0.5);
@@ -1636,7 +1636,7 @@ test('hog, talia, pablo, and bianca keep the approved batch rules', () => {
   assert.equal(bianca.specialDefense.slowMetals, 0.28);
   assert.equal(bianca.specialDefense.float, true);
   assert.equal(bianca.specialDefense.grabImmune, true);
-  assert.equal(bianca.specialDirectional.lob, 520);
+  assert.equal(bianca.specialDirectional.lob, 300);
   assert.equal(bianca.specialDirectional.nearCleanse, 78);
   assert.equal(bianca.specialDirectional.type, 'chemical');
   assert.equal(bianca.specialDirectional.dropZone, undefined);

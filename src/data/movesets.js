@@ -968,8 +968,8 @@ export const MOVESETS = {
       immune: [C], reflectTypes: [H, R], duration: 720, cooldown: 900, vfx: 'shield', vfxColor: 0xf0c84a,
     }),
     specialDirectional: m('Ingot Lob', {
-      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 16.1, lob: 620, vfx: 'strike', vfxColor: 0xf0c84a,
-      projectileSpeed: 360, projectileRadius: 14, projectileLife: 900,
+      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 16.1, lob: 280, vfx: 'strike', vfxColor: 0xf0c84a,
+      projectileSpeed: 400, projectileRadius: 14, projectileLife: 900,
       baseKnockback: 200, knockbackGrowth: 3.01, duration: 240, cooldown: 1020,
     }),
   },
@@ -1016,9 +1016,9 @@ export const MOVESETS = {
       duration: 700, cooldown: 880, vfx: 'shield', vfxColor: 0xd7c4ff,
     }),
     specialDirectional: m('Pink Bismuth', {
-      kind: 'projectile', shotEnd: 'despawn', type: C, damage: 18.3, lob: 520, nearCleanse: 78,
+      kind: 'projectile', shotEnd: 'despawn', type: C, damage: 18.3, lob: 300, nearCleanse: 78,
       vfx: 'cloud', vfxColor: 0xff8ac4,
-      projectileSpeed: 360, projectileRadius: 14, projectileLife: 900,
+      projectileSpeed: 400, projectileRadius: 14, projectileLife: 900,
       baseKnockback: 100, knockbackGrowth: 2.4, duration: 220, cooldown: 1030,
     }),
   },

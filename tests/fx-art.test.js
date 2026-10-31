@@ -3026,3 +3026,10 @@ test("campaign FX: Scarlett's rocket detonation is additive, so its black sheet 
   assert.equal(blendOf(meta.detonate), 1, 'the detonation uses its own add blend, not the move-level normal one');
   assert.equal(blendOf({ blend: 'screen' }), 3);
 });
+
+test('held charge art keeps `shot` reassignable (Prometheus heat-scaled charge crashed the frame loop)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../src/engine/fxArt.js', import.meta.url), 'utf8');
+  assert.match(src, /let shot = want\.art\.scaleMin != null/);
+  assert.doesNotMatch(src, /const shot = want\.art\.scaleMin/);
+});

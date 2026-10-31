@@ -4248,7 +4248,7 @@ function syncHeld(scene, fighter) {
     }
     const onHand = want.art.anchor === 'hand';
     live.img.setOrigin(want.art.pivotX ?? 0.5, want.art.pivotY ?? (onHand ? 0.5 : 1));
-    const shot = want.art.scaleMin != null
+    let shot = want.art.scaleMin != null
       ? want.art.scaleMin + ((want.art.scaleMax ?? want.art.scaleMin) - want.art.scaleMin) * frac
       : want.art.scaleWith === 'alpha'
         ? 1

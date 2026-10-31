@@ -2827,9 +2827,9 @@ export const MOVESETS = {
       duration: 900, cooldown: 1100, vfx: 'shield', vfxColor: 0xf0e8c8,
     }),
     specialDirectional: m('Decay Mortar', {
-      kind: 'projectile', shotEnd: 'despawn', type: R, damage: 10.2, type2: H, damage2: 7.2, lob: 480, explodeOnly: true, landBurst: true,
+      kind: 'projectile', shotEnd: 'despawn', type: R, damage: 10.2, type2: H, damage2: 7.2, lob: { vy: 0, g: 600 }, explodeOnly: true, landBurst: true,
       explodeRadius: 78, vfx: 'spark', vfxColor: 0xffd070,
-      projectileSpeed: 340, projectileRadius: 11, projectileLife: 900,
+      projectileSpeed: 520, projectileRadius: 11, projectileLife: 900,
       baseKnockback: 231.8, knockbackGrowth: 4.88, duration: 220, cooldown: 1000,
     }),
   },

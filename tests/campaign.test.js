@@ -442,7 +442,7 @@ import { campaignMoves, basicOf } from '../src/campaign/moves.js';
 import { REWORK_MOVES } from '../src/data/statRework.js';
 import { upgradeRecord, MAX_LEVEL, levelUp } from '../src/campaign/units.js';
 
-test('every attack is base + stat bonus: Normal 10, Special 15, Charge 20, ghosts +5; range, hits and uses come from the sheet', () => {
+test('every attack is base + stat bonus: Normal 10, Special 15, Charge 20, ghosts +3; range, hits and uses come from the sheet', () => {
   const baseBy = { basic: 10, special: 15, charge: 20 };
   for (const c of ROSTER) {
     const moves = campaignMoves(c.id);
@@ -455,7 +455,7 @@ test('every attack is base + stat bonus: Normal 10, Special 15, Charge 20, ghost
       if (m.attack) {
         assert.equal(m.hits, m.types.length ? row.hits : 0, `${c.id} ${m.key} hits (a move with no damage type deals none)`);
         assert.deepEqual(m.range, [1, Math.max(1, row.range)], `${c.id} ${m.key} range`);
-        if (m.hits > 0) assert.equal(m.base, baseBy[m.slot] + (c.ghost ? 5 : 0), `${c.id} ${m.key} base`);
+        if (m.hits > 0) assert.equal(m.base, baseBy[m.slot] + (c.ghost ? 3 : 0), `${c.id} ${m.key} base`);
         assert.ok(m.range[1] <= 3);
       }
       if (m.slot === 'charge' && m.attack) assert.ok(m.charge === true);

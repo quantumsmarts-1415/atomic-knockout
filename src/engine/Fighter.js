@@ -73,7 +73,7 @@ function nextHitIndex(attacker, move, defender, hits, now) {
 }
 
 /**
- * Stat rework damage: base by move slot (Normal 10, Special 15, Charge 5-20, Defense 5; ghosts +5) plus the
+ * Stat rework damage: base by move slot (Normal 10, Special 15, Charge 5-20, Defense 5; ghosts +3) plus the
  * average Attack - Defense of the move's types. Multi-hit moves split the base and put the stat bonus on the last
  * hit. Runtime buffs (resists, vulnerable, attack power, the move's own conditional bonuses) still scale it.
  */

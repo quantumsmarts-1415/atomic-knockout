@@ -7,7 +7,7 @@
 //   specialDefense    -> GUARD    no attack: shrugs off damage until the next turn
 //
 // Damage is flat HP, the same numbers as the Smash Ring percent: base by slot (Normal 10, Special 15, Charge 20,
-// Defense 5, ghosts +5) plus the average (Attack - Defense) over the move's types, split over its hits with the bonus
+// Defense 5, ghosts +3) plus the average (Attack - Defense) over the move's types, split over its hits with the bonus
 // on the last one (see combat.js). Range, hits and the number of uses per map come from the rework sheet
 // (src/data/statReworkData.js); a move with the sheet's `heal` flag is a healing move.
 import { CHARACTERS } from '../data/characters.js';

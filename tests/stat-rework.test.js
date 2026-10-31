@@ -97,8 +97,8 @@ test('damage: base + Attack - Defense; mixed types average the difference; an im
   assert.equal(baseOf('special'), 15);
   assert.equal(baseOf('charge', { charge: 20 }), 20);
   assert.equal(baseOf('defense'), 5);
-  assert.equal(baseOf('normal', { ghost: true }), 15, 'ghost +5');
-  assert.equal(baseOf('defense', { ghost: true }), 10, 'ghost +5 on a defense move that deals damage');
+  assert.equal(baseOf('normal', { ghost: true }), 13, 'ghost +3');
+  assert.equal(baseOf('defense', { ghost: true }), 8, 'ghost +3 on a defense move that deals damage');
   // Hydra heat 5 vs Aurelius heat defense
   const dHeat = REWORK_FIGHTERS.aurelius.def.heat;
   assert.equal(statBonus('hydra', 'aurelius', ['heat']), 5 - dHeat);

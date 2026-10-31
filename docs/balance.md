@@ -10,7 +10,7 @@
 - **Weight + Speed = 6.** Knockback resistance 0.5 + W/4, gravity scale 0.5 + W/5, walk speed 150 + 40*S, air jumps ceil(S/2).
   Jump height is one constant (162.8) for everyone.
 - **Damage** = move base (Normal 10, Special 15, Charge 20, Defense 5) + the average of (Attack - Defense) over the move's
-  damage types. An immune type counts 0 in the average; a move whose types are all immune does nothing. Ghosts get +5 on any
+  damage types. An immune type counts 0 in the average; a move whose types are all immune does nothing. Ghosts get +3 on any
   damaging move. Noble gases are chemical-immune (Ogden keeps his full 30 points). Multi-hit: the base is split evenly, the stat
   bonus lands on the last hit. Xander's Anesthesia is sleep, no damage.
 - **Timing**: 0.4 s global recovery after a move plus the sheet's per-move cooldown and chains. Charge ramps 5% to 20% over 3 s

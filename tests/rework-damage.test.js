@@ -144,19 +144,19 @@ test('multi-hit: base is split over the hits and the stat bonus lands on the las
   const total = parts.reduce((a, b) => a + b, 0);
   const m = x.charDef.moves[key];
   const types = [m.type, m.type2, m.type3].filter(Boolean).map((t) => (t === 'physical' ? 'kinetic' : t));
-  const base = { basicDirectional: 10, specialDirectional: 15, basicCharge: 20, specialDefense: 5 }[key] + (x.charDef.ghost ? 5 : 0);
+  const base = { basicDirectional: 10, specialDirectional: 15, basicCharge: 20, specialDefense: 5 }[key] + (x.charDef.ghost ? 3 : 0);
   const bonus = statBonus(id, y.charDef.id, types);
   if (bonus != null) assert.ok(Math.abs(total - Math.max(0, base + bonus)) < 0.5 || parts[2] === 0, `${id} ${key} total ${total} vs ${base + bonus}`);
 });
 
-test('a ghost adds +5 to every move that deals damage', () => {
+test('a ghost adds +3 to every move that deals damage', () => {
   const ghost = Object.values(CHARACTERS).find((c) => c.ghost && REWORK_MOVES[c.id].basicDirectional.hits === 1);
   const { x, y } = fight(ghost.id, 'aurelius');
   const m = x.charDef.moves.basicDirectional;
   const types = [m.type, m.type2, m.type3].filter(Boolean).map((t) => (t === 'physical' ? 'kinetic' : t));
   const bonus = statBonus(ghost.id, 'aurelius', types);
   const got = hit(x, y, 'basicDirectional');
-  if (bonus != null) assert.ok(Math.abs(got - Math.max(0, 15 + bonus)) < 1e-6, `${ghost.id}: ${got} vs ${15 + bonus}`);
+  if (bonus != null) assert.ok(Math.abs(got - Math.max(0, 13 + bonus)) < 1e-6, `${ghost.id}: ${got} vs ${13 + bonus}`);
 });
 
 test('a noble gas takes nothing from a chemical-only move; Ogden is not immune', () => {

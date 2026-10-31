@@ -1,6 +1,6 @@
 // Combat forecast and resolution (stat rework, Oct 2026). Pure: callers pass an rng.
 //
-//   damage  flat HP, the Smash Ring numbers: move base (Normal 10, Special 15, Charge 20, Defense 5, ghosts +5) plus the
+//   damage  flat HP, the Smash Ring numbers: move base (Normal 10, Special 15, Charge 20, Defense 5, ghosts +3) plus the
 //           average of (Attack - Defense) over the move's damage types. A type the defender is immune to counts 0 in the
 //           average; a move whose types are ALL immune does nothing. Never below 0.
 //   hits    a move with several hits splits its base evenly; the stat bonus lands on the LAST hit. Every hit rolls on its own.

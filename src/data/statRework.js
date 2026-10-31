@@ -26,7 +26,7 @@ export const RW = Object.freeze({
   jumpHeight: Math.round(1.1 * 148 * 10) / 10,   // 162.8 px
   airJumpMult: 0.92,
   baseDamage: Object.freeze({ normal: 10, special: 15, charge: 20, defense: 5 }),
-  ghostBonus: 5,
+  ghostBonus: 3,
   ghostDrainPct: 1,
   ghostDrainMs: 1000,
   // Charge
@@ -118,7 +118,7 @@ export function isImmuneType(defId, type) {
 }
 
 // ---- damage ----------------------------------------------------------------
-/** Base percent of a slot for a given attacker (ghosts add +5 on any move that deals damage). */
+/** Base percent of a slot for a given attacker (ghosts add +3 on any move that deals damage). */
 export function baseOf(slot, { ghost = false, charge = null } = {}) {
   let base = RW.baseDamage[slot] ?? 0;
   if (slot === 'charge' && charge != null) base = charge;

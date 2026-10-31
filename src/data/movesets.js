@@ -445,9 +445,9 @@ export const MOVESETS = {
       duration: 720, cooldown: 500, vfx: 'shield', vfxColor: 0x7a2e2e,
     }),
     specialDirectional: m('Spontaneous Ignition', {
-      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 16.9, lob: 300,
+      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 16.9, lob: { vy: 0, g: 600 },
       visualShape: 'wp', vfx: 'wp', vfxColor: 0xfff6e8,
-      projectileSpeed: 360, projectileRadius: 14, projectileLife: 900,
+      projectileSpeed: 520, projectileRadius: 14, projectileLife: 900,
       onHit: { burn: { dps: 1, every: 1000, untilKo: true } },
       baseKnockback: 160, knockbackGrowth: 2.6,
       // Startup 4. Endlag 10. Same-button lock ~33 frames (was ~69).

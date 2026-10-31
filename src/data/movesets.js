@@ -1335,7 +1335,7 @@ export const MOVESETS = {
       delayMs: 280, fallSpeed: 740, fallAccel: 980,
       skyHeight: 380, skyLead: 200,
       vfx: 'strike', vfxColor: 0x8a93a0,
-      projectileSpeed: 420, projectileRadius: 16, projectileLife: 1400,
+      projectileSpeed: 650, projectileRadius: 16, projectileLife: 1400,
       baseKnockback: 220, knockbackGrowth: 4.2, duration: 220, cooldown: 1010,
     }),
   },

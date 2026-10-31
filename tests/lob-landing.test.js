@@ -34,3 +34,15 @@ test('Phillip, Aurelius and Bianca lobs come down within their life', () => {
     assert.ok(flightMs(m.lob) <= m.projectileLife, `${id} ${flightMs(m.lob)} > ${m.projectileLife}`);
   }
 });
+
+test('Nick Meteorite Drop dives down into the 100-250px band in front of him', () => {
+  const m = MOVESETS.nick.specialDirectional;
+  // spawn: skyLead behind the muzzle, skyHeight above it; held for delayMs, then falls with accel.
+  const muzzleX = 40;
+  let x = muzzleX - m.skyLead;
+  let h = m.skyHeight + 90; // muzzle sits ~90px above the floor
+  let vy = m.fallSpeed;
+  const dt = 1 / 240;
+  while (h > 0) { vy += m.fallAccel * dt; h -= vy * dt; x += m.projectileSpeed * dt; }
+  assert.ok(x >= 150 && x <= 300, `lands at ${Math.round(x)}`);
+});

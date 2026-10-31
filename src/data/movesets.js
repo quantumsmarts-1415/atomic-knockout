@@ -2208,10 +2208,10 @@ export const MOVESETS = {
   neptune: {
     basicCharge: m('Mad Science Flask', {
       kind: 'projectile', shotEnd: 'despawn', type: C, damage: 10.5, type2: R, damage2: 8.7,
-      explodeOnly: true, explodeRadius: 54, hitRadius: 54, landBurst: true, lob: 420,
+      explodeOnly: true, explodeRadius: 54, hitRadius: 54, landBurst: true, lob: { vy: 0, g: 600 },
       chargeDamageMult: 1.45, chargeRadiusMult: 1.35,
       maxChargeMs: 900, vfx: 'cloud', vfxColor: 0x3ec8c0,
-      projectileSpeed: 440, projectileRadius: 12, projectileLife: 900,
+      projectileSpeed: 520, projectileRadius: 12, projectileLife: 900,
       baseKnockback: 110, knockbackGrowth: 1.8, duration: 240, cooldown: 1420,
     }),
     basicDirectional: melee('Trident Thrust', {

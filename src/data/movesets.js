@@ -445,9 +445,9 @@ export const MOVESETS = {
       duration: 720, cooldown: 500, vfx: 'shield', vfxColor: 0x7a2e2e,
     }),
     specialDirectional: m('Spontaneous Ignition', {
-      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 16.9, lob: 480,
+      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 16.9, lob: 300,
       visualShape: 'wp', vfx: 'wp', vfxColor: 0xfff6e8,
-      projectileSpeed: 460, projectileRadius: 14, projectileLife: 900,
+      projectileSpeed: 360, projectileRadius: 14, projectileLife: 900,
       onHit: { burn: { dps: 1, every: 1000, untilKo: true } },
       baseKnockback: 160, knockbackGrowth: 2.6,
       // Startup 4. Endlag 10. Same-button lock ~33 frames (was ~69).
@@ -969,7 +969,7 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Ingot Lob', {
       kind: 'projectile', shotEnd: 'despawn', type: K, damage: 16.1, lob: 620, vfx: 'strike', vfxColor: 0xf0c84a,
-      projectileSpeed: 280, projectileRadius: 14, projectileLife: 900,
+      projectileSpeed: 360, projectileRadius: 14, projectileLife: 900,
       baseKnockback: 200, knockbackGrowth: 3.01, duration: 240, cooldown: 1020,
     }),
   },
@@ -1018,7 +1018,7 @@ export const MOVESETS = {
     specialDirectional: m('Pink Bismuth', {
       kind: 'projectile', shotEnd: 'despawn', type: C, damage: 18.3, lob: 520, nearCleanse: 78,
       vfx: 'cloud', vfxColor: 0xff8ac4,
-      projectileSpeed: 260, projectileRadius: 14, projectileLife: 900,
+      projectileSpeed: 360, projectileRadius: 14, projectileLife: 900,
       baseKnockback: 100, knockbackGrowth: 2.4, duration: 220, cooldown: 1030,
     }),
   },

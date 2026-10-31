@@ -2498,9 +2498,9 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Lucky Horseshoe', {
       kind: 'projectile', shotEnd: 'despawn', type: K, damage: 17.4, luckyEvery: 4,
-      lob: 280, landBurst: true, explodeOnly: true, explodeRadius: 64,
+      lob: { vy: 0, g: 600 }, landBurst: true, explodeOnly: true, explodeRadius: 64,
       vfx: 'strike', vfxColor: 0xffd24a,
-      projectileSpeed: 380, projectileRadius: 12, projectileLife: 900,
+      projectileSpeed: 520, projectileRadius: 12, projectileLife: 900,
       baseKnockback: 190, knockbackGrowth: 4.0, duration: 200, cooldown: 1000,
     }),
   },

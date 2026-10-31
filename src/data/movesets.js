@@ -2194,13 +2194,13 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Yellowcake Lob', {
       kind: 'projectile', shotEnd: 'linger', type: R, damage: 9.9, type2: C, damage2: 8.2, explodeOnly: true, explodeRadius: 56,
-      landBurst: true, lob: 480, vfx: 'cloud', vfxColor: 0xffe14a,
+      landBurst: true, lob: { vy: 0, g: 600 }, vfx: 'cloud', vfxColor: 0xffe14a,
       dropZone: {
         name: 'Yellowcake Lob', type: R, damage: 1.2, type2: C, damage2: 0.9,
         ms: 1600, radius: 52, tick: 400, knockback: 0, growth: 0, color: 0xffe14a,
         feet: true, sheet: true, useHold: true,
       },
-      projectileSpeed: 340, projectileRadius: 12, projectileLife: 1100,
+      projectileSpeed: 520, projectileRadius: 12, projectileLife: 1100,
       baseKnockback: 77.4, knockbackGrowth: 1.38, duration: 220, cooldown: 1020,
     }),
   },

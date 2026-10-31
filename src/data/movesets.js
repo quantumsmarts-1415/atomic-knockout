@@ -2882,9 +2882,9 @@ export const MOVESETS = {
       duration: 1100, cooldown: 1200, vfx: 'shield', vfxColor: 0xffd0c0,
     }),
     specialDirectional: m('Short Fuse', {
-      kind: 'projectile', shotEnd: 'despawn', type: R, damage: 9.9, type2: H, damage2: 7.5, lob: 360, explodeOnly: true,
+      kind: 'projectile', shotEnd: 'despawn', type: R, damage: 9.9, type2: H, damage2: 7.5, lob: { vy: 0, g: 600 }, explodeOnly: true,
       explodeRadius: 86, vfx: 'spark', vfxColor: 0xff7040,
-      projectileSpeed: 280, projectileRadius: 12, projectileLife: 680,
+      projectileSpeed: 520, projectileRadius: 12, projectileLife: 900,
       baseKnockback: 200, knockbackGrowth: 4.4, duration: 200, cooldown: 1000,
     }),
   },

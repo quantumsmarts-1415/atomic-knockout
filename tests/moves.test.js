@@ -1523,7 +1523,7 @@ test('oz, ira, and aurelius keep the approved move rules', () => {
   assert.deepEqual(gold.specialDefense.reflectTypes, ['heat', 'radiation']);
   assert.equal(gold.basicCharge.onHit.freeze, 640);
   assert.equal(gold.basicCharge.onHit.gold, 640);
-  assert.equal(gold.specialDirectional.lob, 280);
+  assert.deepEqual(gold.specialDirectional.lob, { vy: 0, g: 600 });
   assert.equal(gold.specialDirectional.angleable, undefined);
   assert.equal(gold.specialDirectional.baseKnockback, 200);
   assert.equal(gold.basicCharge.stunChance, 0.5);

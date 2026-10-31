@@ -968,8 +968,8 @@ export const MOVESETS = {
       immune: [C], reflectTypes: [H, R], duration: 720, cooldown: 900, vfx: 'shield', vfxColor: 0xf0c84a,
     }),
     specialDirectional: m('Ingot Lob', {
-      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 16.1, lob: 280, vfx: 'strike', vfxColor: 0xf0c84a,
-      projectileSpeed: 400, projectileRadius: 14, projectileLife: 900,
+      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 16.1, lob: { vy: 0, g: 600 }, vfx: 'strike', vfxColor: 0xf0c84a,
+      projectileSpeed: 520, projectileRadius: 14, projectileLife: 900,
       baseKnockback: 200, knockbackGrowth: 3.01, duration: 240, cooldown: 1020,
     }),
   },

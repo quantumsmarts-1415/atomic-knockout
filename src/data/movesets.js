@@ -2246,8 +2246,8 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Plutonium Pit', {
       kind: 'projectile', shotEnd: 'despawn', type: K, damage: 9, type2: R, damage2: 7, explodeOnly: true, explodeRadius: 50,
-      lob: 540, landBurst: true, vfx: 'spark', vfxColor: 0xff7040,
-      projectileSpeed: 280, projectileRadius: 16, projectileLife: 1200,
+      lob: { vy: 0, g: 600 }, landBurst: true, vfx: 'spark', vfxColor: 0xff7040,
+      projectileSpeed: 520, projectileRadius: 16, projectileLife: 1200,
       baseKnockback: 160, knockbackGrowth: 2.6, duration: 240, cooldown: 940,
     }),
   },

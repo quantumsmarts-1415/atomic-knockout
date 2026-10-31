@@ -2296,13 +2296,13 @@ export const MOVESETS = {
     }),
     specialDirectional: m('Pitchblende Toss', {
       kind: 'projectile', shotEnd: 'linger', type: R, damage: 18, explodeOnly: true, explodeRadius: 48,
-      landBurst: true, lob: 460, vfx: 'cloud', vfxColor: 0xc8e070,
+      landBurst: true, lob: { vy: 0, g: 600 }, vfx: 'cloud', vfxColor: 0xc8e070,
       dropZone: {
         name: 'Pitchblende Toss', type: R, damage: 2.37,
         ms: 1400, radius: 46, tick: 360, knockback: 0, growth: 0, color: 0xc8e070,
         feet: true, sheet: true, useHold: true,
       },
-      projectileSpeed: 380, projectileRadius: 11, projectileLife: 1000,
+      projectileSpeed: 520, projectileRadius: 11, projectileLife: 1000,
       baseKnockback: 108.8, knockbackGrowth: 1.9, duration: 210, cooldown: 1020,
     }),
   },

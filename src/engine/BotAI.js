@@ -18,6 +18,8 @@
 // down: true to drop through a platform. Every other stage keeps the flat
 // chase logic exactly as before.
 // ---------------------------------------------------------------------------
+import { moveRework } from '../data/statRework.js';
+
 import { nodeAt, findPath, jumpReach, liftAt, reachableFrom } from './BotNav.js';
 
 export function computeBotInput(time, bot, fighters, bounds, nav = null) {
@@ -346,6 +348,20 @@ function cdOf(bot, key, move) {
   return typeof bot.cdMsFor === 'function' ? bot.cdMsFor(key, move) : move.cooldown;
 }
 
+/**
+ * Sim-only switch (window.__botSkipNoDamage, set by tools/sim-tournament.mjs with SIM_NO_ZERO=1): bots never press a
+ * move that deals no damage (a heal, a status, a pure buff). The moves stay in the game for people.
+ */
+function skipsNoDamage() { return typeof globalThis !== 'undefined' && globalThis.__botSkipNoDamage === true; }
+export function dealsNoDamage(bot, key) {
+  const move = bot.charDef?.moves?.[key];
+  if (!move) return false;
+  const row = bot.charDef?.rework ? moveRework(bot.charDef.id, key) : null;
+  const types = [move.type, move.type2, move.type3].filter(Boolean);
+  return !types.length || (row != null && row.hits === 0);
+}
+function botMayUse(bot, key) { return !(skipsNoDamage() && dealsNoDamage(bot, key)); }
+
 function tryAttacks(time, bot, target, ai, input, bounds) {
   if (input.down) return;
   const basic = bot.charDef.moves.basicDirectional;
@@ -357,10 +373,10 @@ function tryAttacks(time, bot, target, ai, input, bounds) {
   const ready = bot.state !== 'attack' && bot.state !== 'hurt' && bot.state !== 'ko'
     && bot.state !== 'charging' && bot.state !== 'defending' && bot.state !== 'dead';
   let wantBasic = ready && dist <= basicRange && dy < ATTACK_DY
-    && time >= ai.nextAttackAt && canUse(bot, 'basicDirectional', time);
+    && time >= ai.nextAttackAt && canUse(bot, 'basicDirectional', time) && botMayUse(bot, 'basicDirectional');
   let wantSpecial = ready && dist <= specialRange && dy < ATTACK_DY + 20
     && time >= ai.nextSpecialAt && canUse(bot, 'specialDirectional', time)
-    && time >= (bot.specialMutedUntil ?? 0);
+    && time >= (bot.specialMutedUntil ?? 0) && botMayUse(bot, 'specialDirectional');
   // Both buttons are edge-triggered on the same frame; attack would eat the
   // special press. Alternate so a bot actually uses both directional moves.
   if (wantSpecial && diveLeavesDeck(bot, input, target, bounds)) wantSpecial = false;
@@ -455,7 +471,7 @@ function applyScriptedSlots(time, bot, input) {
   } else if (t >= 2620 && t < 4100) {
     neutral();
     input.special = false;
-    input.attack = bot.state === 'charging' || !busy;
+    input.attack = (bot.state === 'charging' || !busy) && botMayUse(bot, 'basicCharge');
   } else if (t >= 4100 && t < 4220) {
     neutral();
     input.attack = false;
@@ -463,7 +479,7 @@ function applyScriptedSlots(time, bot, input) {
   } else if (t >= 4220 && t < 5300) {
     neutral();
     input.attack = false;
-    input.special = (bot.specialMutedUntil ?? 0) <= time && (bot.state === 'defending' || !busy);
+    input.special = (bot.specialMutedUntil ?? 0) <= time && (bot.state === 'defending' || !busy) && botMayUse(bot, 'specialDefense');
   } else if (t >= 5300 && t < 5420) {
     neutral();
     input.attack = false;

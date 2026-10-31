@@ -9,6 +9,7 @@
 //   SIM_LIMIT=2 SIM_TAG=smoke npm run sim
 //   SIM_PAIR=1 SIM_ONLY=helen,tara npm run sim   # just those matchups, with a pair log
 //   SIM_EACH=3 npm run sim                      # each fighter vs 3 random others, one full KO each
+//   SIM_NO_ZERO=1 npm run sim                   # bots skip every move that deals no damage
 //   SIM_GOLD=1 npm run sim                      # paint the select-screen gold edge, then run the rounds
 //
 // Writes an aggregate JSON (win rate, damage, KO time, damage by type)
@@ -290,6 +291,8 @@ async function ensureServer() {
 async function openPage(browser) {
   const page = await browser.newPage({ viewport: { width: 480, height: 270 } });
   page.setDefaultTimeout(300000);
+  // SIM_NO_ZERO=1: bots never press a move that deals no damage (bot-side filter only; see BotAI.dealsNoDamage).
+  if (process.env.SIM_NO_ZERO === '1') await page.addInitScript(() => { window.__botSkipNoDamage = true; });
   const errors = [];
   page.on('pageerror', (err) => errors.push(String(err)));
   const gold = GOLD ? '&gold=1' : '';

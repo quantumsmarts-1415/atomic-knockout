@@ -164,3 +164,10 @@ test('the retired balance-pass ranges and band multipliers are gone from the mov
   assert.ok(Object.keys(MOVESETS).length === 118);
   assert.ok(CHARACTERS.hydra.rework);
 });
+
+test('the sim-only bot filter knows which moves deal no damage (Anesthesia yes, a plain Normal no)', async () => {
+  const { dealsNoDamage } = await import('../src/engine/BotAI.js');
+  const { CHARACTERS: C } = await import('../src/data/characters.js');
+  assert.equal(dealsNoDamage({ charDef: C.xander }, 'specialDefense'), true);
+  assert.equal(dealsNoDamage({ charDef: C.ben }, 'basicDirectional'), false);
+});

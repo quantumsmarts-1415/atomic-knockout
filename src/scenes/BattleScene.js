@@ -33,6 +33,7 @@ import {
   resolvePush, pushSolids, resolveGrab, projectileSpriteSize, hurtHitsCircle, hurtHitsRect, strikeHits, projectileHits,
   debugCells, debugHitCells, debugDashCells, slashPolyline, slashRibbon, projectileShape, maskShown,
 } from '../engine/boxes.js';
+import { rainFallMs } from '../engine/feel.js';
 import { artFor, beamDrawScale, cloudIgnitionScale, collectFxArt, flareEmbers, fxAnchor, fxBurstHits, fxFrameIndex, fxNamed, fxProjectileView, fxWallTest, groundTop, handheldUnit, overhandToss, placeFxImage, rodOrbitPoint, spawnContactFx, spawnFlareShower, spawnFxDetonate, spawnFxSprite, spawnJumpArc, spawnMoveExtra, stepFxProjectile, stepPlacedFx, stickAim, syncFxActors, throwGrowth, tickGeysers } from '../engine/fxArt.js';
 import { bodySheetMuzzle, sheetFxPoint, sheetReleasePoint } from '../engine/moveSheet.js';
 import { loadRosterArt, registerSheetAnims, repackOversizedSheets } from './BootScene.js';
@@ -1315,11 +1316,15 @@ export default class BattleScene extends Phaser.Scene {
         if (art?.ember?.frames?.length) {
           const layout = flareEmbers(move, owner.bodyH || 118, Math.floor((this.time?.now || 0) + owner.x));
           const origin = toss ? { x: toss.x, y: toss.y } : null;
-          spawnFlareShower(this, owner, move, layout, origin);
           const n = move.rain | 0;
           const face = owner.facing || 1;
           const originX = toss ? toss.x : owner.x + face * (owner.bodyW ?? 40) * 0.2;
           const top = toss ? toss.y : owner.y - layout.height;
+          // The curtain falls from the tip of the toss to the floor, not for a fixed 650 ms: from that height a
+          // fixed life ran out about head height and the embers never touched a standing opponent.
+          layout.floorY = groundTop(this, originX, owner.y);
+          layout.life = Math.max(layout.life, rainFallMs(layout.floorY - top, 240));
+          spawnFlareShower(this, owner, move, layout, origin);
           for (let i = 0; i < n; i++) {
             const t = n === 1 ? 0 : (i / (n - 1) - 0.5);
             const drift = (i % 2 ? 1 : -1) * (8 + (i % 3) * 3);
@@ -1329,6 +1334,7 @@ export default class BattleScene extends Phaser.Scene {
               rainDelay: 0,
               _rainChild: true,
               projectileRadius: layout.radius,
+              projectileLife: Math.max(move.projectileLife ?? 0, rainFallMs(layout.floorY - top, 270)),
               _from: { x: originX + t * layout.width, y: top },
               _vy: 270 + (i % 3) * 30,
               projectileSpeed: Math.abs(drift),
@@ -1543,6 +1549,10 @@ export default class BattleScene extends Phaser.Scene {
       });
     }
     const born = this.time.now;
+    if (move._rainChild && vy > 0) {
+      // Rain falls until it lands, whatever height it was thrown from.
+      move = { ...move, projectileLife: Math.max(move.projectileLife ?? 0, rainFallMs(groundTop(this, x, owner.y) - y, vy)) };
+    }
     const shotVx = dropVx != null ? dropVx : (move._vx != null ? move._vx : face * move.projectileSpeed);
     const shot = {
       owner, move,

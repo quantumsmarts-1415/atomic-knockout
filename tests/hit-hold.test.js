@@ -37,3 +37,14 @@ test('every listed move carries its hold and keeps startup and visible length', 
   }
   assert.ok(n >= 20);
 });
+
+import { rainFallMs } from '../src/engine/feel.js';
+
+test('rainFallMs gives a falling shot enough life to reach the floor', () => {
+  assert.equal(rainFallMs(0, 270), 0);
+  assert.equal(rainFallMs(300, 0), 0);
+  // 300 px at 270 px/s = 1111 ms, plus a small landing margin
+  const ms = rainFallMs(300, 270);
+  assert.ok(ms >= 1111 && ms <= 1200, String(ms));
+  assert.ok(rainFallMs(400, 270) > rainFallMs(300, 270));
+});

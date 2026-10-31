@@ -604,3 +604,9 @@ export const TYPE_COLOR = {
   chemical: 0x4dff78,
   radiation: 0x7dffe0,
 };
+
+/** Time for something falling at `speed` px/s to cover `drop` px, plus a short margin so it lands before it expires. */
+export function rainFallMs(drop, speed) {
+  if (!(drop > 0) || !(speed > 0)) return 0;
+  return Math.ceil((drop / speed) * 1000) + 60;
+}

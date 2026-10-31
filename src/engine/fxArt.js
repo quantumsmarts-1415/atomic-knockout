@@ -3330,7 +3330,7 @@ export function spawnFlareShower(scene, owner, move, layout, origin = null) {
       rot: piece.rot, spin: piece.spin,
       x: originX + piece.x, y: top + piece.y,
       vx: piece.vx, vy: piece.vy,
-      born, life: spec.life,
+      born, life: spec.life, floorY: spec.floorY,
       frame0: piece.frame0 | 0,
       puff, puffScale: piece.scale * 0.85,
       nextPuff: born + 80, puffLeft: piece.smoke && puff ? 2 : 0,
@@ -3357,6 +3357,7 @@ function stepEmbers(scene) {
     }
     ember.x += ember.vx * dt;
     ember.y += ember.vy * dt;
+    if (ember.floorY != null && ember.y > ember.floorY) ember.y = ember.floorY;
     const frame = ember.art.frames[(ember.frame0 + fxFrameIndex(ember.art, elapsed)) % ember.art.frames.length];
     applyFrameLook(ember.img, frame, ember.art, ember.scale);
     ember.img.setPosition(ember.x, ember.y);

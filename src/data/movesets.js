@@ -1016,9 +1016,9 @@ export const MOVESETS = {
       duration: 700, cooldown: 880, vfx: 'shield', vfxColor: 0xd7c4ff,
     }),
     specialDirectional: m('Pink Bismuth', {
-      kind: 'projectile', shotEnd: 'despawn', type: C, damage: 18.3, lob: 300, nearCleanse: 78,
+      kind: 'projectile', shotEnd: 'despawn', type: C, damage: 18.3, lob: { vy: 0, g: 600 }, nearCleanse: 78,
       vfx: 'cloud', vfxColor: 0xff8ac4,
-      projectileSpeed: 400, projectileRadius: 14, projectileLife: 900,
+      projectileSpeed: 520, projectileRadius: 14, projectileLife: 900,
       baseKnockback: 100, knockbackGrowth: 2.4, duration: 220, cooldown: 1030,
     }),
   },

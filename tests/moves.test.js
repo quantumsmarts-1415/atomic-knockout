@@ -1636,7 +1636,7 @@ test('hog, talia, pablo, and bianca keep the approved batch rules', () => {
   assert.equal(bianca.specialDefense.slowMetals, 0.28);
   assert.equal(bianca.specialDefense.float, true);
   assert.equal(bianca.specialDefense.grabImmune, true);
-  assert.equal(bianca.specialDirectional.lob, 300);
+  assert.deepEqual(bianca.specialDirectional.lob, { vy: 0, g: 600 });
   assert.equal(bianca.specialDirectional.nearCleanse, 78);
   assert.equal(bianca.specialDirectional.type, 'chemical');
   assert.equal(bianca.specialDirectional.dropZone, undefined);

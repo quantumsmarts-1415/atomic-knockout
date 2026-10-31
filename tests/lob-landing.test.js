@@ -46,3 +46,24 @@ test('Nick Meteorite Drop dives down into the 100-250px band in front of him', (
   while (h > 0) { vy += m.fallAccel * dt; h -= vy * dt; x += m.projectileSpeed * dt; }
   assert.ok(x >= 150 && x <= 300, `lands at ${Math.round(x)}`);
 });
+
+test('every lobbed or thrown move flies flat: tiny rise, long even range', () => {
+  const bad = [];
+  let n = 0;
+  for (const [id, set] of Object.entries(MOVESETS)) {
+    for (const [key, move] of Object.entries(set)) {
+      if (move.kind !== 'projectile' || move.lob == null) continue;
+      n++;
+      const v = typeof move.lob === 'number' ? move.lob : (move.lob.vy ?? 460);
+      const g = typeof move.lob === 'object' ? (move.lob.g ?? G) : G;
+      const rise = (v * v) / (2 * g);
+      const t = (v + Math.sqrt(v * v + 2 * g * RELEASE_H)) / g;
+      const range = move.projectileSpeed * t;
+      if (rise > 25 || range < 300 || range > 480 || t * 1000 > move.projectileLife) {
+        bad.push(`${id}.${key} ${move.name} rise ${Math.round(rise)} range ${Math.round(range)} t ${Math.round(t * 1000)}ms life ${move.projectileLife}`);
+      }
+    }
+  }
+  assert.ok(n >= 11, `only ${n} lob moves`);
+  assert.deepEqual(bad, []);
+});

@@ -81,7 +81,9 @@ function reworkDamage(attacker, original, move, defender, now) {
   const slot = SLOT_OF_KEY[move.rwKey];
   const row = moveRework(attacker.charDef.id, move.rwKey);
   const types = activeTypes(move);
-  const hits = Math.max(1, row?.hits ?? 1);
+  // rwHits: a Smash Ring move that fires several separate projectiles (a fan, an orbit) counts each one as a hit,
+  // so the base is split between them instead of every projectile dealing the whole base. The sheet row (Campaign) is unchanged.
+  const hits = Math.max(1, move.rwHits ?? row?.hits ?? 1);
   const empty = { total: 0, packets: [] };
   if (!slot || !types.length || (row && row.hits === 0)) return empty;
   let bonus = statBonus(attacker.charDef.id, defender.charDef.id, types);

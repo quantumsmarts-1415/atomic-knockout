@@ -177,7 +177,7 @@ export const MOVESETS = {
 
   carter: {
     basicCharge: m('Diamond Storm', {
-      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 8.8, chargeDamageMult: 2,
+      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 8.8, chargeDamageMult: 2, rwHits: 8,
       maxChargeMs: 800, visualShape: 'diamond', orbitRelease: true,
       orbitWhileCharging: {
         count: 8, radius: 76, damage: 2, type: K, touch: 22, gap: 300, period: 900, knockback: 36,
@@ -422,7 +422,7 @@ export const MOVESETS = {
       // The flare goes up. The shower is the hit: heat and chemical.
       // Charge widens the fan. It does not add damage.
       kind: 'projectile', shotEnd: 'despawn', type: H, damage: 3.4, type2: C, damage2: 2.6,
-      rain: 5, rainSpread: 150, chargeSpreadMult: 2.4, rainDelay: 180,
+      rain: 5, rwHits: 5, rainSpread: 150, chargeSpreadMult: 2.4, rainDelay: 180,
       maxChargeMs: 700, visualShape: 'ember', vfx: 'phosphor', vfxColor: 0xe8ffc0,
       projectileSpeed: 80, projectileRadius: 12, projectileLife: 650,
       baseKnockback: 48, knockbackGrowth: 0.8,
@@ -1433,7 +1433,7 @@ export const MOVESETS = {
       flatHit: 8, duration: 640, cooldown: 980, vfx: 'shield', vfxColor: 0xe6e2da,
     }),
     specialDirectional: m('Iris Scatter', {
-      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 14, fanTypes: [K, H, E, C], fanDeg: 30, ghostCopies: 3, vfx: 'spark',
+      kind: 'projectile', shotEnd: 'despawn', type: K, damage: 14, fanTypes: [K, H, E, C], fanDeg: 30, ghostCopies: 3, rwHits: 4, vfx: 'spark',
       projectileSpeed: 440, projectileRadius: 7, projectileLife: 420,
       baseKnockback: 70, knockbackGrowth: 1.6, duration: 220, cooldown: 1040,
     }),
@@ -2100,7 +2100,7 @@ export const MOVESETS = {
       duration: 640, cooldown: 900, vfx: 'shield', vfxColor: 0xd8e4ff, ...fx('Flux Pin'),
     }),
     specialDirectional: m('Ytterby Mine', {
-      kind: 'mine', type: K, damage: YARA.mineShardDamage * 3.07,
+      kind: 'mine', type: K, rwHits: 4, damage: YARA.mineShardDamage * 3.07,
       mineArmMs: YARA.mineArmMs, mineMax: YARA.mineMax, mineRange: YARA.mineRange,
       shardSpeed: YARA.mineShardSpeed, projectileLife: YARA.mineShardLife, projectileRadius: 6,
       vfx: 'strike', vfxColor: 0xf0e6c8, ...fx('Ytterby Mine'),
@@ -2367,7 +2367,7 @@ export const MOVESETS = {
       duration: 480, cooldown: 1000, vfx: 'shield', vfxColor: 0xe8e0ff,
     }),
     specialDirectional: m('Fallout Rain', {
-      kind: 'projectile', shotEnd: 'despawn', type: R, damage: 5.4, rain: 5, vfx: 'cloud', vfxColor: 0xd8ffb0,
+      kind: 'projectile', shotEnd: 'despawn', type: R, damage: 5.4, rain: 5, rwHits: 5, vfx: 'cloud', vfxColor: 0xd8ffb0,
       projectileSpeed: 80, projectileRadius: 8, projectileLife: 900,
       baseKnockback: 59.54, knockbackGrowth: 1.04, duration: 220, cooldown: 1030,
     }),

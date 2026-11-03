@@ -21,16 +21,16 @@
 //     ghostBonus  flat base damage added to every damaging ghost move   Benjamin: +3
 // ---------------------------------------------------------------------------
 export const RING_COEF = {
-  kbResBase: 0.5, kbResPerW: 0.24,
-  gravBase: 0.5, gravPerW: 0.12,
-  walkBase: 150, walkPerS: 41.705,
+  kbResBase: 0.5, kbResPerW: 0.254,
+  gravBase: 0.5, gravPerW: 0.1,
+  walkBase: 150, walkPerS: 39.373,
   airJumpAdd: 0,
-  atkWeight: { kinetic: 0.926, heat: 1.111, chemical: 1.35, electrical: 0.947, radiation: 0.851 },
-  defWeight: { kinetic: 0.993, heat: 0.985, chemical: 0.908, electrical: 1.167, radiation: 0.873 },
-  typeMult: { kinetic: 0.864, heat: 1.28, chemical: 1.108, electrical: 1.043, radiation: 1.052 },
-  projectileMult: 0.652, areaMult: 0.91, chargeMult: 0.605, counterMult: 0.973,
-  healMult: 1.881, dotMult: 1.413,
-  ghostBonus: 1.016,
+  atkWeight: { kinetic: 0.898, heat: 1.201, chemical: 1.434, electrical: 0.891, radiation: 0.829 },
+  defWeight: { kinetic: 1.043, heat: 1.018, chemical: 0.833, electrical: 1.234, radiation: 0.888 },
+  typeMult: { kinetic: 0.841, heat: 1.31, chemical: 1.065, electrical: 1.026, radiation: 1.109 },
+  projectileMult: 0.65, areaMult: 0.856, chargeMult: 0.547, counterMult: 0.967,
+  healMult: 2.348, dotMult: 1.474,
+  ghostBonus: 0.762,
 };
 
 /** Benjamin's defaults, for the sign-off table and the tests. */

@@ -92,7 +92,9 @@ function reworkDamage(attacker, original, move, defender, now) {
     bonus = types.reduce((t, ty) => t + RING_COEF.atkWeight[canonical(ty)] * ((RING_FIGHTERS[attacker.charDef.id] ?? attacker.charDef.rework).atk[ty] ?? 0), 0) / types.length;
   }
   if (bonus == null) return empty;
-  const base = baseOf(slot, { ghost: !!attacker.charDef.ghost, charge: move._chargeBase ?? (slot === 'charge' ? RW.baseDamage.charge : null) });
+  // Ghost bonus is the global RING_COEF.ghostBonus (Benjamin's rule: +3 on every move that deals damage).
+  const base0 = baseOf(slot, { ghost: false, charge: move._chargeBase ?? (slot === 'charge' ? RW.baseDamage.charge : null) });
+  const base = attacker.charDef.ghost && base0 > 0 ? base0 + RING_COEF.ghostBonus : base0;
   const n = nextHitIndex(attacker, move, defender, hits, now);
   let amount = hitDamage({ base, bonus, hits, n }) * ringDamageMult(slot, row, types);   // global type / trait coefficients (ringBalance.js)
   // Conditional bonuses written on the move (bonusVsStun, heatEmpower ...) scale the hit in proportion.

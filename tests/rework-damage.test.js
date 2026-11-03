@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert';
 import { mock } from 'node:test';
 import { createRequire } from 'node:module';
+import { useBenjaminRules } from '../src/data/ringBalance.js';
+useBenjaminRules();   // these tests check Benjamin's formulas, not the tuned global coefficients
 
 const require = createRequire(import.meta.url);
 const phaserPath = require.resolve('phaser');

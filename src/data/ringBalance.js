@@ -18,26 +18,34 @@
 //     chargeMult      the charge slot                    counterMult  the defense slot (counters)
 //   Over time
 //     healMult   amount of every heal       dotMult   burn and poison per second
+//     ghostBonus  flat base damage added to every damaging ghost move   Benjamin: +3
 // ---------------------------------------------------------------------------
 export const RING_COEF = {
-  kbResBase: 0.5, kbResPerW: 0.25,
-  gravBase: 0.5, gravPerW: 0.2,
-  walkBase: 150, walkPerS: 40,
+  kbResBase: 0.5, kbResPerW: 0.22,
+  gravBase: 0.5, gravPerW: 0.148,
+  walkBase: 150, walkPerS: 45.407,
   airJumpAdd: 0,
-  atkWeight: { kinetic: 1, heat: 1, chemical: 1, electrical: 1, radiation: 1 },
-  defWeight: { kinetic: 1, heat: 1, chemical: 1, electrical: 1, radiation: 1 },
-  typeMult: { kinetic: 1, heat: 1, chemical: 1, electrical: 1, radiation: 1 },
-  projectileMult: 1, areaMult: 1, chargeMult: 1, counterMult: 1,
-  healMult: 1, dotMult: 1,
+  atkWeight: { kinetic: 0.976, heat: 1.06, chemical: 1.235, electrical: 1.025, radiation: 0.847 },
+  defWeight: { kinetic: 0.956, heat: 0.987, chemical: 1.007, electrical: 1.079, radiation: 0.823 },
+  typeMult: { kinetic: 0.903, heat: 1.249, chemical: 1.125, electrical: 1.081, radiation: 0.968 },
+  projectileMult: 0.652, areaMult: 0.977, chargeMult: 0.692, counterMult: 0.982,
+  healMult: 1.484, dotMult: 1.313,
+  ghostBonus: 1.32,
 };
 
 /** Benjamin's defaults, for the sign-off table and the tests. */
 export const BENJAMIN_COEF = Object.freeze({
   kbResBase: 0.5, kbResPerW: 0.25, gravBase: 0.5, gravPerW: 0.2, walkBase: 150, walkPerS: 40, airJumpAdd: 0,
-  projectileMult: 1, areaMult: 1, chargeMult: 1, counterMult: 1, healMult: 1, dotMult: 1,
+  projectileMult: 1, areaMult: 1, chargeMult: 1, counterMult: 1, healMult: 1, dotMult: 1, ghostBonus: 3,
 });
 
 export const ringKnockbackResistance = (w) => RING_COEF.kbResBase + RING_COEF.kbResPerW * w;
 export const ringGravityScale = (w) => RING_COEF.gravBase + RING_COEF.gravPerW * w;
 export const ringWalkSpeed = (s) => RING_COEF.walkBase + RING_COEF.walkPerS * s;
 export const ringAirJumps = (s) => Math.ceil(s / 2) + RING_COEF.airJumpAdd;
+
+/** Test helper: put every global coefficient back to Benjamin's formulas (the rule tests check his numbers, not the tuned ones). */
+export function useBenjaminRules() {
+  Object.assign(RING_COEF, BENJAMIN_COEF);
+  for (const g of ['atkWeight', 'defWeight', 'typeMult']) for (const t of Object.keys(RING_COEF[g])) RING_COEF[g][t] = 1;
+}

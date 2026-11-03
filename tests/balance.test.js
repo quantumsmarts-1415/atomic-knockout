@@ -86,9 +86,11 @@ test('Weight and Speed (1-5, sum 6) drive speed, weight and jumps; every roster 
   for (const id of ids) {
     const c = CHARACTERS[id].combat;
     assert.ok(c, `${id} has a combat profile`);
-    assert.ok(c.speed >= 190 && c.speed <= 350, id);
-    assert.ok(c.weight >= 0.75 && c.weight <= 1.75, id);
-    assert.ok(Math.abs(c.jumpVelocity - jumpLaunchOf(Math.round((c.weight - 0.5) * 4))) < 1e-6, id);
+    const K = RING_COEF;   // Smash Ring physics go through the global coefficients (Benjamin's formulas are their defaults)
+    assert.ok(c.speed >= K.walkBase + K.walkPerS - 1e-9 && c.speed <= K.walkBase + 5 * K.walkPerS + 1e-9, id);
+    assert.ok(c.weight >= K.kbResBase + K.kbResPerW - 1e-9 && c.weight <= K.kbResBase + 5 * K.kbResPerW + 1e-9, id);
+    const w = Math.round((c.weight - K.kbResBase) / K.kbResPerW);
+    assert.ok(Math.abs(c.jumpVelocity - Math.sqrt(2 * 1500 * (K.gravBase + K.gravPerW * w) * 162.8)) < 1e-6, id);
   }
   assert.ok(CHARACTERS.hydra.combat.speed > CHARACTERS.chroma.combat.speed);
   assert.ok(CHARACTERS.hydra.combat.weight < CHARACTERS.chroma.combat.weight);

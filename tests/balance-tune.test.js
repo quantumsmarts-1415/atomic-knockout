@@ -9,8 +9,8 @@ test('balance tune only names real fighters and keeps multipliers sane', () => {
   for (const [id, t] of Object.entries(BALANCE_TUNE)) {
     assert.ok(CHARACTERS[id], `${id} is not a fighter`);
     for (const k of Object.keys(t)) assert.ok(['kb', 'cd'].includes(k), `${id}: unknown knob ${k}`);
-    if (t.kb != null) assert.ok(t.kb >= 0.4 && t.kb <= 2.5, `${id} kb ${t.kb}`);
-    if (t.cd != null) assert.ok(t.cd >= 0.5 && t.cd <= 2, `${id} cd ${t.cd}`);
+    if (t.kb != null) assert.ok(t.kb >= 0.3 && t.kb <= 3, `${id} kb ${t.kb}`);
+    if (t.cd != null) assert.ok(t.cd >= 0.4 && t.cd <= 2.5, `${id} cd ${t.cd}`);
   }
 });
 

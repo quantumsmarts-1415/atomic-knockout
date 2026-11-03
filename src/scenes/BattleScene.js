@@ -1797,9 +1797,12 @@ export default class BattleScene extends Phaser.Scene {
       if (move.metalsOnly && !target.charDef?.combat?.metal) continue;
       if (target.state === 'defending' && target.defenseMove?.untargetable) continue;
       if (move.coneDeg > 0 && target !== owner) {
+        // The cone opens from the caster, not from the offset circle's centre. Measured from the centre, a
+        // target closer than offsetX (right in front of the caster) fell behind the cone and was never hit.
         const facing = owner.facing || 1;
-        const dx = (target.x - cx) * facing;
-        const dy = target.y - cy;
+        const oy = owner.y - owner.bodyH / 2;
+        const dx = (target.x - owner.x) * facing;
+        const dy = (target.y - (target.bodyH ?? 0) / 2) - oy;
         if (dx < 0) continue;
         const ang = Math.abs(Math.atan2(dy, Math.max(1, dx))) * (180 / Math.PI);
         if (ang > move.coneDeg / 2) continue;

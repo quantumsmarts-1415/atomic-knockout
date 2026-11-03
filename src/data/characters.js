@@ -2512,20 +2512,10 @@ for (const def of Object.values(CHARACTERS)) {
 }
 
 // Balance pass (Nov 3 2026): per-fighter knockback and recharge multipliers from src/data/balanceTune.js.
-// Knockback scales how far a fighter's hits send the target (base and growth together); recharge scales the
-// sheet's per-move cooldown (Fighter.cdMsFor). Damage stays base + Attack - Defense; no rule changes.
+// Knockback scales how far a fighter's hits send the target (Fighter.takeHit); recharge scales the sheet's per-move
+// cooldown (Fighter.cdMsFor). Damage stays base + Attack - Defense; no rule changes.
 for (const [id, tune] of Object.entries(BALANCE_TUNE)) {
-  const def = CHARACTERS[id];
-  if (!def) continue;
-  def.tune = tune;
-  if (tune.kb != null && tune.kb !== 1) {
-    for (const key of Object.keys(SLOT_OF_KEY)) {
-      const mv = def.moves?.[key];
-      if (!mv) continue;
-      if (mv.baseKnockback != null) mv.baseKnockback *= tune.kb;
-      if (mv.knockbackGrowth != null) mv.knockbackGrowth *= tune.kb;
-    }
-  }
+  if (CHARACTERS[id]) CHARACTERS[id].tune = tune;
 }
 
 // Hit windows that cover the art's held pose (src/data/hitTiming.js). Endlag shrinks by the same amount.

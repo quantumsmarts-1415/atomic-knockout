@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ROSTER, CHARACTERS } from '../src/data/characters.js';
-import { REWORK_FIGHTERS } from '../src/data/statReworkData.js';
+import { RING_FIGHTERS as REWORK_FIGHTERS } from '../src/data/statRework.js';
+import { BALANCE_STATS } from '../src/data/balanceStats.js';
 import { BALANCE_TUNE } from '../src/data/balanceTune.js';
 
 test('balance tune only names real fighters and keeps multipliers sane', () => {
@@ -23,6 +24,7 @@ test('the stat rules still hold for every fighter after balancing', () => {
     const sum = all.reduce((s, v) => s + (v ?? 0), 0);
     assert.equal(sum, f.atk.chemical == null ? 24 : 30, `${c.id} attack+defense budget`);
   }
+  assert.ok(!BALANCE_STATS.hydra && !BALANCE_STATS.helen, 'Hydra and Helen stats are Benjamin\'s own');
   assert.deepEqual(REWORK_FIGHTERS.hydra.atk, { kinetic: 1, heat: 5, chemical: 5, electrical: 1, radiation: 5 });
 });
 

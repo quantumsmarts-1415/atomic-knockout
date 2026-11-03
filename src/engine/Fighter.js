@@ -10,7 +10,7 @@ import { armGeyser, artFor, fxAnchor, groundTop, hitAnchor, playRetortPulse, rev
 import { clipNameForMove, sheetMeta, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { stringStep } from './swingString.js';
-import { baseOf, chargeBase, moveRework, RW, SLOT_OF_KEY, statBonus, hitDamage, hitstunMsFor, canonical } from '../data/statRework.js';
+import { baseOf, chargeBase, moveRework, RING_FIGHTERS, RW, SLOT_OF_KEY, statBonus, hitDamage, hitstunMsFor, canonical } from '../data/statRework.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
 
 function vaporAttack(move, attacker) {
@@ -88,7 +88,7 @@ function reworkDamage(attacker, original, move, defender, now) {
   if (!slot || !types.length || (row && row.hits === 0)) return empty;
   let bonus = statBonus(attacker.charDef.id, defender.charDef.id, types);
   if (move.ignoreDefense) {
-    bonus = types.reduce((t, ty) => t + (attacker.charDef.rework.atk[ty] ?? 0), 0) / types.length;
+    bonus = types.reduce((t, ty) => t + ((RING_FIGHTERS[attacker.charDef.id] ?? attacker.charDef.rework).atk[ty] ?? 0), 0) / types.length;
   }
   if (bonus == null) return empty;
   const base = baseOf(slot, { ghost: !!attacker.charDef.ghost, charge: move._chargeBase ?? (slot === 'charge' ? RW.baseDamage.charge : null) });
@@ -2130,9 +2130,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
       this.creditDamage(attacker, dmg, incoming.type);
       this.igniteFromGuard(incoming, time, dmg);
       if (!gate.noKnockback && !incoming.noKnockback && !move.isSelf && !move.dot) {
+        const kbm = attacker && attacker !== this ? (attacker.charDef?.tune?.kb ?? 1) : 1;   // balance pass knob
         const kb = knockbackRaw(
-          incoming.baseKnockback,
-          incoming.knockbackGrowth,
+          incoming.baseKnockback * kbm,
+          incoming.knockbackGrowth * kbm,
           this.percent,
           this.weightNow(),
           (1 - reduction) * TUNING.knockbackScale * (ownBlast ? TUNING.selfKnockbackScale : 1),
@@ -2205,9 +2206,10 @@ export default class Fighter extends Phaser.GameObjects.Container {
       }
       return dmg;
     }
+    const kbm = attacker && attacker !== this ? (attacker.charDef?.tune?.kb ?? 1) : 1;   // balance pass knob
     let kb = knockbackRaw(
-      incoming.baseKnockback,
-      incoming.knockbackGrowth,
+      incoming.baseKnockback * kbm,
+      incoming.knockbackGrowth * kbm,
       this.percent,
       this.weightNow(),
       TUNING.knockbackScale * (incoming.launchMult ?? 1) * (ownBlast ? TUNING.selfKnockbackScale : 1),

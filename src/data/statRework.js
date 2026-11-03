@@ -17,13 +17,13 @@
 import { REWORK_FIGHTERS, REWORK_MOVES } from './statReworkData.js';
 import { BALANCE_STATS } from './balanceStats.js';
 
-// Balance pass (Nov 3 2026): re-split of some fighters' Attack/Defense points (same budget, same 0-10 limits).
-// src/data/balanceStats.js lists only the fighters that changed; the sheet snapshot stays untouched.
-for (const [id, s] of Object.entries(BALANCE_STATS)) {
-  const row = REWORK_FIGHTERS[id];
-  if (!row) continue;
-  row.atk = { ...row.atk, ...s.atk };
-  row.def = { ...row.def, ...s.def };
+// Balance pass (Nov 3 2026): re-split of some fighters' Attack/Defense points for the Smash Ring (same budget, same
+// 0-10 limits). src/data/balanceStats.js lists only the fighters that changed. REWORK_FIGHTERS (the sheet snapshot, which
+// the Campaign reads) stays untouched; the Ring's damage reads RING_FIGHTERS.
+export const RING_FIGHTERS = {};
+for (const [id, row] of Object.entries(REWORK_FIGHTERS)) {
+  const s = BALANCE_STATS[id];
+  RING_FIGHTERS[id] = s ? { ...row, atk: { ...row.atk, ...s.atk }, def: { ...row.def, ...s.def } } : row;
 }
 
 export { REWORK_FIGHTERS, REWORK_MOVES };
@@ -148,8 +148,8 @@ export function chargeBase(heldMs) {
  * (the move then deals no damage at all).
  */
 export function statBonus(atkId, defId, types) {
-  const a = REWORK_FIGHTERS[atkId];
-  const d = REWORK_FIGHTERS[defId];
+  const a = RING_FIGHTERS[atkId];
+  const d = RING_FIGHTERS[defId];
   return bonusFromTables(a ? a.atk : null, d ? d.def : null, types);
 }
 

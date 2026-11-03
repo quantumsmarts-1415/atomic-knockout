@@ -15,6 +15,16 @@
 //   Ghosts                +5 base on every move that deals damage; 1% self damage per second
 // ---------------------------------------------------------------------------
 import { REWORK_FIGHTERS, REWORK_MOVES } from './statReworkData.js';
+import { BALANCE_STATS } from './balanceStats.js';
+
+// Balance pass (Nov 3 2026): re-split of some fighters' Attack/Defense points (same budget, same 0-10 limits).
+// src/data/balanceStats.js lists only the fighters that changed; the sheet snapshot stays untouched.
+for (const [id, s] of Object.entries(BALANCE_STATS)) {
+  const row = REWORK_FIGHTERS[id];
+  if (!row) continue;
+  row.atk = { ...row.atk, ...s.atk };
+  row.def = { ...row.def, ...s.def };
+}
 
 export { REWORK_FIGHTERS, REWORK_MOVES };
 

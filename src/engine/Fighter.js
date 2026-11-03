@@ -921,7 +921,8 @@ export default class Fighter extends Phaser.GameObjects.Container {
   /** Cooldown of one of this fighter's four moves in ms: the sheet's value, else the move's own number. */
   cdMsFor(key, move = null) {
     const row = key ? moveRework(this.charDef.id, key) : null;
-    if (row && Number.isFinite(row.cd)) return Math.round(row.cd * 1000);
+    // Balance pass: a per-fighter recharge multiplier (src/data/balanceTune.js) scales the sheet's cooldown.
+    if (row && Number.isFinite(row.cd)) return Math.round(row.cd * 1000 * (this.charDef.tune?.cd ?? 1));
     return move?.cooldown ?? this.charDef.moves?.[key]?.cooldown ?? 0;
   }
 

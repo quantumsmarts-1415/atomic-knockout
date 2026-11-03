@@ -1,5 +1,6 @@
 import { deriveProfile } from './balance.js';
 import { HIT_HOLD_F } from './hitTiming.js';
+import { BALANCE_TUNE } from './balanceTune.js';
 import { REWORK_FIGHTERS, RW, SLOT_OF_KEY, airJumpsOf, gravityScaleOf, jumpLaunchOf, knockbackResistance, walkSpeedOf } from './statRework.js';
 import { ELEMENTS } from './elements.js';
 import { MOVESETS } from './movesets.js';
@@ -2507,6 +2508,23 @@ for (const def of Object.values(CHARACTERS)) {
     def.combat.weight = def.stats.weight;
     def.combat.gravityScale = def.stats.gravityScale;
     if (def.combat.noble && rw.def.chemical != null) def.combat.noble = false;   // Ogden is a noble gas that can be hurt by chemicals
+  }
+}
+
+// Balance pass (Nov 3 2026): per-fighter knockback and recharge multipliers from src/data/balanceTune.js.
+// Knockback scales how far a fighter's hits send the target (base and growth together); recharge scales the
+// sheet's per-move cooldown (Fighter.cdMsFor). Damage stays base + Attack - Defense; no rule changes.
+for (const [id, tune] of Object.entries(BALANCE_TUNE)) {
+  const def = CHARACTERS[id];
+  if (!def) continue;
+  def.tune = tune;
+  if (tune.kb != null && tune.kb !== 1) {
+    for (const key of Object.keys(SLOT_OF_KEY)) {
+      const mv = def.moves?.[key];
+      if (!mv) continue;
+      if (mv.baseKnockback != null) mv.baseKnockback *= tune.kb;
+      if (mv.knockbackGrowth != null) mv.knockbackGrowth *= tune.kb;
+    }
   }
 }
 

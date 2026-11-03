@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { RING_COEF } from '../src/data/ringBalance.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { PNG } from 'pngjs';
@@ -62,7 +63,7 @@ test('wave 6 ghosts are playable with the doc moves and pronouns', () => {
     const c = CHARACTERS[id];
     assert.strictEqual(c.ghost, true, id);
     assert.ok(c.stats.weight >= 0.75 && c.stats.weight <= 1.75, id);
-    assert.ok(Math.abs(c.stats.speed - (150 + 40 * c.rework.s)) < 1e-9, `${id} ghosts walk at the normal speed`);
+    assert.ok(Math.abs(c.stats.speed - (RING_COEF.walkBase + RING_COEF.walkPerS * c.ringRow.s)) < 1e-9, `${id} ghosts walk at the normal speed`);
     const names = SLOTS.map((slot) => c.moves[slot].name);
     assert.deepStrictEqual(names, NAMES[id], id);
     const teach = c.teach || '';

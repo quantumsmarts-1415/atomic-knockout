@@ -10,7 +10,8 @@ import { armGeyser, artFor, fxAnchor, groundTop, hitAnchor, playRetortPulse, rev
 import { clipNameForMove, sheetMeta, sheetReleasePoint } from './moveSheet.js';
 import { coatSpec } from './coat.js';
 import { stringStep } from './swingString.js';
-import { baseOf, chargeBase, moveRework, RING_FIGHTERS, RW, SLOT_OF_KEY, statBonus, hitDamage, hitstunMsFor, canonical } from '../data/statRework.js';
+import { baseOf, chargeBase, moveRework, RING_FIGHTERS, RW, SLOT_OF_KEY, statBonus, hitDamage, hitstunMsFor, canonical, ringDamageMult } from '../data/statRework.js';
+import { RING_COEF } from '../data/ringBalance.js';
 import { hurtboxes, hurtUnion, hitboxes, pushbox, hitAabb } from './boxes.js';
 
 function vaporAttack(move, attacker) {
@@ -88,12 +89,12 @@ function reworkDamage(attacker, original, move, defender, now) {
   if (!slot || !types.length || (row && row.hits === 0)) return empty;
   let bonus = statBonus(attacker.charDef.id, defender.charDef.id, types);
   if (move.ignoreDefense) {
-    bonus = types.reduce((t, ty) => t + ((RING_FIGHTERS[attacker.charDef.id] ?? attacker.charDef.rework).atk[ty] ?? 0), 0) / types.length;
+    bonus = types.reduce((t, ty) => t + RING_COEF.atkWeight[canonical(ty)] * ((RING_FIGHTERS[attacker.charDef.id] ?? attacker.charDef.rework).atk[ty] ?? 0), 0) / types.length;
   }
   if (bonus == null) return empty;
   const base = baseOf(slot, { ghost: !!attacker.charDef.ghost, charge: move._chargeBase ?? (slot === 'charge' ? RW.baseDamage.charge : null) });
   const n = nextHitIndex(attacker, move, defender, hits, now);
-  let amount = hitDamage({ base, bonus, hits, n });
+  let amount = hitDamage({ base, bonus, hits, n }) * ringDamageMult(slot, row, types);   // global type / trait coefficients (ringBalance.js)
   // Conditional bonuses written on the move (bonusVsStun, heatEmpower ...) scale the hit in proportion.
   const sum = (m) => (m.damage ?? 0) + (m.damage2 ?? 0) + (m.damage3 ?? 0);
   if (sum(original) > 0 && sum(move) !== sum(original)) amount *= Math.max(0, sum(move) / sum(original));

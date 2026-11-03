@@ -15,16 +15,14 @@
 //   Ghosts                +5 base on every move that deals damage; 1% self damage per second
 // ---------------------------------------------------------------------------
 import { REWORK_FIGHTERS, REWORK_MOVES } from './statReworkData.js';
-import { BALANCE_STATS } from './balanceStats.js';
+import { ELEMENT_STATS } from './elementStats.js';
+import { RING_COEF } from './ringBalance.js';
 
-// Balance pass (Nov 3 2026): re-split of some fighters' Attack/Defense points for the Smash Ring (same budget, same
-// 0-10 limits). src/data/balanceStats.js lists only the fighters that changed. REWORK_FIGHTERS (the sheet snapshot, which
-// the Campaign reads) stays untouched; the Ring's damage reads RING_FIGHTERS.
+// Element balance (Nov 3 2026): the Smash Ring reads Weight, Speed and Attack/Defense from ELEMENT_STATS (derived from each fighter's real
+// element by tools/gen-element-stats.mjs; Hydra's and Helen's rows are Benjamin's own and unchanged). Same rules as the sheet: Weight + Speed = 6,
+// each stat 0-10, Attack + Defense = 30 (24 for noble gases). REWORK_FIGHTERS (the sheet snapshot) is what the Campaign reads and stays untouched.
 export const RING_FIGHTERS = {};
-for (const [id, row] of Object.entries(REWORK_FIGHTERS)) {
-  const s = BALANCE_STATS[id];
-  RING_FIGHTERS[id] = s ? { ...row, atk: { ...row.atk, ...s.atk }, def: { ...row.def, ...s.def } } : row;
-}
+for (const [id, row] of Object.entries(REWORK_FIGHTERS)) RING_FIGHTERS[id] = ELEMENT_STATS[id] ?? row;
 
 export { REWORK_FIGHTERS, REWORK_MOVES };
 
@@ -150,7 +148,33 @@ export function chargeBase(heldMs) {
 export function statBonus(atkId, defId, types) {
   const a = RING_FIGHTERS[atkId];
   const d = RING_FIGHTERS[defId];
-  return bonusFromTables(a ? a.atk : null, d ? d.def : null, types);
+  return ringBonusFromTables(a ? a.atk : null, d ? d.def : null, types);
+}
+
+/** Smash Ring bonus: bonusFromTables with the global per-type value of an Attack / Defense point (src/data/ringBalance.js; 1 = Benjamin's rule). */
+export function ringBonusFromTables(atk, def, types) {
+  const list = [...new Set((types || []).map(canonical))];
+  if (!list.length) return 0;
+  if (def && list.every((t) => def[t] == null)) return null;
+  let sum = 0;
+  for (const t of list) {
+    if (def && def[t] == null) continue;
+    const a = (atk ? atk[t] : 0) ?? 0;
+    const d = def ? def[t] : 0;
+    sum += RING_COEF.atkWeight[t] * a - RING_COEF.defWeight[t] * d;
+  }
+  return sum / list.length;
+}
+
+/** Smash Ring multiplier on a finished hit: per-type and per-trait global coefficients (src/data/ringBalance.js; all 1 = Benjamin's rules). */
+export function ringDamageMult(slot, row, types) {
+  const list = [...new Set((types || []).map(canonical))];
+  let m = list.length ? list.reduce((t, ty) => t + (RING_COEF.typeMult[ty] ?? 1), 0) / list.length : 1;
+  if (row?.kind === 'Traveling') m *= RING_COEF.projectileMult;
+  if (row?.area > 0) m *= RING_COEF.areaMult;
+  if (slot === 'charge') m *= RING_COEF.chargeMult;
+  if (slot === 'defense') m *= RING_COEF.counterMult;
+  return m;
 }
 
 /** The same bonus from two stat tables ({ kinetic, heat, ... } with null = N/A or immune); Campaign units carry their own. */

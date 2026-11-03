@@ -2,6 +2,7 @@
 // Fighter and BattleScene stay character-agnostic; they read these flags.
 import { chemicalMult } from '../data/balance.js';
 import { RW, healFloor } from '../data/statRework.js';
+import { RING_COEF } from '../data/ringBalance.js';
 
 export function applyOnHit(attacker, victim, move, time) {
   if (!move || victim === attacker) return;
@@ -106,7 +107,7 @@ export function applyOnHit(attacker, victim, move, time) {
     const poisonable = !(victim.charDef?.rework && victim.charDef.rework.def.chemical == null) && !(victim.poisonUntil > time);
     if (poisonable) {
       victim.poisonUntil = Number.POSITIVE_INFINITY;
-      victim.poisonDps = RW.dotPct;
+      victim.poisonDps = RW.dotPct * RING_COEF.dotMult;
       victim.poisonRamp = 0;
       victim.poisonTick = time + (wait || RW.dotTickMs);
       victim.poisonEvery = RW.dotTickMs;
@@ -206,7 +207,7 @@ export function applyOnHit(attacker, victim, move, time) {
     // Stat rework: burn is 1% a second for 8 s and does not stack on itself (white phosphorus stays lit until KO).
     if (!(victim.burnSticky && !sticky) && (sticky || !(victim.burnUntil > time))) {
       victim.burnUntil = sticky ? Number.POSITIVE_INFINITY : time + RW.burnMs;
-      victim.burnDps = RW.dotPct;
+      victim.burnDps = RW.dotPct * RING_COEF.dotMult;
       victim.burnEvery = RW.dotTickMs;
       victim.burnTick = time + victim.burnEvery;
       victim.burnSticky = sticky;
@@ -407,6 +408,7 @@ export function bankStolenPackets(fighter) {
  */
 export function healPercent(fighter, amount, { regen = false, cap = 15 } = {}) {
   if (!(amount > 0) || fighter?.percent == null) return 0;
+  amount *= RING_COEF.healMult;   // global heal coefficient (ringBalance.js)
   fighter.peakPercent = Math.max(fighter.peakPercent ?? 0, fighter.percent);
   const floor = healFloor(fighter.peakPercent);
   const take = regen ? amount : Math.min(amount, cap);

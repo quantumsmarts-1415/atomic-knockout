@@ -6,8 +6,9 @@ import { MOVESETS } from '../src/data/movesets.js';
 import {
   REWORK_FIGHTERS, REWORK_MOVES, RW, TYPES, airJumpsOf, baseOf, campaignHpOf, campaignMovOf, chargeBase,
   gravityScaleOf, hitDamage, hitstunMsFor, healFloor, jumpLaunchOf, knockbackResistance, rollOutcome, rollTable,
-  statBonus, walkSpeedOf,
+  RING_FIGHTERS, statBonus, walkSpeedOf,
 } from '../src/data/statRework.js';
+import { RING_COEF, ringAirJumps, ringGravityScale, ringKnockbackResistance, ringWalkSpeed } from '../src/data/ringBalance.js';
 
 const NOBLE = ['helen', 'neo', 'aaron', 'krypto', 'ronan', 'xander'];
 
@@ -53,11 +54,12 @@ test('derived physical stats: resistance 0.5 + W/4, gravity 0.5 + W/5, walk 150 
   assert.deepEqual([1, 2, 3, 4, 5].map(campaignMovOf), [3, 4, 4, 5, 5]);
   assert.deepEqual([1, 2, 3, 4, 5].map(campaignHpOf), [60, 70, 80, 90, 100]);
   for (const c of ROSTER) {
-    const f = REWORK_FIGHTERS[c.id];
-    assert.equal(c.stats.weight, knockbackResistance(f.w), c.id);
-    assert.equal(c.stats.gravityScale, gravityScaleOf(f.w), c.id);
-    assert.equal(c.stats.speed, walkSpeedOf(f.s), c.id);
-    assert.equal(c.stats.airJumps, airJumpsOf(f.s), c.id);
+    // Smash Ring: element-true Weight/Speed through the global coefficients (src/data/ringBalance.js; Benjamin's formulas are their defaults)
+    const f = RING_FIGHTERS[c.id];
+    assert.equal(c.stats.weight, ringKnockbackResistance(f.w), c.id);
+    assert.equal(c.stats.gravityScale, ringGravityScale(f.w), c.id);
+    assert.equal(c.stats.speed, ringWalkSpeed(f.s), c.id);
+    assert.equal(c.stats.airJumps, ringAirJumps(f.s), c.id);
   }
 });
 
@@ -71,7 +73,7 @@ test('everyone jumps the same height (1.1 x 148 = 162.8 px), ghosts included; la
   assert.ok(jumpLaunchOf(5) > jumpLaunchOf(1));
   const ghosts = ROSTER.filter((c) => c.ghost);
   assert.equal(ghosts.length, 15);
-  for (const c of ghosts) assert.equal(c.stats.speed, walkSpeedOf(REWORK_FIGHTERS[c.id].s), `${c.id} walks at the normal speed`);
+  for (const c of ghosts) assert.equal(c.stats.speed, ringWalkSpeed(RING_FIGHTERS[c.id].s), `${c.id} walks at the normal speed`);
 });
 
 test('every move has a row: 472 moves, base cooldown and uses plus effect costs, none below 1 use', () => {
@@ -100,14 +102,15 @@ test('damage: base + Attack - Defense; mixed types average the difference; an im
   assert.equal(baseOf('normal', { ghost: true }), 13, 'ghost +3');
   assert.equal(baseOf('defense', { ghost: true }), 8, 'ghost +3 on a defense move that deals damage');
   // Hydra heat 5 vs Aurelius heat defense
-  const dHeat = REWORK_FIGHTERS.aurelius.def.heat;
-  assert.equal(statBonus('hydra', 'aurelius', ['heat']), 5 - dHeat);
-  const dKin = REWORK_FIGHTERS.aurelius.def.kinetic;
-  assert.equal(statBonus('hydra', 'aurelius', ['heat', 'kinetic']), ((5 - dHeat) + (1 - dKin)) / 2);
+  const { atkWeight: aw, defWeight: dw } = RING_COEF;   // 1 = Benjamin's rule; a tuned weight is a flagged departure
+  const dHeat = RING_FIGHTERS.aurelius.def.heat;
+  assert.equal(statBonus('hydra', 'aurelius', ['heat']), aw.heat * 5 - dw.heat * dHeat);
+  const dKin = RING_FIGHTERS.aurelius.def.kinetic;
+  assert.ok(Math.abs(statBonus('hydra', 'aurelius', ['heat', 'kinetic']) - ((aw.heat * 5 - dw.heat * dHeat) + (aw.kinetic * 1 - dw.kinetic * dKin)) / 2) < 1e-9);
   // Noble gas: a chemical-only move deals nothing; a mixed move counts chemical as 0
   assert.equal(statBonus('hydra', 'helen', ['chemical']), null);
-  assert.equal(statBonus('hydra', 'helen', ['chemical', 'heat']), (0 + (5 - 5)) / 2);
-  assert.equal(statBonus('hydra', 'helen', ['kinetic']), 1 - 1);
+  assert.equal(statBonus('hydra', 'helen', ['chemical', 'heat']), (0 + (aw.heat * 5 - dw.heat * 5)) / 2);
+  assert.equal(statBonus('hydra', 'helen', ['kinetic']), aw.kinetic * 1 - dw.kinetic * 1);
   // Ogden is not immune
   assert.notEqual(statBonus('hydra', 'ogden', ['chemical']), null);
 });

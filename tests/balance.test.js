@@ -1,5 +1,6 @@
 import { jumpLaunchOf } from '../src/data/statRework.js';
 import test from 'node:test';
+import { RING_COEF } from '../src/data/ringBalance.js';
 import assert from 'node:assert';
 import { CHARACTERS } from '../src/data/characters.js';
 import {
@@ -96,9 +97,9 @@ test('Weight and Speed (1-5, sum 6) drive speed, weight and jumps; every roster 
 
 test('air jumps follow Speed (ceil(S / 2)) and walk speed follows 150 + 40 S', () => {
   assert.strictEqual(CHARACTERS.helen.stats.airJumps, 3);
-  assert.strictEqual(CHARACTERS.sully.stats.airJumps, 2);
+  assert.strictEqual(CHARACTERS.sully.stats.airJumps, Math.ceil(CHARACTERS.sully.ringRow.s / 2));
   assert.strictEqual(CHARACTERS.helen.stats.speed, CHARACTERS.helen.combat.speed);
-  assert.strictEqual(CHARACTERS.helen.stats.speed, 150 + 40 * 5);
+  assert.strictEqual(CHARACTERS.helen.stats.speed, RING_COEF.walkBase + RING_COEF.walkPerS * 5);
 });
 
 test('cold gases take more heat damage than refractory metals', () => {

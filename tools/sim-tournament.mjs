@@ -29,6 +29,7 @@ const TAG = process.env.SIM_TAG || 'run';
 const STOCKS = MATCH_STOCKS;
 const REPS = Number(process.env.SIM_REPS || 3);
 const PAGES = Math.max(1, Number(process.env.SIM_PAGES || 4));
+const RECYCLE = Number(process.env.SIM_RECYCLE || 0);   // SIM_RECYCLE=N: reopen a page after N matches (a page grows to a few GB over a long run)
 const LIMIT = Number(process.env.SIM_LIMIT || 0);
 const STAGE = process.env.SIM_STAGE || 'elemental-isle';
 const GOLD = process.env.SIM_GOLD === '1';
@@ -378,6 +379,11 @@ async function main() {
           }
         }
         done += 1;
+        slot.ran = (slot.ran || 0) + 1;
+        if (RECYCLE > 0 && slot.ran >= RECYCLE && cursor < queue.length) {
+          try { await slot.page.close(); } catch { /* page already gone */ }
+          Object.assign(slot, await openPage(browser), { ran: 0 });
+        }
         if (done % 20 === 0 || done === queue.length) {
           const sec = ((Date.now() - started) / 1000).toFixed(0);
           console.log(`progress ${done}/${queue.length} in ${sec}s failures=${failures.length}`);

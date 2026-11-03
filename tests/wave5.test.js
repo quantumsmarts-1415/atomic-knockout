@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { RING_COEF } from '../src/data/ringBalance.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { PNG } from 'pngjs';
@@ -34,7 +35,7 @@ test('ghosts drain, keep a slow step, and keep translucent sheets', () => {
     const c = CHARACTERS[id];
     assert.strictEqual(c.ghost, true, id);
     assert.ok(c.stats.weight >= 0.75 && c.stats.weight <= 1.75, `${id} weight is a rework resistance`);
-    assert.ok(Math.abs(c.stats.speed - (150 + 40 * c.rework.s)) < 1e-9, `${id} ghosts walk at the normal speed`);
+    assert.ok(Math.abs(c.stats.speed - (RING_COEF.walkBase + RING_COEF.walkPerS * c.ringRow.s)) < 1e-9, `${id} ghosts walk at the normal speed`);
     const png = PNG.sync.read(readFileSync(`art-src/imported/sheets/${id}_idle.png`));
     let ink = 0;
     let partial = 0;

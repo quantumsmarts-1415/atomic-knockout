@@ -1,7 +1,8 @@
 import { deriveProfile } from './balance.js';
 import { HIT_HOLD_F } from './hitTiming.js';
 import { BALANCE_TUNE } from './balanceTune.js';
-import { REWORK_FIGHTERS, RW, SLOT_OF_KEY, airJumpsOf, gravityScaleOf, jumpLaunchOf, knockbackResistance, walkSpeedOf } from './statRework.js';
+import { REWORK_FIGHTERS, RING_FIGHTERS, RW, SLOT_OF_KEY } from './statRework.js';
+import { ringAirJumps, ringGravityScale, ringKnockbackResistance, ringWalkSpeed } from './ringBalance.js';
 import { ELEMENTS } from './elements.js';
 import { MOVESETS } from './movesets.js';
 import { IMPORTED_ROSTER, characterFromImport } from './imported.js';
@@ -2491,16 +2492,19 @@ installBodyClips(CHARACTERS);
 for (const def of Object.values(CHARACTERS)) {
   const rw = REWORK_FIGHTERS[def.id];
   if (!rw || !def.stats) continue;
-  def.rework = rw;
+  def.rework = rw;                       // the sheet row: the Campaign reads this
+  const rg = RING_FIGHTERS[def.id] ?? rw; // the Smash Ring row (element-true Weight, Speed and stats)
+  def.ringRow = rg;
   for (const key of Object.keys(SLOT_OF_KEY)) if (def.moves?.[key]) def.moves[key].rwKey = key;   // which slot a hit belongs to
   // Every charge reaches full in 3 s (5% base at 0 s, +1% every 0.2 s, 20% at 3 s).
   if (def.moves?.basicCharge) def.moves.basicCharge.maxChargeMs = RW.chargeMs;
+  const gravity = ringGravityScale(rg.w);
   def.stats = {
-    speed: walkSpeedOf(rw.s),
-    jumpVelocity: jumpLaunchOf(rw.w),
-    weight: knockbackResistance(rw.w),
-    gravityScale: gravityScaleOf(rw.w),
-    airJumps: airJumpsOf(rw.s),
+    speed: ringWalkSpeed(rg.s),
+    jumpVelocity: Math.sqrt(2 * RW.worldGravity * gravity * RW.jumpHeight),
+    weight: ringKnockbackResistance(rg.w),
+    gravityScale: gravity,
+    airJumps: ringAirJumps(rg.s),
   };
   if (def.combat) {
     def.combat.speed = def.stats.speed;

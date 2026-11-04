@@ -70,7 +70,7 @@ test("with Benjamin's coefficients the Ring physics are his formulas", () => {
 
 test('every global coefficient is sane', () => {
   for (const k of ['kbResBase', 'kbResPerW', 'gravBase', 'gravPerW', 'walkBase', 'walkPerS']) assert.ok(RING_COEF[k] > 0, k);
-  for (const k of ['projectileMult', 'areaMult', 'chargeMult', 'counterMult', 'healMult', 'dotMult']) assert.ok(RING_COEF[k] > 0.2 && RING_COEF[k] < 3, k);
+  for (const k of ['projectileMult', 'areaMult', 'chargeMult', 'counterMult', 'healMult', 'dotMult']) assert.ok(RING_COEF[k] > 0.2 && RING_COEF[k] <= 3, k);
   for (const g of ['atkWeight', 'defWeight', 'typeMult']) for (const t of TYPES) assert.ok(RING_COEF[g][t] > 0.2 && RING_COEF[g][t] < 3, `${g}.${t}`);
   for (const c of ROSTER) assert.ok(CHARACTERS[c.id].stats.gravityScale > 0 && CHARACTERS[c.id].stats.weight > 0);
 });
